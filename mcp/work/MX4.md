@@ -17,7 +17,8 @@
   Moved on purpose: mp1f R1, R2; mp1e R1; rc24 T-4 (below). mx1 41, mx2 26, mx3 25, mp1-shapes 10, mp1 100,
   mirror-parity 62, mr1 26, tw1 21: unchanged. Areas: twin 27, arabic 15, report 42, checker 7 suites passed; lint 0;
   check-min: 75 match, stamps new; site config PASS; website theme-generator 922 PASS; fx1 10 of 10 on 7acab002.
-- **State:** FULLRUN
+- **State: DONE.** Full run on 537ea36e: "run-tests: 136 suites passed" (the base's 135 + mx4). After 537ea36e
+  only this note changed. CI: tests.yml run 41384614912, started by the reviewer on the branch.
 - **Resume:** the reviewer's merge; the laptop's part 11 (below).
 
 ## Before -> after, per item
