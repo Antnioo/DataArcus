@@ -1,0 +1,53 @@
+{
+  "pages": [
+    {
+      "id": "p0",
+      "width": 1280,
+      "height": 720,
+      "visuals": [
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v0",
+          "position": {
+            "x": 38,
+            "y": 206,
+            "width": 1111,
+            "height": 204,
+            "z": 0
+          },
+          "visual": {
+            "visualType": "pivotTable"
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v2",
+          "position": {
+            "x": 887,
+            "y": 258,
+            "width": 197,
+            "height": 162,
+            "z": 2000
+          },
+          "visual": {
+            "visualType": "clusteredBarChart"
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v3",
+          "position": {
+            "x": 48,
+            "y": 402,
+            "width": 229,
+            "height": 103,
+            "z": 3000
+          },
+          "visual": {
+            "visualType": "actionButton"
+          }
+        }
+      ]
+    }
+  ]
+}

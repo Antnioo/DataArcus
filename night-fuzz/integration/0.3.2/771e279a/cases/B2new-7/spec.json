@@ -1,0 +1,81 @@
+{
+  "pages": [
+    {
+      "id": "p0",
+      "width": 1920,
+      "height": 1080,
+      "visuals": [
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v1",
+          "position": {
+            "x": 245,
+            "y": 896,
+            "width": 628,
+            "height": 184,
+            "z": 1000
+          },
+          "visual": {
+            "visualType": "pivotTable"
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v5",
+          "position": {
+            "x": 1791,
+            "y": 422,
+            "width": 129,
+            "height": 433,
+            "z": 5000
+          },
+          "visual": {
+            "visualType": "actionButton",
+            "objects": {
+              "text": [
+                {
+                  "properties": {
+                    "text": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "'Synthetic action page 0 visual 5'"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "icon": [
+                {
+                  "properties": {
+                    "shapeType": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "'rightArrow'"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v6",
+          "position": {
+            "x": 919,
+            "y": 798,
+            "width": 406,
+            "height": 282,
+            "z": 6000
+          },
+          "visual": {
+            "visualType": "areaChart"
+          }
+        }
+      ]
+    }
+  ]
+}

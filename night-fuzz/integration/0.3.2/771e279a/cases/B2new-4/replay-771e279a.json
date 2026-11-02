@@ -1,0 +1,68 @@
+{
+  "failures": {
+    "P1": [
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v0/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v7/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v0/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v7/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v0/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v7/visual.json"
+        ]
+      }
+    ],
+    "D1": [
+      {
+        "why": "byte difference between independent plans",
+        "files": [
+          "Synthetic AR.Report/.platform"
+        ]
+      }
+    ],
+    "B2": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v1",
+          "p0/v7"
+        ]
+      }
+    ],
+    "B2new": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v1",
+          "p0/v7",
+          "English [{\"x\":542,\"y\":212,\"width\":471,\"height\":136,\"z\":1000},{\"x\":1059,\"y\":172,\"width\":221,\"height\":113,\"z\":7000}]",
+          "Arabic [{\"x\":208,\"y\":212,\"width\":471,\"height\":136,\"z\":1000},{\"x\":0,\"y\":172,\"width\":221,\"height\":113,\"z\":7000}]",
+          "plan on v1: movedByRule: moved with a button beside it",
+          "plan on v7: none",
+          "in pictureChecks.newOverlaps: false"
+        ]
+      }
+    ]
+  },
+  "extra": {
+    "validatorOriginal": [
+      "PBIR_QUERY_STATE_MISSING"
+    ],
+    "normalizedRepeat": true,
+    "normalizedRenamed": true
+  }
+}
