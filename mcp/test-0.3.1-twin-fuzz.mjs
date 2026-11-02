@@ -13,7 +13,9 @@ import './test-env.mjs';
 //       keptInView, pictureChecks, cannot, the heatmap names in mirrors; a button's underline in its fitted entry, withLine)
 // And the three bugs by name: B1-1 (a chart pushed off the page when a button borrows a slicer's width), B1-3 (a bar
 // kept over a table past the page edge), M1-1 (a neighbour moved by the button fitting, the plan silent); and N5 (made
-// up here): a button's underline widened with it is named in the button's own fitted entry (withLine).
+// up here): a button's underline widened with it is named in the button's own fitted entry (withLine). N6-N9 (MX8): the night
+// lab's B2new-1 and B2new-8, a chart lined up with a heatmap's grid kept off a visual it did not overlap in English;
+// N10: B2new-2's new overlap (another rule) reaches pictureChecks.newOverlaps on a page with no picture.
 // Not here (the lab's strict properties, not bugs, per the brief): B2 overlaps, B3's 60 px floor, D1 raw bytes, P1.
 // Metadata only: no model rows, measures are BLANK().   node test-0.3.1-twin-fuzz.mjs
 import fs from 'node:fs';
@@ -206,6 +208,19 @@ try {
   chk(() => said('M1-1', 'p0/v15'), () => `N4. M1-1: the plan names the group the button's fitting moved (movedByRule): ${JSON.stringify(plan('M1-1').movedByRule)}`);
   const lb = box('line', 'p0', 'v1'), lu = box('line', 'p0', 'v2'), le = ((plan('line').fitted || {}).buttons || []).find((x) => x.visual === 'v1');
   chk(() => lb && lu && lb.width > 60 && lu.x === lb.x && lu.width === lb.width && le && JSON.stringify(le.withLine) === '["v2"]', () => `N5. a button's underline widens with it and is named in its fitted entry (withLine): ${JSON.stringify([lb, lu, le])}`);
+  // (0.3.1 MX8) the night lab's B2new-1 and B2new-8 (on a6000a27): a chart lined up with a heatmap's grid moved onto a
+  // visual it did not overlap in English (B2new-8: a group); now kept at its mirror and said (red on a6000a27 first)
+  const abs = (n, pg, v, en) => { const vs = en ? new Map(((runs.find((x) => x.name === n) || {}).spec.pages.find((p) => p.id === pg) || { visuals: [] }).visuals.map((y) => [y.name, y])) : at[n + '/' + pg];
+    const o = vs && vs.get(v); if (!o) return null; const b = { x: o.position.x, y: o.position.y, w: o.position.width, h: o.position.height };
+    let g = o.parentGroupName, d = 0; while (g && vs.get(g) && d++ < 10) { b.x += vs.get(g).position.x; b.y += vs.get(g).position.y; g = vs.get(g).parentGroupName; } return b; };
+  const meet = (p, q) => p && q ? Math.max(0, Math.min(p.x + p.w, q.x + q.w) - Math.max(p.x, q.x)) * Math.max(0, Math.min(p.y + p.h, q.y + q.h) - Math.max(p.y, q.y)) : -1;
+  [['B2new-1', 'v8', 'v15', 'v8'], ['B2new-8', 'v5', 'v17', 'v17']].forEach(([n, a, b, chart], k) => {
+    chk(() => meet(abs(n, 'p0', a, true), abs(n, 'p0', b, true)) === 0 && meet(abs(n, 'p0', a), abs(n, 'p0', b)) === 0, () => `N${6 + 2 * k}. ${n}: ${a} and ${b} do not overlap in English, nor in the twin: ${JSON.stringify([abs(n, 'p0', a), abs(n, 'p0', b)])}`);
+    chk(() => (plan(n).movedByRule || []).some((x) => x.where === 'p0/' + chart && /kept at its mirror/.test(x.rule)), () => `N${7 + 2 * k}. ${n}: the plan says why ${chart} is not lined up with its heatmap's grid: ${JSON.stringify(plan(n).movedByRule)}`);
+  });
+  // (MX8) a new overlap from another rule (B2new-2: a widened button's row moves a column onto a chart; on both heads)
+  // reaches pictureChecks.newOverlaps on a page with no picture (only pages drawn on a picture were checked)
+  chk(() => ((plan('B2new-2').pictureChecks || {}).newOverlaps || []).some((x) => x.where === 'p0: v5, v6'), () => `N10. B2new-2: pictureChecks.newOverlaps names v5 and v6: ${JSON.stringify(plan('B2new-2').pictureChecks)}`);
 } catch (e) { problems.push('threw: ' + String(e && e.stack || e).slice(0, 600)); }
 
 const secs = ((Date.now() - t0) / 1000).toFixed(1);
