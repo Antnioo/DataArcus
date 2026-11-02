@@ -23,8 +23,9 @@
   mx1, mx2, twin-fuzz (M1 green: the charts were already named) unchanged. Areas, fx1, lint, CI: see State.
 - **Areas on 9cce148:** twin 31, arabic 15, report 42 (glass-tables rerun after unshallowing the clone: its N0 reads
   cba24a5; 113 PASS), checker 7, core 8 suites passed; fx1 5 of 5 (22); lint 0; site config PASS.
-- **State:** code in 1a22226, CHANGELOG 9cce148; CI on the branch next.
-- **Resume:** CI's result.
+- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41530448902 on 8613eebe (Linux,
+  Windows, macOS). After 8613eebe only this note changed.
+- **Resume:** the reviewer's merge; laptop part 14 (below).
 
 ## Plan, per item
 1. The pinned capabilities (powerbi-core-visual-schema through the validator's provider, 0.5.0): a column chart's inside
@@ -77,6 +78,9 @@
   one row of the matrix's text more room below (20.88 at 10pt), which covers "a few px" with a margin. A box that grows
   downward keeps every row level with the grid's (same top); the extra room is white below the grid's last row. Kept
   inside its page or group (clamped, not B1: a clamped box still has the room it had before).
+- CI: run 41524209043 passed everything but two macOS shards, cancelled while queued (no runner, no steps, no FAIL
+  line); its one rerun ran shard 2 green, and shard 1 again sat queued until it was cancelled. No code change, so I started
+  one fresh run on the same commit (41530448902): green on all three systems.
 - The chart's padding in the fixture is made up (left 0, right 20): the real file's is not in the evidence branch (only
   its position); the check compares edges, so any one-sided padding shows the swap.
 
