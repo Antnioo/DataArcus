@@ -11,9 +11,11 @@
 - **Expected checks:** `dp1` about 8 checks; its 4 floor checks red on e75d432 first, the pin checks are guards.
   Every other suite unchanged; the full suite 136 -> 137. `npm audit --omit=dev`: 4 (1 high, 3 moderate) -> 0.
   node_modules: 54196 KB before, about the same after. No product code change (the SDK's notes below need none).
-- **Got:** (filled at the end)
-- **State:** plan pushed; work next.
-- **Resume:** apply the bumps, write `dp1`, the area runs, lint, CI on the branch.
+- **Got:** commit 6c1e662: SDK 1.32.2; lock: body-parser 2.4.0, fast-uri 3.1.9, ip-address 10.7.5, qs 6.17.1. `dp1`
+  8 checks, red on e75d432 first (4 of 8 failed: the floors; D1, D2 x2, D4 guards). `npm audit --omit=dev`: 4 (1 high,
+  3 moderate) -> 0. node_modules (fresh `npm ci`): 54196 KB -> 54312 KB. Areas: see "Tests" below. Lint 0.
+- **State:** work done; area runs and CI below.
+- **Resume:** CI on the branch, then the reviewer.
 
 ## Plan
 1. Read mcp/package.json: the runtime dependencies are exact pins (no caret), the dev one (pngjs) a caret range.
@@ -36,3 +38,53 @@
    and stay. The new suite reads every pin from package.json; the only numbers it holds are the audit's fixed floors
    (a different fact: the first safe version, not the pin).
 4. `cd mcp && npm test -- platform core`, lint, CI on the branch.
+
+## Before -> after
+| Package | Before | After | How |
+|---|---|---|---|
+| @modelcontextprotocol/sdk | 1.32.1 | 1.32.2 | package.json exact pin (the only place it is written) |
+| body-parser (SDK's express) | 2.3.0 | 2.4.0 | lock (`npm audit fix`); it also asks content-type ^2.1.0, iconv-lite ^0.7.3 (already met) |
+| fast-uri (ajv) | 3.1.8 | 3.1.9 | lock |
+| ip-address (SDK's express-rate-limit) | 10.7.2 | 10.7.5 | lock |
+| qs (body-parser) | 6.16.0 | 6.17.1 | lock: `npm audit` listed it; the fix within body-parser's range |
+
+`npm audit --omit=dev` before: body-parser high (GHSA-27r3-jxmh-p828); fast-uri moderate (4 advisories); ip-address
+moderate (GHSA-rxp7-6hxx-x8q5); qs moderate (GHSA-6pq8-jhm2-2vcw): "4 vulnerabilities (3 moderate, 1 high)". After:
+"found 0 vulnerabilities". None of the four is reached over stdio (the HTTP server packages are the SDK's, unused).
+`npm ls --omit=dev` exits 0; 109 packages installed (unchanged count).
+
+## The SDK's notes, per change (1.32.1..1.32.2)
+- #2958 registering after connect(): only McpServer's constructor, when its options declare capabilities. Ours
+  declare none (`dp1` D4 keeps it so): not reached. Tool registration with zod inputs, elicitation, stdio, error
+  shapes: no byte of their JavaScript changed (the two packages compared: only dist/*/server/mcp.js, its maps, and
+  transport.d.ts differ).
+- #2814 `| undefined` on Transport's optional properties: types only. Nothing.
+- No product code change.
+
+## Tests
+- New: `dp1` (platform) 8 checks, red on e75d432 first. No other suite's expected number changed.
+- Areas after 6c1e662: platform + safety 19 suites passed (powerbi-2026-10 26, dp1 8, approval suites unchanged).
+
+## CHANGELOG line
+- **Package updates:** the MCP SDK 1.32.2 and fixed versions of four packages it brings (body-parser, fast-uri,
+  ip-address, qs), so a security audit of the MCP's packages finds nothing.
+
+## Decisions I made
+- The CHANGELOG line stays here, not in mcp/CHANGELOG.md: its [Unreleased] is still 0.3.1 being finished; the
+  reviewer adds it under 0.3.2's heading when this merges (no conflict with laptop part 11).
+- qs moved to 6.17.1 (what `npm audit fix` chose inside body-parser 2.4.0's `^6.16.1`), not held at 6.16.1.
+- The floors in `dp1` are the advisories' first safe versions, not the pins, so a later bump never edits the test.
+- The release page answered 403 to this session; the notes were read from the tag history and the two npm packages.
+
+## For the owner
+none
+
+## Risky changes
+none (packages only; no security policy, approval, writing, answers, network or process code changed; no check removed)
+
+## Seen, not in scope
+- The CHANGELOG's 0.3.0 entry says "MCP SDK 1.32.1": history, left as is.
+- audit-8 A8-9 ("declared = locked") is now a test (`dp1` D2) for every runtime pin.
+
+## Lessons for the reviewer
+- Compare the published packages (`npm pack` both, `diff -r`): the shipped JavaScript is the truth, release notes a guide.
