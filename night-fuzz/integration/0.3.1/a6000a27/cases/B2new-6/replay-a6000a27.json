@@ -1,0 +1,72 @@
+{
+  "failures": {
+    "P1": [
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v14/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v23/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v8/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v14/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v23/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v8/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v14/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v23/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v8/visual.json"
+        ]
+      }
+    ],
+    "D1": [
+      {
+        "why": "byte difference between independent plans",
+        "files": [
+          "Synthetic AR.Report/.platform"
+        ]
+      }
+    ],
+    "B2": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v8",
+          "p0/v14"
+        ]
+      }
+    ],
+    "B2new": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v8",
+          "p0/v14",
+          "English [{\"x\":732,\"y\":460,\"width\":375,\"height\":260,\"z\":8000},{\"x\":211,\"y\":321,\"width\":439,\"height\":141,\"z\":14000}]",
+          "Arabic [{\"x\":173,\"y\":460,\"width\":375,\"height\":260,\"z\":8000},{\"x\":478,\"y\":321,\"width\":439,\"height\":141,\"z\":14000}]",
+          "plan on v8: none",
+          "plan on v14: movedByRule: kept lined up with its heatmap's grid (English's offset from its left edge)",
+          "in pictureChecks.newOverlaps: false"
+        ]
+      }
+    ]
+  },
+  "extra": {
+    "validatorOriginal": [
+      "PBIR_ROLE_REQUIRED_MISSING",
+      "PBIR_QUERY_STATE_MISSING"
+    ],
+    "normalizedRepeat": true,
+    "normalizedRenamed": true
+  }
+}

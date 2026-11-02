@@ -1,0 +1,102 @@
+{
+  "pages": [
+    {
+      "id": "p0",
+      "width": 1280,
+      "height": 720,
+      "visuals": [
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v9",
+          "position": {
+            "x": 332,
+            "y": 221,
+            "width": 803,
+            "height": 484,
+            "z": 9000
+          },
+          "visualGroup": {}
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v0",
+          "position": {
+            "x": 0,
+            "y": 189,
+            "width": 790,
+            "height": 295,
+            "z": 0
+          },
+          "visual": {
+            "visualType": "pivotTable",
+            "query": {
+              "queryState": {
+                "Rows": {
+                  "projections": [
+                    {
+                      "field": {},
+                      "queryRef": "Synthetic.Weekday",
+                      "nativeQueryRef": "Weekday"
+                    }
+                  ]
+                },
+                "Columns": {
+                  "projections": [
+                    {
+                      "field": {},
+                      "queryRef": "Synthetic.Hour",
+                      "nativeQueryRef": "Hour"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "parentGroupName": "v9"
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v1",
+          "position": {
+            "x": 77,
+            "y": 0,
+            "width": 726,
+            "height": 189,
+            "z": 1000
+          },
+          "visual": {
+            "visualType": "lineChart",
+            "query": {
+              "queryState": {
+                "Category": {
+                  "projections": [
+                    {
+                      "field": {},
+                      "queryRef": "Synthetic.Date",
+                      "nativeQueryRef": "Date"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "parentGroupName": "v9"
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v4",
+          "position": {
+            "x": 34,
+            "y": 165,
+            "width": 350,
+            "height": 190,
+            "z": 4000
+          },
+          "visual": {
+            "visualType": "donutChart"
+          }
+        }
+      ]
+    }
+  ]
+}

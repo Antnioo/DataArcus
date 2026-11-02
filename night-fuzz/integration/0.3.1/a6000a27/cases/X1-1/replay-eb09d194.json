@@ -1,0 +1,65 @@
+{
+  "failures": {
+    "P1": [
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v0/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v1/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v0/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v1/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v0/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v1/visual.json"
+        ]
+      }
+    ],
+    "D1": [
+      {
+        "why": "byte difference between independent plans",
+        "files": [
+          "Synthetic AR.Report/.platform"
+        ]
+      }
+    ],
+    "X1": [
+      {
+        "why": "offset from the grid left edge differs",
+        "files": [
+          "p0/v1",
+          "p0/v0",
+          "English offset 12.00 (grid left 415.00)",
+          "Arabic offset -43.00 (grid left 331.00)"
+        ]
+      },
+      {
+        "why": "category order changes against the grid",
+        "files": [
+          "p0/v1",
+          "p0/v0",
+          "chart sort Ascending -> sort Descending (string axis)",
+          "grid columns Ascending -> Ascending"
+        ]
+      }
+    ]
+  },
+  "extra": {
+    "validatorOriginal": [
+      "PBIR_ROLE_REQUIRED_MISSING"
+    ],
+    "normalizedRepeat": true,
+    "normalizedRenamed": true
+  }
+}
