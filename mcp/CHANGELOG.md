@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.1
+- **Arabic twin checks on thousands of made-up reports:** a button widened for its Arabic text no longer pushes a chart
+  beside it off the page (it takes width from a slicer only where everything it moves stays on the page), a bar chart
+  kept over a table stays on the page, and the plan names every visual moved beside a widened button.
 - **A second test run in Power BI Desktop:** a table in the Arabic twin leaves room for Power BI's vertical scrollbar,
   so its first column stays whole at the right edge when there are more rows than fit; a heatmap by weekday shows its
   day names beside a grid exactly as wide as the English one when the English report sets the day column's width
