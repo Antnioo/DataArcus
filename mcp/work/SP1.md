@@ -18,9 +18,11 @@
   the recorded file unchanged between them. A one-character wording change in the new module: sp1 FAIL 1 of 11.
 - **Before -> after:** `tools/plan_layout.mjs` 635 -> 585 lines; `lib/plan-disclosure.mjs` 63 lines (new).
 - **Guards (Codex's list) after the move:** j14 30, test-0.3.1-write-gate 7, bilingual-report 33, mr1 (in core), bd1 18:
-  all PASS, counts unchanged. Areas and CI: below.
-- **State:** the move pushed; areas core, report, release and CI below.
-- **Resume:** if CI is red, read its FAIL line; sp1 must stay byte for byte (never re-record after the base).
+  all PASS, counts unchanged. Areas: core 10 suites passed (on 819739c, the last code commit), report 42 of 42 (on
+  f9eb523; glass-tables needs cba24a5, absent from a shallow clone: 113 checks once fetched), release 5; lint 0.
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41533391430 on 819739c** (attempt 2: macOS shard 3 was
+  cancelled with no FAIL line, rerun once). The first run (41530313701) was red: sp1 P7 on Windows (CRLF checkout), fixed.
+- **State: DONE.** **Resume:** none; the reviewer's merge.
 
 ## The plans in sp1
 P1 the sample; P2 a layout alone, page 1280x720 asked (no plan id); P3 English on twin-project; P4 Arabic with approved
@@ -38,6 +40,9 @@ a measure no list names (notTranslated, titlesInEnglish, planProblems). C1: the 
   (NODE_OPTIONS `--import`) seeds node:crypto's randomBytes, randomFillSync, randomUUID, the web crypto's
   getRandomValues and Math.random (the assets/js engines loaded by require fall back to it). Then digests compare too.
   The product code is untouched; the server never loads that module.
+- CI's Windows checkout writes the fixtures' text files with CRLF, and the redesign's digest is over the original's
+  bytes: P7 differed on Windows only (run 41530313701). sp1 now plans from LF copies of the fixtures (as the repository
+  holds them); proven here by turning the fixtures CRLF: the old test failed P7 only, the new one passes.
 - Hashes, not whole answers, in the fixture (10 answers, about 150 KB); `SP1_DUMP=<file>` writes them to compare.
   The answers hold no path (checked: no working folder, no separators), so the hashes hold on Windows and macOS too.
 - The page size: the brief's "page description"; its two inline lines became one pure function, same words.
