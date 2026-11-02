@@ -24,10 +24,11 @@
   read E.PAGES), fixed in 87dadbf9 (design.mjs exports the size). Website: design-engine 600 (+2 on purpose, below),
   theme-generator 922, theme-generator-lab 922, pbip 111, layout 512, layout-canvas 31 (base e75d432: 598, 922, 922, 111, 512, 31). Lint 0;
   check-min 75 match; site config PASS; csp, ar-pages up to date. Rendered EN and AR: 8 fonts, no page error.
-- **Final runs after 87dadbf9:** report 43, checker 7, arabic 15, model 14 suites passed (counts as above); core: CORE2.
+- **Final runs after 87dadbf9:** report 43, checker 7, arabic 15, model 14 suites passed (counts as above); core 8 suites passed (mcp 1594, golden 12).
   CI 41398188138 red: the sitemap dates (written now), theme-logo.mjs's loader (no require), op1 G3 on Windows only
   (CRLF lines kept a comment; red with the old splitter, G5 now tests it): fixed in the next commit; theme-logo 753 = base.
-- **State:** CI on the branch (running).
+- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41399611894 on 62284a6e (Linux,
+  Windows, macOS). After it only this note changed.
 - **Resume:** the reviewer's merge after 0.3.1 ships; the laptop's button check (below); the TK1 follow-up.
 
 ## Before -> after
