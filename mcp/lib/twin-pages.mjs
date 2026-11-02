@@ -42,10 +42,25 @@ function fitButtons(page, visuals, ctx, at) {
   const attachedTo = (v) => { const p = posOf(v); return visuals.filter((s) => s !== v && /^(shape|basicShape)$/.test(typeOf(s)) && parentOf(s) === parentOf(v) && posOf(s)).filter((s) => { const q = posOf(s);
     return !vOver(p, q) && q.x >= p.x - 2 && q.x + q.width <= p.x + p.width + 2 && q.width <= p.width && Math.min(Math.abs(q.y - (p.y + p.height)), Math.abs(p.y - (q.y + q.height))) <= 8; }); };
   const shift = (v, d) => { posOf(v).x = Mirror.round(posOf(v).x + d); attachedTo(v).forEach((s) => { posOf(s).x = Mirror.round(posOf(s).x + d); }); };
+  // (0.3.1 MX6, the fuzz lab's B1-1: a chart beside a slicer that gave a button its width was pushed to x -59) the boxes
+  // as they were, and whether every box the fitting changed is still inside its page or group: else it is put back
+  const snap = () => new Map(visuals.filter((x) => posOf(x)).map((x) => [x, { x: posOf(x).x, width: posOf(x).width }]));
+  const fits = (was) => [...was].every(([x, o]) => { const q = posOf(x); if (q.x === o.x && q.width === o.width) return true; const W = widthOf(x); return !Number.isFinite(W) || (q.x >= -0.5 && q.x + q.width <= W + 0.5); });
+  const back = (was) => was.forEach((o, x) => { posOf(x).x = o.x; posOf(x).width = o.width; });
+  // (MX6, the lab's M1-1: a group beside a button moved 28 and the plan only counted it) every visual the fitting moved
+  // or narrowed, by name, for the plan's movedByRule
+  const moved = (was, but) => [...was].filter(([x, o]) => x !== but && (posOf(x).x !== o.x || posOf(x).width !== o.width)).map(([x, o]) => ({ visual: String(x.name),
+    rule: posOf(x).width !== o.width ? (typeOf(x) === 'slicer' ? 'a slicer beside a button widened for its Arabic text: gave it width (as the writer lays out a strip)' : 'an underline of a button widened for its Arabic text: widened with it') : 'beside a button widened for its Arabic text: moved with it' }));
+  out.moves = [];
   visuals.forEach((v) => {
     const p = posOf(v); if (typeOf(v) !== 'actionButton' || !p) return;
     let b; try { b = Rules.buttonNeed({ json: v, type: 'actionButton', h: p.height, w: p.width }, ctx.text); } catch (e) { b = null; }
     if (!b || p.width + 0.5 >= b.needW) return;
+    const start = snap();
+    try { fitOne(v, p, b); } finally { out.moves.push(...moved(start, v)); }
+  });
+  return out;
+  function fitOne(v, p, b) {
     const W = widthOf(v); if (!Number.isFinite(W)) return;
     const grow = Math.ceil(b.needW - p.width), lines = attachedTo(v);
     // the room: the container, or a panel it sits on (a sibling holding it whole); the row: siblings beside it
@@ -56,10 +71,12 @@ function fitButtons(page, visuals, ctx, at) {
     const left = row.filter((x) => posOf(x).x + posOf(x).width <= p.x + 0.5), right = row.filter((x) => posOf(x).x >= p.x + p.width - 0.5);
     const roomL = Math.max(0, (left.length ? Math.min(...left.map((x) => posOf(x).x)) : p.x) - lo), roomR = Math.max(0, hi - (right.length ? Math.max(...right.map((x) => posOf(x).x + posOf(x).width)) : p.x + p.width));
     const firstL = ctx.rtl, a1 = Math.min(grow, Math.floor(firstL ? roomL : roomR)), a2 = Math.min(grow - a1, Math.floor(firstL ? roomR : roomL));
-    const dl = firstL ? a1 : a2, dr = firstL ? a2 : a1;
+    let dl = firstL ? a1 : a2, dr = firstL ? a2 : a1;
+    const was0 = snap();
     left.forEach((x) => shift(x, -dl)); right.forEach((x) => shift(x, dr));
     p.x = Mirror.round(p.x - dl); p.width = Mirror.round(p.width + dl + dr);
     lines.forEach((s) => { const q = posOf(s); q.x = Mirror.round(q.x - dl); q.width = Mirror.round(q.width + dl + dr); });
+    if (!fits(was0)) { back(was0); dl = 0; dr = 0; }
     // (0.3.1 FX1, D-1028-02: the twin is identical, so the Reset keeps its icon; the laptop's part 3: the sample's Reset,
     // 159 wide beside three dropdown slicers in the top strip, got 20 of free room and lost its icon) still too narrow:
     // (a) as the writer lays a strip out (pbip-page.js: the Reset as wide as its text and icon need, the dropdown slicers
@@ -78,7 +95,7 @@ function fitButtons(page, visuals, ctx, at) {
         while (want > 0) { const open = sl.filter((x) => share.get(x) < slack(x)); if (!open.length) break; const each = Math.max(1, Math.floor(want / open.length));
           for (const x of open) { if (want <= 0) break; const d = Math.min(each, slack(x) - share.get(x), want); share.set(x, share.get(x) + d); want -= d; } }
         const take = [...share.values()].reduce((a, d) => a + d, 0); if (!take) continue;
-        let off = take;
+        let off = take; const was = snap();
         // the near side first: each visual moves by what is still to give, a slicer then gives its share
         S.list.slice().sort((a, c) => (S.toLeft ? posOf(c).x - posOf(a).x : posOf(a).x - posOf(c).x)).forEach((x) => {
           const d = share.get(x) || 0; shift(x, S.toLeft ? -off : off);
@@ -86,6 +103,8 @@ function fitButtons(page, visuals, ctx, at) {
         if (S.toLeft) p.x = Mirror.round(p.x - take);
         p.width = Mirror.round(p.width + take);
         lines.forEach((s) => { const q = posOf(s); if (S.toLeft) q.x = Mirror.round(q.x - take); q.width = Mirror.round(q.width + take); });
+        // (MX6) only where the room exists: a visual it moves would leave its page or group, nothing is borrowed this side
+        if (!fits(was)) { back(was); continue; }
         narrowed += sl.filter((x) => share.get(x)).length;
       }
     }
@@ -121,8 +140,7 @@ function fitButtons(page, visuals, ctx, at) {
     }
     if (dl + dr > 0 || narrowed) out.buttons.push(Object.assign({}, what, moved ? { moved } : {}));
     if (p.width + 0.5 < b.needW) out.buttonsCut.push(Object.assign({}, what, { room: p.width, why: `its Arabic text needs ${b.needW} wide; its ${v.parentGroupName != null ? 'group' : 'page'} and the visuals beside it leave ${p.width}: give a shorter Arabic text, or Power BI cuts it` }));
-  });
-  return out;
+  }
 }
 // (0.3.1 R1: a real user's Arabic title kept its English box, 54 high, and wrapped: about 97 needed) A text box whose
 // Arabic needs more lines than its height holds (check_report's TEXTBOX_FITS: 10 + 1.8 x pt a line, the lines wrapped at
@@ -395,7 +413,11 @@ function aroundTables(pg, r, opts) {
       if (Mirror.kindOf(v0) === 'bar' && ov >= a.width * a.height * 0.75 && Number.isFinite(a.z) && Number.isFinite(b.z) && a.z > b.z) {
         let k; try { k = Mirror.mirrorVisual(v0, widthOf(v0), Object.assign({}, opts, { keepDirection: true })).json; } catch (e) { return; }
         if (!isObj(k) || !isObj(k.position)) return;
-        k.position.x = Mirror.round(m1.position.x + a.x - b.x); r.visuals[i] = k; (r.moved = r.moved || []).push({ visual: String(v0.name), rule: 'a bar chart over a table or matrix that stays left to right: kept on it, its bars\' direction kept' }); return;
+        // (0.3.1 MX6, the fuzz lab's B1-3: a bar 57 left of its table's left edge, the table mirrored to x 0, went to x -57)
+        // the kept offset is clamped to its page or group; a bar wider than its page or group can't be kept inside: said
+        const W = widthOf(v0), want = Mirror.round(m1.position.x + a.x - b.x), x = Mirror.round(Math.max(0, Math.min(want, W - k.position.width)));
+        k.position.x = x; r.visuals[i] = k;
+        (r.moved = r.moved || []).push({ visual: String(v0.name), rule: 'a bar chart over a table or matrix that stays left to right: kept on it, its bars\' direction kept' + (k.position.width > W + 0.5 ? `; wider (${a.width}) than its ${v0.parentGroupName != null ? 'group' : 'page'} (${W}): it cannot fit inside` : x !== want ? `; moved ${Mirror.round(Math.abs(x - want))} to stay inside its ${v0.parentGroupName != null ? 'group' : 'page'}` : '') }); return;
       }
       // (a matrix only: its row headers are at its left in both languages)
       if (Mirror.kindOf(m0) !== 'matrix') return;
@@ -581,7 +603,7 @@ export function buildTwin(P, labels) {
     // (the fitting reads and changes only the twin's copies)
     if (isObj(page)) {
       const c = Object.assign({}, ctx, { rtl: !P.keepLtr(pg), noButton: (x) => pageOf(x).type === 'Tooltip' || (isObj(pageOf(x).pageBinding) && /drillthrough/i.test(String(pageOf(x).pageBinding.type || ''))) }), origByName = Object.fromEntries(pg.visuals.map((v) => [v.json.name, v.json]));
-      try { const b = fitButtons(page, r.visuals, c, pg.id); fitted.buttons.push(...b.buttons); fitted.buttonsCut.push(...b.buttonsCut); } catch (e) { /* a shape not expected: left as it is */ }
+      try { const b = fitButtons(page, r.visuals, c, pg.id); fitted.buttons.push(...b.buttons); fitted.buttonsCut.push(...b.buttonsCut); (r.moved = r.moved || []).push(...b.moves); } catch (e) { /* a shape not expected: left as it is */ }
       try { const h = fitHeaders(page, r.visuals, origByName, c, pg.id); fitted.headers.push(...h.headers); fitted.headersCut.push(...h.headersCut); } catch (e) { /* a shape not expected: left as it is */ }
       // (0.3.1 MX2) after the headers' widths: a wide table keeps the English view
       if (c.rtl) { try { keepView(page, r.visuals, pg.id).forEach((k) => { laidOut.push(k.page + '/' + k.visual); if (k.behind) keptInView.push(k); }); } catch (e) { /* a shape not expected: left as it is */ } }
