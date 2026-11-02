@@ -14,8 +14,9 @@
 - **Got:** commit 6c1e662: SDK 1.32.2; lock: body-parser 2.4.0, fast-uri 3.1.9, ip-address 10.7.5, qs 6.17.1. `dp1`
   8 checks, red on e75d432 first (4 of 8 failed: the floors; D1, D2 x2, D4 guards). `npm audit --omit=dev`: 4 (1 high,
   3 moderate) -> 0. node_modules (fresh `npm ci`): 54196 KB -> 54312 KB. Areas: see "Tests" below. Lint 0.
-- **State:** work done; area runs and CI below.
-- **Resume:** CI on the branch, then the reviewer.
+- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41396585299 on 3b83592 (Linux, Windows,
+  macOS). After the last code commit 6c1e662 only this note changed.
+- **Resume:** the reviewer's merge after 0.3.1 ships; then close Dependabot #107-#110.
 
 ## Plan
 1. Read mcp/package.json: the runtime dependencies are exact pins (no caret), the dev one (pngjs) a caret range.
@@ -63,7 +64,10 @@ moderate (GHSA-rxp7-6hxx-x8q5); qs moderate (GHSA-6pq8-jhm2-2vcw): "4 vulnerabil
 
 ## Tests
 - New: `dp1` (platform) 8 checks, red on e75d432 first. No other suite's expected number changed.
-- Areas after 6c1e662: platform + safety 19 suites passed (powerbi-2026-10 26, dp1 8, approval suites unchanged).
+- Areas after 6c1e662: platform + safety 19, core + model + checker 29, report + arabic 57 suites passed.
+  (glass-tables N0 first failed only in this session's shallow clone, its base commit cba24a5 missing; passed after a
+  deeper fetch.)
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41396585299 on 3b83592.
 
 ## CHANGELOG line
 - **Package updates:** the MCP SDK 1.32.2 and fixed versions of four packages it brings (body-parser, fast-uri,
