@@ -1,0 +1,68 @@
+{
+  "failures": {
+    "P1": [
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v10/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v4/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v10/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v4/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v10/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v4/visual.json"
+        ]
+      }
+    ],
+    "D1": [
+      {
+        "why": "byte difference between independent plans",
+        "files": [
+          "Synthetic AR.Report/.platform"
+        ]
+      }
+    ],
+    "B2": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v1",
+          "p0/v15"
+        ]
+      }
+    ],
+    "B2new": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v1",
+          "p0/v15",
+          "English [{\"x\":30,\"y\":603,\"width\":294,\"height\":185,\"z\":1000},{\"x\":345,\"y\":394,\"width\":211,\"height\":281,\"z\":15000}]",
+          "Arabic [{\"x\":956,\"y\":603,\"width\":294,\"height\":185,\"z\":1000},{\"x\":955,\"y\":394,\"width\":211,\"height\":281,\"z\":15000}]",
+          "plan on v1: none",
+          "plan on v15: movedByRule: moved with a button beside it",
+          "in pictureChecks.newOverlaps: false"
+        ]
+      }
+    ]
+  },
+  "extra": {
+    "validatorOriginal": [
+      "PBIR_QUERY_STATE_MISSING"
+    ],
+    "normalizedRepeat": true,
+    "normalizedRenamed": true
+  }
+}

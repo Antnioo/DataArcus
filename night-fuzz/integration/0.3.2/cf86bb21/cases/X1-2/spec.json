@@ -1,0 +1,124 @@
+{
+  "pages": [
+    {
+      "id": "p0",
+      "width": 1920,
+      "height": 1080,
+      "visuals": [
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v9",
+          "position": {
+            "x": 1142,
+            "y": 193,
+            "width": 740,
+            "height": 678,
+            "z": 9000
+          },
+          "visualGroup": {}
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v0",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 740,
+            "height": 424,
+            "z": 0
+          },
+          "visual": {
+            "visualType": "pivotTable",
+            "query": {
+              "queryState": {
+                "Rows": {
+                  "projections": [
+                    {
+                      "field": {},
+                      "queryRef": "Synthetic.Weekday",
+                      "nativeQueryRef": "Weekday"
+                    }
+                  ]
+                },
+                "Columns": {
+                  "projections": [
+                    {
+                      "field": {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Entity": "Synthetic"
+                            }
+                          },
+                          "Property": "Hour"
+                        }
+                      },
+                      "queryRef": "Synthetic.Hour",
+                      "nativeQueryRef": "Hour"
+                    }
+                  ]
+                }
+              }
+            },
+            "objects": {
+              "columnWidth": [
+                {
+                  "properties": {
+                    "value": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "83D"
+                        }
+                      }
+                    }
+                  },
+                  "selector": {
+                    "metadata": "Synthetic.Weekday"
+                  }
+                }
+              ]
+            }
+          },
+          "parentGroupName": "v9"
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v1",
+          "position": {
+            "x": 79,
+            "y": 439,
+            "width": 649,
+            "height": 239,
+            "z": 1000
+          },
+          "visual": {
+            "visualType": "columnChart",
+            "query": {
+              "queryState": {
+                "Category": {
+                  "projections": [
+                    {
+                      "field": {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Entity": "Synthetic"
+                            }
+                          },
+                          "Property": "Hour"
+                        }
+                      },
+                      "queryRef": "Synthetic.Hour",
+                      "nativeQueryRef": "Hour"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "parentGroupName": "v9"
+        }
+      ]
+    }
+  ]
+}
