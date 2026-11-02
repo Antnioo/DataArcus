@@ -116,16 +116,18 @@
     // Where the 8pt minimum makes a text bigger than its scaled box (small pages), the box grows to fit the text.
     // Heights measured in Power BI Desktop 2.157 (scripts/tests/DESKTOP-TESTS.md, 2026-10-01), in page units (a point
     // size takes the same page units on any page): a text box needs 10 + 1.8 x pt per line (points to pixels 4/3, a line
-    // about 1.35 of that, padding about 5 above and below), button text 2 + 1.6 x pt per line, the Reset icon 2.25 x pt,
+    // about 1.35 of that, padding about 5 above and below), button text 6 + 1.6 x pt per line, the Reset icon 2.25 x pt,
     // a dropdown slicer (title and box) 16 + 4 x pt. Width: 0.55 em per character, in pixels (charW).
     // Buttons (measured on 2.158): Power BI never wraps a button's text, and its icon grows with the button's height
     // (about as wide as the button is high) and is drawn at the start. resetFit(text, w, k): a Reset button w wide is one
     // line high, max(40k, 6 + 1.6 x pt) (Arabic text needs 4 more than English: 19 at 8pt, 30 at 15pt), and keeps its icon only where the text (0.45 em per character, measured 0.40-0.41)
     // and the icon fit side by side; otherwise the icon is left out rather than drawn over the text.
     // pt(t): a size within 8-60pt. LABEL: button text, the theme's label size.
-    const pt = (t) => Math.max(8, Math.min(60, Math.round(t))), charW = (t) => t * 0.55 * 4 / 3;
-    const boxH = (t, n) => Math.ceil(10 + 1.8 * t * (n || 1)), buttonH = (t, n) => Math.ceil(2 + 1.6 * t * (n || 1));
-    const slicerH = (t) => Math.ceil(16 + 4 * t);
+    // (0.3.2 OP1) the heights and the 8-60 range are text-measure.js's (one place); the button's is 6 + 1.6 x pt a line,
+    // the measured Arabic rule the checker uses (the writer had 2 + 1.6 here, used only by the English page navigator)
+    const pt = Measure.ptIn, charW = (t) => t * 0.55 * 4 / 3;
+    const boxH = Measure.boxH, buttonH = Measure.buttonH;
+    const slicerH = Measure.slicerH;
     // (0.3.0 F1, F2) a pill slicer's height (its header, the container title written at the tiles' size, and one row of
     // tiles): MEASURED on Desktop 2.159 (dataarcus-engine, business/beta/ship030/RECHECK-F1.md, 20 Oct 2026): at 15pt a
     // pill slicer 88 high cuts the text to its top third, 140 draws it whole (a button slicer hides a text its tile is too
@@ -156,15 +158,15 @@
     // as that text needs); the tooltip, the alt text and the bookmark keep the plain words.
     const RESET_GAP = '  ';
     const resetFit = (text, w, k) => {
-      const h = Math.ceil(Math.max(40 * k, 6 + 1.6 * LABEL));
+      const h = Math.ceil(Math.max(40 * k, buttonH(LABEL)));
       return { h, icon: textWidth(RESET_GAP + text, LABEL, false, font) + 10 + h <= w };
     };
     // Reset is only as wide as its icon and its text (the owner's design choice 7, 5 Oct 2026; Desktop showed the icon at
     // one end of a 274-wide rail button and the text at the other): the icon as wide as the button is high, the text
     // + 10 (measured, M3), within the room it has
-    const resetW = (text, k, room) => Math.min(room, Math.ceil(textWidth(RESET_GAP + text, LABEL, false, font) + 10 + Math.ceil(Math.max(40 * k, 6 + 1.6 * LABEL))));
+    const resetW = (text, k, room) => Math.min(room, Math.ceil(textWidth(RESET_GAP + text, LABEL, false, font) + 10 + Math.ceil(Math.max(40 * k, buttonH(LABEL)))));
     // the largest text size within 8-60 whose one line fits a text box h high (8 at least)
-    const boxFit = (h) => Math.max(8, Math.floor((h - 10) / 1.8));
+    const boxFit = Measure.boxFit;
     // A text box is top-aligned and has no vertical alignment: the middle of its text is about 1.2 x pt below the box's
     // top (measured in Desktop 2.158, DESKTOP-TESTS.md round 1: Segoe UI 3 + 1.19 x pt, Tahoma 1.12 x pt). centred(s, t):
     // the slot's y and height with the box moved down so the text's middle is the slot's, as far as the text's own height

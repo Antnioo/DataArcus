@@ -21,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const UI_LABELS = UI_LABELS_EN;
 
   const { clampHex, mix, contrast, generate } = E;
+  // (0.3.2 OP1) the font choices are the engine's list (text-measure.js's catalog), drawn here: the page has no copy
+  if ($('font')) $('font').innerHTML = E.FONTS.map((f) => `<option>${f}</option>`).join('');
 
   // ---------- state ----------
   let state;
@@ -428,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const c = lay(); applyPage(c); renderJson(); // the theme's corner radius follows the page size and corners
     // page size first: it is set once in Power BI and every number below depends on it
     $('pageSize').innerHTML = `<span class="tg-label">${L('Power BI page size', 'مقاس صفحة Power BI')}</span>
-      <div>${seg('page', [['1920x1080', `1920 × 1080<small>${L('16:9 · Power BI default', '16:9 · افتراضي Power BI')}</small>`], ['1280x720', `1280 × 720<small>${L('16:9 · older reports', '16:9 · تقارير أقدم')}</small>`], ['960x720', `960 × 720<small>4:3</small>`], ['custom', `${L('Custom', 'مخصص')}<small>${L('any size', 'أي مقاس')}</small>`]], c.page === 'custom' || PAGES[c.page] ? c.page : '1920x1080')}
+      <div>${seg('page', [[E.DEFAULT_PAGE, `${E.PAGES[E.DEFAULT_PAGE].join(' × ')}<small>${L('16:9 · Power BI default', '16:9 · افتراضي Power BI')}</small>`], ['1280x720', `1280 × 720<small>${L('16:9 · older reports', '16:9 · تقارير أقدم')}</small>`], ['960x720', `960 × 720<small>4:3</small>`], ['custom', `${L('Custom', 'مخصص')}<small>${L('any size', 'أي مقاس')}</small>`]], c.page === 'custom' || PAGES[c.page] ? c.page : E.DEFAULT_PAGE)}
         ${c.page === 'custom' ? `<div class="tg-custom"><label>${L('Width', 'العرض')}<input type="number" inputmode="numeric" data-l="pageW" min="${LIM.w[0]}" max="${LIM.w[1]}" step="1" value="${c.pageW}"></label><span aria-hidden="true">×</span><label>${L('Height', 'الارتفاع')}<input type="number" inputmode="numeric" data-l="pageH" min="${LIM.h[0]}" max="${LIM.h[1]}" step="1" value="${c.pageH}"></label></div>
         <small class="d-block mt-1 ${pageMsg || shapeMsg(c) ? 'tg-warn' : 'text-white-50'}" role="status">${[pageMsg, shapeMsg(c)].filter(Boolean).join(' ') || L('Match Format page › Canvas settings › Custom in Power BI.', 'طابقه مع <bdi dir="ltr">Format page › Canvas settings › Custom</bdi> في Power BI.')}</small>` : ''}</div>
       <small class="d-block mt-2 text-white-50">${L('Use the same size in Power BI: <b>Format page › Canvas settings</b>. All sizes and positions below follow it.', 'استخدم المقاس نفسه في Power BI: <b><bdi dir="ltr">Format page › Canvas settings</bdi></b>. كل المقاسات والمواضع أدناه تتبعه.')}</small>`;
@@ -567,8 +569,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // (0.2.9, A3-12: the writer is its modules first (0.3 J7: report-a11y.js before pbip-export.js), in this order; each written out with its own ?v= stamp;
     // audit 4's A4-5: text-measure.js first, the one text measurement the sizes use; 0.3.1 M1: the shared mirror engine,
     // report-mirror.js after the visual catalog it reads, before the writer whose Arabic charts it turns round)
-    const BUILDER = ['/assets/js/text-measure.min.js?v=20261027tt2', '/assets/js/story-titles.min.js?v=20261027tt2', '/assets/js/visual-types.min.js?v=20261019u1', '/assets/js/report-mirror.min.js?v=20261102mx7', '/assets/js/pbip-query.min.js?v=20261026lr1', '/assets/js/pbip-sizing.min.js?v=20261028fx5', '/assets/js/pbip-notes.min.js?v=20261028fx5b',
-      '/assets/js/label-limits.min.js?v=20261027r4a', '/assets/js/pbip-page.min.js?v=20261028fx5b', '/assets/js/report-a11y.min.js?v=20261025sq5', '/assets/js/pbip-export.min.js?v=20261027tt2n'];
+    const BUILDER = ['/assets/js/text-measure.min.js?v=20261102op1', '/assets/js/story-titles.min.js?v=20261027tt2', '/assets/js/visual-types.min.js?v=20261019u1', '/assets/js/report-mirror.min.js?v=20261102mx7', '/assets/js/pbip-query.min.js?v=20261026lr1', '/assets/js/pbip-sizing.min.js?v=20261102op1', '/assets/js/pbip-notes.min.js?v=20261028fx5b',
+      '/assets/js/label-limits.min.js?v=20261027r4a', '/assets/js/pbip-page.min.js?v=20261102op1', '/assets/js/report-a11y.min.js?v=20261025sq5', '/assets/js/pbip-export.min.js?v=20261027tt2n'];
     // (0.3.1 FX5: the page loads the sizes and what they read, for the canvas's bars; a script already on the page is not
     // loaded again)
     const onPage = (src) => [...document.scripts].some((x) => x.src === new URL(src, location.href).href);
@@ -843,7 +845,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // (layout-check.js, the engine the MCP runs before it writes) on the project in memory, before it is offered: "0
     // problems Power BI Desktop would show" or the list, which stays in view; the download is never held back. Structure
     // only: the files' types, places, sizes and settings, and the model's column types when your own model is chosen
-    const CHECK = ['../assets/js/visual-types.min.js?v=20261019u1', '../assets/js/report-rules.min.js?v=20261028fx3', '../assets/js/layout-check.min.js?v=20261027r4a'];
+    const CHECK = ['../assets/js/visual-types.min.js?v=20261019u1', '../assets/js/report-rules.min.js?v=20261102op1', '../assets/js/layout-check.min.js?v=20261027r4a'];
     const loadCheck = () => (window.DALayoutCheck ? Promise.resolve(window.DALayoutCheck) : loadBuilder().then(() => CHECK.reduce((q, src) => q.then(() => loadScript(src)), Promise.resolve())).then(() => window.DALayoutCheck));
     const ckBox = $('pbipCheck');
     const showCheck = (C, files, m) => {
@@ -1028,7 +1030,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!beforeExample) { beforeExample = JSON.stringify(state); try { localStorage.setItem(UNDO, beforeExample); } catch (e) { /* private mode */ } }
     const p = PRESETS['Desert Gulf'];
     state = { preset: 'Desert Gulf', name: 'Executive Sales', font: 'Segoe UI', data: p.data.slice(), ui: { ...p.ui },
-      layout: { preset: 'exec', kpis: 4, filters: true, fpos: 'top', dir: isAr() ? 'rtl' : 'ltr', v: 3, radius: 8, shadow: true, header: true, kpiBar: 'top', kpiBarC: 'data', headLine: 'full', samples: true, transparent: true, page: '1920x1080', hh: 64, logoW: 200 } };
+      layout: { preset: 'exec', kpis: 4, filters: true, fpos: 'top', dir: isAr() ? 'rtl' : 'ltr', v: 3, radius: 8, shadow: true, header: true, kpiBar: 'top', kpiBarC: 'data', headLine: 'full', samples: true, transparent: true, page: E.DEFAULT_PAGE, hh: 64, logoW: 200 } };
     pageMsg = ''; renderPresets(); renderInputs(); renderAll();
     $('exampleUndo').hidden = false;
     openStep('layout'); $('layout').scrollIntoView({ behavior: 'smooth', block: 'start' });

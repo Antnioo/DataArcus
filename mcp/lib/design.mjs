@@ -9,6 +9,9 @@ export const E = require('../../assets/js/design-engine.js');
 export const { DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, SCHEMA } = E;
 // The engine's parts the MCP tools use (the audit's A2-8: server.mjs reaches the engine only through this adapter; the
 // adapter itself reads and writes no file)
+// (0.3.2 OP1) the default page, the engine's one place: its name and its size in page units
+export const { DEFAULT_PAGE } = E;
+export const [DEFAULT_PAGE_W, DEFAULT_PAGE_H] = E.PAGES[E.DEFAULT_PAGE];
 export const { PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, REPORT_TEXTS, texts, clampHex, lum, buildTheme, themeScaleOf, scaleTheme, textScale, projectPages, themeName, fileBase, imageSize, isSmall } = E;
 // (0.3.1 GL1) the glass look: its cards and contrast (glassLook) and the page picture (glassPng), the engine's
 export const { isGlass, glassLook, glassPng } = E;
@@ -252,7 +255,7 @@ export function layoutFrom(l, base, fix) {
   if (l.page != null) {
     if (typeof l.page === 'object') Object.assign(out, { page: 'custom', pageW: l.page.w, pageH: l.page.h });
     else if (E.PAGES[l.page]) out.page = l.page;
-    else fix('layout.page', l.page, out.page || '1920x1080', `use ${Object.keys(E.PAGES).join(', ')} or { w, h }`);
+    else fix('layout.page', l.page, out.page || E.DEFAULT_PAGE, `use ${Object.keys(E.PAGES).join(', ')} or { w, h }`);
   }
   if (l.radius != null) { if (+l.radius >= 0 && +l.radius <= 24) out.radius = +l.radius; else fix('layout.radius', l.radius, out.radius == null ? 8 : out.radius, 'corners are 0 to 24'); }
   ['shadow', 'transparent', 'header'].forEach((k) => { if (l[k] != null) out[k] = !!l[k]; });

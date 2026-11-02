@@ -10,7 +10,8 @@ import { ROOT, visitor } from './lib.mjs';
 import { FILE, PAGES_TO_CHECK, unpack, captureAll, compare, PROJECT_FILE, unpackProjects, captureProjects, compareProjects } from './capture-design-fixtures.mjs';
 
 // the engine exactly as the lab page loads it (minified)
-const load = (file) => { const m = { exports: {} }; new Function('module', 'exports', 'self', fs.readFileSync(path.join(ROOT, 'assets/js', file), 'utf8'))(m, m.exports, undefined); return m.exports; };
+// (0.3.2 OP1) the engine reads text-measure.js (the font catalog, the measured heights): its require gets the .min.js too
+const load = (file) => { const m = { exports: {} }; new Function('module', 'exports', 'self', 'require', fs.readFileSync(path.join(ROOT, 'assets/js', file), 'utf8'))(m, m.exports, undefined, (dep) => load(path.basename(dep).replace(/(\.min)?\.js$/, '.min.js'))); return m.exports; };
 const copy = (o) => JSON.parse(JSON.stringify(o));
 
 // the saved design the page had before the reload that captured a case (the capture script's own steps, replayed):
@@ -167,7 +168,14 @@ export default async function ({ browser, url }) {
   for (const page of Object.values(PAGES_TO_CHECK)) {
     const html = fs.readFileSync(path.join(ROOT, page), 'utf8');
     const options = (id) => { const m = html.match(new RegExp(`<select[^>]*id="${id}"[^>]*>([\\s\\S]*?)</select>`)); return m ? [...m[1].matchAll(/<option([^>]*)>([^<]*)<\/option>/g)].map((o) => ((o[1].match(/value="([^"]*)"/) || [])[1] ?? o[2])) : null; };
-    check(JSON.stringify(options('font')) === JSON.stringify(E.FONTS), `${page}: fonts ${JSON.stringify(options('font'))} are not the engine's ${JSON.stringify(E.FONTS)}`);
+    // (0.3.2 OP1) the font choices are drawn from the engine's list (text-measure.js's catalog): the page has no copy of
+    // them, and the rendered list is the engine's
+    check(JSON.stringify(options('font')) === '[]', `${page}: the page writes its own font options ${JSON.stringify(options('font'))} (they come from the engine)`);
+    const fv = await visitor(browser);
+    await fv.pg.goto(`${url}${page}?lang=en`, { waitUntil: 'networkidle' });
+    const shown = await fv.pg.$$eval('#font option', (os) => os.map((o) => o.value));
+    check(JSON.stringify(shown) === JSON.stringify(E.FONTS), `${page}: the rendered fonts ${JSON.stringify(shown)} are not the engine's ${JSON.stringify(E.FONTS)}`);
+    await fv.ctx.close();
     for (const [k, id] of Object.entries({ labels: 'csLabels', grid: 'csGrid', legend: 'csLegend', axis: 'csAxis', table: 'csTable' }))
       check(JSON.stringify(options(id)) === JSON.stringify(E.CHART_OPTIONS[k]), `${page}: chart ${k} choices ${JSON.stringify(options(id))} are not the engine's ${JSON.stringify(E.CHART_OPTIONS[k])}`);
   }

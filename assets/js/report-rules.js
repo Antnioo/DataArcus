@@ -59,20 +59,21 @@
     'matrix', 'multiRowCard', 'pageNavigator', 'pivotTable', 'qnaVisual', 'rdlVisual', 'scorecard', 'shape', 'slicer', 'table', 'tableEx', 'textbox']);
   const VisualTypes = () => { try { return typeof module !== 'undefined' && module.exports ? require('./visual-types.js') : root.DAVisualTypes || null; } catch (e) { return null; } };
   const defaultTitle = (type) => { const V = VisualTypes(); return DEFAULT_TITLE_OFF.includes(type) ? 'off' : V && V.NATIVE_TYPES && V.NATIVE_TYPES.includes(type) ? 'on' : 'not known'; };
+  // text-measure.js: the text widths, the measured heights, the 8-60 range and the measured fonts, the one copy the
+  // report writer uses too (audit 4's A4-5: the rules never load the writer; 0.3.2 OP1: one place for every fact)
+  const TM = () => (typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure);
+  const textWidth = () => TM().textWidth;
   // The text rules were measured in these fonts; on another font a finding is an estimate (a note, never an error)
-  const MEASURED_FONTS = ['segoe ui', 'tahoma'];
-  const measuredFont = (f) => !f || MEASURED_FONTS.includes(String(f).toLowerCase().replace(/^'|'$/g, '').split(',')[0].trim());
+  const measuredFont = (f) => TM().measuredFont(f);
   // The measured numbers, in page units (a point size takes the same page units on any page, as measured). The one
   // copy: scripts/tests/report-check.mjs takes them from here (MEASURED).
-  const BOX = (t, n) => Math.ceil(10 + 1.8 * t * (n || 1));        // a text box: 10 + 1.8 x pt a line
-  const BTN_H = (t) => Math.ceil(6 + 1.6 * t);                     // a button's one line (Arabic needs the 6)
+  const BOX = (t, n) => TM().boxH(t, n);                           // a text box: 10 + 1.8 x pt a line
+  const BTN_H = (t, n) => TM().buttonH(t, n);                      // a button: 6 + 1.6 x pt a line (Arabic needs the 6)
   const BTN_TW = (t, n) => 0.45 * 4 / 3 * t * n;                   // a button's text, 0.45 em a character
-  // a button with an icon: its text measured with the per-letter widths, + 10 (round 10, M3); the widths are
-  // text-measure.js's, the one copy the report writer uses too (audit 4's A4-5: the rules never load the writer)
-  const textWidth = () => (typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure).textWidth;
+  // a button with an icon: its text measured with the per-letter widths, + 10 (round 10, M3)
   const BTN_ICON_TW = (text, t, font) => textWidth()(text, t, false, font) + 10;
   const CH = (t) => t * 0.55 * 4 / 3;                              // a text box's character, 0.55 em
-  const SLICER = (t) => Math.ceil(16 + 4 * t);                     // a dropdown slicer, title and box
+  const SLICER = (t) => TM().slicerH(t);                           // a dropdown slicer, title and box: 16 + 4 x pt
   const PAGE_TWO_LINES = (t, font) => (/^tahoma/i.test(String(font || '')) ? 3.2 : 3.5) * t;   // a page button's two lines
   // (A4-6, audit 4) the lines a page button shows at a height: two only when two fit (SRC.pageWrap), one when one does
   const PAGE_LINES = (h, t, font) => (h + 0.5 >= PAGE_TWO_LINES(t, font) ? 2 : h + 0.5 >= BTN_H(t) ? 1 : 0);
@@ -86,7 +87,7 @@
   // (SRC.barRows; the writer's tooltip charts and the design engine's categoryFit count the same)
   const TIP_ROWS = (h, axis) => Math.floor((h - 45 - 8 - (axis ? 38 : 0)) / 22.2);
   const TIP_ROWS_6 = (h) => Math.floor((h - 40) / 27);             // a tooltip bar chart at 8pt labels: 27 a bar + 40 (SRC.tipTrend)
-  const MEASURED = { BOX, BTN_H, BTN_TW, BTN_ICON_TW, CH, SLICER, PAGE_TWO_LINES, PAGE_LINES, PAGE_TW, TEXT_MID, TIP_ROWS, TIP_ROWS_6, PHONE_W: 323, TEXT_MIN: 8, TEXT_MAX: 60 };
+  const MEASURED = { BOX, BTN_H, BTN_TW, BTN_ICON_TW, CH, SLICER, PAGE_TWO_LINES, PAGE_LINES, PAGE_TW, TEXT_MID, TIP_ROWS, TIP_ROWS_6, PHONE_W: 323, get TEXT_MIN() { return TM().TEXT_MIN; }, get TEXT_MAX() { return TM().TEXT_MAX; } };
   const ps1 = (x, c) => entries(((((x.json.visual || {}).query || {}).queryState || {}).Values || {}).projections).indexOf(c.p) + 1;
   const isPageButton = (x) => x.type === 'actionButton' && str(plain(((x.json.visual || {}).visualContainerObjects || {}).visualLink).type) === 'PageNavigation';
   const STATES = ['default', 'hover', 'press', 'pressed', 'disabled', 'selected'];
