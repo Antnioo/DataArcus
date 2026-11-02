@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.1
+- **A third test run in Power BI Desktop:** the day names beside a heatmap by weekday no longer wrap onto two lines, so
+  they stay level with the grid's rows without a scrollbar of their own, and a chart lined up under a heatmap's grid
+  stays under the same hours as in English.
 - **Arabic twin checks on thousands of made-up reports:** a button widened for its Arabic text no longer pushes a chart
   beside it off the page (it takes width from a slicer only where everything it moves stays on the page), a bar chart
   kept over a table stays on the page, and the plan names every visual moved beside a widened button.

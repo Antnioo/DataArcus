@@ -137,12 +137,15 @@ try {
   const nm = Array.isArray(names) ? names.find((v) => hm && v.position.y === hm.position.y) : null;
   const R = Math.ceil(Math.max(TM.textWidth('Wednesday', 10, false, 'Segoe UI'), TM.textWidth('الأربعاء', 10, false, 'Segoe UI')) + 12);   // the English row header: the longest name + the cell's padding (5-6 a side)
   const pad0 = (v, side) => { const e = ((v.visual.visualContainerObjects || {}).padding || []).find((x) => !x.selector); return e && e.properties[side] ? num(e.properties[side]) : null; };
-  chk(() => hm && hm.position.width - 1 >= HB.width - R - 0.5, () => `H1. the grid keeps its English cells' width (the box ${HB.width} less the English row header ${R}; the twin's matrix less its hidden 1): ${hm && hm.position.width}`);
-  chk(() => nm && Math.abs(nm.position.width - (R - 1)) < 0.5 && pad0(nm, 'left') === 0 && pad0(nm, 'right') === 0 && Math.abs(nm.position.x - (hm.position.x + hm.position.width)) < 0.5 && Math.abs(hm.position.width + nm.position.width - HB.width) < 0.5,
-    () => `H2. the names take the hidden row headers' room (${R - 1}, no padding of their own), the pair in the box: ${JSON.stringify([hm && hm.position, nm && nm.position, nm && nm.visual.visualContainerObjects.padding])}`);
-  const ch = at('p1heat', 'colHours'), gridC = (x, w, lead) => x + (lead + w) / 2;
-  const off = ch && hm ? (gridC(hm.position.x, hm.position.width, 1) - (ch.position.x + ch.position.width / 2)) + (gridC(HB.x, HB.width, R) - (CB.x + CB.width / 2)) : NaN;
-  chk(() => Math.abs(off) <= 3, () => `H3. the hour chart 52c8e333 under the grid lines up as in English (the grid's centre against the chart's, mirrored): ${off}`);
+  // (MX7, moved on purpose: the names table takes 6 more for a table cell's padding from the matrix's padding beside its
+  // grid, 6 -> 0; the grid is measured less that padding, as MX5's suite does, and the hour chart keeps English's offset
+  // from the grid's left edge, the MX7 rule, in place of the old centre against centre)
+  chk(() => hm && Math.abs(hm.position.width - 1 - (pad0(hm, 'left') || 0) - (HB.width - 6 - R)) < 0.5, () => `H1. the grid keeps its English cells' width (the box ${HB.width} less its padding 6 less the English row header ${R}; the twin's matrix less its hidden 1 and its padding): ${hm && hm.position.width}`);
+  chk(() => nm && Math.abs(nm.position.width - (R - 1 + 6)) < 0.5 && pad0(nm, 'left') === 0 && pad0(nm, 'right') === 0 && Math.abs(nm.position.x - (hm.position.x + hm.position.width)) < 0.5 && Math.abs(hm.position.width + nm.position.width - HB.width) < 0.5,
+    () => `H2. the names take the hidden row headers' room and the 6 of a table cell's padding (${R - 1 + 6}, no padding of their own), the pair in the box: ${JSON.stringify([hm && hm.position, nm && nm.position, nm && nm.visual.visualContainerObjects.padding])}`);
+  const ch = at('p1heat', 'colHours');
+  const off = ch && hm ? (ch.position.x - (hm.position.x + (pad0(hm, 'left') || 0) + 1)) - (CB.x - (HB.x + R)) : NaN;
+  chk(() => Math.abs(off) <= 0.5, () => `H3. the hour chart 52c8e333 keeps English's offset from the grid's left edge (MX7): ${off}`);
   const nnames = Array.isArray(names) ? names.length : -1;
   chk(() => nnames === 1, () => `H4. a heatmap whose row header's width is not set (MX5), one too short, one by region: no names table (B1): ${nnames} names tables`);
   // ---------- B: the plan names each heatmap kept B1 with its reason ----------

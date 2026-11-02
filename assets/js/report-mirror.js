@@ -626,10 +626,17 @@
   // 202; Call Center p1: 7 and a header whole in 188 at 10): a row is the line of its text, 1.887 x pt (15.1 at 8pt,
   // DESKTOP-TESTS "Item 3, the table"), + 2 of padding; the header one row, a total one, a title 1.6 rows, the box's own
   // margins 6 (ER p1: 8 rows of 11pt are 182 and were whole in 188, so the margins are at most 6).
-  // Returns { ok: true, textSize, width (the names table's) } or { ok: false, why }
+  // (0.3.1 MX7, laptop part 12: the names table at the strip less 1, no column width, no word wrap setting: Desktop wrapped
+  // «Mon» as «M / on», the rows grew off the grid's and the table drew its own scrollbar) a table cell's padding is
+  // wider than a matrix row header's (5 to 6 a side, DESKTOP-TESTS "Item 3, the table"), so the names table takes the
+  // strip less 1 plus TABLE_PAD_MORE, from the box's slack: the matrix's own padding beside its grid (English's right,
+  // the twin's left: o.mirrored), which the twin's matrix gives up, so its grid keeps English's width. Less padding
+  // there than that: B1, said.
+  // Returns { ok: true, textSize, width (the names table's), slack } or { ok: false, why }
   const WEEKDAY = /^(week ?day|day ?name|day of (the )?week|dayofweek|week ?day name)$/i;
-  const ROW_LINE = 15.1 / 8, ROW_PAD = 2, ROW_TITLE = 1.6, ROW_MARGINS = 6;
-  function heatmapBeside(json) {
+  const ROW_LINE = 15.1 / 8, ROW_PAD = 2, ROW_TITLE = 1.6, ROW_MARGINS = 6, TABLE_PAD_MORE = 6;
+  const padOf = (json, side) => { const e = (entries(json.visual.visualContainerObjects, 'padding') || []).find((x) => !x.selector && isObj(x.properties) && x.properties[side] !== undefined); const n = e ? parseFloat(String(lit(e.properties[side])).replace(/D$/, '')) : 0; return Number.isFinite(n) ? n : 0; };
+  function heatmapBeside(json, opts) {
     if (kindOf(json) !== 'matrix' || !isObj(json.position) || !Number.isFinite(json.position.height)) return { ok: false, why: 'not a matrix' };
     const v = json.visual, rows = projections(v.query, 'Rows'), cols = projections(v.query, 'Columns');
     if (!cols || !cols.length) return { ok: false, why: 'no Columns field' };
@@ -645,19 +652,31 @@
     const R = set ? parseFloat(String(lit(set.properties.value)).replace(/D$/, '')) : NaN;
     if (!set) return { ok: false, why: 'its row header\'s width is not set in English (Desktop sizes it from the data, never read): names beside it could not keep English\'s grid width' };
     if (!Number.isFinite(R) || R < 2) return { ok: false, why: 'its row header\'s width in English is not a width the names can take' };
-    if (json.position.width <= (R - 1) * 2) return { ok: false, why: 'its box is too narrow for the names beside its grid' };
-    return { ok: true, textSize: pt, width: round(R - 1) };
+    const slack = padOf(json, opts && opts.mirrored ? 'left' : 'right');
+    if (slack < TABLE_PAD_MORE - 0.01) return { ok: false, why: `its box has no room beside its grid for the names table's cell padding (${TABLE_PAD_MORE} more than a row header's; its padding there ${round(slack)}): names beside it would wrap` };
+    if (json.position.width <= (R - 1 + TABLE_PAD_MORE) * 2) return { ok: false, why: 'its box is too narrow for the names beside its grid' };
+    return { ok: true, textSize: pt, width: round(R - 1 + TABLE_PAD_MORE), slack: TABLE_PAD_MORE };
   }
   // the twin's heatmap (mirrored) and its names table: the names table in the room of the English row headers (no padding
   // of its own at its sides, so its column is all of it), the matrix the rest of the box, its grid filling it
   // (columnHeaders.columnAdjustment "growToFit", Microsoft's capabilities 0.1.3), so the names stand at its right edge.
   // Returns { matrix, table } or null
+  // (MX7) json: the twin's (mirrored) matrix; its left padding gives the names table the cell padding's room. The names
+  // table: its column set to its width, word wrap off on its values and header (tableEx values.wordWrap,
+  // columnHeaders.wordWrap, Microsoft's capabilities), the matrix's text size and row padding, so its rows are the grid's
   function heatmapNames(json, o) {
-    const h = heatmapBeside(json); if (!h.ok) return null;
+    const h = heatmapBeside(json, { mirrored: true }); if (!h.ok) return null;
     const r = rowNamesBeside(json, Object.assign({}, o || {}, { width: h.width })); if (!r) return null;
     plainEntry(r.matrix.visual.objects, 'columnHeaders').properties.columnAdjustment = str('growToFit');
+    const mp = plainEntry(r.matrix.visual.visualContainerObjects, 'padding').properties;
+    mp.left = mk(round(padOf(json, 'left') - h.slack) + 'D');
     const vco = r.table.visual.visualContainerObjects, pe = plainEntry(vco, 'padding').properties;
     pe.left = mk('0D'); pe.right = mk('0D');
+    const to = r.table.visual.objects, rq = to.columnFormatting[0].selector.metadata;
+    to.columnWidth = [{ properties: { value: mk(h.width + 'D') }, selector: { metadata: rq } }];
+    to.values[0].properties.wordWrap = mk('false');
+    Object.assign(to.columnHeaders[0].properties, { wordWrap: mk('false'), autoSizeColumnWidth: mk('false') });
+    const g = to.grid[0].properties; if (g.textSize === undefined) g.textSize = mk(h.textSize + 'D');
     return r;
   }
   // json: a visual.json; { ok: true } when the twin writes it as a table, else { ok: false, why }

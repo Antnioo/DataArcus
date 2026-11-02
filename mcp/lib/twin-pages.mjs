@@ -241,6 +241,43 @@ function keepView(page, visuals, at) {
   });
   return out;
 }
+// (0.3.1 MX7, laptop part 12: Call Center's hour chart 52c8e333 starts 27 left of its heatmap's grid and ends 8 right of
+// it in English; mirrored about its own box it started 8 left and ended 27 right, its bars still left to right, so they
+// stood a cell right of their hours) a matrix keeps its columns in English's left-to-right order (Power BI's matrix has
+// no right-to-left setting), so a chart lined up with its grid keeps English's offset from the grid's left edge: the
+// grid's left is the box's x, its left padding and its row header strip (the row field's columnWidth: 1 when the twin
+// writes its names beside, English's when set, else not counted on either side). Lined up: same parent, a chart with a
+// category axis, its span shared with the matrix's box by 0.8 of the narrower, under it (its top below the matrix's
+// middle, within 24 of its bottom) or over it (the mirror of that). Kept inside its page or group; named in movedByRule.
+const GRID_CHARTS = /^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|lineChart|areaChart|stackedAreaChart|hundredPercentStackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart|ribbonChart)$/;
+function underGrids(pg, r, pageW) {
+  const lit0 = (p) => (p && p.expr && p.expr.Literal ? parseFloat(String(p.expr.Literal.Value).replace(/D$/, '')) : NaN);
+  const qs = (v) => (isObj(v) && isObj(v.visual) && isObj(v.visual.query) && isObj(v.visual.query.queryState) ? v.visual.query.queryState : {});
+  const has = (v, k) => isObj(qs(v)[k]) && Array.isArray(qs(v)[k].projections) && qs(v)[k].projections.length > 0;
+  const pad = (v) => { const e = (isObj(v.visual.visualContainerObjects) && Array.isArray(v.visual.visualContainerObjects.padding) ? v.visual.visualContainerObjects.padding : []).find((x) => isObj(x) && !x.selector && isObj(x.properties) && x.properties.left !== undefined); const n = e ? lit0(e.properties.left) : 0; return Number.isFinite(n) ? n : 0; };
+  const strip = (v) => { const rq = qs(v).Rows.projections[0] && qs(v).Rows.projections[0].queryRef, cw = isObj(v.visual.objects) && Array.isArray(v.visual.objects.columnWidth) ? v.visual.objects.columnWidth : [];
+    const e = cw.find((x) => isObj(x) && isObj(x.selector) && x.selector.metadata === rq && isObj(x.properties)); const n = e ? lit0(e.properties.value) : NaN; return Number.isFinite(n) ? n : null; };
+  const parent = (v) => (v.parentGroupName != null ? String(v.parentGroupName) : '');
+  const widthIn = (v) => { const g = parent(v) ? r.visuals.find((x) => isObj(x) && String(x.name) === parent(v)) : null; return g ? (posOf(g) || {}).width : pageW; };
+  pg.visuals.forEach((m, i) => {
+    const en = m.json, tw = r.visuals[i];
+    if (!isObj(en) || !isObj(tw) || Mirror.kindOf(en) !== 'matrix' || !has(en, 'Rows') || !has(en, 'Columns') || !posOf(en) || !posOf(tw)) return;
+    const sEn = strip(en), sTw = strip(tw), both = sEn != null && sTw != null;
+    const leftEn = posOf(en).x + pad(en) + (both ? sEn : 0), leftTw = posOf(tw).x + pad(tw) + (both ? sTw : 0), hb = posOf(en);
+    pg.visuals.forEach((c, j) => {
+      const ce = c.json, ct = r.visuals[j], cb = posOf(ce), q = posOf(ct);
+      if (j === i || !cb || !q || parent(ce) !== parent(en) || !GRID_CHARTS.test(String(ce.visual && ce.visual.visualType)) || !has(ce, 'Category')) return;
+      const share = Math.min(cb.x + cb.width, hb.x + hb.width) - Math.max(cb.x, hb.x);
+      if (share < 0.8 * Math.min(cb.width, hb.width)) return;
+      const under = cb.y >= hb.y + hb.height / 2 && cb.y <= hb.y + hb.height + 24, over = cb.y + cb.height <= hb.y + hb.height / 2 && cb.y + cb.height >= hb.y - 24;
+      if (!under && !over) return;
+      const W = widthIn(ct), want = leftTw + (cb.x - leftEn), x = Mirror.round(Number.isFinite(W) ? Math.max(0, Math.min(W - q.width, want)) : want);
+      if (Math.abs(x - q.x) < 0.01) return;
+      q.x = x;
+      (r.moved = r.moved || []).push({ visual: String(ct.name), rule: 'kept lined up with its heatmap\'s grid (English\'s offset from its left edge)' + (Math.abs(x - want) > 0.01 ? ', moved to stay inside its page' : '') });
+    });
+  });
+}
 function fitHeaders(page, visuals, origByName, ctx, at) {
   const out = { headers: [], headersCut: [] }, sc = isObj(page) && Number.isFinite(page.height) ? page.height / 1080 : 1;
   visuals.forEach((v) => {
@@ -582,6 +619,8 @@ export function buildTwin(P, labels) {
     const extra = [];
     if (!P.keepLtr(pg)) r.visuals.forEach((vj, i) => { const o = pg.visuals[i] && pg.visuals[i].json; if (!o || !Mirror.heatmapBeside(o).ok) return;
       let hn = null; try { hn = Mirror.heatmapNames(vj); } catch (e) { hn = null; } if (!hn) return; r.visuals[i] = hn.matrix; extra.push({ from: String(o.name), json: hn.table }); });
+    // (0.3.1 MX7) a chart lined up under or over a heatmap's grid keeps English's offset from the grid's left edge
+    if (!P.keepLtr(pg)) { try { underGrids(pg, r, pageOf(pg).width); } catch (e) { /* a shape not expected: left as it is */ } }
     const autoTitled = new Map();   // (FX3b) visual name -> the title text written for Power BI's automatic title
     r.visuals.forEach((vj) => {
       const autos = autoTitlesOf(pg.id, vj);
