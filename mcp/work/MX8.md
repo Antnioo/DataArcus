@@ -30,8 +30,9 @@
   "new overlap introduced" is B2new): B2new-1, 6, 8, 9, 10, 11, 12 each 1 new overlap on this branch before the fix,
   0 after (left: P1, D1, lab-only, as on eb09d194).
 - **Areas on fa20395b (item 3):** twin 31, arabic 15, report 42, checker 7, core 8 suites passed; fx1 5 of 5 (22); lint 0.
-- **State:** item 3 in fa20395b; CI again next (CI 41530448902 was green on 8613eebe, before it).
-- **Resume:** CI's result.
+- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41538598174 on 3f9a6e60 (Linux,
+  Windows, macOS; items 1-3). Before item 3: run 41530448902 green on 8613eebe. After 3f9a6e60 only this note changed.
+- **Resume:** the reviewer's merge; laptop part 14 (below).
 
 ## Plan, per item
 1. The pinned capabilities (powerbi-core-visual-schema through the validator's provider, 0.5.0): a column chart's inside
