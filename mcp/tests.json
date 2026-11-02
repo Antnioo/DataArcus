@@ -67,6 +67,7 @@
     { "file": "test-0.3.0-preview-match.mjs", "name": "preview-match", "area": "report", "purpose": "the approval window's preview draws what Desktop draws" },
     { "file": "test-0.3.0-approval-complete.mjs", "name": "approval-complete", "area": "safety", "purpose": "every approval page says exactly what its click writes" },
     { "file": "test-0.3.0-powerbi-2026-10.mjs", "name": "powerbi-2026-10", "area": "platform", "purpose": "Microsoft's October 2026 update and the pinned visual catalog" },
+    { "file": "test-0.3.2-deps.mjs", "name": "dp1", "area": "platform", "purpose": "the packages pinned once in package.json and above the audit's fixed versions" },
     { "file": "test-0.3.0-language-toggle.mjs", "name": "language-toggle", "area": "twin", "purpose": "the EN-AR copy: one report with both languages and a toggle" },
     { "file": "test-r1-see-the-result.mjs", "name": "r1-see-the-result", "area": "model", "purpose": "the \"see the result\" prototypes (shadow model)" },
     { "file": "test-0.3.0-smooth-lines.mjs", "name": "smooth-lines", "area": "report", "purpose": "smooth line charts with findable points" },
