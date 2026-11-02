@@ -26,6 +26,11 @@ const ROOT = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataa
 process.env.DATAARCUS_ROOT = ROOT;
 fs.cpSync(path.join(HERE, 'fixtures', 'twin-project'), path.join(ROOT, 'twin'), { recursive: true });
 fs.cpSync(path.join(HERE, 'fixtures', 'health-project'), path.join(ROOT, 'health'), { recursive: true });
+// (CI's Windows checkout writes the fixtures' text files with CRLF: the redesign's digest is over the original's bytes) the
+// copies get LF, as the repository holds them, so every OS plans from the same bytes
+const lf = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) return lf(f);
+  const b = fs.readFileSync(f); if (!b.includes(0) && b.includes(13)) fs.writeFileSync(f, b.toString('utf8').replace(/\r\n/g, '\n')); });
+lf(path.join(ROOT, 'twin')); lf(path.join(ROOT, 'health'));
 // the tiny model (made up): sales by region and month, an Arabic column, a measure with a dynamic format
 const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"A"}, {}) in Source' } }], col = (name, dataType) => ({ name, dataType, sourceColumn: name });
 const bim = { compatibilityLevel: 1567, model: { tables: [
