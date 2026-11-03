@@ -1,0 +1,71 @@
+{
+  "failures": {
+    "P1": [
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v15/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v18/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v6/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v15/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v18/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v6/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v15/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v18/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v6/visual.json"
+        ]
+      }
+    ],
+    "D1": [
+      {
+        "why": "byte difference between independent plans",
+        "files": [
+          "Synthetic AR.Report/.platform"
+        ]
+      }
+    ],
+    "B2": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v15",
+          "p0/v18"
+        ]
+      }
+    ],
+    "B2new": [
+      {
+        "why": "new overlap introduced, said in pictureChecks.newOverlaps",
+        "files": [
+          "p0/v15",
+          "p0/v18",
+          "English [{\"x\":785,\"y\":363,\"width\":101,\"height\":81,\"z\":15000},{\"x\":230,\"y\":429,\"width\":171,\"height\":288,\"z\":18000}]",
+          "Arabic [{\"x\":904,\"y\":363,\"width\":101,\"height\":81,\"z\":15000},{\"x\":879,\"y\":429,\"width\":171,\"height\":288,\"z\":18000}]",
+          "plan on v15: movedByRule: a bar chart over a table or matrix that stays left to right: kept on it, its bars' direction kept",
+          "plan on v18: none",
+          "in pictureChecks.newOverlaps: true"
+        ]
+      }
+    ]
+  },
+  "extra": {
+    "validatorOriginal": [
+      "PBIR_QUERY_STATE_MISSING"
+    ],
+    "normalizedRepeat": true,
+    "normalizedRenamed": true
+  }
+}

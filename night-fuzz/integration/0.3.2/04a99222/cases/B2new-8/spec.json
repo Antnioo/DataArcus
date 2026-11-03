@@ -1,0 +1,109 @@
+{
+  "pages": [
+    {
+      "id": "p0",
+      "width": 1280,
+      "height": 720,
+      "visuals": [
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v3",
+          "position": {
+            "x": 312,
+            "y": 406,
+            "width": 457,
+            "height": 297,
+            "z": 3000
+          },
+          "visual": {
+            "visualType": "slicer"
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v10",
+          "position": {
+            "x": 1214,
+            "y": 456,
+            "width": 66,
+            "height": 158,
+            "z": 10000
+          },
+          "visual": {
+            "visualType": "actionButton",
+            "objects": {
+              "text": [
+                {
+                  "properties": {
+                    "text": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "'Synthetic action page 2 visual 10'"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "icon": [
+                {
+                  "properties": {
+                    "shapeType": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "'rightArrow'"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v13",
+          "position": {
+            "x": 1102,
+            "y": 360,
+            "width": 178,
+            "height": 328,
+            "z": 13000
+          },
+          "visual": {
+            "visualType": "pivotTable"
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v16",
+          "position": {
+            "x": 91,
+            "y": 361,
+            "width": 175,
+            "height": 306,
+            "z": 16000
+          },
+          "visual": {
+            "visualType": "clusteredBarChart"
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v17",
+          "position": {
+            "x": 434,
+            "y": 359,
+            "width": 378,
+            "height": 208,
+            "z": 17000
+          },
+          "visual": {
+            "visualType": "pivotTable"
+          }
+        }
+      ]
+    }
+  ]
+}

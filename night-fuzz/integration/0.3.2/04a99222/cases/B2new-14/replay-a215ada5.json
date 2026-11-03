@@ -1,0 +1,74 @@
+{
+  "failures": {
+    "P1": [
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v1/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v11/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v6/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v8/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v1/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v11/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v6/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v8/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v1/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v11/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v6/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v8/visual.json"
+        ]
+      }
+    ],
+    "D1": [
+      {
+        "why": "byte difference between independent plans",
+        "files": [
+          "Synthetic AR.Report/.platform"
+        ]
+      }
+    ],
+    "B2": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v1",
+          "p0/v6"
+        ]
+      }
+    ],
+    "B2new": [
+      {
+        "why": "new overlap introduced, said in pictureChecks.newOverlaps",
+        "files": [
+          "p0/v1",
+          "p0/v6",
+          "English [{\"x\":335,\"y\":472,\"width\":312,\"height\":108,\"z\":1000},{\"x\":717,\"y\":199,\"width\":63,\"height\":329,\"z\":6000}]",
+          "Arabic [{\"x\":503,\"y\":472,\"width\":312,\"height\":108,\"z\":1000},{\"x\":500,\"y\":199,\"width\":63,\"height\":329,\"z\":6000}]",
+          "plan on v1: movedByRule: moved with a button beside it",
+          "plan on v6: none",
+          "in pictureChecks.newOverlaps: true"
+        ]
+      }
+    ]
+  },
+  "extra": {
+    "validatorOriginal": [
+      "PBIR_QUERY_STATE_MISSING"
+    ],
+    "normalizedRepeat": true,
+    "normalizedRenamed": true
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "failures": {
+    "P1": [
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v20/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v20/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v20/visual.json"
+        ]
+      }
+    ],
+    "D1": [
+      {
+        "why": "byte difference between independent plans",
+        "files": [
+          "Synthetic AR.Report/.platform"
+        ]
+      }
+    ],
+    "B2": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v8",
+          "p0/v9"
+        ]
+      }
+    ],
+    "B2unsaid": [
+      {
+        "why": "new overlap the plan does not mention (no group box involved)",
+        "files": [
+          "p0/v8",
+          "p0/v9",
+          "English [{\"x\":245,\"y\":761,\"width\":97,\"height\":39,\"z\":8000},{\"x\":510,\"y\":457,\"width\":136,\"height\":343,\"z\":9000}]",
+          "Arabic [{\"x\":245,\"y\":761,\"width\":97,\"height\":39,\"z\":8000},{\"x\":326,\"y\":457,\"width\":136,\"height\":343,\"z\":9000}]",
+          "plan on v8: none",
+          "plan on v9: movedByRule: moved with a button beside it",
+          "page kept left to right: true; picture: kept"
+        ]
+      }
+    ],
+    "B2new": [
+      {
+        "why": "new overlap introduced, not said in the plan",
+        "files": [
+          "p0/v8",
+          "p0/v9",
+          "English [{\"x\":245,\"y\":761,\"width\":97,\"height\":39,\"z\":8000},{\"x\":510,\"y\":457,\"width\":136,\"height\":343,\"z\":9000}]",
+          "Arabic [{\"x\":245,\"y\":761,\"width\":97,\"height\":39,\"z\":8000},{\"x\":326,\"y\":457,\"width\":136,\"height\":343,\"z\":9000}]",
+          "plan on v8: none",
+          "plan on v9: movedByRule: moved with a button beside it",
+          "in pictureChecks.newOverlaps: false"
+        ]
+      }
+    ]
+  },
+  "extra": {
+    "validatorOriginal": [
+      "PBIR_QUERY_STATE_MISSING"
+    ],
+    "normalizedRepeat": true,
+    "normalizedRenamed": true
+  }
+}
