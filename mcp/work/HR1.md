@@ -2,22 +2,20 @@
 - **Approval:** the reviewer's brief "HR1" (3 Nov, B-293); D-1016-01, D-1102-02, L-1102-06.
 - **Base:** `fix/0.3.2-hr1` from `origin/integration/0.3.2` at 0c7450e. Pushed only this branch.
 - **Approval, step 2:** the owner's choice OPTION 1 "Remove repeats" (relayed by the reviewer, 3 Nov 08:4x).
-- **Scope:** plan_layout's ANSWER only (`tools/plan_layout.mjs`, `lib/gulf-date-questions.mjs`'s answer object); the
-  plan's stored data, the approval binding and the approval page untouched. `test-0.3.2-hr1.mjs` moves into `suites`
-  (area report); bilingual-report's B5h also fails on `truncated`; suite lines that read a moved field move with it.
-- **Plan (option 1), each answer-only:**
-  1. flipCards: `back` once on flipCards when every card's is the same (else on each card, as now).
-  2. flipCards: the 3 new measures a card adds on each page follow one rule, said once (`measureNames`); a card whose
-     names differ from the rule (a name already taken in the model gets another number) keeps its `measures` list.
-  3. gulfDates.candidates[].relationship: `"to Calendar[Date]"` (the field is not repeated).
-  4. gulfDates.candidates: once the person confirmed the date (dateRole answered), only that one, and
-     `otherCandidates: <n>`; before that, every candidate (they are the question's choices).
-  5. forAuthoring: `tabOrder` dropped where it equals z, said once (`tabOrderIsZ`).
-  6. slots[].galleryWhy dropped (the same why is on gallery.slots for that page and title).
-- **Expected checks:** B5 plan (long path) 40,319 cut -> about 37,200 uncut (<= 38,000); hr1 5 of 5 green;
-  bilingual-report 33 checks, B5h stricter and green; flip-cards, gulf-date-questions: lines named below move.
-- **State: IN PROGRESS.**
-- **Resume:** the steps above in order; then the areas, lint, the merge (once), CI.
+- **Scope:** plan_layout's ANSWER only: new `lib/plan-headroom.mjs` (fitRepeats), one call in `tools/plan_layout.mjs`;
+  the plan's stored data, the approval binding and the approval page untouched (fitRepeats copies, never mutates: U2).
+  `test-0.3.2-hr1.mjs` in `suites` (area report); bilingual-report's B5h also fails when a plan with an id is cut.
+- **What changed (option 1), only when the answer is past AIM = 95% of ANSWER_MAX (38,000):** flipCards `back` once
+  (when every card's is the same) and `measureNames` (the rule; a card whose names differ keeps `measures`);
+  gulfDates.candidates: once confirmed, that one and `otherCandidates: n` (before: all, they are the choices); each
+  relationship `"to Calendar[Date]"`; slots[].galleryWhy dropped (said on gallery.slots).
+- **Numbers (B5 plan, text sent):** short folder 39,615 cut -> 37,704 uncut; long folder (136 characters) 39,616 cut
+  -> 37,680 uncut. Headroom 2,320 under 40,000 (320 under the 38,000 bar). Before the cap: 40,328 -> about 37,700.
+- **Expected checks:** (written first) B5 <= 38,000 uncut, hr1 green, B5h strict. **Got:** hr1 10 checks (H1-H5, U1-U4), red on 0c7450e (H1, H5), green on ea124e05. bilingual-report 33 checks:
+  B5h red on 0c7450e (the B5 plan cut), green after. No other suite line moved (the reshape is conditional).
+  Areas on ea124e05: see Results.
+- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41611277931 on bd2c1ace.
+- **Resume:** none; the reviewer's merge.
 
 ## Step 1 (measured, 3 Nov): the cause
 - The brief's cause (an absolute path repeated in the answer)
@@ -35,7 +33,30 @@
   - What varies between runs (about 25 characters) is the ORDER of `bilingual.texts` (and so which made-up Arabic
     name each text gets in the test), not the path.
 
-## The repeats measured (saving on the 40,328 answer)
+## Results
+- Commits: 1397e0c (step 1: measured, the guard red), 9f77721 (the plan), ea124e05 (the code and tests),
+  bd2c1ace (merge of origin/integration/0.3.2 at 67f1d234; WORK.md's 0.3.2 line kept from both sides).
+- Line counts (before -> after): lib/plan-headroom.mjs 0 -> 54 (new); tools/plan_layout.mjs +4 -2; test-0.3.2-hr1.mjs
+  0 -> 131 (new); test-0.3.1-bilingual-report.mjs +8 -4; tests.json one line moved; CHANGELOG.md +3.
+- Areas on ea124e05: report 51 suites passed, arabic 15, checker 7, core 11; lint exit 0. After the merge (bd2c1ace):
+  report 55 suites passed; bilingual-report 33 checks and fx1 22 checks, three times each, all PASS; hr1 10 checks PASS.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41611277931 on bd2c1ace.
+
+## CHANGELOG line
+"A large plan is no longer cut: a plan close to the answer limit (one report in English and Arabic with every option
+on) says once what it repeated (the flip cards' back and helper measure names, the confirmed date), so every flip card
+stays in the plan; smaller plans read exactly as before."
+
+## Decisions I made
+- The reshape applies only past AIM (95% of the limit), as fitLists does for lists: the reviewer expected 18 suite
+  lines to move, but the characterisation suites (sp3 R6, sp4 P2 and, with the tabOrder change, sp3, sp4, sp7, sp13
+  byte for byte) would have needed their recorded fixtures re-recorded, which the rules forbid. Conditional: none moves.
+- Step 5 of the plan (forAuthoring tabOrder said once) dropped: it is in every plan (every characterisation suite
+  moves) and B5 is under 38,000 without it.
+- B5h counts a cut only on an answer with a plan id: a step before it is still cut (For the owner, 2).
+- The code is in a new `lib/plan-headroom.mjs`, so the rule can be checked on made-up answers (U1-U4).
+
+## The repeats measured in step 1 (saving on the 40,328 answer)
 - flipCards.cards[].back identical on every card -> once on flipCards: 591.
 - flipCards.cards[].measures (21 names, each "<title> (flip front|back|backdrop)" and " 2"): a rule instead: 852.
 - gulfDates.candidates[].relationship repeats `field` -> `to: "Calendar[Date]"`: 400.
@@ -43,28 +64,27 @@
 - gallery.slots[].why repeated in slots[].galleryWhy: 158.
 - Largest parts: bilingual 16,265 (texts 4,739, terminology 3,427, cannot 1,674), gulfDates 4,131, flipCards 3,349.
 
-## The guard (committed, red on purpose, in tests.json `ignored` with why)
+## The guard (step 1 committed it red in `ignored`; now in `suites`)
 `test-0.3.2-hr1.mjs`: H1 the long-folder B5 plan not cut and at most 38,000; H2 short vs long within 200; H3 the
-plan names the folder at most once; H4 check_report and the twin's plan the same. Now: H1 red (39,616, cut), H2-H4
-green. Moves into `suites` (area report) with the fix.
+plan names the folder at most once; H4 check_report and the twin's plan the same; H5 the repeats said once; U1-U4
+fitRepeats on made-up answers. On 0c7450e: H1 red (39,616, cut), H5 red; on ea124e05 all green.
 
 ## For the owner
-Chosen: 1 (3 Nov). The options as offered:
-1. Recommended: the five repeats above plus `gulfDates.candidates` cut to the one in use and a count of the others
-   (measured together: 40,328 -> 37,184, headroom 2,816 under 40,000, 816 under the 38,000 bar). The 2,000-character
-   bar (38,000) is met; "at least 2,000 on the long path" too. 18 suite lines that read these fields move with it.
-2. Or raise the bar differently: the plan's AIM for a bilingual plan with every option is the cap; B5h becomes
-   "not cut" instead of "< 40,000".
-3. Or keep the plan as it is and only make B5h honest: fail when `truncated` is present (red today).
+1. Chosen: option 1 (3 Nov), done as above.
+2. Still cut, before and after this job: the B5 step BEFORE the Arabic texts are given (no plan id yet) is 42,587
+   characters before the cap; capAnswer cuts `bilingual.notTranslated` (25 of 50 kept), the texts the person must
+   label. Its 50 entries repeat 4 reasons (38 times one of them): the reasons once would save 3,233 (to 39,354),
+   still near the cap. A job of its own, if you want it.
 
 ## Risky changes
-none (no answer code changed).
+- An answer past 38,000 now has a second shape (the repeats said once): an AI reading `flipCards.cards[].back`
+  finds it on `flipCards.back`. Said in the answer itself (measureNames, back beside cards).
 
 ## Seen, not in scope
-- The B5 plan is cut TODAY (2 of 4 flip cards' details dropped from the plan the person reads), on every path.
-- `bilingual.texts` order varies run to run (same machine, same fixture): an answer that is not deterministic.
+- `bilingual.texts` order varies run to run (same machine, same fixture): the reviewer files it separately.
 - capAnswer measures the answer before the scrub (tool-answer.mjs compact): harmless today (no path in it).
 
 ## Lessons for the reviewer
-Near the cap (text sent): plan_layout B5 39,6xx (cut); create_arabic_twin's plan on the large fixture 34,269;
-check_report 9,969. B5h's `< 40000` cannot see a cut answer: check `truncated` too.
+Near the cap (text sent, after this job): plan_layout B5 37,7xx; the B5 step before the Arabic texts 40,000 (cut,
+For the owner 2); create_arabic_twin's plan on the large fixture 34,2xx; check_report 9,969. A `< 40000` check cannot
+see a cut answer: check `truncated.cut` too (check_report's own `truncated: true` is its findings list, not the cap).
