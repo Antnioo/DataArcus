@@ -91,6 +91,20 @@ function twinFit(a, from, termsFrom) {
   return a;
 }
 
+// (0.3.2 HM1) the visuals the twin adds (built.pages[].extra: a heatmap's names table), each renamed to the first free
+// name of its page (a visual's name or folder, compared lower-cased); returns [{ page, name, beside }] in page order
+export function freeAddedNames(R, built) {
+  const out = [];
+  (built.pages || []).forEach((x) => {
+    if (!x || !x.pg || !(x.extra || []).length) return;
+    const pre = x.pg.rel.slice(0, x.pg.rel.lastIndexOf('/') + 1) + 'visuals/';
+    const taken = new Set(x.pg.visuals.map((v) => String(isObj(v.json) ? v.json.name : '').toLowerCase())
+      .concat(R.files.filter((f) => f.startsWith(pre)).map((f) => f.slice(pre.length).split('/')[0].toLowerCase())));
+    x.extra.forEach((e) => { const base = String(e.from) + 'Names'; let n = base; for (let k = 2; taken.has(n.toLowerCase()); k++) n = base + k;
+      e.json.name = n; taken.add(n.toLowerCase()); out.push({ page: safeName(x.pg.id), name: safeName(n), beside: safeName(e.from) }); });
+  });
+  return out;
+}
 export function planTwin(a) {
   // (0.3.1 X2) inMemory: { files, base, projectDir }: the English report create_report's plan builds, made one report
   // with its Arabic pages under its own name (into "same"); nothing of it is on disk yet
@@ -263,6 +277,13 @@ export function planTwin(a) {
   const ref = byPathOf(R.pbir);
   // (rc.24) the twin built in memory with the labels: its title measures and what its Arabic texts need
   const built = buildTwin({ R, model: model.m, keepLtr, dateTables, dateColumns, textColumns, timeRightToLeft: a.timeRightToLeft, waterfallRtl: a.waterfallRtl, same }, rawLabels(texts, labels));
+  // (0.3.2 HM1, B-296: Codex N1-25, M1-1: a page with a visual already named "<heatmap>Names" lost it to the names table,
+  // silently) each visual the twin adds takes the first free name on its page, "<heatmap>Names", "<heatmap>Names2"...,
+  // free of every visual's name and folder there, without case (one folder on Windows and macOS); the writer refuses
+  // the rest (twin-write.mjs twinTree). (B-297, Codex N1-1) the plan names each one: mirrors heatmapNames added
+  let addedVisuals = freeAddedNames(R, built);
+  const hn = mirrors.find((x) => x.kind === 'heatmapNames');
+  if (hn && addedVisuals.length) hn.added = addedVisuals.slice(0, 30).map((x) => x.page + '/' + x.name);
   // (0.3.1 MX1 D, the reviewer's add-on of 1 Nov: Fintech's roadmap table) a reversed table wider than its box: Power BI
   // lays a table from its left edge and scrolls to the right, so the English first column (now the last) is behind the
   // scroll. Its columns summed: its own widths (columnWidth by queryRef) or, without one, its Arabic header's width (a
@@ -331,6 +352,8 @@ export function planTwin(a) {
   // (0.3.1 K2) the .platform logical id, chosen once here (the write builds again with the plan's: the approved bytes hold it)
   const logicalId = typeof a.logicalId === 'string' && a.logicalId ? a.logicalId : crypto.randomUUID();
   const copy = same ? languageCopy({ R, loc, tabsShown: a.tabsShown, keepLtr, name: a.inMemory ? loc.base : null, logicalId }, built, rawLabels(texts, labels)) : null;
+  // (HM1) the copy adds them on its Arabic pages, under the names they take there
+  if (copy && Array.isArray(copy.addedVisuals)) { addedVisuals = copy.addedVisuals; if (hn && addedVisuals.length) hn.added = addedVisuals.slice(0, 30).map((x) => x.page + '/' + x.name); }
   // (AF1, the release audit's F11: the twin's names come from the report folder's name, untrusted input like any name:
   // screened in the answer, as pathOut screens every folder; the write builds them from P.outBase, the real name)
   const twinShown = { report: safeName(path.basename(twinDir)), pbip: safeName(path.basename(twinPbip)) };
@@ -363,7 +386,7 @@ export function planTwin(a) {
     if (ti && !altUnder.has(ti.id) && ti.raw.trim() === t.raw.trim() && labels[t.id] == null && labels[ti.id] == null) altUnder.set(ti.id, t.id); });
   const under = new Set(altUnder.values()), listed = texts.filter((t) => !under.has(t.id)).map((t) => (altUnder.has(t.id) ? Object.assign({}, t, { altTextToo: altUnder.get(t.id) }) : t));
   // (0.3, B-154) the model's fingerprint, pinned by the plan (null: no model read)
-  return { loc, R, logicalId, labels, texts, mixedTitles, textsUnknown, notTranslated, month, dateTables, dateColumns, pictureIds, pictures, keepLtr, built, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, answer: capAnswer(twinFit({
+  return { loc, R, logicalId, labels, texts, mixedTitles, textsUnknown, notTranslated, month, dateTables, dateColumns, pictureIds, pictures, keepLtr, built, addedVisuals, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, answer: capAnswer(twinFit({
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: twinShown.report, pbip: twinShown.pbip, folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },

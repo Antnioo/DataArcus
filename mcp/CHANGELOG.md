@@ -8,6 +8,9 @@ package's manifest; this file says what is in it.
 - **A chart under a heatmap that cannot move:** when lining it up under the heatmap's grid would cover another
   visual, it stays where the plain mirror puts it but keeps its English sort, value axis and padding, so its hours still
   read left to right like the grid above it.
+- **The day names beside a heatmap never replace a visual of the report:** they take a free name on their page, the
+  plan and the approval page name them, a heatmap whose padded rows may not all fit keeps its own row names, and their box is the
+  heatmap's own height with no scrollbar.
 - **A large plan is no longer cut:** a plan close to the answer limit (one report in English and Arabic with every
   option on) says once what it repeated (the flip cards' back and helper measure names, the confirmed date), so every
   flip card stays in the plan; smaller plans read exactly as before.
