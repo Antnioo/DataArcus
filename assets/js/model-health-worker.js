@@ -5,8 +5,8 @@
  * (c) DataArcus. All rights reserved.
  */
 /* global MHEngine, TmdlModel */
-// the engine, and the TMDL reader the MCP uses for projects saved as TMDL (Power BI Desktop's default)
-importScripts('model-health-engine.min.js?v=20261025f', 'tmdl-model.min.js?v=20261026a');
+// the DAX tokens and report references (0.3.2 SP9, before the engine), the engine, and the TMDL reader the MCP uses for projects saved as TMDL (Power BI Desktop's default)
+importScripts('dax-reference-parser.min.js?v=20261103sp9', 'model-health-engine.min.js?v=20261103sp9', 'tmdl-model.min.js?v=20261026a');
 
 const post = (type, data) => self.postMessage(Object.assign({ type }, data || {}));
 

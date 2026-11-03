@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // was fetched only when a file was dropped) the worker is started when the page loads (its importScripts load the
   // engine and the TMDL reader then) and kept ready between runs: it holds nothing between messages. A run still going
   // when another file is dropped is stopped and a new worker started for the new file. Nothing is sent anywhere.
-  const WORKER_URL = '/assets/js/model-health-worker.min.js?v=20261026a';
+  const WORKER_URL = '/assets/js/model-health-worker.min.js?v=20261103sp9';
   let worker = null, ready = null, busy = false;
   const warm = () => { try { ready = new Worker(WORKER_URL); ready.onerror = () => { ready = null; }; } catch (e) { ready = null; } };
   warm();
