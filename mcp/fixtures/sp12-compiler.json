@@ -1,0 +1,807 @@
+{
+ "C1 starter ring": "91f03099e10dfdae3757e521:12441",
+ "C2 starter trend": "7b69f1799081a5c2e2e5714c:10435",
+ "C3 starter bar": "ddd1a802a83417e0127eff6c:14031",
+ "C4 starter pill": "e650330349fc42beb2264ae3:10404",
+ "C5 starter spark": "991d1b642c8f07f782e2ef62:21137",
+ "C6 starter card": "c7224dbe40f940182a1e6ec0:32161",
+ "C7 starter ramadan": "02f9c351b908a6818f965e2e:28724",
+ "C8 A quotes, markup, ]]>, a script tag": {
+  "dax": {
+   "dax": "KPI \"x\" <y> =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _Sales = [Sales]\nVAR _Target = [Target]\nVAR _Sales_LY = [Sales LY]\nVAR _Achievement = DIVIDE ( _Sales, _Target )\nVAR _Growth_vs_LY = DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )\n-- Layer 2: Text\nVAR _L2_text = \"&lt;i&gt;&quot;AED&quot;&lt;/i&gt; &amp; \" & FORMAT ( IF ( ( ABS ( COALESCE ( _Sales, 0 ) ) < 0.5 ), 0, COALESCE ( _Sales, 0 ) ), \"#,0\", \"en-US\" ) & \" ]]&gt;&lt;script&gt;x()&lt;/script&gt;\"\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='300' height='60' viewBox='0 0 300 60'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>He said &quot;hi&quot; &amp; &apos;bye&apos; &lt;b&gt;x&lt;/b&gt; ]]&gt; &lt;script&gt;alert(1)&lt;/script&gt; 100%25 %231</text><text x='10' y='40' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": []
+  },
+  "measure": {
+   "dax": "VAR _Sales = [Sales]\nVAR _Target = [Target]\nVAR _Sales_LY = [Sales LY]\nVAR _Achievement = DIVIDE ( _Sales, _Target )\nVAR _Growth_vs_LY = DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )\nVAR _L2_text = \"&lt;i&gt;&quot;AED&quot;&lt;/i&gt; &amp; \" & FORMAT ( IF ( ( ABS ( COALESCE ( _Sales, 0 ) ) < 0.5 ), 0, COALESCE ( _Sales, 0 ) ), \"#,0\", \"en-US\" ) & \" ]]&gt;&lt;script&gt;x()&lt;/script&gt;\"\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='300' height='60' viewBox='0 0 300 60'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>He said &quot;hi&quot; &amp; &apos;bye&apos; &lt;b&gt;x&lt;/b&gt; ]]&gt; &lt;script&gt;alert(1)&lt;/script&gt; 100%25 %231</text><text x='10' y='40' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "KPI \"x\" <y>"
+  },
+  "card": {
+   "dax": "VAR _Sales = [Sales]\nVAR _Target = [Target]\nVAR _Sales_LY = [Sales LY]\nVAR _Achievement = DIVIDE ( _Sales, _Target )\nVAR _Growth_vs_LY = DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )\nVAR _L2_text = \"&lt;i&gt;&quot;AED&quot;&lt;/i&gt; &amp; \" & FORMAT ( IF ( ( ABS ( COALESCE ( _Sales, 0 ) ) < 0.5 ), 0, COALESCE ( _Sales, 0 ) ), \"#,0\", \"en-US\" ) & \" ]]&gt;&lt;script&gt;x()&lt;/script&gt;\"\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='300' height='60' viewBox='0 0 300 60'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>He said &quot;hi&quot; &amp; &apos;bye&apos; &lt;b&gt;x&lt;/b&gt; ]]&gt; &lt;script&gt;alert(1)&lt;/script&gt; 100%25 %231</text><text x='10' y='40' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "KPI \"x\" <y>"
+  },
+  "table": {
+   "dax": "VAR _Sales = [Sales]\nVAR _Target = [Target]\nVAR _Sales_LY = [Sales LY]\nVAR _Achievement = DIVIDE ( _Sales, _Target )\nVAR _Growth_vs_LY = DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )\nVAR _L2_text = \"&lt;i&gt;&quot;AED&quot;&lt;/i&gt; &amp; \" & FORMAT ( IF ( ( ABS ( COALESCE ( _Sales, 0 ) ) < 0.5 ), 0, COALESCE ( _Sales, 0 ) ), \"#,0\", \"en-US\" ) & \" ]]&gt;&lt;script&gt;x()&lt;/script&gt;\"\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='300' height='60' viewBox='0 0 300 60'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>He said &quot;hi&quot; &amp; &apos;bye&apos; &lt;b&gt;x&lt;/b&gt; ]]&gt; &lt;script&gt;alert(1)&lt;/script&gt; 100%25 %231</text><text x='10' y='40' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "KPI \"x\" <y>"
+  },
+  "tagged": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='60' viewBox='0 0 300 60'><g data-l='0'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>He said &quot;hi&quot; &amp; &apos;bye&apos; &lt;b&gt;x&lt;/b&gt; ]]&gt; &lt;script&gt;alert(1)&lt;/script&gt; 100%25 %231</text></g><g data-l='1'><text x='10' y='40' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>&lt;i&gt;&quot;AED&quot;&lt;/i&gt; &amp; 1,240,000 ]]&gt;&lt;script&gt;x()&lt;/script&gt;</text></g></svg>",
+   "errors": []
+  },
+  "plain": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='60' viewBox='0 0 300 60'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>He said &quot;hi&quot; &amp; &apos;bye&apos; &lt;b&gt;x&lt;/b&gt; ]]&gt; &lt;script&gt;alert(1)&lt;/script&gt; 100%25 %231</text><text x='10' y='40' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>&lt;i&gt;&quot;AED&quot;&lt;/i&gt; &amp; 1,240,000 ]]&gt;&lt;script&gt;x()&lt;/script&gt;</text></svg>",
+   "errors": []
+  },
+  "blank": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='60' viewBox='0 0 300 60'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>He said &quot;hi&quot; &amp; &apos;bye&apos; &lt;b&gt;x&lt;/b&gt; ]]&gt; &lt;script&gt;alert(1)&lt;/script&gt; 100%25 %231</text><text x='10' y='40' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>&lt;i&gt;&quot;AED&quot;&lt;/i&gt; &amp; 0 ]]&gt;&lt;script&gt;x()&lt;/script&gt;</text></svg>",
+   "errors": []
+  },
+  "themed": {
+   "design": {
+    "name": "KPI \"x\" <y>",
+    "w": 300,
+    "h": 60,
+    "values": [
+     {
+      "id": "sales",
+      "label": "Sales",
+      "kind": "measure",
+      "measure": "Sales",
+      "sample": 1240000
+     },
+     {
+      "id": "target",
+      "label": "Target",
+      "kind": "measure",
+      "measure": "Target",
+      "sample": 1500000
+     },
+     {
+      "id": "ly",
+      "label": "Sales LY",
+      "kind": "measure",
+      "measure": "Sales LY",
+      "sample": 1100000
+     },
+     {
+      "id": "ach",
+      "label": "Achievement",
+      "kind": "ratio",
+      "a": "sales",
+      "b": "target"
+     },
+     {
+      "id": "growth",
+      "label": "Growth vs LY",
+      "kind": "pct",
+      "a": "sales",
+      "b": "ly"
+     }
+    ],
+    "layers": [
+     {
+      "type": "text",
+      "name": "Text",
+      "x": 10,
+      "y": 20,
+      "size": 12,
+      "weight": 400,
+      "anchor": "start",
+      "fill": "#111111",
+      "text": "He said \"hi\" & 'bye' <b>x</b> ]]> <script>alert(1)</script> 100% #1"
+     },
+     {
+      "type": "text",
+      "name": "Text",
+      "x": 10,
+      "y": 40,
+      "size": 12,
+      "weight": 400,
+      "anchor": "start",
+      "fill": "#111111",
+      "bind": {
+       "text": {
+        "v": "sales",
+        "fmt": "n0",
+        "prefix": "<i>\"AED\"</i> & ",
+        "suffix": " ]]><script>x()</script>"
+       }
+      }
+     }
+    ]
+   },
+   "errors": [],
+   "url": {
+    "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='60' viewBox='0 0 300 60'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>He said &quot;hi&quot; &amp; &apos;bye&apos; &lt;b&gt;x&lt;/b&gt; ]]&gt; &lt;script&gt;alert(1)&lt;/script&gt; 100%25 %231</text><text x='10' y='40' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>&lt;i&gt;&quot;AED&quot;&lt;/i&gt; &amp; 1,240,000 ]]&gt;&lt;script&gt;x()&lt;/script&gt;</text></svg>",
+    "errors": []
+   },
+   "dax": {
+    "dax": "KPI \"x\" <y> =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _Sales = [Sales]\nVAR _Target = [Target]\nVAR _Sales_LY = [Sales LY]\nVAR _Achievement = DIVIDE ( _Sales, _Target )\nVAR _Growth_vs_LY = DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )\n-- Layer 2: Text\nVAR _L2_text = \"&lt;i&gt;&quot;AED&quot;&lt;/i&gt; &amp; \" & FORMAT ( IF ( ( ABS ( COALESCE ( _Sales, 0 ) ) < 0.5 ), 0, COALESCE ( _Sales, 0 ) ), \"#,0\", \"en-US\" ) & \" ]]&gt;&lt;script&gt;x()&lt;/script&gt;\"\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='300' height='60' viewBox='0 0 300 60'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>He said &quot;hi&quot; &amp; &apos;bye&apos; &lt;b&gt;x&lt;/b&gt; ]]&gt; &lt;script&gt;alert(1)&lt;/script&gt; 100%25 %231</text><text x='10' y='40' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+    "errors": []
+   }
+  }
+ },
+ "C9 A javascript: in a text and a colour": {
+  "dax": {
+   "dax": "javascript:alert(1) =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _Sales = [Sales]\nVAR _Target = [Target]\nVAR _Sales_LY = [Sales LY]\nVAR _Achievement = DIVIDE ( _Sales, _Target )\nVAR _Growth_vs_LY = DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )\n-- Layer 2: r\nVAR _L2_fill = SWITCH ( TRUE (), ( COALESCE ( _Achievement, 0 ) < 1 ), \"%23000000\", \"%23abcdef\" )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='50' viewBox='0 0 200 50'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>&lt;a href=&apos;javascript:alert(1)&apos;&gt;click&lt;/a&gt;</text><rect x='0' y='0' width='10' height='10' fill='\"\n        & _L2_fill\n        & \"' stroke='%23000000' stroke-width='1'/></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": []
+  },
+  "measure": {
+   "dax": "VAR _Sales = [Sales]\nVAR _Target = [Target]\nVAR _Sales_LY = [Sales LY]\nVAR _Achievement = DIVIDE ( _Sales, _Target )\nVAR _Growth_vs_LY = DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )\nVAR _L2_fill = SWITCH ( TRUE (), ( COALESCE ( _Achievement, 0 ) < 1 ), \"%23000000\", \"%23abcdef\" )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='50' viewBox='0 0 200 50'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>&lt;a href=&apos;javascript:alert(1)&apos;&gt;click&lt;/a&gt;</text><rect x='0' y='0' width='10' height='10' fill='\"\n        & _L2_fill\n        & \"' stroke='%23000000' stroke-width='1'/></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "javascript:alert(1)"
+  },
+  "card": {
+   "dax": "VAR _Sales = [Sales]\nVAR _Target = [Target]\nVAR _Sales_LY = [Sales LY]\nVAR _Achievement = DIVIDE ( _Sales, _Target )\nVAR _Growth_vs_LY = DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )\nVAR _L2_fill = SWITCH ( TRUE (), ( COALESCE ( _Achievement, 0 ) < 1 ), \"%23000000\", \"%23abcdef\" )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='50' viewBox='0 0 200 50'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>&lt;a href=&apos;javascript:alert(1)&apos;&gt;click&lt;/a&gt;</text><rect x='0' y='0' width='10' height='10' fill='\"\n        & _L2_fill\n        & \"' stroke='%23000000' stroke-width='1'/></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "javascript:alert(1)"
+  },
+  "table": {
+   "dax": "VAR _Sales = [Sales]\nVAR _Target = [Target]\nVAR _Sales_LY = [Sales LY]\nVAR _Achievement = DIVIDE ( _Sales, _Target )\nVAR _Growth_vs_LY = DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )\nVAR _L2_fill = SWITCH ( TRUE (), ( COALESCE ( _Achievement, 0 ) < 1 ), \"%23000000\", \"%23abcdef\" )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='50' viewBox='0 0 200 50'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>&lt;a href=&apos;javascript:alert(1)&apos;&gt;click&lt;/a&gt;</text><rect x='0' y='0' width='10' height='10' fill='\"\n        & _L2_fill\n        & \"' stroke='%23000000' stroke-width='1'/></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "javascript:alert(1)"
+  },
+  "tagged": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='50' viewBox='0 0 200 50'><g data-l='0'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>&lt;a href=&apos;javascript:alert(1)&apos;&gt;click&lt;/a&gt;</text></g><g data-l='1'><rect x='0' y='0' width='10' height='10' fill='%23000000' stroke='%23000000' stroke-width='1'/></g></svg>",
+   "errors": []
+  },
+  "plain": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='50' viewBox='0 0 200 50'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>&lt;a href=&apos;javascript:alert(1)&apos;&gt;click&lt;/a&gt;</text><rect x='0' y='0' width='10' height='10' fill='%23000000' stroke='%23000000' stroke-width='1'/></svg>",
+   "errors": []
+  },
+  "blank": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='50' viewBox='0 0 200 50'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>&lt;a href=&apos;javascript:alert(1)&apos;&gt;click&lt;/a&gt;</text><rect x='0' y='0' width='10' height='10' fill='%23000000' stroke='%23000000' stroke-width='1'/></svg>",
+   "errors": []
+  },
+  "themed": {
+   "design": {
+    "name": "javascript:alert(1)",
+    "w": 200,
+    "h": 50,
+    "values": [
+     {
+      "id": "sales",
+      "label": "Sales",
+      "kind": "measure",
+      "measure": "Sales",
+      "sample": 1240000
+     },
+     {
+      "id": "target",
+      "label": "Target",
+      "kind": "measure",
+      "measure": "Target",
+      "sample": 1500000
+     },
+     {
+      "id": "ly",
+      "label": "Sales LY",
+      "kind": "measure",
+      "measure": "Sales LY",
+      "sample": 1100000
+     },
+     {
+      "id": "ach",
+      "label": "Achievement",
+      "kind": "ratio",
+      "a": "sales",
+      "b": "target"
+     },
+     {
+      "id": "growth",
+      "label": "Growth vs LY",
+      "kind": "pct",
+      "a": "sales",
+      "b": "ly"
+     }
+    ],
+    "layers": [
+     {
+      "type": "text",
+      "name": "Text",
+      "x": 10,
+      "y": 20,
+      "size": 12,
+      "weight": 400,
+      "anchor": "start",
+      "fill": "#000000' onload='alert(1)",
+      "text": "<a href='javascript:alert(1)'>click</a>"
+     },
+     {
+      "type": "rect",
+      "name": "r",
+      "x": 0,
+      "y": 0,
+      "w": 10,
+      "h": 10,
+      "fill": "javascript:alert(1)",
+      "stroke": "\"><script>",
+      "sw": 1,
+      "bind": {
+       "fill": {
+        "rules": [
+         {
+          "v": "ach",
+          "op": "<",
+          "t": 1,
+          "c": "red' x='"
+         }
+        ],
+        "other": "#ABCDEF"
+       }
+      }
+     }
+    ]
+   },
+   "errors": [],
+   "url": {
+    "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='50' viewBox='0 0 200 50'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>&lt;a href=&apos;javascript:alert(1)&apos;&gt;click&lt;/a&gt;</text><rect x='0' y='0' width='10' height='10' fill='%23000000' stroke='%23000000' stroke-width='1'/></svg>",
+    "errors": []
+   },
+   "dax": {
+    "dax": "javascript:alert(1) =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _Sales = [Sales]\nVAR _Target = [Target]\nVAR _Sales_LY = [Sales LY]\nVAR _Achievement = DIVIDE ( _Sales, _Target )\nVAR _Growth_vs_LY = DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )\n-- Layer 2: r\nVAR _L2_fill = SWITCH ( TRUE (), ( COALESCE ( _Achievement, 0 ) < 1 ), \"%23000000\", \"%23abcdef\" )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='50' viewBox='0 0 200 50'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>&lt;a href=&apos;javascript:alert(1)&apos;&gt;click&lt;/a&gt;</text><rect x='0' y='0' width='10' height='10' fill='\"\n        & _L2_fill\n        & \"' stroke='%23000000' stroke-width='1'/></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+    "errors": []
+   }
+  }
+ },
+ "C10 A Arabic label with RTL marks, mirrored": {
+  "dax": {
+   "dax": "‏مبيعات «رمضان»‎ =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _sales = [المبيعات]\nVAR _target = [الهدف]\nVAR _ach = DIVIDE ( _sales, _target )\n-- Layer 2: Text\nVAR _L2_text = \"‏«\" & FORMAT ( IF ( ( ABS ( ( COALESCE ( _ach, 0 ) * 100 ) ) < 0.05 ), 0, ( COALESCE ( _ach, 0 ) * 100 ) ), \"#,0.0\", \"en-US\" ) & \"%25\" & \"»‎\"\n-- Layer 3: حلقة\nVAR _L3_p = MIN ( MAX ( COALESCE ( _ach, 0 ), 0 ), 1 )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80' viewBox='0 0 240 80'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>‏المبيعات ‫من‬ الهدف‎ &lt;&amp;&gt;</text><text x='230' y='50' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='end' fill='%23111111'>\"\n        & _L2_text\n        & \"</text><g transform='translate(240 0) scale(-1 1)'><circle cx='40' cy='40' r='30' fill='none' stroke='%231e293b' stroke-width='6'/><circle cx='40' cy='40' r='30' fill='none' stroke='%2300d4ff' stroke-width='6' transform='rotate(-90 40 40)' stroke-dasharray='\"\n        & FORMAT ( ( _L3_p * 188.4956 ), \"0.00\", \"en-US\" )\n        & \" 188.5' stroke-opacity='\"\n        & IF ( ( _L3_p > 0 ), \"1\", \"0\" )\n        & \"'/></g></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": []
+  },
+  "measure": {
+   "dax": "VAR _sales = [المبيعات]\nVAR _target = [الهدف]\nVAR _ach = DIVIDE ( _sales, _target )\nVAR _L2_text = \"‏«\" & FORMAT ( IF ( ( ABS ( ( COALESCE ( _ach, 0 ) * 100 ) ) < 0.05 ), 0, ( COALESCE ( _ach, 0 ) * 100 ) ), \"#,0.0\", \"en-US\" ) & \"%25\" & \"»‎\"\nVAR _L3_p = MIN ( MAX ( COALESCE ( _ach, 0 ), 0 ), 1 )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80' viewBox='0 0 240 80'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>‏المبيعات ‫من‬ الهدف‎ &lt;&amp;&gt;</text><text x='230' y='50' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='end' fill='%23111111'>\"\n        & _L2_text\n        & \"</text><g transform='translate(240 0) scale(-1 1)'><circle cx='40' cy='40' r='30' fill='none' stroke='%231e293b' stroke-width='6'/><circle cx='40' cy='40' r='30' fill='none' stroke='%2300d4ff' stroke-width='6' transform='rotate(-90 40 40)' stroke-dasharray='\"\n        & FORMAT ( ( _L3_p * 188.4956 ), \"0.00\", \"en-US\" )\n        & \" 188.5' stroke-opacity='\"\n        & IF ( ( _L3_p > 0 ), \"1\", \"0\" )\n        & \"'/></g></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "‏مبيعات «رمضان»‎"
+  },
+  "card": {
+   "dax": "VAR _sales = [المبيعات]\nVAR _target = [الهدف]\nVAR _ach = DIVIDE ( _sales, _target )\nVAR _L2_text = \"‏«\" & FORMAT ( IF ( ( ABS ( ( COALESCE ( _ach, 0 ) * 100 ) ) < 0.05 ), 0, ( COALESCE ( _ach, 0 ) * 100 ) ), \"#,0.0\", \"en-US\" ) & \"%25\" & \"»‎\"\nVAR _L3_p = MIN ( MAX ( COALESCE ( _ach, 0 ), 0 ), 1 )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80' viewBox='0 0 240 80'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>‏المبيعات ‫من‬ الهدف‎ &lt;&amp;&gt;</text><text x='230' y='50' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='end' fill='%23111111'>\"\n        & _L2_text\n        & \"</text><g transform='translate(240 0) scale(-1 1)'><circle cx='40' cy='40' r='30' fill='none' stroke='%231e293b' stroke-width='6'/><circle cx='40' cy='40' r='30' fill='none' stroke='%2300d4ff' stroke-width='6' transform='rotate(-90 40 40)' stroke-dasharray='\"\n        & FORMAT ( ( _L3_p * 188.4956 ), \"0.00\", \"en-US\" )\n        & \" 188.5' stroke-opacity='\"\n        & IF ( ( _L3_p > 0 ), \"1\", \"0\" )\n        & \"'/></g></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "‏مبيعات «رمضان»‎"
+  },
+  "table": {
+   "dax": "VAR _sales = [المبيعات]\nVAR _target = [الهدف]\nVAR _ach = DIVIDE ( _sales, _target )\nVAR _L2_text = \"‏«\" & FORMAT ( IF ( ( ABS ( ( COALESCE ( _ach, 0 ) * 100 ) ) < 0.05 ), 0, ( COALESCE ( _ach, 0 ) * 100 ) ), \"#,0.0\", \"en-US\" ) & \"%25\" & \"»‎\"\nVAR _L3_p = MIN ( MAX ( COALESCE ( _ach, 0 ), 0 ), 1 )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80' viewBox='0 0 240 80'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>‏المبيعات ‫من‬ الهدف‎ &lt;&amp;&gt;</text><text x='230' y='50' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='end' fill='%23111111'>\"\n        & _L2_text\n        & \"</text><g transform='translate(240 0) scale(-1 1)'><circle cx='40' cy='40' r='30' fill='none' stroke='%231e293b' stroke-width='6'/><circle cx='40' cy='40' r='30' fill='none' stroke='%2300d4ff' stroke-width='6' transform='rotate(-90 40 40)' stroke-dasharray='\"\n        & FORMAT ( ( _L3_p * 188.4956 ), \"0.00\", \"en-US\" )\n        & \" 188.5' stroke-opacity='\"\n        & IF ( ( _L3_p > 0 ), \"1\", \"0\" )\n        & \"'/></g></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "‏مبيعات «رمضان»‎"
+  },
+  "tagged": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80' viewBox='0 0 240 80'><g data-l='0'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>‏المبيعات ‫من‬ الهدف‎ &lt;&amp;&gt;</text></g><g data-l='1'><text x='230' y='50' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='end' fill='%23111111'>‏«0.0%25»‎</text></g><g data-l='2'><g transform='translate(240 0) scale(-1 1)'><circle cx='40' cy='40' r='30' fill='none' stroke='%231e293b' stroke-width='6'/><circle cx='40' cy='40' r='30' fill='none' stroke='%2300d4ff' stroke-width='6' transform='rotate(-90 40 40)' stroke-dasharray='0.00 188.5' stroke-opacity='0'/></g></g></svg>",
+   "errors": []
+  },
+  "plain": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80' viewBox='0 0 240 80'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>‏المبيعات ‫من‬ الهدف‎ &lt;&amp;&gt;</text><text x='230' y='50' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='end' fill='%23111111'>‏«0.0%25»‎</text><g transform='translate(240 0) scale(-1 1)'><circle cx='40' cy='40' r='30' fill='none' stroke='%231e293b' stroke-width='6'/><circle cx='40' cy='40' r='30' fill='none' stroke='%2300d4ff' stroke-width='6' transform='rotate(-90 40 40)' stroke-dasharray='0.00 188.5' stroke-opacity='0'/></g></svg>",
+   "errors": []
+  },
+  "blank": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80' viewBox='0 0 240 80'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>‏المبيعات ‫من‬ الهدف‎ &lt;&amp;&gt;</text><text x='230' y='50' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='end' fill='%23111111'>‏«0.0%25»‎</text><g transform='translate(240 0) scale(-1 1)'><circle cx='40' cy='40' r='30' fill='none' stroke='%231e293b' stroke-width='6'/><circle cx='40' cy='40' r='30' fill='none' stroke='%2300d4ff' stroke-width='6' transform='rotate(-90 40 40)' stroke-dasharray='0.00 188.5' stroke-opacity='0'/></g></svg>",
+   "errors": []
+  },
+  "themed": {
+   "design": {
+    "name": "‏مبيعات «رمضان»‎",
+    "w": 240,
+    "h": 80,
+    "mirror": true,
+    "values": [
+     {
+      "id": "sales",
+      "label": "‏المبيعات",
+      "kind": "measure",
+      "measure": "المبيعات",
+      "sample": 5
+     },
+     {
+      "id": "target",
+      "label": "الهدف",
+      "kind": "measure",
+      "measure": "الهدف"
+     },
+     {
+      "id": "ach",
+      "label": "الإنجاز",
+      "kind": "ratio",
+      "a": "sales",
+      "b": "target"
+     }
+    ],
+    "layers": [
+     {
+      "type": "text",
+      "name": "Text",
+      "x": 230,
+      "y": 20,
+      "size": 12,
+      "weight": 400,
+      "anchor": "end",
+      "fill": "#111111",
+      "text": "‏المبيعات ‫من‬ الهدف‎ <&>"
+     },
+     {
+      "type": "text",
+      "name": "Text",
+      "x": 10,
+      "y": 50,
+      "size": 12,
+      "weight": 400,
+      "anchor": "start",
+      "fill": "#111111",
+      "bind": {
+       "text": {
+        "v": "ach",
+        "fmt": "p1",
+        "prefix": "‏«",
+        "suffix": "»‎"
+       }
+      }
+     },
+     {
+      "type": "ring",
+      "name": "حلقة",
+      "cx": 40,
+      "cy": 40,
+      "r": 30,
+      "sw": 6,
+      "fill": "#00d4ff",
+      "bind": {
+       "p": {
+        "v": "ach",
+        "d0": 0,
+        "d1": 1
+       }
+      },
+      "track": "#dddfe1"
+     }
+    ]
+   },
+   "errors": [],
+   "url": {
+    "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80' viewBox='0 0 240 80'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>‏المبيعات ‫من‬ الهدف‎ &lt;&amp;&gt;</text><text x='230' y='50' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='end' fill='%23111111'>‏«0.0%25»‎</text><g transform='translate(240 0) scale(-1 1)'><circle cx='40' cy='40' r='30' fill='none' stroke='%23dddfe1' stroke-width='6'/><circle cx='40' cy='40' r='30' fill='none' stroke='%2300d4ff' stroke-width='6' transform='rotate(-90 40 40)' stroke-dasharray='0.00 188.5' stroke-opacity='0'/></g></svg>",
+    "errors": []
+   },
+   "dax": {
+    "dax": "‏مبيعات «رمضان»‎ =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _sales = [المبيعات]\nVAR _target = [الهدف]\nVAR _ach = DIVIDE ( _sales, _target )\n-- Layer 2: Text\nVAR _L2_text = \"‏«\" & FORMAT ( IF ( ( ABS ( ( COALESCE ( _ach, 0 ) * 100 ) ) < 0.05 ), 0, ( COALESCE ( _ach, 0 ) * 100 ) ), \"#,0.0\", \"en-US\" ) & \"%25\" & \"»‎\"\n-- Layer 3: حلقة\nVAR _L3_p = MIN ( MAX ( COALESCE ( _ach, 0 ), 0 ), 1 )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80' viewBox='0 0 240 80'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>‏المبيعات ‫من‬ الهدف‎ &lt;&amp;&gt;</text><text x='230' y='50' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='end' fill='%23111111'>\"\n        & _L2_text\n        & \"</text><g transform='translate(240 0) scale(-1 1)'><circle cx='40' cy='40' r='30' fill='none' stroke='%23dddfe1' stroke-width='6'/><circle cx='40' cy='40' r='30' fill='none' stroke='%2300d4ff' stroke-width='6' transform='rotate(-90 40 40)' stroke-dasharray='\"\n        & FORMAT ( ( _L3_p * 188.4956 ), \"0.00\", \"en-US\" )\n        & \" 188.5' stroke-opacity='\"\n        & IF ( ( _L3_p > 0 ), \"1\", \"0\" )\n        & \"'/></g></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+    "errors": []
+   }
+  }
+ },
+ "C11 A measure names with ] and doubled quotes": {
+  "dax": {
+   "dax": "Net ]]]] \"Sales\" =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _Net_x = [Net ]]Sales[ \"q\"]\nVAR _B = [Tgt\"\"]\nVAR _C = ( _Net_x - _B )\n-- Layer 1: Text\nVAR _L1_text = \"say &quot;&quot;hi&quot;&quot; \" & IF ( ( COALESCE ( _C, 0 ) > 0 ), \"+\", \"\" ) & FORMAT ( IF ( ( ABS ( COALESCE ( _C, 0 ) ) < 0.005 ), 0, COALESCE ( _C, 0 ) ), \"#,0.00\", \"en-US\" )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L1_text\n        & \"</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": []
+  },
+  "measure": {
+   "dax": "VAR _Net_x = [Net ]]Sales[ \"q\"]\nVAR _B = [Tgt\"\"]\nVAR _C = ( _Net_x - _B )\nVAR _L1_text = \"say &quot;&quot;hi&quot;&quot; \" & IF ( ( COALESCE ( _C, 0 ) > 0 ), \"+\", \"\" ) & FORMAT ( IF ( ( ABS ( COALESCE ( _C, 0 ) ) < 0.005 ), 0, COALESCE ( _C, 0 ) ), \"#,0.00\", \"en-US\" )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L1_text\n        & \"</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "Net ]] \"Sales\""
+  },
+  "card": {
+   "dax": "VAR _Net_x = [Net ]]Sales[ \"q\"]\nVAR _B = [Tgt\"\"]\nVAR _C = ( _Net_x - _B )\nVAR _L1_text = \"say &quot;&quot;hi&quot;&quot; \" & IF ( ( COALESCE ( _C, 0 ) > 0 ), \"+\", \"\" ) & FORMAT ( IF ( ( ABS ( COALESCE ( _C, 0 ) ) < 0.005 ), 0, COALESCE ( _C, 0 ) ), \"#,0.00\", \"en-US\" )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L1_text\n        & \"</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "Net ]] \"Sales\""
+  },
+  "table": {
+   "dax": "VAR _Net_x = [Net ]]Sales[ \"q\"]\nVAR _B = [Tgt\"\"]\nVAR _C = ( _Net_x - _B )\nVAR _L1_text = \"say &quot;&quot;hi&quot;&quot; \" & IF ( ( COALESCE ( _C, 0 ) > 0 ), \"+\", \"\" ) & FORMAT ( IF ( ( ABS ( COALESCE ( _C, 0 ) ) < 0.005 ), 0, COALESCE ( _C, 0 ) ), \"#,0.00\", \"en-US\" )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L1_text\n        & \"</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "Net ]] \"Sales\""
+  },
+  "tagged": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'><g data-l='0'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>say &quot;&quot;hi&quot;&quot; 0.00</text></g></svg>",
+   "errors": []
+  },
+  "plain": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>say &quot;&quot;hi&quot;&quot; 0.00</text></svg>",
+   "errors": []
+  },
+  "blank": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>say &quot;&quot;hi&quot;&quot; 0.00</text></svg>",
+   "errors": []
+  },
+  "themed": {
+   "design": {
+    "name": "Net ]] \"Sales\"",
+    "w": 200,
+    "h": 40,
+    "values": [
+     {
+      "id": "a",
+      "label": "Net \"x\"",
+      "kind": "measure",
+      "measure": "Net ]Sales[ \"q\""
+     },
+     {
+      "id": "b",
+      "label": "B",
+      "kind": "measure",
+      "measure": "Tgt\"\""
+     },
+     {
+      "id": "c",
+      "label": "C",
+      "kind": "diff",
+      "a": "a",
+      "b": "b"
+     }
+    ],
+    "layers": [
+     {
+      "type": "text",
+      "name": "Text",
+      "x": 10,
+      "y": 20,
+      "size": 12,
+      "weight": 400,
+      "anchor": "start",
+      "fill": "#111111",
+      "bind": {
+       "text": {
+        "v": "c",
+        "fmt": "n2",
+        "prefix": "say \"\"hi\"\" ",
+        "sign": true
+       }
+      }
+     }
+    ]
+   },
+   "errors": [],
+   "url": {
+    "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>say &quot;&quot;hi&quot;&quot; 0.00</text></svg>",
+    "errors": []
+   },
+   "dax": {
+    "dax": "Net ]]]] \"Sales\" =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _Net_x = [Net ]]Sales[ \"q\"]\nVAR _B = [Tgt\"\"]\nVAR _C = ( _Net_x - _B )\n-- Layer 1: Text\nVAR _L1_text = \"say &quot;&quot;hi&quot;&quot; \" & IF ( ( COALESCE ( _C, 0 ) > 0 ), \"+\", \"\" ) & FORMAT ( IF ( ( ABS ( COALESCE ( _C, 0 ) ) < 0.005 ), 0, COALESCE ( _C, 0 ) ), \"#,0.00\", \"en-US\" )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L1_text\n        & \"</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+    "errors": []
+   }
+  }
+ },
+ "C12 A very long numbers": {
+  "dax": {
+   "dax": "Big =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _X = [X]\nVAR _Y = [Y]\nVAR _R = DIVIDE ( _X, _Y )\n-- Layer 1: Text\nVAR _L1_text = IF ( ( ABS ( COALESCE ( _X, 0 ) ) >= 1000000 ), FORMAT ( IF ( ( ABS ( ( COALESCE ( _X, 0 ) / 1000000 ) ) < 0.05 ), 0, ( COALESCE ( _X, 0 ) / 1000000 ) ), \"#,0.0\", \"en-US\" ) & \"M\", IF ( ( ABS ( COALESCE ( _X, 0 ) ) >= 1000 ), FORMAT ( IF ( ( ABS ( ( COALESCE ( _X, 0 ) / 1000 ) ) < 0.05 ), 0, ( COALESCE ( _X, 0 ) / 1000 ) ), \"#,0.0\", \"en-US\" ) & \"K\", FORMAT ( IF ( ( ABS ( COALESCE ( _X, 0 ) ) < 0.5 ), 0, COALESCE ( _X, 0 ) ), \"#,0\", \"en-US\" ) ) )\n-- Layer 2: Text\nVAR _L2_text = FORMAT ( IF ( ( ABS ( ( COALESCE ( _R, 0 ) * 100 ) ) < 0.05 ), 0, ( COALESCE ( _R, 0 ) * 100 ) ), \"#,0.0\", \"en-US\" ) & \"%25\"\n-- Layer 3: r\nVAR _L3_w = ( ( -1000000000 ) + ( MIN ( MAX ( ( ( COALESCE ( _R, 0 ) - ( -1000000000000 ) ) / 2000000000000 ), 0 ), 1 ) * 2000000000 ) )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='2000' height='8' viewBox='0 0 2000 8'><text x='123456789012345660' y='0' font-family='Segoe UI, sans-serif' font-size='Infinity' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L1_text\n        & \"</text><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text><rect x='1.23' y='10' width='\"\n        & FORMAT ( IF ( ( ABS ( _L3_w ) < 0.005 ), 0, _L3_w ), \"0.00\", \"en-US\" )\n        & \"' height='3' fill='%23123456'/><line x1='0' y1='0' x2='100000000000' y2='1' stroke='%23ffffff' stroke-width='0.13'/></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": []
+  },
+  "measure": {
+   "dax": "VAR _X = [X]\nVAR _Y = [Y]\nVAR _R = DIVIDE ( _X, _Y )\nVAR _L1_text = IF ( ( ABS ( COALESCE ( _X, 0 ) ) >= 1000000 ), FORMAT ( IF ( ( ABS ( ( COALESCE ( _X, 0 ) / 1000000 ) ) < 0.05 ), 0, ( COALESCE ( _X, 0 ) / 1000000 ) ), \"#,0.0\", \"en-US\" ) & \"M\", IF ( ( ABS ( COALESCE ( _X, 0 ) ) >= 1000 ), FORMAT ( IF ( ( ABS ( ( COALESCE ( _X, 0 ) / 1000 ) ) < 0.05 ), 0, ( COALESCE ( _X, 0 ) / 1000 ) ), \"#,0.0\", \"en-US\" ) & \"K\", FORMAT ( IF ( ( ABS ( COALESCE ( _X, 0 ) ) < 0.5 ), 0, COALESCE ( _X, 0 ) ), \"#,0\", \"en-US\" ) ) )\nVAR _L2_text = FORMAT ( IF ( ( ABS ( ( COALESCE ( _R, 0 ) * 100 ) ) < 0.05 ), 0, ( COALESCE ( _R, 0 ) * 100 ) ), \"#,0.0\", \"en-US\" ) & \"%25\"\nVAR _L3_w = ( ( -1000000000 ) + ( MIN ( MAX ( ( ( COALESCE ( _R, 0 ) - ( -1000000000000 ) ) / 2000000000000 ), 0 ), 1 ) * 2000000000 ) )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='2000' height='8' viewBox='0 0 2000 8'><text x='123456789012345660' y='0' font-family='Segoe UI, sans-serif' font-size='Infinity' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L1_text\n        & \"</text><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text><rect x='1.23' y='10' width='\"\n        & FORMAT ( IF ( ( ABS ( _L3_w ) < 0.005 ), 0, _L3_w ), \"0.00\", \"en-US\" )\n        & \"' height='3' fill='%23123456'/><line x1='0' y1='0' x2='100000000000' y2='1' stroke='%23ffffff' stroke-width='0.13'/></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "Big"
+  },
+  "card": {
+   "dax": "VAR _X = [X]\nVAR _Y = [Y]\nVAR _R = DIVIDE ( _X, _Y )\nVAR _L1_text = IF ( ( ABS ( COALESCE ( _X, 0 ) ) >= 1000000 ), FORMAT ( IF ( ( ABS ( ( COALESCE ( _X, 0 ) / 1000000 ) ) < 0.05 ), 0, ( COALESCE ( _X, 0 ) / 1000000 ) ), \"#,0.0\", \"en-US\" ) & \"M\", IF ( ( ABS ( COALESCE ( _X, 0 ) ) >= 1000 ), FORMAT ( IF ( ( ABS ( ( COALESCE ( _X, 0 ) / 1000 ) ) < 0.05 ), 0, ( COALESCE ( _X, 0 ) / 1000 ) ), \"#,0.0\", \"en-US\" ) & \"K\", FORMAT ( IF ( ( ABS ( COALESCE ( _X, 0 ) ) < 0.5 ), 0, COALESCE ( _X, 0 ) ), \"#,0\", \"en-US\" ) ) )\nVAR _L2_text = FORMAT ( IF ( ( ABS ( ( COALESCE ( _R, 0 ) * 100 ) ) < 0.05 ), 0, ( COALESCE ( _R, 0 ) * 100 ) ), \"#,0.0\", \"en-US\" ) & \"%25\"\nVAR _L3_w = ( ( -1000000000 ) + ( MIN ( MAX ( ( ( COALESCE ( _R, 0 ) - ( -1000000000000 ) ) / 2000000000000 ), 0 ), 1 ) * 2000000000 ) )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='2000' height='8' viewBox='0 0 2000 8'><text x='123456789012345660' y='0' font-family='Segoe UI, sans-serif' font-size='Infinity' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L1_text\n        & \"</text><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text><rect x='1.23' y='10' width='\"\n        & FORMAT ( IF ( ( ABS ( _L3_w ) < 0.005 ), 0, _L3_w ), \"0.00\", \"en-US\" )\n        & \"' height='3' fill='%23123456'/><line x1='0' y1='0' x2='100000000000' y2='1' stroke='%23ffffff' stroke-width='0.13'/></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "Big"
+  },
+  "table": {
+   "dax": "VAR _X = [X]\nVAR _Y = [Y]\nVAR _R = DIVIDE ( _X, _Y )\nVAR _L1_text = IF ( ( ABS ( COALESCE ( _X, 0 ) ) >= 1000000 ), FORMAT ( IF ( ( ABS ( ( COALESCE ( _X, 0 ) / 1000000 ) ) < 0.05 ), 0, ( COALESCE ( _X, 0 ) / 1000000 ) ), \"#,0.0\", \"en-US\" ) & \"M\", IF ( ( ABS ( COALESCE ( _X, 0 ) ) >= 1000 ), FORMAT ( IF ( ( ABS ( ( COALESCE ( _X, 0 ) / 1000 ) ) < 0.05 ), 0, ( COALESCE ( _X, 0 ) / 1000 ) ), \"#,0.0\", \"en-US\" ) & \"K\", FORMAT ( IF ( ( ABS ( COALESCE ( _X, 0 ) ) < 0.5 ), 0, COALESCE ( _X, 0 ) ), \"#,0\", \"en-US\" ) ) )\nVAR _L2_text = FORMAT ( IF ( ( ABS ( ( COALESCE ( _R, 0 ) * 100 ) ) < 0.05 ), 0, ( COALESCE ( _R, 0 ) * 100 ) ), \"#,0.0\", \"en-US\" ) & \"%25\"\nVAR _L3_w = ( ( -1000000000 ) + ( MIN ( MAX ( ( ( COALESCE ( _R, 0 ) - ( -1000000000000 ) ) / 2000000000000 ), 0 ), 1 ) * 2000000000 ) )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='2000' height='8' viewBox='0 0 2000 8'><text x='123456789012345660' y='0' font-family='Segoe UI, sans-serif' font-size='Infinity' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L1_text\n        & \"</text><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text><rect x='1.23' y='10' width='\"\n        & FORMAT ( IF ( ( ABS ( _L3_w ) < 0.005 ), 0, _L3_w ), \"0.00\", \"en-US\" )\n        & \"' height='3' fill='%23123456'/><line x1='0' y1='0' x2='100000000000' y2='1' stroke='%23ffffff' stroke-width='0.13'/></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "Big"
+  },
+  "tagged": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='2000' height='8' viewBox='0 0 2000 8'><g data-l='0'><text x='123456789012345660' y='0' font-family='Segoe UI, sans-serif' font-size='Infinity' font-weight='400' text-anchor='start' fill='%23111111'>0</text></g><g data-l='1'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>0.0%25</text></g><g data-l='2'><rect x='1.23' y='10' width='0.00' height='3' fill='%23123456'/></g><g data-l='3'><line x1='0' y1='0' x2='100000000000' y2='1' stroke='%23ffffff' stroke-width='0.13'/></g></svg>",
+   "errors": []
+  },
+  "plain": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='2000' height='8' viewBox='0 0 2000 8'><text x='123456789012345660' y='0' font-family='Segoe UI, sans-serif' font-size='Infinity' font-weight='400' text-anchor='start' fill='%23111111'>0</text><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>0.0%25</text><rect x='1.23' y='10' width='0.00' height='3' fill='%23123456'/><line x1='0' y1='0' x2='100000000000' y2='1' stroke='%23ffffff' stroke-width='0.13'/></svg>",
+   "errors": []
+  },
+  "blank": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='2000' height='8' viewBox='0 0 2000 8'><text x='123456789012345660' y='0' font-family='Segoe UI, sans-serif' font-size='Infinity' font-weight='400' text-anchor='start' fill='%23111111'>0</text><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>0.0%25</text><rect x='1.23' y='10' width='0.00' height='3' fill='%23123456'/><line x1='0' y1='0' x2='100000000000' y2='1' stroke='%23ffffff' stroke-width='0.13'/></svg>",
+   "errors": []
+  },
+  "themed": {
+   "design": {
+    "name": "Big",
+    "w": 1e+21,
+    "h": -5,
+    "values": [
+     {
+      "id": "x",
+      "label": "X",
+      "kind": "measure",
+      "measure": "X"
+     },
+     {
+      "id": "y",
+      "label": "Y",
+      "kind": "measure",
+      "measure": "Y"
+     },
+     {
+      "id": "r",
+      "label": "R",
+      "kind": "ratio",
+      "a": "x",
+      "b": "y"
+     }
+    ],
+    "layers": [
+     {
+      "type": "text",
+      "name": "Text",
+      "x": 123456789012345680,
+      "y": -1e-7,
+      "size": 1e+308,
+      "weight": 400,
+      "anchor": "start",
+      "fill": "#111111",
+      "bind": {
+       "text": {
+        "v": "x",
+        "fmt": "auto"
+       }
+      }
+     },
+     {
+      "type": "text",
+      "name": "Text",
+      "x": 10,
+      "y": 20,
+      "size": 12,
+      "weight": 400,
+      "anchor": "start",
+      "fill": "#111111",
+      "bind": {
+       "text": {
+        "v": "r",
+        "fmt": "k1"
+       }
+      }
+     },
+     {
+      "type": "rect",
+      "name": "r",
+      "x": 1.23456789,
+      "y": 9.999999,
+      "w": 1000000000000000,
+      "h": 3,
+      "fill": "#123456",
+      "bind": {
+       "w": {
+        "v": "r",
+        "d0": -1000000000000,
+        "d1": 1000000000000,
+        "r0": -1000000000,
+        "r1": 1000000000
+       }
+      }
+     },
+     {
+      "type": "line",
+      "name": "l",
+      "x1": -1e-9,
+      "y1": 0,
+      "x2": 99999999999.995,
+      "y2": 1,
+      "stroke": "#ffffff",
+      "sw": 0.125
+     }
+    ]
+   },
+   "errors": [],
+   "url": {
+    "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='2000' height='8' viewBox='0 0 2000 8'><text x='123456789012345660' y='0' font-family='Segoe UI, sans-serif' font-size='Infinity' font-weight='400' text-anchor='start' fill='%23111111'>0</text><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>0.0%25</text><rect x='1.23' y='10' width='0.00' height='3' fill='%23123456'/><line x1='0' y1='0' x2='100000000000' y2='1' stroke='%23ffffff' stroke-width='0.13'/></svg>",
+    "errors": []
+   },
+   "dax": {
+    "dax": "Big =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _X = [X]\nVAR _Y = [Y]\nVAR _R = DIVIDE ( _X, _Y )\n-- Layer 1: Text\nVAR _L1_text = IF ( ( ABS ( COALESCE ( _X, 0 ) ) >= 1000000 ), FORMAT ( IF ( ( ABS ( ( COALESCE ( _X, 0 ) / 1000000 ) ) < 0.05 ), 0, ( COALESCE ( _X, 0 ) / 1000000 ) ), \"#,0.0\", \"en-US\" ) & \"M\", IF ( ( ABS ( COALESCE ( _X, 0 ) ) >= 1000 ), FORMAT ( IF ( ( ABS ( ( COALESCE ( _X, 0 ) / 1000 ) ) < 0.05 ), 0, ( COALESCE ( _X, 0 ) / 1000 ) ), \"#,0.0\", \"en-US\" ) & \"K\", FORMAT ( IF ( ( ABS ( COALESCE ( _X, 0 ) ) < 0.5 ), 0, COALESCE ( _X, 0 ) ), \"#,0\", \"en-US\" ) ) )\n-- Layer 2: Text\nVAR _L2_text = FORMAT ( IF ( ( ABS ( ( COALESCE ( _R, 0 ) * 100 ) ) < 0.05 ), 0, ( COALESCE ( _R, 0 ) * 100 ) ), \"#,0.0\", \"en-US\" ) & \"%25\"\n-- Layer 3: r\nVAR _L3_w = ( ( -1000000000 ) + ( MIN ( MAX ( ( ( COALESCE ( _R, 0 ) - ( -1000000000000 ) ) / 2000000000000 ), 0 ), 1 ) * 2000000000 ) )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='2000' height='8' viewBox='0 0 2000 8'><text x='123456789012345660' y='0' font-family='Segoe UI, sans-serif' font-size='Infinity' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L1_text\n        & \"</text><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text><rect x='1.23' y='10' width='\"\n        & FORMAT ( IF ( ( ABS ( _L3_w ) < 0.005 ), 0, _L3_w ), \"0.00\", \"en-US\" )\n        & \"' height='3' fill='%23123456'/><line x1='0' y1='0' x2='100000000000' y2='1' stroke='%23ffffff' stroke-width='0.13'/></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+    "errors": []
+   }
+  }
+ },
+ "C13 A a column value with markup": {
+  "dax": {
+   "dax": "Per row =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _Name = SELECTEDVALUE ( 'Cust''s'[Na]]me] )\nVAR _Val = SELECTEDVALUE ( 'Sales'[Amount] )\n-- Layer 1: Text\nVAR _L1_text = \"&lt;\" & SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( _Name & \"\", \"&\", \"&amp;\" ), \"<\", \"&lt;\" ), \">\", \"&gt;\" ), \"'\", \"&apos;\" ), \"\"\"\", \"&quot;\" ), \"%\", \"%25\" ), \"#\", \"%23\" ) & \"&gt;\"\n-- Layer 2: Text\nVAR _L2_text = SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( FORMAT ( IF ( ( ABS ( COALESCE ( _Val, 0 ) ) < 0.05 ), 0, COALESCE ( _Val, 0 ) ), \"#,0.0\", \"en-US\" ) & \"\", \"&\", \"&amp;\" ), \"<\", \"&lt;\" ), \">\", \"&gt;\" ), \"'\", \"&apos;\" ), \"\"\"\", \"&quot;\" ), \"%\", \"%25\" ), \"#\", \"%23\" )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='30' viewBox='0 0 200 30'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L1_text\n        & \"</text><text x='100' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": []
+  },
+  "measure": {
+   "dax": "VAR _Name = SELECTEDVALUE ( 'Cust''s'[Na]]me] )\nVAR _Val = SELECTEDVALUE ( 'Sales'[Amount] )\nVAR _L1_text = \"&lt;\" & SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( _Name & \"\", \"&\", \"&amp;\" ), \"<\", \"&lt;\" ), \">\", \"&gt;\" ), \"'\", \"&apos;\" ), \"\"\"\", \"&quot;\" ), \"%\", \"%25\" ), \"#\", \"%23\" ) & \"&gt;\"\nVAR _L2_text = SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( FORMAT ( IF ( ( ABS ( COALESCE ( _Val, 0 ) ) < 0.05 ), 0, COALESCE ( _Val, 0 ) ), \"#,0.0\", \"en-US\" ) & \"\", \"&\", \"&amp;\" ), \"<\", \"&lt;\" ), \">\", \"&gt;\" ), \"'\", \"&apos;\" ), \"\"\"\", \"&quot;\" ), \"%\", \"%25\" ), \"#\", \"%23\" )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='30' viewBox='0 0 200 30'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L1_text\n        & \"</text><text x='100' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "Per row"
+  },
+  "card": {
+   "dax": "VAR _Name = SELECTEDVALUE ( 'Cust''s'[Na]]me] )\nVAR _Val = SELECTEDVALUE ( 'Sales'[Amount] )\nVAR _L1_text = \"&lt;\" & SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( _Name & \"\", \"&\", \"&amp;\" ), \"<\", \"&lt;\" ), \">\", \"&gt;\" ), \"'\", \"&apos;\" ), \"\"\"\", \"&quot;\" ), \"%\", \"%25\" ), \"#\", \"%23\" ) & \"&gt;\"\nVAR _L2_text = SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( FORMAT ( IF ( ( ABS ( COALESCE ( _Val, 0 ) ) < 0.05 ), 0, COALESCE ( _Val, 0 ) ), \"#,0.0\", \"en-US\" ) & \"\", \"&\", \"&amp;\" ), \"<\", \"&lt;\" ), \">\", \"&gt;\" ), \"'\", \"&apos;\" ), \"\"\"\", \"&quot;\" ), \"%\", \"%25\" ), \"#\", \"%23\" )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='30' viewBox='0 0 200 30'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L1_text\n        & \"</text><text x='100' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "Per row"
+  },
+  "table": {
+   "dax": "VAR _Name = SELECTEDVALUE ( 'Cust''s'[Na]]me] )\nVAR _Val = SELECTEDVALUE ( 'Sales'[Amount] )\nVAR _L1_text = \"&lt;\" & SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( _Name & \"\", \"&\", \"&amp;\" ), \"<\", \"&lt;\" ), \">\", \"&gt;\" ), \"'\", \"&apos;\" ), \"\"\"\", \"&quot;\" ), \"%\", \"%25\" ), \"#\", \"%23\" ) & \"&gt;\"\nVAR _L2_text = SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( FORMAT ( IF ( ( ABS ( COALESCE ( _Val, 0 ) ) < 0.05 ), 0, COALESCE ( _Val, 0 ) ), \"#,0.0\", \"en-US\" ) & \"\", \"&\", \"&amp;\" ), \"<\", \"&lt;\" ), \">\", \"&gt;\" ), \"'\", \"&apos;\" ), \"\"\"\", \"&quot;\" ), \"%\", \"%25\" ), \"#\", \"%23\" )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='30' viewBox='0 0 200 30'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L1_text\n        & \"</text><text x='100' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "Per row"
+  },
+  "tagged": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='30' viewBox='0 0 200 30'><g data-l='0'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>&lt;&gt;</text></g><g data-l='1'><text x='100' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>0.0</text></g></svg>",
+   "errors": []
+  },
+  "plain": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='30' viewBox='0 0 200 30'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>&lt;&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; 50%25 %231 ]]&gt;&gt;</text><text x='100' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>1,234.5</text></svg>",
+   "errors": []
+  },
+  "blank": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='30' viewBox='0 0 200 30'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>&lt;&gt;</text><text x='100' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>0.0</text></svg>",
+   "errors": []
+  },
+  "themed": {
+   "design": {
+    "name": "Per row",
+    "w": 200,
+    "h": 30,
+    "values": [
+     {
+      "id": "n",
+      "label": "Name",
+      "kind": "column",
+      "column": "'Cust''s'[Na]]me]"
+     },
+     {
+      "id": "v",
+      "label": "Val",
+      "kind": "column",
+      "column": "Sales[Amount]"
+     }
+    ],
+    "layers": [
+     {
+      "type": "text",
+      "name": "Text",
+      "x": 10,
+      "y": 20,
+      "size": 12,
+      "weight": 400,
+      "anchor": "start",
+      "fill": "#111111",
+      "bind": {
+       "text": {
+        "v": "n",
+        "fmt": "text",
+        "prefix": "<",
+        "suffix": ">"
+       }
+      }
+     },
+     {
+      "type": "text",
+      "name": "Text",
+      "x": 100,
+      "y": 20,
+      "size": 12,
+      "weight": 400,
+      "anchor": "start",
+      "fill": "#111111",
+      "bind": {
+       "text": {
+        "v": "v",
+        "fmt": "n1"
+       }
+      }
+     }
+    ]
+   },
+   "errors": [],
+   "url": {
+    "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='30' viewBox='0 0 200 30'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>&lt;&gt;</text><text x='100' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>0.0</text></svg>",
+    "errors": []
+   },
+   "dax": {
+    "dax": "Per row =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _Name = SELECTEDVALUE ( 'Cust''s'[Na]]me] )\nVAR _Val = SELECTEDVALUE ( 'Sales'[Amount] )\n-- Layer 1: Text\nVAR _L1_text = \"&lt;\" & SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( _Name & \"\", \"&\", \"&amp;\" ), \"<\", \"&lt;\" ), \">\", \"&gt;\" ), \"'\", \"&apos;\" ), \"\"\"\", \"&quot;\" ), \"%\", \"%25\" ), \"#\", \"%23\" ) & \"&gt;\"\n-- Layer 2: Text\nVAR _L2_text = SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( FORMAT ( IF ( ( ABS ( COALESCE ( _Val, 0 ) ) < 0.05 ), 0, COALESCE ( _Val, 0 ) ), \"#,0.0\", \"en-US\" ) & \"\", \"&\", \"&amp;\" ), \"<\", \"&lt;\" ), \">\", \"&gt;\" ), \"'\", \"&apos;\" ), \"\"\"\", \"&quot;\" ), \"%\", \"%25\" ), \"#\", \"%23\" )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='30' viewBox='0 0 200 30'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L1_text\n        & \"</text><text x='100' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+    "errors": []
+   }
+  }
+ },
+ "C14 A percent and hash in static text and a theme name": {
+  "dax": {
+   "dax": "100% #1 =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _Sales = [Sales]\nVAR _Target = [Target]\nVAR _Sales_LY = [Sales LY]\nVAR _Achievement = DIVIDE ( _Sales, _Target )\nVAR _Growth_vs_LY = DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='120' height='30' viewBox='0 0 120 30'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>100%25 %231 %2523 %2525 &amp;amp; &amp;%23x3c;</text><text x='10' y='28' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>x</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": []
+  },
+  "measure": {
+   "dax": "VAR _Sales = [Sales]\nVAR _Target = [Target]\nVAR _Sales_LY = [Sales LY]\nVAR _Achievement = DIVIDE ( _Sales, _Target )\nVAR _Growth_vs_LY = DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='120' height='30' viewBox='0 0 120 30'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>100%25 %231 %2523 %2525 &amp;amp; &amp;%23x3c;</text><text x='10' y='28' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>x</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "100% #1"
+  },
+  "card": {
+   "dax": "VAR _Sales = [Sales]\nVAR _Target = [Target]\nVAR _Sales_LY = [Sales LY]\nVAR _Achievement = DIVIDE ( _Sales, _Target )\nVAR _Growth_vs_LY = DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='120' height='30' viewBox='0 0 120 30'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>100%25 %231 %2523 %2525 &amp;amp; &amp;%23x3c;</text><text x='10' y='28' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>x</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "100% #1"
+  },
+  "table": {
+   "dax": "VAR _Sales = [Sales]\nVAR _Target = [Target]\nVAR _Sales_LY = [Sales LY]\nVAR _Achievement = DIVIDE ( _Sales, _Target )\nVAR _Growth_vs_LY = DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='120' height='30' viewBox='0 0 120 30'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>100%25 %231 %2523 %2525 &amp;amp; &amp;%23x3c;</text><text x='10' y='28' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>x</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+   "errors": [],
+   "name": "100% #1"
+  },
+  "tagged": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='30' viewBox='0 0 120 30'><g data-l='0'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>100%25 %231 %2523 %2525 &amp;amp; &amp;%23x3c;</text></g><g data-l='1'><text x='10' y='28' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>x</text></g></svg>",
+   "errors": []
+  },
+  "plain": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='30' viewBox='0 0 120 30'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>100%25 %231 %2523 %2525 &amp;amp; &amp;%23x3c;</text><text x='10' y='28' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>x</text></svg>",
+   "errors": []
+  },
+  "blank": {
+   "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='30' viewBox='0 0 120 30'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>100%25 %231 %2523 %2525 &amp;amp; &amp;%23x3c;</text><text x='10' y='28' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>x</text></svg>",
+   "errors": []
+  },
+  "themed": {
+   "design": {
+    "name": "100% #1",
+    "w": 120,
+    "h": 30,
+    "bg": "#ffffff",
+    "values": [
+     {
+      "id": "sales",
+      "label": "Sales",
+      "kind": "measure",
+      "measure": "Sales",
+      "sample": 1240000
+     },
+     {
+      "id": "target",
+      "label": "Target",
+      "kind": "measure",
+      "measure": "Target",
+      "sample": 1500000
+     },
+     {
+      "id": "ly",
+      "label": "Sales LY",
+      "kind": "measure",
+      "measure": "Sales LY",
+      "sample": 1100000
+     },
+     {
+      "id": "ach",
+      "label": "Achievement",
+      "kind": "ratio",
+      "a": "sales",
+      "b": "target"
+     },
+     {
+      "id": "growth",
+      "label": "Growth vs LY",
+      "kind": "pct",
+      "a": "sales",
+      "b": "ly"
+     }
+    ],
+    "layers": [
+     {
+      "type": "text",
+      "name": "Text",
+      "x": 10,
+      "y": 20,
+      "size": 12,
+      "weight": 400,
+      "anchor": "start",
+      "fill": "#0f6cbd",
+      "text": "100% #1 %23 %25 &amp; &#x3c;"
+     },
+     {
+      "type": "text",
+      "name": "Text",
+      "x": 10,
+      "y": 28,
+      "size": 12,
+      "weight": 400,
+      "anchor": "start",
+      "fill": "theme:nope",
+      "text": "x"
+     }
+    ]
+   },
+   "errors": [
+    "\"theme:nope\" (layer 2, fill) is not a colour of the theme; the names are: theme:text, theme:card, theme:background, theme:accent, theme:good, theme:bad, theme:neutral, theme:muted, theme:track, theme:data1, theme:data2, theme:data3"
+   ],
+   "url": {
+    "url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='30' viewBox='0 0 120 30'><rect width='120' height='30' rx='0' fill='%23ffffff'/><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%230f6cbd'>100%25 %231 %2523 %2525 &amp;amp; &amp;%23x3c;</text><text x='10' y='28' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>x</text></svg>",
+    "errors": []
+   },
+   "dax": {
+    "dax": "100% #1 =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _Sales = [Sales]\nVAR _Target = [Target]\nVAR _Sales_LY = [Sales LY]\nVAR _Achievement = DIVIDE ( _Sales, _Target )\nVAR _Growth_vs_LY = DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='120' height='30' viewBox='0 0 120 30'><rect width='120' height='30' rx='0' fill='%23ffffff'/><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%230f6cbd'>100%25 %231 %2523 %2525 &amp;amp; &amp;%23x3c;</text><text x='10' y='28' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>x</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg",
+    "errors": []
+   }
+  }
+ },
+ "C15 B errors: control characters, unknown kinds, ops and layers": "eb092ffac06e7ab91e05b55d:10781",
+ "C16 B sparkline with area, dot, weeks, mirror, quoted date column": "54948c654b89fd9bfd73cdd2:21054",
+ "C17 B shapes bound: opacity, show, arrow down-good, ring static": "f6eece938f7e87663c1fa8ce:15408",
+ "C18 B empty and default": "6bcfd18e9a023f7dd2e7b607:2020"
+}
