@@ -38,6 +38,8 @@
   system's directory order, which differs on CI. The suite now hands the page the folder's files sorted by path
   (an init script; the product unchanged), recorded again on the base code (095d4db, a worktree), then 3 after.
 - **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41578855895 on cc3adbc5.**
+- **Merged integration/0.3.2 in again (a57e0941, SP7):** both sides kept (run-all's lists, MODULES.md, CHANGELOG,
+  pages); theme-generator.min.js rebuilt, stamp 20261103sp8m; WORK.md 3,180 characters.
 - **State: DONE.**
 - **Resume:** none; the reviewer's merge.
 

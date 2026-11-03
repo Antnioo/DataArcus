@@ -1,0 +1,133 @@
+{
+ "about": "test-0.3.2-sp7.mjs: create_report's answers and the written files recorded on the base (normalised: the plan id, the working folder and the path separator)",
+ "runs": {
+  "T1 EN glass 1920 x 1080": {
+   "plan": {
+    "err": false,
+    "length": 12554,
+    "sha256": "abaddc3bfb5ec4c931811b60ec7dc61dcd0b1f16c56b7b6337fd94052d43b49e"
+   },
+   "report": {
+    "err": false,
+    "length": 10197,
+    "sha256": "a007856228069bddc4e730103623fcf318d88d79b976c307ff4cdcbdb942ea9e"
+   },
+   "files": {
+    "count": 89,
+    "sha256": "6d0cb0ab3365ec35bed7a7431c4af98d8f3f650e7e401a97833a44bbff7093bb"
+   }
+  },
+  "T2 EN plain 1280 x 720": {
+   "plan": {
+    "err": false,
+    "length": 13390,
+    "sha256": "f3bef0482b1d7ce6754f33eaeebbb8e47298483954195059582f5fcc0a89a945"
+   },
+   "report": {
+    "err": false,
+    "length": 10761,
+    "sha256": "eb37a532645f1ea04aac5866a8afbc0a7a732a547292a82e8cbf0b38e6d06200"
+   },
+   "files": {
+    "count": 92,
+    "sha256": "fa5bed5c9df49b125f5f371821486932aadf98cee5ef6fbf0fd44c6f06cc1551"
+   }
+  },
+  "T3 AR glass 1920 x 1080, names approved": {
+   "plan": {
+    "err": false,
+    "length": 17328,
+    "sha256": "bcb83cf5955a368e6dd53eaa654356cd132f4629a7ec9908c73356363c4eea04"
+   },
+   "report": {
+    "err": false,
+    "length": 9726,
+    "sha256": "98a9257eb63c182472c931ebdb8ac32a44b9239cd0457b063def66de10910dbf"
+   },
+   "files": {
+    "count": 88,
+    "sha256": "80b471168461af8b5aaa0df9ae1d0a30b76404f2fb81ad5edd45ddec85a13c61"
+   }
+  },
+  "T4 AR plain 1280 x 720, names approved": {
+   "plan": {
+    "err": false,
+    "length": 19506,
+    "sha256": "e7b21e04dcc1246ec18dd0b4418ee758992113803c7390236eccde4e8cb33f73"
+   },
+   "report": {
+    "err": false,
+    "length": 10329,
+    "sha256": "e29e3d73e17a6318120643f842eb0ee1f52019547aad6578d5e1b04623f0373e"
+   },
+   "files": {
+    "count": 103,
+    "sha256": "e7eb01538f8a22f978025ebca396c07b1e8f3e0202763c751af3ec2f195a316f"
+   }
+  },
+  "T5 EN glass on the twin": {
+   "plan": {
+    "err": false,
+    "length": 10816,
+    "sha256": "f34e158fed23c67b1538c67585efba9e6c6ec88a4e0ce129c6fbd5052949a483"
+   },
+   "report": {
+    "err": false,
+    "length": 8000,
+    "sha256": "0af993e47028b73d7bdb57898dbbb68bd21e18aae720ca965b0cddf7b2ef47af"
+   },
+   "files": {
+    "count": 116,
+    "sha256": "85b8d8e664f42b344541fc87924ade0f8989b00276372d401997edf7574c4278"
+   }
+  },
+  "T6 AR plain 1280 x 720 on the twin, no names": {
+   "plan": {
+    "err": false,
+    "length": 21332,
+    "sha256": "ad8a7e8e917ffad5550e8e420266eb9fe5a252aebf83245e9a249ec532e43138"
+   },
+   "report": {
+    "err": false,
+    "length": 11745,
+    "sha256": "0f20a125dfef203c6e1e18d89c23ff05ec5b8d3bcb186429498d2c573184783b"
+   },
+   "files": {
+    "count": 126,
+    "sha256": "ac5f3afb7283648078e9c1af2cf6941a64fc74af8d7b1cf8ad3fc7ccf0cf5707"
+   }
+  },
+  "T7 AR glass 1280 x 720 on the twin": {
+   "plan": {
+    "err": false,
+    "length": 17737,
+    "sha256": "f098d8bf0d6156e964466a6f40d2a92acd079f5ffac1430b24d61ebd9a5eb568"
+   },
+   "report": {
+    "err": false,
+    "length": 11361,
+    "sha256": "c6a8f9114b4c062843c0f72d676f3698008d0ab9721ff2dd9673868903ee5d3d"
+   },
+   "files": {
+    "count": 111,
+    "sha256": "c113ba8f81763bb2bce1b03dbfe6080bc04f53cddf7283f0e79df865703a8c75"
+   }
+  },
+  "T8 hand-placed pages, no chart": {
+   "plan": {
+    "err": false,
+    "length": 10687,
+    "sha256": "f94156c01d5cc985e04af4a879801d001162e8989392458668ce94a51b7ce2f2"
+   },
+   "report": {
+    "err": false,
+    "length": 4651,
+    "sha256": "476f277c38535982101bf01c2795c2777af8e2205900216057413ac02d6bd445"
+   },
+   "files": {
+    "count": 38,
+    "sha256": "447cbbcf1e53a8227a2fd00a4a804702044a1811633f726875f3cce27e120466"
+   }
+  }
+ }
+}
