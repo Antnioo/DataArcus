@@ -5,6 +5,10 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **Three small Arabic twin fixes:** a table header grows into its table's free room even when the table keeps widths
+  for fields it no longer shows (those settings stay as they are); a column the English hides stays hidden at the
+  table's left end, never as a thin strip after the names; a chart kept where the plain mirror puts it under a heatmap
+  says, in English and Arabic, how many pixels it stands off the grid's cells.
 - **An Arabic label beside a value reads in order:** in the Arabic twin, a card or title that joins your approved
   Arabic words with a value of the model (a day, an hour, a count) keeps each value in its place, so "Thursday" or
   "11:00 PM" no longer swaps with the Arabic around it; your words are written exactly as you approved them.
