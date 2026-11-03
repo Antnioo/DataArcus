@@ -1,0 +1,273 @@
+[
+ {
+  "call": "read_model {\"path\":\"twin-project/Twin Sales.pbip\"}",
+  "err": false,
+  "ms": 23,
+  "text": 477,
+  "tokens": 136,
+  "wire": 574,
+  "wireWithStructured": 1072,
+  "topKeys": 3,
+  "topUnnamed": [
+   "source",
+   "existingReports"
+  ],
+  "keys": 9,
+  "unnamed": 5,
+  "schemaFloor": 413,
+  "truncated": null
+ },
+ {
+  "call": "suggest_fields {\"path\":\"twin-project/Twin Sales.pbip\"}",
+  "err": false,
+  "ms": 24,
+  "text": 2184,
+  "tokens": 624,
+  "wire": 2635,
+  "wireWithStructured": 4840,
+  "topKeys": 11,
+  "topUnnamed": [
+   "cats",
+   "slicers",
+   "tip",
+   "slicerPool"
+  ],
+  "keys": 36,
+  "unnamed": 19,
+  "schemaFloor": 3112,
+  "truncated": null
+ },
+ {
+  "call": "check_model_health {\"path\":\"health-project/Health Test Report.pbip\"}",
+  "err": false,
+  "ms": 38,
+  "text": 10927,
+  "tokens": 3122,
+  "wire": 11760,
+  "wireWithStructured": 22708,
+  "topKeys": 8,
+  "topUnnamed": [
+   "source",
+   "stats",
+   "reportRead",
+   "reports"
+  ],
+  "keys": 72,
+  "unnamed": 46,
+  "schemaFloor": 2986,
+  "truncated": null
+ },
+ {
+  "call": "generate_theme {\"name\":\"RD9 Theme\"}",
+  "err": false,
+  "ms": 42,
+  "text": 4683,
+  "tokens": 1338,
+  "wire": 5152,
+  "wireWithStructured": 9856,
+  "topKeys": 13,
+  "topUnnamed": [
+   "written",
+   "fileAfterGo",
+   "warnings",
+   "repaired",
+   "notes"
+  ],
+  "keys": 69,
+  "unnamed": 25,
+  "schemaFloor": 2806,
+  "truncated": null
+ },
+ {
+  "call": "plan_layout {\"sample\":true}",
+  "err": false,
+  "ms": 14,
+  "text": 3150,
+  "tokens": 900,
+  "wire": 3335,
+  "wireWithStructured": 6506,
+  "topKeys": 3,
+  "topUnnamed": [
+   "sayFirst"
+  ],
+  "keys": 22,
+  "unnamed": 7,
+  "schemaFloor": 826,
+  "truncated": null
+ },
+ {
+  "call": "plan_layout {\"path\":\"twin-project/Twin Sales.pbip\",\"lang\":\"ar\"}",
+  "err": false,
+  "ms": 183,
+  "text": 14702,
+  "tokens": 4201,
+  "wire": 15995,
+  "wireWithStructured": 30718,
+  "topKeys": 22,
+  "topUnnamed": [
+   "designLint",
+   "exactCheck",
+   "kindChanges",
+   "blankCategories",
+   "topCategories",
+   "categoryCharts"
+  ],
+  "keys": 143,
+  "unnamed": 46,
+  "schemaFloor": 6493,
+  "truncated": null
+ },
+ {
+  "call": "create_report {\"path\":\"twin-project/Twin Sales.pbip\"}",
+  "err": true,
+  "ms": 5,
+  "text": 611,
+  "tokens": 175,
+  "wire": 665,
+  "wireWithStructured": null,
+  "topKeys": 0,
+  "topUnnamed": [],
+  "keys": 0,
+  "unnamed": 0,
+  "schemaFloor": null,
+  "truncated": null,
+  "head": "Nothing was written: create_report writes a file only with an approved plan id (planId). Call plan_layout with the model (path) and the plan's fields: it checks"
+ },
+ {
+  "call": "add_gulf_calendar {\"path\":\"twin-project/Twin Sales.pbip\",\"firstYear\":2024,\"lastYear\":2026}",
+  "err": false,
+  "ms": 25,
+  "text": 3756,
+  "tokens": 1073,
+  "wire": 3969,
+  "wireWithStructured": 7746,
+  "topKeys": 15,
+  "topUnnamed": [
+   "scriptAfterGo",
+   "columnsByKind",
+   "rows",
+   "range",
+   "byHand",
+   "selfCheck",
+   "howToApplyAfterGo"
+  ],
+  "keys": 36,
+  "unnamed": 18,
+  "schemaFloor": 1326,
+  "truncated": null
+ },
+ {
+  "call": "read_report {\"path\":\"twin-project/Twin Sales.pbip\"}",
+  "err": false,
+  "ms": 12,
+  "text": 2746,
+  "tokens": 785,
+  "wire": 2856,
+  "wireWithStructured": null,
+  "topKeys": 0,
+  "topUnnamed": [],
+  "keys": 0,
+  "unnamed": 0,
+  "schemaFloor": null,
+  "truncated": null
+ },
+ {
+  "call": "read_report {\"path\":\"twin-project/Twin Sales.pbip\",\"format\":\"json\"}",
+  "err": false,
+  "ms": 11,
+  "text": 7419,
+  "tokens": 2120,
+  "wire": 8596,
+  "wireWithStructured": 16036,
+  "topKeys": 12,
+  "topUnnamed": [
+   "reportFilters",
+   "customVisuals",
+   "installedNotUsed",
+   "suspicious",
+   "truncated",
+   "note"
+  ],
+  "keys": 72,
+  "unnamed": 38,
+  "schemaFloor": 2581,
+  "truncated": null
+ },
+ {
+  "call": "check_report {\"path\":\"twin-project/Twin Sales.pbip\"}",
+  "err": false,
+  "ms": 527,
+  "text": 14487,
+  "tokens": 4139,
+  "wire": 15566,
+  "wireWithStructured": 30074,
+  "topKeys": 13,
+  "topUnnamed": [
+   "rulesRun",
+   "impact",
+   "truncated"
+  ],
+  "keys": 78,
+  "unnamed": 45,
+  "schemaFloor": 3895,
+  "truncated": null
+ },
+ {
+  "call": "check_report {\"path\":\"health-project/Health Test Report.pbip\"}",
+  "err": false,
+  "ms": 13,
+  "text": 7708,
+  "tokens": 2202,
+  "wire": 8133,
+  "wireWithStructured": 15862,
+  "topKeys": 14,
+  "topUnnamed": [
+   "rulesRun",
+   "impact",
+   "truncated",
+   "fixRoutes"
+  ],
+  "keys": 69,
+  "unnamed": 45,
+  "schemaFloor": 3537,
+  "truncated": null
+ },
+ {
+  "call": "create_arabic_twin {\"path\":\"twin-project/Twin Sales.pbip\"}",
+  "err": false,
+  "ms": 49,
+  "text": 17829,
+  "tokens": 5094,
+  "wire": 19226,
+  "wireWithStructured": 37076,
+  "topKeys": 22,
+  "topUnnamed": [
+   "notFullyArabic",
+   "keptForNavigation",
+   "sayInPlan",
+   "sayFirst",
+   "approvalPreview",
+   "pageNames"
+  ],
+  "keys": 78,
+  "unnamed": 33,
+  "schemaFloor": 3489,
+  "truncated": null
+ },
+ {
+  "call": "approve_plan {\"planId\":\"plan-000000000000\"}",
+  "err": true,
+  "ms": 3,
+  "text": 253,
+  "tokens": 72,
+  "wire": 309,
+  "wireWithStructured": null,
+  "topKeys": 0,
+  "topUnnamed": [],
+  "keys": 0,
+  "unnamed": 0,
+  "schemaFloor": null,
+  "truncated": null,
+  "head": "Not approved: there is no plan \"plan-000000000000\" (a plan id is good only in this session of the DataArcus server, and a restart forgets it). Make the plan aga"
+ }
+]

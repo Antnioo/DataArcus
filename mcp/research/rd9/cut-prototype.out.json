@@ -1,0 +1,95 @@
+[
+ {
+  "call": "check_report",
+  "size": 14487,
+  "cap": 11590,
+  "fits": true,
+  "after": 11270,
+  "ms": 3.9,
+  "kept": "findings 5/10",
+  "todayFits": true,
+  "todayKept": "findings 4/10; lint 0/0"
+ },
+ {
+  "call": "check_report",
+  "size": 14487,
+  "cap": 8692,
+  "fits": true,
+  "after": 8457,
+  "ms": 1,
+  "kept": "findings 1/10",
+  "todayFits": true,
+  "todayKept": "findings 1/10; lint 0/0"
+ },
+ {
+  "call": "check_report",
+  "size": 14487,
+  "cap": 5795,
+  "fits": false,
+  "after": 8457,
+  "ms": 1.6,
+  "kept": "findings 1/10",
+  "todayFits": false,
+  "todayKept": "findings 1/10; lint 0/0"
+ },
+ {
+  "call": "check_report (health)",
+  "size": 7708,
+  "cap": 6166,
+  "fits": false,
+  "after": 7708,
+  "ms": 0.1,
+  "kept": "",
+  "todayFits": false,
+  "todayKept": "findings 0/0; lint 0/0"
+ },
+ {
+  "call": "check_report (health)",
+  "size": 7708,
+  "cap": 4625,
+  "fits": false,
+  "after": 7708,
+  "ms": 0.1,
+  "kept": "",
+  "todayFits": false,
+  "todayKept": "findings 0/0; lint 0/0"
+ },
+ {
+  "call": "check_report (health)",
+  "size": 7708,
+  "cap": 3083,
+  "fits": false,
+  "after": 7708,
+  "ms": 0.1,
+  "kept": "",
+  "todayFits": false,
+  "todayKept": "findings 0/0; lint 0/0"
+ },
+ {
+  "call": "create_arabic_twin",
+  "size": 17829,
+  "cap": 14263,
+  "fits": true,
+  "after": 14214,
+  "ms": 2,
+  "kept": "texts 20/25; terminology.sheet 1/6; notTranslated 4/21"
+ },
+ {
+  "call": "create_arabic_twin",
+  "size": 17829,
+  "cap": 10697,
+  "fits": false,
+  "after": 11266,
+  "ms": 2,
+  "kept": "texts 20/25; terminology.sheet 1/6; notTranslated 0/21; texts 0/20"
+ },
+ {
+  "call": "create_arabic_twin",
+  "size": 17829,
+  "cap": 7132,
+  "fits": false,
+  "after": 11266,
+  "ms": 1.9,
+  "kept": "texts 20/25; terminology.sheet 1/6; notTranslated 0/21; texts 0/20"
+ }
+]
