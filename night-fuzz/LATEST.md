@@ -1,5 +1,15 @@
 # Night fuzz: latest
 
+## Final summary (night lab, 2 Nov 21:05 to 3 Nov 04:00 UTC)
+
+- Heads tested: integration/0.3.1 a6000a27, 1a5f6584 (MX8); integration/0.3.2 a234f06f, cf86bb21 (DP1), 771e279a (OP1), 550cea1b (SP1), a215ada5 (0.3.1 merged in), 04a99222 (SP3), 66f93a01 (SP2), 90eaa7ca (SP5), 7797bf63 (SP4), 956c4d80 (SP6). 12 heads; for each: 300 generated + 57 real shapes + 6 reduced cases + 100 grid specs, the same seeds also on the previous head. Seeds 2026110300 to 2026113899. No lab errors.
+- V1, V2, D1n, M1, B1, T1, S1: 0 failures on every head. The lab's 6 reduced cases: no counting property fails on any head (V1-1, B1-1, B1-3, M1-1 stay fixed).
+- The one NEW failure of the night: integration/0.3.1 a6000a27 (MX7), B2new: underGrids (mcp/lib/twin-pages.mjs, `function underGrids`) moved a chart onto its heatmap's grid offset over another visual, unsaid (B2new 33 -> 53 of 300 on the same seeds vs eb09d194; 7 reduced cases). MX8 (1a5f6584) answered it: B2new 47 -> 26, every remaining one said in pictureChecks.newOverlaps or involving a group box.
+- X1 (the night lab's own check, a chart lined up with a heatmap grid): before MX8, 50 to 65 of 100 grid specs: a text-typed category's sort was flipped (assets/js/report-mirror.js chartRtl) while the grid stays left to right. MX8: 0 of 100 on most heads. Still seen (old, 2 of 100 on 66f93a01): a chart matched by two heatmaps is moved twice and the last match wins (twin-pages.mjs underGrids, the 0.8-of-the-narrower share test), and a lined-up chart then moved by button fitting (twin-pages.mjs fitButtons) leaves its grid.
+- B2unsaid (new overlaps the plan does not mention, no group box): about 1 of 300 on each MX8 head (0 to 2), old: a page kept left to right (its picture not a PNG or JPEG) is skipped by MX8's new-overlap pass (mcp/lib/twin-pictures.mjs:87) while a button on it is still widened over a neighbour.
+- Lab fixes made in the night lab's copy (not the product): X1 treats a plan-named exception ("kept at its mirror") as M1 does. Three NEW X1 lines for 1a5f6584 at 23:25 were this false positive and were withdrawn. Codex's lab is missing campaign.mjs (any run over 250 cases without --cases fails); the night lab ran batches of 150.
+- Lab-only counts (P1, raw D1, B2, B3) are in each REPORT.md: P1 and raw D1 fail on every report by the lab's own definition; B3 5/57 real shapes on every head.
+
 NEW FAILURE integration/0.3.1 a6000a27 B2new: B2new-1 (new overlap introduced), passes on eb09d194. [why](integration/0.3.1/a6000a27/cases/B2new-1/why.md)
 NEW FAILURE integration/0.3.1 a6000a27 B2new: B2new-6 (new overlap introduced), passes on eb09d194. [why](integration/0.3.1/a6000a27/cases/B2new-6/why.md)
 NEW FAILURE integration/0.3.1 a6000a27 B2new: B2new-8 (new overlap introduced), passes on eb09d194. [why](integration/0.3.1/a6000a27/cases/B2new-8/why.md)
