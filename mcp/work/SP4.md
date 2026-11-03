@@ -25,9 +25,10 @@
 - **Areas (base 04a9922 in a worktree -> after 144a838):** report 44 -> 45 suites (sp4 added; every other count the
   same: glass-default 43, sq13 39, sq15b 25, sp3 10); core 10 -> 10 (mutation 198, 76 mutants killed); checker 7 -> 7;
   j14 30 -> 30 (safety, run alone); lint 0.
-- **CI:** (below)
-- **State:** CI running.
-- **Resume:** CI on the branch; then only this note.
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41561746421 on f2ebe8b** (attempt 1; Linux, Windows
+  and macOS shards). An earlier run (41561707072, on ffb5ce8) was cancelled by me: the note lacked agent-memory's line.
+- **State: DONE.**
+- **Resume:** none; the reviewer's merge.
 
 ## CHANGELOG line
 - **Inside the MCP, the report's fields:** how a report picks and names its fields and their number formats is in one
