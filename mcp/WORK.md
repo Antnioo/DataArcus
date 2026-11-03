@@ -7,8 +7,8 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 ## Where it stands (0.3.2, 3 Nov)
 - 0.3.1 shipped: on main at b79a7ed6 (#104, #114, "## [0.3.1]: 2026-11-03"); each job's note in `mcp/work/<ID>.md`.
 - `integration/0.3.2`: builders branch from it, push only their branch; the reviewer merges; the owner merges to main.
-- 0.3.2: TK1, DP1, OP1, HR1-HR2 (answers fit uncut), HM2, R032 (main in, version 0.3.2, its own
-  CHANGELOG section), SP1-9, SP12-16, SP18-20 (the split). Running: HM1, DT1.
+- 0.3.2: TK1, DP1, OP1, HR1-HR2 (answers fit uncut), HM1-HM2, R032 (main in, version 0.3.2, its own
+  CHANGELOG section), SP1-9, SP12-16, SP18-20 (the split). Running: DT1, ED1, LV1.
 
 ## Next step
 1. The reviewer: R032 into integration/0.3.2. 2. 0.3.2's other jobs; the release day flips the download lines.
