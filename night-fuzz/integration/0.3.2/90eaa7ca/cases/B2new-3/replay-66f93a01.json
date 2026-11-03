@@ -1,0 +1,68 @@
+{
+  "failures": {
+    "P1": [
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v11/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v12/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v11/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v12/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v11/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v12/visual.json"
+        ]
+      }
+    ],
+    "D1": [
+      {
+        "why": "byte difference between independent plans",
+        "files": [
+          "Synthetic AR.Report/.platform"
+        ]
+      }
+    ],
+    "B2": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v11",
+          "p0/v13"
+        ]
+      }
+    ],
+    "B2new": [
+      {
+        "why": "new overlap introduced, said in pictureChecks.newOverlaps",
+        "files": [
+          "p0/v11",
+          "p0/v13",
+          "English [{\"x\":1073,\"y\":240,\"width\":82,\"height\":136,\"z\":11000},{\"x\":574,\"y\":26,\"width\":477,\"height\":244,\"z\":13000}]",
+          "Arabic [{\"x\":125,\"y\":240,\"width\":82,\"height\":136,\"z\":11000},{\"x\":185,\"y\":26,\"width\":477,\"height\":244,\"z\":13000}]",
+          "plan on v11: none",
+          "plan on v13: movedByRule: moved with a button beside it",
+          "in pictureChecks.newOverlaps: true"
+        ]
+      }
+    ]
+  },
+  "extra": {
+    "validatorOriginal": [
+      "PBIR_QUERY_STATE_MISSING"
+    ],
+    "normalizedRepeat": true,
+    "normalizedRenamed": true
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "failures": {
+    "P1": [
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v0/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v11/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v4/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v0/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v11/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v4/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v0/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v11/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v4/visual.json"
+        ]
+      }
+    ],
+    "D1": [
+      {
+        "why": "byte difference between independent plans",
+        "files": [
+          "Synthetic AR.Report/.platform"
+        ]
+      }
+    ],
+    "B2": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v4",
+          "p0/v11"
+        ]
+      }
+    ],
+    "B2new": [
+      {
+        "why": "new overlap introduced, said in pictureChecks.newOverlaps",
+        "files": [
+          "p0/v4",
+          "p0/v11",
+          "English [{\"x\":963,\"y\":252,\"width\":204,\"height\":255,\"z\":4000},{\"x\":620,\"y\":426,\"width\":296,\"height\":55,\"z\":11000}]",
+          "Arabic [{\"x\":470,\"y\":252,\"width\":204,\"height\":255,\"z\":4000},{\"x\":364,\"y\":426,\"width\":296,\"height\":55,\"z\":11000}]",
+          "plan on v4: movedByRule: moved with a button beside it",
+          "plan on v11: none",
+          "in pictureChecks.newOverlaps: true"
+        ]
+      }
+    ]
+  },
+  "extra": {
+    "validatorOriginal": [
+      "PBIR_QUERY_STATE_MISSING"
+    ],
+    "normalizedRepeat": true,
+    "normalizedRenamed": true
+  }
+}

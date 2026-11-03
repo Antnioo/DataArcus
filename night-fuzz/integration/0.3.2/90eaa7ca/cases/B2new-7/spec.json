@@ -1,0 +1,79 @@
+{
+  "pages": [
+    {
+      "id": "p0",
+      "width": 1920,
+      "height": 1080,
+      "visuals": [
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v8",
+          "position": {
+            "x": 1715,
+            "y": 507,
+            "width": 191,
+            "height": 349,
+            "z": 8000
+          },
+          "visual": {
+            "visualType": "actionButton",
+            "objects": {
+              "text": [
+                {
+                  "properties": {
+                    "text": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "'Synthetic action page 0 visual 8'"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "icon": [
+                {
+                  "properties": {
+                    "shapeType": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "'rightArrow'"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v10",
+          "position": {
+            "x": 216,
+            "y": 979,
+            "width": 62,
+            "height": 101,
+            "z": 10000
+          },
+          "visualGroup": {}
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v16",
+          "position": {
+            "x": 318,
+            "y": 663,
+            "width": 612,
+            "height": 417,
+            "z": 16000
+          },
+          "visual": {
+            "visualType": "actionButton"
+          }
+        }
+      ]
+    }
+  ]
+}
