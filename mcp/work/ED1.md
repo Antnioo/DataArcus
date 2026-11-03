@@ -31,7 +31,10 @@
   0.3.0-claims 688; site 624 (base 622), anchors 120; ar-pages 38 copies match.
 - **CI:** run 41682703224 on 8ce314a: all green but website-suites (1): ar-pages.mjs, the AR copy I had edited by hand
   (`&mdash;`) differs from a fresh render (the character). Fixed: `ar-pages.mjs --write`, QUOTED takes both forms.
-- **Resume:** done when CI is green on the branch (the line below).
+  Merged origin/integration/0.3.2 once (R032: WORK.md kept theirs plus my line; my CHANGELOG line moved under the new
+  [Unreleased]: 0.3.2 heading); after it site 624, anchors 120, lint 0, claims 688, ar-pages 38.
+- **Resume:** DONE. CI green: https://github.com/Antnioo/DataArcus/actions/runs/41689780791 on f5d9d945 (attempt 2:
+  macOS shard 1 was cancelled with no runner and no FAIL line, rerun once with --failed).
 
 ## CHANGELOG line
 - **The website, steadier and plainer:** the Model Health Check article no longer jumps when its font arrives on a
