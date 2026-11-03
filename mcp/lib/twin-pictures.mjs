@@ -80,6 +80,13 @@ export function flipPicturesOf(R, loc, info, built, keepLtr) {
       barsTurned: ['the bar chart drawn over the table or matrix grows from the right in the twin, while the table stays left to right inside', 'المخطط الشريطي المرسوم فوق الجدول أو المصفوفة ينمو من اليمين في النسخة العربية، بينما يبقى الجدول من اليسار إلى اليمين']};
     newOverlaps(en, visuals).forEach((o) => { const t = SAID[o.why] || SAID.new; checks.newOverlaps.push({ where: safeName(pg.id) + ': ' + o.visuals.map((n) => safeName(n)).join(', '), what: t[0], whatAr: t[1] }); });
   });
+  // (0.3.1 MX8, the night lab's B2new cases on a6000a27: a chart moved under a heatmap's grid onto another visual, and
+  // newOverlaps said nothing: only pages drawn on a picture were checked) every other mirrored page's new overlaps too
+  const NEW = ['these visuals overlap in the twin and did not in the English page', 'تتداخل هذه المرئيات في النسخة العربية ولم تكن تتداخل في الصفحة الإنجليزية'];
+  built.pages.forEach(({ pg, page, visuals }) => {
+    const x = info.get(String(pg.id)); if ((x && x.picture === 'flipped') || keepLtr(pg) || !isObj(page)) return;
+    newOverlaps(pg.visuals.map((v) => v.json), visuals).filter((o) => o.why === 'new').forEach((o) => checks.newOverlaps.push({ where: safeName(pg.id) + ': ' + o.visuals.map((n) => safeName(n)).join(', '), what: NEW[0], whatAr: NEW[1] }));
+  });
   built.addedPictures = added;
   built.pictureChecks = checks.offPanel.length || checks.newOverlaps.length ? checks : null;
 }

@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.1
+- **A fourth test run in Power BI Desktop:** a chart lined up under a heatmap's grid keeps its English padding, value
+  axis and sort as well as its place, so each bar stands under its own hour, and the day names beside a heatmap get room
+  for their last row, so no scrollbar covers them.
 - **A third test run in Power BI Desktop:** the day names beside a heatmap by weekday no longer wrap onto two lines, so
   they stay level with the grid's rows without a scrollbar of their own, and a chart lined up under a heatmap's grid
   stays under the same hours as in English.
@@ -25,6 +28,8 @@ package's manifest; this file says what is in it.
   cap.
 - **Inside the MCP:** the words a report plan says are kept in one file of their own; every plan says exactly what it
   said before.
+- **Inside the MCP:** the sample project's plan and a redesign's plan are made in a file of their own; each plan says
+  and does exactly what it did before.
 - **Inside the report writer:** the zip file and the sample sales data each have a file of their own; every download,
   on the website and from the MCP, is byte for byte what it was before.
 - **More of the Arabic twin like the English:** more matrices that are lists are written as tables, so their first column
@@ -51,6 +56,8 @@ package's manifest; this file says what is in it.
   `aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb`. In Claude Desktop, uninstall 0.3.1 (Settings >
   Extensions > DataArcus for Power BI > Uninstall), then double-click the 0.3.0 file and choose Install. Your reports
   stay where they were written.
+- **Inside the MCP, the report's answer:** what create_report says after writing a report is put together in one file
+  of its own; every answer and every written file is exactly what it was before.
 - **Bars and columns are never too thick:** where the number of categories is known (a chart kept to its top N, days,
   months, quarters, a field of two or a few known values), a bar or column is at most 36 thick on a 1280 x 720 page
   (45 at 1920 x 1080), so three bars or columns no longer fill the chart; the space between them grows evenly, on the
