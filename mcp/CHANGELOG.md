@@ -11,6 +11,9 @@ package's manifest; this file says what is in it.
 - **Inside the Arabic twin:** the rules that say what kind a visual is, which chart axis is time and what keeps reading
   left to right inside a mirrored visual have a file of their own; every twin and every right-to-left chart is exactly
   what it was before.
+- **The twin says when a turned chart holds a running calculation:** its plan names each visual it turns right to
+  left that holds a running sum, moving average, previous, next, first, last or rank calculation, in English and
+  Arabic, so its numbers can be checked against the original in Desktop; the twin itself is written as before.
 - **A chart under a heatmap that cannot move:** when lining it up under the heatmap's grid would cover another
   visual, it stays where the plain mirror puts it but keeps its English sort, value axis and padding, so its hours still
   read left to right like the grid above it.
