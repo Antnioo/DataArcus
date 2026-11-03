@@ -3,56 +3,62 @@
 ## Summary
 - **Approval:** the reviewer's brief "ED1" (3 Nov); the owner D-1016-01, D-1102-02, D-1103-09, D-1027-15 (no new em
   dashes, the old ones cleaned after 0.3.1). Backlog B-255, B-292 (the night audit's AUD-048).
-- **Base:** `fix/0.3.2-ed1` from `origin/integration/0.3.2` at 0c6ad5d. Push only this branch; never merge. Website only.
-- **B-255, found on the base** (`git grep` for U+2014 outside mcp/work/ and mcp/CHANGELOG.md): the 5 lines of the brief
-  plus 2 it did not list: `scripts/tests/lib.mjs:89` (a comment) and `mcp/lib/redesign.mjs:59` (a regex that strips a
-  trailing dash from a title: MCP code, another builder's; kept, listed in the gate as the one allowed file, Seen).
-  Bootstrap's vendor CSS and its .map hold one each (not ours; the gate skips `assets/css/vendor/`).
-  - The article's dash (EN and AR, page and translations) is inside a word-for-word quote of Microsoft's
-    bi-directional guidance ("All one-to-one relationships must be bi-directional", an em dash, "it isn't possible to configure otherwise", checked on
-    learn.microsoft.com today). The quote stays exact: written `&mdash;` (the same character on screen), and the gate
-    allows the entity only inside that quote.
-  - arabic-calendar.js (a comment): the quoted dash becomes "a dash"; pl300-bank/build.js (the bank's own guard):
-    its regex names the character by its escape (`\u2014`, the same test, no literal character); lib.mjs's comment: a colon.
-- **The gate:** `scripts/test-site-config.mjs` (runs in CI, tests.yml "site config") gains one check: every tracked text
-  file (pages, translations, scripts, CSS, JSON, Markdown, YAML) outside mcp/work/, mcp/CHANGELOG.md and
-  assets/css/vendor/ has no U+2014, and no page or translation writes it as `&mdash;`/`&#8212;`/`&#x2014;` outside
-  the quote above. Its PASS line names the files it read.
-- **B-292, measured on the base** (Playwright 1.63, Chromium 1243, 390 x 844, Inter served 500 ms late as site.mjs
-  does, 5 runs): CLS 0.103, 0.103, 0.103, 0.103, 0.104 (5 of 5; 0 with no web font). One shift at about 700 ms: the
-  intro's second paragraph (content.p2), its text moving 29 px up. **Cause: the font swap**, on one line. The fallback
-  ("Inter Fallback", style.css:36-56) is within 0.07% of Inter over the whole paragraph (3,028.92 vs 3,026.89 px), but
-  the first line "So we built a free Power BI Model Health Check." is 365.88 px in Inter in a 366 px column: it fits by
-  0.12 px, so the fallback (369.27 px) wraps "Check." and the swap pulls the paragraph up one line. No image or script.
-- **Fix:** the words, not the fallback (any fallback misses 0.12 px): the first sentence starts "That is why we built a
-  free ..." (EN page and translation; the AR text is not touched, AR measured too), so line 1 breaks in the same place in
-  both fonts. To check at 360, 375, 390, 414 px: no line of the article's body re-wraps on the swap.
-- **The check:** `scripts/tests/site.mjs`'s web-font swap test (AUD-002) gains the page: CLS 0.1 or less at 1440 and
-  390 px (+2 checks), the same measure as its other pages.
-- **Expected:** site suite +2 checks, green; site config PASS with the new check (fails on the base: 7 lines);
-  `npm run -s build:min` changes 2 .min.js (best-practice-exceptions and health-check translations) with a new ?v=
-  on every page that loads each; lint 0; claims and changelog-words green; sitemap-lastmod --write after the last commit.
-
-## Plan
-1. This note (commit, push). 2. B-255 edits + the gate. 3. B-292 words + the site.mjs check. 4. build:min, ?v= stamps,
-suites, lint. 5. Merge the integration branch once if it moved, CI, the note's result, sitemap-lastmod.
-
-## Got
-(after the work)
+- **Base:** `fix/0.3.2-ed1` from `origin/integration/0.3.2` at 0c6ad5d. Push only this branch; never merge.
+- **Scope:** website only. B-255: `git grep` for U+2014 outside mcp/work/ and mcp/CHANGELOG.md found the brief's 5
+  lines plus 2 it did not list (`scripts/tests/lib.mjs:89`, a comment; `mcp/lib/redesign.mjs:59`, MCP code, kept: Seen)
+  and Bootstrap's vendor CSS and .map (not ours, skipped). The article's dash (EN and AR, page and translations) is
+  inside a word-for-word quote of Microsoft's bi-directional guidance (checked on learn.microsoft.com today): kept
+  exact, written `&mdash;`. arabic-calendar.js's comment says "a dash"; pl300-bank/build.js's own guard names the
+  character by its escape (`\u2014`, same test); lib.mjs's comment takes a colon.
+  The gate: `scripts/test-site-config.mjs:89-111` (CI tests.yml:83, "site config"): every tracked text file outside
+  mcp/work/, mcp/CHANGELOG.md and assets/css/vendor/ has no U+2014 (redesign.mjs: its one allowed), and no page or
+  translation writes `&mdash;`/`&#8212;`/`&#x2014;` outside the quote (`QUOTED`). On the base it fails with 7 lines.
+  B-292, measured on the base (Playwright 1.63, Chromium 1243, 390 x 844, Inter 500 ms late as site.mjs serves it,
+  5 runs): CLS 0.103, 0.103, 0.103, 0.103, 0.104 (0 with no web font). One shift at about 700 ms: content.p2's text,
+  29 px up. **Cause: the font swap** on one line. The fallback ("Inter Fallback", style.css:36-56) is within 0.07% of
+  Inter over the paragraph, but its first line was 365.88 px in Inter in a 366 px column: the fallback (369.27 px)
+  wrapped "Check." and the swap pulled the paragraph up a line. No image, no late script.
+  Fix, the words: "So we made a free ... on a model that anyone can download ... one of Microsoft's public samples"
+  (EN page and translation; the AR text untouched). A sweep of 37 wordings at 15 widths (320 to 1920 px) compared each
+  word's line in Inter and in the fallback: the original differed at 390, 393, 414; my first try ("That is why we
+  built") moved the problem to 1440-1920 (CLS 0.058 and 0.101 there); the chosen one differs at none.
+  The check: `scripts/tests/site.mjs`'s font-swap test (AUD-002) gains the page at 1440 and 390 px, 0.1 or less.
+- **Expected checks:** site 622 -> 624; site config PASS with the new check (FAIL on the base, 7 lines); 2 .min.js
+  rebuilt, each with ?v=20261103a on its 2 pages; lint 0; changelog-words, 0.3.0-claims green.
+- **Got:** after the fix (5 runs each, Inter late): 320 px 0-0.004, 360 0, 390 0, 414 0.001-0.003, 1440 0.002; AR 390 0.
+  site config PASS (1373 files); check-min: every changed .min.js has a new stamp; lint 0; changelog-words 439,
+  0.3.0-claims 688; site and anchors: see Resume.
+- **Resume:** done when CI is green on the branch (the line below).
 
 ## CHANGELOG line
+- **The website, steadier and plainer:** the Model Health Check article no longer jumps when its font arrives on a
+  phone, and the site's own pages and scripts no longer use the long dash (a quote of Microsoft's guidance keeps it).
 
 ## Decisions I made
+- The Microsoft quote keeps its dash as `&mdash;`: the brief says keep a quote exact; the entity shows the same
+  character and the gate allows it only inside that one quote.
+- The gate is in site config (every website change runs it, rule 2026-10-06) and covers the whole repository's text
+  except the job notes, the changelog's history and vendor files, so MCP code is covered too (one named exception).
+- B-292 fixed by the words, not the fallback: no fallback font matches every line to 0.12 px; three words changed,
+  chosen by measuring every word's line in both fonts at 15 widths.
 
 ## For the owner
-none
+- The Health Check article's intro now reads "So we made a free Power BI Model Health Check. To show what it finds on
+  a model that anyone can download ... one of Microsoft's public samples" (was "built", no "that", "own"). Meaning
+  unchanged; my recommendation: keep it (it is what stops the phone-width jump).
 
 ## Risky changes
 none
 
 ## Seen, not in scope
+- `mcp/lib/redesign.mjs:59` holds a literal em dash in a regex (strips a trailing dash from a title): MCP code, another
+  builder's area. Writing it `\u2014` would let the gate drop its one exception.
+- Any English article can meet the same swap on a line that fits Inter within about 1%: the font-swap test covers 4
+  pages; a sweep like this note's over every article would find the others before a visitor does.
 
 ## For the laptop
 none
 
 ## Lessons for the reviewer
+- A layout shift from a font swap is a per-line near-fit, not a bad fallback: measure every word's line in both fonts at
+  many widths; fixing one width by rewording can move the problem to another (here 390 to 1440).

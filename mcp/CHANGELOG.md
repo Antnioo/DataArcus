@@ -442,6 +442,8 @@ package's manifest; this file says what is in it.
   Power BI Desktop places it; a title indented with tabs keeps its room on the icon's side; a chart drawn over a table
   or matrix keeps its place on it, and no visual lands on a matrix's row headers; an Arabic help line that starts with
   a number or ends with a full stop reads in the right order.
+- **The website, steadier and plainer:** the Model Health Check article no longer jumps when its font arrives on a
+  phone, and the site's own pages and scripts no longer use the long dash (a quote of Microsoft's guidance keeps it).
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
