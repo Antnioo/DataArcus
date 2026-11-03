@@ -135,3 +135,6 @@
   and the matrix end above its top. hm2 12 -> 15 checks. `fixtures/hm2/A1-1.json` unchanged.
 - **Checks on wave/hm1-merge:** hm2 15, hm1 16, mx3 25, mx4 24, mx5 17, mx7 14, mx8 18, twin-fuzz 185; lint 0. (No mx6
   suite: MX6 is twin-fuzz.)
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41687428460 on d1ad9eca** (Linux, Windows, macOS,
+  website; macOS shards 0 and 4 cancelled with no steps on the first attempt, green on the one `rerun --failed`). After
+  d1ad9eca only this note changed. State: DONE (wave/hm1-merge).
