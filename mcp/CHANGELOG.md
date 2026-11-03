@@ -39,6 +39,8 @@ package's manifest; this file says what is in it.
 - **Inside the Model Health Check, again:** the model's index (its tables, columns, measures and what each one uses)
   is in a file of its own and is never changed once built; every check gives the same findings, unused fields, score and
   questions as before.
+- **Inside the MCP, the redesign:** placing a report's visuals on the grid (and keeping a visual laid over another with
+  it) is in a file of its own; every redesign plan moves, keeps and explains each visual exactly as before.
 - **Inside the Model Health Check:** reading DAX and the fields a report uses is in a file of its own; every check, on
   the website and from the MCP, gives the same findings, unused fields, score and questions as before.
 - **Inside the report writer:** the page buttons and the filter panels (the tabs, the slicers with their Reset, the

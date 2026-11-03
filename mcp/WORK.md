@@ -9,7 +9,7 @@ first. Finished entries: [work/archive/](work/archive/README.md).
   one PR integration -> main at the end, the owner merges (the owner: max 4 builders for three rounds, then 2-3).
 - Merged 21-28 Oct: waves 1-6, the release audit, the Seen batches SQ1-SQ13, LR1 to CX1, and laptop part 3's SPD, P3A, FX1-FX6 (FX3b-FX5b) (each note in `mcp/work/<ID>.md`).
 - 29 Oct-1 Nov (laptop parts 4-8): TB2, TB1, TB1b, TB1c, MP1, MP1b, MP1c, MR1, MP1d, MX1, MP1e, MX2, MP1f, MX3, MX4, MX5, MX6, MX7, MX8 (each in `work/<ID>.md`).
-- 0.3.2 (this branch): TK1, DP1, OP1, SP1-9, SP12-13, SP15 (the split). Running: SP14, SP18, HR1.
+- 0.3.2 (this branch): TK1, DP1, OP1, SP1-9, SP12-13, SP15 (the split). Running: SP14, SP18, SP19, HR1.
 
 ## Next step
 1. 0.3.1: the laptop's yes, then the owner's merge to main. 2. 0.3.2 after it.

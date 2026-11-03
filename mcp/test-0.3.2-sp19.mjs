@@ -16,6 +16,9 @@ import './test-env.mjs';
 //   C8   a 1920 x 1080 page: rows touching, a shape beside a row (the margin sentence)
 //   C9   a group among native visuals, and a hidden visual
 //   C10  titles, a restyle and consistentText "report" on a page with overlapping rows
+//   I1   (after the move) lib/redesign-grid.mjs exports the geometry and the grid; redesign.mjs's unitsOf is its own
+//   I2   redesign.mjs no longer defines them; redesign-grid.mjs reads and writes no file
+//   I3   gridPage on made-up items: the same answer twice, the items' boxes unchanged
 //   node test-0.3.2-sp19.mjs
 import fs from 'node:fs';
 import os from 'node:os';
@@ -113,6 +116,24 @@ const gold = JSON.parse(fs.readFileSync(GOLD, 'utf8')).cases;
 const first = (a, b) => { const x = JSON.stringify(a), y = JSON.stringify(b); let i = 0; while (i < x.length && x[i] === y[i]) i++; return `at ${i}: now ...${x.slice(Math.max(0, i - 60), i + 80)} | recorded ...${y.slice(Math.max(0, i - 60), i + 80)}`; };
 for (const [name] of CASES) chk(() => gold[name] && JSON.stringify(got[name]) === JSON.stringify(gold[name]),
   () => `${name.split(' ')[0]}. planRedesign for "${name.replace(/^C\d+ /, '')}" is the base's (problems, patches, pages, answer): ${gold[name] ? first(got[name], gold[name]) : 'not recorded'} (SP19_DUMP=<file> writes them)`);
+
+// ---------- after the move (SP19): the grid is in lib/redesign-grid.mjs ----------
+const G = await import('./lib/redesign-grid.mjs');
+const MOVED = ['TABLES', 'box', 'shownBox', 'overlap', 'TOL', 'inside', 'sameBox', 'precedes', 'follow', 'unitsOf', 'gridPage'];
+chk(() => MOVED.every((k) => G[k] !== undefined) && R.unitsOf === G.unitsOf && typeof G.gridPage === 'function',
+  () => `I1. lib/redesign-grid.mjs exports the geometry and the grid, and redesign.mjs's unitsOf is its function: missing ${JSON.stringify(MOVED.filter((k) => G[k] === undefined))}`);
+const src = fs.readFileSync(path.join(HERE, 'lib', 'redesign.mjs'), 'utf8'), gsrc = fs.readFileSync(path.join(HERE, 'lib', 'redesign-grid.mjs'), 'utf8');
+const defined = ['function gridPage', 'function unitsOf', 'function follow', 'const box =', 'const shownBox =', 'const overlap =', 'const TOL =', 'const TABLES =', 'const inside =', 'const sameBox ='].filter((d) => src.includes(d));
+chk(() => !defined.length && /import \{ box, shownBox, unitsOf, gridPage \} from '\.\/redesign-grid\.mjs';/.test(src) && !/from 'node:(fs|path)'|writeTree|readFileSync/.test(gsrc),
+  () => `I2. redesign.mjs no longer defines the grid (it imports it) and redesign-grid.mjs reads and writes no file: still defined ${JSON.stringify(defined)}`);
+// gridPage on made-up items: the same answer twice, the items' own boxes unchanged (positions out, nothing written)
+const items = () => [['a', 'card', 0, 0, 400, 200, 1], ['b', 'lineChart', 410, 0, 860, 210, 2], ['c', 'tableEx', 0, 220, 1280, 480, 3], ['n', 'card', 0, 0, 400, 200, 0]]
+  .map(([name, type, x, y, w, h, z]) => ({ v: { id: name }, name, type, z, b: G.box({ x, y, w, h }), movable: true }));
+const run = () => { const it = items(), before = JSON.stringify(it.map((x) => x.b)); G.unitsOf(it); const g = G.gridPage({ w: 1280, h: 720 }, it);
+  return { before, after: JSON.stringify(it.map((x) => x.b)), leads: it.map((x) => (x.lead ? x.lead.name : null)), plan: [...g.plan].map(([x, b]) => [x.name, b]), why: [...g.why].map(([x, w]) => [x.name, w]), gap: g.gap, margins: g.margins }; };
+const r1 = run(), r2 = run();
+chk(() => JSON.stringify(r1) === JSON.stringify(r2) && r1.before === r1.after && r1.leads[0] === 'n' && r1.plan.length && r1.gap === 16,
+  () => `I3. gridPage gives the same answer twice and leaves the items' boxes as they were (two cards in one box: the lower z, n, is the lead): ${JSON.stringify(r1).slice(0, 400)}`);
 
 fs.rmSync(ROOT, { recursive: true, force: true });
 if (problems.length) { console.log(`FAIL script=test-0.3.2-sp19.mjs cause=${problems[0].slice(0, 300).replace(/\s+/g, ' ')}`); problems.forEach((x) => console.log('  - ' + x)); console.log(`FAIL  sp19  ${checks - problems.length} of ${checks} checks`); process.exit(1); }
