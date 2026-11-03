@@ -23,7 +23,11 @@
   11. The written twin's digest a027c648b88ac031 on the base and after (byte-identical, .platform without its drawn
   logicalId). Plan answer: twin-project 15,847 -> 15,847 (+0); the vc1 shape 16,737 -> 17,536 (+799: the Arabic is
   escaped in the answer), under 40,000. No other suite's expected number moved. twin 34 of 34 suites, arabic 15 of 15, report 56 of 57 (glass-tables, on the base too: Seen); fx1 3 x 22; lint 0.
-- **Resume:** CI on the branch (below), then the reviewer; the laptop (RD2-D2).
+- **State: NOT DONE (CI not green, no test failed).** Run https://github.com/Antnioo/DataArcus/actions/runs/41711930384
+  on 7b4dbd9: Linux 5 of 5, Windows 5 of 5, macOS 4 of 5, website green; macOS shard 4 cancelled twice (the run and
+  the one `--failed` rerun), after 15 min each, with no steps logged and no FAIL line (as HM1's shard 0). Not rerun
+  again (the brief): the reviewer's call (a fresh `gh workflow run`). integration/0.3.2 did not move (71819c3).
+- **Resume:** the reviewer: CI's macOS shard 4, then the merge; the laptop (RD2-D2).
 
 ## The plan
 1. Sources (below), the base numbers (answer sizes, fx1 x3, the twin's written bytes on the vc1 shape).
