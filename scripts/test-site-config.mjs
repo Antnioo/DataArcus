@@ -88,24 +88,26 @@ for (const f of ['scripts', 'mcp'].flatMap(scriptsWith)) ok(!/import\.meta\.url\
 
 // No em dash (U+2014) in the repository's own text (the owner, 27 Oct, D-1027-15; 0.3.2 ED1): every tracked page,
 // translation, script, style, data and note file, outside the job notes (mcp/work/), the changelog's history and
-// Bootstrap's vendor files. A page or translation may not write it as an entity either, except inside a word-for-word
-// quote of someone else's page (QUOTED). Code that recognises the character names it by its escape (\u2014).
+// Bootstrap's vendor files. A page or translation may not write it as an entity either. The one exception is a
+// word-for-word quote of someone else's page (QUOTED): written &mdash; in the sources, and as the character itself in
+// the generated Arabic copy (ar-pages.mjs saves the page as the browser serialises it). Code that recognises the
+// character names it by its escape (\u2014).
 const EM = String.fromCharCode(0x2014);
 const DASH_TEXT = /\.(html|m?js|cjs|css|json|md|ya?ml|txt|xml|svg|webmanifest|tmdl|dax|tsv)$/i;
 const DASH_SKIP = /^(mcp\/work\/|mcp\/CHANGELOG\.md$|assets\/css\/vendor\/|node_modules\/)/;
 // file: why its one literal em dash stays (MCP code, out of the website's scope; a regex that strips a trailing dash)
 const DASH_ALLOWED = { 'mcp/lib/redesign.mjs': 1 };
 // Microsoft's bi-directional relationship guidance, quoted in the best-practice-exceptions article (EN and AR)
-const QUOTED = ["must be bi-directional&mdash;it isn't possible to configure otherwise"];
+const QUOTED = ["must be bi-directional&mdash;it isn't possible to configure otherwise"].flatMap((q) => [q, q.replace('&mdash;', EM)]);
 let dashFiles = [];
 try { dashFiles = execFileSync('git', ['ls-files', '-z'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).split('\0').filter((f) => f && DASH_TEXT.test(f) && !DASH_SKIP.test(f) && exists(f)); }
 catch (e) { fails.push(`em dash check: git ls-files failed (${e.message})`); }
 ok(dashFiles.length > 500, `em dash check: only ${dashFiles.length} tracked text files (expected the whole repository)`);
 for (const f of dashFiles) {
-  const t = read(f), lit = t.split(EM).length - 1;
+  const t = QUOTED.reduce((s, q) => s.split(q).join(''), read(f)), lit = t.split(EM).length - 1;
   ok(lit === (DASH_ALLOWED[f] || 0), `${f}: ${lit} em dash(es) (U+2014): use a comma, a colon, parentheses or " - "`);
   if (/\.(html|js)$/.test(f)) {
-    const left = QUOTED.reduce((s, q) => s.split(q).join(''), t).match(/&mdash;|&#8212;|&#x2014;/gi);
+    const left = t.match(/&mdash;|&#8212;|&#x2014;/gi);
     ok(!left, `${f}: writes an em dash as ${left && left[0]} outside a quoted title`);
   }
 }

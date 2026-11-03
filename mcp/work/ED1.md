@@ -8,11 +8,12 @@
   lines plus 2 it did not list (`scripts/tests/lib.mjs:89`, a comment; `mcp/lib/redesign.mjs:59`, MCP code, kept: Seen)
   and Bootstrap's vendor CSS and .map (not ours, skipped). The article's dash (EN and AR, page and translations) is
   inside a word-for-word quote of Microsoft's bi-directional guidance (checked on learn.microsoft.com today): kept
-  exact, written `&mdash;`. arabic-calendar.js's comment says "a dash"; pl300-bank/build.js's own guard names the
+  exact, written `&mdash;` in the sources (the generated AR copy holds the character: ar-pages.mjs saves what the
+  browser serialises). arabic-calendar.js's comment says "a dash"; pl300-bank/build.js's own guard names the
   character by its escape (`\u2014`, same test); lib.mjs's comment takes a colon.
-  The gate: `scripts/test-site-config.mjs:89-111` (CI tests.yml:83, "site config"): every tracked text file outside
+  The gate: `scripts/test-site-config.mjs:89-113` (CI tests.yml:83, "site config"): every tracked text file outside
   mcp/work/, mcp/CHANGELOG.md and assets/css/vendor/ has no U+2014 (redesign.mjs: its one allowed), and no page or
-  translation writes `&mdash;`/`&#8212;`/`&#x2014;` outside the quote (`QUOTED`). On the base it fails with 7 lines.
+  translation writes `&mdash;`/`&#8212;`/`&#x2014;`; the quote (`QUOTED`) is allowed in either form. Base: FAIL, 3 lines.
   B-292, measured on the base (Playwright 1.63, Chromium 1243, 390 x 844, Inter 500 ms late as site.mjs serves it,
   5 runs): CLS 0.103, 0.103, 0.103, 0.103, 0.104 (0 with no web font). One shift at about 700 ms: content.p2's text,
   29 px up. **Cause: the font swap** on one line. The fallback ("Inter Fallback", style.css:36-56) is within 0.07% of
@@ -23,11 +24,13 @@
   word's line in Inter and in the fallback: the original differed at 390, 393, 414; my first try ("That is why we
   built") moved the problem to 1440-1920 (CLS 0.058 and 0.101 there); the chosen one differs at none.
   The check: `scripts/tests/site.mjs`'s font-swap test (AUD-002) gains the page at 1440 and 390 px, 0.1 or less.
-- **Expected checks:** site 622 -> 624; site config PASS with the new check (FAIL on the base, 7 lines); 2 .min.js
+- **Expected checks:** site 622 -> 624; site config PASS with the new check (FAIL on the base); 2 .min.js
   rebuilt, each with ?v=20261103a on its 2 pages; lint 0; changelog-words, 0.3.0-claims green.
 - **Got:** after the fix (5 runs each, Inter late): 320 px 0-0.004, 360 0, 390 0, 414 0.001-0.003, 1440 0.002; AR 390 0.
   site config PASS (1373 files); check-min: every changed .min.js has a new stamp; lint 0; changelog-words 439,
-  0.3.0-claims 688; site and anchors: see Resume.
+  0.3.0-claims 688; site 624 (base 622), anchors 120; ar-pages 38 copies match.
+- **CI:** run 41682703224 on 8ce314a: all green but website-suites (1): ar-pages.mjs, the AR copy I had edited by hand
+  (`&mdash;`) differs from a fresh render (the character). Fixed: `ar-pages.mjs --write`, QUOTED takes both forms.
 - **Resume:** done when CI is green on the branch (the line below).
 
 ## CHANGELOG line
@@ -60,5 +63,7 @@ none
 none
 
 ## Lessons for the reviewer
+- The /ar/ pages are generated (ar-pages.mjs): after an EN page with an AR copy changes, `ar-pages.mjs --write`, never
+  a hand edit; CI's website-suites shard 1 runs the check first.
 - A layout shift from a font swap is a per-line near-fit, not a bad fallback: measure every word's line in both fonts at
   many widths; fixing one width by rewording can move the problem to another (here 390 to 1440).
