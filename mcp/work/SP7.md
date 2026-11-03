@@ -28,6 +28,11 @@
   layout-canvas 31; lint 0; check-min (stamps against main) and test-site-config pass; csp, ar-pages, sitemap clean.
 - **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41570057046 on 4c90c01a** (first run, every job green;
   integration/0.3.2 had not moved from 90eaa7c: nothing merged in).
+- **Merged integration/0.3.2 in (956c4d80: SP4, SP6)** at eb08b20c: both sides kept (run-all.mjs: sp6 in shard 2,
+  sp7 in shard 1; tests.json, the CHANGELOG lines, the BUILDER list and every ?v= stamp, one per script path; WORK.md
+  3,180 characters). After it: report 48/48 (sp5 12, sp7 11, sp3 10, sp4 5, sp6 13), core 11/11 (mutation 198),
+  arabic 15/15; website sp7 3, sp6 4, sp5 3, pbip 111, both generators 922; lint 0; check-min and site config pass.
+  **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41576555869 on eb08b20c.**
 - **State: DONE.**
 - **Resume:** none; the reviewer's merge.
 
