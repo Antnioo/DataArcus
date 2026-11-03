@@ -15,8 +15,8 @@
   B5's plan with an id (hr1): 37,7xx -> 37,046 (forAuthoring reshaped too).
 - **Expected checks:** (written first) hr2 red on 10aa0f2, green after; no other suite's line moves. **Got:** hr2
   red on 10aa0f2 (G1-G3 and U), 7 checks green on d89206cc; hr1 10 checks green. Areas: see Results.
-- **State:** code done (d89206cc), merged origin/integration/0.3.2 once (96f85e95, SP20); the area runs and CI next.
-- **Resume:** the area runs on 96f85e95, then `gh workflow run tests.yml --ref fix/0.3.2-hr2`.
+- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41622279492 on 7160e562.
+- **Resume:** none; the reviewer's merge.
 
 ## Results
 - Commits: b09b4dd8 (the plan), 260ba438 (the guard red, in `ignored`), d89206cc (the code, hr2 in `suites`, CHANGELOG),
@@ -25,7 +25,11 @@
   CHANGELOG.md +2; WORK.md's 0.3.2 line names HR2.
 - Areas on d89206cc (before the merge): report 55 suites passed and 1 failed: glass-tables, because this clone was
   shallow (`git show cba24a5` not found); after `git fetch --unshallow` it passes, 113 checks. arabic 15, checker 7.
-- Lint: exit 0.
+- After the merge (96f85e95): report 56 suites passed (hr1 10, hr2 7 checks), arabic 15, checker 8, core 11;
+  bilingual-report 33 checks and fx1 22 checks, three times each, all PASS. Lint: exit 0.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41622279492 on 7160e562 (the first attempt: macOS
+  shard 2 failed custom-visuals-lab CL-2, Microsoft's validator `PBIR_SCHEMA_UNREACHABLE`, a network warning on the
+  runner; `gh run rerun --failed` once: green).
 
 ## CHANGELOG line
 "Every text that stays English is listed: the bilingual plan's step before the Arabic texts (every option on) is no
@@ -41,6 +45,8 @@ longer cut; it says each reason once, with its texts under it, so the person see
 - Not done (not a repeat that can be said once without changing what is listed): the 38 texts that are both in
   `bilingual.texts` and in `notTranslated` (the texts the person is being asked to label): notTranslated keeps each
   text and where, as the brief says.
+- One rerun of the failed macOS shard (a FAIL line, not a cancel): its cause was the validator not reaching
+  Microsoft's schema (a warning), in a suite this job does not touch, green on Linux and Windows in the same run.
 - The guard drives HR1's person only up to the first answer with `bilingual` (the step), so it stays short.
 
 ## For the owner
@@ -54,6 +60,8 @@ none
 
 ## Seen, not in scope
 - `bilingual.texts` order still varies run to run (HR1's Seen): about 100 characters between two runs.
+- custom-visuals-lab CL-2 fails when the runner cannot reach Microsoft's PBIR schema (macOS, 3 Nov): a network
+  warning counted as a warning.
 - A shallow clone fails glass-tables (`git show cba24a5`): CI's checkout depth is fine, a local session is not.
 
 ## Lessons for the reviewer
