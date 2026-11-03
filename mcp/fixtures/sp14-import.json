@@ -1,0 +1,126 @@
+{
+ "F1 project": {
+  "folder": "Twin Sales.SemanticModel",
+  "path": "twin-project/Twin Sales.SemanticModel",
+  "others": 0,
+  "reports": [
+   "Twin Sales"
+  ],
+  "tables": 2,
+  "names": "Sales|Calendar",
+  "rels": 1,
+  "all": "8da05050548e2fe317b08f3ea7b0aac88c11b3665057be99fe2b5b5c3c524c54",
+  "bind": "c297019426920def96e3710afb4a1a80e8900d431ab31db69c13fcc8157a76d7"
+ },
+ "F2 model folder": {
+  "folder": "Plain Orders.SemanticModel",
+  "path": "Plain Orders.SemanticModel",
+  "others": 0,
+  "reports": [],
+  "tables": 2,
+  "names": "Orders|Dates",
+  "rels": 1,
+  "all": "5b882f8069b8fab99874ea7dd2542d8a8e35d86e2d1f1a4dceb0c685cfca7e52",
+  "bind": "3dc6d0379aa45c3707424645a3c2770ee28043944cdb07f8770cc6875d58dd8a"
+ },
+ "F3 dataset": {
+  "folder": "Service Orders.Dataset",
+  "path": "service-orders/Service Orders.Dataset",
+  "others": 0,
+  "reports": [
+   "Service Orders"
+  ],
+  "tables": 3,
+  "names": "Work Orders|Dim Date|Dim Age Bucket",
+  "rels": 2,
+  "all": "ce5c2f2a60e263c55e73111e55d1e2572109271cbb64961b761c86016209b6d9",
+  "bind": "07ab77b67c191ab531fb307ce8d8fd888dc219addcc38dccf04ef5ba80cd7b80"
+ },
+ "F4 backup": {
+  "folder": "Health Test.SemanticModel",
+  "path": "proj/Health Test.SemanticModel",
+  "others": 1,
+  "reports": [
+   "Health Test Report"
+  ],
+  "tables": 4,
+  "names": "Sales|Calendar|_Measures|Sales Agg",
+  "rels": 1,
+  "all": "e1fb06c999c9a9bab3fe56025d5037951488ebcca7d75d9ed1684cb4a217d622",
+  "bind": "3018d9d42689f7b400ab16646d9a8b81638ee7524ef5f5d7b01ecb030615ee6f"
+ },
+ "F5 two reports": {
+  "folder": "Plain Orders.SemanticModel",
+  "path": "p/Plain Orders.SemanticModel",
+  "others": 0,
+  "reports": [
+   "Orders A",
+   "Orders B"
+  ],
+  "tables": 2,
+  "names": "Orders|Dates",
+  "rels": 1,
+  "all": "0fe87057df8f81a5ae0a4c5a0f2f4c8f9d2e47078d18cbe0ed5aba4f2860980d",
+  "bind": "3dc6d0379aa45c3707424645a3c2770ee28043944cdb07f8770cc6875d58dd8a"
+ },
+ "F6 utf-16": {
+  "folder": "Financial.SemanticModel",
+  "path": "Financial.SemanticModel",
+  "others": 0,
+  "reports": [],
+  "tables": 2,
+  "names": "Financials|Calendar",
+  "rels": 1,
+  "all": "334fa28d17b5c241d1dd131ce5d019646aa4fbba09522f9d427af027041e41f4",
+  "bind": "0912b7912590e9dc704cf2629a78531da70e7abcbe89ae7e62f8e679fedc9cdb"
+ },
+ "F7 no model": {
+  "error": "NO_SEMANTIC_MODEL"
+ },
+ "F8 no tables": {
+  "error": "NO_MODEL"
+ },
+ "F9 tmdl too big": {
+  "error": "TOO_BIG"
+ },
+ "F10 bim too big": {
+  "error": "TOO_BIG"
+ },
+ "G1 model.bim": {
+  "tables": 1,
+  "names": "Births",
+  "rels": 0,
+  "all": "357a962e77dde2794959256f5497bc59af16b7cb2cc45e25e87a84df6f0d749f",
+  "bind": "2e360866443235fa1367fe473d166859c0a4b6712862ab3e3aa36645c9e4d19a"
+ },
+ "G2 legacy pbit": {
+  "tables": 3,
+  "names": "Sales|_Measures|Calendar",
+  "rels": 1,
+  "all": "c563b632c69283e64374bdb2c307ee0c364732c4e0b73676fda3e9dd6f39366e",
+  "bind": "2269193e20ab3eb8dd9f9051bce801d1869571a3d53945945bf4e7749fbe0606"
+ },
+ "G3 tmdl pbit": {
+  "tables": 4,
+  "names": "Sales|Calendar|_Measures|Sales Agg",
+  "rels": 1,
+  "all": "b7d78a9ed2b84bf303936c234d2f2c95f3b1691f061bbf83458f24635dacb511",
+  "bind": "ce7ca2c890a15eed22e65a419293e2943d5ee1135e5c4e9ea4458f008007080e"
+ },
+ "G4 pbix": {
+  "error": "PBIX"
+ },
+ "G5 bim too big": {
+  "error": "TOO_BIG"
+ },
+ "G6 pbit too big": {
+  "error": "TOO_BIG"
+ },
+ "G7 bim at the limit": {
+  "tables": 1,
+  "names": "Online Retail",
+  "rels": 0,
+  "all": "568ae58cbec555aebcbdfa7dab44579919502e3194e5dc35e502d07a7838c3aa",
+  "bind": "40ff803ea5a30a3436517395e8dd055b06f661adbc9f0211f09247ba34c5c262"
+ }
+}
