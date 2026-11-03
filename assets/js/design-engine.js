@@ -10,6 +10,9 @@
   // text-measure.js: the font catalog, the measured heights and Power BI's 8-60 text sizes, one place (0.3.2 OP1; the
   // generator pages load it before this file)
   const TM = typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure;
+  // design-colours.js: the colour math (0.3.2 SP6; the generator pages load it before this file)
+  const C = typeof module !== 'undefined' && module.exports ? require('./design-colours.js') : root.DAColours;
+  const { clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, calmPalette, CALM, rgbToLab, hexToLab, deltaE, simulateCvd, logoColours } = C;
   const PRESETS = {
     'DataArcus': { data: ['#00d4ff', '#6c5ce7', '#00cec9', '#fd79a8', '#0084ff', '#a29bfe', '#fdcb6e', '#40f3ff'], ui: { background: '#0a0f1c', card: '#1a1f2e', text: '#f8fafc', accent: '#00d4ff', good: '#00b894', neutral: '#fdcb6e', bad: '#e17055' } },
     'Corporate': { data: ['#1f4e79', '#2e75b6', '#f4b183', '#c55a11', '#548235', '#9dc3e6', '#a9d18e', '#7f7f7f'], ui: { background: '#f3f5f8', card: '#ffffff', text: '#1f2933', accent: '#1f4e79', good: '#2e7d32', neutral: '#f9a825', bad: '#c62828' } },
@@ -38,8 +41,6 @@
   const themeName = (name) => (name && String(name).trim() ? name : DEFAULT_NAME);
 
   // ---------- color math ----------
-  // #1a2b3c, 1a2b3c or the short #abc form, spaces around allowed; anything else is not a color (null)
-  const clampHex = (v) => { v = (v || '').trim(); if (!v.startsWith('#')) v = '#' + v; if (/^#[0-9a-fA-F]{3}$/.test(v)) v = '#' + [...v.slice(1)].map((c) => c + c).join(''); return /^#[0-9a-fA-F]{6}$/.test(v) ? v.toLowerCase() : null; };
   // A design's colours as the engine draws and writes them: each a hex colour, else the default design's (fresh); never
   // a caller's text (0.2.9, the audit's A2-7: an unrepaired ui.background reached the background SVG the website sets
   // as innerHTML). d: the design
@@ -59,224 +60,8 @@
   };
   // The colours a KPI bar or the header line can take (the page's choices)
   const BAR_COLORS = ['accent', 'good', 'neutral', 'data'];
-  const hexToRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-  const rgbToHex = (r) => '#' + r.map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
-  const mix = (a, b, t) => { const A = hexToRgb(a), B = hexToRgb(b); return rgbToHex(A.map((v, i) => v + (B[i] - v) * t)); };
-  const lum = (h) => { const c = hexToRgb(h).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
-  const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
-  const hexToHsl = (h) => {
-    let [r, g, b] = hexToRgb(h).map((v) => v / 255);
-    const max = Math.max(r, g, b), min = Math.min(r, g, b); let hh = 0, s = 0; const l = (max + min) / 2;
-    if (max !== min) { const d = max - min; s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      hh = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4; hh *= 60; }
-    return [hh, s, l];
-  };
-  const hslToHex = (h, s, l) => {
-    h = ((h % 360) + 360) % 360; const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2;
-    const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
-    return rgbToHex([(r + m) * 255, (g + m) * 255, (b + m) * 255]);
-  };
-  // (polish round P1, RESCORE-5: adventureworks' lead 1.6:1 and property's 1.8:1 on their cards: thin lines and flat
-  // bars) a colour under min:1 on the card, its hue and saturation kept, stepped to the first lightness at min:1
-  // (darker on a light card, lighter on a dark one); moved here from the MCP so the writer chooses with it too
-  const toContrast = (c, card, min) => {
-    if (contrast(c, card) >= min) return c;
-    const [h, sat, l0] = hexToHsl(c), darker = lum(card) > 0.45;
-    for (let i = 1; i <= 100; i++) { const l = darker ? l0 - i / 100 : l0 + i / 100; if (l < 0 || l > 1) break; const x = hslToHex(h, sat, l); if (contrast(x, card) >= min) return x; }
-    return c;
-  };
-  // Status hues (P1, RESCORE-5; shared with the MCP since P3): red under 15 or 345 and over, amber 35 to 55, green 90 to
-  // 150 degrees, at saturation 0.35 and over (a grey or a muted colour is never a status colour); null otherwise
-  const STATUS_HUES = { bad: (h) => h < 15 || h >= 345, neutral: (h) => h >= 35 && h <= 55, good: (h) => h >= 90 && h <= 150 };
-  const statusHue = (c) => { const x = clampHex(c || ''); if (!x) return null; const [h, sat] = hexToHsl(x); return sat >= 0.35 ? Object.keys(STATUS_HUES).find((k) => STATUS_HUES[k](h)) || null : null; };
-  // The second chart's colour (P1+, the laptop's LAB-POLISH section 5; P3, RESCORE-6 N26: complaints and ecommerce got
-  // #E63946, inspection its own status red): the palette's next colour that is not a status colour (a red, amber or green
-  // hue, or one of st's good/neutral/bad), stands at least 30 degrees of hue from the lead (a grey, saturation under 0.15,
-  // has no hue to tell apart) and 3:1 on the card; with none at 3:1, the first such hue taken to 3:1 (toContrast); with
-  // none in the palette, the first calm colour (CALM, below) that passes, taken to 3:1. st: { good, neutral, bad }
-  const secondColour = (data, card, st) => {
-    const lead = clampHex((data || [])[0] || ''); if (!lead || !clampHex(card || '')) return null;
-    const own = ['good', 'neutral', 'bad'].map((k) => clampHex(((st || {})[k]) || '')).filter(Boolean);
-    const [h0, s0] = hexToHsl(lead), far = (c) => { const [h, sat] = hexToHsl(c); if (sat < 0.15) return false; if (s0 < 0.15) return true; const d = Math.abs(h - h0) % 360; return Math.min(d, 360 - d) >= 30; };
-    const ok = (c) => c && far(c) && !statusHue(c) && !own.includes(c);
-    const rest = data.slice(1).map((c) => clampHex(c || '')).filter(ok);
-    const pick = rest.find((c) => contrast(c, card) >= 3) || rest[0] || CALM.find(ok);
-    return pick ? toContrast(pick, card, 3) : null;
-  };
-  // The ends of a bar's fade by value (P3, RESCORE-6 N25: a darkened lead faded the other way, the largest bars brown):
-  // the strong end is the chart's colour exactly, never past it; the weak end the lightest tint of it towards the card
-  // that still stands 3:1 there, or, where none does (the colour itself near 3:1), a soft tint halfway (soft: true); a
-  // colour under 3:1 itself does not fade (null: every bar keeps it, round 13's rule)
-  const fadeEnds = (base, card) => {
-    const b = clampHex(base || ''), k = clampHex(card || ''); if (!b || !k || contrast(b, k) < 3) return null;
-    for (let n = 12; n >= 3; n--) { const low = mix(b, k, n / 20); if (contrast(low, k) >= 3 && contrast(low, k) < contrast(b, k)) return { low, high: b }; }
-    return { low: mix(b, k, 0.45), high: b, soft: true };
-  };
-  const generate = (base, mode) => {
-    const [h, s0, l0] = hexToHsl(base); const s = Math.max(0.45, s0), l = Math.min(0.55, Math.max(0.4, l0));
-    const plans = {
-      analogous: [[0, 0], [30, 0.05], [-30, 0.05], [60, 0.12], [-60, 0.1], [0, 0.2], [30, -0.12], [-30, -0.12]],
-      complementary: [[0, 0], [180, 0], [0, 0.18], [180, 0.18], [0, -0.14], [180, -0.14], [30, 0.1], [210, 0.1]],
-      triadic: [[0, 0], [120, 0], [240, 0], [0, 0.18], [120, 0.18], [240, 0.18], [60, 0.05], [180, 0.05]],
-      mono: [[0, -0.2], [0, -0.1], [0, 0], [0, 0.1], [0, 0.18], [0, 0.26], [0, 0.32], [0, 0.38]]
-    };
-    // The 0.15 floor is never reached today: the base lightness is held at 0.4-0.55 and no step above goes down more
-    // than 0.2, so the darkest colour is 0.2. It stays as a safety limit in case the steps change.
-    return plans[mode].map(([dh, dl]) => hslToHex(h + dh, s, Math.min(0.85, Math.max(0.15, l + dl))));
-  };
-  // A calm palette beside a brand colour (0.2.9, the reviewer of 11 Oct: the analogous harmony gave loud colours beside
-  // the owner's brand; moved here from the MCP by the cross-review's G7, so the website and the MCP give the same one):
-  // the brand exactly, then up to 7 calm colours told apart by hue (one within 25 degrees of the brand's is skipped), each
-  // mixed towards the text colour until it stands 3:1 on the visuals' background (card)
-  const CALM = ['#2f6e9e', '#b86e00', '#1f7a70', '#6a4c93', '#b5452f', '#56636f', '#5e7f3a', '#8e5b2e', '#a23b72', '#3d7ea6'];
-  const calmPalette = (brand, card, text) => {
-    const near = (a, b) => { const [h1, s1] = hexToHsl(a), [h2, s2] = hexToHsl(b), d = Math.abs(h1 - h2) % 360; return s1 > 0.15 && s2 > 0.15 && Math.min(d, 360 - d) < 25; };
-    const out = [];
-    for (const c0 of CALM) {
-      if (out.length === 7) break;
-      if (near(c0, brand)) continue;
-      let c = c0; for (let t = 0.1; contrast(c, card) < 3 && t <= 1; t += 0.1) c = mix(c0, text, t);
-      if (!out.includes(c) && c !== brand) out.push(c);
-    }
-    return [brand].concat(out).slice(0, 8);
-  };
-
-  // ---------- a theme from a logo (0.3.0 step 6) ----------
-  // The visitor's logo is read in the browser only: the page draws it on a small canvas and hands its pixels (RGBA, as
-  // getImageData gives them) to logoColours; nothing here sees a file or a network. logoTheme builds the palette from
-  // those colours with generate() (the generator's "Generate" from one brand colour), never a second palette system.
-  // CIE Lab (D65, 2 degrees) from sRGB [r, g, b] 0-255
-  const toLinear = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
-  const fromLinear = (v) => 255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055);
-  const rgbToLab = (rgb) => {
-    const [r, g, b] = rgb.map(toLinear), f = (t) => (t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116);
-    const x = f((0.4124564 * r + 0.3575761 * g + 0.1804375 * b) / 0.95047), y = f(0.2126729 * r + 0.7151522 * g + 0.072175 * b), z = f((0.0193339 * r + 0.119192 * g + 0.9503041 * b) / 1.08883);
-    return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
-  };
-  const hexToLab = (h) => rgbToLab(hexToRgb(h));
-  // CIEDE2000 between two Lab colours (Sharma, Wu, Dalal 2005): under 2-3 most eyes see one colour
-  const deltaE = (p, q) => {
-    const rad = Math.PI / 180, [L1, a1, b1] = p, [L2, a2, b2] = q, s7 = (c) => Math.sqrt(Math.pow(c, 7) / (Math.pow(c, 7) + Math.pow(25, 7)));
-    const G = 0.5 * (1 - s7((Math.hypot(a1, b1) + Math.hypot(a2, b2)) / 2)), A1 = (1 + G) * a1, A2 = (1 + G) * a2;
-    const C1 = Math.hypot(A1, b1), C2 = Math.hypot(A2, b2), hue = (b, a) => (b === 0 && a === 0 ? 0 : (Math.atan2(b, a) / rad + 360) % 360);
-    const h1 = hue(b1, A1), h2 = hue(b2, A2), both = C1 * C2 !== 0;
-    let dh = both ? h2 - h1 : 0; if (dh > 180) dh -= 360; else if (dh < -180) dh += 360;
-    const dH = 2 * Math.sqrt(C1 * C2) * Math.sin(dh * rad / 2), Lm = (L1 + L2) / 2, Cm = (C1 + C2) / 2;
-    let hm = h1 + h2; if (both) { if (Math.abs(h1 - h2) > 180) hm += hm < 360 ? 360 : -360; hm /= 2; }
-    const T = 1 - 0.17 * Math.cos((hm - 30) * rad) + 0.24 * Math.cos(2 * hm * rad) + 0.32 * Math.cos((3 * hm + 6) * rad) - 0.2 * Math.cos((4 * hm - 63) * rad);
-    const SL = 1 + 0.015 * (Lm - 50) * (Lm - 50) / Math.sqrt(20 + (Lm - 50) * (Lm - 50)), SC = 1 + 0.045 * Cm, SH = 1 + 0.015 * Cm * T;
-    const RT = -2 * s7(Cm) * Math.sin(60 * Math.exp(-Math.pow((hm - 275) / 25, 2)) * rad), dC = (C2 - C1) / SC, dHs = dH / SH;
-    return Math.sqrt(Math.pow((L2 - L1) / SL, 2) + dC * dC + dHs * dHs + RT * dC * dHs);
-  };
-  // How a colour looks with no red cones (protanopia) or no green cones (deuteranopia): Machado, Oliveira and Fernandes
-  // (2009), severity 1, applied in linear RGB. 'normal' (or anything else) gives the colour back.
-  const CVD = { protan: [[0.152286, 1.052583, -0.204868], [0.114503, 0.786281, 0.099216], [-0.003882, -0.048116, 1.051998]],
-    deutan: [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.01182, 0.04294, 0.968881]] };
-  const simulateCvd = (hex, kind) => {
-    const c = clampHex(hex || ''), M = CVD[kind]; if (!c || !M) return c;
-    const l = hexToRgb(c).map(toLinear);
-    return rgbToHex(M.map((r) => fromLinear(Math.max(0, Math.min(1, r[0] * l[0] + r[1] * l[1] + r[2] * l[2])))));
-  };
-  // What counts as background in a logo: a pixel under half opaque; a near-white or near-black one with almost no colour
-  // (Lab lightness 90+ or 12-, chroma under 12: a white page, a light frame, a black outline); a grey (chroma under 8)
-  // is no hue and counts only when the logo has nothing else. Colours are clustered (k-means in Lab, weighted by pixels,
-  // seeded the same way every time), clusters closer than 12 (CIEDE2000) merged, a cluster that is only the blend of a
-  // heavier one with white, black or another (the soft edge a canvas draws) dropped, and clusters under 4% of the
-  // coloured pixels left out; the 3 largest are the brand colours, each the logo's own most frequent colour in it.
-  const LOGO = { alpha: 128, light: 90, dark: 12, flat: 12, grey: 8, k: 6, merge: 12, blend: 6, share: 0.04, max: 3, apart: 20 };
-  const logoColours = (px) => {
-    px = px || []; const counts = new Map(), skipped = { transparent: 0, light: 0, dark: 0 };
-    for (let i = 0; i + 3 < px.length; i += 4) {
-      if (px[i + 3] < LOGO.alpha) { skipped.transparent++; continue; }
-      const key = (px[i] << 16) | (px[i + 1] << 8) | px[i + 2]; counts.set(key, (counts.get(key) || 0) + 1);
-    }
-    const hues = [], greys = [], darks = [];
-    counts.forEach((w, key) => {
-      const rgb = [(key >> 16) & 255, (key >> 8) & 255, key & 255], lab = rgbToLab(rgb), C = Math.hypot(lab[1], lab[2]), p = { hex: rgbToHex(rgb), lab, w };
-      if (lab[0] >= LOGO.light && C < LOGO.flat) skipped.light += w;
-      else if (lab[0] <= LOGO.dark && C < LOGO.flat) { skipped.dark += w; darks.push(p); }
-      else (C < LOGO.grey ? greys : hues).push(p);
-    });
-    // a logo with no hue (black, grey): its own dark or grey colour, said as mono
-    const pts = hues.length ? hues : greys.length ? greys : darks, mono = !hues.length;
-    if (!pts.length) return { colours: [], mono: false, skipped };
-    const d2 = (a, b) => (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) + (a[2] - b[2]) * (a[2] - b[2]);
-    const P = pts.slice().sort((a, b) => b.w - a.w || (a.hex < b.hex ? -1 : 1));
-    const cs = [P[0].lab.slice()];
-    while (cs.length < Math.min(LOGO.k, P.length)) {
-      let best = null, bd = 0;
-      for (const p of P) { const d = Math.min(...cs.map((c) => d2(c, p.lab))) * p.w; if (d > bd) { bd = d; best = p; } }
-      if (!best) break; cs.push(best.lab.slice());
-    }
-    const as = new Array(P.length).fill(-1);
-    for (let it = 0; it < 30; it++) {
-      let moved = false;
-      P.forEach((p, i) => { let bi = 0, bd = Infinity; cs.forEach((c, j) => { const d = d2(c, p.lab); if (d < bd) { bd = d; bi = j; } }); if (as[i] !== bi) { as[i] = bi; moved = true; } });
-      if (!moved) break;
-      const sum = cs.map(() => [0, 0, 0, 0]);
-      P.forEach((p, i) => { const s = sum[as[i]]; for (let k = 0; k < 3; k++) s[k] += p.lab[k] * p.w; s[3] += p.w; });
-      sum.forEach((s, j) => { if (s[3]) cs[j] = [s[0] / s[3], s[1] / s[3], s[2] / s[3]]; });
-    }
-    let groups = cs.map((c, j) => { const m = P.filter((_, i) => as[i] === j); return m.length ? { members: m, w: m.reduce((a, p) => a + p.w, 0) } : null; }).filter(Boolean)
-      .map((g) => Object.assign(g, { top: g.members[0] })).sort((a, b) => b.w - a.w || (a.top.hex < b.top.hex ? -1 : 1));
-    // merge near ones into the heavier
-    const merged = [];
-    for (const g of groups) { const into = merged.find((m) => deltaE(m.top.lab, g.top.lab) < LOGO.merge); if (into) { into.w += g.w; into.members = into.members.concat(g.members); } else merged.push(g); }
-    // drop the soft edges: a colour between a heavier cluster and white, black or another heavier cluster
-    const ends = (i) => ['#ffffff', '#000000'].concat(merged.slice(0, i).map((m) => m.top.hex));
-    groups = merged.filter((g, i) => i === 0 || !merged.slice(0, i).some((m) => ends(i).some((e) => e !== m.top.hex && [0.15, 0.3, 0.45, 0.6, 0.75, 0.9].some((t) => deltaE(hexToLab(mix(m.top.hex, e, t)), g.top.lab) < LOGO.blend))));
-    const total = groups.reduce((a, g) => a + g.w, 0);
-    const kept = groups.filter((g) => g.w / total >= LOGO.share).slice(0, LOGO.max), all = kept.reduce((a, g) => a + g.w, 0);
-    return { colours: kept.map((g) => ({ hex: g.top.hex, share: Math.round(g.w / all * 1000) / 1000 })), mono, skipped };
-  };
-  // The palette from a logo's colours (hex strings or { hex }, the lead first; at most 3 are used): the logo's colours,
-  // then generate(lead, harmony) and, if that leaves too few apart, CALM, skipping any within 15 (CIEDE2000) of one taken.
-  // Every colour is taken to 3:1 on the visuals' background where it is under (toContrast: WCAG 2.1 1.4.11, bars, lines
-  // and large shapes); the logo's own ones are listed in adjusted (logo: true) so the page can say so. Then the order:
-  // the lead stays first and the other 7 are put in the order whose closest neighbours are farthest apart for normal
-  // vision, deuteranopia and protanopia (every order is tried; the logo's other colours keep places 2-3 when that costs
-  // under 10% of the best, or their closest neighbours still stand 20 apart: clearly two colours). ui: the design's page colours. null when no colour is given.
-  const deCache = new Map();
-  const visionsOf = (c) => { if (!deCache.has(c)) deCache.set(c, ['normal', 'deutan', 'protan'].map((v) => hexToLab(simulateCvd(c, v)))); return deCache.get(c); };
-  const apart = (a, b) => { const A = visionsOf(a), B = visionsOf(b); return [0, 1, 2].map((v) => deltaE(A[v], B[v])); };
-  const logoTheme = (brand, o) => {
-    o = o || {};
-    const own = []; (brand || []).forEach((c) => { const h = clampHex(typeof c === 'string' ? c : (c && c.hex) || ''); if (h && !own.includes(h) && own.length < 3) own.push(h); });
-    if (!own.length) return null;
-    const ui = colours({ ui: o.ui }).ui, card = ui.card, harmony = ['analogous', 'complementary', 'triadic', 'mono'].includes(o.harmony) ? o.harmony : 'analogous';
-    const picked = own.slice();
-    for (const c of generate(own[0], harmony).concat(CALM)) { if (picked.length === 8) break; if (picked.every((p) => deltaE(hexToLab(p), hexToLab(c)) >= 15)) picked.push(c); }
-    const adjusted = [], r2 = (x) => Math.round(x * 100) / 100, before = [];
-    picked.forEach((c, i) => {
-      const t = toContrast(c, card, 3);
-      if (t !== c) adjusted.push({ from: c, to: t, before: r2(contrast(c, card)), after: r2(contrast(t, card)), logo: i < own.length });
-      if (!before.includes(t)) before.push(t);
-    });
-    for (const c of CALM) {
-      if (before.length === 8) break; const t = toContrast(c, card, 3); if (before.includes(t)) continue;
-      before.push(t); if (t !== c) adjusted.push({ from: c, to: t, before: r2(contrast(c, card)), after: r2(contrast(t, card)), logo: false });
-    }
-    // the order: every order of colours 2-8 (5040), scored by the closest neighbours over the three visions
-    const n = before.length, D = before.map((a) => before.map((b) => (a === b ? [0, 0, 0] : apart(a, b))));
-    const score = (ord) => { let m = Infinity; for (let i = 1; i < ord.length; i++) m = Math.min(m, ...D[ord[i - 1]][ord[i]]); return m; };
-    let best = null, bestS = -1, keep = null, keepS = -1;
-    const ownAt = own.map((h) => before.indexOf(toContrast(h, card, 3)));
-    const perm = (arr, k) => {
-      if (k === arr.length) {
-        const ord = [0].concat(arr), s = score(ord);
-        if (s > bestS + 1e-9) { bestS = s; best = ord.slice(); }
-        if (ownAt.every((j, i) => i === 0 || ord[i] === j) && s > keepS + 1e-9) { keepS = s; keep = ord.slice(); }
-        return;
-      }
-      for (let i = k; i < arr.length; i++) { [arr[k], arr[i]] = [arr[i], arr[k]]; perm(arr, k + 1); [arr[k], arr[i]] = [arr[i], arr[k]]; }
-    };
-    perm(Array.from({ length: n - 1 }, (_, i) => i + 1), 0);
-    const ord = keep && (keepS >= 0.9 * bestS || keepS >= LOGO.apart) ? keep : best, data = ord.map((i) => before[i]);
-    const near = (v) => r2(Math.min(...data.slice(1).map((c, i) => apart(data[i], c)[v])));
-    const cvd = { normal: near(0), deutan: near(1), protan: near(2) }; cvd.min = Math.min(cvd.normal, cvd.deutan, cvd.protan);
-    const table = data.map((hex) => { const onCard = r2(contrast(hex, card)); return { hex, onCard, onPage: r2(contrast(hex, ui.background)), shapes: onCard >= 3, text: onCard >= 4.5 }; });
-    return { data, accent: data[0], brand: own, harmony, before, adjusted, table, cvd };
-  };
+  // The palette from a logo's colours (design-colours.js logoTheme), on the design's page colours repaired (o.ui)
+  const logoTheme = (brand, o) => C.logoTheme(brand, o, colours({ ui: (o || {}).ui }).ui);
 
   // ---------- page layout: a full background with a place for every visual ----------
   // Power BI's default page is 1280 × 720, so every slot is in those units and can be typed straight
@@ -663,104 +448,11 @@
       daBad: { description: 'DataArcus bad', url: svg(`<rect x='1.5' y='1.5' width='13' height='13' rx='3' fill='${b.f}'/>` + line('M5.5 5.5l5 5M10.5 5.5l-5 5', b.m)) }
     };
   };
-  // ---------- the glass look (0.3.1 GL1, the owner's idea of 26 Oct) ----------
-  // Power BI has no blur behind a visual. The look is made of what Power BI has: each visual's background colour with
-  // transparency, a light 1-pixel border at the design's corners, a soft shadow, and the page's background picture,
-  // which DataArcus draws already soft: the page colour with four soft colour fields of the theme's own colours (no
-  // photo, no text). Seen through the see-through cards, the picture reads as frosted glass. The theme schema
-  // (Microsoft's reportThemeSchema-2.159, commonCards; the validator's VCO catalog): background { show, color,
-  // transparency }, border { show, color, radius, width }, dropShadow { show, color, position, preset, transparency,
-  // shadowBlur, shadowDistance, shadowSpread }, each number without a range in the schema (transparency in %, 0-100).
-  // t: the cards' transparency asked (%), lowered by glassLook until the contrast holds; strength: how far a colour field
-  // reaches into the page colour at its centre (lowered until the page's text holds); fields: [x, y (0-1 of the page),
-  // radius (of the page's height), the colour: data colour 1-3 or the accent]; the shadow at 1080 high, scaled with the
-  // page; grid: the samples the contrast is checked on (the picture is the same at any size). To be picked from the
-  // laptop's lab (mcp/lab/GLASS-LAB.md): t, the rim, the shadow. band: the alpha (%) of a banded table's alternate rows
-  // (GL2: the solid look's 8% of the accent), raised in transparency until the text and the grid lines stand on it.
-  const GLASS = { t: 35, max: 60, band: 8, strength: { light: 0.42, dark: 0.55 }, fields: [[0.1, 0.15, 0.55, 0], [0.9, 0.22, 0.6, 1], [0.6, 1, 0.65, 2], [0.02, 0.98, 0.45, 'accent']],
-    // (GL2: the laptop of 27 Oct, Desktop 2.159: GL1's dark shadow, 55 / 18 / 4, barely shows on a dark page) the dark
-    // shadow stronger: less transparent, wider, further; GL1's and a light halo are rows of the lab's dark page
-    shadow: { light: { transparency: 85, blur: 18, distance: 4 }, dark: { transparency: 30, blur: 24, distance: 6 } }, grid: [192, 108], margin: 0.02 };
-  const isGlass = (d) => !!(d && d.chart && d.chart.look === 'glass');
-  // the picture's pixels (RGB, 8 bits, rows top to bottom) at w x h for colours cc ({ ui, data }) at strength s: each
-  // field's weight is s * exp(-2 d^2 / r^2), taken as a row factor times a column factor (the same number, made once).
-  // A page picture (960 wide or more) is drawn in squares of 2 x 2 pixels: the same soft picture (neighbours never more
-  // than 2 levels apart), half the PNG's bytes
-  const glassRgb = (cc, s, w, h) => {
-    const u = cc.ui, bg = hexToRgb(u.background), out = new Uint8Array(w * h * 3), a = w / h, q2 = w >= 960 ? 2 : 1, at = (v, n) => (Math.floor(v / q2) * q2 + q2 / 2) / n;
-    const F = GLASS.fields.map(([fx, fy, r, k]) => ({ c: hexToRgb(k === 'accent' ? u.accent : cc.data[k % cc.data.length]),
-      cx: Float64Array.from({ length: w }, (_, x) => Math.exp(-2 * Math.pow((at(x, w) - fx) * a, 2) / (r * r))),
-      cy: Float64Array.from({ length: h }, (_, y) => Math.exp(-2 * Math.pow(at(y, h) - fy, 2) / (r * r))) }));
-    for (let y = 0, i = 0; y < h; y++) for (let x = 0; x < w; x++, i += 3) {
-      let r0 = bg[0], g0 = bg[1], b0 = bg[2];
-      for (let f = 0; f < F.length; f++) { const q = F[f], t = s * q.cx[x] * q.cy[y]; r0 += (q.c[0] - r0) * t; g0 += (q.c[1] - g0) * t; b0 += (q.c[2] - b0) * t; }
-      out[i] = Math.round(r0); out[i + 1] = Math.round(g0); out[i + 2] = Math.round(b0);
-    }
-    return out;
-  };
-  // the darkest and the lightest pixel (by luminance) of RGB pixels
-  const extremesOf = (px) => { let lo = 0, hi = 0, l0 = Infinity, l1 = -1;
-    const at = (i) => rgbToHex([px[i], px[i + 1], px[i + 2]]);
-    for (let i = 0; i < px.length; i += 3) { const l = lum(at(i)); if (l < l0) { l0 = l; lo = i; } if (l > l1) { l1 = l; hi = i; } }
-    return { darkest: at(lo), lightest: at(hi) }; };
-  const glassCache = new Map();
-  // The look for a design: { asked, t (the transparency written, %), rim, strength, shadow { transparency, blur, distance },
-  // image { darkest, lightest }, checks [{ id, ratio, min, pass }] }. The worst case: the card's colour at t blended over
-  // the darkest and the lightest pixel of the picture under it; text and labels 4.5:1, colour 1 3:1 (WCAG 1.4.3, 1.4.11),
-  // t lowered one point at a time until all pass (0, a solid card, when none does); the page's own text 4.5:1 on the
-  // picture (the strength lowered until it does). opt.t: another transparency to ask (the lab's variants).
-  const glassLook = (d, opt) => {
-    const cc = colours(d), u = cc.ui, l = (d && d.layout) || {}, asked = Math.max(0, Math.min(GLASS.max, Math.round(opt && opt.t != null ? +opt.t : GLASS.t)));
-    const banded = !!(d && d.chart && d.chart.table === 'banded'), key = JSON.stringify([u, cc.data, page(l).h, asked, banded]);
-    if (glassCache.has(key)) return glassCache.get(key);
-    const light = lum(u.background) > 0.45, R = roles(u), [gw, gh] = GLASS.grid, mg = GLASS.margin;
-    let s = light ? GLASS.strength.light : GLASS.strength.dark, ends = null;
-    for (;; s = Math.max(0, Math.round((s - 0.02) * 100) / 100)) {
-      ends = extremesOf(glassRgb(cc, s, gw, gh));
-      if (s === 0 || [ends.darkest, ends.lightest].every((p) => contrast(u.text, p) >= 4.5 + mg)) break;
-    }
-    const over = (t, fg) => Math.min(...[ends.darkest, ends.lightest].map((p) => contrast(fg, mix(p, u.card, 1 - t / 100))));
-    // the labels (the theme's secondary text) as close to the text colour as they need to stand 4.5:1 at the asked
-    // transparency (roles' mix of 0.35 towards the card, less in steps of 0.05), so a pale label does not make the cards solid
-    let labels = R.secondary;
-    for (let r = 0.3; r >= 0 && over(asked, labels) < 4.5 + mg; r = Math.round((r - 0.05) * 100) / 100) labels = mix(u.text, u.card, r);
-    const pairs = [['textOnGlass', u.text, 4.5], ['labelsOnGlass', labels, 4.5], ['color1OnGlass', cc.data[0], 3]];
-    let t = asked; while (t > 0 && !pairs.every(([, fg, min]) => over(t, fg) >= min + mg)) t--;
-    const k = page(l).h / 1080, sh = light ? GLASS.shadow.light : GLASS.shadow.dark;
-    // (GL2) tables and matrices keep no fill of their own (glassTables): their cells are the glass card. The grid lines
-    // stand at least what they stand on the solid card, darkened towards the text (steps of 0.05) until they do over
-    // the glass; a banded table's alternate rows: the accent at GLASS.band % alpha, one point more transparent at a
-    // time until the text (4.5:1) and the grid lines stand on it; all over the darkest and the lightest pixel
-    const glass = [ends.darkest, ends.lightest].map((p) => mix(p, u.card, 1 - t / 100)), gmin = contrast(R.grid, u.card);
-    const worst = (fg, xs) => Math.min(...xs.map((b) => contrast(fg, b))), bandsAt = (a) => glass.map((b) => mix(b, u.accent, a / 100));
-    let grid = R.grid;
-    for (let r = 0.8; r > 0 && worst(grid, glass) < gmin; r = Math.round((r - 0.05) * 100) / 100) grid = mix(u.text, u.card, r);
-    let a = banded ? GLASS.band : 0;
-    while (a > 0 && !(worst(u.text, bandsAt(a)) >= 4.5 + mg && worst(grid, bandsAt(a)) >= gmin)) a--;
-    const table = { clear: u.card + '00', band: banded ? u.accent + Math.round(a * 255 / 100).toString(16).padStart(2, '0') : null, bandAlpha: a, grid };
-    const checks = pairs.map(([id, fg, min]) => ({ id, ratio: over(t, fg), min })).concat([{ id: 'textOnPicture', ratio: Math.min(contrast(u.text, ends.darkest), contrast(u.text, ends.lightest)), min: 4.5 },
-      { id: 'gridOnGlass', ratio: worst(grid, glass), min: gmin }], banded ? [{ id: 'textOnBand', ratio: worst(u.text, bandsAt(a)), min: 4.5 }, { id: 'gridOnBand', ratio: worst(grid, bandsAt(a)), min: gmin }] : [])
-      .map((x) => Object.assign(x, { pass: x.ratio >= x.min }));
-    const out = { asked, t, labels, rim: light ? '#ffffff' : mix(u.card, '#ffffff', 0.25), strength: s, mode: light ? 'light' : 'dark',
-      shadow: { transparency: sh.transparency, blur: Math.max(1, Math.round(sh.blur * k)), distance: Math.max(1, Math.round(sh.distance * k)) }, image: ends, table, checks };
-    if (glassCache.size > 50) glassCache.clear();
-    glassCache.set(key, out);
-    return out;
-  };
   // (0.3.1 GD1, the owner, 27 Oct: "i want to make the glassy dashboard default") the look a new design starts in: the
   // Theme Generator's first visit, generate_theme and every new report without a look asked. A saved design without a
   // look keeps the look it was made with (CHART_DEFAULTS: "auto", plain); the redesign, the twin and the EN-AR copy keep
   // the original report's
   const DEFAULT_LOOK = 'glass';
-  // The gate (GD1): glass only where it keeps everything readable: the cards keep some transparency (t > 0) and every
-  // glass check passes, except the page's own text on its own colour once the picture is plain (strength 0), which the
-  // plain look fails the same way. { fits, failed: [{ id, ratio, min }], t }
-  const glassFit = (d) => {
-    const g = glassLook(d), failed = g.checks.filter((c) => !c.pass && !(c.id === 'textOnPicture' && g.strength === 0)).map((c) => ({ id: c.id, ratio: c.ratio, min: c.min }));
-    return { fits: g.t > 0 && !failed.length, failed, t: g.t };
-  };
-  // the picture's pixels at w x h (RGB), as glassLook's strength makes them
-  const glassPixels = (d, w, h, opt) => glassRgb(colours(d), glassLook(d, opt).strength, Math.max(1, Math.round(+w)), Math.max(1, Math.round(+h)));
   // ---- a PNG without a canvas, so the website and the MCP write the same pixels (the browser deflates in JavaScript, Node by node:zlib, LC1) ----
   // RGB, 8 bits; each row filtered with the PNG filter of the smallest sum (None, Sub, Up, Average, Paeth: PNG's own
   // advice); LZ77 matches in one deflate block with its own Huffman codes (RFC 1951), in a zlib stream (RFC 1950)
@@ -872,56 +564,10 @@
     const png = new Uint8Array(parts.reduce((x, pt) => x + pt.length, 0)); let at = 0; parts.forEach((pt) => { png.set(pt, at); at += pt.length; });
     return png;
   };
-  // The page's background picture of the glass look, a PNG at w x h (the page's own size: 1280 x 720, 1920 x 1080...)
-  // (GD1) the glass picture says what it is in a tEXt chunk right after its header, so the Arabic twin knows a page
-  // background that is DataArcus's soft picture (colour fields, no panels) from a picture with panels a mirrored page
-  // would leave (twin-plan's pictures): the twin mirrors a glass page as it mirrors a page without a picture
-  const GLASS_MARK = 'DataArcus glass look';
-  const MARK_AT = 33, MARK = [...'tEXtComment\0' + GLASS_MARK].map((ch) => ch.charCodeAt(0));
-  const isGlassPng = (b) => !!b && b.length > MARK_AT + 4 + MARK.length && MARK.every((c, i) => b[MARK_AT + 4 + i] === c) && ((b[MARK_AT] << 24) | (b[MARK_AT + 1] << 16) | (b[MARK_AT + 2] << 8) | b[MARK_AT + 3]) === MARK.length - 4;
-  // (0.3.1 GD2) a theme used alone, with pages DataArcus does not write (hand-placed, an existing report): the glass look's
-  // picture goes in the theme itself, as its page background image. Microsoft's report theme schema
-  // (powerbi-desktop-samples, reportThemeSchema-2.159.json) has visualStyles.page["*"].background[] { color, image { name,
-  // url, scaling Normal|Fit|Fill }, transparency }; the url is the picture as a data URI, at the theme's page size,
-  // scaling "Fit" (the schema's "Stretch", as the report writer's page.json sets it). A copy of theme with it; the theme
-  // given is not changed. Whether Desktop draws a theme's picture: measured on the laptop (mcp/work/GD2.md)
-  const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  const base64 = (b) => { let out = ''; for (let i = 0; i < b.length; i += 3) { const n = (b[i] << 16) | ((b[i + 1] || 0) << 8) | (b[i + 2] || 0);
-    out += B64[(n >> 18) & 63] + B64[(n >> 12) & 63] + (i + 1 < b.length ? B64[(n >> 6) & 63] : '=') + (i + 2 < b.length ? B64[n & 63] : '='); } return out; };
-  const withGlassPicture = (theme, d) => {
-    if (!isGlass(d)) return theme;
-    const p = page((d && d.layout) || {}), t = JSON.parse(JSON.stringify(theme)), vs = (t.visualStyles = t.visualStyles || {});
-    const pg = (vs.page = vs.page || { '*': {} })['*'] = vs.page['*'] || {}, bg = (pg.background = Array.isArray(pg.background) && pg.background.length ? pg.background : [{}]);
-    bg[0] = Object.assign({}, bg[0], { image: { name: 'DataArcus glass ' + p.w + 'x' + p.h + '.png', url: 'data:image/png;base64,' + base64(glassPng(d, p.w, p.h)), scaling: 'Fit' }, transparency: 0 });
-    return t;
-  };
-  // (GD1: glass is the default, so every new report draws it, in its plan and again in its write: the last few pictures
-  // are kept, by their colours, strength and size; each call gets its own copy)
-  const pngCache = new Map();
-  const glassPng = (d, w, h, opt) => { const W = Math.max(1, Math.round(+w)), H = Math.max(1, Math.round(+h)), cc = colours(d), key = JSON.stringify([cc.ui, cc.data, glassLook(d, opt).strength, W, H]);
-    if (!pngCache.has(key)) { if (pngCache.size >= 8) pngCache.delete(pngCache.keys().next().value); pngCache.set(key, encodePng(W, H, glassPixels(d, W, H, opt), GLASS_MARK)); }
-    return pngCache.get(key).slice(); };
-  // the look's cards in the theme: background, border, shadow (see GLASS); t: the visual type
-  const glassCards = (u, l, g, t) => ({
-    background: [{ show: true, color: { solid: { color: u.card } }, transparency: g.t }],
-    border: [Object.assign({ show: true, color: { solid: { color: g.rim } }, width: 1 }, t === 'cardVisual' ? {} : { radius: toPage(+l.radius || 0, l) })],
-    dropShadow: [l && l.shadow ? { show: true, color: { solid: { color: '#000000' } }, position: 'Outer', preset: 'Bottom', transparency: g.shadow.transparency, shadowBlur: g.shadow.blur, shadowDistance: g.shadow.distance, shadowSpread: 0 } : { show: false }]
-  });
-
-  // (0.3.1 GL2, the owner, 27 Oct: "tables are not cleared of alternate rows formating") the look's tables and matrices:
-  // no fill of their own. Without one Power BI's default style fills every cell (the theme's background and
-  // backgroundLight) over the see-through card. Their cards have no transparency (Microsoft's capabilities for tableEx
-  // and pivotTable, @microsoft/powerbi-core-visual-schema): each back colour is the card's colour with alpha 00
-  // (#RRGGBBAA, the report theme schema's colour pattern), a banded table's alternate rows the look's tint; the grid
-  // lines the look's own colour (their show and width stay the table style's). tb: glassLook(d).table
-  const glassTables = (tb) => {
-    const fill = (h) => ({ solid: { color: h } }), clear = fill(tb.clear), both = ['tableEx', 'pivotTable'];
-    return [[both, 'values', { backColor: clear, backColorPrimary: clear, backColorSecondary: tb.band ? fill(tb.band) : clear }], [both, 'columnHeaders', { backColor: clear }],
-      [both, 'total', { backColor: clear }], [['pivotTable'], 'rowHeaders', { backColor: clear }], [['pivotTable'], 'subTotals', { backColor: clear }],
-      [['pivotTable'], 'rowTotal', { backColor: clear }], [['pivotTable'], 'columnTotal', { backColor: clear }],
-      [both, 'grid', { gridHorizontalColor: fill(tb.grid), gridVerticalColor: fill(tb.grid) }]];
-  };
-
+  // (0.3.2 SP6) the glass look, design-glass.js: given the engine's colours, page units and PNG writer explicitly
+  const Glass = typeof module !== 'undefined' && module.exports ? require('./design-glass.js') : root.DAGlass;
+  const { GLASS, isGlass, GLASS_MARK, isGlassPng, glassTables } = Glass;
+  const { glassLook, glassFit, glassPixels, withGlassPicture, glassPng, glassCards } = Glass.make({ colours, roles, page, toPage, encodePng });
   // d: the design { name, font, data, ui, chart, layout }; lang: the page's language ('ar' or 'en'), for the reading
   // direction when the layout has none
   const buildTheme = (d0, lang) => {
