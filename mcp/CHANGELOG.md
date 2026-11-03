@@ -4,7 +4,24 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
-## [Unreleased]: 0.3.1
+## [0.3.1]: 2026-11-03 (the version for testers)
+Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports
+opens, every page reads right to left, and Microsoft's validator finds nothing in a twin that its English report does
+not have. In short:
+- **The Arabic twin's tables and matrices:** a matrix that is a list is written as a table, so its first column reads
+  on the right; a matrix with row levels can be written flat when you choose it; a table keeps its English column
+  widths and the columns English shows, its first column at the right edge; a heatmap by weekday shows its day names
+  beside its grid, and a chart lined up under the grid keeps each bar under its own hour.
+- **Try it without a model of your own:** a made-up Gulf retail project, written after you approve, with four next
+  steps to try on it.
+- **Is your report ready for Arabic?** `check_report` with `lens: "arabic"` reads any report and says page by page what
+  reads wrong in Arabic and how to fix it; it changes nothing.
+- **One report in English and Arabic:** `languages: "en+ar"` writes the English pages and their Arabic pages in one
+  report, with a language button on every page, once you approve the Arabic texts.
+- **Safer:** the Arabic twin writes exactly what you approved, or nothing; a name that reads like an instruction to the
+  AI is flagged and not followed.
+
+Every change, newest first:
 - **A fourth test run in Power BI Desktop:** a chart lined up under a heatmap's grid keeps its English padding, value
   axis and sort as well as its place, so each bar stands under its own hour, and the day names beside a heatmap get room
   for their last row, so no scrollbar covers them.

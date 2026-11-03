@@ -1,7 +1,7 @@
 // The plain-words check of mcp/CHANGELOG.md's [Unreleased] section (scripts/changelog-words.mjs), on fixed texts:
 // every internal code is caught, plain sentences that only look like one are not, and the section is found.
 //   node scripts/test-changelog-words.mjs
-import { internalCodes, unreleased } from './changelog-words.mjs';
+import { internalCodes, unreleased, newest } from './changelog-words.mjs';
 
 const problems = []; let checks = 0;
 const chk = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
@@ -31,6 +31,14 @@ const md = '# Changelog\n\n## [Unreleased]\n- One plain line.\n- B-1 coded.\n\n#
 const sec = unreleased(md);
 chk(sec && sec.lines.length === 2 && internalCodes(sec.text).length === 1, `the [Unreleased] section only: ${JSON.stringify(sec)}`);
 chk(unreleased('# Changelog\n\n## [0.3.0]\n- x\n') === null, 'no [Unreleased] section: null (the check then fails)');
+
+// (3 Nov, the 0.3.1 release) newest(): [Unreleased] while there is one, else the newest version (a released heading is
+// still read by users: its codes are found)
+chk(newest(md).lines.length === 2, 'newest: the [Unreleased] section first');
+const rel = newest('# Changelog\n\n## [0.3.1]: 2026-11-03\n- One plain line.\n- B-1 coded.\n\n## [0.3.0]: 2026-10-21\n- #48 B-143.\n');
+chk(rel && rel.lines.length === 2 && internalCodes(rel.text).length === 1, `newest: the newest version, not the older ones: ${JSON.stringify(rel)}`);
+chk(newest('# Changelog\n\nnothing\n') === null, 'newest: no section at all: null');
+chk(newest('# Changelog\n\n## [0.3.1]: 2026-11-03\n- Plain.\n\n## [Unreleased]: 0.2.9.1\n- B-1 old.\n').lines.length === 1, 'newest: an old [Unreleased] lower in the file is not the newest');
 
 if (problems.length) { problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  test-changelog-words  ${problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  test-changelog-words  ${checks} checks`);
