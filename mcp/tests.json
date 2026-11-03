@@ -191,6 +191,7 @@
   ],
   "pending": [],
   "ignored": [
+    { "file": "test-0.3.2-dt1.mjs", "why": "DT1's guard, red on the base: moves into suites with the fix" },
     { "file": "test-results.mjs", "why": "a helper: the result adapter (A2, 0.3.1) the runner, scripts/ci-sum.mjs, check-result-lines and the website's run-all read result lines with" },
     { "file": "test-source.mjs", "why": "a helper, not a test: the source text (server.mjs and the files it was split into, 0.3.1 S9) for the suites that read it" },
     { "file": "test-0.2.9.mjs", "why": "a block of test.mjs: test.mjs imports it and runs it in its parts" },
