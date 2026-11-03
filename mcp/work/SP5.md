@@ -31,11 +31,11 @@
   sp5 2 on the base, 3 after; the whole ZIP, PNGs included, also identical here (SP5_WHOLE=1). A one-word change to the
   sample model fails both (MCP sp5 S1-S4, website W1: model.bim), then reverted.
 - **Areas (on a16ad868):** report 44 of 44 (glass-tables 113 once cba24a5 was fetched: shallow clone, as SP1); core
-  CORE_RESULT; release 5 of 5; website sp5 3, pbip 111, theme-generator 922, theme-generator-lab 922, layout-canvas 31, design-engine 600;
+  10 of 10 (mutation 198: 76 mutants, all killed); release 5 of 5; website sp5 3, pbip 111, theme-generator 922, theme-generator-lab 922, layout-canvas 31, design-engine 600;
   lint 0; check-min (stamps compared with main) and test-site-config pass.
-- **CI:** CI_RESULT
-- **State:** STATE_NOW
-- **Resume:** RESUME_NOW
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41552576033 on dc104b0d** (first run, every job green).
+- **State: DONE.**
+- **Resume:** none; the reviewer's merge.
 
 ## CHANGELOG line
 - **Inside the report writer:** the zip file and the sample sales data each have a file of their own; every download,
