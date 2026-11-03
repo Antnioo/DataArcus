@@ -34,6 +34,8 @@ package's manifest; this file says what is in it.
   on the website and from the MCP, is byte for byte what it was before.
 - **Inside the website's field picker:** the list where you choose a field for each visual has a file of its own; it
   shows the same choices in the same order and the download is byte for byte what it was before.
+- **Inside the website's model choice:** reading the project folder or the model file you choose has a file of its
+  own; the same models are read, the same files are refused, and the same messages are shown.
 - **Inside the report writer:** the tooltip pages (the card and the bars shown when a chart is hovered) are made in a
   file of their own; every report, on the website and from the MCP, is byte for byte what it was before.
 - **Inside the Model Health Check, again:** the model's index (its tables, columns, measures and what each one uses)

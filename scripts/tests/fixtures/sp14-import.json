@@ -1,0 +1,66 @@
+{
+ "W1 en folder": {
+  "msg": "⁨SP14 Project/Sales.SemanticModel (2 models in this folder; this one is used)⁩: 3 tables, 3 measures. Each visual below has a suggested field; change any of them.",
+  "bad": "",
+  "groups": [
+   "⁨Sales⁩",
+   "⁨Calendar⁩",
+   "⁨Customer⁩"
+  ],
+  "selects": 11
+ },
+ "W2 en pbit": {
+  "msg": "⁨legacy.pbit⁩: 3 tables, 2 measures. Each visual below has a suggested field; change any of them.",
+  "bad": "",
+  "groups": [
+   "⁨_Measures⁩",
+   "⁨Sales⁩",
+   "⁨Calendar⁩"
+  ],
+  "selects": 11
+ },
+ "W3 en pbix": {
+  "msg": "A .pbix keeps its model in a format only Power BI reads. Use File › Export › Power BI template (.pbit).",
+  "bad": "rgb(252, 165, 165)",
+  "groups": [],
+  "selects": 0
+ },
+ "W4 en too big": {
+  "msg": "This file is larger than a Power BI template without data (usually under 20 MB), or unpacks to more than it says, so it was not read. Export a fresh .pbit from Power BI Desktop.",
+  "bad": "rgb(252, 165, 165)",
+  "groups": [],
+  "selects": 0
+ },
+ "W5 ar folder": {
+  "msg": "⁨SP14 Project/Sales.SemanticModel (عدد النماذج في المجلد: 2، ويُستخدم هذا النموذج)⁩: 3 جدول، 3 مقياس. لكل عنصر أدناه حقل مقترح، ويمكنك تغيير أي منها.",
+  "bad": "",
+  "groups": [
+   "⁨Sales⁩",
+   "⁨Calendar⁩",
+   "⁨Customer⁩"
+  ],
+  "selects": 11
+ },
+ "W6 ar pbit": {
+  "msg": "⁨legacy.pbit⁩: 3 جدول، 2 مقياس. لكل عنصر أدناه حقل مقترح، ويمكنك تغيير أي منها.",
+  "bad": "",
+  "groups": [
+   "⁨_Measures⁩",
+   "⁨Sales⁩",
+   "⁨Calendar⁩"
+  ],
+  "selects": 11
+ },
+ "W7 ar pbix": {
+  "msg": "ملف .pbix يحفظ النموذج بصيغة لا يقرؤها إلا Power BI. استخدم File › Export › Power BI template (.pbit).",
+  "bad": "rgb(252, 165, 165)",
+  "groups": [],
+  "selects": 0
+ },
+ "W8 ar too big": {
+  "msg": "هذا الملف أكبر من قالب Power BI بدون بيانات (عادة أقل من 20 ميجابايت)، أو يتجاوز عند فك ضغطه ما يذكره، لذا لم يُقرأ. صدّر ملف ‎.pbit‎ جديدًا من Power BI Desktop.",
+  "bad": "rgb(252, 165, 165)",
+  "groups": [],
+  "selects": 0
+ }
+}
