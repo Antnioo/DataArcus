@@ -14,7 +14,8 @@
 - **Got:** `hm2` 12 checks, red on e2cf676: 6 of 12 (A2, A3, A4, C2, C3, C4), as planned; green on f105a0f. No other
   test's number changed. fx1 3 of 3 before (22) and 3 of 3 after (22). twin-fuzz 185, mx8 18 unchanged.
 - **Areas on f105a0f:** twin 32 suites passed (31 + hm2); lint 0; changelog-words PASS. Integration did not move (no merge).
-- **State:** CI (below).
+- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41661453999 on 2b8d617 (Linux,
+  Windows, macOS). After 2b8d617 only this note changed.
 - **Resume:** the reviewer's merge; the laptop's next part (below).
 
 ## Plan
