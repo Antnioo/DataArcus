@@ -28,9 +28,10 @@
 - **Answer size (L-1102-06):** create_arabic_twin's plan answer, A1-1 with HM2's block 8527 -> 8821 characters, the
   Call Center shape 10110 -> 10405, A1-1 lined up 8311 -> 8311. fx1 3 of 3 before (22) and 3 of 3 after (22).
 - **Areas:** twin on the merged tree: every suite passes (sp11 21, mx4 24, hm2 15, twin-tt1 15, twin-fuzz 185, ...);
-  lint 0; changelog-words PASS. Full run and CI: below.
-- **State:** CI to run.
-- **Resume:** CI on the branch, then the reviewer's merge.
+  lint 0; changelog-words, agent-memory PASS. The local full run hung in test.mjs in this container (stopped); CI ran all.
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41733601552 on 2b48c288** (first run, 23 jobs: Linux,
+  Windows, macOS). After 2b48c288 only this note changed. **State: DONE.**
+- **Resume:** the reviewer's merge; the laptop items below.
 
 ## Decisions I made
 - The suite is named `twin-tt1`: `tt1` is 0.3.1's TT1 (`test-0.3.1-tt1.mjs`, area arabic); names are unique (G1).
