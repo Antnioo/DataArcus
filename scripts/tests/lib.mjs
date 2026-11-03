@@ -3,11 +3,36 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { chromium } from 'playwright-core';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+// (0.3.1 GD1) the design the Theme Generator saved on a first visit before glass became its default (visitor's plainDesign)
+const PLAIN_DESIGN = JSON.stringify(createRequire(import.meta.url)('../../assets/js/design-engine.js').repairState(null));
+
+// (SQ15c, Q1-S5: a report, never a gate) DA_WEB_COVERAGE=<folder> (scripts/coverage-web.mjs sets it): every page a test
+// opens records Chromium's JS coverage (page.coverage) from its first script to its close; the engines' entries
+// (assets/js/*.js, the translations' data files not) are written to <folder> in Node's V8 coverage format, each named by
+// its source file, for c8 to report. The server then sends an engine's source for its .min.js (the pages load the
+// minified file; CI checks it is what the source gives), so the counts are the source's lines and branches.
+const COVERAGE = process.env.DA_WEB_COVERAGE ? path.resolve(process.env.DA_WEB_COVERAGE) : null;
+const ENGINE = /^\/assets\/js\/([^/]+?)(?:\.min)?\.js$/;
+const covered = new Set();
+let covFiles = 0;
+async function coverageStart(pg) { await pg.coverage.startJSCoverage({ resetOnNavigation: false }); covered.add(pg); }
+async function coverageStop(pg) {
+  if (!covered.delete(pg)) return;
+  let list; try { list = await pg.coverage.stopJSCoverage(); } catch (e) { return; }   // a page that crashed or closed itself: nothing to write
+  const result = list.map((e) => { const m = ENGINE.exec(new URL(e.url, 'http://x').pathname), f = m && path.join(ROOT, 'assets/js', m[1] + '.js');
+    return f && fs.existsSync(f) ? { scriptId: e.scriptId, url: pathToFileURL(f).href, functions: e.functions } : null; }).filter(Boolean);
+  if (!result.length) return;
+  fs.mkdirSync(COVERAGE, { recursive: true });
+  fs.writeFileSync(path.join(COVERAGE, `coverage-web-${process.pid}-${++covFiles}.json`), JSON.stringify({ result }));
+}
+// the pages still open at the end (run-all calls it before closing the browser)
+export const flushCoverage = () => Promise.all([...covered].map(coverageStop));
 
 // How long to wait for something the page does itself (build the language switcher, translate, lay out). Generous,
 // because a busy machine can be many times slower; a wait that runs out is still a failure, just a later one.
@@ -24,6 +49,8 @@ export function serve() {
     let file = path.join(ROOT, p);
     if (!file.startsWith(ROOT)) { res.writeHead(403); return res.end(); }
     if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
+    const eng = COVERAGE && /\.min\.js$/.test(p) && ENGINE.exec(p);
+    if (eng && fs.existsSync(path.join(ROOT, 'assets/js', eng[1] + '.js'))) file = path.join(ROOT, 'assets/js', eng[1] + '.js');
     if (!fs.existsSync(file)) { res.writeHead(404, { 'Content-Type': TYPES['.html'] }); return res.end(fs.readFileSync(path.join(ROOT, '404.html'))); }
     res.writeHead(200, { 'Content-Type': TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream' });
     fs.createReadStream(file).pipe(res);
@@ -56,9 +83,12 @@ export const pages = () => {
 /**
  * A fresh visitor. Options: viewport [w, h], timezone, consent ('denied' | 'granted' | null for a first visit),
  * downloads (true to accept file downloads), motion ('reduce' for visitors who turn animations off).
+ * plainDesign (default true; 0.3.1 GD1): the Theme Generator's first visit opens on the glass look, so a visitor starts
+ * with the design the page saved on a first visit before that (E.repairState(null): no look, plain), the path the
+ * website's suites were written for; false for a true first visit (theme-generator.mjs, GD1).
  * Returns { ctx, pg, errs, hits } — errs collects page errors and console errors, hits counts analytics requests.
  */
-export async function visitor(browser, { viewport = [1440, 900], timezone = 'Asia/Dubai', consent = 'denied', downloads = false, motion = 'no-preference' } = {}) {
+export async function visitor(browser, { viewport = [1440, 900], timezone = 'Asia/Dubai', consent = 'denied', downloads = false, motion = 'no-preference', plainDesign = true } = {}) {
   const ctx = await browser.newContext({ viewport: { width: viewport[0], height: viewport[1] }, timezoneId: timezone, acceptDownloads: downloads, reducedMotion: motion });
   // opening a page on a busy machine can take longer than Playwright's default 30 s
   ctx.setDefaultNavigationTimeout(120000);
@@ -75,8 +105,17 @@ export async function visitor(browser, { viewport = [1440, 900], timezone = 'Asi
   await ctx.addInitScript(() => { window.__scrolling = false;
     document.addEventListener('scroll', () => { window.__scrolling = true; }, { passive: true });
     document.addEventListener('scrollend', () => { window.__scrolling = false; }); });
+  if (plainDesign) await ctx.addInitScript((d) => { try { if (!localStorage.getItem('dataarcus-theme-generator')) localStorage.setItem('dataarcus-theme-generator', d); } catch (e) { /* ignore */ } }, PLAIN_DESIGN);
   if (consent) await ctx.addInitScript((c) => { try { if (!localStorage.getItem('dataarcus-consent')) localStorage.setItem('dataarcus-consent', c); } catch (e) { /* ignore */ } }, consent);
   const pg = await ctx.newPage();
+  if (COVERAGE) {
+    // every page of this visitor, the first and any a test opens itself, until it or the visitor closes
+    const track = async (p) => { await coverageStart(p); const close = p.close.bind(p); p.close = async (o) => { await coverageStop(p); return close(o); }; return p; };
+    await track(pg);
+    const newPage = ctx.newPage.bind(ctx), closeCtx = ctx.close.bind(ctx);
+    ctx.newPage = async () => track(await newPage());
+    ctx.close = async (o) => { await Promise.all(ctx.pages().map(coverageStop)); return closeCtx(o); };
+  }
   // --slow N in run-all: pages run N times slower (Chrome's CPU throttling), to reproduce a busy machine
   const slow = +process.env.DATAARCUS_TEST_SLOW || 0;
   if (slow > 1) await (await ctx.newCDPSession(pg)).send('Emulation.setCPUThrottlingRate', { rate: slow });

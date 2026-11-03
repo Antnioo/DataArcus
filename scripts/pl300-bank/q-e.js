@@ -29,7 +29,7 @@ Q('perf','single',1,'Reduce data',
 [`Filter the rows in Power Query to the last 3 years`,`Hide the old rows with a report-level filter`,`Create a measure that ignores old years`,`Change the table to Dual storage mode`],0,
 `Filtering rows in Power Query stops unneeded rows from loading at all. Report filters and measures still leave every row in memory.`,
 [``,`Filtered rows are still loaded.`,`A measure doesn't reduce the data loaded.`,`Dual keeps an imported copy anyway.`],
-`أبسط تقليل للحجم: فلترة الصفوف غير المطلوبة في Power Query.`,['datared']),
+`أبسط تقليل للحجم: تصفية الصفوف غير المطلوبة في Power Query.`,['datared']),
 
 Q('perf','multi',2,'Reduce data',
 `Which two actions reduce the size of an Import semantic model? Each correct answer presents a complete solution. Select TWO.`,

@@ -89,7 +89,7 @@
           { "@type": "Question", "name": "How do I get Hijri dates in Power BI?",
             "acceptedAnswer": { "@type": "Answer", "text": "Power BI has no built-in function that returns a Hijri month or flags Ramadan. (Measured in Power BI Desktop 2.158, October 2026: DAX FORMAT with \"ar-SA\" or \"ar-AE\" still returns the Gregorian date.) This generator embeds the Umm al-Qura month start dates in the DAX, then calculates Hijri year, month, day, Ramadan and Eid for every date." } },
           { "@type": "Question", "name": "Are the Ramadan dates exact?",
-            "acceptedAnswer": { "@type": "Answer", "text": "By default they follow the official Saudi Umm al-Qura calendar, and a moon sighting can differ by one day. The Announced Ramadan and Eid dates option uses the dates the UAE announced since 2018; future dates are estimates until they are announced." } }
+            "acceptedAnswer": { "@type": "Answer", "text": "By default they follow Saudi Arabia's Umm al-Qura calendar; a moon sighting can differ from it, usually by a day. The Announced Ramadan and Eid dates option uses the dates the UAE announced since 2018 (Oman announced 11 of them a day later from 2019 to 2026); future dates are estimates until they are announced and added here." } }
         ]
       }
     ]
@@ -184,7 +184,7 @@
       <header class="mb-4">
         <span class="page-badge" data-i18n="cg.badge">Free tool · No sign-up</span>
         <h1 class="display-5 fw-bold" data-i18n="cg.title">DAX Calendar Table Generator</h1>
-        <p class="lead text-white-50 mb-0" data-i18n="cg.subtitle">A complete Power BI date table in one paste: fiscal years, GCC weekends, and Hijri dates with Ramadan and Eid flags that no built-in function gives you.</p>
+        <p class="lead text-white-50 mb-0" data-i18n="cg.subtitle">A Power BI date table in one paste: fiscal years, GCC weekends, and Hijri dates with Ramadan and Eid flags that no built-in function gives you.</p>
       </header>
 
       <div class="row g-4" data-clarity-mask="true">
@@ -206,7 +206,8 @@
               <div style="grid-column:1/-1"><label class="tg-label" for="cgWeek" data-i18n="cg.weekStart">Week starts on</label>
                 <select id="cgWeek" class="form-select"><option value="sun" data-i18n="cg.day.sun">Sunday</option><option value="mon" data-i18n="cg.day.mon">Monday</option><option value="sat" data-i18n="cg.day.sat">Saturday</option></select></div>
               <div style="grid-column:1/-1"><label class="tg-label" for="cgWeekend" data-i18n="cg.weekend">Weekend</label>
-                <select id="cgWeekend" class="form-select"><option value="sat-sun" data-i18n="cg.we.satsun">Saturday + Sunday</option><option value="fri-sat" data-i18n="cg.we.frisat">Friday + Saturday</option><option value="fri" data-i18n="cg.we.fri">Friday only</option><option value="sun" data-i18n="cg.we.sun">Sunday only</option><option value="uae" data-i18n="cg.we.uae">UAE: Sat + Sun since 2022</option><option value="ksa" data-i18n="cg.we.ksa">Saudi Arabia: Fri + Sat since 2013</option><option value="kwt" data-i18n="cg.we.kwt">Kuwait: Fri + Sat since 2007</option><option value="qat" data-i18n="cg.we.qat">Qatar: Fri + Sat since 2003</option><option value="bhr" data-i18n="cg.we.bhr">Bahrain: Fri + Sat since 2006</option><option value="omn" data-i18n="cg.we.omn">Oman: Fri + Sat since 2013</option></select></div>
+                <select id="cgWeekend" class="form-select"><option value="sat-sun" data-i18n="cg.we.satsun">Saturday + Sunday</option><option value="fri-sat" data-i18n="cg.we.frisat">Friday + Saturday</option><option value="fri" data-i18n="cg.we.fri">Friday only</option><option value="sun" data-i18n="cg.we.sun">Sunday only</option><option value="uae" data-i18n="cg.we.uae">UAE: Sat + Sun since 2022</option><option value="ksa" data-i18n="cg.we.ksa">Saudi Arabia: Fri + Sat since 2013</option><option value="kwt" data-i18n="cg.we.kwt">Kuwait: Fri + Sat since 2007</option><option value="qat" data-i18n="cg.we.qat">Qatar: Fri + Sat since 2003</option><option value="bhr" data-i18n="cg.we.bhr">Bahrain: Fri + Sat since 2006</option><option value="omn" data-i18n="cg.we.omn">Oman: Fri + Sat since 2013</option><option value="shj" data-i18n="cg.we.shj">Sharjah govt: Fri-Sun since 2022</option></select>
+                <small id="cgWeekendNote" class="d-block small text-white-50 mt-1" data-i18n="cg.weekendNote">Is Weekend and Is Working Day follow this weekend only: they don't know public holidays, half days (the UAE government works a half day on Friday) or an employer's own rest days.</small></div>
               <div><label class="tg-label" for="cgFy" data-i18n="cg.fyStart">Fiscal year starts</label>
                 <select id="cgFy" class="form-select"><option value="1" data-i18n="cg.m.1">January</option><option value="2" data-i18n="cg.m.2">February</option><option value="3" data-i18n="cg.m.3">March</option><option value="4" data-i18n="cg.m.4">April</option><option value="5" data-i18n="cg.m.5">May</option><option value="6" data-i18n="cg.m.6">June</option><option value="7" data-i18n="cg.m.7">July</option><option value="8" data-i18n="cg.m.8">August</option><option value="9" data-i18n="cg.m.9">September</option><option value="10" data-i18n="cg.m.10">October</option><option value="11" data-i18n="cg.m.11">November</option><option value="12" data-i18n="cg.m.12">December</option></select></div>
               <div><label class="tg-label" for="cgLang" data-i18n="cg.names">Month and day names</label>
@@ -215,10 +216,10 @@
             <div class="cg-checks">
               <span class="tg-label mb-0" data-i18n="cg.columns">Columns to include</span>
               <label><input type="checkbox" id="cgHijri"><span><span data-i18n="cg.col.hijri">Hijri dates, Ramadan and Eid</span><small id="hijriNote" data-i18n="cg.col.hijriNote">Umm al-Qura calendar: Hijri year, month, day, Ramadan day, Eid al-Fitr and Eid al-Adha flags.</small></span></label>
-              <label><input type="checkbox" id="cgObserved"><span><span data-i18n="cg.col.observed">Announced Ramadan and Eid dates (UAE)</span><small data-i18n-html="cg.col.observedNote">Moves Ramadan, Shawwal and Dhu al-Hijjah to the dates the UAE announced since 2018. Dates not announced yet stay on Umm al-Qura and are flagged in Is Estimated Date.</small></span></label>
+              <label><input type="checkbox" id="cgObserved"><span><span data-i18n="cg.col.observed">Announced Ramadan and Eid dates (UAE)</span><small data-i18n-html="cg.col.observedNote">Moves Ramadan, Shawwal and Dhu al-Hijjah to the dates the UAE announced since 2018, whichever weekend you pick. Saudi Arabia's matched them; Oman announced 11 of them a day later (2019-2026), and Qatar, Kuwait and Bahrain may differ by a day. Dates not announced yet stay on Umm al-Qura and are flagged in Is Estimated Date.</small></span></label>
               <label><input type="checkbox" id="cgFiscal"><span><span data-i18n="cg.col.fiscal">Fiscal year, quarter and month</span><small data-i18n="cg.col.fiscalNote">Labels like FY2026 and FQ1, based on your fiscal start month.</small></span></label>
-              <label><input type="checkbox" id="cgArabic"><span><span data-i18n="cg.col.arabic">Add Arabic name columns</span><small data-i18n="cg.col.arabicNote">Day Name (Arabic), Month Name (Arabic) and Hijri Month Name (Arabic) beside the English names, for Arabic report pages. Sort each by Day of Week, Month Number or Hijri Month Number.</small></span></label>
-              <label><input type="checkbox" id="cgRel"><span><span data-i18n="cg.col.rel">Relative offsets</span><small data-i18n="cg.col.relNote">Day, month and year offsets from today, for "last 3 months" slicers that never need updating.</small></span></label>
+              <label><input type="checkbox" id="cgArabic"><span><span data-i18n="cg.col.arabic">Add Arabic name columns</span><small data-i18n="cg.col.arabicNote">Day Name (Arabic), Month Name (Arabic) and Hijri Month Name (Arabic) beside the English names, and Arabic labels beside the quarters, the fiscal year and quarter and the yes/no flags (Quarter (Arabic), Is Weekend (Arabic) and the like), for Arabic report pages. Sort each name by Day of Week, Month Number or Hijri Month Number.</small></span></label>
+              <label><input type="checkbox" id="cgRel"><span><span data-i18n="cg.col.rel">Relative offsets</span><small data-i18n="cg.col.relNote">Day, month and year offsets from the day of the last refresh, for "last 3 months" slicers that move on with each refresh.</small></span></label>
             </div>
             <div class="cg-err" id="err" role="alert"></div>
           </div>
@@ -247,8 +248,8 @@
       <div class="row mt-5 justify-content-center">
         <div class="col-lg-8">
           <div class="tg-cta mb-5 text-center">
-            <h2 class="h4 fw-bold mb-2" data-i18n="cg.cta.title">Ramadan changes everything in your numbers</h2>
-            <p class="text-white-50 mb-3" data-i18n="cg.cta.desc">Comparing this Ramadan to last Ramadan, not March to March, is where the real insight is. DataArcus builds Power BI reports that understand the Gulf calendar.</p>
+            <h2 class="h4 fw-bold mb-2" data-i18n="cg.cta.title">Ramadan moves every year, and your numbers with it</h2>
+            <p class="text-white-50 mb-3" data-i18n-html="cg.cta.desc">Compare this Ramadan with last Ramadan, not March with March. DataArcus builds Power BI reports that understand the Gulf calendar: see <a href='/power-bi-mcp/' class='text-accent'>DataArcus for Power BI</a>.</p>
             <div class="d-flex flex-wrap justify-content-center gap-2">
               <a href="/#contact" class="btn btn-accent" data-i18n="nav.consultation">Book a Free Call</a>
               <a href="dax-measure-builder.html" class="tg-btn2 text-decoration-none d-inline-block" data-i18n="cg.cta.next">Next: build YoY and YTD measures</a>
@@ -260,13 +261,14 @@
             <h3 data-i18n="cg.faq.q1">How do I add this table in Power BI?</h3>
             <p data-i18n-html="cg.faq.a1">In Power BI Desktop go to <strong>Modeling → New table</strong>, paste the DAX and press Enter. Then right-click the table, choose <strong>Mark as date table</strong>, and pick the Date column. Relate Date to the date column of your fact table.</p>
             <h3 data-i18n="cg.faq.q2">How does it get Hijri dates without Power Query?</h3>
-            <p data-i18n="cg.faq.a2">Power BI has no built-in function that returns a Hijri month or flags Ramadan. (Measured in Power BI Desktop 2.158, October 2026: DAX FORMAT with "ar-SA" or "ar-AE" still returns the Gregorian date.) The generator calculates every Hijri month start in your range and embeds them in a small DATATABLE inside the DAX. Each date then looks up its Hijri month, so the table works offline and refreshes instantly.</p>
+            <!-- FAQ a2's measurement: scripts/tests/DESKTOP-TESTS.md, "DAX FORMAT with Arabic locales" (2026-10-05, round 10, Power BI Desktop 2.158) -->
+            <p data-i18n="cg.faq.a2">Power BI has no built-in function that returns a Hijri month or flags Ramadan. (Measured in Power BI Desktop 2.158, October 2026: DAX FORMAT with "ar-SA" or "ar-AE" still returns the Gregorian date.) The generator calculates every Hijri month start in your range and embeds them in a small DATATABLE inside the DAX. Each date then looks up its Hijri month, so the table needs no data source and works offline.</p>
             <h3 data-i18n="cg.faq.q3">Are the Ramadan and Eid dates exact?</h3>
-            <p data-i18n="cg.faq.a3">By default they follow the official Saudi Umm al-Qura calendar, and a moon sighting can differ by one day. Turn on Announced Ramadan and Eid dates to use the dates the UAE announced since 2018 (only Ramadan 2018 differed). Future dates are estimates until they are announced.</p>
+            <p data-i18n="cg.faq.a3">By default they follow Saudi Arabia's Umm al-Qura calendar; a moon sighting can differ from it, usually by a day. Turn on Announced Ramadan and Eid dates to use the dates the UAE announced since 2018 (only Ramadan 2018 differed from Umm al-Qura). They are the UAE's dates: Oman announced 11 of them a day later from 2019 to 2026. Future dates are estimates until they are announced and added here.</p>
             <h3 data-i18n="cg.faq.q4">How do I compare this Ramadan with last Ramadan?</h3>
             <p data-i18n-html="cg.faq.a4">Put <strong>Ramadan Day</strong> on the axis and <strong>Hijri Year</strong> in the legend. Every Ramadan lines up day by day, even though the Gregorian dates move about 11 days earlier each year.</p>
             <h3 data-i18n="cg.faq.q5">Why relative offsets?</h3>
-            <p data-i18n-html="cg.faq.a5">Filter on <strong>Month Offset</strong> between -2 and 0 to always show the last three months. It updates by itself every day, so nobody has to change a slicer again.</p>
+            <p data-i18n-html="cg.faq.a5">Filter on <strong>Month Offset</strong> between -2 and 0 to show the last three months. The offsets are worked out when the table is calculated, so they move on with each refresh of the model (or when the file is opened again), not at midnight: refresh it every day and the filter keeps showing the last three months.</p>
           </section>
         </div>
       </div>
@@ -329,14 +331,14 @@
       </div>
   </footer>
 
-  <script src="../assets/js/translations/common.min.js?v=20261009h" defer></script>
-  <script src="../assets/js/translations/calendar-generator.min.js?v=20261006a" defer></script>
-  <script src="../assets/js/lang-manager.min.js?v=20261023a" defer></script>
+  <script src="../assets/js/translations/common.min.js?v=20261025f" defer></script>
+  <script src="../assets/js/translations/calendar-generator.min.js?v=20261027st1" defer></script>
+  <script src="../assets/js/lang-manager.min.js?v=20261025a" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>
   <script src="../assets/js/main.min.js?v=20261022d" defer></script>
-  <script src="../assets/js/gulf-dates.min.js" defer></script>
+  <script src="../assets/js/gulf-dates.min.js?v=20261025gc" defer></script>
   <script src="../assets/js/arabic-calendar.min.js?v=20261021w16" defer></script>
-  <script src="../assets/js/calendar-generator.min.js?v=20261022a" defer></script>
+  <script src="../assets/js/calendar-generator.min.js?v=20261026sq14" defer></script>
 </body>
 </html>

@@ -170,7 +170,7 @@ try {
   const SCRIPT = path.join(REPO, 'scripts/check-result-lines.mjs');
   const run = (args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8' });
   const h1 = run([]);
-  chk(() => h1.status === 0, () => `H1. every script of mcp/package.json's test prints "PASS  <name>  <N> checks" (or FAIL / SKIP): ${h1.status} ${(h1.stdout + h1.stderr).slice(0, 400)}`);
+  chk(() => h1.status === 0, () => `H1. every suite in mcp/tests.json prints "PASS  <name>  <N> checks" (or FAIL / SKIP): ${h1.status} ${(h1.stdout + h1.stderr).slice(0, 400)}`);
   const F = path.join(ROOT, 'res'); fs.mkdirSync(F);
   fs.writeFileSync(path.join(F, 'package.json'), JSON.stringify({ scripts: { test: 'node a.mjs && node b.mjs' } }));
   fs.writeFileSync(path.join(F, 'a.mjs'), "if (bad) { console.log(`FAIL  a  ${n} checks, ${k} failed`); process.exit(1); }\nconsole.log(`PASS  a  ${n} checks`);\n");

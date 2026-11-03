@@ -6,7 +6,8 @@
 // theme colours). It never shows a data value and never makes one up: each visual gets a grey placeholder shape (bars,
 // a line, a ring, rows), with no text and no number in it, and the page is labelled "preview".
 // A page: { name, w, h, rtl, colors: { background, card, ink, accent }, visuals: [{ type (Power BI's visualType),
-// x, y, w, h (page units, as the page places them: a right-to-left page is already mirrored), z, title }] }.
+// x, y, w, h (page units, as the page places them: a right-to-left page is already mirrored), z, title }], glass?: { url,
+// t (the cards' transparency, %), rim } (0.3.1 GD2: the glass look, drawn as written) }.
 (function (root) {
   'use strict';
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -135,7 +136,7 @@
   // D5: labels that may slant (J12's rough rule, kept as a note: slanted labels are not cut, and check_report has no such
   // finding), [{ i, kind: 'slant', why }]
   function notes(page) {
-    const kk = +page.h ? +page.h / 1080 : 1, out = [];
+    const out = [];
     (page.visuals || []).forEach((v, i) => {
       const k = kindOf(v); if (!((k === 'column' || k === 'line') && v.category)) return;
       const L = labelsOf(v.category);
@@ -146,9 +147,11 @@
     return out;
   }
 
+  // (SQ13, V1-S2: "label length unknown" read as an error to a person who did not ask) the labels note says plainly
+  // that the axis labels come from the data, which the preview does not have
   const WORDS = {
-    en: { preview: 'preview', cut: 'cut off', overlap: 'overlap', small: 'too small', page: 'Preview of the page', visuals: 'visuals', flags: 'to check', labels: 'label length unknown', slant: 'labels may slant' },
-    ar: { preview: 'معاينة', cut: 'مقطوع', overlap: 'تداخل', small: 'صغير جدًا', page: 'معاينة الصفحة', visuals: 'عناصر', flags: 'للمراجعة', labels: 'طول التسميات غير معروف', slant: 'قد تميل التسميات' }
+    en: { preview: 'preview', cut: 'cut off', overlap: 'overlap', small: 'too small', page: 'Preview of the page', visuals: 'visuals', flags: 'to check', labels: 'labels from your data', slant: 'labels may slant' },
+    ar: { preview: 'معاينة', cut: 'مقطوع', overlap: 'تداخل', small: 'صغير جدًا', page: 'معاينة الصفحة', visuals: 'عناصر', flags: 'للمراجعة', labels: 'التسميات من بياناتك', slant: 'قد تميل التسميات' }
   };
   const GREY = '#A3ACBB', WARN = '#B7791F';
 
@@ -162,12 +165,27 @@
     m[0] = k > 2 ? (3 * sl[0] - m[1]) / 2 : sl[0]; m[k - 1] = k > 2 ? (3 * sl[k - 2] - m[k - 2]) / 2 : sl[0];
     return pts.slice(0, -1).map((p0, i) => { const p1 = pts[i + 1], d = h[i] / 3; return [p0, [p0[0] + d, p0[1] + m[i] * d], [p1[0] - d, p1[1] - m[i + 1] * d], p1]; });
   }
+  // (0.3.1 FX5) n bars t thick along a length L, every gap the same (the written inner and outer padding are equal):
+  // [{ at, t }] from the start of the length
+  const barsOf = (bars, L) => { const t = Math.min(bars.t, L / bars.n), g = Math.max(0, (L - bars.n * t) / (bars.n + 1)); return Array.from({ length: bars.n }, (x, i) => ({ at: g + i * (t + g), t })); };
+  // the bars a bar or column chart's file sets (its categoryAxis innerPadding and outerPadding equal, the writer's barBand,
+  // pbip-sizing.js): their count and thickness on the page H high, by the writer's own rule; null where it sets none
+  const barsFor = (k, v, H) => {
+    const Z = shared(() => require('./pbip-sizing.js'), 'DAPbipSizing'), pct = v && +v.band;
+    if (!Z || !Z.barCountOf || !(pct > 0) || !/^(bar|column)$/.test(k)) return null;
+    const span = Z.barSpan(k === 'bar', +v.w || 0, +v.h || 0, H), n = Z.barCountOf(pct, span, H), p = pct / 100;
+    return n ? { n, t: span * (1 - p) / (n + p) } : null;
+  };
   function shape(k, b, rtl, c, u, v) {
     const X = (f) => (rtl ? b.x + b.w * (1 - f) : b.x + b.w * f), Y = (f) => b.y + b.h * f;
     const R = (f0, g0, fw, gh, fill, op) => { const x0 = rtl ? X(f0 + fw) : X(f0); return `<rect x="${n(x0)}" y="${n(Y(g0))}" width="${n(b.w * fw)}" height="${n(b.h * gh)}" rx="${n(Math.min(b.w * fw, b.h * gh, 24 * u) * 0.2)}" fill="${fill || GREY}"${op ? ` opacity="${op}"` : ''}/>`; };
     switch (k) {
-      case 'bar': return [0.86, 0.7, 0.56, 0.42, 0.3].map((f, i) => R(0.06, 0.08 + i * 0.18, f * 0.88, 0.11)).join('');
-      case 'column': return [0.5, 0.78, 0.6, 0.9, 0.66, 0.8].map((f, i) => R(0.07 + i * 0.145, 0.95 - f * 0.88, 0.1, f * 0.88)).join('');
+      // (0.3.1 FX5) a chart whose file sets its bars' thickness (v.bars, from its padding: the writer's barBand) draws that
+      // many bars that thick, the gaps equal, as Desktop draws them; else the placeholder's own five bars or six columns
+      case 'bar': if (v && v.bars) return barsOf(v.bars, b.h).map((g, i) => R(0.06, g.at / b.h, [0.86, 0.7, 0.56, 0.42, 0.3][i % 5] * 0.88, g.t / b.h)).join('');
+        return [0.86, 0.7, 0.56, 0.42, 0.3].map((f, i) => R(0.06, 0.08 + i * 0.18, f * 0.88, 0.11)).join('');
+      case 'column': if (v && v.bars) return barsOf(v.bars, b.w).map((g, i) => { const f = [0.5, 0.78, 0.6, 0.9, 0.66, 0.8][i % 6]; return R(g.at / b.w, 0.95 - f * 0.88, g.t / b.w, f * 0.88); }).join('');
+        return [0.5, 0.78, 0.6, 0.9, 0.66, 0.8].map((f, i) => R(0.07 + i * 0.145, 0.95 - f * 0.88, 0.1, f * 0.88)).join('');
       case 'line': {
         // (L1) as the file draws it: smooth (monotone, as Power BI's monotoneX: the curve never swings past a point) with a
         // dot on each point, or straight (v.smooth, v.markers: read from the line chart's lineStyles)
@@ -202,6 +220,13 @@
     }
   }
 
+  // (SQ13, V1-S4) a chart over time (v.timeDir, from fromFiles): an arrow along the bottom of its plot toward later time
+  function timeArrow(k, ib, v, u) {
+    if (!v || !v.timeDir || !/^(line|column)$/.test(k) || ib.w < 24 * u || ib.h < 12 * u) return '';
+    const later = v.timeDir === 'rtl' ? -1 : 1, x0 = ib.x + ib.w * (later > 0 ? 0.04 : 0.96), x1 = ib.x + ib.w * (later > 0 ? 0.96 : 0.04), y = ib.y + ib.h, a = Math.max(3 * u, Math.min(ib.h * 0.04, 10 * u));
+    return `<path class="td" data-time="${v.timeDir}" d="M${n(x0)},${n(y)} L${n(x1)},${n(y)} M${n(x1 - later * a)},${n(y - a)} L${n(x1)},${n(y)} L${n(x1 - later * a)},${n(y + a)}" fill="none" stroke="${GREY}" stroke-width="${n(Math.max(u, ib.h * 0.006))}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+
   /** The SVG picture of a page. opts: { lang: 'en' | 'ar', width (display width, px; default 800), flags (more flags,
    *  [{ i, kind }], from the layout check; a page's own flags are drawn too) }. Deterministic: the same page and options give the same string. */
   function render(page, opts) {
@@ -210,6 +235,11 @@
     const c = Object.assign({ background: '#F4F6FA', card: '#FFFFFF', ink: '#14213D', accent: '#0F7C90' }, page.colors || {});
     const col = { background: hex(c.background, '#F4F6FA'), card: hex(c.card, '#FFFFFF'), ink: hex(c.ink, '#14213D'), accent: hex(c.accent, '#0F7C90') };
     const fs = 11 * u, pad = 8 * u, vs = page.visuals || [], kk = H / 1080;
+    // (0.3.1 GD2, the owner, 27 Oct: "in the approval page it should not be solid cards") a glass page as the report is
+    // written: its soft picture behind (page.glass.url: a PNG data URL or a blob URL, nothing else) and every card, a
+    // table's too, at the theme's own transparency (page.glass.t, %) with the look's rim
+    const gl = page.glass && /^(data:image\/png;base64,[A-Za-z0-9+/=]+|blob:[A-Za-z0-9:/._-]+)$/.test(String(page.glass.url || '')) && +page.glass.t > 0 ? page.glass : null;
+    const glassFill = gl ? ` fill-opacity="${String(Math.round((1 - Math.min(100, +gl.t) / 100) * 100) / 100)}" stroke="${hex(gl.rim, '#FFFFFF')}" stroke-opacity="1"` : '';
     const flags = check(page);
     (page.flags || []).concat(o.flags || []).forEach((f) => { if (f && vs[f.i] && /^(cut|overlap|small)$/.test(f.kind) && !flags.some((g) => g.i === f.i && g.kind === f.kind)) flags.push({ i: f.i, kind: f.kind }); });
     // (one line of a title that may not wrap, shortened with "…" by the writer's measure: a picture, not a measurement)
@@ -224,7 +254,8 @@
     const body = order.map((i) => {
       const v = vs[i], k = kindOf(v), b = { x: +v.x || 0, y: +v.y || 0, w: Math.max(0, +v.w || 0), h: Math.max(0, +v.h || 0) };
       const title = clean(v.title), boxed = !/^(text|image|button|shape)$/.test(k);
-      const panel = boxed ? `<rect class="box" x="${n(b.x)}" y="${n(b.y)}" width="${n(b.w)}" height="${n(b.h)}" rx="${n(6 * u)}" fill="${col.card}" stroke="${GREY}" stroke-opacity=".35" stroke-width="${n(u)}"/>`
+      const panel = boxed ? (gl ? `<rect class="box" x="${n(b.x)}" y="${n(b.y)}" width="${n(b.w)}" height="${n(b.h)}" rx="${n(6 * u)}" fill="${col.card}"${glassFill} stroke-width="${n(u)}"/>`
+        : `<rect class="box" x="${n(b.x)}" y="${n(b.y)}" width="${n(b.w)}" height="${n(b.h)}" rx="${n(6 * u)}" fill="${col.card}" stroke="${GREY}" stroke-opacity=".35" stroke-width="${n(u)}"/>`)
         : `<rect class="box" x="${n(b.x)}" y="${n(b.y)}" width="${n(b.w)}" height="${n(b.h)}" fill="none"/>`;
       const end = '</g><!--/v-->';
       if (k === 'panel') return `<g class="v" data-i="${i}" data-kind="panel">${panel}${end}`;
@@ -283,7 +314,7 @@
       } else inner = (v.grid === 'dotted' && /^(bar|column|line)$/.test(k) ? [0.25, 0.5, 0.75].map((g) => (k === 'bar'
         ? `<line class="grid" x1="${n(ib.x + ib.w * g)}" y1="${n(ib.y)}" x2="${n(ib.x + ib.w * g)}" y2="${n(ib.y + ib.h)}"`
         : `<line class="grid" x1="${n(ib.x)}" y1="${n(ib.y + ib.h * g)}" x2="${n(ib.x + ib.w)}" y2="${n(ib.y + ib.h * g)}"`) + ` stroke="${GREY}" stroke-width="${n(u)}" stroke-dasharray="${n(u)} ${n(3 * u)}" opacity=".7"/>`).join('') : '')
-        + (k === 'image' || k === 'shape' ? shape(k, b, rtl, col, u) : shape(k, ib, rtl, col, u, v));
+        + (k === 'image' || k === 'shape' ? shape(k, b, rtl, col, u) : shape(k, ib, rtl, col, u, ((bars) => (bars ? Object.assign({}, v, { bars }) : v))(barsFor(k, v, H)))) + timeArrow(k, ib, v, u);
       return `<g class="v" data-i="${i}" data-kind="${k}">${panel}${inner ? `<g class="ph">${inner}</g>` : ''}${t}${end}`;
     }).join('');
     // the flags: a dashed outline in a calm amber and the flag's word in a small tag at the box's top corner (inside the page)
@@ -309,7 +340,8 @@
     // flips an SVG text's start and end). Arabic still shapes right to left inside each text, and the writer's titles
     // carry their own direction marks and isolates (J18)
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n(W)} ${n(H)}" width="${width}" height="${height}" direction="ltr" role="img" aria-label="${esc(label)}">`
-      + `<rect class="page" x="0" y="0" width="${n(W)}" height="${n(H)}" fill="${col.background}" stroke="${GREY}" stroke-opacity=".5" stroke-width="${n(u)}"/>${body}${marks}${said}${tag}</svg>`;
+      + `<rect class="page" x="0" y="0" width="${n(W)}" height="${n(H)}" fill="${col.background}" stroke="${GREY}" stroke-opacity=".5" stroke-width="${n(u)}"/>`
+      + (gl ? `<image class="glass" x="0" y="0" width="${n(W)}" height="${n(H)}" preserveAspectRatio="none" href="${gl.url}"/>` : '') + `${body}${marks}${said}${tag}</svg>`;
   }
 
   // ---- the pages, from what the report writer writes or from the design engine's slots ----
@@ -339,6 +371,23 @@
   const th1 = (theme, type, card, key) => { const vs = (theme && theme.visualStyles) || {}, f = (t) => (((vs[t] || {})['*'] || {})[card] || [])[0]; const e = f(type) || f('*'); return e && e[key] != null ? e[key] : null; };
   const nameOfProj = (x) => String(x.displayName != null ? x.displayName : x.nativeQueryRef != null ? x.nativeQueryRef : (((x.field || {}).Column || (x.field || {}).Measure || {}).Property) || '');
   const altOf = (j) => strOf(props(((j.visual || {}).visualContainerObjects || {}).general).altText);
+  // (SQ13, V1-S4: the placeholder line looked the same whichever way time ran) which way a chart over time runs, from its
+  // settings as Desktop reads them (report-mirror.js chartRtl writes them): 'rtl' when its continuous axis is inverted
+  // (invertAxis; a categorical axis ignores it) or it is sorted descending by its category (or the order key it carries
+  // in its tooltips), 'ltr' sorted ascending or not sorted; null when its category is not time (by its name) or it is
+  // sorted by something else. Settings only, never a value; the preview's cue, never written
+  const TIME_NAME = /\b(date|dates|day|days|week|weeks|month|months|quarter|quarters|qtr|year|years|yr|fy|period|periods)\b|تاريخ|يوم|أسبوع|شهر|ربع|سنة|عام|فترة/i;
+  function timeDirOf(vis, c) {
+    const f = c.field || {}, e = f.Column || f.Measure || ((f.Aggregation || {}).Expression || {}).Column || {};
+    if (!TIME_NAME.test(String(e.Property || '') + ' ' + nameOfProj(c))) return null;
+    const ax = props((vis.objects || {}).categoryAxis);
+    if (boolOf(ax.invertAxis) === true && strOf(ax.axisType) !== 'Categorical') return 'rtl';
+    const q = vis.query || {}, s = ((q.sortDefinition || {}).sort || [])[0];
+    if (!s) return 'ltr';
+    const same = (a, b) => JSON.stringify(a) === JSON.stringify(b), tips = ((((q.queryState || {}).Tooltips || {}).projections) || []).filter((x) => x && x.field);
+    if (!(same(s.field, c.field) || tips.some((x) => same(x.field, s.field)))) return null;
+    return s.direction === 'Descending' ? 'rtl' : 'ltr';
+  }
   function settingsOf(j, type, theme, pageId) {
     const vis = j.visual || {}, vco = vis.visualContainerObjects || {}, ob = vis.objects || {}, tc = (theme && theme.textClasses) || {}, out = {};
     const tp = props(vco.title), pad = props(vco.padding);
@@ -390,12 +439,17 @@
     }
     // (0.3.0 L2) the button slicer's buttons (its one row's columns, else 3) and a chart's dotted or hidden gridlines
     if (type === 'advancedSlicerVisual') out.pills = Math.max(1, Math.min(8, numOf(props(ob.layout).columnCount) || 3));
+    // (0.3.1 FX5) the bars' thickness the writer set: a bar or column chart's equal inner and outer padding (a percent)
+    if (/^(barChart|clusteredBarChart|stackedBarChart|hundredPercentStackedBarChart|columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) {
+      const ca = props(ob.categoryAxis); if (numOf(ca.innerPadding) > 0 && numOf(ca.innerPadding) === numOf(ca.outerPadding)) out.band = numOf(ca.innerPadding);
+    }
     { const va = props(ob.valueAxis); if (boolOf(va.gridlineShow) === false) out.grid = 'none'; else if (strOf(va.gridlineStyle) === 'dotted') out.grid = 'dotted'; }
     // (L1) a line's look as written: smooth, and a dot on each point (lineStyles, the entry with no selector)
     if (/^(lineChart|areaChart|stackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) { const st = props(ob.lineStyles); if (strOf(st.lineChartType) === 'smooth') out.smooth = true; if (boolOf(st.showMarker) === true) out.markers = true; }
     if (/^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|lineChart|areaChart|stackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) {
       const c = (((qs.Category || {}).projections) || []).find((x) => x && x.field);
       if (c) { out.category = nameOfProj(c); out.labelSize = numOf(props(ob.categoryAxis).fontSize) || +th1(theme, type, 'categoryAxis', 'fontSize') || +(tc.label || {}).fontSize || 9; }
+      const td = c ? timeDirOf(vis, c) : null; if (td) out.timeDir = td;
     }
     return out;
   }
@@ -405,9 +459,14 @@
    *  every shown visual at its page position (inside groups too); the tooltip and hidden pages and hidden visuals left
    *  out. A card with no field and no title, or a text box with no text, is a panel (the writer's panel behind a chart,
    *  the header band, the filter rail). The visuals in their drawing
-   *  order (z, then place: the writer's names are random, so they never decide it). opts: { rtl, colors }. */
+   *  order (z, then place: the writer's names are random, so they never decide it). opts: { rtl, colors, picture (GD2:
+   *  bytes -> a URL for a glass page's picture, or null) }. */
   function fromFiles(files, opts) {
     const o = opts || {}, by = new Map(), res = [];
+    // (GD2) the page pictures: opts.picture(bytes) gives a picture's URL for the preview when it is the glass look's (the
+    // MCP: a small copy; the website: the bytes themselves), else null: any other picture is not drawn, as before
+    const pics = new Map();
+    (files || []).forEach((f) => { const q = /(?:^|\/)StaticResources\/RegisteredResources\/([^/]+\.png)$/i.exec(String(f.path || '')); if (q && f.data && typeof f.data !== 'string') pics.set(q[1], f.data); });
     (files || []).forEach((f) => { const m = /(?:^|\/)definition\/pages\/(.+)$/.exec(String(f.path || '')); if (m) by.set(m[1], f.data); else if (/(?:^|\/)StaticResources\/RegisteredResources\/[^/]+\.json$/.test(String(f.path || '')) || /(?:^|\/)definition\/(report|reportExtensions)\.json$/.test(String(f.path || ''))) res.push(f); });
     const json = (rel) => { try { return by.has(rel) ? JSON.parse(txt(by.get(rel))) : null; } catch (e) { return null; } };
     const parse = (f) => { try { return JSON.parse(txt(f.data)); } catch (e) { return null; } };
@@ -420,6 +479,13 @@
     const themes = res.filter((f) => f !== rep && f !== xf).map((f) => ({ f, j: parse(f) })).filter((x) => x.j && x.j.textClasses);
     const theme = ((want && themes.find((x) => x.f.path.endsWith('/' + want))) || themes[0] || {}).j || null;
     const order = ((json('pages.json') || {}).pageOrder || []).map(String);
+    // (GD2) a page on the glass look's picture: the picture's URL, the cards' transparency and rim as the theme writes them
+    const star = (card) => ((((((theme && theme.visualStyles) || {})['*'] || {})['*'] || {})[card]) || [])[0] || {};
+    const glassT = +star('background').transparency, rim = ((star('border').color || {}).solid || {}).color;
+    const glassOf = (pj) => { if (!(glassT > 0) || typeof o.picture !== 'function') return null;
+      const e = (((pj.objects || {}).background) || []).find((x) => x && x.properties && x.properties.image), nm = e ? lit(((e.properties.image || {}).image || {}).name) : null;
+      const url = nm && pics.has(nm) ? o.picture(pics.get(nm)) : null;
+      return url ? { url: String(url), t: glassT, rim: typeof rim === 'string' ? rim : null } : null; };
     return order.map((id) => ({ id, pj: json(`${id}/page.json`) })).filter((p) => p.pj && p.pj.type !== 'Tooltip' && p.pj.visibility !== 'HiddenInViewMode').map(({ id, pj }) => {
       const list = [...by.keys()].filter((k) => k.startsWith(id + '/visuals/') && /\/visual\.json$/.test(k)).map((k) => json(k)).filter(Boolean)
         .sort((a, b) => ((+(a.position || {}).z || 0) - (+(b.position || {}).z || 0)) || (+(a.position || {}).y || 0) - (+(b.position || {}).y || 0) || (+(a.position || {}).x || 0) - (+(b.position || {}).x || 0));
@@ -437,7 +503,7 @@
           type !== 'textbox' && shortened(title, altOf(j)) ? { titleCut: true } : {},
           (/^(card|cardVisual|multiRowCard)$/.test(type) && !hasFields(j) || type === 'textbox') && !title ? { panel: true } : {});
       }).filter(Boolean);
-      return { id, name: String(pj.displayName || id), w: +pj.width || 0, h: +pj.height || 0, rtl: !!o.rtl, colors: o.colors || null, visuals };
+      return Object.assign({ id, name: String(pj.displayName || id), w: +pj.width || 0, h: +pj.height || 0, rtl: !!o.rtl, colors: o.colors || null, visuals }, glassOf(pj) ? { glass: glassOf(pj) } : {});
     });
   }
 

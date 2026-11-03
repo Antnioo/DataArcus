@@ -96,8 +96,10 @@ try {
   const pid = J.plan && J.plan.planId;
   let html = ''; { const n = links().length; await w.call('approve_plan', { planId: pid }); const url = await linkAt(n); html = url ? unesc(await req(url, 'GET')) : '';
     const txt = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
-    chk(() => /Orders EN \(EN-AR\)\.Report/.test(txt) && /Page pairs \(4\)/.test(txt) && /Language buttons \(4\)/.test(txt) && /Slicers kept in sync \(3\)/.test(txt), () => `L9a. the approval page shows the copy, the pairs, the buttons and the sync groups: ${txt.slice(0, 400)}`);
-    chk(() => /182 files:/.test(txt) && /Pages \(8\)/.test(txt) && /Project file \(1\)/.test(txt), () => `L9b. every file, grouped and counted (182: 180 report files, the .pbip and the month script, as the twin): ${(txt.match(/\d+ files:.{0,200}/) || [''])[0]}`);
+    // (FX1, the laptop's part 3: an Arabic plan's page wholly Arabic, each Latin run isolated; changed on purpose)
+    chk(() => /Orders EN \(EN-AR\)\.Report/.test(txt) && /أزواج الصفحات \(4\)/.test(txt) && /أزرار اللغة \(4\)/.test(txt) && /المقسمات المتزامنة \(3\)/.test(txt), () => `L9a. the approval page shows the copy, the pairs, the buttons and the sync groups: ${txt.slice(0, 400)}`);
+    // (0.3.1 GD2: the report is glass, the default since GD1; its Arabic pages get their own flipped pictures, 2 more files)
+    chk(() => /جميع الملفات \(184\)/.test(txt) && /الصفحات \(8\)/.test(txt) && /ملف المشروع \(1\)/.test(txt), () => `L9b. every file, grouped and counted (184: 182 report files, the .pbip and the month script, as the twin): ${(txt.match(/\d+ files:.{0,200}/) || [''])[0]}`);
     if (url) { await req(url, 'POST', 'decision=approve'); await w.call('approve_plan', { planId: pid }); } }
   const wr = await w.call('create_arabic_twin', { path: 'large/Orders EN.pbip', into: 'same', planId: pid });
   chk(() => !wr.err && wr.j.written === true && fs.existsSync(COPY) && fs.existsSync(path.join(ROOT, 'large/Orders EN (EN-AR).pbip')), () => `L2a. the copy is written: ${short(wr)}`);
@@ -109,14 +111,18 @@ try {
   const AR = ord.slice(4), arOf = Object.fromEntries(ORDER.map((p, i) => [p, AR[i]])), enOf = Object.fromEntries(ORDER.map((p, i) => [AR[i], p]));
   chk(() => ord.length === 8 && ORDER.every((p, i) => ord[i] === p) && AR.every((p) => !ORDER.includes(p) && fs.existsSync(path.join(COPY, 'definition/pages', p, 'page.json'))) && PJ.activePageName === ORDER[0],
     () => `L2b. pages.json: the English pages first, then the 4 Arabic pages under new ids, the English first page opened: ${JSON.stringify(PJ)}`);
-  chk(() => filesOf(COPY).length === 180, () => `L2c. the copy holds 180 files (91 + 80 Arabic page files + 8 button files + 1 bookmark): ${filesOf(COPY).length}`);
+  // (0.3.1 GD2) + the Arabic pages' own pictures, the English pages' flipped (2: one for each English picture)
+  chk(() => filesOf(COPY).length === 182, () => `L2c. the copy holds 182 files (91 + 80 Arabic page files + 8 button files + 1 bookmark + 2 Arabic pictures): ${filesOf(COPY).length}`);
   {
     // an English page: the original's files, byte for byte but the slicers' syncGroup; plus its language button
     const diff = [];
     filesOf(ORIG).forEach((f) => { const a = path.join(ORIG, f), b = path.join(COPY, f); if (!fs.existsSync(b)) { diff.push('missing ' + f); return; }
       if (/^definition\/pages\/pages\.json$|^definition\/bookmarks\/bookmarks\.json$|^\.platform$|^definition\/reportExtensions\.json$/.test(f)) return;
       if (fs.readFileSync(a).equals(fs.readFileSync(b))) return;
-      const x = rd(a), y = rd(b); if (y.visual && y.visual.syncGroup) delete y.visual.syncGroup; if (JSON.stringify(x) !== JSON.stringify(y)) diff.push(f); });
+      const x = rd(a), y = rd(b); if (y.visual && y.visual.syncGroup) delete y.visual.syncGroup;
+      // (0.3.1 GD2) report.json: the original's, but the Arabic pages' pictures registered (2 items "...-ar.png")
+      if (f === 'definition/report.json') (y.resourcePackages || []).forEach((pk) => { const n0 = (pk.items || []).length; pk.items = (pk.items || []).filter((it) => !/-ar\.png$/.test(it.name)); if (n0 - pk.items.length !== 2 && pk.name === 'RegisteredResources') diff.push('report.json: not 2 Arabic pictures registered'); });
+      if (JSON.stringify(x) !== JSON.stringify(y)) diff.push(f); });
     chk(() => !diff.length, () => `L2d. the English pages are the original's (but the slicers' sync group): ${JSON.stringify(diff.slice(0, 6))}`);
     const names = []; ord.forEach((p) => visualsOf(COPY, p).forEach((x) => names.push(x.v.name)));
     chk(() => new Set(names).size === names.length && AR.every((p) => visualsOf(COPY, p).every((x) => x.v.name === x.n)), () => `L2e. every visual name is unique in the copy (the Arabic pages' are new): ${names.length} names, ${new Set(names).size} different`);

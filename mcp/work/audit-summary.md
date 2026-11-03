@@ -72,6 +72,7 @@ The owner decided on 11 Oct that every finding is fixed in 0.2.9. The ranking is
 - **English/LTR:** two languages hard-coded as pairs (A2-9); right-to-left mirrored in one place in the engine but ad hoc in the writer (B-14, T1).
 
 ## Seen, not in scope (across the blocks)
+Status of these items: [mcp/work/SEEN-QUEUE.md#audit-summary](SEEN-QUEUE.md#audit-summary)
 - Each block file ends with its own list.
 - The website's model readers have no size cap on model.bim (audit 1).
 - Packaging's build tests rewrite committed files and restore them in `finally` (audit 8).

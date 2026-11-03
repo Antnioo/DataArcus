@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><body>
+<a href="https://github.com/Antnioo/dataarcus-releases/releases/tag/v1.2.3" class="btn"><i class="bi bi-download"></i><span data-i18n="beta.hero.button">نزّل الإصدار 1.2.3</span></a>
+<section id="new-123">
+<h2 data-i18n="beta.new123.title">الجديد في الإصدار 1.2.3</h2>
+<p data-i18n="beta.new123.date">صدر في 2 نوفمبر 2026.</p>
+</section>
+<div data-i18n-html="beta.join.next"><ol><li>نزّل <code>dataarcus-1.2.3.mcpb</code> من <a href="https://github.com/Antnioo/dataarcus-releases/releases/tag/v1.2.3">صفحة الإصدار 1.2.3</a>.</li><li>ويجب أن يطبع: <code>1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e</code></li></ol></div>
+</body></html>

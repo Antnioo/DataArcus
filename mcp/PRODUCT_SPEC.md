@@ -1,7 +1,7 @@
 # DataArcus MCP: product spec
 
 What DataArcus is, what it promises, and what it doesn't. Written 2026-10-03 from the code on main (`bc05275`, MCP
-server version 0.1.0); brought to 0.3.0 on 2026-10-21 (W2) from the code of `integration/0.3.0-wave`, and from `mcp/ROADMAP.md`, `mcp/CLAUDE.md` and `scripts/tests/DESKTOP-TESTS.md`. Privacy is in
+server version 0.1.0); brought to 0.3.0 on 2026-10-21 (W2) from the code of `integration/0.3.0-wave`, and to 0.3.1 on 2026-10-25 (D5) from the code of `integration/0.3.1`, and from `mcp/ROADMAP.md`, `mcp/CLAUDE.md` and `scripts/tests/DESKTOP-TESTS.md`. Privacy is in
 `mcp/PRIVACY.md`. When this page and the code disagree, the code is right and this page is fixed.
 
 ## In one line
@@ -55,8 +55,17 @@ server, so an AI app such as Claude can use it on your own computer, next to Mic
   script ("<name> - Arabic calendar.tmdl"): until you apply it, the Arabic report uses the English calendar columns and
   says which fields show English data; after it, plan again and the Arabic columns are used. Sort-order and
   format-string fix scripts (`check_model_health`).
+- **0.3.1:** "Is this report ready for Arabic?" (`check_report` with `lens: "arabic"`: any report, page by page, each
+  finding with its fix; it only reads); one report in English and Arabic straight from the plan (`plan_layout` and
+  `create_report` with `languages: "en+ar"`, off by default, built as the EN-AR copy is); a made-up Gulf retail project
+  to try DataArcus without a model (`plan_layout` and `create_report` with `sample: true`, written after your approval
+  to a new folder); the approval page draws the Arabic pages of a twin or a copy (up to 12 pages or page pairs)
+  before you approve it.
+  Off unless asked: a DAX function library (`daxFunctions: true`: four user-defined functions and their measures in a
+  TMDL script you apply; it raises the model's compatibility level to 1702, which cannot be undone).
 - **Not yet (planned):** background images drawn by the engine, a drag-and-drop layout editor.
-- **Known limits:** the smallest page (640 x 360) has cut card values, titles and chart labels (after the beta); the
+- **Known limits:** Power BI's matrix has no right-to-left setting: an Arabic report keeps its row headers at the
+  left; the smallest page (640 x 360) has cut card values, titles and chart labels (after the beta); the
   phone layout below the first screen is not yet checked in Desktop; a very large model gives very large answers
   (see `mcp/GOLDEN-TASKS.md` once merged).
 
@@ -64,16 +73,16 @@ server, so an AI app such as Claude can use it on your own computer, next to Mic
 | Tool | Takes | Returns | Writes |
 |---|---|---|---|
 | `read_model` | a model path | the model file's name, the existing reports, and per table: hidden, date table, visible columns with types, the number of hidden columns, visible measures with format strings | nothing |
-| `suggest_fields` | a model path, the number of KPI cards (1-8, default 4) | the fields for each KPI card, chart, table and slicer (the website's rules: base measures first, month from the date table, no keys or hidden fields) | nothing |
-| `check_model_health` | a model path, objects per finding (1-200, default 15), optional `columnTypes` | the score (overall, performance, maintainability, best practice), model statistics, every finding (id, severity, category, title, why, fix, count, objects), checks skipped for lack of a column type with how to get it, and what was done with `columnTypes` | nothing |
-| `generate_theme` | a name, colours (palette, brand colour + harmony, or preset), font, chart style, page and style choices, language, folder | the theme file's path, the full design (for the next two tools), the page size, contrast checks, warnings, and every input that could not be used (`repaired`) | one new theme JSON file, under a free name |
-| `plan_layout` | a design, layout (exec, analysis, ops, focus), KPI cards (3-6), filters (none, start, end, top), header, page size, direction, language | every visual's name, suggested type and position (x, y, width, height), the reasons for the layout, and the same positions as PBIR `position` objects (`forAuthoring`) | nothing |
-| `create_report` | a project folder, a report name, and a design (or hand-placed pages); optional theme file, logo, language, second page, slide-in panel | the number of files, the `.pbip` to open, the pages, what draws the panels, `themeChanged` if the theme was adjusted, `modelNotes` (fields that will show badly, with the fix), `reportNotes` | a new report folder and `.pbip` next to the model, under a free name; refuses if any file exists |
+| `suggest_fields` | a model path, the number of KPI cards (1-6, default 4) | the fields for each KPI card, chart, table and slicer (the website's rules: base measures first, month from the date table, no keys or hidden fields) | nothing |
+| `check_model_health` | a model path, objects per finding (1-200, default 15), optional `columnTypes` | the score (overall, performance, maintainability, best practice), model statistics, every finding (id, severity, category, title, why, fix, count, objects), checks skipped for lack of a column type with how to get it, and what was done with `columnTypes`; without `planId`, the fix scripts it would write and a proposed `planId` | only after the person approves its plan (`approve_plan`, then this tool with `planId`): each fix script as a new TMDL file next to the project, for you to apply; a second plan on the same model names the same files and writes nothing new |
+| `generate_theme` | a name, colours (palette, brand colour + harmony, or preset), font, chart style, page and style choices, language, folder | the theme file's path, the full design (for the next two tools), the page size, contrast checks, warnings, and every input that could not be used (`repaired`); without `planId`, the file it would write and a proposed `planId` | only after the person approves its plan: one new theme JSON file, under a free name |
+| `plan_layout` | a design, layout (exec, analysis, ops, focus), KPI cards (0-6; the layouts are made for 3-6), the model's `path` and the plan's fields (`planFields`), filters (none, start, end, top), header, page size, direction, language; optional `languages: "en+ar"` (0.3.1) or `sample: true` (0.3.1) | every visual's name, suggested type and position (x, y, width, height), the reasons for the layout, and the same positions as PBIR `position` objects (`forAuthoring`); with a model (`path`) and the plan's fields, the plan with a proposed `planId` for `create_report` (or `planProblems`) | nothing |
+| `create_report` | a project folder, a report name, and a design (or hand-placed pages); optional theme file, logo, language, second page, slide-in panel; `languages: "en+ar"` or `sample: true` as planned (0.3.1) | the number of files, the `.pbip` to open, the pages, what draws the panels, `themeChanged` if the theme was adjusted, `modelNotes` (fields that will show badly, with the fix), `reportNotes` | only with the approved plan from `plan_layout` (its `planId`): exactly the files that plan built, a new report folder and `.pbip` next to the model, under a free name; a name taken after the go: nothing is written |
 | `approve_plan` | a `planId` | the person's answer: DataArcus's own approval window in their browser (or the AI app's own prompt) shows the plan and every file it writes; only the person's click approves | nothing; no other tool writes without an approved plan |
 | `read_report` | a PBIR report | one line per visual (type, place, size, fields, a title only when a measure gives it), pages, buttons, bookmarks, the theme's colours; never filter values, slicer selections or bookmark states | nothing |
-| `check_report` | a PBIR report | Microsoft's report validator (offline) and the rules measured in Power BI Desktop: each finding with its file, rule, impact and a fix in words; never the report's own text | nothing |
-| `create_arabic_twin` | a PBIR report, approved Arabic texts (`labels`, `terms`), `into` | the plan: what mirrors, what cannot, every text a person sees with its drafted Arabic, what stays English and why | a new "<name> AR" report next to the original, or with `into: "same"` one copy "<name> (EN-AR)" with the English and Arabic pages and a language button; the original only read |
-| `add_gulf_calendar` | a project, the years, the country, options | the date table's columns and checks (`selfCheck`), the script's file name | a new TMDL script file next to the project, for you to apply |
+| `check_report` | a PBIR report; optional `lens: "arabic"` (0.3.1: the Arabic check instead) | Microsoft's report validator (offline) and the rules measured in Power BI Desktop: each finding with its file, rule, impact and a fix in words; never the report's own text | nothing |
+| `create_arabic_twin` | a PBIR report, approved Arabic texts (`labels`, `terms`), `into` | the plan: what mirrors, what cannot, every text a person sees with its drafted Arabic, what stays English and why | a new "<name> AR" report next to the original, or with `into: "same"` one copy "<name> (EN-AR)" with the English and Arabic pages and a language button, only after the person approves its plan; the original only read |
+| `add_gulf_calendar` | a project, the years, the country, options | the date table's columns and checks (`selfCheck`), the script's file name | only after the person approves its plan: a new TMDL script file next to the project, for you to apply; a second plan on the same model names the same file and writes nothing new |
 
 **Model paths** (every tool that reads a model): a Power BI project folder, its `.SemanticModel` (or older `.Dataset`)
 folder, a `model.bim`, or a `.pbit`, inside the working folder. TMDL and `model.bim` projects are both read.
@@ -94,8 +103,9 @@ tooltip pages (a card and a bar chart by category; and, when the model has a mon
 | Page sizes | 1920 x 1080 (default), 1280 x 720, 960 x 720, or any 640-3840 x 360-2160, shaped 4:3 to 2.4:1 (others fitted) | `assets/js/design-engine.js` |
 | Languages | English and Arabic (right to left) | |
 | Fonts | Segoe UI, Segoe UI Semibold, DIN, Arial, Calibri, Tahoma, Verdana, Georgia; for Arabic: Segoe UI, Segoe UI Semibold, Arial, Tahoma | `design-engine.js` |
-| Theme text sizes | 8-60 pt (Power BI refuses a theme outside it) | `mcp/CLAUDE.md` |
+| Theme text sizes | 8-60 pt (Power BI refuses a theme outside it) | `mcp/docs/RULES-POWERBI.md` |
 | Runtime | Node.js 20.10 or later (Microsoft's report CLI behind `check_report` needs 20, its schema package 20.10; round 22b); the MCP SDK `@modelcontextprotocol/sdk` 1.31 or later | `mcp/package.json` |
+| Platforms | Writes Power BI projects on Windows, macOS and Linux; open them in Power BI Desktop on Windows, or deploy the project to Fabric. The `.mcpb` extension is for Windows; on macOS and Linux the server runs from the repository | `mcp/README.md`; CI runs the MCP's tests on Linux, Windows and macOS |
 | AI apps | any MCP client over stdio; built and tested with Claude Code; Claude Desktop through the `.mcpb` extension (`mcp/README.md`) | |
 
 Power BI's PBIR format still changes. Only `assets/js/pbip-export.js` writes it, so a format change is fixed in one
@@ -108,8 +118,9 @@ file; each Desktop release the owner uses is checked before a DataArcus release 
    the file DataArcus checked.
 3. **Read models without changing them.** Model changes go through the user, or through Microsoft's MCP with the
    user watching.
-4. **Metadata only.** Tools return names, types and formats, and a report's short titles and texts as typed (screened
-   for instructions and length only), never data values from the model; data only when the user asks, through
+4. **Metadata only.** Tools return names, types and formats, and the texts a person typed into a report, screened for
+   instructions and returned as typed (`read_report`: page names and text boxes up to 120 characters, never a static
+   title; `create_arabic_twin`: the texts a reader sees, titles included, for their Arabic), never data values from the model; data only when the user asks, through
    other tools (`mcp/PRIVACY.md`).
 5. **Model metadata is untrusted input.** A table, column, measure or file name, or a description, never steers
    what the AI does.

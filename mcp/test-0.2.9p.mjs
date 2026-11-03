@@ -11,6 +11,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
 import { withPlans } from './test-plan.mjs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const req = createRequire(import.meta.url);
@@ -103,7 +104,7 @@ export async function v029p({ call, check, ROOT, fs = fs0 }) {
     const src = (f) => fs.readFileSync(path.join(REPO, f), 'utf8');
     chk(() => typeof FM.formatOf === 'function' && typeof FM.reportFormatOf === 'function' && Fix.formatOf === FM.formatOf && !/function formatOf\(/.test(src('assets/js/model-health-tmdl.js')),
       () => 'A3-3: formatOf (and the report\'s reportFormatOf) live in field-meaning.js; the health engine uses that one');
-    const s = src('mcp/server.mjs');
+    const s = serverSource();
     chk(() => !/withRightFormats|cardFormatOf|function reportFormatOf|const rightOf/.test(s), () => 'A3-3: the server keeps no format rule of its own (withRightFormats, cardFormatOf, reportFormatOf, rightOf)');
     // a model the website's picker reads: the formats it gives are the rule's, with no server after it
     const t = tablesOf([{ name: 'Visits', columns: [col('Visit', 'string'), col('Visited', 'dateTime'), col('Pages', 'int64'), col('Clinic', 'string')],
@@ -153,7 +154,7 @@ export async function v029p({ call, check, ROOT, fs = fs0 }) {
       () => `A3-2: an Arabic report takes the calendar's Arabic names (axis and the plan's category), sorted by the calendar's number; no English short name: ${JSON.stringify({ date: ar.date, bar: ar.cats.bar })}`);
     chk(() => keys(ar.calendarNames).includes('Calendar[Hijri Month Name]'), () => `A3-2: a calendar name with no Arabic column is named (calendarNames): ${JSON.stringify(ar.calendarNames)}`);
     // the server and the plan's lint keep no picker rule of their own
-    const s = fs.readFileSync(path.join(REPO, 'mcp/server.mjs'), 'utf8'), pl = fs.readFileSync(path.join(REPO, 'mcp/lib/plan-lint.mjs'), 'utf8');
+    const s = serverSource(), pl = fs.readFileSync(path.join(REPO, 'mcp/lib/plan-lint.mjs'), 'utf8');
     chk(() => !/Day Short|ARABIC_OF|ramadan\\s\*day|F\.table\.map/.test(s) && !/F\.table\.map|Bind\.build\(/.test(pl) && /countBind = [^\n]*\n?[^\n]*Bind\.build\(/.test(s),
       () => 'A3-2: no Gulf-calendar names or Ramadan rule in the server, no copy of build\'s field mapper in the server or the plan\'s lint, and the counted binding goes through build');
     // the picker's field map keeps shared fields shared and changes no field of the binding it maps

@@ -101,7 +101,7 @@ window.clvTranslations = {
     },
     // Article Header Arabic
     header: {
-      title: "المقياس الوحيد الذي يحدد مستقبل تجارتك الإلكترونية (وكيفية تتبعه في Power BI)",
+      title: "مقياس واحد يحدد مستقبل تجارتك الإلكترونية (وكيفية تتبعه في Power BI)",
       subtitle: "نُشر في 23 أغسطس 2025"
     },
     // Article Content Arabic

@@ -78,6 +78,7 @@ empty-folder answer (:289) and mcp/assets layout (:53, :61) are DataArcus-specif
 - Fixed counts (26 files :21, 8 tools :242) raised by hand each release.
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#audit-8-packaging](SEEN-QUEUE.md#audit-8-packaging)
 - Header comment and test plan still say 8 tools (build.mjs:13-14; PACKAGING.md:232).
 - Build tests rewrite committed packaging files and restore them in `finally` (build.test.mjs:347-366).
 - No privacy-policy field in the manifest.

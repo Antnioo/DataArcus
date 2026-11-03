@@ -51,10 +51,13 @@ const pageOf = async (planId, approve) => {
   if (approve && url) { await req(url, 'POST', 'decision=approve'); await w.call('approve_plan', { planId }); }
   return html;
 };
-const FILES = 'Files that will be written';
 // the files part of a page, and what stands before its fold
 const filesPart = (html) => between(html, `id="files"`, "</div>");
 const beforeFold = (html) => { const f = filesPart(html), i = f.indexOf('<details'); return i < 0 ? f : f.slice(0, i); };
+// (0.3.1 R4A, round 4's problem 2) the page's first line, under its title: what is new and where; the counts by kind
+// folded under it (they were the files part's first line)
+const headPart = (html) => between(html, '</h1>', 'class="lead"');
+const foldedIn = (part, text) => { const h = part.replace(/&quot;/g, '"').replace(/&amp;/g, '&'), i = h.indexOf(text), b = h.slice(0, Math.max(0, i)); return i > 0 && b.lastIndexOf('<details') > b.lastIndexOf('</details>'); };
 const STEPS = (H) => /TMDL view/.test(H) && /Preview/.test(H) && /Apply/.test(H);
 
 try {
@@ -74,8 +77,8 @@ try {
     const top = unesc(beforeFold(repHtml)), part = filesPart(repHtml);
     const before = rels(path.join(HERE, 'fixtures/health-project')), written = rels(path.join(ROOT, 'hp/Sales')).filter((r) => !before.includes(r));
     const pages = written.filter((r) => /\/page\.json$/.test(r)).length, visuals = written.filter((r) => /\/visual\.json$/.test(r)).length, phones = written.filter((r) => /\/mobile\.json$/.test(r)).length;
-    chk(() => new RegExp(`1 report: ${pages} pages?, ${visuals} visuals?`).test(top) && new RegExp(`${phones} phone layouts?`).test(top),
-      () => `T1-1. the summary by kind comes first, in words (1 report: ${pages} pages, ${visuals} visuals, ... ${phones} phone layouts): ${top.slice(0, 500)}`);
+    chk(() => new RegExp(`^\\s*1 new report: ${pages} pages?, next to your model, in the folder "hp/Sales"`).test(unesc(headPart(repHtml)).replace(/<[^>]+>/g, '')) && foldedIn(headPart(repHtml), `1 report: ${pages} pages, ${visuals} visuals`) && new RegExp(`${phones} phone layouts?`).test(unesc(headPart(repHtml))),
+      () => `T1-1. the page starts with what is new and where (1 new report: ${pages} pages, ...), the counts by kind folded under it (1 report: ${pages} pages, ${visuals} visuals, ... ${phones} phone layouts): ${unesc(headPart(repHtml)).slice(0, 500)}`);
     chk(() => /Testers\.pbip/.test(top) && !/1 script/.test(top), () => `T1-2. the report the person asked for is named on top, before the fold: ${top.slice(0, 500)}`);
     const folds = part.match(/<details[^>]*>/g) || [];
     chk(() => folds.length >= 1 && !/\bopen\b/.test(folds[0]) && part.indexOf('<details') < part.indexOf('visual.json'), () => `T1-3. the full list is folded under a closed <details>: ${part.slice(0, 400)}`);
@@ -94,7 +97,9 @@ try {
     chk(() => !/a small text file that/i.test(H) && !(repPlan.j.plan || {}).scriptIs, () => 'T4-1 (guard). a plan that writes no script says nothing about scripts');
     // T-6 (it-reviewer / exec-report): "...executive-report-background.png" listed, then "There is no background image."
     const png = written.find((r) => /-background\.png$/.test(r));
-    chk(() => png && /Page background[^.]*blank/i.test(H), () => `T6-1. the blank page background is listed as what it is (blank, see-through): ${png} | ${H.slice(H.indexOf('Images') - 50, H.indexOf('Images') + 200)}`);
+    // (0.3.1 GD1: a new report is in the glass look by default, its page background the look's soft picture; the blank
+    // background of the plain look is checked in test-0.3.1-glass-default.mjs, R2-plain)
+    chk(() => png && /Page background[^.]*glass look's soft picture/i.test(H), () => `T6-1. the page background is listed as what it is (the glass look's soft picture): ${png} | ${H.slice(H.indexOf('Images') - 50, H.indexOf('Images') + 200)}`);
     const panels = repOut.j && String(repOut.j.panels || '');
     chk(() => panels && !/There is no background image\./.test(panels) && /blank/.test(panels), () => `T6-2. the write answer agrees with the page (a blank background file, no picture): ${panels}`);
     // T-7 (beginner / nice-report): "...to check and fingerprint them, and never returns data values to Claude."
@@ -120,8 +125,9 @@ try {
     const before = rels(path.join(HERE, 'fixtures/twin-project')), written = rels(path.join(ROOT, 'tw/Sales')).filter((r) => !before.includes(r));
     const top = unesc(beforeFold(twinHtml)), H = unesc(twinHtml);
     const script = written.find((r) => /\.tmdl$/.test(r));
-    chk(() => /التقارير: 1 \(الصفحات: \d+/.test(top) && /السكربتات: 1/.test(top) && script && top.includes(script), () => `T1-6. the twin's summary in words (the twin's page is Arabic, T-5), its script named on top: ${script} | ${top.slice(0, 400)}`);
-    chk(() => new RegExp(`All ${written.length} files`).test(unesc(filesPart(twinHtml))), () => `T1-7. the twin's count is what the write wrote (${written.length})`);
+    chk(() => /^\s*تقرير جديد واحد \(الصفحات: \d+\)، بجانب التقرير الأصلي/.test(unesc(headPart(twinHtml)).replace(/<[^>]+>/g, '')) && foldedIn(headPart(twinHtml), 'التقارير: 1 (الصفحات:') && /السكربتات: 1/.test(unesc(headPart(twinHtml))) && script && top.includes(script), () => `T1-6. the twin's summary in words (the twin's page is Arabic, T-5), its script named on top: ${script} | ${top.slice(0, 400)}`);
+    // (FX1: the twin's page wholly Arabic; changed on purpose from "All N files")
+    chk(() => new RegExp(`جميع الملفات \\(${written.length}\\)`).test(unesc(filesPart(twinHtml))), () => `T1-7. the twin's count is what the write wrote (${written.length})`);
     chk(() => /السكربت ملف نصي صغير/.test(H) && /لا يغيّر DataArcus نموذجك بنفسه أبدًا/.test(H) && STEPS(H), () => `T4-3. the twin's (Arabic) page says what the script is and the 3 steps: ${H.slice(H.indexOf('script'), H.indexOf('script') + 300)}`);
     chk(() => /a small text file/i.test(twinPlan.j.plan.scriptIs || '') && (twinPlan.j.plan.howToApplyScript || []).length === 3, () => `T4-4. the twin's plan answer carries scriptIs and the 3 steps: ${JSON.stringify(twinPlan.j.plan).slice(0, 400)}`);
     chk(() => !/the user applies it in TMDL view/.test(twinPlan.j.plan.writesAfterGo.join(' ')), () => `T4-5. the plan's writes no longer say "the user applies it in TMDL view": ${twinPlan.j.plan.writesAfterGo.join(' | ')}`);
@@ -225,7 +231,7 @@ try {
     chk(() => id && c.j.plan.writesAfterGo.length === 1 && /Arabic calendar\.tmdl/.test(c.j.plan.writesAfterGo[0]) && !rels(ROOT).filter((r) => !before.includes(r) && !/links\.txt$/.test(r)).length,
       () => `C1-1. arabicColumnsOnly plans one script, the Arabic calendar columns, and writes nothing yet: ${short(c)}`);
     const html = id ? await pageOf(id, true) : '';
-    chk(() => /1 script/.test(unesc(beforeFold(html))) && !/report:/.test(unesc(beforeFold(html))), () => `C1-2. its page: one script, no report: ${unesc(beforeFold(html)).slice(0, 300)}`);
+    chk(() => /^\s*1 new script/.test(unesc(headPart(html)).replace(/<[^>]+>/g, '')) && /1 script/.test(unesc(headPart(html))) && !/report/.test(unesc(headPart(html))), () => `C1-2. its page: one script, no report: ${unesc(headPart(html)).slice(0, 300)}`);
     const out = id ? await w.call('add_gulf_calendar', { path: 'cal/Sales', arabicColumnsOnly: true, planId: id }) : { err: true, t: 'no plan' };
     const added = rels(ROOT).filter((r) => !before.includes(r) && !/links\.txt$/.test(r));
     chk(() => !out.err && added.length === 1 && /^cal\/Sales\/Twin Sales - Arabic calendar\.tmdl$/.test(added[0]), () => `C1-3. after the click exactly that script is written, next to the project: ${JSON.stringify(added)} ${short(out)}`);

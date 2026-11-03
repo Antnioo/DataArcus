@@ -220,9 +220,13 @@ export function compareProjects(results, tag = '') {
   });
   return problems;
 }
+// (0.3.1 LC1) the lab page's layout canvas draws page 1 after the writer's fit once the writer has loaded (the suite
+// layout-canvas checks it against the written page); these fixtures freeze the engine's drawing of the layout's slots,
+// so the writer is held back here (the canvas then draws the layout's slots, as on the live page)
+const noWriter = async (pg) => { await pg.route('**/assets/js/pbip-export.min.js*', (r) => r.fulfill({ status: 404, body: '' })); return null; };
 export async function captureAll(browser, url, page) {
   const out = [];
-  for (const c of cases()) out.push(Object.assign({ case: c }, await captureCase(browser, url, c, null, page)));
+  for (const c of cases()) out.push(Object.assign({ case: c }, await captureCase(browser, url, c, noWriter, page)));
   return out;
 }
 

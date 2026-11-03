@@ -46,19 +46,21 @@ const short = (areas, n) => areas.map((a) => (a.tables.length > n ? { area: a.ar
 // read_model on a large model: counts, the date tables, the areas, the tables with measures (how many measures,
 // visible columns and related tables), the other tables' names, and how to ask for details
 export function largeSummary(m) {
-  const all = summary(m), rel = relatedOf(m), full = size(fullAnswer(m));
+  // (SQ6, 0.2.9-reader-S24) a row's raw table name, by its place in m.tables (summary keeps the order): the maps below
+  // are keyed by the raw name, the rows carry the shown one (cut past NAME_OUT, cleaned)
+  const all = summary(m), rel = relatedOf(m), full = size(fullAnswer(m)), rawOf = new Map(all.map((t, i) => [t, m.tables[i].name]));
   let withMeasures = all.filter((t) => t.measures.length), notListed = null;
   if (withMeasures.length > TOP) {
-    const order = new Map(withMeasures.map((t, i) => [t.table, i]));
-    const ranked = withMeasures.slice().sort((a, b) => b.measures.length - a.measures.length || order.get(a.table) - order.get(b.table));
+    const order = new Map(withMeasures.map((t, i) => [t, i]));
+    const ranked = withMeasures.slice().sort((a, b) => b.measures.length - a.measures.length || order.get(a) - order.get(b));
     const rest = ranked.slice(TOP), areaOf = new Map();
     (m.tables || []).forEach((t) => { const ms = (t.measures || []).find((x) => x.displayFolder); areaOf.set(t.name, ms ? shownName(String(ms.displayFolder).split(/[\\/;]/)[0].trim(), 80) : ''); });
-    const by = new Map(); rest.forEach((t) => { const a = areaOf.get(t.table) || '(no display folder)'; by.set(a, (by.get(a) || 0) + 1); });
+    const by = new Map(); rest.forEach((t) => { const a = areaOf.get(rawOf.get(t)) || '(no display folder)'; by.set(a, (by.get(a) || 0) + 1); });
     withMeasures = ranked.slice(0, TOP);
     notListed = { tablesWithMeasures: rest.length, byArea: [...by.entries()].sort((a, b) => b[1] - a[1]).slice(0, 40).map(([area, tables]) => ({ area, tables })),
       how: `Only the ${TOP} tables with the most measures are listed. The other ${rest.length} are reached with a focus (suggest_fields and create_report: focus: "<an area or a word from a table's name>") or by name (read_model with tables: ["Table name", ...]).` };
   }
-  const out = largeBody(m, all, rel, full, withMeasures, notListed);
+  const out = largeBody(m, all, rel, full, withMeasures, notListed, rawOf);
   // still too long (thousands of tables): the other tables' names go first, then the areas' table names
   const fits = () => JSON.stringify(out).length <= LIMIT - 1000;
   if (!fits()) {
@@ -71,14 +73,14 @@ export function largeSummary(m) {
 }
 // a table's name as a list gives it: marked when its row is (F-MP P3)
 const tableOut = (t) => (t.suspicious ? { name: t.table, suspicious: true } : t.table);
-function largeBody(m, all, rel, full, withMeasures, notListed) {
+function largeBody(m, all, rel, full, withMeasures, notListed, rawOf) {
   return Object.assign({
     source: m.source, existingReports: takenNames(m.projectDir), summary: true,
     why: `This model is large: the full list of its tables, columns and measures would be ${full.toLocaleString('en-US')} characters, more than an AI app reads well in one answer. This is a summary; ask for the tables you need.`,
     counts: { tables: all.length, columns: m.tables.reduce((n, t) => n + t.columns.length, 0), measures: m.tables.reduce((n, t) => n + t.measures.length, 0), relationships: (raw(m).relationships || []).length },
     dateTables: all.filter((t) => t.dateTable).map(tableOut),
     areas: short(areasOf(m), AREA_TABLES),
-    tablesWithMeasures: withMeasures.map((t) => ({ table: t.table, ...(t.suspicious ? { suspicious: true } : {}), measures: t.measures.length, columns: t.columns.length, relatedTables: (rel.get(t.table) || new Set()).size })),
+    tablesWithMeasures: withMeasures.map((t) => ({ table: t.table, ...(t.suspicious ? { suspicious: true } : {}), measures: t.measures.length, columns: t.columns.length, relatedTables: (rel.get(rawOf.get(t)) || new Set()).size })),
     otherTables: all.filter((t) => !t.measures.length).map(tableOut) }, notListed ? { notListed } : {}, {
     details: 'Call read_model again with tables: ["Table name", ...] to get those tables in full (columns with types, measures with formats). For field picks on one part of the model, call suggest_fields with focus: "<an area or a word from table names>" or with tables.'
   });

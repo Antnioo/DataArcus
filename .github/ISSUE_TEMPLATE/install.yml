@@ -1,0 +1,57 @@
+name: Install problem
+description: The .mcpb doesn't install, its SHA-256 doesn't match, or the tools don't show in your AI app.
+title: "[Install] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. The steps: [mcp/README.md](https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md#claude-desktop-beta).
+        Issues are public. **Never attach a .pbix, a model or report folder, your data, or a screenshot that shows
+        figures.** How we answer: [SUPPORT.md](https://github.com/Antnioo/DataArcus/blob/main/SUPPORT.md).
+  - type: input
+    id: version
+    attributes:
+      label: The .mcpb file you installed
+      placeholder: "dataarcus-0.3.0.mcpb"
+    validations:
+      required: true
+  - type: input
+    id: app
+    attributes:
+      label: AI app and its version
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version (Settings > System > About)
+    validations:
+      required: true
+  - type: dropdown
+    id: step
+    attributes:
+      label: The step that failed
+      options:
+        - Downloading the .mcpb
+        - Checking its SHA-256 (it doesn't match)
+        - Installing it in the AI app
+        - Choosing the working folder
+        - The tools don't show ("list your DataArcus tools")
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The message you saw, copied as text. Write your user name or a private folder's name as "me" or "...".
+      render: text
+    validations:
+      required: true
+  - type: checkboxes
+    id: nodata
+    attributes:
+      label: Before you send
+      options:
+        - label: I attached no .pbix, no data and no screenshot that shows figures.
+          required: true

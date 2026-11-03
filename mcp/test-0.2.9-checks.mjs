@@ -70,7 +70,9 @@ export async function v029checks({ call, check, ROOT, fs = fs0 }) {
     chk(() => im && KINDS.every((k) => im.kinds[k] && typeof im.kinds[k].count === 'number' && /\S/.test(im.kinds[k].means)) && im.kinds.desktopOpens.count === 6 + KN && im.kinds.canBreak.count === 0,
       () => `C4. impact.kinds: each kind with its count and one sentence; 6 + ${KN} known desktopOpens, 0 canBreak: ${JSON.stringify(im)}`);
     chk(() => /Desktop opens/i.test(im.kinds.desktopOpens.means) && /Fabric/.test(im.kinds.desktopOpens.means) && /strict/i.test(im.kinds.desktopOpens.means), () => `C5. the desktopOpens sentence names Desktop, Fabric and strict validation: ${im.kinds.desktopOpens.means}`);
-    chk(() => /not broken|opens in (Power BI )?Desktop/i.test(im.summary) && !/broken\b(?! in)/i.test(im.summary.replace(/not broken/ig, '')), () => `C6. with only desktopOpens errors the summary says the report is not broken in Desktop: ${im && im.summary}`);
+    // (0.3.1 RB, item 5: moved on purpose: Desktop is never opened by check_report, so the summary says nothing known to
+    // break it was found, what ran, and that Desktop itself was not opened; never "opens in Desktop" or "not broken")
+    chk(() => /^Nothing found that Power BI Desktop is known to refuse \(.*Power BI Desktop itself was not opened\)/.test(im.summary) && /strict validation or Fabric would refuse/.test(im.summary) && !/not broken|opens in (Power BI )?Desktop/i.test(im.summary), () => `C6. with only desktopOpens errors the summary says nothing known to break it was found, what ran, and that Desktop was not opened: ${im && im.summary}`);
     chk(() => KINDS.every((k) => (strict.j.counts.byImpact || {})[k] === sf.filter((f) => f.impact === k).length || strict.j.truncated), () => `C7. counts.byImpact matches the findings: ${JSON.stringify(strict.j.counts.byImpact)}`);
 
     // b. what can break the report in Desktop: a visual that lost its fields (PBIR_QUERY_STATE_MISSING) and a page that
@@ -120,7 +122,7 @@ export async function v029checks({ call, check, ROOT, fs = fs0 }) {
       () => `P2a. (U1) the catalog lists the rounded box: the validator ${VALIDATOR_PIN} reports nothing for it on ${nSl} slicers, no known note: ${round.err ? round.t.slice(0, 200) : JSON.stringify([round.j.validator, unk(rdf)])}`);
     chk(() => slicersOf(Rd).every((f) => knownGap('PBIR_FORMATTING_OBJECT_UNKNOWN', 'dropdown', J(f)) === null),
       () => 'P2b. (U1) knownGap gives no note for the proven shape while the installed catalog lists the object');
-    chk(() => round.j.counts.errors === 0 && round.j.impact.kinds.canBreak.count === 0 && round.j.impact.kinds.desktopOpens.count === 0 && !/can break/i.test(round.j.impact.summary) && !/known/i.test(round.j.impact.summary),
+    chk(() => round.j.counts.errors === 0 && round.j.impact.kinds.canBreak.count === 0 && round.j.impact.kinds.desktopOpens.count === 0 && !/can break/i.test(round.j.impact.summary) && !/known note/i.test(round.j.impact.summary),   /* (RB item 5: "known note", since the summary now says "known to refuse") */
       () => `P2c. the report has no error and no known note: ${JSON.stringify([round.j.counts, round.j.validator, round.j.impact.summary])}`);
     // never hide a real error: another object, a made-up object on a chart, the box on another visual stay the
     // validator's errors. (U1, changed on purpose: one more property of the box, another slicer mode, a selector and a

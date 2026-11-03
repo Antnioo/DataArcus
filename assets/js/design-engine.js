@@ -17,7 +17,8 @@
   };
   // The fonts and chart choices the generator offers (its <select> lists; a test keeps both the same)
   const FONTS = ['Segoe UI', 'Segoe UI Semibold', 'DIN', 'Arial', 'Calibri', 'Tahoma', 'Verdana', 'Georgia'];
-  const CHART_OPTIONS = { labels: ['auto', 'on', 'off'], grid: ['auto', 'dotted', 'off'], legend: ['auto', 'Top', 'TopCenter', 'Bottom', 'Right', 'off'], axis: ['auto', 'off'], table: ['auto', 'minimal', 'banded'] };
+  // (0.3.1 GL1) look: the cards' look, Power BI's own (auto) or glass (see GLASS below)
+  const CHART_OPTIONS = { labels: ['auto', 'on', 'off'], grid: ['auto', 'dotted', 'off'], legend: ['auto', 'Top', 'TopCenter', 'Bottom', 'Right', 'off'], axis: ['auto', 'off'], table: ['auto', 'minimal', 'banded'], look: ['auto', 'glass'] };
   // The fonts text sizes were measured in, in Power BI Desktop (the header and rail heights of minOf, the table's need
   // of TABLE_NEED, the writer's text widths): Segoe UI and Tahoma only. The others are offered; a wider one (Verdana)
   // may need more room than measured until the laptop proof "A2-11" in DESKTOP-TESTS.md (0.2.9, the audit's A2-11)
@@ -386,8 +387,9 @@
   const CATEGORY_KINDS = ['bar', 'column', 'donut'];
   // How many categories a chart's slot can show (0.2.9, the laptop's sweep of rc.1, S5 and D19: a category with dozens
   // of values gave cut vertical labels and a scrollbar). The report keeps that many, its Top N by the chart's measure,
-  // and the plan says so. On the 720 grid, where the theme's text sizes are made for the page (a 1080 page is x 1.5).
-  //  bar: measured, Desktop 2.158 (night of 6-7 Oct, DESKTOP-TESTS.md; mcp/CLAUDE.md): 22.2 a row at the theme's 10pt,
+  // and the plan says so. On the 720 grid (positions scale h / 720; the rows below were measured at 10pt on 720 and are
+  // kept as measured on a 1080 page, whose text is now x 1.25, not x 1.5: a row there has room to spare, never less).
+  //  bar: measured, Desktop 2.158 (night of 6-7 Oct, DESKTOP-TESTS.md; mcp/docs/RULES-POWERBI.md): 22.2 a row at the theme's 10pt,
   //    45 above the first row, 8 under the last and 38 for the value axis;
   //  column: a GUESS until the laptop proof "S5" in DESKTOP-TESTS.md: horizontal labels need about 64 a column (a label
   //    of about 8 characters at 10pt) after 60 for the value axis, at most 12 (12 month names fit, round 1, measured)
@@ -539,14 +541,22 @@
   // the rounded panels, so transparent visuals never get it; solid visuals follow the Soft shadows option
   const shadowStyle = (l) => [{ show: !!(l && !l.transparent && l.shadow) }];
   // Power BI's default text sizes (title 12, label 10, callout 28) are made for a 1280 × 720 page. On a bigger page
-  // everything looks small, so every size grows with the page: × 1.5 on 1920 × 1080, unchanged on 1280 × 720.
+  // everything looks small, so every size grows with the page: × 1.25 on 1920 × 1080, unchanged on 1280 × 720.
+  // FHD_TEXT: the text factor on 1920 × 1080, the ONE place it is set (the owner's decision of 27 Oct, D-1027-16: "no go
+  // for 1.25 in 0.3.1"; from Codex's text-sizes review, dataarcus-exchange results/2026-10-26-text-sizes: × 1.5 kept the
+  // 720 page's apparent size at Fit to page, × 1.25 is its role-based profile: body 12.5, visual title 15, KPI 35).
+  // Up to 0.3.0 it was 1.5 (the page's own factor, h / 720). textScale: the factor on a page h high, a straight line
+  // through 1 at 720 and FHD_TEXT at 1080 (2 at 2160, 0.75 at 360). Only text follows it: a box the laptop measured
+  // keeps its measured minimum (the pills, pbip-sizing.js pillH; the KPI title gap, kpiInset), and positions stay h / 720.
   // Power BI rejects the whole theme when one font size is outside 8-60 (tested in Desktop), so very big or small pages stop there
-  // sizeAt: a base size on a page h high (the grid is 720 high), in half points within 8-60
-  const sizeAt = (n, h) => Math.min(60, Math.max(8, Math.round(n * (h / 720) * 2) / 2));
+  // sizeAt: a base size on a page h high (the grid is 720 high), in half points within 8-60 (Power BI takes half points)
+  const FHD_TEXT = 1.25;
+  const textScale = (h) => 1 + (h / 720 - 1) * (FHD_TEXT - 1) / (1080 / 720 - 1);
+  const sizeAt = (n, h) => Math.min(60, Math.max(8, Math.round(n * textScale(h) * 2) / 2));
   const fs = (n, l) => sizeAt(n, page(l).h);
   const textSizes = (d) => {
-    const l = d.layout, f = (n) => fs(n, l);
-    const merge = (t, extra) => ({ [t]: { '*': Object.assign({ border: borderStyle(d.ui, l), dropShadow: shadowStyle(l) }, extra) } });
+    const l = d.layout, f = (n) => fs(n, l), g = isGlass(d) ? glassLook(d) : null;
+    const merge = (t, extra) => ({ [t]: { '*': Object.assign(g ? { border: glassCards(d.ui, l, g, t).border, dropShadow: glassCards(d.ui, l, g, t).dropShadow } : { border: borderStyle(d.ui, l), dropShadow: shadowStyle(l) }, extra) } });
     const grid = { values: [{ fontSize: f(10) }], columnHeaders: [{ fontSize: f(10) }], total: [{ fontSize: f(10) }] };
     return Object.assign({},
       merge('tableEx', grid),
@@ -559,15 +569,18 @@
   // them is its base at one page height (0.2.9, the tools audit's A6-10: the MCP server copied these sizes and the
   // rounding to find a theme's page; an engine change would have broken it without a word)
   const TEXT_BASES = [['tableEx', 'values', 'fontSize', 10], ['slicer', 'header', 'textSize', 10], ['card', 'labels', 'fontSize', 28], ['multiRowCard', 'cardTitle', 'fontSize', 12], ['multiRowCard', 'dataLabels', 'fontSize', 18], ['pivotTable', 'rowHeaders', 'fontSize', 10]];
-  // The page height a theme's text sizes were made for: { h } (the middle of the heights that give all its sizes), or
-  // null for a theme the engine did not make (its sizes are its author's)
+  // The page height a theme's text sizes were made for: { h, f } (h the middle of the heights that give all its sizes, f
+  // its text factor, textScale(h): a rescale to another page is textScale(there) / f), or null for a theme the engine
+  // did not make (its sizes are its author's). (TS1) A 1920 × 1080 theme made before 0.3.1 (× 1.5) reads as one made
+  // for a page about 1440 high: its sizes are exactly those
   const themeScaleOf = (theme) => {
     const vs = (theme && theme.visualStyles) || {}, at = (v, k, prop) => +((((vs[v] || {})['*'] || {})[k] || [{}])[0] || {})[prop];
     const got = TEXT_BASES.map(([v, k, prop]) => at(v, k, prop));
     if (!(got[0] > 0)) return null;
     const fits = (h) => TEXT_BASES.every(([, , , n], i) => got[i] === sizeAt(n, h));
     const hs = []; for (let h = 200; h <= 4400; h++) if (fits(h)) hs.push(h);
-    return hs.length ? { h: hs[Math.floor(hs.length / 2)] } : null;
+    const h = hs[Math.floor(hs.length / 2)];
+    return hs.length ? { h, f: textScale(h) } : null;
   };
   // A copy of a theme with every text size times r, in half points within 8-60 (the theme given is not changed)
   const scaleTheme = (theme, r) => {
@@ -576,7 +589,7 @@
   };
   // Chart style: theme-wide defaults, written only to the visual types whose theme schema (2.157) has that
   // setting, because Power BI rejects the whole theme when one property is unknown. "auto" writes nothing.
-  const CHART_DEFAULTS = { labels: 'auto', grid: 'auto', legend: 'auto', axis: 'auto', table: 'auto' };
+  const CHART_DEFAULTS = { labels: 'auto', grid: 'auto', legend: 'auto', axis: 'auto', table: 'auto', look: 'auto' };
   const chart = (d) => Object.assign({}, CHART_DEFAULTS, d.chart);
   const AXIS_CHARTS = ['barChart', 'columnChart', 'clusteredBarChart', 'clusteredColumnChart', 'hundredPercentStackedBarChart', 'hundredPercentStackedColumnChart',
     'lineChart', 'areaChart', 'stackedAreaChart', 'hundredPercentStackedAreaChart', 'lineStackedColumnComboChart', 'lineClusteredColumnComboChart', 'ribbonChart', 'waterfallChart'];
@@ -593,8 +606,8 @@
     // theirs from the report writer's quiet grid (text mixed 0.85 towards the card), which a gridline colour in the
     // theme would switch off, so none is written here unless a grid is asked (below). Only with a chart style chosen:
     // "Power BI default" (every setting auto) writes no chart settings, as the website promises
-    if (Object.keys(CHART_DEFAULTS).some((k) => c[k] !== 'auto')) { const R = roles(u); add(AXIS_CHARTS.concat('scatterChart'), 'categoryAxis', { labelColor: { solid: { color: R.secondary } } });
-      add(AXIS_CHARTS.concat('scatterChart'), 'valueAxis', { labelColor: { solid: { color: R.secondary } } }); }
+    if (Object.keys(CHART_DEFAULTS).some((k) => c[k] !== 'auto')) { const sec = c.look === 'glass' ? glassLook(d).labels : roles(u).secondary; add(AXIS_CHARTS.concat('scatterChart'), 'categoryAxis', { labelColor: { solid: { color: sec } } });
+      add(AXIS_CHARTS.concat('scatterChart'), 'valueAxis', { labelColor: { solid: { color: sec } } }); }
     if (c.grid !== 'auto') {
       const g = c.grid === 'off' ? { gridlineShow: false } : { gridlineShow: true, gridlineStyle: 'dotted', gridlineColor: { solid: { color: roles(u).gridline } } };
       add(AXIS_CHARTS.concat('scatterChart'), 'valueAxis', g);
@@ -610,8 +623,10 @@
     if (c.table !== 'auto') {
       const line = { solid: { color: roles(u).grid } };
       add(['tableEx', 'pivotTable'], 'grid', { gridVertical: false, gridHorizontal: c.table === 'minimal', gridHorizontalColor: line });
-      add(['tableEx', 'pivotTable'], 'values', { backColorPrimary: { solid: { color: u.card } }, backColorSecondary: { solid: { color: c.table === 'banded' ? mix(u.card, u.accent, 0.08) : u.card } } });
+      // (GL1) glass cards keep their table cells see-through: no back colour, which would be solid
+      if (c.look !== 'glass') add(['tableEx', 'pivotTable'], 'values', { backColorPrimary: { solid: { color: u.card } }, backColorSecondary: { solid: { color: c.table === 'banded' ? mix(u.card, u.accent, 0.08) : u.card } } });
     }
+    if (c.look === 'glass') glassTables(glassLook(d).table).forEach(([types, card, props]) => add(types, card, props));
     return out;
   };
   // Adds the chart style cards into the per-visual entries built above (tables already carry text sizes there)
@@ -641,10 +656,271 @@
       daBad: { description: 'DataArcus bad', url: svg(`<rect x='1.5' y='1.5' width='13' height='13' rx='3' fill='${b.f}'/>` + line('M5.5 5.5l5 5M10.5 5.5l-5 5', b.m)) }
     };
   };
+  // ---------- the glass look (0.3.1 GL1, the owner's idea of 26 Oct) ----------
+  // Power BI has no blur behind a visual. The look is made of what Power BI has: each visual's background colour with
+  // transparency, a light 1-pixel border at the design's corners, a soft shadow, and the page's background picture,
+  // which DataArcus draws already soft: the page colour with four soft colour fields of the theme's own colours (no
+  // photo, no text). Seen through the see-through cards, the picture reads as frosted glass. The theme schema
+  // (Microsoft's reportThemeSchema-2.159, commonCards; the validator's VCO catalog): background { show, color,
+  // transparency }, border { show, color, radius, width }, dropShadow { show, color, position, preset, transparency,
+  // shadowBlur, shadowDistance, shadowSpread }, each number without a range in the schema (transparency in %, 0-100).
+  // t: the cards' transparency asked (%), lowered by glassLook until the contrast holds; strength: how far a colour field
+  // reaches into the page colour at its centre (lowered until the page's text holds); fields: [x, y (0-1 of the page),
+  // radius (of the page's height), the colour: data colour 1-3 or the accent]; the shadow at 1080 high, scaled with the
+  // page; grid: the samples the contrast is checked on (the picture is the same at any size). To be picked from the
+  // laptop's lab (mcp/lab/GLASS-LAB.md): t, the rim, the shadow. band: the alpha (%) of a banded table's alternate rows
+  // (GL2: the solid look's 8% of the accent), raised in transparency until the text and the grid lines stand on it.
+  const GLASS = { t: 35, max: 60, band: 8, strength: { light: 0.42, dark: 0.55 }, fields: [[0.1, 0.15, 0.55, 0], [0.9, 0.22, 0.6, 1], [0.6, 1, 0.65, 2], [0.02, 0.98, 0.45, 'accent']],
+    // (GL2: the laptop of 27 Oct, Desktop 2.159: GL1's dark shadow, 55 / 18 / 4, barely shows on a dark page) the dark
+    // shadow stronger: less transparent, wider, further; GL1's and a light halo are rows of the lab's dark page
+    shadow: { light: { transparency: 85, blur: 18, distance: 4 }, dark: { transparency: 30, blur: 24, distance: 6 } }, grid: [192, 108], margin: 0.02 };
+  const isGlass = (d) => !!(d && d.chart && d.chart.look === 'glass');
+  // the picture's pixels (RGB, 8 bits, rows top to bottom) at w x h for colours cc ({ ui, data }) at strength s: each
+  // field's weight is s * exp(-2 d^2 / r^2), taken as a row factor times a column factor (the same number, made once).
+  // A page picture (960 wide or more) is drawn in squares of 2 x 2 pixels: the same soft picture (neighbours never more
+  // than 2 levels apart), half the PNG's bytes
+  const glassRgb = (cc, s, w, h) => {
+    const u = cc.ui, bg = hexToRgb(u.background), out = new Uint8Array(w * h * 3), a = w / h, q2 = w >= 960 ? 2 : 1, at = (v, n) => (Math.floor(v / q2) * q2 + q2 / 2) / n;
+    const F = GLASS.fields.map(([fx, fy, r, k]) => ({ c: hexToRgb(k === 'accent' ? u.accent : cc.data[k % cc.data.length]),
+      cx: Float64Array.from({ length: w }, (_, x) => Math.exp(-2 * Math.pow((at(x, w) - fx) * a, 2) / (r * r))),
+      cy: Float64Array.from({ length: h }, (_, y) => Math.exp(-2 * Math.pow(at(y, h) - fy, 2) / (r * r))) }));
+    for (let y = 0, i = 0; y < h; y++) for (let x = 0; x < w; x++, i += 3) {
+      let r0 = bg[0], g0 = bg[1], b0 = bg[2];
+      for (let f = 0; f < F.length; f++) { const q = F[f], t = s * q.cx[x] * q.cy[y]; r0 += (q.c[0] - r0) * t; g0 += (q.c[1] - g0) * t; b0 += (q.c[2] - b0) * t; }
+      out[i] = Math.round(r0); out[i + 1] = Math.round(g0); out[i + 2] = Math.round(b0);
+    }
+    return out;
+  };
+  // the darkest and the lightest pixel (by luminance) of RGB pixels
+  const extremesOf = (px) => { let lo = 0, hi = 0, l0 = Infinity, l1 = -1;
+    const at = (i) => rgbToHex([px[i], px[i + 1], px[i + 2]]);
+    for (let i = 0; i < px.length; i += 3) { const l = lum(at(i)); if (l < l0) { l0 = l; lo = i; } if (l > l1) { l1 = l; hi = i; } }
+    return { darkest: at(lo), lightest: at(hi) }; };
+  const glassCache = new Map();
+  // The look for a design: { asked, t (the transparency written, %), rim, strength, shadow { transparency, blur, distance },
+  // image { darkest, lightest }, checks [{ id, ratio, min, pass }] }. The worst case: the card's colour at t blended over
+  // the darkest and the lightest pixel of the picture under it; text and labels 4.5:1, colour 1 3:1 (WCAG 1.4.3, 1.4.11),
+  // t lowered one point at a time until all pass (0, a solid card, when none does); the page's own text 4.5:1 on the
+  // picture (the strength lowered until it does). opt.t: another transparency to ask (the lab's variants).
+  const glassLook = (d, opt) => {
+    const cc = colours(d), u = cc.ui, l = (d && d.layout) || {}, asked = Math.max(0, Math.min(GLASS.max, Math.round(opt && opt.t != null ? +opt.t : GLASS.t)));
+    const banded = !!(d && d.chart && d.chart.table === 'banded'), key = JSON.stringify([u, cc.data, page(l).h, asked, banded]);
+    if (glassCache.has(key)) return glassCache.get(key);
+    const light = lum(u.background) > 0.45, R = roles(u), [gw, gh] = GLASS.grid, mg = GLASS.margin;
+    let s = light ? GLASS.strength.light : GLASS.strength.dark, ends = null;
+    for (;; s = Math.max(0, Math.round((s - 0.02) * 100) / 100)) {
+      ends = extremesOf(glassRgb(cc, s, gw, gh));
+      if (s === 0 || [ends.darkest, ends.lightest].every((p) => contrast(u.text, p) >= 4.5 + mg)) break;
+    }
+    const over = (t, fg) => Math.min(...[ends.darkest, ends.lightest].map((p) => contrast(fg, mix(p, u.card, 1 - t / 100))));
+    // the labels (the theme's secondary text) as close to the text colour as they need to stand 4.5:1 at the asked
+    // transparency (roles' mix of 0.35 towards the card, less in steps of 0.05), so a pale label does not make the cards solid
+    let labels = R.secondary;
+    for (let r = 0.3; r >= 0 && over(asked, labels) < 4.5 + mg; r = Math.round((r - 0.05) * 100) / 100) labels = mix(u.text, u.card, r);
+    const pairs = [['textOnGlass', u.text, 4.5], ['labelsOnGlass', labels, 4.5], ['color1OnGlass', cc.data[0], 3]];
+    let t = asked; while (t > 0 && !pairs.every(([, fg, min]) => over(t, fg) >= min + mg)) t--;
+    const k = page(l).h / 1080, sh = light ? GLASS.shadow.light : GLASS.shadow.dark;
+    // (GL2) tables and matrices keep no fill of their own (glassTables): their cells are the glass card. The grid lines
+    // stand at least what they stand on the solid card, darkened towards the text (steps of 0.05) until they do over
+    // the glass; a banded table's alternate rows: the accent at GLASS.band % alpha, one point more transparent at a
+    // time until the text (4.5:1) and the grid lines stand on it; all over the darkest and the lightest pixel
+    const glass = [ends.darkest, ends.lightest].map((p) => mix(p, u.card, 1 - t / 100)), gmin = contrast(R.grid, u.card);
+    const worst = (fg, xs) => Math.min(...xs.map((b) => contrast(fg, b))), bandsAt = (a) => glass.map((b) => mix(b, u.accent, a / 100));
+    let grid = R.grid;
+    for (let r = 0.8; r > 0 && worst(grid, glass) < gmin; r = Math.round((r - 0.05) * 100) / 100) grid = mix(u.text, u.card, r);
+    let a = banded ? GLASS.band : 0;
+    while (a > 0 && !(worst(u.text, bandsAt(a)) >= 4.5 + mg && worst(grid, bandsAt(a)) >= gmin)) a--;
+    const table = { clear: u.card + '00', band: banded ? u.accent + Math.round(a * 255 / 100).toString(16).padStart(2, '0') : null, bandAlpha: a, grid };
+    const checks = pairs.map(([id, fg, min]) => ({ id, ratio: over(t, fg), min })).concat([{ id: 'textOnPicture', ratio: Math.min(contrast(u.text, ends.darkest), contrast(u.text, ends.lightest)), min: 4.5 },
+      { id: 'gridOnGlass', ratio: worst(grid, glass), min: gmin }], banded ? [{ id: 'textOnBand', ratio: worst(u.text, bandsAt(a)), min: 4.5 }, { id: 'gridOnBand', ratio: worst(grid, bandsAt(a)), min: gmin }] : [])
+      .map((x) => Object.assign(x, { pass: x.ratio >= x.min }));
+    const out = { asked, t, labels, rim: light ? '#ffffff' : mix(u.card, '#ffffff', 0.25), strength: s, mode: light ? 'light' : 'dark',
+      shadow: { transparency: sh.transparency, blur: Math.max(1, Math.round(sh.blur * k)), distance: Math.max(1, Math.round(sh.distance * k)) }, image: ends, table, checks };
+    if (glassCache.size > 50) glassCache.clear();
+    glassCache.set(key, out);
+    return out;
+  };
+  // (0.3.1 GD1, the owner, 27 Oct: "i want to make the glassy dashboard default") the look a new design starts in: the
+  // Theme Generator's first visit, generate_theme and every new report without a look asked. A saved design without a
+  // look keeps the look it was made with (CHART_DEFAULTS: "auto", plain); the redesign, the twin and the EN-AR copy keep
+  // the original report's
+  const DEFAULT_LOOK = 'glass';
+  // The gate (GD1): glass only where it keeps everything readable: the cards keep some transparency (t > 0) and every
+  // glass check passes, except the page's own text on its own colour once the picture is plain (strength 0), which the
+  // plain look fails the same way. { fits, failed: [{ id, ratio, min }], t }
+  const glassFit = (d) => {
+    const g = glassLook(d), failed = g.checks.filter((c) => !c.pass && !(c.id === 'textOnPicture' && g.strength === 0)).map((c) => ({ id: c.id, ratio: c.ratio, min: c.min }));
+    return { fits: g.t > 0 && !failed.length, failed, t: g.t };
+  };
+  // the picture's pixels at w x h (RGB), as glassLook's strength makes them
+  const glassPixels = (d, w, h, opt) => glassRgb(colours(d), glassLook(d, opt).strength, Math.max(1, Math.round(+w)), Math.max(1, Math.round(+h)));
+  // ---- a PNG without a canvas, so the website and the MCP write the same pixels (the browser deflates in JavaScript, Node by node:zlib, LC1) ----
+  // RGB, 8 bits; each row filtered with the PNG filter of the smallest sum (None, Sub, Up, Average, Paeth: PNG's own
+  // advice); LZ77 matches in one deflate block with its own Huffman codes (RFC 1951), in a zlib stream (RFC 1950)
+  const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  const crc32 = (b) => { let c = 0xffffffff; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+  const LEN_BASE = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258], LEN_EXTRA = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0];
+  const DIST_BASE = [1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577], DIST_EXTRA = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13];
+  const rev = (c, n) => { let r = 0; for (let i = 0; i < n; i++) { r = (r << 1) | (c & 1); c >>= 1; } return r; };
+  const codeOf = (base, v) => { let i = base.length - 1; while (base[i] > v) i--; return i; };
+  const LEN_CODE = Uint8Array.from({ length: 259 }, (_, v) => (v < 3 ? 0 : codeOf(LEN_BASE, v)));
+  // Huffman code lengths for counts, none over max (the counts halved until they fit); deterministic ties
+  const huffLengths = (counts, max) => {
+    let f = counts.slice();
+    for (;;) {
+      const len = new Array(f.length).fill(0), used = f.map((c, i) => [c, i]).filter(([c]) => c > 0);
+      if (used.length === 1) { len[used[0][1]] = 1; return len; }
+      let nodes = used.map(([c, i]) => ({ c, i, leaf: true }));
+      while (nodes.length > 1) { nodes.sort((a, b) => a.c - b.c || (a.i - b.i)); const [a, b] = nodes.splice(0, 2); nodes.push({ c: a.c + b.c, i: Math.min(a.i, b.i) + f.length, kids: [a, b] }); }
+      let deep = 0; const walk = (n, d) => { if (n.leaf) { len[n.i] = d; deep = Math.max(deep, d); } else n.kids.forEach((k) => walk(k, d + 1)); }; walk(nodes[0], 0);
+      if (deep <= max) return len;
+      f = f.map((c) => (c ? (c >> 1) | 1 : 0));
+    }
+  };
+  const canon = (len) => { const max = Math.max(...len), bl = new Array(max + 1).fill(0); len.forEach((l) => { if (l) bl[l]++; });
+    const next = [0]; for (let b = 1, code = 0; b <= max; b++) { code = (code + bl[b - 1]) << 1; next[b] = code; } bl[0] = 0;
+    return len.map((l) => (l ? rev(next[l]++, l) : 0)); };
+  const deflate = (data) => {
+    // the matches: a token per literal (its byte) or match (256 + its length, then its distance)
+    const n = data.length, tok = new Int32Array(n + 1), WIN = 32768, HS = 1 << 15, head = new Int32Array(HS).fill(-1), prev = new Int32Array(WIN);
+    const lc = new Array(286).fill(0), dcnt = new Array(30).fill(0); let nt = 0;
+    const hash = (i) => ((data[i] << 10) ^ (data[i + 1] << 5) ^ data[i + 2]) & (HS - 1);
+    const insert = (i) => { if (i + 2 < n) { const h = hash(i); prev[i & (WIN - 1)] = head[h]; head[h] = i; } };
+    for (let i = 0; i < n;) {
+      let best = 0, dist = 0;
+      if (i + 2 < n) {
+        let j = head[hash(i)], chain = 48;
+        while (j >= 0 && i - j <= WIN && chain-- > 0) {
+          if (data[j + best] === data[i + best]) { let k = 0; while (k < 258 && i + k < n && data[j + k] === data[i + k]) k++; if (k > best) { best = k; dist = i - j; if (k === 258) break; } }
+          j = prev[j & (WIN - 1)];
+        }
+      }
+      if (best >= 3) { tok[nt++] = (best << 16) | dist; lc[257 + LEN_CODE[best]]++; dcnt[codeOf(DIST_BASE, dist)]++; for (let k = 0; k < best; k++) insert(i + k); i += best; }
+      else { tok[nt++] = -1 - data[i]; lc[data[i]]++; insert(i); i++; }
+    }
+    lc[256] = 1; if (!dcnt.some(Boolean)) dcnt[0] = 1;
+    const LL = huffLengths(lc, 15), DL = huffLengths(dcnt, 15), LC = canon(LL), DC = canon(DL);
+    let nl = 286; while (nl > 257 && !LL[nl - 1]) nl--; let nd = 30; while (nd > 1 && !DL[nd - 1]) nd--;
+    // the code lengths, run-length coded (16: the last length again 3-6 times, 17: 3-10 zeros, 18: 11-138 zeros)
+    const all = LL.slice(0, nl).concat(DL.slice(0, nd)), rl = [], ccnt = new Array(19).fill(0);
+    for (let i = 0; i < all.length;) {
+      const v = all[i]; let r = 1; while (i + r < all.length && all[i + r] === v) r++;
+      if (v === 0 && r >= 3) { const k = Math.min(r, 138); rl.push(k >= 11 ? [18, k - 11, 7] : [17, k - 3, 3]); i += k; }
+      else if (v && r >= 4) { rl.push([v, 0, 0]); const k = Math.min(r - 1, 6); rl.push([16, k - 3, 2]); i += 1 + k; }
+      else { rl.push([v, 0, 0]); i++; }
+    }
+    rl.forEach(([c]) => ccnt[c]++);
+    const CL = huffLengths(ccnt, 7), CC = canon(CL), ORDER = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
+    let nc = 19; while (nc > 4 && !CL[ORDER[nc - 1]]) nc--;
+    let out = new Uint8Array(Math.max(1024, n >> 3)), o = 0, buf = 0, nb = 0;
+    const put = (v, k) => { buf |= v << nb; nb += k; while (nb >= 8) { if (o === out.length) { const x = new Uint8Array(out.length * 2); x.set(out); out = x; } out[o++] = buf & 255; buf >>>= 8; nb -= 8; } };
+    put(1, 1); put(2, 2); put(nl - 257, 5); put(nd - 1, 5); put(nc - 4, 4);   // the last block, its own codes
+    for (let i = 0; i < nc; i++) put(CL[ORDER[i]], 3);
+    rl.forEach(([c, x, xb]) => { put(CC[c], CL[c]); if (xb) put(x, xb); });
+    for (let t = 0; t < nt; t++) {
+      const v = tok[t];
+      if (v < 0) { const b = -1 - v; put(LC[b], LL[b]); continue; }
+      const len = v >>> 16, dist = v & 0xffff || 65536, c = LEN_CODE[len], dc = codeOf(DIST_BASE, dist);
+      put(LC[257 + c], LL[257 + c]); if (LEN_EXTRA[c]) put(len - LEN_BASE[c], LEN_EXTRA[c]);
+      put(DC[dc], DL[dc]); if (DIST_EXTRA[dc]) put(dist - DIST_BASE[dc], DIST_EXTRA[dc]);
+    }
+    put(LC[256], LL[256]); if (nb) put(0, 8 - nb);
+    return out.subarray(0, o);
+  };
+  // text: an optional tEXt chunk (keyword Comment) right after the header, as glassPng marks its picture
+  // (0.3.1 LC1, PF1's Seen 1: the JavaScript deflate took 0.6 s a picture, 8.5 s under coverage) in Node the rows are
+  // deflated by node:zlib (the same filtered rows, the same chunks, the mark right after IHDR: the same pixels, other
+  // bytes); the browser keeps the JavaScript deflate. opt.deflate 'js': the JavaScript one in Node too (its test)
+  const ZLIB = (() => { try { return typeof module !== 'undefined' && module.exports && typeof require === 'function' ? require('zlib') : null; } catch (e) { return null; } })();
+  const encodePng = (w, h, rgb, text, opt) => {
+    const row = w * 3, raw = new Uint8Array(h * (row + 1)), line = new Uint8Array(row), js = !ZLIB || (opt && opt.deflate === 'js');
+    // node:zlib: every row but the first filtered Up (as glass-picture.mjs, PF1: the choice per row cost more than it
+    // saved), in a plain loop; the pixels the same
+    if (!js) {
+      for (let y = 0; y < h; y++) { const p = y * row, q = y * (row + 1); raw[q] = y ? 2 : 0;
+        if (y) for (let x = 0; x < row; x++) raw[q + 1 + x] = (rgb[p + x] - rgb[p + x - row]) & 255; else raw.set(rgb.subarray(0, row), 1); }
+      return pngOf(w, h, new Uint8Array(ZLIB.deflateSync(raw)), text);
+    }
+    const pred = (f, p, x, y) => { const a = x >= 3 ? rgb[p + x - 3] : 0, b = y ? rgb[p + x - row] : 0, c = x >= 3 && y ? rgb[p + x - row - 3] : 0;
+      if (f === 1) return a; if (f === 2) return b; if (f === 3) return (a + b) >> 1;
+      if (f === 4) { const q = a + b - c, pa = Math.abs(q - a), pb = Math.abs(q - b), pc = Math.abs(q - c); return pa <= pb && pa <= pc ? a : pb <= pc ? b : c; }
+      return 0; };
+    for (let y = 0; y < h; y++) {
+      const p = y * row, q = y * (row + 1); let best = 0, bs = Infinity;
+      for (let f = 0; f < 5; f++) { let sum = 0; for (let x = 0; x < row && sum < bs; x++) { const v = (rgb[p + x] - pred(f, p, x, y)) & 255; sum += v < 128 ? v : 256 - v; } if (sum < bs) { bs = sum; best = f; } }
+      for (let x = 0; x < row; x++) line[x] = (rgb[p + x] - pred(best, p, x, y)) & 255;
+      raw[q] = best; raw.set(line, q + 1);
+    }
+    let a = 1, b = 0; for (let i = 0; i < raw.length; i++) { a = (a + raw[i]) % 65521; b = (b + a) % 65521; }
+    const z = deflate(raw), idat = new Uint8Array(z.length + 6); idat.set([0x78, 0x01]); idat.set(z, 2);
+    const ad = ((b << 16) | a) >>> 0; idat.set([ad >>> 24, (ad >>> 16) & 255, (ad >>> 8) & 255, ad & 255], z.length + 2);
+    return pngOf(w, h, idat, text);
+  };
+  // the PNG's chunks around its zlib stream: signature, IHDR (RGB, 8 bits), the tEXt comment right after it, IDAT, IEND
+  const pngOf = (w, h, idat, text) => {
+    const u32 = (v) => [v >>> 24, (v >>> 16) & 255, (v >>> 8) & 255, v & 255];
+    const chunk = (type, body) => { const c = new Uint8Array(12 + body.length); c.set(u32(body.length)); c.set([...type].map((ch) => ch.charCodeAt(0)), 4); c.set(body, 8); c.set(u32(crc32(c.subarray(4, 8 + body.length))), 8 + body.length); return c; };
+    const parts = [Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', Uint8Array.from(u32(w).concat(u32(h), [8, 2, 0, 0, 0])))]
+      .concat(text ? [chunk('tEXt', Uint8Array.from([...('Comment\0' + text)].map((ch) => ch.charCodeAt(0) & 255)))] : [], [chunk('IDAT', idat), chunk('IEND', new Uint8Array(0))]);
+    const png = new Uint8Array(parts.reduce((x, pt) => x + pt.length, 0)); let at = 0; parts.forEach((pt) => { png.set(pt, at); at += pt.length; });
+    return png;
+  };
+  // The page's background picture of the glass look, a PNG at w x h (the page's own size: 1280 x 720, 1920 x 1080...)
+  // (GD1) the glass picture says what it is in a tEXt chunk right after its header, so the Arabic twin knows a page
+  // background that is DataArcus's soft picture (colour fields, no panels) from a picture with panels a mirrored page
+  // would leave (twin-plan's pictures): the twin mirrors a glass page as it mirrors a page without a picture
+  const GLASS_MARK = 'DataArcus glass look';
+  const MARK_AT = 33, MARK = [...'tEXtComment\0' + GLASS_MARK].map((ch) => ch.charCodeAt(0));
+  const isGlassPng = (b) => !!b && b.length > MARK_AT + 4 + MARK.length && MARK.every((c, i) => b[MARK_AT + 4 + i] === c) && ((b[MARK_AT] << 24) | (b[MARK_AT + 1] << 16) | (b[MARK_AT + 2] << 8) | b[MARK_AT + 3]) === MARK.length - 4;
+  // (0.3.1 GD2) a theme used alone, with pages DataArcus does not write (hand-placed, an existing report): the glass look's
+  // picture goes in the theme itself, as its page background image. Microsoft's report theme schema
+  // (powerbi-desktop-samples, reportThemeSchema-2.159.json) has visualStyles.page["*"].background[] { color, image { name,
+  // url, scaling Normal|Fit|Fill }, transparency }; the url is the picture as a data URI, at the theme's page size,
+  // scaling "Fit" (the schema's "Stretch", as the report writer's page.json sets it). A copy of theme with it; the theme
+  // given is not changed. Whether Desktop draws a theme's picture: measured on the laptop (mcp/work/GD2.md)
+  const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  const base64 = (b) => { let out = ''; for (let i = 0; i < b.length; i += 3) { const n = (b[i] << 16) | ((b[i + 1] || 0) << 8) | (b[i + 2] || 0);
+    out += B64[(n >> 18) & 63] + B64[(n >> 12) & 63] + (i + 1 < b.length ? B64[(n >> 6) & 63] : '=') + (i + 2 < b.length ? B64[n & 63] : '='); } return out; };
+  const withGlassPicture = (theme, d) => {
+    if (!isGlass(d)) return theme;
+    const p = page((d && d.layout) || {}), t = JSON.parse(JSON.stringify(theme)), vs = (t.visualStyles = t.visualStyles || {});
+    const pg = (vs.page = vs.page || { '*': {} })['*'] = vs.page['*'] || {}, bg = (pg.background = Array.isArray(pg.background) && pg.background.length ? pg.background : [{}]);
+    bg[0] = Object.assign({}, bg[0], { image: { name: 'DataArcus glass ' + p.w + 'x' + p.h + '.png', url: 'data:image/png;base64,' + base64(glassPng(d, p.w, p.h)), scaling: 'Fit' }, transparency: 0 });
+    return t;
+  };
+  // (GD1: glass is the default, so every new report draws it, in its plan and again in its write: the last few pictures
+  // are kept, by their colours, strength and size; each call gets its own copy)
+  const pngCache = new Map();
+  const glassPng = (d, w, h, opt) => { const W = Math.max(1, Math.round(+w)), H = Math.max(1, Math.round(+h)), cc = colours(d), key = JSON.stringify([cc.ui, cc.data, glassLook(d, opt).strength, W, H]);
+    if (!pngCache.has(key)) { if (pngCache.size >= 8) pngCache.delete(pngCache.keys().next().value); pngCache.set(key, encodePng(W, H, glassPixels(d, W, H, opt), GLASS_MARK)); }
+    return pngCache.get(key).slice(); };
+  // the look's cards in the theme: background, border, shadow (see GLASS); t: the visual type
+  const glassCards = (u, l, g, t) => ({
+    background: [{ show: true, color: { solid: { color: u.card } }, transparency: g.t }],
+    border: [Object.assign({ show: true, color: { solid: { color: g.rim } }, width: 1 }, t === 'cardVisual' ? {} : { radius: toPage(+l.radius || 0, l) })],
+    dropShadow: [l && l.shadow ? { show: true, color: { solid: { color: '#000000' } }, position: 'Outer', preset: 'Bottom', transparency: g.shadow.transparency, shadowBlur: g.shadow.blur, shadowDistance: g.shadow.distance, shadowSpread: 0 } : { show: false }]
+  });
+
+  // (0.3.1 GL2, the owner, 27 Oct: "tables are not cleared of alternate rows formating") the look's tables and matrices:
+  // no fill of their own. Without one Power BI's default style fills every cell (the theme's background and
+  // backgroundLight) over the see-through card. Their cards have no transparency (Microsoft's capabilities for tableEx
+  // and pivotTable, @microsoft/powerbi-core-visual-schema): each back colour is the card's colour with alpha 00
+  // (#RRGGBBAA, the report theme schema's colour pattern), a banded table's alternate rows the look's tint; the grid
+  // lines the look's own colour (their show and width stay the table style's). tb: glassLook(d).table
+  const glassTables = (tb) => {
+    const fill = (h) => ({ solid: { color: h } }), clear = fill(tb.clear), both = ['tableEx', 'pivotTable'];
+    return [[both, 'values', { backColor: clear, backColorPrimary: clear, backColorSecondary: tb.band ? fill(tb.band) : clear }], [both, 'columnHeaders', { backColor: clear }],
+      [both, 'total', { backColor: clear }], [['pivotTable'], 'rowHeaders', { backColor: clear }], [['pivotTable'], 'subTotals', { backColor: clear }],
+      [['pivotTable'], 'rowTotal', { backColor: clear }], [['pivotTable'], 'columnTotal', { backColor: clear }],
+      [both, 'grid', { gridHorizontalColor: fill(tb.grid), gridVerticalColor: fill(tb.grid) }]];
+  };
+
   // d: the design { name, font, data, ui, chart, layout }; lang: the page's language ('ar' or 'en'), for the reading
   // direction when the layout has none
   const buildTheme = (d0, lang) => {
-    const cc = colours(d0), d = Object.assign({}, d0, { ui: cc.ui, data: cc.data }), u = d.ui, l = d.layout, R = roles(u), sec = R.secondary, ter = R.tertiary, f = d.font;
+    const cc = colours(d0), d = Object.assign({}, d0, { ui: cc.ui, data: cc.data }), u = d.ui, l = d.layout, R = roles(u), ter = R.tertiary, f = d.font;
+    // (GL1) the glass look: every visual's background, border and shadow are the look's (glassCards), the labels its own
+    const g = isGlass(d) ? glassLook(d) : null, gc = (t) => glassCards(u, l, g, t), sec = g ? g.labels : R.secondary;
     return {
       name: themeName(d.name),
       dataColors: d.data,
@@ -666,7 +942,7 @@
         label: { fontSize: fs(10, l), fontFace: f, color: sec }
       },
       visualStyles: withChartStyles({
-        '*': { '*': {
+        '*': { '*': g ? gc('*') : {
           // with a layout background the panels are drawn in the image, so visuals go transparent
           background: l && l.transparent ? [{ show: false }] : [{ show: true, color: { solid: { color: u.card } }, transparency: 0 }],
           // same corners as the panels in the background PNG, in page units
@@ -677,7 +953,7 @@
           background: [{ color: { solid: { color: u.background } }, transparency: 0 }],
           outspace: [{ color: { solid: { color: u.background } } }]
         } },
-        ...Object.fromEntries(VISUAL_TYPES.map((t) => [t, { '*': { border: borderStyle(u, l, t), dropShadow: shadowStyle(l) } }])),
+        ...Object.fromEntries(VISUAL_TYPES.map((t) => [t, { '*': g ? { border: gc(t).border, dropShadow: gc(t).dropShadow } : { border: borderStyle(u, l, t), dropShadow: shadowStyle(l) } }])),
         // visuals with their own text sizes, which do not follow the text classes above
         ...textSizes(d)
       }, u, d, lang)
@@ -694,7 +970,9 @@
       ['labelsOnVisuals', contrast(sec, u.card), 4.5],
       ['textOnPage', contrast(u.text, u.background), 4.5],
       ['color1OnVisuals', contrast(d.data[0], u.card), 3]
-    ].map(([id, ratio, min]) => ({ id, ratio, min, pass: ratio >= min }));
+    ].map(([id, ratio, min]) => ({ id, ratio, min, pass: ratio >= min }))
+      // (GL1) with the glass look, the worst cases over its picture (glassLook)
+      .concat(isGlass(d) ? glassLook(d).checks.map((x) => ({ id: x.id, ratio: x.ratio, min: x.min, pass: x.pass })) : []);
     const weak = d.data.map((c, i) => [i + 1, contrast(c, u.card)]).filter(([, r]) => r < 1.6).map(([i]) => i);
     return { checks, weak };
   };
@@ -716,10 +994,18 @@
   // The PNG matches the table to the pixel. In Power BI, with Image fit: Stretch, each panel lands exactly under
   // its visual (checked with calibration backgrounds on 1920 × 1080 and 1280 × 720 pages).
   // opt: { w, h } the image size, preview (the page's layout preview), overlay(slots) the preview's own marks
+  // opt.glass ({ t, rim, url }: the glass look's preview, GL1): the look's picture (url: its PNG as a data URL, made by
+  // glassPng) under see-through panels with the look's rim, as Power BI draws them; no header band and no accent bars
+  // (the report's picture has none)
   function bgSvg(d0, slots, opt, lang) {
     const cc = colours(d0), d = Object.assign({}, d0, { ui: cc.ui, data: cc.data }), u = d.ui, c = d.layout, right = rtl(c, lang), R = roles(u), light = R.light, PW = pw(c), PH = 720;
-    const edge = R.edge, rail = R.rail, r = +c.radius;
-    let s = `<rect width="${PW}" height="${PH}" fill="${u.background}"/>`;
+    const edge = R.edge, rail = R.rail, r = +c.radius, gl = opt.glass && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(String(opt.glass.url)) ? opt.glass : null;
+    let s = gl ? `<rect width="${PW}" height="${PH}" fill="${u.background}"/><image href="${gl.url}" width="${PW}" height="${PH}" preserveAspectRatio="none"/>` : `<rect width="${PW}" height="${PH}" fill="${u.background}"/>`;
+    if (gl) {
+      slots.forEach((p) => { if (p.kind !== 'title' && p.kind !== 'logo') s += `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="${r}" fill="${u.card}" fill-opacity="${(100 - (+gl.t || 0)) / 100}" stroke="${clampHex(gl.rim || '') || edge}" stroke-width="1"/>`; });
+      if (opt.preview && opt.overlay) s += opt.overlay(slots);
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${PW} ${PH}" width="${opt.w || PW}" height="${opt.h || PH}"${opt.preview ? ' role="img" aria-label="Page layout preview"' : ''}>${s}</svg>`;
+    }
     if (c.header) {
       const hh = sizes(c, PW).hh;
       s += `<rect width="${PW}" height="${hh}" fill="${R.band}"/><rect y="${hh - 1}" width="${PW}" height="1" fill="${edge}"/>`
@@ -797,7 +1083,7 @@
     return out;
   }
   const SLOT_GAP = 40;
-  const REFLOW_KEEP = 0.5;   // (round 8, S7; round 9: 0.6 -> 0.5, so two dropdowns reflow too) a chart beside the rail keeps this share of its height at least when the page reflows
+  const REFLOW_KEEP = 0.45;   // (round 8, S7; round 9: 0.6 -> 0.5, so two dropdowns reflow too; 0.3.1 TS1, the owner's yes of 26 Oct to 0.2.9-writer-S10, SQ13's option (a): 0.5 -> 0.45, so a second page's chart keeps 168 of 347 and the 197 gap under the rail closes) a chart beside the rail keeps this share of its height at least when the page reflows
   const slotsTouch = (a, b) => (Math.abs(a.y - b.y) <= 1 && Math.abs(a.h - b.h) <= 1 && Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w) <= SLOT_GAP)
     || (Math.abs(a.x - b.x) <= 1 && Math.abs(a.w - b.w) <= 1 && Math.max(a.y, b.y) - Math.min(a.y + a.h, b.y + b.h) <= SLOT_GAP);
   // fitSlots(slots, { dropKinds, headerRows, railItems }): { slots, dropped }; the slots given are never changed
@@ -849,16 +1135,25 @@
       const B = rail.y + rail.h, beside = out.filter((s) => s !== rail && !OWN_SLOTS.includes(s.kind) && s.y < B && s.y + s.h > B
         && ((s.x - (rail.x + rail.w) >= 0 && s.x - (rail.x + rail.w) <= SLOT_GAP) || (rail.x - (s.x + s.w) >= 0 && rail.x - (s.x + s.w) <= SLOT_GAP)));
       const cut = beside.length ? Math.min(...beside.map((s) => s.y + s.h)) - B : 0;
-      if (cut > 0 && beside.every((s) => s.y + s.h === B + cut && B - s.y >= REFLOW_KEEP * s.h)) {
-        const under = (s) => s.y >= B + cut && s.x < Math.max(...beside.map((q) => q.x + q.w).concat(rail.x + rail.w)) && s.x + s.w > Math.min(...beside.map((q) => q.x).concat(rail.x));
-        out = out.map((s) => (beside.includes(s) ? Object.assign({}, s, { h: B - s.y }) : !OWN_SLOTS.includes(s.kind) && s !== rail && under(s) ? Object.assign({}, s, { y: s.y - cut, h: s.h + cut }) : s));
+      // (0.3.1 FX2, the laptop's C23: "the bar chart draws below its panel, over the table's first rows") the slots in
+      // the same row as one beside the rail (its top and bottom) end there too: the row stays one line, and the slots
+      // moved up under it never go under a chart of that row that kept its height
+      const row = beside.length ? out.filter((s) => s !== rail && !beside.includes(s) && !OWN_SLOTS.includes(s.kind) && beside.some((b) => Math.abs(s.y - b.y) <= 1 && Math.abs(s.y + s.h - b.y - b.h) <= 1)) : [];
+      const ends = beside.concat(row);
+      if (cut > 0 && ends.every((s) => s.y + s.h === B + cut && B - s.y >= REFLOW_KEEP * s.h)) {
+        const under = (s) => s.y >= B + cut && s.x < Math.max(...ends.map((q) => q.x + q.w).concat(rail.x + rail.w)) && s.x + s.w > Math.min(...ends.map((q) => q.x).concat(rail.x));
+        out = out.map((s) => (ends.includes(s) ? Object.assign({}, s, { h: B - s.y }) : !OWN_SLOTS.includes(s.kind) && s !== rail && under(s) ? Object.assign({}, s, { y: s.y - cut, h: s.h + cut }) : s));
       } else if (beside.length === 1 && !out.some((q) => q !== beside[0] && q !== rail && !OWN_SLOTS.includes(q.kind) && q.kind !== 'kpi' && q.y < beside[0].y + beside[0].h && q.y + q.h > beside[0].y)) {
         // (only a chart alone in its row: moving one chart of a row would break the row's line)
         // (design round 9, S7 with one or two dropdowns: the chart beside would keep too little of its height) the one
         // chart beside starts under the rail, a row's gap below it, and takes the rail's column: where it keeps its share
         const s0 = beside[0], next = out.filter((q) => q.y >= s0.y + s0.h && q.x < s0.x + s0.w && q.x + q.w > s0.x).map((q) => q.y - (s0.y + s0.h)), g = next.length ? Math.min(...next) : SLOT_GAP / 2;
         const y = B + g, h = s0.y + s0.h - y, x0 = Math.min(s0.x, rail.x), x1 = Math.max(s0.x + s0.w, rail.x + rail.w);
-        if (h >= REFLOW_KEEP * s0.h) out = out.map((s) => (s === s0 ? Object.assign({}, s, { x: x0, y, w: x1 - x0, h }) : s));
+        // (0.3.1 FX2, the laptop's C03: "a large empty band above the chart, left of the rail", a focus page with no KPI
+        // cards) a chart that starts at the rail's own top (nothing above it beside the rail) moves only where the room it
+        // fills under the rail is at least the band it would leave empty above it; one under a KPI row moves as before
+        const band = (y - s0.y) * s0.w, fills = (x1 - x0 - s0.w) * h, atTop = s0.y <= rail.y + 1;
+        if (h >= REFLOW_KEEP * s0.h && (!atTop || fills >= band)) out = out.map((s) => (s === s0 ? Object.assign({}, s, { x: x0, y, w: x1 - x0, h }) : s));
       }
     }
     if (rail) out = out.map((s) => {
@@ -995,7 +1290,7 @@
     PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, calmPalette, CALM, rgbToLab, hexToLab, deltaE, simulateCvd, logoColours, logoTheme,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
-    fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, statusIcons, ICON_NAMES, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    GLASS, DEFAULT_LOOK, glassFit, GLASS_MARK, isGlassPng, withGlassPicture, isGlass, glassLook, glassTables, glassPixels, glassPng, encodePng, fs, sizeAt, FHD_TEXT, textScale, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, REFLOW_KEEP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, statusIcons, ICON_NAMES, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;

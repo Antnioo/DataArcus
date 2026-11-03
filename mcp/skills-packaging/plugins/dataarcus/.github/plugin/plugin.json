@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "name": "dataarcus",
+  "version": "0.3.1",
+  "description": "Arabic right-to-left reports and Arabic twins, one report in English and Arabic, Gulf calendars with Hijri and Ramadan, the model health check, and an approval click before any file is written. Works next to Microsoft's Power BI Report skill (the powerbi-authoring plugin). The DataArcus server is added with copilot mcp add (see the README).",
+  "author": { "name": "DataArcus", "url": "https://dataarcus.com" },
+  "homepage": "https://dataarcus.com/power-bi-mcp/",
+  "license": "MIT",
+  "keywords": ["powerbi", "pbir", "pbip", "arabic", "rtl", "gulf", "hijri", "ramadan", "report-design"],
+  "skills": ["./skills/dataarcus", "./skills/report-design"],
+  "agents": []
+}

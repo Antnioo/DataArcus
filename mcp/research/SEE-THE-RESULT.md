@@ -1,7 +1,7 @@
 # Seeing the result: how the AI can look at what Power BI Desktop draws (R1, 20 Oct 2026)
 
 Research and prototypes, cloud builder; branch `research/see-the-result`. Nothing here is a tool, and no default changed.
-The plan and the results are in `mcp/work/R1.md`.
+The plan and the results are in `mcp/work/R1-see-the-result.md`.
 
 ## The gap
 The owner, 20 Oct, after an honest review of 0.3: "It can't see the result. Neither of us sees what Desktop actually
@@ -12,7 +12,7 @@ the report: a title that wraps, a table's last column behind a scrollbar, month 
 Arabic header cut.
 
 ## What we already know (evidence in this repo)
-- **The preview places boxes right, and misses what is inside them.** J12 (19 Oct, `mcp/WORK.md`): the laptop compared
+- **The preview places boxes right, and misses what is inside them.** J12 (19 Oct, `mcp/work/archive/WORK-2026-10-15-22.md`): the laptop compared
   the preview with Desktop's PDF export of the same written reports: every box within 4 units; titles, cut table columns,
   slanted labels and the side of a KPI's value were wrong until fixed one rule at a time. D5 (19 Oct): the preview called
   titles «مقطوع» (cut) that Desktop drew whole. Each fix was a new measurement in Desktop.
@@ -20,7 +20,7 @@ Arabic header cut.
   report the writer writes from them score 0.15 to 0.50 (frame IoU, missing and extra counted 0) on the fixtures'
   planned pages: the writer adds page buttons, header bars and panels and moves boxes. Only a drawing of the WRITTEN
   report can be judged; the approval page already draws the written pages (0.3.0 D5, PM-5).
-- **Desktop is drivable on the laptop, with quirks** (`mcp/CLAUDE.md`, `scripts/tests/DESKTOP-TESTS.md`): the bridge CLI
+- **Desktop is drivable on the laptop, with quirks** (`mcp/docs/LAPTOP.md`, `scripts/tests/DESKTOP-TESTS.md`): the bridge CLI
   (`status`, `open`, `reload`, `screenshot <page-id>`); `screenshot-all` fails on generated projects (one page at a
   time); a capture right after opening caught empty cards ("about 20 seconds more than the script's wait"); 2.159 says
   "not loaded after 45 s" while it is still loading (record the pid, wait on the window); capture the Desktop window by

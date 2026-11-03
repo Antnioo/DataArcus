@@ -166,6 +166,77 @@ export default async function ({ browser, url }) {
     await v.ctx.close();
   }
 
+  // I-2 (0.3.1 wave 3, the owner's "Yes" 22 Oct): in the mock and practice results each exam area under 70% links to
+  // its section of the exam's own Microsoft study guide (69% shows the link, 70% doesn't). The addresses below were
+  // read on Microsoft Learn on 25 Oct 2026: each anchor is the id of the area's heading on the study guide page, whose
+  // text is the area's name and weight (the page title is "Study guide for Exam PL-300 / DP-600: ...").
+  const GUIDE = 'https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/';
+  const STUDY = {
+    'pl-300': { prep: 'pl-300#prepare-the-data-2530', model: 'pl-300#model-the-data-2530', viz: 'pl-300#visualize-and-analyze-the-data-2530', manage: 'pl-300#manage-and-secure-power-bi-1520' },
+    'dp-600': { prep: 'dp-600#prepare-data-4550', model: 'dp-600#implement-and-manage-semantic-models-2530', maintain: 'dp-600#maintain-a-data-analytics-solution-2530' }
+  };
+  for (const [page, store, bank] of [['pl-300', 'dataarcus-pl300-v1', 'PL300'], ['dp-600', 'dataarcus-dp600-v1', 'DP600']]) for (const lang of ['en', 'ar']) {
+    const doms = Object.keys(STUDY[page]), tag = `I-2 ${page} ${lang}`;
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/tools/${page}-practice-exam.html?lang=${lang}`, { waitUntil: 'networkidle' });
+    // a mock exam made to measure, submitted by its time running out: the first area 69 of 100, the second 7 of 10 (70%),
+    // the third none of 5, the fourth (PL-300) all of 5
+    const plan = { [doms[0]]: [100, 69], [doms[1]]: [10, 7], [doms[2]]: [5, 0] };
+    if (doms[3]) plan[doms[3]] = [5, 5];
+    await v.pg.evaluate(({ store, bank, plan }) => {
+      const qs = window[bank].q, items = [];
+      for (const [d, [n, right]] of Object.entries(plan)) {
+        const pool = qs.filter((q) => q.d === d && q.type === 'single');
+        for (let i = 0; i < n; i++) { const q = pool[i % pool.length]; items.push({ id: q.id, perm: q.opts.map((_, k) => k), r: i < right ? q.ans : (q.ans + 1) % q.opts.length }); }
+      }
+      const P = JSON.parse(localStorage.getItem(store) || '{}');
+      P.mock = { kind: 'full', caseId: null, items, flags: [], i: 0, start: Date.now() - 60000, endAt: Date.now() - 1000, min: 100 };
+      localStorage.setItem(store, JSON.stringify(P));
+    }, { store, bank, plan });
+    await v.pg.goto(`${url}/tools/${page}-practice-exam.html?lang=${lang}`, { waitUntil: 'networkidle' });
+    await v.pg.click('[data-go="resume"]');
+    await v.pg.waitForSelector('.dp-score', { timeout: 10000 }).catch(() => {});
+    const rows = () => v.pg.$$eval('.dp-domrow[data-dom]', (rs) => rs.map((r) => ({ d: r.dataset.dom, pct: (r.querySelector('.dp-domtop b') || {}).textContent || '',
+      links: [...r.querySelectorAll('a[data-study]')].map((a) => ({ href: a.href, text: a.textContent.trim(), rel: a.rel, target: a.target })) })));
+    const mock = await rows();
+    // (ST1, I-S2) an area's exam weight ("25–30%") is a Latin run: isolated left to right, so Arabic never draws it reversed
+    const weights = await v.pg.$$eval('.dp-domrow[data-dom] .dp-domtop small', (ss) => ss.map((x) => { const b = x.querySelector('bdi[dir="ltr"]'); return b && b.textContent === x.textContent ? b.textContent : '!' + x.textContent; }));
+    check(weights.length === doms.length && weights.every((w) => /^\d+–\d+%$/.test(w)), `${tag} mock: each area's weight in its own <bdi dir="ltr">: ${JSON.stringify(weights)}`);
+    const want = (d) => GUIDE + STUDY[page][d];
+    const by = Object.fromEntries(mock.map((r) => [r.d, r]));
+    check(mock.length === doms.length, `${tag} mock: one row per exam area: ${JSON.stringify(mock.map((r) => r.d))}`);
+    check(by[doms[0]]?.pct === '69%' && by[doms[0]].links.length === 1 && by[doms[1]]?.pct === '70%' && by[doms[1]].links.length === 0,
+      `${tag} mock: 69% shows the study link, 70% doesn't: ${JSON.stringify([by[doms[0]], by[doms[1]]])}`);
+    check(by[doms[2]]?.links.length === 1 && (!doms[3] || by[doms[3]]?.links.length === 0), `${tag} mock: 0% links, 100% doesn't: ${JSON.stringify([by[doms[2]], by[doms[3]]])}`);
+    check(mock.every((r) => r.links.every((l) => l.href === want(r.d) && l.target === '_blank' && /noopener/.test(l.rel))), `${tag} mock: each area's link is its study guide section: ${JSON.stringify(mock)}`);
+    check(mock.every((r) => r.links.every((l) => (lang === 'en' ? /study guide/i.test(l.text) : /دليل المذاكرة/.test(l.text) && !/study/i.test(l.text)))), `${tag} mock: the link says it in the page's language: ${JSON.stringify(mock.flatMap((r) => r.links.map((l) => l.text)))}`);
+    // practice: 10 questions, the first area's answered right, every other one wrong
+    await v.pg.goto(`${url}/tools/${page}-practice-exam.html?lang=${lang}`, { waitUntil: 'networkidle' });
+    await v.pg.click('[data-go="practice"]'); await v.pg.click('[data-count="10"]'); await v.pg.click('#dpStart');
+    for (let k = 0; k < 10; k++) {
+      await v.pg.waitForSelector('#dpQ .dp-q');
+      await v.pg.evaluate(({ bank, good }) => {
+        const el = document.querySelector('#dpQ .dp-q'), q = window[bank].q.find((x) => x.id === el.dataset.qid) || window[bank].cases.flatMap((c) => c.questions).find((x) => x.id === el.dataset.qid);
+        const right = q.d === good, click = (sel) => document.querySelector('#dpQ ' + sel).click();
+        if (q.type === 'single') click(`[data-opt="${right ? q.ans : (q.ans + 1) % q.opts.length}"]`);
+        else if (q.type === 'multi') (right ? q.ans : [q.opts.findIndex((_, i) => !q.ans.includes(i)), ...q.ans.slice(1)]).forEach((i) => click(`[data-opt="${i}"]`));
+        else if (q.type === 'yesno') q.ans.forEach((a, i) => click(`[data-yn="${i}"][data-v="${(right ? a : !a) ? 1 : 0}"]`));
+        else if (q.type === 'order') (right ? q.ans : q.ans.slice().reverse()).forEach((i) => click(`[data-add="${i}"]`));
+      }, { bank, good: doms[0] });
+      await v.pg.click('#dpCheck'); await v.pg.click('#dpNext');
+    }
+    await v.pg.waitForSelector('.dp-end', { timeout: 10000 }).catch(() => {});
+    const prac = await rows();
+    check(prac.length >= 2 && prac.every((r) => (r.pct === '100%' ? r.links.length === 0 : r.pct === '0%' && r.links.length === 1 && r.links[0].href === want(r.d))),
+      `${tag} practice: areas under 70% link to their section, the others don't: ${JSON.stringify(prac)}`);
+    // (0.3.1 SQ8, I-S3) the skill table's bars are green from 70% and amber under it, as the area rows and the mock's
+    const sk = await v.pg.evaluate(() => [...document.querySelectorAll('.dp-end .dp-skilltable > div')].map((d) => { const [a, b] = d.querySelector('b').textContent.split('/').map(Number);
+      return { pct: a / b, cls: d.querySelector('.dp-bar').className }; }));
+    check(sk.length >= 1 && sk.every((s) => s.cls.includes(s.pct >= 0.7 ? 'good' : 'warn')), `${tag} practice: skill bars not green / amber by score: ${JSON.stringify(sk)}`);
+    if (v.errs.length) problems.push(`${tag}: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
+
   // Exam simulators: moving to the next question from lower down scrolls back to the question
   for (const page of ['dp-600-practice-exam', 'pl-300-practice-exam']) {
     const v = await visitor(browser, { viewport: [1440, 900] });

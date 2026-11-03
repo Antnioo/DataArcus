@@ -1,6 +1,11 @@
 // Tests for scripts/sitemap-lastmod.mjs: a page's date skips commits that only change boilerplate (CDN versions and
 // their integrity hashes, ?v= cache bumps), and dates are Dubai dates (the site's and the owner's time zone).
 //   node scripts/test-sitemap-lastmod.mjs
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { boilerplateOnly, dubaiDate, pageDate } from './sitemap-lastmod.mjs';
 
 let checks = 0, fails = 0;
@@ -58,6 +63,27 @@ for (const p of UNCHANGED) eq(pageDate(p, AT), '2026-09-29', `${p} (only CDN tag
 // the two articles edited on 4 October (Dubai): the redesign (new images) and the Health Check (the 33.8% sentence)
 eq(pageDate('articles/article-power-bi-report-redesign.html', AT), '2026-10-04', 'the redesign article');
 eq(pageDate('articles/article-power-bi-model-health-check.html', AT), '2026-10-04', 'the Health Check article');
+
+// ---------- a shallow clone (0.3.1 SQ8, I-S1) ----------
+// its oldest commit holds every page, so each date would become that commit's: --write and the check refuse, say why,
+// and leave sitemap.xml as it was (a depth-1 clone of this branch moved 68 dates silently before)
+{
+  const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lastmod-shallow-'));
+  const cl = spawnSync('git', ['clone', '-q', '--depth', '1', 'file://' + ROOT, dir], { encoding: 'utf8' });
+  ok(cl.status === 0, `a depth-1 clone for the test: ${cl.stderr}`);
+  if (cl.status === 0) {
+    // the script under test (this checkout's, committed or not) runs inside the clone
+    fs.copyFileSync(path.join(ROOT, 'scripts/sitemap-lastmod.mjs'), path.join(dir, 'scripts/sitemap-lastmod.mjs'));
+    const before = fs.readFileSync(path.join(dir, 'sitemap.xml'), 'utf8');
+    for (const args of [['--write'], []]) {
+      const r = spawnSync(process.execPath, [path.join(dir, 'scripts/sitemap-lastmod.mjs'), ...args], { cwd: dir, encoding: 'utf8' });
+      ok(r.status === 2 && /shallow/.test(r.stderr) && /git fetch --unshallow/.test(r.stderr), `shallow clone, ${args[0] || 'check'}: exit 2 with the reason, got ${r.status}: ${(r.stdout + r.stderr).slice(0, 200)}`);
+    }
+    ok(fs.readFileSync(path.join(dir, 'sitemap.xml'), 'utf8') === before, 'shallow clone: sitemap.xml unchanged');
+  }
+  fs.rmSync(dir, { recursive: true, force: true });
+}
 
 console.log(`${checks - fails}/${checks} checks passed`);
 process.exit(fails ? 1 : 0);

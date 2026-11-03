@@ -2,7 +2,8 @@
 
 ## Where it is (2026-10-01)
 6 tools (`read_model`, `suggest_fields`, `check_model_health`, `generate_theme`, `plan_layout`, `create_report`), 87
-checks in `npm test`, the website's 16 suites, and every report change checked in Power BI Desktop. About 60% of the
+checks in `npm test`, the website's 16 suites, and every report change checked in Power BI Desktop (dated: the numbers
+of 1 Oct; today every suite is listed in `mcp/tests.json` and `scripts/tests/run-all.mjs`). About 60% of the
 way to a first public release (estimate). Current work: `mcp/WORK.md`.
 
 ## Strategy (owner's go, 2026-10-01, after a second opinion on the project brief)
@@ -214,7 +215,7 @@ The trigger is reached (the design engine is in the MCP; it is being branded). T
 `Antnioo/dataarcus-engine` (empty). **Owner's choice: option A**, after the current round (`fix/phone-and-sizes`) is
 merged and before the private beta, with a plan in `WORK.md` and the owner's go first:
 - **Moves to the private repo:** `mcp/`, the internal notes (`mcp/WORK.md`, `mcp/ROADMAP.md`, `mcp/CLAUDE.md`,
-  `scripts/tests/DESKTOP-TESTS.md`, `content/`), and all future paid work (the Arabic/Gulf pack, Pro features).
+  `mcp/docs/`, `mcp/work/`, `scripts/tests/DESKTOP-TESTS.md`, `content/`), and all future paid work (the Arabic/Gulf pack, Pro features).
 - **Stays public:** the website, its tools and the shared engines in `assets/js/` (every visitor's browser downloads
   them anyway, so hiding their source would hide little). The private repo takes a copy of the engines, with a check
   that both copies match, so the website and the MCP keep giving the same answers.

@@ -109,7 +109,7 @@ Q('get','yesno',2,'Query folding',
 [true,true,false],
 `Filters and column selection fold well to relational sources. An Index column has no SQL equivalent in most cases, so folding often stops there. Folding also speeds up Import refresh, because less data is transferred and processed.`,
 [`Yes. Filters translate to a WHERE clause.`,`Yes. Index columns commonly break folding, so add them as late as possible.`,`No. Folding reduces the data transferred during Import refresh too, and incremental refresh relies on it.`],
-`الفلترة تُطوى للمصدر عادة، وIndex column يوقف الطي، والطي مهم أيضًا لسرعة refresh في Import.`,['folding']),
+`التصفية تُطوى للمصدر عادة، وIndex column يوقف الطي، والطي مهم أيضًا لسرعة refresh في Import.`,['folding']),
 
 Q('get','single',3,'Storage mode',
 `A model uses a DirectQuery fact table and an imported Product dimension. Slicers on Product are slow because every filter must be combined with the DirectQuery table. You want Product queries to be answered from memory when possible and still join efficiently with the fact table at the source. Which storage mode should you set for Product?`,

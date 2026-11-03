@@ -65,7 +65,7 @@ so the AI can tell the user the calendar matches the country before it is applie
   		toColumn: 'Gulf Calendar'.Date
   ```
   The file is written with LF line ends and UTF-8 (Arabic month names), as the suite compares bytes (a Windows
-  checkout's CRLF already fails 3 `gulf-calendar` checks, `mcp/CLAUDE.md`).
+  checkout's CRLF already fails 3 `gulf-calendar` checks, `mcp/docs/RULES-POWERBI.md`).
   The column blocks follow what Desktop wrote for the generator's calendar in `tmdl-ramadan`'s `Calendar.tmdl`
   (`isNameInferred`, `sourceColumn`, no type). Names are quoted by the TMDL rule round 2's scripts use.
 - `howToApply`: save a copy of the file; open TMDL view; open the script file (or paste it); **Preview: it must show
@@ -167,7 +167,7 @@ tool's script for `name: 'Calendar'`, 2018-2030, UAE, announced, `relateTo: ['Sa
 ## Build, cloud part (2026-10-04, branch `feat/add-gulf-calendar`): expected numbers written before any run
 The owner's answers: years required, default name `Gulf Calendar`, relationships only for `relateTo` columns. No
 Desktop here: what Desktop has not measured (G2 mark as date table, G3 sort by column) stays **by hand** in the
-answer, never in the script; the Desktop rows are D-GC1 to D-GC6 in `mcp/WORK.md`.
+answer, never in the script; the Desktop rows are D-GC1 to D-GC6 in `mcp/WORK.md` (since 0.3.1: `mcp/work/archive/WORK-2026-10-01-04.md`, the table; results in `WORK-2026-10-05-09.md`).
 - **Website (`gulf-calendar` suite, new section 8):** `DataArcusCalendar.build()` in Node equals the page's DAX and
   column count for the 16 saved outputs and the test model's options: **17 equal**, plus 1 check that `build` exists:
   788 -> **806** checks (main had 788); every other website suite unchanged.

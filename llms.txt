@@ -12,7 +12,7 @@
 - [PL-300 practice exam](https://dataarcus.com/tools/pl-300-practice-exam.html) and [DP-600 practice exam](https://dataarcus.com/tools/dp-600-practice-exam.html).
 
 ## Arabic versions
-- [داتا أركوس - Power BI مُتحقَّق منه ومهيّأ للخليج](https://dataarcus.com/ar/): every page above has an Arabic version at its own address, the same path under https://dataarcus.com/ar/ (for example the [Arabic tools hub](https://dataarcus.com/ar/tools/) and the [Arabic Model Health Check](https://dataarcus.com/ar/tools/power-bi-model-health-check.html)).
+- [DataArcus - Power BI مُتحقَّق منه ومهيّأ للخليج](https://dataarcus.com/ar/): every page above has an Arabic version at its own address, the same path under https://dataarcus.com/ar/ (for example the [Arabic tools hub](https://dataarcus.com/ar/tools/) and the [Arabic Model Health Check](https://dataarcus.com/ar/tools/power-bi-model-health-check.html)).
 
 ## Articles
 - [A Gulf calendar in Power BI](https://dataarcus.com/articles/article-gulf-calendar-power-bi.html)
@@ -20,12 +20,13 @@
 - [Power BI model health check](https://dataarcus.com/articles/article-power-bi-model-health-check.html)
 - [Power BI best practices and their exceptions](https://dataarcus.com/articles/article-power-bi-best-practice-exceptions.html)
 - [Is your Power BI model ready for AI? A 7-point check](https://dataarcus.com/articles/article-power-bi-model-ai-ready.html)
+- [Is your Power BI report ready for Arabic? 19 things to check](https://dataarcus.com/articles/article-power-bi-report-ready-for-arabic.html)
 - [Before an AI builds your Power BI custom visual: 4 checks](https://dataarcus.com/articles/article-power-bi-custom-visual-ai-checks.html)
 - [Power BI licensing guide](https://dataarcus.com/articles/article-power-bi-licensing-guide.html)
 - [All articles](https://dataarcus.com/blog.html)
 
 ## Services
-- [DataArcus for Power BI (public beta): an AI agent in Claude Desktop that writes a new Power BI report next to your model](https://dataarcus.com/power-bi-mcp/)
+- [DataArcus for Power BI (public beta): an AI agent in Claude Desktop that writes a new Power BI report next to your model, in English, Arabic, or both in one report, and checks whether a report is ready for Arabic](https://dataarcus.com/power-bi-mcp/)
 - [Copilot readiness audit](https://dataarcus.com/services/copilot-readiness-audit.html)
 
 ## Contact

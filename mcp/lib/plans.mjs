@@ -23,7 +23,8 @@ export const ALLOWS = {
   scripts: ['check_model_health'],                // check_model_health's fix scripts
   calendar: ['add_gulf_calendar'],                // add_gulf_calendar's script
   twin: ['create_arabic_twin'],                   // create_arabic_twin's own proposal: the "<name> AR" report (and its month script)
-  redesign: ['create_report']                     // plan_layout with redesignFrom (0.3, J13): the copy "<name> redesigned" with its approved patches
+  redesign: ['create_report'],                    // plan_layout with redesignFrom (0.3, J13): the copy "<name> redesigned" with its approved patches
+  sample: ['create_report']                       // plan_layout with sample (0.3.1 C): the made-up sample project in a new folder
 };
 const plans = new Map();
 const now = () => Date.now();
@@ -105,17 +106,36 @@ export function planOf(id) { const p = plans.get(String(id)); return p && alive(
 // inputs are compared with it, key by key, and any difference is refused with the keys named. canon: one JSON form
 // (object keys sorted, undefined as null), so the same inputs always compare equal
 const canon = (v) => JSON.stringify(v === undefined ? null : v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().filter((key) => x[key] !== undefined).map((key) => [key, x[key]])) : x));
+// (0.3.1 R4A, round 4's problem 3: "inputs differ ... in fields (slicers)" left the agent guessing) each difference names
+// the values: what was passed that the plan doesn't hold, what the plan holds that was not passed, and the exact input to
+// pass. The values are the agent's own inputs and the plan's pins (names, fields, options), never data. A file's print
+// (files) stays as it was: its message says the file changed
+const isObj = (x) => x && typeof x === 'object' && !Array.isArray(x);
+const shown = (v) => { const t = canon(v); return t.length > 200 ? t.slice(0, 200) + '…' : t; };
+function saidOf(at, w, g) {
+  const list = (xs) => xs.map(shown).join(', ');
+  if (Array.isArray(w) && Array.isArray(g)) {
+    const has = (xs, x) => xs.some((y) => canon(y) === canon(x)), extra = g.filter((x) => !has(w, x)), missing = w.filter((x) => !has(g, x));
+    const parts = [extra.length ? `passed ${list(extra)}, which the plan does not hold` : '', missing.length ? `the plan holds ${list(missing)}, not passed` : '', !extra.length && !missing.length ? 'the same values in another order' : ''].filter(Boolean);
+    return `${parts.join('; ')}; pass ${at} = ${shown(w)}`;
+  }
+  if (w === undefined || w === null) return `passed ${shown(g)}, which the plan does not hold; leave ${at} out`;
+  if (g === undefined || g === null) return `not passed; pass ${at} = ${shown(w)}`;
+  return `passed ${shown(g)}, the plan holds ${shown(w)}; pass ${at} = ${shown(w)}`;
+}
 function differences(want, got) {
   const keys = [...new Set(Object.keys(want || {}).concat(Object.keys(got || {})))].sort(), off = [];
   for (const k of keys) {
     const w = (want || {})[k], g = (got || {})[k];
     if (canon(w) === canon(g)) continue;
-    const isObj = (x) => x && typeof x === 'object' && !Array.isArray(x);
     const sub = isObj(w) && isObj(g) ? [...new Set(Object.keys(w).concat(Object.keys(g)))].filter((s) => canon(w[s]) !== canon(g[s])) : [];
-    off.push(sub.length && sub.length <= 6 ? `${k} (${sub.join(', ')})` : k);
+    if (k === 'files') { off.push(sub.length && sub.length <= 6 ? `${k} (${sub.join(', ')})` : k); continue; }
+    off.push(sub.length && sub.length <= 6 ? `${k} (${sub.map((s) => `${s}: ${saidOf(`${k}.${s}`, w[s], g[s])}`).join('; ')})` : `${k}: ${saidOf(k, w, g)}`);
   }
   return off;
 }
+/** The gate's differences, as its refusal names them (read only; the R4A suite reads it). */
+export const inputDifferences = (want, got) => differences(want, got);
 
 /** The gate: returns the approved plan, or throws "Nothing was written" with what to do. tool: the calling tool; model:
  *  its model's key (or null); pin: the write's own inputs in the form the plan pinned them (A6-1, A6-5). */

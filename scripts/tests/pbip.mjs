@@ -295,10 +295,11 @@ export default async function ({ browser, url }) {
       check(a.trend === 4, `default report: ${a.trend} of 5 charts linked to the monthly trend tooltip (4 expected: all but the line chart)`);
       check(tb.columns === 8 && !tb.bad.length, `default report: ${tb.bad.length} of ${tb.columns} table columns without header alignment (8 columns expected)`);
       check(cd.cards === 9 && !cd.bad.length, `default report: ${cardsBad} of ${cd.cards} cards with their own fill or ignored padding (9 cards expected: 7 KPI cards and the two tooltip cards)`);
-      // value sizes: the default cards keep 42 (1080) and 28 (720); the tooltip card 20
+      // value sizes: the default cards keep the theme's callout, 35 (1080: 28 x 1.25, the owner's D-1027-16 in 0.3.1 TS1, on
+      // purpose; was 42 at x 1.5) and 28 (720); the tooltip card 20
       const sizes = (files) => [...new Set(Object.keys(files).filter((f) => f.endsWith('/visual.json')).map((f) => JSON.parse(String(files[f]))).filter((v) => v.visual && v.visual.visualType === 'cardVisual' && !isMessageCard(v)).map((v) => parseFloat(v.visual.objects.value[0].properties.fontSize.expr.Literal.Value)))].sort((x, y) => x - y).join(',');
       const s720 = sizes(build(std('1280x720'), 'en', { second: true, panel: false }).files);
-      check(sizes(b.files) === '20,42' && s720 === '20,28', `card value sizes: 1080 ${sizes(b.files)} (want 20,42), 720 ${s720} (want 20,28)`);
+      check(sizes(b.files) === '20,35' && s720 === '20,28', `card value sizes: 1080 ${sizes(b.files)} (want 20,35), 720 ${s720} (want 20,28)`);
       // a side accent bar: the title's side padding clears it (26 on 1080, 17 on 720); a bar on top needs none
       const ins = ['1920x1080', '1280x720'].map((pg) => inset(std(pg, { kpiBar: 'start' }).layout)).concat(inset(std('1920x1080', { kpiBar: 'top' }).layout));
       check(JSON.stringify(ins) === '[26,17,0]', `accent bar inset: ${JSON.stringify(ins)}, want [26,17,0]`);
@@ -354,7 +355,14 @@ export default async function ({ browser, url }) {
       localStorage.setItem('dataarcus-theme-generator', JSON.stringify(s)); }, name);
     await v.pg.reload({ waitUntil: 'networkidle' });
     const picked = await setup(v.pg);
-    const [dl] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('#pbipBtn')]);
+    // (0.3.1 TT2, the owner's D-1027-19) an Arabic download on English names asks for the names first: these checks were
+    // written for English names kept as they are, so "Keep English" is ticked for every name listed (the person's
+    // explicit choice; scripts/tests/arabic-names.mjs checks the step itself), then the download is approved
+    const dlp = v.pg.waitForEvent('download');
+    await v.pg.click('#pbipBtn');
+    const asked = await Promise.race([dlp.then(() => false), v.pg.waitForSelector('#pbipNames:not([hidden])', { timeout: 60000 }).then(() => true)]);
+    if (asked) { await v.pg.$$eval('#pbipNames input[type=checkbox]', (cs) => cs.forEach((c) => { c.checked = true; c.dispatchEvent(new Event('change', { bubbles: true })); })); await v.pg.click('#pbipNamesOk'); }
+    const dl = await dlp;
     const files = unzip(fs.readFileSync(await dl.path()));
     const msg = await v.pg.$eval('#pbipOwnMsg', (e) => e.textContent).catch(() => '');
     if (v.errs.length) problems.push(`${lang} ${name}: ${v.errs.join(' | ')}`);
@@ -474,6 +482,66 @@ export default async function ({ browser, url }) {
       check(JSON.stringify(order) === JSON.stringify(['Total Sales', 'Total Qty']), `R24-1 (${lang}): KPI 1, an empty KPI 2 and KPI 3 give two cards in order, both with a field: ${JSON.stringify(order)}`);
     }
     fs.rmSync(lean, { recursive: true, force: true });
+  }
+
+  // 0.3.1 LR2 (the laptop's run of 26 Oct, the owner's "Use «حسب»"): the Theme Generator's own download on a made-up model
+  // with English names, Arabic and English, through the page (the picker's suggestions, the page's own steps):
+  //  a. (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a title is wholly Arabic or wholly English; it replaces
+  //     LR2's «حسب» between English names) the Arabic chart titles on English names are the English download's own
+  //     sentences ("Total Sales by Region"), each isolated whole by the writer (U+200F U+2068 ... U+2069 U+200F), never
+  //     a bracket; the English ones unchanged
+  //  b, c, d (pins: the laptop saw them on a harness that skipped the page's steps): the Arabic charts are mirrored, a KPI
+  //     card has its measure's format, every KPI slot has a measure when the model has enough
+  {
+    const TM = createRequire(import.meta.url)('../../assets/js/text-measure.js');
+    const own = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-lr2-'));
+    fs.mkdirSync(path.join(own, 'Own', 'Own.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(own, 'Own', 'Own.SemanticModel', 'definition.pbism'), '{ "version": "4.0", "settings": {} }');
+    const ms = [['Total Sales', 'SUM ( Sales[Amount] )'], ['Orders', 'COUNTROWS ( Sales )'], ['Total Cost', 'SUM ( Sales[Cost] )'], ['Units', 'SUM ( Sales[Qty] )'], ['Customers', 'DISTINCTCOUNT ( Sales[Customer] )']];
+    fs.writeFileSync(path.join(own, 'Own', 'Own.SemanticModel', 'model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [
+      { name: 'Sales', columns: [['Amount', 'double'], ['Cost', 'double'], ['Qty', 'double'], ['Customer', 'string'], ['Region', 'string'], ['Order Date', 'dateTime']].map(([name, dataType]) => ({ name, dataType })),
+        measures: ms.map(([name, expression]) => ({ name, expression, formatString: '#,0' })) },
+      { name: 'Calendar', dataCategory: 'Time', columns: [{ name: 'Date', dataType: 'dateTime', isKey: true }, { name: 'Month', dataType: 'string', sortByColumn: 'Month Number' }, { name: 'Month Number', dataType: 'int64' }] }],
+    relationships: [{ name: 'r1', fromTable: 'Sales', fromColumn: 'Order Date', toTable: 'Calendar', toColumn: 'Date' }] } }));
+    const visualsOf = (files) => Object.entries(files).filter(([n]) => /\/visual\.json$/.test(n)).map(([n, b]) => ({ n, j: JSON.parse(b.toString('utf8')) })).filter((x) => x.j.visual);
+    // a title as Desktop shows it: its text, or the plain branch of its "Title:" report measure (the Top N text aside)
+    const titleOf = (files, v) => {
+      const t = (((v.visualContainerObjects || {}).title || [])[0] || { properties: {} }).properties.text, e = t && t.expr;
+      if (e && e.Literal) return String(e.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'");
+      if (!e || !e.Measure) return null;
+      const ext = JSON.parse((Object.entries(files).find(([n]) => /reportExtensions\.json$/.test(n)) || [0, '{}'])[1].toString('utf8'));
+      const m = (ext.entities || []).flatMap((x) => x.measures || []).find((x) => x.name === e.Measure.Property);
+      // (BD2) the text at run time: the literal, inside the expression's whole wrap (UNICHAR ( 8295 ) & ( ... ) & UNICHAR ( 8297 ))
+      const x = m && /_s = _n, "((?:[^"]|"")*)"/.exec(m.expression), w = m && /^UNICHAR \( 8295 \) & \(.* \) & UNICHAR \( 8297 \)$/s.test(m.expression); return x ? (w ? '⁧' : '') + x[1].replace(/""/g, '"') + (w ? '⁩' : '') : null;
+    };
+    const altOf = (v) => { const a = (((v.visualContainerObjects || {}).general || [])[0] || { properties: {} }).properties.altText; return a && a.expr && a.expr.Literal ? String(a.expr.Literal.Value).replace(/^'|'$/g, '') : null; };
+    const CHART = /^(clusteredBarChart|clusteredColumnChart|lineChart)$/;
+    const got = {};
+    for (const lang of ['en', 'ar']) {
+      const { files } = await run(lang, 'Own', async (pg) => { await pg.selectOption('#pbipData', 'local'); await pg.setInputFiles('#pbipFolder', path.join(own, 'Own')); return picker(pg); });
+      const vs = visualsOf(files), charts = vs.filter((x) => CHART.test(x.j.visual.visualType));
+      got[lang] = { files, vs, titles: charts.map((x) => titleOf(files, x.j.visual)), tables: vs.filter((x) => x.j.visual.visualType === 'tableEx').map((x) => titleOf(files, x.j.visual)), alts: vs.filter((x) => CHART.test(x.j.visual.visualType) || x.j.visual.visualType === 'tableEx').map((x) => altOf(x.j.visual)) };
+      // d: the first page's KPI cards: as many as the picker's KPI rows, each with its measure (no "Select or add data")
+      const p1 = Object.keys(files).filter((n) => /\/pages\/[^/]+\/page\.json$/.test(n)).map((n) => ({ d: n.replace(/page\.json$/, ''), j: JSON.parse(files[n].toString('utf8')) })).filter((p) => p.j.type !== 'Tooltip')[0];
+      const cards = vs.filter((x) => x.n.startsWith(p1.d) && x.j.visual.visualType === 'cardVisual' && !isMessageCard(x.j.visual));
+      check(cards.length === 4 && cards.every((x) => x.j.visual.query), `LR2-d (${lang}): 4 KPI slots on a model with 5 measures, each with its measure: ${cards.length} cards, ${cards.filter((x) => !x.j.visual.query).length} empty`);
+      // c: the Orders card shows the measure's own format (#,0), not Desktop's default
+      const orders = vs.find((x) => x.j.visual.visualType === 'cardVisual' && /"Property":"Orders"/.test(JSON.stringify(x.j.visual.query || {})));
+      const fmt = orders && ((orders.j.visual.objects || {}).value || []).find((e) => e.selector && e.selector.metadata === 'Sales.Orders');
+      check(fmt && fmt.properties.customFormatString.expr.Literal.Value === "'#,0'" && fmt.properties.labelDisplayUnits.expr.Literal.Value === '-1D', `LR2-c (${lang}): the Orders card's format: ${JSON.stringify(fmt)}`);
+    }
+    const en = got.en, ar = got.ar;
+    // a: each English title as the Arabic download writes it: the same sentence, isolated whole (TT1)
+    const toAr = (t) => TM.isolateWhole(t);
+    const sorted = (a) => a.slice().sort().join(' | ');
+    check(en.titles.length >= 4 && sorted(ar.titles) === sorted(en.titles.map(toAr)), `LR2-a1: the Arabic chart titles on English names: the English download's sentences, wholly English, isolated whole: ${sorted(ar.titles)} (want ${sorted(en.titles.map(toAr))})`);
+    check(ar.titles.concat(ar.tables, ar.alts).every((t) => t && !/[()]/.test(t)), `LR2-a2: no bracket in an Arabic chart or table title or alt text: ${ar.titles.concat(ar.tables, ar.alts).filter((t) => !t || /[()]/.test(t)).slice(0, 4).join(' | ')}`);
+    check(ar.titles.filter((t) => /^\u2067\u200F\u2068Total Sales by [^\u2066-\u2069]+\u2069\u200F\u2069$/.test(t)).length >= 3, `LR2-a3: an English title is one run: U+200F and the isolate inside BD2's wrap (U+2067 ... U+2069), the shared rule: ${ar.titles.map((t) => JSON.stringify(t)).slice(0, 4).join(' | ')}`);
+    check(sorted(en.titles) === 'Total Sales by Customer | Total Sales by Customer | Total Sales by Month | Total Sales by Month | Total Sales by Region | Total Sales by Region | Total Sales by Region', `LR2-a4: the English download's titles unchanged: ${sorted(en.titles)}`);
+    // b: the Arabic charts mirrored, the line chart's months from the right (its month order reversed)
+    const arCharts = mirrorOf(ar.files), line = ar.vs.find((x) => x.j.visual.visualType === 'lineChart');
+    check(arCharts.length >= 4 && arCharts.every((c) => c.mirrored) && line && line.j.visual.query.sortDefinition.sort[0].direction === 'Descending', `LR2-b (ar): charts mirrored ${JSON.stringify(arCharts)}, line sort ${line && JSON.stringify(line.j.visual.query.sortDefinition)}`);
+    fs.rmSync(own, { recursive: true, force: true });
   }
 
   // 2. Published model, Arabic page: live connection, fields read from a .pbit
@@ -619,6 +687,30 @@ export default async function ({ browser, url }) {
       check(img.length >= 1 && img.every((x) => x.position.width === w && x.position.height === 48) && /'Fit'/.test(fit) && !img[0].visual.objects.imageScaling,
         `${file} on the page: ${img.length} image visuals ${img.map((x) => x.position.width + ' x ' + x.position.height).join(', ')} (want ${w} x 48), scaling ${fit}`);
       check(/horizontal version will read much better/.test(note) === tall, `${file} on the page: note "${note}"`);
+    }
+  }
+  // (0.3.1 GD2, the owner, 27 Oct: "the live website theme generator should also be updated") a glass design (the first
+  // visit's default): the preview draws each page on the picture the download writes, its cards at the written
+  // transparency, EN and AR; the Arabic page rendered (the picture's box the page's, loaded)
+  {
+    const require = createRequire(import.meta.url);
+    for (const lang of ['en', 'ar']) {
+      const v = await visitor(browser, { viewport: [1440, 900], downloads: true, plainDesign: false });
+      await v.pg.goto(`${url}${PAGE}?lang=${lang}`, { waitUntil: 'networkidle' });
+      await v.pg.selectOption('#pbipData', 'sample');
+      await v.pg.click('#pbipPreviewBtn');
+      await v.pg.waitForFunction(() => { const b = document.getElementById('pbipPreview'); return b && !b.hidden && b.querySelectorAll('svg image.glass').length; }, null, { timeout: 15000 }).catch(() => null);
+      const shown = await v.pg.evaluate(async () => Promise.all([...document.querySelectorAll('#pbipPreview svg')].map(async (svg) => { const im = svg.querySelector('image.glass'), bb = im ? im.getBBox() : null, vb = svg.viewBox.baseVal;
+        const href = im ? im.getAttribute('href') : '', bytes = href.startsWith('data:image/png;base64,') ? [...atob(href.slice(22))].map((ch) => ch.charCodeAt(0)) : [];
+        return { href: href.slice(0, 5), full: !!bb && Math.abs(bb.width - vb.width) < 1 && Math.abs(bb.height - vb.height) < 1, bytes, ops: [...svg.querySelectorAll('rect.box[fill-opacity]')].map((r) => +r.getAttribute('fill-opacity')) }; })));
+      const [dl] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('#pbipBtn')]);
+      const files = unzip(fs.readFileSync(await dl.path())), E = require('../../assets/js/design-engine.js');
+      const theme = Object.entries(files).filter(([p0]) => /RegisteredResources\/[^/]+\.json$/.test(p0)).map(([, b]) => JSON.parse(b.toString('utf8'))).find((t) => t.visualStyles), t = theme.visualStyles['*']['*'].background[0].transparency;
+      const pics = Object.entries(files).filter(([p0]) => /\.png$/i.test(p0) && E.isGlassPng(new Uint8Array(files[p0]))).map(([, b]) => Buffer.from(b));
+      check(shown.length >= 2 && shown.every((x) => x.href === 'data:' && x.full && pics.some((b) => b.equals(Buffer.from(x.bytes))) && x.ops.length >= 4 && x.ops.every((o) => Math.abs(o - (1 - t / 100)) < 0.006)),
+        `glass preview ${lang}: every page drawn on the download's own picture (the page's whole box), its cards at ${100 - t}% (the theme's ${t}% transparency): ${JSON.stringify(shown.map((x) => [x.href, x.full, x.bytes.length, x.ops.slice(0, 3)])).slice(0, 300)}`);
+      if (v.errs.length) problems.push(`glass preview ${lang}: ${v.errs.join(' | ')}`);
+      await v.ctx.close();
     }
   }
   // 0.3.0 step 1, "Preview before Approve" (the owner's go, 18 Oct): the lab's preview of its download is the MCP's

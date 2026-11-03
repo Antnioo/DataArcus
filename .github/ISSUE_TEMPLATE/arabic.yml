@@ -1,0 +1,56 @@
+name: Reads wrong in Arabic
+description: A report, the Arabic twin, the EN-AR copy or the approval page reads wrong in Arabic or right to left.
+title: "[Arabic] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. You can write in Arabic or English. Issues are public. **Never attach a .pbix, a model or report
+        folder, your data, or a screenshot that shows figures.** Copy the text that reads wrong instead.
+        How we answer: [SUPPORT.md](https://github.com/Antnioo/DataArcus/blob/main/SUPPORT.md).
+  - type: input
+    id: version
+    attributes:
+      label: DataArcus version
+      description: Claude Desktop > Settings > Extensions > DataArcus for Power BI, or the .mcpb file's name.
+    validations:
+      required: true
+  - type: input
+    id: app
+    attributes:
+      label: AI app, Windows version and Power BI Desktop version
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where it reads wrong
+      options:
+        - A new Arabic report
+        - The Arabic twin of a report
+        - The EN-AR copy, or one report in English and Arabic
+        - The approval page
+        - check_report's Arabic lens
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What reads wrong
+      description: The page and the visual, the text as it is shown, and how it should read.
+    validations:
+      required: true
+  - type: textarea
+    id: answer
+    attributes:
+      label: The tool's answer (optional)
+      description: What the tool said, copied as text.
+      render: text
+  - type: checkboxes
+    id: nodata
+    attributes:
+      label: Before you send
+      options:
+        - label: I attached no .pbix, no data and no screenshot that shows figures.
+          required: true

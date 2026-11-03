@@ -36,3 +36,11 @@ export function withPlans(call) {
     return call(name, Object.assign({}, args, { planId: id }));
   };
 }
+
+/**
+ * (0.3.1 CX1, Codex's F01: an Arabic plan whose titles would be English for a field with no Arabic name gets no plan id)
+ * The displayNames a person gives to keep these fields English on purpose: each one's model name. A check that builds an
+ * Arabic report on English names lists, by hand, the fields it keeps English, as a person would say it; never read from
+ * the plan's answer (no default).
+ */
+export const keepEnglish = (...keys) => Object.fromEntries(keys.map((k) => [k, String(k).replace(/^.*?\[(.*)\]$/, '$1')]));

@@ -1,0 +1,84 @@
+{
+  "name": "fx4-retail",
+  "compatibilityLevel": 1567,
+  "model": {
+    "culture": "en-US",
+    "tables": [
+      {
+        "name": "Online Retail",
+        "columns": [
+          {
+            "name": "Invoice",
+            "dataType": "string",
+            "sourceColumn": "Invoice"
+          },
+          {
+            "name": "StockCode",
+            "dataType": "string",
+            "sourceColumn": "StockCode"
+          },
+          {
+            "name": "Basket Label",
+            "dataType": "string",
+            "sourceColumn": "Basket Label"
+          },
+          {
+            "name": "Description",
+            "dataType": "string",
+            "sourceColumn": "Description"
+          },
+          {
+            "name": "Quantity",
+            "dataType": "int64",
+            "sourceColumn": "Quantity",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "InvoiceDate",
+            "dataType": "dateTime",
+            "sourceColumn": "InvoiceDate"
+          },
+          {
+            "name": "Price",
+            "dataType": "double",
+            "sourceColumn": "Price",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Customer ID",
+            "dataType": "double",
+            "sourceColumn": "Customer ID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Country",
+            "dataType": "string",
+            "sourceColumn": "Country"
+          }
+        ],
+        "measures": [
+          {
+            "name": "Revenue",
+            "expression": "SUMX ( 'Online Retail', 'Online Retail'[Quantity] * 'Online Retail'[Price] )",
+            "formatString": "#,0.00"
+          },
+          {
+            "name": "Quantity",
+            "expression": "SUM ( 'Online Retail'[Quantity] )",
+            "formatString": "#,0"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Online Retail",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let Source = #table({\"A\"}, {}) in Source"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

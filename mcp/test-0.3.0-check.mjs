@@ -68,7 +68,7 @@ try {
     const pageNo = new Map(inv.pages.map((p) => [p.id, p.n]));
     const mcp = Rules.check(R, { groups: Rules.GROUPS }).findings.map((f) => ({ origin: 'rule', rule: f.rule, severity: f.severity, page: f.page ? { n: pageNo.get(f.page.id) } : null, visual: f.visual ? `x at ${Math.round(f.visual.x)},${Math.round(f.visual.y)} ${Math.round(f.visual.w)}x${Math.round(f.visual.h)}` : null }))
       .concat(DL.lint(inv, m.tables, null, {}).findings.map((f) => ({ origin: 'lint', rule: f.rule, severity: f.severity, page: f.page, visual: f.visual })));
-    const labAll = lab.problems.concat(lab.worthALook);
+    const labAll = lab.problems.concat(lab.worthALook, lab.meant || []);   // (R4A: the "no data" cards, meant, apart from worth a look)
     chk(() => lab.pages === inv.pages.length && lab.pages >= 3 && lab.visuals >= 20, () => `C-02 ${c.model}. the check read every page: ${lab.pages} pages, ${lab.visuals} visuals`);
     // (the same files as a download has them, under a folder: the same answer)
     chk(() => JSON.stringify(LC.checkProject(built.files.map((f) => Object.assign({}, f, { path: 'Folder/' + f.path })), { lang: c.lang, model: m.tables })) === JSON.stringify(lab), () => `C-02 ${c.model}. the files under a download's folder give the same answer`);

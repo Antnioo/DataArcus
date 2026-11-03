@@ -127,8 +127,10 @@ try {
     // (D7: the default became waterfallRtl "native"; this report asks for "mirror", D1's chart, as written)
     const AR = await write({ name: 'Gallery Arabic', lang: 'ar', sharedAxes: CONFIRMED, pages: HAND(['combo', 'waterfall', 'smallMultiples']), planFields: SAME_UNIT, displayNames: AR_NAMES, waterfallRtl: 'mirror' });
     const vs = AR.dir && fs.existsSync(AR.dir) ? allVisuals(AR.dir) : [], cb = vs.find(KIND_OF.combo), wf = vs.find(rtlWaterfall), sm = vs.find(KIND_OF.smallMultiples);
-    chk(() => cb && S(objp(cb, 'valueAxis').switchAxisPosition) === 'true' && S(objp(cb, 'categoryAxis').invertAxis) === 'true' && JSON.stringify(roles(cb).Y2) === '["Total Cost"]',
-      () => `HA combo: mirrored (value axis right, categories inverted): ${AR.err || short(AR.r)} ${JSON.stringify(cb && cb.visual.objects)}`);
+    // (0.3.1 M1, changed on purpose: the twin's rules, report-mirror.js: no invertAxis on a categorical axis, which Desktop
+    // ignores; the categories from the right by the sort turned round)
+    chk(() => cb && S(objp(cb, 'valueAxis').switchAxisPosition) === 'true' && S(objp(cb, 'categoryAxis').invertAxis) === undefined && cb.visual.query.sortDefinition.sort[0].direction === 'Descending' && JSON.stringify(roles(cb).Y2) === '["Total Cost"]',
+      () => `HA combo: mirrored (value axis right, categories from the right by the sort): ${AR.err || short(AR.r)} ${JSON.stringify(cb && cb.visual.objects)}`);
     // (changed on purpose when D1 met D2: the waterfall is the stacked column chart that reads from the right, D1)
     chk(() => wf && !vs.some(KIND_OF.waterfall) && S(objp(wf, 'valueAxis').switchAxisPosition) === 'true' && !(wf.visual.objects || {}).categoryAxis && wf.visual.query.sortDefinition.sort[0].direction === 'Descending',
       () => `HA waterfall: the stacked column chart read from the right (value axis right, Descending, no categoryAxis.invertAxis): ${JSON.stringify(vs.map((v) => v.visual.visualType))} ${JSON.stringify(wf && [wf.visual.objects, wf.visual.query.sortDefinition])}`);

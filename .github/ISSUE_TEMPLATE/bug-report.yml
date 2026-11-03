@@ -1,0 +1,57 @@
+name: Bug report
+description: A DataArcus tool did something wrong, refused, or wrote a report that looks wrong.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. Issues are public. **Never attach a .pbix, a model or report folder, your data, or a screenshot
+        that shows figures.** If a private table or measure name matters, replace it with a made-up name.
+        How we answer: [SUPPORT.md](https://github.com/Antnioo/DataArcus/blob/main/SUPPORT.md).
+  - type: input
+    id: version
+    attributes:
+      label: DataArcus version
+      description: Claude Desktop > Settings > Extensions > DataArcus for Power BI, or the .mcpb file's name.
+      placeholder: "0.3.0"
+    validations:
+      required: true
+  - type: input
+    id: app
+    attributes:
+      label: AI app and its version
+      placeholder: "Claude Desktop, Claude Code, ..."
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version, and Power BI Desktop's (Help > About)
+    validations:
+      required: true
+  - type: textarea
+    id: asked
+    attributes:
+      label: What you asked
+      description: Your request to the AI app, and the tool it called.
+    validations:
+      required: true
+  - type: textarea
+    id: answer
+    attributes:
+      label: The tool's answer
+      description: What the tool said, copied as text (no screenshot with figures).
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+  - type: checkboxes
+    id: nodata
+    attributes:
+      label: Before you send
+      options:
+        - label: I attached no .pbix, no data and no screenshot that shows figures.
+          required: true

@@ -189,8 +189,8 @@
     return t;
   }
 
-  // ---- the formatting each kind is written with (ctx: { mirror, grid }: a right-to-left report's mirrored axes, the
-  // quiet gridline colour) ----
+  // ---- the formatting each kind is written with (ctx: { grid, smooth, lang }: the quiet gridline colour, the line's
+  // look, the axis title's language; a right-to-left report's axes are report-mirror.js's, 0.3.1 M1) ----
   const obj = (props) => [{ properties: props }];
   const color = (hex) => ({ solid: { color: { expr: { Literal: { Value: "'" + hex + "'" } } } } });
   function objects(kind, B, ctx) {
@@ -207,23 +207,11 @@
       out.lineStyles = obj(lineStyle(c.smooth !== false));
     }
     if (c.grid) va.gridlineColor = color(c.grid);
-    // a right-to-left report: the value axis on the right (the waterfall has no invertAxis on its category axis: its
-    // columns are put right to left by the sort, as mirrorChart does for the others)
-    if (c.mirror) va.switchAxisPosition = bool(true);
+    // (a right-to-left report's axes and order: report-mirror.js mirrorChart, the twin's rules, called by the writer on
+    // the finished chart; 0.3.1 M1)
     if (Object.keys(va).length) out.valueAxis = obj(va);
-    if (c.mirror && kind !== 'waterfall') out.categoryAxis = obj({ invertAxis: bool(true) });
     return out;
   }
-  // a right-to-left report: the first column at the right (the sort reversed; a chart sorted by its measure keeps the
-  // largest at the right), as pbip-query.js mirrorChart does for the bar, column and line charts
-  function mirrorSort(query) {
-    if (!query) return query;
-    const sd = query.queryState && query.sortDefinition, y = query.queryState.Y && query.queryState.Y.projections[0];
-    if (sd && sd.sort && sd.sort[0]) { const byY = y && JSON.stringify(sd.sort[0].field) === JSON.stringify(y.field); sd.sort[0].direction = byY ? 'Ascending' : 'Descending'; }
-    else query.sortDefinition = { sort: [{ field: query.queryState.Category.projections[0].field, direction: 'Descending' }], isDefaultSort: true };
-    return query;
-  }
-
   // ---- a right-to-left waterfall (D1, the owner's must-fix 2; seen in Desktop 2.159 on R3's Descending waterfall) ----
   // Power BI accumulates a waterfall in its sort order, left to right, and has no setting to invert its category axis:
   // sorted Descending, December was the first step at the LEFT and the bars climbed to January. So a right-to-left
@@ -391,6 +379,6 @@
     return { m: both, c, tail: TAILS[kind][inAr ? 'ar' : 'en'] };
   }
 
-  const api = { KINDS, KIND_NAMES, TOOL_NAMES, LABELS, MAX_PANELS, MAX_STEPS, WRITES, isKind, typeOf, unitOf, unitsDiffer, additive, ordered, membersOf, fieldsOf, fits, pick, resolve, split, assign, askedKinds, withUnits, fromTool, toTool, labelOf, storyOf, bindQuery, titleParts, title, objects, mirrorSort, rtlWaterfall, fillOf, WF_WHAT, WF_WORDS, WATERFALL_RTL, WATERFALL_RTL_DEFAULT, waterfallRtlOf, fallFormat, PBI_SENTIMENT, sentimentOf };
+  const api = { KINDS, KIND_NAMES, TOOL_NAMES, LABELS, MAX_PANELS, MAX_STEPS, WRITES, isKind, typeOf, unitOf, unitsDiffer, additive, ordered, membersOf, fieldsOf, fits, pick, resolve, split, assign, askedKinds, withUnits, fromTool, toTool, labelOf, storyOf, bindQuery, titleParts, title, objects, rtlWaterfall, fillOf, WF_WHAT, WF_WORDS, WATERFALL_RTL, WATERFALL_RTL_DEFAULT, waterfallRtlOf, fallFormat, PBI_SENTIMENT, sentimentOf };
   if (node) module.exports = api; else root.DAGallery = api;
 })(typeof self !== 'undefined' ? self : this);

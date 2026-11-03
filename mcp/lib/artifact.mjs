@@ -15,7 +15,7 @@ import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { inventory, memorySource, REPORT_LIMITS } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
-import { rulesInput, knownGap } from './check-report.mjs';
+import { rulesInput, knownGap, impactOf } from './check-report.mjs';
 
 const require = createRequire(import.meta.url);
 const Rules = require('../../assets/js/report-rules.js');
@@ -53,12 +53,15 @@ async function validate(files, mem) {
     for (const f of files) { const to = path.join(dir, ...String(f.path).split('/')); if (!to.startsWith(dir + path.sep)) throw new Error('a path outside the project'); fs.mkdirSync(path.dirname(to), { recursive: true }); fs.writeFileSync(to, f.data, { flag: 'wx', mode: 0o600 }); }
     const reportDir = path.join(dir, base), pbip = files.some((f) => f.path === base.replace(/\.Report$/, '') + '.pbip') ? path.join(dir, base.replace(/\.Report$/, '') + '.pbip') : undefined;
     const s = await runReportValidation({ reportDir, defDir: path.join(reportDir, 'definition'), provider: await getMetadataProvider(), skipSchema: true, pbipPath: pbip });
-    const out = { ran: true, errors: 0, warnings: 0, known: 0, byRule: {}, files: [] };
+    // (0.3.1 P3A) each finding's kind as check_report gives it (impactOf, one copy): create_report says the same verdict
+    const out = { ran: true, errors: 0, warnings: 0, known: 0, byRule: {}, files: [], kinds: { canBreak: 0, openedInDesktop: 0, mayLook: 0, desktopOpens: 0 }, said: {} };
     for (const [code, d] of Object.entries(s.diagnostics || {})) for (const it of (d.items || [])) {
       const file = it.file && path.isAbsolute(String(it.file)) ? path.relative(reportDir, String(it.file)).split(path.sep).join('/') : null, inside = file && !file.startsWith('..') ? file : null;
       let known = null; if (inside && /visual\.json$/.test(inside)) { try { known = knownGap(code, it.path, JSON.parse(mem.get(inside))); } catch (e) { known = null; } }
       const rule = /^[A-Z0-9_]{3,60}$/.test(code) ? code : 'VALIDATOR';
       if (known) { out.known++; continue; }
+      const kind = impactOf({ origin: 'validator', rule, severity: d.severity === 'error' ? 'error' : d.severity === 'warning' ? 'warning' : 'note', file: inside, _base: it.file ? path.basename(String(it.file)) : '' });
+      out.kinds[kind] = (out.kinds[kind] || 0) + 1; out.said[rule] = (out.said[rule] || 0) + 1;
       if (d.severity === 'error') { out.errors++; out.byRule[rule] = (out.byRule[rule] || 0) + 1; if (inside) out.files.push({ rule, file: inside }); }
       else if (d.severity === 'warning') out.warnings++;
     }
@@ -101,7 +104,7 @@ function references(inv, tables, mem, pending) {
 }
 
 /** The checks of a project's files in memory (create_report's files: "<name>.Report/...", "<name>.pbip"). tables: the
- *  model reader's tables; lang: 'en' | 'ar'; opts.skip: checks left out (tests); opts.pending: [{ t, name }] measures written with the report as a script (L4). Never writes into the user's folder. */
+ *  model reader's tables; lang: 'en' | 'ar'; opts.skip: checks left out (tests); opts.blockOverlap: an OVERLAP blocks (FX2); opts.pending: [{ t, name }] measures written with the report as a script (L4). Never writes into the user's folder. */
 export async function checkArtifact(files, tables, lang, opts) {
   const o = opts || {}, skip = skipped(o), rep = inReport(files), mem = new Map(rep.map((f) => [f.path, typeof f.data === 'string' ? f.data : Buffer.from(f.data).toString('utf8')]));
   const notRun = [], blocking = [], byRule = {};
@@ -115,7 +118,7 @@ export async function checkArtifact(files, tables, lang, opts) {
   if (skip.has('validator')) notRun.push({ check: 'validator', why: 'skipped' });
   else {
     const v = await validate(files, mem);
-    checks.validator = v.ran ? { ran: true, errors: v.errors, warnings: v.warnings, known: v.known } : { ran: false };
+    checks.validator = v.ran ? Object.assign({ ran: true, errors: v.errors, warnings: v.warnings, known: v.known, kinds: v.kinds }, Object.keys(v.said).length ? { byRule: v.said } : {}) : { ran: false };
     if (!v.ran) notRun.push(Object.assign({ check: 'validator', why: v.why }, v.capped ? { capped: true } : {}));
     else { Object.entries(v.byRule).forEach(([k, n]) => count(k, n)); blocking.push(...v.files); if (v.errors > v.files.length) blocking.push({ rule: 'VALIDATOR', file: null }); }
   }
@@ -137,7 +140,10 @@ export async function checkArtifact(files, tables, lang, opts) {
     }
     // 4. the design lint, every page
     if (skip.has('lint')) notRun.push({ check: 'lint', why: 'skipped' });
-    else { try { const L = lint(inv, tables, null, { titles: false }); checks.lint = { ran: true, findings: L.findings.length }; L.findings.forEach((f) => count(f.rule, 1)); }
+    // (0.3.1 FX2, the laptop's C23: a bar chart drawn over the table's first rows passed as "pass") with opts.blockOverlap
+    // (a report DataArcus lays out itself), two data visuals overlapping (the lint's OVERLAP: never a panel or a card laid
+    // over its own chart) block the plan; pages placed by hand keep the finding as a finding
+    else { try { const L = lint(inv, tables, null, { titles: false }); checks.lint = { ran: true, findings: L.findings.length }; L.findings.forEach((f) => { count(f.rule, 1); if (f.rule === 'OVERLAP' && o.blockOverlap) blocking.push({ rule: f.rule, file: null }); }); }
       catch (e) { notRun.push({ check: 'lint', why: 'the design lint could not read this report' }); } }
   }
   const checkedPages = checks.references.ran && checks.lint.ran ? checks.references.pages : 0;

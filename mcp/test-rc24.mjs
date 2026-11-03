@@ -107,7 +107,8 @@ try {
   chk(() => !p1.err && p1.j.labels.given === Object.keys(labels).length && !(p1.j.labels.problems || []).length, () => `T-1. every label is taken: ${short(p1)}`);
   const page = await pageOf(w, p1.j.plan.planId);
   // (0.3.0 T2, changed on purpose: on the Arabic twin's page a quoted name is isolated, <bdi>"..."</bdi>)
-  chk(() => /Chart title \(from a title measure\) (?:<bdi>)?&quot;Top \{1\} of \{2\}: Web Orders Total Score by Coupon Region&quot;/.test(page) && /أعلى \{1\} من \{2\}: النقاط حسب منطقة القسيمة/.test(page), () => `T-1. the approval page names the title measure's text: ${(/Arabic texts[\s\S]{0,800}/.exec(page) || [''])[0]}`);
+  // (FX1: the twin's page wholly Arabic; changed on purpose from "Chart title (from a title measure)")
+  chk(() => /عنوان مخطط \(من مقياس عنوان\) (?:<bdi>)?«Top \{1\} of \{2\}: Web Orders Total Score by Coupon Region»/.test(page) && /أعلى \{1\} من \{2\}: النقاط حسب منطقة القسيمة/.test(page), () => `T-1. the approval page names the title measure's text: ${(/النصوص العربية[\s\S]{0,800}/.exec(page) || [''])[0]}`);
   // a label that drops a number the report counts is refused, never written half
   {
     const bad = Object.assign({}, labels); const k = (tm.find((t) => /\{2\}/.test(t.text)) || { id: 'titleText:none' }).id; bad[k] = 'أعلى {1}: النقاط';
@@ -184,12 +185,17 @@ try {
     twinPages.forEach((pg) => pg.visuals.filter((v) => v.visual && v.visual.visualType === 'tableEx').forEach((v) => {
       const sc = pg.page.height / 1080, cw = (v.visual.objects || {}).columnWidth || [], width = (q) => { const e = cw.find((x) => x.selector && x.selector.metadata === q); return e ? parseFloat(lit(e.properties.value)) : null; };
       const sum = cw.reduce((a, e) => a + parseFloat(lit(e.properties.value)), 0);
-      if (sum > v.position.width - 36 * sc + 0.5) bad.push(`${v.name}: columns ${sum} wider than the table's ${v.position.width} less 36`);
-      v.visual.query.queryState.Values.projections.forEach((p) => { const cwid = width(p.queryRef); if (cwid == null || !p.displayName) return; const need = textWidth(p.displayName, T, true, 'Segoe UI') + 24 * sc; if (cwid + 0.5 < need) bad.push(`${v.name}/${p.queryRef}: ${cwid} for a header that needs ${Math.ceil(need)}`); });
+      // (0.3.1 MX4, moved on purpose: a reversed table that fits now takes its slack in its leftmost column, up to the
+      // room measured in Desktop, the box less 20 (twin-pages.mjs keepView; laptop part 4), where the writer's estimate is 36)
+      if (sum > v.position.width - 20 * sc + 0.5) bad.push(`${v.name}: columns ${sum} wider than the table's ${v.position.width} less 20`);
+      // (TW1, M1-S2: a hidden column, width 0, has no header to fit: the twin's right-to-left table hides its name column
+      // as the writer's does, round 23; check_report's tableHeaders skips it too)
+      v.visual.query.queryState.Values.projections.forEach((p) => { const cwid = width(p.queryRef); if (cwid == null || cwid <= 1 || !p.displayName) return; const need = textWidth(p.displayName, T, true, 'Segoe UI') + 24 * sc; if (cwid + 0.5 < need) bad.push(`${v.name}/${p.queryRef}: ${cwid} for a header that needs ${Math.ceil(need)}`); });
     }));
     const cut = (p2.j.fitted && p2.j.fitted.headersCut) || [];
     chk(() => !bad.length || bad.length === cut.length, () => `T-4. every Arabic header fits its column within the table's width, or is listed in the plan: ${bad.join('; ')} | plan ${JSON.stringify(cut)}`);
-    chk(() => ((p2.j.fitted && p2.j.fitted.headers) || []).length >= 1, () => `T-4. the plan lists the widened columns: ${JSON.stringify(p2.j.fitted)}`);
+    // (0.3.1 MX3, laptop part 9: no column is narrowed for another's header any more: a header with no spare room is listed cut)
+    chk(() => ((p2.j.fitted && p2.j.fitted.headers) || []).length + cut.length >= 1, () => `T-4. the plan lists the widened columns, or the headers that stay cut: ${JSON.stringify(p2.j.fitted)}`);
     // numbers are never narrowed: each number column keeps at least its width in the original
     const onums = Object.fromEntries(origPages.flatMap((pg) => pg.visuals.filter((v) => v.visual && v.visual.visualType === 'tableEx').map((v) => [v.name, v])));
     const narrowed = [];

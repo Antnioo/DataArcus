@@ -342,8 +342,7 @@ try {
     const GP = r && r.gridId ? path.join(out, 'pills/Pills Variants.Report/definition/pages', r.gridId) : '';
     const gv = GP && fs.existsSync(path.join(GP, 'visuals')) ? fs.readdirSync(path.join(GP, 'visuals')).map((v) => rd(path.join(GP, 'visuals', v, 'visual.json'))) : [];
     const gp = gv.filter((v) => v.visual.visualType === 'advancedSlicerVisual'), gl = gv.filter((v) => v.visual.visualType === 'textbox');
-    const m0 = (v) => S(P(v, 'padding', 'default').topMargin) === '0L' && S(P(v, 'layout').customizePadding) === 'true', ptOf = (v) => S(P(v, 'value', 'default').fontSize);
-    const hsOf = (pt, ctl) => gp.filter((v) => ptOf(v) === pt + 'D' && m0(v) !== ctl).map((v) => v.position.height).sort((a, b) => a - b).join();
+    const ptOf = (v) => S(P(v, 'value', 'default').fontSize);
     const order = r && r.gridId ? rd(path.join(out, 'pills/Pills Variants.Report/definition/pages/pages.json')) : {};
     // (F6, changed on purpose: the grid now holds the shipped shape at the height pillH gives each pt, one with an Arabic
     // header, and four reports follow: the strip and the rail, EN and AR, each checked; the rails write pills again)

@@ -80,12 +80,13 @@ try {
     const before = rels(path.join(HERE, 'fixtures/twin-project')), now = rels(path.join(ROOT, 'tw')), written = now.filter((r) => !before.includes(r));
     const missing = written.filter((r) => !H.includes(r));
     chk(() => written.length > 20 && !missing.length, () => `A1-1. the twin's page names every file the twin writes (${written.length}): missing ${JSON.stringify(missing.slice(0, 8))}`);
-    chk(() => new RegExp(`${written.length} files:`).test(H), () => `A1-2. the twin's page counts the files (${written.length}): ${section(H, 'Files that will be written', 500)}`);
-    chk(() => said(H, 'Visuals', count(written, /\/visual\.json$/)) && said(H, 'Pages', count(written, /\/page\.json$/)) && said(H, 'Project file', 1),
-      () => `A1-3. grouped and counted (visuals ${count(written, /\/visual\.json$/)}, pages ${count(written, /\/page\.json$/)}, project file 1): ${section(H, 'Files that will be written', 800)}`);
+    // (FX1, the laptop's part 3: the twin's page is wholly Arabic; changed on purpose from the English counts beside)
+    chk(() => new RegExp(`جميع الملفات \\(${written.length}\\)`).test(H), () => `A1-2. the twin's page counts the files (${written.length}): ${section(H, 'الملفات التي ستُكتب', 500)}`);
+    chk(() => said(H, 'المرئيات', count(written, /\/visual\.json$/)) && said(H, 'الصفحات', count(written, /\/page\.json$/)) && said(H, 'ملف المشروع', 1),
+      () => `A1-3. grouped and counted (visuals ${count(written, /\/visual\.json$/)}, pages ${count(written, /\/page\.json$/)}, project file 1): ${section(H, 'الملفات التي ستُكتب', 800)}`);
     // (0.3.0 C1, changed on purpose: the twin's script is the full Arabic calendar set now, " - Arabic calendar.tmdl")
     const month = written.find((r) => /Arabic calendar.*\.tmdl$/.test(r));
-    chk(() => month && said(H, 'Arabic calendar script', 1), () => `A1-4. the month script is its own group, named as what it is: ${month} ${section(H, 'Files that will be written', 800)}`);
+    chk(() => month && said(H, 'سكربت أعمدة التقويم العربية', 1), () => `A1-4. the month script is its own group, named as what it is: ${month} ${section(H, 'الملفات التي ستُكتب', 800)}`);
     chk(() => html.length > 0 && !html.includes(HOSTILE) && !/<script>alert|<b>bold<\/b>/.test(html), () => 'A7-1. a hostile page name is escaped on the twin\'s page');
     // the twin this test writes: Microsoft's validator 0 errors and check_report 0 "can break"
     const c = await w.call('check_report', { path: 'tw/Twin Sales AR.pbip' }), j = c.j || {};

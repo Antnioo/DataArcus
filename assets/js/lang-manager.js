@@ -148,6 +148,8 @@ class LanguageManager {
      return window.ramadanSalesTranslations;
     } else if (path.includes('article-power-bi-model-health-check')) {
      return window.modelHealthArticleTranslations;
+    } else if (path.includes('article-power-bi-report-ready-for-arabic')) {
+     return window.reportReadyArabicTranslations;
     } else if (path.includes('article-power-bi-custom-visual-ai-checks')) {
      return window.customVisualChecksTranslations;
     } else if (path.includes('article-power-bi-best-practice-exceptions')) {

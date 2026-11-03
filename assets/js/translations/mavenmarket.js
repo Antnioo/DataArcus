@@ -92,23 +92,23 @@ window.mavenmarketTranslations = {
       embed: "لوحة Power BI التفاعلية: Maven-Market Retail Analysis Dashboard"
     },
     meta: {
-      title: "مثال لوحة تحكم Maven Market في Power BI - داتا أركوس",
-      description: "استكشف لوحة تحكم Maven Market في Power BI: تحليلات تفاعلية للمبيعات والمخزون والأرباح لقطاع التجزئة والتجارة الإلكترونية.",
-      keywords: "لوحة تحكم Maven Market, تحليلات Power BI للبيع بالتجزئة, لوحة مبيعات, تحليلات المخزون, لوحة التجارة الإلكترونية, داتا أركوس",
-      author: "داتا أركوس",
+      title: "مثال لوحة معلومات Maven Market في Power BI - DataArcus",
+      description: "استكشف لوحة معلومات Maven Market في Power BI: تحليلات تفاعلية للمبيعات والمخزون والأرباح لقطاع التجزئة والتجارة الإلكترونية.",
+      keywords: "لوحة معلومات Maven Market, تحليلات Power BI للبيع بالتجزئة, لوحة مبيعات, تحليلات المخزون, لوحة التجارة الإلكترونية, داتا أركوس",
+      author: "DataArcus",
       "og:type": "website",
-      "og:title": "مثال لوحة تحكم Maven Market في Power BI - داتا أركوس",
-      "og:description": "استكشف لوحة تحكم Maven Market في Power BI: تحليلات تفاعلية للمبيعات والمخزون والأرباح لقطاع التجزئة والتجارة الإلكترونية.",
+      "og:title": "مثال لوحة معلومات Maven Market في Power BI - DataArcus",
+      "og:description": "استكشف لوحة معلومات Maven Market في Power BI: تحليلات تفاعلية للمبيعات والمخزون والأرباح لقطاع التجزئة والتجارة الإلكترونية.",
       "og:url": "https://dataarcus.com/dashboards/maven-market-dashboard.html",
-      "og:site_name": "داتا أركوس",
+      "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/maven-market.jpg",
-      "og:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:image:alt": "شعار DataArcus مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       "og:locale": "ar_EG",
       "twitter:card": "summary_large_image",
-      "twitter:title": "مثال لوحة تحكم Maven Market في Power BI - داتا أركوس",
-      "twitter:description": "استكشف لوحة تحكم Maven Market في Power BI: تحليلات تفاعلية للمبيعات والمخزون والأرباح لقطاع التجزئة والتجارة الإلكترونية.",
+      "twitter:title": "مثال لوحة معلومات Maven Market في Power BI - DataArcus",
+      "twitter:description": "استكشف لوحة معلومات Maven Market في Power BI: تحليلات تفاعلية للمبيعات والمخزون والأرباح لقطاع التجزئة والتجارة الإلكترونية.",
       "twitter:image": "https://dataarcus.com/assets/img/og/maven-market.jpg",
-      "twitter:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "twitter:image:alt": "شعار DataArcus مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       canonical: "https://dataarcus.com/dashboards/maven-market-dashboard.html",
     },
 
@@ -146,12 +146,12 @@ window.mavenmarketTranslations = {
     },
 
     disclaimer: {
-      text: "تم تطوير لوحة التحكم هذه كعرض للمهارات باستخدام مجموعة بيانات عامة مقدمة من Maven Analytics."
+      text: "تم تطوير لوحة المعلومات هذه كعرض للمهارات باستخدام مجموعة بيانات عامة مقدمة من Maven Analytics."
     },
 
     capabilities: {
       title: "رؤى قابلة للتنفيذ للتجارة الإلكترونية",
-      subtitle: "تحوّل لوحة التحكم هذه بيانات المبيعات الأولية إلى أداة استراتيجية، مما يوضح كيف نقدم الوضوح في:",
+      subtitle: "تحوّل لوحة المعلومات هذه بيانات المبيعات الأولية إلى أداة استراتيجية، مما يوضح كيف نقدم الوضوح في:",
       list: [
         "<strong>تحليل اتجاهات المبيعات:</strong> احصل على رؤية تنفيذية لمقاييس مبيعاتك الرئيسية (الإيرادات، متوسط قيمة الطلب، معدل التحويل) وتتبع الأداء بمرور الوقت.",
         "<strong>الأداء الجغرافي:</strong> حدد على الفور المدن أو البلدان الأفضل أداءً، مما يسمح بحملات إعلانية مستهدفة وتخطيط لوجستي أفضل.",

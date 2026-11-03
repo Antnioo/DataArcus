@@ -14,6 +14,17 @@ export default async function ({ browser, url }) {
     for (const m of html.matchAll(/data-i18n="([^"]+)"[^>]*>([^<]*)<(?!\/)/g)) problems.push(`${p}: data-i18n="${m[1]}" has a tag inside ("${m[2].trim().slice(0, 40)}...")`);
     checks++;
   }
+  // (ST1, GC-S2: the owner's rule for public claims) a headline never says "free", "first", "only" or "official": the
+  // title, og:title, twitter:title and h1 of every page as served (English, Arabic and the go/ short links) and as shown
+  const BRAG = /\b(free|first|only|official)\b|مجان|الأول|الوحيد|الرسمي/i;
+  const served = [...pages(), ...fs.readdirSync(path.join(ROOT, 'go')).map((d) => path.join('go', d, 'index.html')).filter((f) => fs.existsSync(path.join(ROOT, f)))];
+  for (const p of served) {
+    const html = fs.readFileSync(path.join(ROOT, p), 'utf8');
+    const heads = [...html.matchAll(/<title>([^<]*)<\/title>|<meta (?:property|name)="(?:og|twitter):title" content="([^"]*)"|<h1[^>]*>([^<]*)</g)].map((m) => (m[1] || m[2] || m[3] || '').trim());
+    const bad = heads.filter((h) => BRAG.test(h));
+    if (bad.length) problems.push(`${p}: a headline says free/first/only/official: ${bad.join(' | ')}`);
+    checks++;
+  }
   for (const p of pages()) for (const lang of langsOf(p)) for (const vp of [[390, 844], [1440, 900]]) {
     const v = await visitor(browser, { viewport: vp });
     await v.pg.goto(`${url}/${p}?lang=${lang}`, { waitUntil: 'networkidle' });
@@ -34,6 +45,7 @@ export default async function ({ browser, url }) {
         untranslated: document.documentElement.lang === 'ar' ? ['placeholder', 'alt', 'aria-label', 'title'].flatMap((a) => [...document.querySelectorAll(`[${a}]:not([data-i18n-${a}])`)]
           .filter((e) => !e.closest('svg, script, template, iframe, [translate="no"]') && e.getClientRects().length && /[A-Za-z]{2}/.test(e.getAttribute(a)) && !/[\u0600-\u06FF]/.test(e.getAttribute(a)) && !/^(LinkedIn|WhatsApp|GitHub|X|YouTube|Instagram|Microsoft Learn|DataArcus)$/i.test(e.getAttribute(a).trim()))
           .map((e) => `${a}="${e.getAttribute(a).slice(0, 40)}"`)) : [],
+        h1: [...document.querySelectorAll('h1')].map((e) => e.innerText.trim()),
         sideways: document.documentElement.scrollWidth > innerWidth,
         offset: parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop),
         expected: nav ? nav.offsetHeight + pins + 12 : null,
@@ -52,6 +64,8 @@ export default async function ({ browser, url }) {
     if (badMeta.length) problems.push(`${tag}: meta not in the page language: ${badMeta.map(([n, val]) => n + '=' + val.slice(0, 40)).join(' | ')}`);
     const badAttrs = r.attrs.filter(([, val]) => val.includes('[Missing:') || (lang === 'ar' && !/[\u0600-\u06FF]/.test(val)));
     if (badAttrs.length) problems.push(`${tag}: attributes not translated: ${badAttrs.slice(0, 3).map(([a, val]) => a + '=' + val).join(' | ')}`);
+    const brag = [...r.meta.filter(([n]) => /title/.test(n)).map(([, val]) => val), ...r.h1].filter((h) => BRAG.test(h));
+    if (brag.length) problems.push(`${tag}: a headline as shown says free/first/only/official: ${brag.join(' | ')}`);
     if (r.sideways) problems.push(`${tag}: page scrolls sideways`);
     const wrongWay = r.arrows.filter((f) => f !== (lang === 'ar' ? 1 : 0)).length;
     if (wrongWay) problems.push(`${tag}: ${wrongWay} of ${r.arrows.length} arrows point against the reading direction`);

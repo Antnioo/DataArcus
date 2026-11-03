@@ -19,6 +19,7 @@ import http from 'node:http';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepEnglish } from './test-plan.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), req = createRequire(import.meta.url);
 const problems = []; let checks = 0;
@@ -107,8 +108,12 @@ try {
     const cases = [{ id: 'T1a', layout: 'exec', names: false }, { id: 'T1b', layout: 'ops', names: true }];
     for (const c of cases) {
       const base = { path: MP, focus: 'Web Orders', lang: 'ar', layout: c.layout, name: 'D5 ' + c.id, secondPage: true };
+      // (0.3.1 CX1, F01: an Arabic plan whose titles would be English gets no plan id) the fields with no Arabic name are kept
+      // English on purpose, as the person says it (T1a: all of them; T1b: those the fixed list has no word for)
+      const NONE = ['Calendar[Month Short]', 'Web Orders[Web Orders Total Score]', 'Web Orders[Web Orders Total Value]', 'Web Orders[Web Orders Count]', 'Web Orders[Web Orders Average Score]', 'Coupon[Coupon Region]', 'Plan[Plan Group]'], REST = ['Web Orders[Web Orders Max Score]', 'Web Orders[Web Orders Average Value]', 'Coupon[Coupon Status]', 'Coupon[Coupon Group]'];
+      if (!c.names) base.displayNames = keepEnglish(...NONE, ...REST);
       let pl = await s.call('plan_layout', base);
-      if (c.names) { const an = (pl.j && pl.j.arabicNames) || {}; base.displayNames = Object.assign({}, an.inThePlan || {}, an.suggestedDisplayNames || {}); pl = await s.call('plan_layout', base); }
+      if (c.names) { const an = (pl.j && pl.j.arabicNames) || {}; base.displayNames = Object.assign({}, an.inThePlan || {}, an.suggestedDisplayNames || {}, keepEnglish(...REST)); pl = await s.call('plan_layout', base); }
       const id = pl.j && pl.j.plan && pl.j.plan.planId;
       chk(() => /^plan-/.test(id), () => `${c.id} setup: plan_layout gives a plan id: ${String(pl.t).slice(0, 300)}`);
       if (!id) continue;

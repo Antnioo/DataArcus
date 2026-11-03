@@ -1,7 +1,7 @@
 # DataArcus blog: the plan (read before writing a post)
 
 The memory for the blog. Read it before planning or writing an article; update it after each one is published
-(the log, the map, "Next up"). Last updated 2026-10-22 by the reviewer (the custom-visual article; before that 2026-10-03, "Next up" from the SEO research).
+(the log, the map, "Next up"). Last updated 2026-10-25 by the builder (W, the Arabic-readiness article); before that 2026-10-22 by the reviewer (the custom-visual article; before that 2026-10-03, "Next up" from the SEO research).
 
 ## Who we write for, and how we sound
 - **Our identity:** Power BI reports designed right, in minutes, and checked in Power BI, not just generated.
@@ -25,7 +25,7 @@ The memory for the blog. Read it before planning or writing an article; update i
 ## The pillars (what the blog is about)
 | Pillar | Published | Free tool it leads to |
 |---|---|---|
-| Gulf business logic (and Arabic) | Ramadan sales YoY (2026-09-23), Gulf calendar in DAX (2026-10-03) | DAX Calendar Table Generator (Hijri), Theme Generator (Arabic) |
+| Gulf business logic (and Arabic) | Ramadan sales YoY (2026-09-23), Gulf calendar in DAX (2026-10-03), Is your report ready for Arabic? (2026-10-25, with 0.3.1) | DAX Calendar Table Generator (Hijri), Theme Generator (Arabic) |
 | Power BI craft (DAX, models) | DAX attribution pattern (2026-09-01), Model health check (2026-09-25), AI-built custom visuals: 4 checks (2026-10-23) | Model Health Check, DAX Measure Builder |
 | Report design | Report redesign in 5 minutes (2026-09-28), 7 report styles (2026-09-29) | Theme Generator, SVG KPI Designer |
 | Cost and licensing | Pro vs PPU vs Fabric F64 (2026-09-23) | Licensing Cost Calculator |
@@ -50,7 +50,7 @@ The memory for the blog. Read it before planning or writing an article; update i
    capacity requirements. Tool: Licensing Cost Calculator. (A first FAQ and Copilot section: Beta prep, 2026-10-03.)
 4. **DP-600 after the October 2026 update**, then the **PL-300 study guide** (a 4-week plan, the traps). Tools: the
    practice exams.
-5. **Arabic and right-to-left Power BI reports done right**: answer "does power bi support arabic", "matrix right to
+5. **(Written 2026-10-25 as "Is your Power BI report ready for Arabic?", published with DataArcus 0.3.1.)** **Arabic and right-to-left Power BI reports done right**: answer "does power bi support arabic", "matrix right to
    left" and "bilingual report"; our angle is the mirrored layout plus the Gulf logic. Tool: Theme Generator
    (Arabic). Publish with the `/ar/` pages (owner 2026-10-03: option A, after round 3).
 6. **KPI cards that tell a story with SVG**: no tool ranks for "power bi svg kpi card". Tool: SVG KPI Designer.
@@ -95,7 +95,7 @@ became a post). Add ideas here with the date and where they came from:
 - [ ] At least one link to the tool it leads to, and links to 1-2 related posts (and from them back to this one).
 - [ ] DAX run on a test model; numbers and claims checked; sources linked.
 - [ ] No employer data: no company names, dashboards, screenshots or numbers from the owner's job.
-- [ ] All 16 website suites pass (`node scripts/tests/run-all.mjs`), then merge.
+- [ ] Every website suite passes (`node scripts/tests/run-all.mjs`), then merge.
 - [ ] Then: the log below, the pillar table, and three LinkedIn posts queued in `content/LINKEDIN-PLAN.md`.
 
 ## Published log
@@ -116,4 +116,5 @@ became a post). Add ideas here with the date and where they came from:
 | 2026-10-03 | A Gulf calendar in Power BI: Hijri dates, Ramadan, Eid and the right weekend | Gulf | Calendar generator, Measure Builder |
 | 2026-10-17 | Power BI best practices have exceptions: 5 we missed (the Health Check benchmark: 23 models, 206 wrong findings before, 1 after; Microsoft's own words, quotes checked on Microsoft Learn 16 Oct) | Craft | Model Health Check |
 | 2026-10-23 | Before an AI builds your Power BI custom visual: 4 checks (the admin settings, certification, Desktop vs the service, what an uncertified visual can't do; every fact from Microsoft Learn, read 22 Oct; Microsoft's October 2026 feature summary is behind a bot check, its wording confirmed from a verbatim copy) | Craft (AI agents) | Theme Generator, the DataArcus agent |
+| 2026-10-25 | Is your Power BI report ready for Arabic? 19 things to check (L1's Arabic lens: each kind with DataArcus's fix, a Desktop setting or no setting; Microsoft Learn read 25 Oct; L1's numbers on four made-up reports; goes live with DataArcus 0.3.1, branch `feat/0.3.1-ready-for-arabic`, mcp/work/W.md; updated 2026-10-26: a Latin run anywhere in Arabic text can swap the Arabic around it, measured in Desktop 2.159, and the "reword it" advice taken out, mcp/work/BD1.md; updated 2026-10-27: the measured fix, the isolates and the whole text wrapped in U+2067 ... U+2069, page names kept in Arabic since tabs lay out left to right, mcp/work/BD2.md) | Gulf (Arabic) | The DataArcus agent (check_report's Arabic lens) |
 | 2026-10-03 | Copilot readiness audit (a service page in `services/`, not a post; linked from the home page, the AI-ready article and the licensing guide) | Craft (AI-ready models) | Model Health Check |

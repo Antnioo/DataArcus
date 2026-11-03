@@ -45,7 +45,7 @@ window.licensingCalculatorTranslations = {
       "faq": {
         "title": "Questions",
         "q1": "Do report viewers need a Power BI license?",
-        "a1": "Yes, unless the report sits on a Fabric capacity of <strong>F64 or larger</strong>. Below F64, everyone who opens a shared report needs Pro (or PPU for PPU workspaces). On F64 and above, viewers only need the free license. Creators always need Pro.",
+        "a1": "Yes, unless the report sits on a Fabric capacity of <strong>F64 or larger</strong>. Below F64, everyone who opens a shared report needs Pro (or PPU for PPU workspaces). On F64 and above, viewers only need the free license. Creators always need Pro or PPU.",
         "q2": "When is Premium Per User worth it?",
         "a2": "For small teams that need Premium features like bigger models, more frequent refreshes or deployment pipelines, but have too few viewers to justify F64. Remember that everyone reading PPU content needs PPU too. Paginated reports do not need Premium: with Pro you can publish them to shared workspaces.",
         "q3": "Reservation or pay-as-you-go?",
@@ -59,7 +59,7 @@ window.licensingCalculatorTranslations = {
   },
   "ar": {
     "meta": {
-      "title": "حاسبة تكلفة تراخيص Power BI: Pro مقابل PPU مقابل Fabric",
+      "title": "حاسبة تكلفة تراخيص Power BI: Pro مقابل PPU مقابل Fabric", "keywords": "داتا أركوس, Power BI pricing calculator, Power BI licensing cost, Power BI Pro vs Premium Per User, Fabric F64 cost, Power BI free viewers",
       "description": "قارن تكلفة Power BI Pro وPremium Per User وسعة Fabric لفريقك، واعرف الخيار الأوفر ومتى يصبح F64 مجديًا، بالدولار أو الدرهم أو الريال."
     },
     "lc": {
@@ -95,14 +95,14 @@ window.licensingCalculatorTranslations = {
       "disclaimer": "أسعار القائمة بالدولار لمناطق الولايات المتحدة، تم التحقق منها في <span data-p=\"checked\">23 سبتمبر 2026</span> وتُحدَّث أسبوعيًا من مصادر Microsoft: ‏Pro بسعر <span data-p=\"pro\">$14</span> و PPU بسعر <span data-p=\"ppu\">$24</span> لكل مستخدم شهريًا (دفع سنوي)، و Fabric بسعر <span data-p=\"cu\">$0.18</span> لكل وحدة سعة في الساعة عند الدفع حسب الاستخدام، وأقل بنحو <span data-p=\"save\">40.5%</span> مع الحجز لسنة. تختلف الأسعار حسب المنطقة والاتفاقية. هذا تقدير وليس عرض سعر. المصادر: <a href=\"https://www.microsoft.com/en-us/power-platform/products/power-bi/pricing\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">أسعار Power BI</a>، <a href=\"https://azure.microsoft.com/en-us/pricing/details/microsoft-fabric/\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">أسعار Fabric</a>.",
       "cta": {
         "title": "التراخيص هي الجزء الأصغر من التكلفة",
-        "desc": "نموذج بطيء على سعة غير مناسبة يكلّف أكثر من أي ترخيص. تصمم داتا أركوس حلول Power BI تناسب مستخدميك وبياناتك وميزانيتك.",
+        "desc": "نموذج بطيء على سعة غير مناسبة يكلّف أكثر من أي ترخيص. تصمم DataArcus حلول Power BI تناسب مستخدميك وبياناتك وميزانيتك.",
         "more": "المزيد من الأدوات المجانية",
         "guide": "اقرأ الدليل: Pro أم PPU أم Fabric، أي ترخيص تحتاج؟ ←"
       },
       "faq": {
         "title": "أسئلة شائعة",
         "q1": "هل يحتاج مشاهدو التقارير إلى ترخيص Power BI؟",
-        "a1": "نعم، إلا إذا كان التقرير على سعة Fabric بحجم <strong>F64 أو أكبر</strong>. تحت F64، يحتاج كل من يفتح تقريرًا مشتركًا إلى Pro (أو PPU لمساحات PPU). من F64 فأعلى، يكفي المشاهدين الترخيص المجاني. المنشئون يحتاجون Pro دائمًا.",
+        "a1": "نعم، إلا إذا كان التقرير على سعة Fabric بحجم <strong>F64 أو أكبر</strong>. تحت F64، يحتاج كل من يفتح تقريرًا مشتركًا إلى Pro (أو PPU لمساحات PPU). من F64 فأعلى، يكفي المشاهدين الترخيص المجاني. المنشئون يحتاجون Pro أو PPU دائمًا.",
         "q2": "متى يستحق Premium Per User؟",
         "a2": "للفرق الصغيرة التي تحتاج مزايا Premium مثل النماذج الأكبر أو التحديث الأكثر تكرارًا أو خطوط النشر، دون عدد مشاهدين يبرر F64. تذكّر أن كل من يطّلع على محتوى PPU يحتاج PPU أيضًا. أما التقارير مرقّمة الصفحات فلا تحتاج Premium، إذ يكفي ترخيص Pro لنشرها في مساحات العمل المشتركة.",
         "q3": "الحجز أم الدفع حسب الاستخدام؟",

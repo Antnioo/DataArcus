@@ -43,6 +43,7 @@
     const timeExt = [];   // 0.2.9 part 2: the time axes' report measures (DateTime and Integer), into reportExtensions.json with the others
     const timeAxes = [];   // what was done to each time axis, for the answer
     let blankFiltered = 0;
+    const barBands = [];   // 0.3.1 FX5b: the bar and column charts given a padding by their count { page, kind, categories, padding, thickness, max }
     const topCharts = [];   // the design block's S5/D19: charts kept to the Top N their slot can show { page, title, top }
     const waterfallRtl = [];   // D1: each right-to-left waterfall: { page, title, written: 'columnChart' | 'waterfallChart', what, measures? }
     const slicerStyles = [];   // 0.3.0 L2: with slicerStyle 'pills', each slicer's style { page, field, written: 'pills' | 'dropdown', why }
@@ -52,7 +53,7 @@
       tableColumns, tabRows, noPageButtons, leftOut, kpiTitles, titles, tableOrder, tableRows,
       headerGrew, tableSmaller, tableWide, subtitlesUsed, blankKept, noData, noDataSkipped, modelNames,
       extRenamed, freeExt, rowLabels, rowLabelSkipped, barCharts, kindChanges, shortDays, ringsSmall, svgSizes,
-      timeExt, timeAxes, blankFiltered, bound, topCharts, waterfallRtl, slicerStyles, gridCharts
+      timeExt, timeAxes, blankFiltered, bound, topCharts, barBands, waterfallRtl, slicerStyles, gridCharts
     };
   }
 
@@ -62,7 +63,7 @@
     headerGrew: n.headerGrew, tableSmaller: n.tableSmaller, tableWide: n.tableWide, noDataSkipped: n.noDataSkipped, svgSizes: n.svgSizes, noPageButtons: n.noPageButtons, tableColumns: n.tableColumns,
     rowLabels: n.rowLabels.map((x) => ({ page: x.page, t: x.t, c: x.c, m: x.m })), rowLabelSkipped: n.rowLabelSkipped, extRenamed: n.extRenamed, chartColors: r.chartColors, chartAxes: r.chartAxes,
     tabRows: n.tabRows, ringsSmall: n.ringsSmall, shortDays: n.shortDays, barCharts: n.barCharts, kindChanges: n.kindChanges, blankKept: n.blankKept, subtitlesUsed: [...n.subtitlesUsed], timeAxes: n.timeAxes,
-    blankFiltered: n.blankFiltered, tooltipLimits: r.tooltipLimits, bound: n.bound, topCharts: n.topCharts, a11y: r.a11y });
+    blankFiltered: n.blankFiltered, tooltipLimits: r.tooltipLimits, bound: n.bound, topCharts: n.topCharts, barBands: n.barBands, a11y: r.a11y });
 
   const api = {
     make, result

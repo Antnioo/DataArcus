@@ -11,7 +11,8 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
-import { withPlans } from './test-plan.mjs';
+import { withPlans, keepEnglish } from './test-plan.mjs';
+import { serverSource, twinSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared; the twin is lib/arabic-twin.mjs and its steps)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const req = createRequire(import.meta.url);
@@ -21,7 +22,6 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args, c = call) => { try { return await c(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? x.t.slice(0, 300) : JSON.stringify(x.j).slice(0, 300));
-  const get = (fn) => { try { return fn(); } catch (e) { return undefined; } };
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"A"}, {}) in Source' } }], col = (name, dataType) => ({ name, dataType, sourceColumn: name });
   const model = (dir, tables, relationships) => { fs.mkdirSync(path.join(ROOT, dir, 'M.SemanticModel'), { recursive: true }); fs.writeFileSync(path.join(ROOT, dir, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables, relationships: relationships || [] } })); };
   const ms = (name, expression, formatString) => Object.assign({ name, expression }, formatString ? { formatString } : {});
@@ -73,7 +73,7 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
 
   // ---------- G9: one field builder, the picker's ----------
   {
-    const B = req('../assets/js/pbip-bind.js'), src = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+    const B = req('../assets/js/pbip-bind.js'), src = serverSource();
     chk(() => typeof B.fieldOf === 'function' && /Bind\.fieldOf\(/.test(src) && !/Bind\.dateColumnFor\(t\.columns/.test(src), () => 'G9: pbip-bind exports fieldOf and create_report\'s field check uses it');
   }
 
@@ -142,6 +142,12 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     const lint = c.j && c.j.lint, txt = JSON.stringify(c.j || {});
     chk(() => lint && (lint.findings || []).length && !/Shipments by Carrier|Planted|"[^"]*\bby\b[^"]*" at/.test(JSON.stringify(lint.findings)) && /at \d+,\d+ \d+x\d+/.test(JSON.stringify(lint.findings)),
       () => `R5: the lint must name visuals by type and position only: ${JSON.stringify(lint && lint.findings).slice(0, 400)} ${short(c)}`);
+    // (Q1 T-4, 0.3.1: txt was computed and never read) no part of check_report's answer names a visual by its title: the
+    // titles the report holds (the writer titles from the fields, so the planted ones above never reach it), those of more
+    // than one word (a one-word title can be a field's own name, which the answer may give)
+    const titlesIn = (dir) => { const out = []; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const p = path.join(d, e.name); if (e.isDirectory()) walk(p); else if (e.name === 'visual.json') { const t = ((JSON.parse(fs.readFileSync(p, 'utf8')).visual || {}).visualContainerObjects || {}).title; (t || []).forEach((x) => { const v = x && x.properties && x.properties.text && x.properties.text.expr && x.properties.text.expr.Literal && x.properties.text.expr.Literal.Value; if (typeof v === 'string') out.push(v.replace(/^'|'$/g, '')); }); } }); walk(dir); return out; };
+    const held = x.err ? [] : titlesIn(path.join(ROOT, 'i-ship', x.j.report)).filter((t) => /\s/.test(t.trim()));
+    chk(() => !c.err && held.length >= 1 && held.every((t) => !txt.includes(t)), () => `R5: no part of check_report's answer names a visual by its title: ${held.filter((t) => txt.includes(t)).join(' | ') || `(${held.length} titles of more than one word)`}`);
   }
 
   // ---------- G7: one calm brand palette, in the design engine ----------
@@ -157,9 +163,14 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
   {
     // (0.2.9, the writer's A3-12: the writer is five files since, pbip-export.js and its modules; AGG_DAX is in pbip-query.js)
     const px = ['pbip-export', 'pbip-query', 'pbip-sizing', 'pbip-page', 'pbip-notes'].map((f) => path.join(REPO, 'assets/js', f + '.js')).filter((f) => fs.existsSync(f)).map((f) => fs.readFileSync(f, 'utf8')).join('\n'), Px = req('../assets/js/pbip-export.js');
-    const twin = fs.readFileSync(path.join(HERE, 'lib/arabic-twin.mjs'), 'utf8'), cr = fs.readFileSync(path.join(HERE, 'lib/check-report.mjs'), 'utf8'), plans = fs.readFileSync(path.join(HERE, 'lib/plans.mjs'), 'utf8');
+    const twin = twinSource(), cr = fs.readFileSync(path.join(HERE, 'lib/check-report.mjs'), 'utf8'), plans = fs.readFileSync(path.join(HERE, 'lib/plans.mjs'), 'utf8');
     chk(() => (px.match(/const AGG_DAX = /g) || []).length === 1, () => `G4: one AGG_DAX in the writer: ${(px.match(/const AGG_DAX = /g) || []).length}`);
-    chk(() => Array.isArray(Px.AR_MONTHS) && Px.AR_MONTHS.length === 12 && !/const MONTHS_AR = \[/.test(twin) && /AR_MONTHS/.test(twin), () => 'one Arabic month list: the writer exports AR_MONTHS and the twin uses it');
+    chk(() => Array.isArray(Px.AR_MONTHS) && Px.AR_MONTHS.length === 12 && !/const MONTHS_AR = \[/.test(twin), () => 'one Arabic month list: the writer exports AR_MONTHS and the twin writes no list of its own');
+    // (ST1, S9-S1: the line above passed on a dead declaration, MONTHS_AR read nowhere) the twin keeps no month list of its own
+    chk(() => !/MONTHS_AR\s*=/.test(twin), () => 'one Arabic month list: the twin declares no MONTHS_AR of its own (its months come from arabic-calendar.js)');
+    // (Q1 T-5, 0.3.1: the check above passes on the name alone; the twin declares AR_MONTHS and writes its month column
+    // from arabic-calendar.js's MONTHS) the months the twin writes are the writer's, word for word
+    chk(() => { const C = req('../assets/js/arabic-calendar.js'); return C.MONTHS.length === 12 && C.MONTHS.join() === Px.AR_MONTHS.join() && /ArabicCal\.columnsFor/.test(twin); }, () => `one Arabic month list: the twin's month column (arabic-calendar.js MONTHS) names the months as the writer's AR_MONTHS: ${req('../assets/js/arabic-calendar.js').MONTHS.join()} / ${Px.AR_MONTHS.join()}`);
     chk(() => !/\^\[a-z\]\[A-Za-z\]\*\$/.test(cr) && /isCustom/.test(cr), () => 'one custom-visual test: check_report imports the reading block\'s isCustom');
     chk(() => !/export function approvedFor/.test(plans), () => 'G12: no unused approvedFor');
   }
@@ -237,14 +248,18 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     // are reused there; "English names" is a model with no approved terms: the same model in its own folder)
     model('i-ar-en', [{ name: 'Projects', partitions: mp('Projects'), columns: [col('Budget', 'double'), col('Product', 'string'), col('Region', 'string')],
       measures: [ms('Total Budget', 'SUM ( Projects[Budget] )', '#,0'), ms('Projects', 'COUNTROWS ( Projects )', '#,0')] }]);
-    const dEn = await designed('I ar en', null, 'i-ar-en'), hEn = await hand('I ar hand en', null, 'i-ar-en');
+    // (0.3.1 CX1, F01: this check is about English names in an Arabic report: the person keeps them English on purpose)
+    const KEPT = { displayNames: keepEnglish('Projects[Total Budget]', 'Projects[Projects]') };
+    const dEn = await designed('I ar en', KEPT, 'i-ar-en'), hEn = await hand('I ar hand en', KEPT, 'i-ar-en');
+    // (0.3.1 LR2 allowed «التفاصيل» here for its «حسب» joins; changed back 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a
+    // title on English names is wholly English on both paths, "by" and ": detail", so the round-14 condition holds again)
     const words = (ts) => [...new Set(ts.flatMap((t) => (t.match(/\b(by|detail)\b|حسب|التفاصيل/g) || [])))].sort().join();
-    chk(() => !dEn.err && !hEn.err && words(titles(dEn, 'i-ar-en')) && words(titles(dEn, 'i-ar-en')).split(',').every((w) => words(titles(hEn, 'i-ar-en')).split(',').includes(w) || w === 'detail'),
+    chk(() => !dEn.err && !hEn.err && words(titles(dEn, 'i-ar-en')) && words(titles(dEn, 'i-ar-en')).split(',').every((w) => words(titles(hEn, 'i-ar-en')).split(',').includes(w) || w === 'detail') && !/حسب|التفاصيل/.test(words(titles(dEn, 'i-ar-en')) + words(titles(hEn, 'i-ar-en'))),
       () => `P3-2: English names in an Arabic report, designed and hand paths, the same title words: ${JSON.stringify([words(titles(dEn, 'i-ar-en')), words(titles(hEn, 'i-ar-en'))])}`);
     // the source: texts(lang) holds by and newDesign; the server passes it as it is on both paths. "detail" is the writer's
     // own word, chosen by the title's script (pbip-page.js), not in the design engine's labels: the reviewer's (b), 13 Oct,
     // so the design-engine fixtures (which record those labels) stay as they are
-    const srv = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8'), E = createRequire(import.meta.url)('../assets/js/design-engine.js');
+    const srv = serverSource(), E = createRequire(import.meta.url)('../assets/js/design-engine.js');
     const pgSrc = fs.readFileSync(path.join(REPO, 'assets/js/pbip-page.js'), 'utf8');
     chk(() => E.texts('ar').by === 'حسب' && E.texts('ar').newDesign === 'تصميم جديد' && E.texts('en').by === 'by' && !('detail' in E.texts('ar')) && !('detail' in E.texts('en')) && pgSrc.includes("'التفاصيل'") && !/texts: Object\.assign\(\{\}, texts\(a\.lang\)/.test(srv),
       () => `P3-2: by and newDesign in texts(lang), used as they are on both paths; detail the writer's own: ${JSON.stringify([E.texts('ar'), E.texts('en')].map((t) => [t.by, t.detail, t.newDesign]))}`);
@@ -274,9 +289,11 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
       measures: [ms('Total Loans', 'SUM ( Loans[Amount] )', '#,0'), ms('Avg Risk', 'AVERAGE ( Loans[Risk] )', '0.0'), ms('Loan Count', 'COUNTROWS ( Loans )', '#,0')] }]);
     const BOLD = "'Segoe UI Bold', wf_segoe-ui_bold, helvetica, arial, sans-serif";
     const build = async (font, page, filters) => { const pl = await ask('plan_layout', { path: 'i-n21', layout: 'exec', page, kpis: 3, filters, lang: 'en' }); if (pl.err) return pl;
-      return ask('create_report', { path: 'i-n21', name: 'N21 ' + font + ' ' + page, design: Object.assign({}, pl.j.design, { font }), lang: 'en' }); };
+      return ask('create_report', { path: 'i-n21', name: 'N21 ' + font + ' ' + (page.w ? page.w + 'x' + page.h : page), design: Object.assign({}, pl.j.design, { font }), lang: 'en' }); };
     const themeOf = (x) => { const R = path.join(ROOT, 'i-n21', x.j.report, 'StaticResources', 'RegisteredResources'); return JSON.parse(fs.readFileSync(path.join(R, fs.readdirSync(R).find((f) => f.endsWith('.json'))), 'utf8')); };
-    const sb = await build(SB, '1920x1080', 'none'), rg = await build(RG, '1920x1080', 'none');
+    // (0.3.1 TS1: the rows were measured at the 15pt table text 1920 x 1080 had up to 0.3.0; it has 12.5 now, so the
+    // measured numbers are checked on a 2560 x 1440 page, whose text is 15 and titles 18 (x 1.5), as they were)
+    const sb = await build(SB, { w: 2560, h: 1440 }, 'none'), rg = await build(RG, { w: 2560, h: 1440 }, 'none');
     const tables = (x) => visualsOf(x, 'i-n21').filter((v) => v.visual && v.visual.visualType === 'tableEx' && !(((v.visual.objects || {}).grid || [])[0] || {}).properties?.imageHeight);
     // a capped table's height is its whole rows by the face's numbers: (h - fixed) / pitch is whole, within the 1 the height is rounded up by
     const whole = (x, fixed) => tables(x).length && tables(x).every((v) => { const r = (v.position.height - fixed) / 30; return r - Math.floor(r) < 1 / 30 + 1e-9 || v.position.height < fixed; });

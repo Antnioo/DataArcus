@@ -1,0 +1,91 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "name": "ovStackTech",
+  "position": {
+    "x": 440,
+    "y": 226,
+    "z": 10000,
+    "height": 230,
+    "width": 400,
+    "tabOrder": 9000
+  },
+  "visual": {
+    "visualType": "barChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Work Orders"
+                    }
+                  },
+                  "Property": "Technician"
+                }
+              },
+              "queryRef": "Work Orders.Technician",
+              "nativeQueryRef": "Technician"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Work Orders"
+                    }
+                  },
+                  "Property": "Total Labour"
+                }
+              },
+              "queryRef": "Work Orders.Total Labour",
+              "nativeQueryRef": "Total Labour"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Work Orders"
+                    }
+                  },
+                  "Property": "Total Materials"
+                }
+              },
+              "queryRef": "Work Orders.Total Materials",
+              "nativeQueryRef": "Total Materials"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Labour and materials by technician'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

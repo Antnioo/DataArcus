@@ -60,7 +60,8 @@ export async function approvalWindow({ check, ROOT, fs = fs0 }) {
     chk(() => /^plan-/.test(pid), () => `W setup. plan_layout gives a plan id: ${short(pl)}`);
 
     // ---------- W-01: no click: waiting, nothing approved, no link in the answer; a typed go approves nothing ----------
-    const w = await s.call('approve_plan', { planId: pid, userReply: 'go' });
+    // (0.3.1 MR1, B-270: userReply is no input since 14 Oct; it was dropped silently, now it is refused: test-0.3.1-mr1.mjs S6)
+    const w = await s.call('approve_plan', { planId: pid });
     const link = await linkAt(0);
     chk(() => !w.err && w.j.status === 'waiting' && w.j.approvedBy === null && /click Approve/.test(w.j.sayFirst), () => `W-01. no click yet: status waiting, not approved, says to click Approve: ${short(w)}`);
     chk(() => /^http:\/\/127\.0\.0\.1:\d+\/approve\/[A-Za-z0-9_-]{30,}$/.test(link), () => `W-01. the window was opened on 127.0.0.1 with a secret link: ${link}`);
@@ -136,7 +137,11 @@ export async function approvalWindow({ check, ROOT, fs = fs0 }) {
     chk(() => svgs(arPage.t).length === 1 && /معاينة/.test(svgs(arPage.t)[0]) && /<text class="t"[^>]*text-anchor="end"/.test(svgs(arPage.t)[0]), () => 'W-10. an Arabic plan\'s picture is right to left (titles from the right, "معاينة")');
 
     // ---------- W-11: the same security with the pictures ----------
-    chk(() => [page, twoPage, arPage].every((x) => x.h['content-security-policy'] === "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'" && !/<script|<img\b|<iframe|<object|<embed|\shref="|\ssrc="/i.test(x.t)), () => 'W-11. the window\'s policy is unchanged, and the page has no script, image, frame or link');
+    // (0.3.1 GD2, the owner, 27 Oct: "in the approval page it should not be solid cards") a glass page is drawn on its soft
+    // picture: the policy allows inline images only (img-src data:, nothing fetched), and the one image a page may hold is
+    // that picture, a PNG data URL in the preview's <image class="glass">; no script, frame, link or other source
+    const noGlass = (t) => t.replace(/<image class="glass" x="0" y="0" width="[\d.]+" height="[\d.]+" preserveAspectRatio="none" href="data:image\/png;base64,[A-Za-z0-9+/=]+"\/>/g, '');
+    chk(() => [page, twoPage, arPage].every((x) => x.h['content-security-policy'] === "default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'" && !/<script|<img\b|<iframe|<object|<embed|<image|\shref="|\ssrc="/i.test(noGlass(x.t))), () => 'W-11. the window\'s policy allows inline images only, and the page has no script, frame, link or image but the glass picture');
     const twoState = await s.call('approve_plan', { planId: two.j.plan.planId });
     chk(() => !twoState.err && twoState.j.status === 'waiting', () => `W-11. opening the page with its pictures approves nothing: ${short(twoState)}`);
 

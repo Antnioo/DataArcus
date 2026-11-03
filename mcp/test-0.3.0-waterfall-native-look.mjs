@@ -136,7 +136,8 @@ try {
   chk(() => idn && pn.j.plan.reportLook.waterfallRtl === 'native' && pn.j.waterfallRtl && pn.j.waterfallRtl.charts[0].what === NATIVE_SAID && /reads left to right, as Power BI draws it/.test(pn.j.waterfallRtl.sayInPlan),
     () => `P1: the plan's default: reportLook.waterfallRtl "native", the waterfall said "${NATIVE_SAID}": ${short(pn)} ${JSON.stringify(pn.j && [pn.j.reportLook, pn.j.waterfallRtl])}`);
   const htmlN = idn ? await approve(idn) : '';
-  chk(() => /Waterfall, right to left<\/td><td[^>]*>[^<]*native[^<]*reads left to right, as Power BI draws it/.test(htmlN), () => `P2: the approval page shows the switch: ${(htmlN.match(/<h2>Look and options[\s\S]*?<\/table>/) || [htmlN.slice(0, 300)])[0].slice(0, 700)}`);
+  // (FX1, the laptop's part 3: an Arabic plan's page wholly Arabic, each Latin run isolated; changed on purpose)
+  chk(() => /الشلال من اليمين إلى اليسار<\/td><td[^>]*>أصلي: شلال [^]*?يُقرأ من اليسار إلى اليمين كما يرسمه/.test(htmlN.replace(/<\/?bdi[^>]*>/g, '')), () => `P2: the approval page shows the switch: ${(htmlN.match(/<h2>Look and options[\s\S]*?<\/table>/) || [htmlN.slice(0, 300)])[0].slice(0, 700)}`);
   const refused = idn ? await create(Object.assign({}, AR_ARGS, { waterfallRtl: 'mirror' }), idn) : null;
   chk(() => refused && refused.err && !fs.existsSync(path.join(ROOT, 'g/Bridge AR.Report')), () => `P3: create_report with another waterfallRtl than the plan's is refused, nothing written: ${short(refused)}`);
   const rn = idn ? await create(AR_ARGS, idn) : null, wn = wfOf(path.join(ROOT, 'g/Bridge AR.Report'));
@@ -176,7 +177,7 @@ try {
     chk(() => tid && (val === 'mirror' ? mirrors.some((m) => m.kind === 'waterfall' && /stacked column chart/.test(m.what)) : mirrors.some((m) => m.kind === 'waterfallNative' && m.what === 'waterfall charts: ' + NATIVE_SAID)),
       () => `T1 ${tag}: the twin's plan says what its waterfall becomes: ${short(tp)} ${JSON.stringify(mirrors).slice(0, 500)}`);
     const html = tid ? await approve(tid) : '';
-    chk(() => new RegExp(`Waterfall, right to left</td><td[^>]*>[^<]*${val === 'mirror' ? 'mirror' : 'native'}`).test(html), () => `T2 ${tag}: the twin's approval page shows the switch: ${(html.match(/<h2>Options[\s\S]*?<\/table>/) || [html.slice(0, 300)])[0].slice(0, 500)}`);
+    chk(() => new RegExp(`الشلال من اليمين إلى اليسار</td><td[^>]*>${val === 'mirror' ? 'معكوس' : 'أصلي'}`).test(html), () => `T2 ${tag}: the twin's approval page shows the switch: ${(html.match(/<h2>Options[\s\S]*?<\/table>/) || [html.slice(0, 300)])[0].slice(0, 500)}`);
     const other = tid ? await call('create_arabic_twin', { path: 'g/Bridge EN.pbip', planId: tid, waterfallRtl: val === 'mirror' ? 'native' : 'mirror' }) : null;
     chk(() => other && other.err && /Nothing was written/.test(other.t) && !fs.existsSync(path.join(ROOT, 'g', outName + '.Report')), () => `T3 ${tag}: the twin with another waterfallRtl than its plan's is refused, nothing written: ${short(other)}`);
     const tw = tid ? await call('create_arabic_twin', { path: 'g/Bridge EN.pbip', planId: tid }) : null, wt = wfOf(path.join(ROOT, 'g', outName + '.Report'));

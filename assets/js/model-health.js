@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const num = (n) => new Intl.NumberFormat(isAr() ? 'ar-u-nu-latn' : 'en-US').format(n);
   const bdi = (x) => '<bdi dir="ltr">' + esc(x) + '</bdi>';
+  // an Arabic count: w { one, two, few (3-10), many (11-99), hundred (100, 101, 102...) }, fmt the number's format
+  const arCount = (n, w, fmt) => { const r = n % 100; return n === 1 ? w.one : n === 2 ? w.two : fmt(n) + ' ' + (r >= 3 && r <= 10 ? w.few : r >= 11 ? w.many : n >= 100 ? w.hundred : w.few); };
   const RULES = () => (window.MHEngine && window.MHEngine.RULES) || {};
 
   let R = null;          // analysis result
@@ -99,16 +101,29 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.onerror = () => showError('READ');
     reader.readAsArrayBuffer(file);
   }
-  let worker = null;
+  // (0.3.1 FX1, the laptop's part 3, G4-1: a visitor who loaded the page and then went offline got no score: the worker
+  // was fetched only when a file was dropped) the worker is started when the page loads (its importScripts load the
+  // engine and the TMDL reader then) and kept ready between runs: it holds nothing between messages. A run still going
+  // when another file is dropped is stopped and a new worker started for the new file. Nothing is sent anywhere.
+  const WORKER_URL = '/assets/js/model-health-worker.min.js?v=20261026a';
+  let worker = null, ready = null, busy = false;
+  const warm = () => { try { ready = new Worker(WORKER_URL); ready.onerror = () => { ready = null; }; } catch (e) { ready = null; } };
+  warm();
   function run(buffer, fileName) {
-    if (worker) worker.terminate();
-    try { worker = new Worker('/assets/js/model-health-worker.min.js?v=20261022a'); } catch (e) { return showError('WORKER'); }
+    if (worker && busy) { worker.terminate(); worker = null; }
+    if (!worker) { if (!ready) warm(); worker = ready; ready = null; }
+    if (!worker) return showError('WORKER');
+    busy = true;
+    // (the worker is kept, not stopped, when it is done: the next file runs on it, also offline)
+    const done = () => { busy = false; };
     worker.onmessage = (ev) => {
       const d = ev.data;
       if (d.type === 'progress') setStep(d.step);
-      else if (d.type === 'error') { showError(d.code, d.message); worker.terminate(); worker = null; }
+      else if (d.type === 'error') { done(); showError(d.code, d.message); }
       else if (d.type === 'done') {
         R = d.result; tab = 'issues'; filt = { cat: 'all' }; msOpen = null; msQuery = ''; msFilter = 'all';
+        // (AU47, AUD-047) a model file that could not be read: no score, so none is kept in the history either
+        if (R.unreadable) { done(); render(); root.scrollIntoView({ behavior: 'smooth', block: 'start' }); track('mh_analyze', { file_type: R.meta.source, has_report: R.meta.hasReport }); return; }
         qRehash();   // (B-148, R5) answers whose measure or relationship changed are kept, not applied: their questions are asked again
         const hist = store.get('dataarcus-mh-history', {});
         const key = String(fileName).toLowerCase();
@@ -118,14 +133,15 @@ document.addEventListener('DOMContentLoaded', () => {
         delete hist[key]; hist[key] = runs;
         const keys = Object.keys(hist); if (keys.length > 30) delete hist[keys[0]];
         store.set('dataarcus-mh-history', hist);
-        worker.terminate(); worker = null;
+        done();
         render();
         root.scrollIntoView({ behavior: 'smooth', block: 'start' }); // lands below the navbar (scroll-padding-top in style.css)
         // (17 Oct, the outside audit: nothing about the user's model is sent, not even its size, counts or score)
         track('mh_analyze', { file_type: R.meta.source, has_report: R.meta.hasReport, sample: fileName === 'Contoso-Sales-Demo.pbit' });
       }
     };
-    worker.onerror = () => showError('PARSE');
+    // (a worker that fails is not kept)
+    worker.onerror = () => { busy = false; if (worker) worker.terminate(); worker = null; showError('PARSE'); };
     worker.postMessage({ buffer, fileName }, [buffer]);
   }
   function loading(name) {
@@ -152,7 +168,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- views ----------
   function render() {
     if (!R) return renderDrop();
+    if (R.unreadable) return renderUnreadable();
     renderResult();
+  }
+  // (AU47) a model read only in part: the files that could not be read and why, no score, no score card or share, and
+  // the findings the check could still make, marked partial
+  function renderUnreadable() {
+    const fs0 = R.findings || [], rule = (f) => (RULES()[f.id] || {})[isAr() ? 'ar' : 'en'] || [f.id];
+    root.innerHTML =
+      '<div class="mh-filebar"><span><i class="bi bi-file-earmark-bar-graph"></i> <b>' + bdi(R.meta.fileName) + '</b></span><button type="button" class="tg-btn2 btn-sm" id="mhNew"><i class="bi bi-arrow-repeat"></i> ' + L('Check another file', 'افحص ملفًا آخر') + '</button></div>' +
+      '<div class="mh-panel mh-error mh-unreadable"><i class="bi bi-exclamation-triangle"></i><div><b>' + L('No score: part of this model could not be read', 'لا توجد نتيجة: تعذّرت قراءة جزء من هذا النموذج') + '</b>' +
+      '<p>' + esc(L(R.unreadable.en, R.unreadable.ar)) + '</p>' +
+      '<p class="mh-note">' + L('A score of the part that was read would be wrong: a model Power BI Desktop cannot open could score higher than the whole model.', 'نتيجة الجزء المقروء ستكون خاطئة: قد يحصل نموذج لا يفتحه Power BI Desktop على نتيجة أعلى من النموذج كاملًا.') + '</p></div></div>' +
+      '<div class="mh-panel mt-3"><span class="tg-label">' + L('Partial findings: what the check could still find in the part that was read', 'ملاحظات جزئية: ما وجده الفحص في الجزء المقروء فقط') + '</span>' +
+      (fs0.length ? '<ul class="mh-partial">' + fs0.map((f) => '<li>' + esc(rule(f)[0]) + ' <small>(' + num(f.items.length) + ')</small></li>').join('') + '</ul>' : '<p class="mh-note">' + L('No findings in the part that was read.', 'لا توجد ملاحظات في الجزء المقروء.') + '</p>') + '</div>';
+    $('mhNew').onclick = () => { R = null; render(); };
   }
   function renderDrop() {
     root.innerHTML =
@@ -598,7 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function tRels() {
     const el = $('mhTab');
-    el.innerHTML = '<div class="mh-panel"><div class="mh-tscroll"><table class="mh-table"><thead><tr><th>' + L('From (many side)', 'من (جهة many)') + '</th><th></th><th>' + L('To (one side)', 'إلى (جهة one)') + '</th><th>' + L('Cardinality', 'نوع العلاقة') + '</th><th>' + L('Filter', 'الفلترة') + '</th><th>' + L('Active', 'نشطة') + '</th></tr></thead><tbody>' +
+    el.innerHTML = '<div class="mh-panel"><div class="mh-tscroll"><table class="mh-table"><thead><tr><th>' + L('From (many side)', 'من (جهة many)') + '</th><th></th><th>' + L('To (one side)', 'إلى (جهة one)') + '</th><th>' + L('Cardinality', 'نوع العلاقة') + '</th><th>' + L('Filter', 'التصفية') + '</th><th>' + L('Active', 'نشطة') + '</th></tr></thead><tbody>' +
       R.relationships.map((r) => {
         const card = (r.fromCard === 'many' ? '*' : '1') + ':' + (r.toCard === 'many' ? '*' : '1');
         return '<tr class="' + (r.active ? '' : 'mh-dimrow') + '"><td dir="ltr"><code>' + esc(r.fromTable) + '[' + esc(r.fromColumn) + ']</code></td><td>' + (r.cross === 'bothDirections' ? '<i class="bi bi-arrow-left-right text-warning"></i>' : '<i class="bi bi-arrow-left"></i>') + '</td><td dir="ltr"><code>' + esc(r.toTable) + '[' + esc(r.toColumn) + ']</code></td><td>' + (card === '*:*' ? '<span class="mh-badge off">*:*</span>' : card) + '</td><td>' + (r.cross === 'bothDirections' ? '<span class="text-warning">' + L('Both', 'اتجاهين') + '</span>' : L('Single', 'اتجاه واحد')) + '</td><td>' + (r.active ? '<i class="bi bi-check-lg text-success"></i>' : '<span class="mh-dim">' + L('inactive', 'غير نشطة') + '</span>') + '</td></tr>';
@@ -607,9 +637,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function tDocs() {
     const el = $('mhTab');
-    el.innerHTML = '<div class="row g-4"><div class="col-md-4"><div class="mh-panel mh-doc"><i class="bi bi-filetype-html"></i><b>' + L('Full documentation', 'توثيق كامل') + '</b><p class="mh-note">' + L('One HTML page with the health score, every issue, all tables and columns, every measure with its DAX and dependencies, and the relationships. Opens in any browser and prints to PDF.', 'صفحة HTML واحدة فيها التقييم وكل المشاكل وكل الجداول والأعمدة وكل مقياس بصيغته واعتماداته والعلاقات. تفتح في أي متصفح ويمكن طباعتها PDF.') + '</p><button type="button" class="btn btn-accent" data-doc="html"><i class="bi bi-download"></i> ' + L('Download HTML', 'تحميل HTML') + '</button></div></div>' +
-      '<div class="col-md-4"><div class="mh-panel mh-doc"><i class="bi bi-markdown"></i><b>Markdown</b><p class="mh-note">' + L('The same documentation as Markdown, ready for a Git repo, Azure DevOps wiki or Confluence.', 'نفس التوثيق بصيغة Markdown، جاهز لمستودع Git أو Azure DevOps wiki أو Confluence.') + '</p><button type="button" class="tg-btn2" data-doc="md"><i class="bi bi-download"></i> ' + L('Download .md', 'تحميل ‎.md') + '</button></div></div>' +
-      '<div class="col-md-4"><div class="mh-panel mh-doc"><i class="bi bi-filetype-csv"></i><b>' + L('Measures list', 'قائمة المقاييس') + '</b><p class="mh-note">' + L('Every measure with folder, format, usage and DAX as a CSV for Excel.', 'كل المقاييس مع المجلد والتنسيق والاستخدام وصيغة DAX كملف CSV لـ Excel.') + '</p><button type="button" class="tg-btn2" data-doc="csv"><i class="bi bi-download"></i> ' + L('Download CSV', 'تحميل CSV') + '</button></div></div></div>';
+    el.innerHTML = '<div class="row g-4"><div class="col-md-6 col-xxl-3"><div class="mh-panel mh-doc"><i class="bi bi-filetype-html"></i><b>' + L('Full documentation', 'توثيق كامل') + '</b><p class="mh-note">' + L('One HTML page with the health score, every issue, all tables and columns, every measure with its DAX and dependencies, and the relationships. Opens in any browser and prints to PDF.', 'صفحة HTML واحدة فيها التقييم وكل المشاكل وكل الجداول والأعمدة وكل مقياس بصيغته واعتماداته والعلاقات. تفتح في أي متصفح ويمكن طباعتها PDF.') + '</p><button type="button" class="btn btn-accent" data-doc="html"><i class="bi bi-download"></i> ' + L('Download HTML', 'تحميل HTML') + '</button></div></div>' +
+      '<div class="col-md-6 col-xxl-3"><div class="mh-panel mh-doc"><i class="bi bi-markdown"></i><b>Markdown</b><p class="mh-note">' + L('The same documentation as Markdown, ready for a Git repo, Azure DevOps wiki or Confluence.', 'نفس التوثيق بصيغة Markdown، جاهز لمستودع Git أو Azure DevOps wiki أو Confluence.') + '</p><button type="button" class="tg-btn2" data-doc="md"><i class="bi bi-download"></i> ' + L('Download .md', 'تحميل ‎.md') + '</button></div></div>' +
+      '<div class="col-md-6 col-xxl-3"><div class="mh-panel mh-doc"><i class="bi bi-filetype-csv"></i><b>' + L('Measures list', 'قائمة المقاييس') + '</b><p class="mh-note">' + L('Every measure with folder, format, usage and DAX as a CSV for Excel.', 'كل المقاييس مع المجلد والتنسيق والاستخدام وصيغة DAX كملف CSV لـ Excel.') + '</p><button type="button" class="tg-btn2" data-doc="csv"><i class="bi bi-download"></i> ' + L('Download CSV', 'تحميل CSV') + '</button></div></div>' +
+      // I-1: the score card, a picture to share (rule and object names only, never DAX or descriptions)
+      '<div class="col-md-6 col-xxl-3"><div class="mh-panel mh-doc"><i class="bi bi-image"></i><b>' + L('Score card', 'بطاقة النتيجة') + '</b><p class="mh-note">' + L('A 1200 × 630 picture for LinkedIn: the score, the model\'s size and the top 5 findings. Drawn in your browser, nothing is uploaded.', 'صورة ' + bdi('1200 × 630') + ' لـ LinkedIn: التقييم وحجم النموذج وأهم 5 ملاحظات. تُرسم في متصفحك ولا يُرفع أي شيء.') + '</p>' +
+      '<div class="form-check form-switch mb-2"><input class="form-check-input" type="checkbox" role="switch" id="mhCardHide"' + (cardHide ? ' checked' : '') + '><label class="form-check-label" for="mhCardHide">' + L('Hide object names', 'إخفاء أسماء العناصر') + '</label></div>' +
+      '<button type="button" class="tg-btn2" id="mhCard"><i class="bi bi-download"></i> ' + L('Download score card', 'تحميل بطاقة النتيجة') + '</button><ul id="mhCardText" class="visually-hidden"></ul></div></div></div>';
+    $('mhCardHide').onchange = (e) => { cardHide = e.target.checked; };
+    $('mhCard').onclick = () => scoreCard();
     el.querySelectorAll('[data-doc]').forEach((b) => b.onclick = () => {
       const base = (R.meta.fileName || 'model').replace(/\.[^.]+$/, '');
       if (b.dataset.doc === 'html') download(base + ' - documentation.html', docHtml(), 'text/html');
@@ -696,9 +732,77 @@ document.addEventListener('DOMContentLoaded', () => {
     return lines.join('\n');
   }
 
+  // ---------- score card (I-1): one 1200 x 630 PNG drawn on a canvas here. It holds the score, the size line, the top 5
+  // findings by rule name and object name (the first item's; never an item's detail, DAX, a description or M) and the
+  // tool's address. Arabic: right to left in the page's own font, each name isolated (FSI ... PDI) so it keeps its order ----------
+  let cardHide = false;
+  const SEVC = { high: '#ef4444', medium: '#f59e0b', low: '#38bdf8', info: '#94a3b8' };
+  function cardContent() {
+    const s = R.stats, sc = score().overall, cut = (x) => (x.length > 60 ? x.slice(0, 59) + '…' : x);
+    // (0.3.1 SQ7, E-S2) the Arabic word agrees with the number: 1 and 2 by the word alone, 3-10 the plural, 11-99 the
+    // singular (accusative), and a hundred and its 1 and 2 the singular; E2's singular of «المرئيات» is «مرئي»
+    const many = (n, one, more, ar) => (isAr() ? arCount(n, { one: ar[0], two: ar[1], few: ar[2], many: ar[3], hundred: ar[4] }, num) : num(n) + ' ' + (n === 1 ? one : more));
+    const size = [many(s.tables, 'table', 'tables', ['جدول واحد', 'جدولان', 'جداول', 'جدولًا', 'جدول']), many(s.measures, 'measure', 'measures', ['مقياس واحد', 'مقياسان', 'مقاييس', 'مقياسًا', 'مقياس'])]
+      .concat(R.meta.hasReport ? [many(s.visuals, 'visual', 'visuals', ['مرئي واحد', 'مرئيان', 'مرئيات', 'مرئيًا', 'مرئي'])] : []).join('  ·  ');
+    const top = R.findings.filter((f) => !ignored.has(f.id)).slice(0, 5).map((f, i) => {
+      const obj = f.items[0] && f.items[0].obj, n = f.items.length;
+      // the rule on one line, its first object below it (its count when names are hidden)
+      // (Arabic: a right-to-left mark keeps the count after a rule name that ends in Latin letters, "... CALCULATE")
+      return { sev: f.sev, text: num(i + 1) + '. ' + rt(f.id)[0] + (cardHide || !obj ? L('', '\u200f') + ' (' + num(n) + ')' : ''),
+        obj: cardHide || !obj ? '' : '\u2068' + cut(String(obj)) + '\u2069' + (n > 1 ? L(' +' + num(n - 1), ' و' + num(n - 1) + ' أخرى') : '') };
+    });
+    return { title: L('Power BI Model Health Check', 'فحص صحة نموذج Power BI'), sub: L('What the check found in this model', 'ما وجده الفحص في هذا النموذج'),
+      score: sc, grade: grade(sc), size, head: L('Top findings', 'أهم الملاحظات'), none: L('No findings', 'لا توجد ملاحظات'), top, foot: 'dataarcus.com/tools/power-bi-model-health-check' };
+  }
+  async function scoreCard() {
+    const W = 1200, H = 630, rtl = isAr(), k = cardContent(), drawn = [];
+    const ff = getComputedStyle(document.body).fontFamily;
+    try { await Promise.race([Promise.all(['400', '600', '800'].map((w) => document.fonts.load(w + ' 32px ' + ff, rtl ? 'بطاقة Power BI' : 'Power BI'))), new Promise((r) => setTimeout(r, 1500))]); } catch (e) { /* draws with what is loaded */ }
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const c = cv.getContext('2d');
+    c.direction = rtl ? 'rtl' : 'ltr';
+    const X = (x) => (rtl ? W - x : x);
+    // one line of text at the start side (or centred), cut with an ellipsis to its width; every line is also listed in #mhCardText
+    const text = (t, x, y, size, weight, color, maxW, align) => {
+      c.font = weight + ' ' + size + 'px ' + ff; c.fillStyle = color; c.textAlign = align || 'start'; c.textBaseline = 'alphabetic';
+      let s = t;
+      if (maxW && c.measureText(s).width > maxW) { while (s.length > 1 && c.measureText(s + '…').width > maxW) s = s.slice(0, -1); s = s.replace(/[\u2068\s]+$/, '') + (s.includes('\u2068') && !s.includes('\u2069') ? '…\u2069' : '…'); }
+      c.fillText(s, align === 'center' ? x : X(x), y); drawn.push(s);
+    };
+    const bg = c.createLinearGradient(0, 0, W, H); bg.addColorStop(0, '#0a0f1c'); bg.addColorStop(1, '#1a1f2e');
+    c.fillStyle = bg; c.fillRect(0, 0, W, H);
+    c.fillStyle = '#00d4ff'; c.fillRect(rtl ? W - 12 : 0, 0, 12, H);
+    text(k.title, 60, 84, 40, '800', '#ffffff', 1080);
+    text(k.sub, 60, 124, 24, '400', 'rgba(255,255,255,0.65)', 1080);
+    // the score ring, in the grade's colour as on the page
+    const cx = X(240), cy = 330, r = 118;
+    c.lineWidth = 22; c.lineCap = 'round';
+    c.strokeStyle = 'rgba(255,255,255,0.1)'; c.beginPath(); c.arc(cx, cy, r, 0, 2 * Math.PI); c.stroke();
+    c.strokeStyle = k.grade[1]; c.beginPath(); c.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * k.score / 100 * (rtl ? -1 : 1), rtl); c.stroke();
+    text(num(k.score), cx, cy + 22, 84, '800', '#ffffff', 200, 'center');
+    text(k.grade[0], cx, cy + 62, 26, '600', k.grade[1], 200, 'center');
+    text(k.size, 460, 194, 26, '600', '#ffffff', 680);
+    text(k.head, 460, 244, 21, '600', '#00d4ff', 680);
+    if (!k.top.length) text(k.none, 460, 294, 24, '400', 'rgba(255,255,255,0.85)', 680);
+    k.top.forEach((f, i) => {
+      const y = 290 + i * 54;
+      c.fillStyle = SEVC[f.sev] || SEVC.info; c.beginPath(); c.arc(X(468), y - 8, 7, 0, 2 * Math.PI); c.fill();
+      text(f.text, 488, y, 23, '600', 'rgba(255,255,255,0.92)', 652);
+      if (f.obj) text(f.obj, 488, y + 24, 19, '400', 'rgba(255,255,255,0.6)', 652);
+    });
+    c.fillStyle = 'rgba(255,255,255,0.12)'; c.fillRect(60, 560, W - 120, 1);
+    text(k.foot, 60, 600, 22, '600', 'rgba(255,255,255,0.7)', 1080);
+    const list = $('mhCardText');
+    if (list) { list.setAttribute('dir', rtl ? 'rtl' : 'ltr'); list.innerHTML = drawn.map((t) => '<li>' + esc(t) + '</li>').join(''); }
+    const blob = await new Promise((res) => cv.toBlob(res, 'image/png'));
+    if (!blob) return;
+    download((R.meta.fileName || 'model').replace(/\.[^.]+$/, '') + ' - score card.png', blob);
+    track('health_card_download', { names_hidden: cardHide, lang: rtl ? 'ar' : 'en' });
+  }
+
   function download(name, content, type) {
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([content], { type: type + ';charset=utf-8' }));
+    a.href = URL.createObjectURL(content instanceof Blob ? content : new Blob([content], { type: type + ';charset=utf-8' }));
     a.download = name; document.body.appendChild(a); a.click();
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
   }

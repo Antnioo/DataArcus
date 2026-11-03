@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { visitor, settle } from './lib.mjs';
 const { PNG } = createRequire(import.meta.url)('pngjs');
+const E = createRequire(import.meta.url)('../../assets/js/design-engine.js');
 
 const PAGE = '/tools/power-bi-theme-generator.html';
 const STORE = 'dataarcus-theme-generator';
@@ -363,6 +364,27 @@ export default async function ({ browser, url, page = PAGE }) {
     await v.ctx.close();
   }
 
+  // 8b. (0.3.1 SQ8, 0.2.9-design-S4) under 800 wide the executive layout becomes the single-focus one: the folded
+  //     Layout step names the layout the preview shows, not the one picked
+  for (const lang of ['en', 'ar']) {
+    v = await open(lang, { viewport: [1440, 900] });
+    await v.pg.click('[data-l=preset][data-v=exec]');
+    await v.pg.click('[data-l=page][data-v=custom]');
+    await v.pg.fill('input[data-l=pageW]', '640'); await v.pg.press('input[data-l=pageW]', 'Tab');
+    await v.pg.fill('input[data-l=pageH]', '360'); await v.pg.press('input[data-l=pageH]', 'Tab');
+    await v.pg.click('#layout > .tg-fold');
+    const sum = await v.pg.evaluate(() => document.querySelector('#layout > .tg-fold-sum').textContent);
+    check(sum.startsWith(lang === 'ar' ? 'رسالة واحدة · 640 × 360' : 'Single focus · 640 × 360'), `${lang}: a 640 x 360 executive page folds as "${sum}", not single focus`);
+    await v.pg.click('#layout > .tg-fold');
+    await v.pg.fill('input[data-l=pageW]', '1280'); await v.pg.press('input[data-l=pageW]', 'Tab');
+    await v.pg.fill('input[data-l=pageH]', '720'); await v.pg.press('input[data-l=pageH]', 'Tab');
+    await v.pg.click('#layout > .tg-fold');
+    const big = await v.pg.evaluate(() => document.querySelector('#layout > .tg-fold-sum').textContent);
+    check(big.startsWith(lang === 'ar' ? 'ملخص تنفيذي · 1280 × 720' : 'Executive summary · 1280 × 720'), `${lang}: a 1280 x 720 executive page folds as "${big}"`);
+    if (v.errs.length) problems.push(`small-page fold ${lang}: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
+
   // 6. Visual backgrounds follow what the visitor uses (owner 2026-10-04): a colour-only visitor keeps Solid; the first
   //    change in the Layout step switches to Transparent and says so; the visitor's own choice always wins
   for (const lang of ['en', 'ar']) {
@@ -387,6 +409,70 @@ export default async function ({ browser, url, page = PAGE }) {
     const how1 = await v.pg.evaluate(() => document.querySelector('[data-i18n-html="tg.layout.how1"]').textContent.trim());
     check(lang === 'en' ? how1 === 'Set visual backgrounds to Transparent (above), then download the files.' : /شفافة/.test(how1) && /ثم نزّل/.test(how1), `${lang}: how-to step 1 reads "${how1}"`);
     if (v.errs.length) problems.push(`${lang} visuals: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
+  // (0.3.1 GD1, the owner, 27 Oct: "i want to make the glassy dashboard default") a first visit opens on glass, EN and
+  // AR; Plain one click away and kept; a design saved without a look stays plain; colours where glass can't keep the
+  // text readable go to Plain, said
+  for (const lang of ['en', 'ar']) {
+    const v = await open(lang, { plainDesign: false });
+    const first = await v.pg.evaluate((k) => ({ look: document.getElementById('csLook').value, opts: [...document.querySelectorAll('#csLook option')].map((o) => [o.value, o.textContent.trim()]),
+      saved: JSON.parse(localStorage.getItem(k)).chart, t: JSON.parse(document.getElementById('json').textContent).visualStyles['*']['*'].background,
+      bg: getComputedStyle(document.getElementById('preview')).backgroundImage }), STORE);
+    check(first.look === 'glass' && first.saved && first.saved.look === 'glass' && first.t[0].transparency > 0 && /url\("?data:image\/png;base64,/.test(first.bg),
+      `${lang} GD1: a first visit opens on the glass look (the choice, the theme, the preview): ${JSON.stringify(first).slice(0, 300)}`);
+    check(JSON.stringify(first.opts.map((o) => o[0])) === '["glass","auto"]' && (lang === 'en' ? first.opts[0][1] === 'Glass (default)' && first.opts[1][1] === 'Plain' : /افتراضي/.test(first.opts[0][1]) && first.opts[1][1] === 'عادي'),
+      `${lang} GD1: Card look offers "Glass (default)" and "Plain": ${JSON.stringify(first.opts)}`);
+    await v.pg.selectOption('#csLook', 'auto');
+    const plain = await v.pg.evaluate(() => ({ t: JSON.parse(document.getElementById('json').textContent).visualStyles['*']['*'].background, bg: getComputedStyle(document.getElementById('preview')).backgroundImage }));
+    await v.pg.reload({ waitUntil: 'networkidle' });
+    check(plain.bg === 'none' && !(plain.t[0].transparency > 0) && await v.pg.$eval('#csLook', (e) => e.value) === 'auto', `${lang} GD1: Plain is one click away (solid cards, no picture) and kept after a reload: ${JSON.stringify(plain)}`);
+    // a design saved before the look existed (no chart.look) opens as it was made: plain
+    await v.pg.evaluate((k) => { const d = JSON.parse(localStorage.getItem(k)); delete d.chart; localStorage.setItem(k, JSON.stringify(d)); }, STORE);
+    await v.pg.reload({ waitUntil: 'networkidle' });
+    check(await v.pg.$eval('#csLook', (e) => e.value) === 'auto', `${lang} GD1: a design saved without a look stays plain`);
+    // the gate: a pale lead colour (1.4:1 on the white cards) can't stay readable on glass: Plain, and the preview says why
+    await v.pg.evaluate((k) => { const d = JSON.parse(localStorage.getItem(k)); d.preset = null; d.ui = Object.assign(d.ui, { background: '#f4f6f9', card: '#ffffff', text: '#1f2329', accent: '#ffd54f' }); d.data[0] = '#ffd54f'; d.chart = { look: 'glass' }; localStorage.setItem(k, JSON.stringify(d)); }, STORE);
+    await v.pg.reload({ waitUntil: 'networkidle' });
+    const gate = await v.pg.evaluate(() => ({ look: document.getElementById('csLook').value, note: (document.querySelector('#preview .tg-glassnote') || {}).textContent || '', t: JSON.parse(document.getElementById('json').textContent).visualStyles['*']['*'].background }));
+    check(gate.look === 'auto' && !(gate.t[0].transparency > 0) && (lang === 'en' ? /Plain look/.test(gate.note) && /readable/.test(gate.note) && !/blur/i.test(gate.note) : /عادي/.test(gate.note) && /مقروءة/.test(gate.note)),
+      `${lang} GD1: colours where glass can't keep the text readable go to Plain, said: ${JSON.stringify(gate).slice(0, 300)}`);
+    if (v.errs.length) problems.push(`${lang} GD1: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
+  // (0.3.1 GL1) the glass look, EN and AR: the choice, the theme, a preview of what Power BI draws (the picture under
+  // see-through cards, no blur), the background download the engine's picture at the page's size, kept after a reload
+  for (const lang of ['en', 'ar']) {
+    const v = await open(lang);
+    await v.pg.selectOption('#csLook', 'glass');
+    const st = await v.pg.evaluate((k) => JSON.parse(localStorage.getItem(k)), STORE);
+    const all = await v.pg.evaluate(() => JSON.parse(document.getElementById('json').textContent).visualStyles), g = E.glassLook(st);
+    check(st.chart.look === 'glass' && all['*']['*'].background[0].transparency === g.t && all['*']['*'].background[0].show === true && all.barChart['*'].border[0].width === 1,
+      `${lang} glass: the theme's cards ${JSON.stringify(all['*']['*'].background)}, the engine's ${g.t}`);
+    const pv = await v.pg.evaluate(() => ({ bg: getComputedStyle(document.getElementById('preview')).backgroundImage, card: document.querySelector('#preview .tg-card').getAttribute('style'),
+      note: (document.querySelector('#preview .tg-glassnote') || {}).textContent || '', lay: !!document.querySelector('#layCanvas svg image'), vis: document.getElementById('dlVis').textContent }));
+    check(/url\("?data:image\/png;base64,/.test(pv.bg) && /rgba\(/.test(pv.card) && /border:1px solid/.test(pv.card) && pv.lay, `${lang} glass: the preview draws the picture under see-through cards: ${JSON.stringify(pv).slice(0, 300)}`);
+    check(lang === 'en' ? /no blur/.test(pv.note) && !/\b(first|only|official|free)\b/i.test(pv.note) : /ضبابية/.test(pv.note), `${lang} glass: the preview says Power BI has no blur: "${pv.note}"`);
+    // (0.3.1 TW1, GL2-S2) the preview's table as Power BI draws a glass table (design-engine.js glassTables): the header
+    // row clear (no accent fill), its text the text colour; banded, the second row the engine's band (gl.table.band)
+    await v.pg.selectOption('#csTable', 'banded');
+    const tb = await v.pg.evaluate(() => { const rows = [...document.querySelectorAll('#preview .tg-table tr')], c = (e) => getComputedStyle(e).backgroundColor; return { head: c(rows[0]), th: getComputedStyle(rows[0].querySelector('th')).color, r1: c(rows[1]), r2: c(rows[2]) }; });
+    const st2 = await v.pg.evaluate((k) => JSON.parse(localStorage.getItem(k)), STORE), band = E.glassLook(st2).table.band, rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+    const textCss = `rgb(${rgb(st2.ui.text).join(', ')})`, bandRgb = band ? `rgba(${rgb(band).join(', ')}, ` : null;
+    check(tb.head === 'rgba(0, 0, 0, 0)' && tb.th === textCss && tb.r1 === 'rgba(0, 0, 0, 0)' && band && tb.r2.startsWith(bandRgb) && Math.abs(parseFloat(tb.r2.slice(bandRgb.length)) - parseInt(band.slice(7, 9), 16) / 255) < 0.01,
+      `${lang} glass: the preview's table header is clear in the text colour, the banded row the engine's band (${band}): ${JSON.stringify(tb)}`);
+    await v.pg.selectOption('#csTable', 'auto');
+    const [d] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('#pngBtn')]);
+    const bytes = fs.readFileSync(await d.path()), pg = E.page(st.layout);
+    // (0.3.1 LC1: Node deflates by node:zlib, the browser in JavaScript: the same pixels and mark, other bytes)
+    const got = PNG.sync.read(bytes), want = PNG.sync.read(Buffer.from(E.glassPng(st, pg.w, pg.h)));
+    check(E.isGlassPng(bytes) && got.width === pg.w && got.height === pg.h && Buffer.compare(got.data, want.data) === 0, `${lang} glass: the background download is the engine's picture at ${pg.w} x ${pg.h} (${bytes.length} bytes)`);
+    await v.pg.reload({ waitUntil: 'networkidle' });
+    check(await v.pg.$eval('#csLook', (e) => e.value) === 'glass', `${lang} glass: the choice is not kept after a reload`);
+    await v.pg.selectOption('#csLook', 'auto');
+    const back = await v.pg.evaluate(() => ({ t: JSON.parse(document.getElementById('json').textContent).visualStyles['*']['*'].background, bg: getComputedStyle(document.getElementById('preview')).backgroundImage }));
+    check(back.bg === 'none' && !(back.t[0].transparency > 0), `${lang} glass: back to Power BI's default, the cards and the preview are solid again: ${JSON.stringify(back)}`);
+    if (v.errs.length) problems.push(`${lang} glass: ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }
   return { checks, problems };

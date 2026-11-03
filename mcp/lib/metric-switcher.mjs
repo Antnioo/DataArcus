@@ -11,8 +11,8 @@ import { createRequire } from 'node:module';
 import { takenNames, nameKey, tagOf, scriptFileOf } from './model-script.mjs';   // (the one helper for model additions as scripts, shared with L4's flip cards)
 
 const require = createRequire(import.meta.url);
-const Q = require('../../assets/js/pbip-query.js'), Fix = require('../../assets/js/model-health-tmdl.js'), Tmdl = require('../../assets/js/tmdl-model.js');
-const { SCHEMA, json, q, proj, obj, str, bool, num, mirrorChart, sorted, daxNames, hasControl, shown, lineStyle, timeAxisPlan, label } = Q;
+const Q = require('../../assets/js/pbip-query.js'), Fix = require('../../assets/js/model-health-tmdl.js'), Tmdl = require('../../assets/js/tmdl-model.js'), Bind = require('../../assets/js/pbip-bind.js');
+const { SCHEMA, json, q, proj, obj, str, bool, mirrorChart, sorted, daxNames, hasControl, shown, lineStyle, timeAxisPlan, label } = Q;
 
 export const SWITCH_MIN = 2, SWITCH_MAX = 5;
 export const PAGE_NAME = { en: 'Metric', ar: 'المؤشر' };
@@ -41,6 +41,34 @@ export function resolveSwitch(tables, list) {
     out.push({ t: k.t, m: k.m });
   });
   return { measures: out, problems };
+}
+
+/** The axes the Metric page's charts switch on (the bound fields): the bar chart's category, and the line chart's month
+ * or date when it has an order the chart can use. { cat, date } */
+export function switchAxes(bind) {
+  const B = bind || {}, cat = (B.cats || {}).bar || (B.cats || {}).column || null;
+  const tp = B.date ? timeAxisPlan(B.date) : null, date = tp && ['own', 'model', 'number'].includes(tp.order) ? B.date : null;
+  return { cat, date };
+}
+
+/**
+ * (SQ15b, L3-S2) The switch measures each chart's axis is related to: a measure whose tables (its own, those its DAX
+ * names, those of the measures it calls) no relationship leads from to the axis's table would draw one value on every
+ * bar or month, so it is left out, named with why. The picker's own rule (pbip-bind.js reachTable, as a table's
+ * measures); metadata only: the model's relationships and the measures' DAX names, never a value. A model that gives no
+ * relationships leaves nothing out (as the picker), nor does a measure whose DAX reads no table (a constant: the same
+ * value on any axis is what it means). reach: report-fields.mjs relsOf(m). { measures, leftOut }
+ */
+export function switchReach(measures, bind, reach) {
+  const { cat, date } = switchAxes(bind), leftOut = [];
+  const axes = [cat ? { f: cat, kind: 'bar chart' } : null, date ? { f: date, kind: 'line chart' } : null].filter(Boolean);
+  const kept = (measures || []).filter((x) => {
+    const constant = !Bind.readTables((reach && reach.modelTables) || [], x).length;
+    const miss = constant ? [] : axes.filter((a) => Bind.reachTable([a.f, { t: x.t, m: x.m }], reach).notReached.length);
+    if (miss.length) leftOut.push({ field: `${x.t}[${x.m}]`, why: `its table is not related to ${miss.map((a) => `${a.f.t}[${a.f.c}], the ${a.kind}'s axis`).join(', nor to ')} (no relationship in the model leads there): it would show one value on every ${miss.map((a) => (a.kind === 'bar chart' ? 'bar' : 'month')).join(' and ')}.` });
+    return !miss.length;
+  });
+  return { measures: kept, leftOut };
 }
 
 /** The table's free names: "Metric", else "Metric 2"... with its columns and its title measure. raw: the model's tables. */
@@ -92,8 +120,7 @@ export function addSwitch(r, o) {
   const items = o.measures.map((x) => Object.assign({}, x, { label: String(shown((o.labels || {})[`${x.t}[${x.m}]`] || x.m)).replace(/\p{Cc}/gu, ' ').trim().slice(0, 100) || x.m }));
   const { table, script } = switchTable(names, items, fallback, o.seed || '');
   const W = o.page.w, H = o.page.h, k = H / 1080, m = Math.round(32 * k), gap = Math.round(24 * k);
-  const B = o.bind || {}, cat = (B.cats || {}).bar || (B.cats || {}).column || null;
-  const tp = B.date ? timeAxisPlan(B.date) : null, date = tp && ['own', 'model', 'number'].includes(tp.order) ? B.date : null;
+  const B = o.bind || {}, { cat, date } = switchAxes(B);
   const sw = Math.round(W * 0.18), sh = Math.round(Math.min(H - 2 * m, (70 + items.length * 40) * k));
   const x0 = m + sw + gap, aw = W - x0 - m, charts = [cat ? 'bar' : null, date ? 'line' : null].filter(Boolean);
   const cw = charts.length > 1 ? Math.round((aw - gap) / 2) : aw;
@@ -127,7 +154,9 @@ export function addSwitch(r, o) {
         general: obj({ altText: str(`${KIND_WORD[lang][kind]}: ${lang === 'ar' ? 'المؤشر المختار' : 'the chosen metric'} ${BY[lang](label(f))}`) }) } };
     // (F1, the proof: the Arabic line kept Jan at the left) the mirrored sort is the report's own, not a default sort a
     // field-parameter visual may work out again
-    if (o.rtl) { mirrorChart(v, kind); if (query.sortDefinition) delete query.sortDefinition.isDefaultSort; }
+    // (0.3.1 M1) by the twin's rules (report-mirror.js, through the writer's mirrorChart): a date or number column's axis is
+    // continuous and reversed by invertAxis; a text one by the sort
+    if (o.rtl) { mirrorChart(v, kind, { dateColumns: f && f.c != null && /^(dateTime|date|int64|double|decimal)$/i.test(String(f.type || '')) ? [f.t + '.' + f.c] : [] }); if (query.sortDefinition) delete query.sortDefinition.isDefaultSort; }
     if (grid) { const va = v.objects.valueAxis || (v.objects.valueAxis = [{ properties: {} }]); Object.assign(va[0].properties, JSON.parse(JSON.stringify(grid))); gridded++; }
     if (!Object.keys(v.objects).length) delete v.objects;
     vs.push(visual('metric' + kind + pageId.slice(0, 8), x, m, cw, H - 2 * m, z, v));
@@ -164,14 +193,14 @@ export function addSwitch(r, o) {
   pagesFile.data = json(pj);
   const scriptFile = scriptFileOf(r.base, SCRIPT_SUFFIX);
   r.files.splice(r.files.findIndex((f) => /\.pbip$/.test(f.path)), 0, ...files, { path: scriptFile, data: script });
-  return { names, items: items.map((x) => ({ field: `${x.t}[${x.m}]`, label: x.label })), fallback, page: PAGE_NAME[lang], pageId, scriptFile, table,
+  return { names, items: items.map((x) => ({ field: `${x.t}[${x.m}]`, label: x.label })), leftOut: o.leftOut || [], fallback, page: PAGE_NAME[lang], pageId, scriptFile, table,
     charts: charts.map((kind) => ({ kind, by: kind === 'bar' ? `${cat.t}[${cat.c}]` : `${date.t}[${date.c}]` })),
     notSwitched: [cat ? null : 'bar chart: the report has no category for it', date ? null : B.date ? `line chart: ${B.date.t}[${B.date.c}] has no month order the chart can use (a month name without a sort column)` : 'line chart: the report has no month or date axis'].filter(Boolean) };
 }
 
 /** What the plan, the approval page and create_report's answer say of the switch (s: addSwitch's result). */
 export function switchSaid(s) {
-  return { measures: s.items, page: s.page, charts: s.charts, notSwitched: s.notSwitched, fallbackTitle: s.fallback, table: s.names.table, script: s.scriptFile,
+  return { measures: s.items, ...(s.leftOut && s.leftOut.length ? { leftOut: s.leftOut } : {}), page: s.page, charts: s.charts, notSwitched: s.notSwitched, fallbackTitle: s.fallback, table: s.names.table, script: s.scriptFile,
     modelChange: MODEL_CHANGE(s.names.table), beforeApplied: BEFORE_APPLIED,
     howToApply: `Save a copy of your Power BI file first. Open "${s.scriptFile}" (next to the project) in Notepad, select all and copy; in Power BI Desktop open TMDL view, paste into a new tab, choose Preview: it shows one new table ${JSON.stringify(s.names.table)}; then Apply. On the ${JSON.stringify(s.page)} page choose one metric in the slicer: both charts and their titles switch, each measure in its own format. With nothing chosen the title says ${JSON.stringify(s.fallback)}.`,
     savedSelection: `The slicer opens with the first metric chosen (${JSON.stringify(s.items[0].label)}), in the shape Power BI Desktop saves; with nothing chosen the titles say ${JSON.stringify(s.fallback)}.` };

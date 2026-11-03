@@ -68,7 +68,7 @@ window.themeGeneratorTranslations = {
       "readability": "Readability check",
       "chart": { "title": "Chart style", "labels": "Data labels", "grid": "Gridlines", "legend": "Legend", "axis": "Axis titles", "table": "Tables",
         "auto": "Power BI default", "on": "On", "off": "Off", "dotted": "Light dotted", "none": "None", "top": "Top", "topCenter": "Top, centered",
-        "bottom": "Bottom", "side": "Side", "hidden": "Hidden", "minimal": "Minimal lines", "banded": "Banded rows" },
+        "bottom": "Bottom", "side": "Side", "hidden": "Hidden", "minimal": "Minimal lines", "banded": "Banded rows", "look": "Card look", "glass": "Glass (default)", "plain": "Plain" },
       "preview": "Live preview",
       "copy": "Copy",
       "importNote": "Import it in Power BI Desktop: <strong>View → Themes → Browse for themes</strong>, then pick the file.",
@@ -185,7 +185,7 @@ window.themeGeneratorTranslations = {
       "readability": "فحص سهولة القراءة",
       "chart": { "title": "شكل الرسوم", "labels": "تسميات البيانات", "grid": "خطوط الشبكة", "legend": "وسيلة الإيضاح", "axis": "عناوين المحاور", "table": "الجداول",
         "auto": "افتراضي Power BI", "on": "تشغيل", "off": "إيقاف", "dotted": "منقطة خفيفة", "none": "بدون", "top": "أعلى", "topCenter": "أعلى، في المنتصف",
-        "bottom": "أسفل", "side": "جانبي", "hidden": "مخفية", "minimal": "خطوط قليلة", "banded": "صفوف متناوبة" },
+        "bottom": "أسفل", "side": "جانبي", "hidden": "مخفية", "minimal": "خطوط قليلة", "banded": "صفوف متناوبة", "look": "شكل البطاقات", "glass": "زجاجي (افتراضي)", "plain": "عادي" },
       "preview": "معاينة مباشرة",
       "copy": "نسخ",
       "importNote": "استورده في Power BI Desktop: <strong>View → Themes → Browse for themes</strong> ثم اختر الملف.",
@@ -198,7 +198,7 @@ window.themeGeneratorTranslations = {
       "faq": {
         "title": "أسئلة شائعة",
         "q1": "كيف أستورد سمة إلى Power BI؟",
-        "a1": "في Power BI Desktop افتح تبويب <strong>View</strong>، ثم قائمة <strong>Themes</strong>، واختر <strong>Browse for themes</strong>، وحدد ملف json الذي نزّلته. تتحدث كل العناصر المرئية فورًا.",
+        "a1": "في Power BI Desktop افتح تبويب <strong>View</strong>، ثم قائمة <strong>Themes</strong>، واختر <strong>Browse for themes</strong>، وحدد ملف json الذي نزّلته. تتحدث كل المرئيات فورًا.",
         "q2": "هل تعمل في Power BI Service؟",
         "a2": "نعم. استورد السمة في Desktop ثم انشر التقرير، وستنتقل السمة معه.",
         "q3": "كم لونًا للبيانات يجب أن أستخدم؟",
@@ -214,7 +214,7 @@ window.themeGeneratorTranslations = {
       "layout": {
         "new": "جديد",
         "title": "مقاس الصفحة والتخطيط",
-        "subtitle": "خلفية تقرير كاملة بألوان سمتك، مع مكان محدد لكل عنصر مرئي. التخطيطات مبنية على مبادئ تصميم لوحات المعلومات من ستيفن فيو ومعايير IBCS وإرشادات Microsoft لتصميم التقارير.",
+        "subtitle": "خلفية تقرير كاملة بألوان سمتك، مع مكان محدد لكل مرئي. التخطيطات مبنية على مبادئ تصميم لوحات المعلومات من ستيفن فيو ومعايير IBCS وإرشادات Microsoft لتصميم التقارير.",
         "slots": "أين يوضع كل عنصر",
         "copyTable": "انسخ الجدول",
         "csv": "نزّل ملف .csv",
@@ -231,7 +231,7 @@ window.themeGeneratorTranslations = {
       "codeNote": "نزّل الملف في <a href=\"#download\">الخطوة 3</a>."
     },
     "meta": {
-      "title": "مولّد سمات Power BI: ملف JSON وخلفية - داتا أركوس", "description": "أنشئ ملف سمة JSON لـ Power BI وتخطيط صفحة مطابقًا: اختر ألوانك، وعاين الرسوم مباشرة، وافحص التباين، ونزّل خلفية بموضع كل visual بدقة. مجانًا."
+      "title": "مولّد سمات Power BI: ملف JSON وخلفية - DataArcus", "keywords": "داتا أركوس, Power BI theme generator, Power BI theme JSON, Power BI layout template, Power BI report background, Power BI color palette, custom Power BI theme", "description": "أنشئ ملف سمة JSON لـ Power BI وتخطيط صفحة مطابقًا: اختر ألوانك، وعاين الرسوم مباشرة، وافحص التباين، ونزّل خلفية بموضع كل visual بدقة. مجانًا."
     }
   }
 };

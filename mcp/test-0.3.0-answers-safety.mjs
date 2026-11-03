@@ -15,6 +15,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const require = createRequire(import.meta.url);
@@ -50,19 +51,29 @@ const rec = (answer) => CM.record(q1, answer, r1.rawTables, '2026-10-19T10:00:00
   const file = path.join(dir, 'M.dataarcus-answers.json');
   A.writeAnswers(dir, 'M', [rec('intended')], A.readAnswers(dir, 'M'));
   // (a) another file swapped in (a new inode) after the check, before the replace: refused, the swapped file untouched
+  // (0.3.1 AF2: the temp is created through a handle now, createFile's; the swap is made when it is opened, the same moment)
   const checked = A.readAnswers(dir, 'M');
   chk(() => checked.ours && checked.checked && checked.checked.ino && /^[0-9a-f]{64}$/.test(checked.checked.hash) && checked.checked.size > 0, () => `F04-0. the check takes the file's identity (dev+ino, size, hash): ${JSON.stringify(checked.checked)}`);
   const swapped = fs.readFileSync(file, 'utf8').replace('"intended"', '"mistake"');
-  W.setIo({ writeFileSync(f, data, opts) { if (path.basename(String(f)).startsWith('.dataarcus-tmp-')) { const x = path.join(dir, 'other.json'); fs.writeFileSync(x, swapped); fs.renameSync(x, file); } return fs.writeFileSync(f, data, opts); } });
+  W.setIo({ openSync(f, flags, mode) { if (path.basename(String(f)).startsWith('.dataarcus-tmp-')) { const x = path.join(dir, 'other.json'); fs.writeFileSync(x, swapped); fs.renameSync(x, file); } return fs.openSync(f, flags, mode); } });
   let e1 = null; try { A.writeAnswers(dir, 'M', [rec('intended'), rec('mistake')], checked); } catch (e) { e1 = e; }
   W.setIo();
   chk(() => e1 && /Nothing was written/.test(e1.message) && /changed after/.test(e1.message), () => `F04-1. a file swapped in after the check is refused, nothing written: ${e1 && e1.message}`);
   chk(() => fs.readFileSync(file, 'utf8') === swapped, () => 'F04-2. the swapped file is byte-identical');
+  // (0.3.1 T1, the mutation suite: F04-1 passed with dev+ino left out of the check, since the swapped file's size and hash
+  // differ) a byte-identical copy put in its place (a new inode only) is refused too
+  {
+    const checkedB = A.readAnswers(dir, 'M'), same = fs.readFileSync(file);
+    W.setIo({ openSync(f, flags, mode) { if (path.basename(String(f)).startsWith('.dataarcus-tmp-')) { const x = path.join(dir, 'copy.json'); fs.writeFileSync(x, same); fs.renameSync(x, file); } return fs.openSync(f, flags, mode); } });
+    let eb = null; try { A.writeAnswers(dir, 'M', [rec('intended'), rec('mistake')], checkedB); } catch (e) { eb = e; }
+    W.setIo();
+    chk(() => eb && /changed after/.test(eb.message) && fs.readFileSync(file).equals(same), () => `F04-1b. a byte-identical copy swapped in after the check (a new inode) is refused: ${eb ? eb.message : 'replaced'}`);
+  }
   chk(() => !tmpLeft(dir).length, () => `F04-3. no temporary file left: ${tmpLeft(dir)}`);
   // (b) the same file edited in place (same inode, same size, other bytes) after the check: refused too
   const checked2 = A.readAnswers(dir, 'M');
   const edited = fs.readFileSync(file, 'utf8').replace('"mistake"', '"MISTAK"');
-  W.setIo({ writeFileSync(f, data, opts) { if (path.basename(String(f)).startsWith('.dataarcus-tmp-')) fs.writeFileSync(file, edited); return fs.writeFileSync(f, data, opts); } });
+  W.setIo({ openSync(f, flags, mode) { if (path.basename(String(f)).startsWith('.dataarcus-tmp-')) fs.writeFileSync(file, edited); return fs.openSync(f, flags, mode); } });
   let e2 = null; try { A.writeAnswers(dir, 'M', [rec('intended')], checked2); } catch (e) { e2 = e; }
   W.setIo();
   chk(() => e2 && /Nothing was written/.test(e2.message) && fs.readFileSync(file, 'utf8') === edited && !tmpLeft(dir).length, () => `F04-4. an in-place edit of the same size after the check is refused, the file byte-identical: ${e2 && e2.message}`);
@@ -81,7 +92,7 @@ const rec = (answer) => CM.record(q1, answer, r1.rawTables, '2026-10-19T10:00:00
     && !/Nothing is overwritten or deleted\.$/.test(A.writesNote(['the answers file "M.dataarcus-answers.json" next to the project, which replaces the answers file DataArcus wrote there: x']))
     // (changed on purpose in R6, F09 e: the sentence for a plan of new files also says what a failed write removes)
     && A.writesNote(['a new file']) === 'New files only: nothing is overwritten or deleted. If the write fails part-way, DataArcus removes what this call created, and names anything it could not remove.', () => 'F04-7. writesNote: "replaces the answers file DataArcus wrote" for a replace, "New files only: nothing is overwritten or deleted." otherwise');
-  const aw = fs.readFileSync(path.join(HERE, 'lib/approval-window.mjs'), 'utf8'), sv = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+  const aw = fs.readFileSync(path.join(HERE, 'lib/approval-window.mjs'), 'utf8'), sv = serverSource();
   chk(() => !/Nothing is overwritten or deleted\./.test(aw) && /writesNote\(/.test(aw) && !/\\nNothing is overwritten or deleted\./.test(sv), () => 'F04-8. the approval page and the app\'s own prompt take their note from writesNote');
 }
 

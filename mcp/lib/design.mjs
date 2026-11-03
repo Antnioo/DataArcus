@@ -9,7 +9,13 @@ export const E = require('../../assets/js/design-engine.js');
 export const { DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, SCHEMA } = E;
 // The engine's parts the MCP tools use (the audit's A2-8: server.mjs reaches the engine only through this adapter; the
 // adapter itself reads and writes no file)
-export const { PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, REPORT_TEXTS, texts, clampHex, lum, buildTheme, themeScaleOf, scaleTheme, projectPages, themeName, fileBase, imageSize, isSmall } = E;
+export const { PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, REPORT_TEXTS, texts, clampHex, lum, buildTheme, themeScaleOf, scaleTheme, textScale, projectPages, themeName, fileBase, imageSize, isSmall } = E;
+// (0.3.1 GL1) the glass look: its cards and contrast (glassLook) and the page picture (glassPng), the engine's
+export const { isGlass, glassLook, glassPng } = E;
+// (0.3.1 GD1) the glass look is the default of a new design, and the gate that keeps it readable
+export const { DEFAULT_LOOK, glassFit, isGlassPng } = E;
+// (0.3.1 GD2) a theme used alone carries the glass look's picture as its page background image
+export const { withGlassPicture } = E;
 // (0.2.9, audit 2's A2-3: the slot rules are the engine's: absorb for a text slot without its sentence, fitSlots for the rest)
 export const { absorb, fitSlots } = E;
 export const designRtl = E.rtl;
@@ -19,7 +25,9 @@ const HARMONIES = ['analogous', 'complementary', 'triadic', 'mono'];
 // design engine's; the brand is the accent)
 const LIGHT_UI = E.PRESETS.Corporate.ui;
 const UI_KEYS = ['background', 'card', 'text', 'accent', 'good', 'neutral', 'bad'];
-const CONTRAST_NAMES = { textOnVisuals: 'Text on visuals', labelsOnVisuals: 'Labels on visuals', textOnPage: 'Text on page', color1OnVisuals: 'Color 1 on visuals' };
+const CONTRAST_NAMES = { textOnVisuals: 'Text on visuals', labelsOnVisuals: 'Labels on visuals', textOnPage: 'Text on page', color1OnVisuals: 'Color 1 on visuals',
+  // (GL1) the glass look's worst cases: a see-through card over the darkest and the lightest pixel of its picture
+  textOnGlass: 'Text on the see-through cards', labelsOnGlass: 'Labels on the see-through cards', color1OnGlass: 'Color 1 on the see-through cards', textOnPicture: 'Text on the page picture' };
 
 // a colour as the website takes it (#abc, abc, #aabbcc; any case), or null
 const hex = (v) => (typeof v === 'string' ? E.clampHex(v) : null);
@@ -157,6 +165,11 @@ export function themeDesign(a) {
     });
     d.preset = null;
     if (a.brand != null) fix('brand', a.brand, null, 'not used: a palette was given');
+    // (0.3.1 P3A, the laptop's part 3, B-1: a full light palette with mode "dark" gave a light theme and dropped the mode
+    // with no line) the palette's own page decides, its colours kept exactly as given (a colour is never changed without
+    // the user's yes); a mode it disagrees with is said, never dropped silently
+    const pageLight = E.lum(d.ui.background) > 0.45;
+    if (a.mode && hex(p.ui && p.ui.background) && pageLight === dark) fix('mode', a.mode, pageLight ? 'light' : 'dark', `not used: the palette's own page colour ${d.ui.background} is ${pageLight ? 'light' : 'dark'}, and the palette's colours are kept exactly as given. For a ${a.mode} theme, give a ${a.mode} page, visual and text colour in palette.ui`);
   } else if (a.brand != null) {
     const b = hex(a.brand);
     let h = a.harmony == null ? 'calm' : a.harmony;
@@ -177,7 +190,7 @@ export function themeDesign(a) {
   }
   if (a.chart) {
     const c = {};
-    Object.entries(a.chart).forEach(([k, v]) => {
+    Object.entries(lookWord(a.chart)).forEach(([k, v]) => {
       if (!E.CHART_OPTIONS[k]) fix(`chart.${k}`, v, null, `not a chart setting; use ${Object.keys(E.CHART_OPTIONS).join(', ')}`);
       else if (!E.CHART_OPTIONS[k].includes(v)) fix(`chart.${k}`, v, 'auto', `use one of ${E.CHART_OPTIONS[k].join(', ')}`);
       else c[k] = v;
@@ -196,6 +209,41 @@ export function themeDesign(a) {
   }
   const design = E.repairState(d);
   return Object.assign({ design, repaired, notes }, own ? { fromReport: Object.assign(own.info, { contrastWarnings: contrastReport(design).warnings }) } : {});
+}
+
+// (0.3.1 TW1, GL1-S2: a model whose theme has see-through visuals gets the glass look by default, yet the plan said "the
+// new visuals are solid") the colours' words follow the look: under glass the theme's transparent visuals are said as the
+// glass look's; plain keeps solidVisuals. info: themeColours' info (changed in place); look: lookFor's answer
+export function lookWords(info, look) {
+  if (!info || !info.solidVisuals || !look || look.look !== 'glass') return info;
+  const pct = /(\d+)% transparent/.exec(info.solidVisuals);
+  info.glassVisuals = `The theme's visuals are ${pct ? pct[1] + '% ' : ''}transparent, made to sit on a page picture: the new ${look.what || 'report'} has the glass look too, see-through visuals over its own soft page picture (look). Say it in the plan.`;
+  delete info.solidVisuals;
+  return info;
+}
+// ---- the look of a new design (0.3.1 GD1, the owner, 27 Oct: "i want to make the glassy dashboard default") ----
+// The plain look's name is what the engine has, chart.look "auto" (Power BI's own cards); "plain" is taken as the same.
+const LOOK_WORDS = { plain: 'auto' };
+// the look a chart style asks for ("auto" or "glass"), or null when it asks none
+export const askedLook = (chart) => { const v = chart && typeof chart === 'object' ? chart.look : undefined; const w = typeof v === 'string' ? (LOOK_WORDS[v] || v) : null; return w === 'auto' || w === 'glass' ? w : null; };
+// a chart style with "plain" written as the engine's "auto" (anything else as given)
+const lookWord = (chart) => (chart && typeof chart === 'object' && Object.hasOwn(LOOK_WORDS, chart.look) ? Object.assign({}, chart, { look: LOOK_WORDS[chart.look] }) : chart);
+// A new design's look, set in design.chart.look (the design is changed): the one asked, else the default (glass); glass
+// only where it keeps everything readable (the engine's glassFit), else the plain look, and why. Contrast is the gate:
+// an asked glass that can't pass is plain too. what: 'report' or 'theme', for the plan's line. Returns { look, chosenBy: 'default' | 'asked', glassFailed?, sayInPlan }
+const GLASS_FAILED = { textOnGlass: 'text on the see-through cards', labelsOnGlass: 'labels on the see-through cards', color1OnGlass: 'colour 1 on the see-through cards', textOnPicture: 'text on the page picture', gridOnGlass: 'table lines on the see-through cards', textOnBand: 'text on the banded rows', gridOnBand: 'table lines on the banded rows' };
+export function lookFor(design, asked, what = 'report') {
+  const want = asked === 'auto' || asked === 'glass' ? asked : DEFAULT_LOOK, chosenBy = asked === want ? 'asked' : 'default';
+  design.chart = Object.assign({}, design.chart, { look: want });
+  const fit = want === 'glass' ? glassFit(design) : null;
+  if (fit && !fit.fits) design.chart.look = 'auto';
+  const r = (x) => (Math.floor(x * 10) / 10).toFixed(1);
+  const failed = fit && !fit.fits ? (fit.failed.length ? fit.failed : [{ id: 'textOnGlass', ratio: null, min: 4.5 }]).map((c) => ({ check: GLASS_FAILED[c.id] || c.id, ratio: c.ratio == null ? null : Math.round(c.ratio * 100) / 100, min: c.min })) : null;
+  const sayInPlan = design.chart.look === 'glass'
+    ? `${chosenBy === 'default' ? 'Glass look (default)' : 'Glass look, as asked'}: see-through cards over a soft page picture drawn from the theme's own colours (Power BI has no blur behind a visual); plain: chart.look "auto". Say it in the plan.`
+    : failed ? `Plain look: ${chosenBy === 'default' ? 'glass is the default, but' : 'glass was asked, but'} with these colours it can't keep everything readable (${failed.map((c) => c.ratio == null ? `${c.check}: the cards would have to be solid` : `${c.check} ${r(c.ratio)}:1, needs ${c.min}:1`).join('; ')}), so this ${what} has Power BI's own solid cards. Say it in the plan, and offer other colours for the glass look.`
+      : 'Plain look, as asked: Power BI\'s own cards; glass: chart.look "glass".';
+  return Object.assign({ look: design.chart.look, chosenBy }, failed ? { glassFailed: failed } : {}, { sayInPlan });
 }
 
 // Page and style choices into a saved layout. base: a layout to change (plan_layout), fix: records what can't be used
@@ -223,7 +271,9 @@ export function planLayout(a) {
   // existingTheme's); a design from generate_theme made without the model keeps its colours, and the plan says how to
   // keep the report's theme instead
   const rt = a.reportTheme && a.reportTheme.theme ? a.reportTheme : null;
-  let given = a.design, colours = null;
+  // (GD1) the look asked (the design's chart.look, "plain" as "auto"), before the colours are settled; set at the end
+  let given = a.design && typeof a.design === 'object' && a.design.chart ? Object.assign({}, a.design, { chart: lookWord(a.design.chart) }) : a.design, colours = null;
+  const lookAsked = askedLook(given && given.chart);
   // rc.22, B-132 (the owner's rc.21 test: colors { accent } kept the Corporate preset's navy data colours; O-11: the brand
   // colour is exact by default): an accent given with no theme file and no design of its own colours (or the plain
   // default one) makes the data colours as generate_theme does from a brand colour: the accent first and exact, the
@@ -232,11 +282,11 @@ export function planLayout(a) {
   const plainDesign = !namesColours(a.design) || (a.design.preset === 'Corporate' && Array.isArray(a.design.data) && a.design.data.join() === E.PRESETS.Corporate.data.join());
   if (acc && !a.theme && plainDesign) {
     const td = themeDesign({ brand: acc, lang: a.lang }).design, own = Object.fromEntries(['text', 'card', 'background'].map((k) => [k, hex(a.colors[k])]).filter(([, v]) => v));
-    given = Object.assign({}, a.design || {}, { data: td.data.slice(), ui: Object.assign({}, td.ui, own, { accent: acc }), preset: null });
+    given = Object.assign({}, given || {}, { data: td.data.slice(), ui: Object.assign({}, td.ui, own, { accent: acc }), preset: null });
     colours = { from: 'accent', accent: acc, data: td.data.slice(), sayInPlan: `The colours come from the accent ${acc}, used exactly: it is the first data colour and the accent; the other 7 data colours are its calm set (as generate_theme makes them from a brand colour). Show them in the plan.` };
   }
   else if (rt && !namesColours(a.design)) {
-    const c = themeColours(rt, a.lang), g0 = a.design || {}, gl = g0.layout && typeof g0.layout === 'object' ? g0.layout : {};
+    const c = themeColours(rt, a.lang), g0 = given || {}, gl = g0.layout && typeof g0.layout === 'object' ? g0.layout : {};
     // (the font, corners and shadow of a rich theme, where the design has those settings and does not set them itself)
     given = Object.assign({}, g0, { data: c.data, ui: c.ui, preset: c.preset }, c.style.font && g0.font == null ? { font: c.style.font } : {},
       { layout: Object.assign({}, c.style.radius != null && gl.radius == null ? { radius: c.style.radius } : {}, c.style.shadow && gl.shadow == null ? { shadow: true } : {}, gl) });
@@ -263,6 +313,9 @@ export function planLayout(a) {
     smallPage = Object.assign({}, sp, { say: `The page is ${sp.w} wide, under ${E.SMALL_PAGE.w}: the executive layout's four charts and table would be cut or scroll there, so this plan uses the single-focus layout (the KPI cards and one large chart). Say so in the plan; a page ${E.SMALL_PAGE.w} wide or more takes the executive layout.` });
   }
   E.repairState(design, fix);
+  // (GD1) a new report's look: the one asked, else glass where it keeps everything readable, else plain (said)
+  const look = lookFor(design, lookAsked);
+  lookWords(colours, look);   // (TW1, GL1-S2)
   const lang = a.lang, nm = (x) => E.label(x, lang), layout = design.layout;   // (A2-9: labels keyed by language)
   // one row per visual, as the website's slot table: its name, the suggested visual, and x, y, w, h in page units
   const planned = E.computeSlots(layout, lang, { tableFields: a.tableFields, noTime: a.noTime }).map((s) => Object.assign({ role: nm(s.role), kind: s.kind, visual: nm(E.KINDS[s.kind]) }, E.boxOf(s, layout), s.topN ? { topN: s.topN } : {}));   // (D16: a.noTime; S5: each category chart's topN)
@@ -274,7 +327,7 @@ export function planLayout(a) {
     .map((s, i) => ({ role: s.role, kind: s.kind, position: { x: s.x, y: s.y, z: (i + 1) * 1000, width: s.w, height: s.h, tabOrder: (i + 1) * 1000 } }));
   if (colours && colours.from === 'report theme') colours.contrastWarnings = contrastReport(design).warnings;
   // (the owner's decision on layouts, 12 Oct: a setup that ships as preview says so in one plain line, E.isPreview)
-  return Object.assign({ design, slots, forAuthoring, why: E.LAYOUTS[layout.preset].why.map(nm) }, E.isPreview(layout) ? { preview: nm(E.LAYOUT_PREVIEW) } : {}, tinted || {}, smallPage ? { smallPage } : {}, repaired.length ? { repaired } : {}, colours ? { colours } : {});
+  return Object.assign({ design, slots, forAuthoring, why: E.LAYOUTS[layout.preset].why.map(nm), look }, E.isPreview(layout) ? { preview: nm(E.LAYOUT_PREVIEW) } : {}, tinted || {}, smallPage ? { smallPage } : {}, repaired.length ? { repaired } : {}, colours ? { colours } : {});
 }
 
 // (rc.22, B-140) a slot kind's visual, in the plan's language (the slots' "visual")

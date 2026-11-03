@@ -55,6 +55,31 @@
   // or a little wider and takes 50; at and over it 40, which leaves the bars about 60% (only 508 wide was measured).
   const BAR_NARROW_720 = 560;
   const barNameShare = (w, pageH) => (w * 720 / pageH < BAR_NARROW_720 ? 50 : 40);
+  // 0.3.1 FX5 (the owner, 28 Oct, D-1028-06: "why would i have a bar chart with three bars same length we need to apply
+  // some kind of sizing ... and also not make the bars that wide or columns in case of column chart"): a bar or column is
+  // never thicker than BAR_MAX_720 on a 1280 x 720 page, times the text factor on others (design-engine.js textScale: 45
+  // at 1920 x 1080). 36 is two of Desktop's own bars where it packs them (22.2 a row at 10pt, DESKTOP-TESTS.md round 0's
+  // rows, less its 20% inner padding: 17.8): derived from that measurement, the maximum itself to be seen on the laptop.
+  // The gaps are Microsoft's catalog's (powerbi-core-visual-schema 0.1.3) categoryAxis innerPadding ("Space between
+  // categories") and outerPadding ("Outer padding"), whole percents of a category's step; the step is span / (n - inner
+  // + 2 x outer). barBand(n, span, pageH): with inner = outer = p the bars are span x (1 - p) / (n + p) thick and every gap
+  // is the same, so p = (span - max x n) / (span + max), rounded up; null (nothing written, Desktop's default) where the
+  // count is not known or Desktop's default bar (span / n less its 20%) is not thicker than the maximum.
+  const BAR_MAX_720 = 36, BAR_DEFAULT_INNER = 0.2;
+  const Eng = () => (typeof module !== 'undefined' && module.exports ? require('./design-engine.js') : root.DAEngine);
+  const barMax = (pageH) => { const E = Eng(); return BAR_MAX_720 * (E && E.textScale ? E.textScale(+pageH || 720) : 1); };
+  // the length the categories share along a chart's category axis, in page units: a bar chart's height less 45 above, 8
+  // under and 38 for the value axis (the measured rows of topCount, 720 units, scaled with the page); a column chart's
+  // width less its padding and 40 for the value axis (topCount's)
+  const barSpan = (horizontal, w, h, pageH) => { const H = +pageH || 720; return Math.max(0, horizontal ? h - (45 + 8 + 38) * H / 720 : w - 2 * Math.round(16 * H / 1080) - 40); };
+  const barBand = (n, span, pageH) => {
+    const k = Math.floor(+n), max = barMax(pageH);
+    if (!(k >= 1) || !(span > 0) || span / k * (1 - BAR_DEFAULT_INNER) <= max) return null;
+    const pct = Math.min(99, Math.ceil(100 * (span - max * k) / (span + max))), p = pct / 100;
+    return { n: k, pct, bar: span * (1 - p) / (k + p), gap: span * p / (k + p), max };
+  };
+  // the reverse, for a picture drawn from the written files (page-preview.js): the count a written pct was made for
+  const barCountOf = (pct, span, pageH) => { const p = +pct / 100, max = barMax(pageH); return p > 0 && p < 1 && span > 0 ? Math.max(1, Math.round(span * (1 - p) / max - p)) : null; };
   // Round 11 (seen in Desktop 2.158, 5 Oct 2026: on a 960 x 720 page a table of a text column and three measures was
   // wider than its box, a header cut and a column off the box behind a scrollbar; at 1920 x 1080 too with four long
   // measure names). A table holds only the fields its width has room for, by the rule its pictures already follow
@@ -100,7 +125,7 @@
     // pt(t): a size within 8-60pt. LABEL: button text, the theme's label size.
     const pt = (t) => Math.max(8, Math.min(60, Math.round(t))), charW = (t) => t * 0.55 * 4 / 3;
     const boxH = (t, n) => Math.ceil(10 + 1.8 * t * (n || 1)), buttonH = (t, n) => Math.ceil(2 + 1.6 * t * (n || 1));
-    const iconH = (t) => Math.ceil(2.25 * t), slicerH = (t) => Math.ceil(16 + 4 * t);
+    const slicerH = (t) => Math.ceil(16 + 4 * t);
     // (0.3.0 F1, F2) a pill slicer's height (its header, the container title written at the tiles' size, and one row of
     // tiles): MEASURED on Desktop 2.159 (dataarcus-engine, business/beta/ship030/RECHECK-F1.md, 20 Oct 2026): at 15pt a
     // pill slicer 88 high cuts the text to its top third, 140 draws it whole (a button slicer hides a text its tile is too
@@ -194,7 +219,18 @@
       for (let n = ch.length - 1; n >= 1; n--) { const t = cutAt(ch.slice(0, n).join('').trimEnd()); if (textWidth(t, size, true, font) <= avail) return t; }
       return '…';
     };
-    return { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, pillH, pillRoom, PILL_PAD, PILL_GAP, pillW, pillFits, pillTextRoom, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine };
+    // Round 12 (#1; seen in Desktop 2.158, round 11: "Total Sales Last Rama..." on every phone page): a phone card's title
+    // too long for one line at its size wraps to two (titleWrap, as on the page) where two lines and the value fit the
+    // card (w x h), otherwise it stays on one line ('cut': the writer shortens it at a word with "…", oneLine). Returns
+    // { c: the card's fit, mode: 'one' | 'wrap' | 'cut' }. (0.3.1 TW1, SQ4-S2: the writer's phone cards and the Arabic
+    // twin's, one rule)
+    const phoneCardFit = (text, w, h, title, value) => {
+      const c = cardFit(w, h, 1, title, value), room = w - 2 * c.P;
+      if (!text || textWidth(text, title, true, font) <= room) return { c, mode: 'one' };
+      const ls = wrapLines(text, title, room), two = cardFit(w, h, 1, title, value, null, undefined, 2);
+      return ls.length <= 2 && ls.every((l) => textWidth(l, title, true, font) <= room) && two.V >= 8 ? { c: two, mode: 'wrap' } : { c, mode: 'cut', room };
+    };
+    return { cardFit, pt, charW, boxH, buttonH, slicerH, pillH, pillRoom, PILL_PAD, PILL_GAP, pillW, pillFits, pillTextRoom, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine, phoneCardFit };
   }
 
   // A table's height in rows (writer round 8, S3; one table of constants for the known-rows rule and the whole-rows rule).
@@ -235,8 +271,13 @@
   // page is bold there), + 10; the one copy: the writer's phone layout (pbip-page.js) and the Arabic twin's (0.3.0 D3)
   const PHONE_TAB = { size: 10, gap: 8, w: 323 };
   const phoneTabWidth = (name, font) => Math.min(PHONE_TAB.w, Math.ceil(textWidth(String(name), PHONE_TAB.size, true, font) + 10));
+  // the phone layout's header title: 14pt, or the largest size down to 8 whose one line (0.55 em a character, as charW)
+  // fits the box w wide; top: another cap (SQ4: an Arabic twin's phone title never grows past the size it had). The one
+  // copy: the writer's phone layout (pbip-page.js) and the Arabic twin's (report-mirror.js labelMobile)
+  const PHONE_TITLE = 14;
+  const phoneTitleSize = (text, w, top) => Math.max(8, Math.min(top == null ? PHONE_TITLE : top, Math.floor(w / (0.55 * 4 / 3 * Math.max(1, String(text).length)))));
   const api = {
-    PHONE_TAB, phoneTabWidth, TABLE_ROWS, rowPitch, tableHeight, cellRoom, numberSample, fieldRoom, LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, tableFit, make
+    PHONE_TAB, phoneTabWidth, PHONE_TITLE, phoneTitleSize, TABLE_ROWS, rowPitch, tableHeight, cellRoom, numberSample, fieldRoom, LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, BAR_MAX_720, BAR_DEFAULT_INNER, barMax, barSpan, barBand, barCountOf, tableFit, make
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbipSizing = api;
 })(typeof self !== 'undefined' ? self : this);

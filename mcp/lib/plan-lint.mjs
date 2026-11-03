@@ -7,6 +7,7 @@
 // are left out (no lint rule reads them); the first page is the one linted (the page the plan shows).
 // (0.3, J14: the plan's gate is the exact check, lib/artifact.mjs: create_report's own build, every page and everything
 // above included, the bytes create_report writes. This lint stays the plan's view of its first page, and its kinds.)
+import { glassPreviewUrl } from './glass-picture.mjs';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
@@ -20,8 +21,8 @@ const Preview = require('../../assets/js/page-preview.js');
 const LC = require('../../assets/js/layout-check.js');
 import { NAMES } from './design-lint.mjs';
 import { safeText } from './read-report.mjs';
+import { planBinding } from './report-run.mjs';   // (SQ15b, 0.2.9-reader-S8: create_report's page and binding, not a copy)
 
-const relsOf = (m, lang) => ({ ...(lang ? { lang } : {}), modelTables: m.tables, relationships: Bind.relsOfTmsl(m.tmsl) });
 const PNG1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4AWMAAQAABQABNtCI3QAAAABJRU5ErkJggg==', 'base64');
 
 // The writer's report of the plan, in memory (nothing is written): the pages create_report writes for the design and the
@@ -32,14 +33,15 @@ function build(a, o) {
   const { m, design: d0, lang, F } = a, pickFrom = a.tables || m.tables;
   // (the two settings create_report itself forces on a design: solid visuals when there is no background image, and the
   // wider table share unless the design says otherwise; the page is built as create_report will write it, nothing tuned)
-  let design = Object.assign({}, d0, { layout: Object.assign({}, d0.layout, { transparent: false, wideTable: d0.layout.wideTable !== false }) });
-  if (F && F.kpis) design.layout = Object.assign({}, design.layout, { kpis: Math.min(6, F.kpis.length) });   // (the design block's A2-4: kpis is the card count, 0-6)
-  let specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel });
   // the binding: the picker's, with every field the plan names pinned (create_report's options, without page filters;
-  // A3-2: the picker keeps them, so nothing is rebuilt here)
+  // A3-2: the picker keeps them, so nothing is rebuilt here); the card count (the design block's A2-4) and the table's
+  // share of a narrow row (SQ13, 0.2.9-design-S2) by the plan's fields: report-run.mjs's planBinding, create_report's own
+  const PB = planBinding({ m, pickFrom, lang, F, design: Object.assign({}, d0, { layout: Object.assign({}, d0.layout, { transparent: false, wideTable: d0.layout.wideTable !== false }) }) });
+  let design = PB.design;
+  const tableFields = PB.tableFields;
+  let specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel, tableFields });
   const n = Math.max(1, ...specs.map((p) => p.slots.filter((s) => s.kind === 'kpi').length));
-  const pinned = F ? Object.fromEntries([['kpis', F.kpis], ['main', F.measure], ['date', F.timeAxis], ['catA', F.category], ['catB', F.category2], ['slicers', F.slicers], ['table', F.table]].filter(([, v]) => v)) : null;
-  let bind = Bind.suggest(pickFrom, n, Object.assign(relsOf(m, lang), F && F.measure ? { main: F.measure } : {}, pinned ? { pinned } : {}));
+  let bind = PB.bindFor(n);
   if (!(bind.kpis || []).filter(Boolean).length) return { skipped: 'the model has no measure a card or a chart can show', design, specs };
   if (F) delete bind.catPool;   // (as create_report's binding with the plan's fields)
   // (o.names: the plan's display names on the bound fields, as create_report puts them; the lint's page reads none)
@@ -48,7 +50,7 @@ function build(a, o) {
   // (0.3, J4, B-130: the planned page showed cards titled "KPI 2", "KPI 3", "KPI 4" on a model with one measure) the cards
   // the binding can fill, as create_report caps them (maxKpis): a card is never planned without its measure
   const filled = (bind.kpis || []).filter(Boolean).length;
-  if (filled < design.layout.kpis) { design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: filled }) }); specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel }); }
+  if (filled < design.layout.kpis) { design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: filled }) }); specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel, tableFields }); }
   // a text slot without a text is left out by create_report and its room given to the visual beside it
   // (0.3.0 D2) the gallery kinds the plan asks for (a.gallery), on the first page, as create_report puts them; small
   // multiples take the bar chart's category for their panels, as there
@@ -65,7 +67,9 @@ function build(a, o) {
   });
   const r = Pbip.build({ name: 'Plan', title: o.title || 'Plan', pageName: pages[0].name, lang, rtl: E.rtl(design.layout, lang), font: design.font, sample: false,
     theme: E.buildTheme(design, lang), ui: design.ui, model: { byPath: 'Model.SemanticModel', taken: takenNames(m.projectDir), names: {} }, bind,
-    logoPlaceholder: false, texts: E.REPORT_TEXTS[lang === 'ar' ? 'ar' : 'en'], pages, gallery: !!a.gallery });
+    logoPlaceholder: false, texts: E.REPORT_TEXTS[lang === 'ar' ? 'ar' : 'en'], pages, gallery: !!a.gallery,
+    // (0.3.1 TW1, SQ13-S1) a right-to-left page's charts turned as create_report turns them (its default, report-run.mjs)
+    chartAxes: a.chartAxes || 'mirrored' });
   return { r, pages, design };
 }
 /** The writer's report of a plan, in memory (0.3.0 step 2: the check's tests read it): { files, pages } or { skipped }. */
@@ -102,7 +106,7 @@ export function planLint(a) {
   // (0.2.9.1, B-174) and the category charts the writer kept to their top N, by their planned slot (from, nth, as kinds),
   // with the most categories each still shows all of (allUpTo): the plan says what is written, not the slot's N alone
   return Object.defineProperties(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), {
-    kinds: { value: (b.r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN, why }) => ({ nth, from, to, topN, why })), enumerable: false },
+    kinds: { value: (b.r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN, why, said, saidAr }) => ({ nth, from, to, topN, why, said, saidAr })), enumerable: false },
     tops: { value: (b.r.topCharts || []).filter((t) => t.pageIndex === 0).map(({ from, nth, top, allUpTo }) => ({ from, nth, top, allUpTo })), enumerable: false },
     aggregation: { value: aggregation, enumerable: false },
     titles: { value: titles, enumerable: false },
@@ -125,7 +129,8 @@ export function planPreview(a) {
   if (b.skipped) return { pages: (a.second !== false ? b.specs : b.specs.slice(0, 1)).map((p) => {
     let slots = p.slots; p.slots.filter((s) => s.kind === 'text' && !s.text).forEach((t) => { slots = absorb(slots.filter((s) => s !== t), t); });
     return Preview.fromSlots(slots, p.page, { name: p.name, rtl, colors }); }), from: 'slots' };
-  const files = inReport(b.r), pages = Preview.fromFiles(files, { rtl, colors });
+  // (0.3.1 GD2) a glass page drawn on a small copy of its picture (glass-picture.mjs), the approval page's only
+  const files = inReport(b.r), pages = Preview.fromFiles(files, { rtl, colors, picture: (bytes) => glassPreviewUrl(bytes) });
   const inv = inventory(memorySource(files), 'the planned report'), shown = inv.pages.filter((p) => p.kind !== 'Tooltip' && !p.hidden);
   pages.forEach((p, k) => {
     const ip = shown[k]; if (!ip) return;
@@ -153,9 +158,11 @@ export function checkSummary(c, cap) {
   const worthByRule = {}; c.worthALook.forEach((f) => { worthByRule[f.rule] = (worthByRule[f.rule] || 0) + 1; });
   // (0.3.0 T1, T-3: "0 problems Power BI Desktop would show, 3 more worth a look" with no list) each item in one plain
   // line: where, what, and what to do, or "No action needed" for a note that asks for nothing
-  const plain = (f) => `${f.page && f.page.n ? `Page ${f.page.n}: ` : ''}${f.visual ? `${f.visual}: ` : ''}${String(f.what || '').replace(/\.\s*$/, '')}. ${!f.fix ? 'No action needed.' : /^none\b,?\s*/i.test(String(f.fix)) ? String(f.fix).replace(/^none\b,?\s*/i, 'No action needed ').replace(/\.?\s*$/, '.') : String(f.fix).replace(/\.?\s*$/, '.')}${f.guess ? ' (A guess from names and types: check it in Power BI Desktop.)' : ''}`;
+  // (0.3.1 SQ5, T1-S7) the visual by its place in plain words ("the bar chart, top left of the page"), never its box
+  const plain = (f) => `${f.page && f.page.n ? `Page ${f.page.n}: ` : ''}${f.place || f.visual ? `${f.place || f.visual}: ` : ''}${String(f.what || '').replace(/\.\s*$/, '')}. ${!f.fix ? 'No action needed.' : /^none\b,?\s*/i.test(String(f.fix)) ? String(f.fix).replace(/^none\b,?\s*/i, 'No action needed ').replace(/\.?\s*$/, '.') : String(f.fix).replace(/\.?\s*$/, '.')}${f.guess ? ' (A guess from names and types: check it in Power BI Desktop.)' : ''}`;
   return Object.assign({ summary: c.summary, desktop: c.desktop, problems: c.problems.slice(0, n).map(one) }, c.problems.length > n ? { more: c.problems.length - n } : {},
-    c.worth ? { worthALook: worthByRule, worthALookItems: c.worthALook.slice(0, 12).map(plain) } : {}, c.worthALook.length > 12 ? { worthALookMore: c.worthALook.length - 12 } : {});
+    // (0.3.1 R4A, round 4's T-3: "14 more worth a look" and 12 listed) every item: the summary's N is the list's N
+    c.worth ? { worthALook: worthByRule, worthALookItems: c.worthALook.map(plain) } : {});
 }
 
 // (B-146) plan_layout's `aggregation`, in the plan's language: what is not additive and where, and one question per

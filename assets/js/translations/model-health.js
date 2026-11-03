@@ -1,7 +1,7 @@
 // Translations for tools/power-bi-model-health-check.html
 window.modelHealthTranslations = {
   "en": {
-    "meta": { "title": "Free Power BI Model Health Check: Unused Columns & Slow DAX", "description": "Drop a .pbit and get a health score for your Power BI model: unused columns and measures, risky relationships, slow DAX and full documentation." },
+    "meta": { "title": "Power BI Model Health Check: Unused Columns & Slow DAX", "description": "Drop a .pbit and get a health score for your Power BI model: unused columns and measures, risky relationships, slow DAX and full documentation." },
     "mh": {
       "badge": "Free · Runs in your browser · Nothing is uploaded",
       "title": "Power BI Model Health Check",
@@ -22,7 +22,7 @@ window.modelHealthTranslations = {
     }
   },
   "ar": {
-    "meta": { "title": "فحص صحة نموذج Power BI مجانًا: أعمدة غير مستخدمة وDAX بطيء", "description": "أسقط ملف ‎.pbit واحصل على تقييم لصحة نموذج Power BI: الأعمدة والمقاييس غير المستخدمة، والعلاقات الخطرة، وDAX البطيء، وتوثيق كامل." },
+    "meta": { "title": "فحص صحة نموذج Power BI: أعمدة غير مستخدمة وDAX بطيء", "keywords": "داتا أركوس, Power BI model health check, Power BI best practice analyzer, find unused columns Power BI, Power BI model documentation, pbit analyzer, VertiPaq, DAX best practices", "description": "أسقط ملف ‎.pbit واحصل على تقييم لصحة نموذج Power BI: الأعمدة والمقاييس غير المستخدمة، والعلاقات الخطرة، وDAX البطيء، وتوثيق كامل." },
     "mh": {
       "badge": "مجاني · يعمل داخل متصفحك · لا يتم رفع أي ملف",
       "title": "فحص صحة نموذج Power BI",

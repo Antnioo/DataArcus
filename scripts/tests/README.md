@@ -38,6 +38,7 @@ Each test prints `PASS` or `FAIL` with the problems it found. The command fails 
 | `theme-generator-lab`, `layout-lab` | The same two tests on the lab page, which runs the generator on the design engine (the live page keeps the old script until it moves) |
 | `design-engine` | The design engine (`assets/js/design-engine.js`) gives exactly what the generator gave before the move, for every case in `fixtures/design-engine`: the repaired saved design, theme JSON, slot table, background SVG and file name; both pages offer the engine's fonts and chart choices; the lab page runs the engine and the live page the old script; and both pages in the browser make exactly the fixtures, preview included. Fixtures come from `capture-design-fixtures.mjs` and are only remade with the owner's approval |
 | `tmdl-model` | TMDL projects read into the same model as a model.bim: every kind of TMDL object, and the Model Health Check gives identical results on a project saved by Power BI Desktop and its .pbit export (fixtures in `fixtures/model-health/tmdl-*`). Runs in Node, no browser: `node scripts/tests/tmdl-model.mjs` |
+| `github-links` | Every github.com/Antnioo/DataArcus blob link in the tracked files names a file in this repo, and its #anchor is a heading of that file as GitHub makes it (SQ11, 0.3.1). Runs in Node, no browser: `node scripts/tests/github-links.mjs` |
 
 ## How it works
 

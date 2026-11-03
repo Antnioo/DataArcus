@@ -951,6 +951,27 @@ export default async function ({ browser, url }) {
       if (v.errs.length) problems.push(`TMDL project ${name}: ${v.errs.join(' | ')}`);
       await v.ctx.close();
     }
+    // (AU47, AUD-047) a project with a TMDL file that can't be read (Dates.tmdl cut short): the page names the file and
+    // why, in English and Arabic, and gives no score, no score card and no history entry
+    {
+      const dir = path.join(ROOT, 'mcp/test-models/no-measures/Plain Orders.SemanticModel'), files = walk(dir).filter((f) => /\.tmdl$/i.test(f));
+      const rel = (f) => 'cut.SemanticModel/' + path.relative(dir, f).split(path.sep).join('/');
+      const body = (f) => { const b = fs.readFileSync(f); return /Dates\.tmdl$/.test(f) ? b.subarray(0, Math.floor(b.length / 3)) : b; };
+      const zip = zipOf([['cut.pbip', Buffer.from('{"version":"1.0"}')], ...files.map((f) => [rel(f), body(f)])]);
+      for (const lang of ['en', 'ar']) {
+        const v = await visitor(browser, { viewport: [1440, 900] });
+        await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=${lang}`, { waitUntil: 'networkidle' });
+        await v.pg.setInputFiles('#mhFile', { name: 'cut.zip', mimeType: 'application/zip', buffer: zip });
+        const got = await v.pg.waitForSelector('.mh-unreadable, #mhTab, .mh-error', { timeout: 30000 }).then(() => v.pg.evaluate(() => ({
+          said: (document.querySelector('.mh-unreadable') || {}).textContent || '', ring: !!document.querySelector('.mh-ring'), share: !!document.querySelector('#mhShare, #mhCard'),
+          partial: !!document.querySelector('.mh-partial li'), hist: localStorage.getItem('dataarcus-mh-history') }))).catch((e) => ({ said: 'timeout ' + e.message.slice(0, 60) }));
+        const want = lang === 'en' ? /1 model file\(s\) could not be read: cut\.SemanticModel\/definition\/tables\/Dates\.tmdl \(cut short: line \d+, the last, stops in the middle of an item\)\. The check below is missing what they hold; fix the file in Power BI Desktop or your editor and check it again\./
+          : /تعذّرت قراءة 1 من ملفات النموذج: cut\.SemanticModel\/definition\/tables\/Dates\.tmdl \(الملف مقطوع: السطر \d+، وهو الأخير، يتوقف في منتصف عنصر\)\. الفحص أدناه ينقصه ما تحتويه هذه الملفات؛ أصلح الملف في Power BI Desktop/;
+        check(want.test(got.said) && !got.ring && !got.share && got.partial && !got.hist, `unreadable TMDL file (${lang}): the message names the file and why, no score ring, card or share, findings partial, no history: ${JSON.stringify(got).slice(0, 400)}`);
+        if (v.errs.length) problems.push(`unreadable TMDL file (${lang}): ${v.errs.join(' | ')}`);
+        await v.ctx.close();
+      }
+    }
     // the drop zone says what really works
     const v = await visitor(browser, { viewport: [1440, 900] });
     await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });
@@ -993,6 +1014,75 @@ export default async function ({ browser, url }) {
     }
   }
 
+  // I-1 (0.3.1 wave 3, the owner's "Yes" 22 Oct): "Download score card" beside the documentation exports: one PNG,
+  // 1200 x 630, drawn in the browser. It holds the score, the size line, the top 5 findings by rule name and object name
+  // only (never DAX, a description, M or any other model text), "Hide object names" leaves the rule names only, and the
+  // footer is the tool's address; English and Arabic (right to left, names isolated); one health_card_download event per
+  // download; no request leaves the page. The model is made up (a garden centre) with planted DAX, descriptions and M.
+  {
+    const { PNG } = await import('pngjs');
+    const PLANT = ['ZQX_PLANTED_DAX_STRING', 'ZQX planted description', 'ZQX_PLANTED_M', 'ZQX table note'];
+    const mq = (n) => [{ name: n, source: { type: 'm', expression: 'let Source = Csv.Document(File.Contents("C:\\\\ZQX_PLANTED_M.csv")) in Source' } }];
+    const c = (n, ty, extra) => Object.assign({ name: n, dataType: ty || 'int64', sourceColumn: n }, extra || {});
+    const garden = { name: 'garden', compatibilityLevel: 1567, model: { culture: 'en-US', tables: [
+      { name: 'Orders', description: 'ZQX table note', columns: [c('PlantKey'), c('OrderDate', 'dateTime'), c('Qty'), c('Price', 'double'), c('Note', 'string', { description: 'ZQX planted description on a column' })], partitions: mq('Orders'),
+        measures: [{ name: 'Total Qty', expression: 'SUM(Orders[Qty])', formatString: '#,0' },
+          { name: 'Red Qty', expression: 'CALCULATE(SUM(Orders[Qty]), FILTER(Plants, Plants[Colour] = "ZQX_PLANTED_DAX_STRING"))', description: 'ZQX planted description on a measure' },
+          { name: 'Spare Price', expression: 'SUM(Orders[Price]) + LEN("ZQX_PLANTED_DAX_STRING")' }] },
+      { name: 'Plants', columns: [c('PlantKey'), c('Colour', 'string'), c('Family', 'string')], partitions: mq('Plants') },
+      { name: 'المشاتل', columns: [c('Nursery', 'string'), c('Region', 'string')], partitions: mq('Nurseries') }],
+    relationships: [{ name: 'r1', fromTable: 'Orders', fromColumn: 'PlantKey', toTable: 'Plants', toColumn: 'PlantKey', crossFilteringBehavior: 'bothDirections' }] } };
+    const layout = { sections: [{ name: 's1', displayName: 'Page 1', filters: '[]', visualContainers: [{ config: JSON.stringify({ name: 'v1', singleVisual: { visualType: 'tableEx', prototypeQuery: { Version: 2,
+      From: [{ Name: 'o', Entity: 'Orders', Type: 0 }], Select: [{ Measure: { Expression: { SourceRef: { Source: 'o' } }, Property: 'Total Qty' } }] } } }), filters: '[]' }] }], config: '{}' };
+    const file = pbit({ DataModelSchema: JSON.stringify(garden), 'Report/Layout': JSON.stringify(layout), Version: '1.28' });
+    for (const [lang, w] of [['en', 1440], ['ar', 1440], ['en', 390], ['ar', 390]]) {
+      const tag = `I-1 score card (${lang}, ${w} px)`;
+      const v = await visitor(browser, { viewport: [w, 900], downloads: true });
+      const sent = [];
+      v.pg.on('request', (r) => { if (!r.url().startsWith(url) && !/^(data|blob):/.test(r.url()) && !(r.method() === 'GET' && /^https:\/\/(fonts\.(googleapis|gstatic)\.com|cdn\.jsdelivr\.net)\//.test(r.url()))) sent.push(r.method() + ' ' + r.url()); });
+      await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=${lang}`, { waitUntil: 'networkidle' });
+      sent.length = 0;   // from here on: reading the file, the tabs and the downloads
+      await v.pg.setInputFiles('#mhFile', { name: 'garden.pbit', mimeType: 'application/octet-stream', buffer: file });
+      await v.pg.waitForSelector('.mh-scorecard .mh-ring b', { timeout: 30000 });
+      const issues = await v.pg.$$eval('.mh-issue', (ds) => ds.map((d) => d.dataset.rule));
+      await v.pg.click('[data-tab=docs]');
+      const panel = await v.pg.evaluate(() => { const b = document.getElementById('mhCard'), s = document.getElementById('mhCardHide'), p = b && b.closest('.mh-panel');
+        const r = p ? p.getBoundingClientRect() : null; return { button: !!b, sw: !!s && s.getAttribute('role') === 'switch' && !s.checked, inside: r && r.left >= 0 && r.right <= document.documentElement.clientWidth + 1, page: document.documentElement.scrollWidth,
+          beside: !!p && !!p.closest('.row') && !!p.closest('.row').querySelector('[data-doc="csv"]') }; });
+      check(panel.button && panel.sw && panel.inside && panel.beside && panel.page <= w, `${tag}: the button and the "Hide object names" switch (off) beside the exports, on the screen: ${JSON.stringify(panel)}`);
+      if (w !== 1440) { if (v.errs.length) problems.push(`${tag}: ${v.errs.join(' | ')}`); await v.ctx.close(); continue; }
+      await v.pg.evaluate(() => { window.__ev = []; window.dataArcusTrack = (n, p) => window.__ev.push([n, p]); });
+      const card = async () => {
+        const [dl] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('#mhCard')]);
+        const buf = fs.readFileSync(await dl.path());
+        const png = PNG.sync.read(buf);
+        const lines = await v.pg.$$eval('#mhCardText li', (ls) => ls.map((l) => l.textContent));
+        const dir = await v.pg.$eval('#mhCardText', (e) => e.getAttribute('dir'));
+        return { name: dl.suggestedFilename(), w: png.width, h: png.height, buf, lines, text: lines.join('\n'), dir };
+      };
+      const a = await card();
+      const L = (en, ar) => (lang === 'en' ? en : ar);
+      check(a.w === 1200 && a.h === 630 && /\.png$/.test(a.name), `${tag}: the card is a 1200 x 630 PNG: ${a.w} x ${a.h} ${a.name}`);
+      const score = await v.pg.$eval('.mh-scorecard .mh-ring b', (b) => b.textContent);
+      check(a.text.includes(score) && a.text.includes(L('3 tables', '3 جداول')) && a.text.includes(L('3 measures', '3 مقاييس')) && a.text.includes(L('1 visual', 'مرئي واحد'))
+        && a.lines[a.lines.length - 1] === 'dataarcus.com/tools/power-bi-model-health-check', `${tag}: score ${score}, the size line and the footer: ${JSON.stringify(a.lines)}`);
+      const finds = a.lines.filter((l) => /^\d\. /.test(l));
+      check(finds.length === Math.min(5, issues.length) && finds.every((l) => (lang === 'en' ? /[A-Za-z]/ : /[\u0600-\u06FF]/).test(l)), `${tag}: the top ${Math.min(5, issues.length)} findings by rule name in the page's language: ${JSON.stringify(finds)}`);
+      check(PLANT.every((p) => !a.text.includes(p) && !a.buf.includes(p)) && !/CALCULATE\(|SUM\(|FILTER\(|LEN\(|Csv\.Document/.test(a.text), `${tag}: no DAX, description or M on the card: ${JSON.stringify(a.lines)}`);
+      check(/\u2068[^\u2069]+\u2069/.test(a.text) && a.dir === L('ltr', 'rtl'), `${tag}: object names isolated (FSI ... PDI), card direction ${a.dir}: ${JSON.stringify(finds)}`);
+      const names = [...a.text.matchAll(/\u2068([^\u2069]+)\u2069/g)].map((m) => m[1]);
+      await v.pg.click('#mhCardHide');
+      const b = await card();
+      const bf = b.lines.filter((l) => /^\d\. /.test(l));
+      check(b.w === 1200 && b.h === 630 && bf.length === finds.length && !/[\u2068\u2069]/.test(b.text) && names.every((n) => !b.text.includes(n)), `${tag}: names hidden: rule names only: ${JSON.stringify(bf)} (names were ${JSON.stringify(names)})`);
+      const ev = await v.pg.evaluate(() => window.__ev);
+      check(ev.length === 2 && ev.every((e) => e[0] === 'health_card_download') && ev[0][1].names_hidden === false && ev[1][1].names_hidden === true, `${tag}: one health_card_download per download: ${JSON.stringify(ev)}`);
+      check(!sent.length, `${tag}: requests left the page: ${sent.join(' | ')}`);
+      if (v.errs.length) problems.push(`${tag}: ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
+  }
+
   // B-149: the stats row under the score (tables, columns, measures, relationships, pages, visuals) is all Arabic on the
   // Arabic page, the sample model included (it has report pages, so the pages and visuals pills show)
   {
@@ -1002,6 +1092,20 @@ export default async function ({ browser, url }) {
     await v.pg.waitForSelector('.mh-scorecard .mh-ring b', { timeout: 30000 });
     const pills = await v.pg.$$eval('.mh-pill', (ps) => ps.map((p) => [...p.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim()));
     check(pills.length === 6 && pills.every((t) => t && !/[A-Za-z]/.test(t)), `B-149: the Arabic stats row has English labels: ${JSON.stringify(pills)}`);
+    await v.ctx.close();
+  }
+  // (0.3.1 FX1, the laptop's part 3, G4-1: "Health Check offline: no result (the page stays on "Drop a .pbit and get a
+  // health score")") the page loaded, then the network gone: a dropped .pbit still gets its score (the worker and the
+  // scripts it needs are loaded with the page; nothing is sent anywhere either way)
+  {
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });
+    await v.ctx.setOffline(true);
+    await v.pg.setInputFiles('#mhFile', { name: 'model-health-sample.pbit', mimeType: 'application/octet-stream', buffer: fs.readFileSync(path.join(ROOT, 'assets/data/model-health-sample.pbit')) });
+    const score = await v.pg.waitForSelector('.mh-scorecard .mh-ring b', { timeout: 30000 }).then((e) => e.textContent()).catch(() => null);
+    const shown = score ? '' : await v.pg.evaluate(() => document.getElementById('mhRoot') ? document.getElementById('mhRoot').innerText.slice(0, 200) : document.body.innerText.slice(0, 200));
+    check(score != null && +score > 0, `offline (G4-1): the page loaded, then offline, the dropped sample gets no score: ${JSON.stringify(shown)}`);
+    await v.ctx.setOffline(false);
     await v.ctx.close();
   }
   return { checks, problems };
