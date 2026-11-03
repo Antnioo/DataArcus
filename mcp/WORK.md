@@ -7,18 +7,9 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 ## Where it stands (0.3.1, 27 Oct)
 - `integration/0.3.1` (from main d501c78): builders branch from it and push only their branch; the reviewer merges;
   one PR integration -> main at the end, the owner merges (the owner: max 4 builders for three rounds, then 2-3).
-- Merged: waves 1-6 (A2, K2, GC2, RB, Q1); the release audit AF1, AF2, DS1, AU47; the Seen batches SQ1-SQ11, SQ13
-  (each note in `mcp/work/<ID>.md`).
-- Merged 26 Oct: LR1, LR2, BD1, NC1, CS1, GL1, NC2, RD1.
-- 27 Oct merged: R4A, GL2, BD2, CS2, NC3, TT1, GC3, GD1 (glass default), GD2 (twin identical in glass; glass
-  previews), [ST1](work/ST1.md) (every Seen item swept: its register is what is left),
-  [SF1](work/SF1.md) (the hard rules proven; the way back to 0.3.0), [TT2](work/TT2.md) (Arabic names approved on the
-  website's download), [TS1](work/TS1.md) (FHD text x 1.25; S10's gap), [PF1](work/PF1.md) (glass pictures fast),
-  [TW1](work/TW1.md) (the twin identical: panels, Total, axes, phone titles; glass previews), [LC1](work/LC1.md)
-  (layout preview), [CX2](work/CX2.md) (Codex's wording findings), [CX1](work/CX1.md) (Codex's safety findings).
-- 28 Oct (laptop part 3): [SPD](work/SPD.md) (CI 32 -> 12 min), [P3A](work/P3A.md), [FX1](work/FX1.md), [FX2](work/FX2.md), [FX3](work/FX3.md), [FX4](work/FX4.md), [FX5](work/FX5.md), [FX6](work/FX6.md), [FX5b](work/FX5b.md), [FX3b](work/FX3b.md), [FX4b](work/FX4b.md).
-- 29 Oct-1 Nov (laptop parts 4-8): TB1, TB1b, TB1c, TB2, MP1 and MP1b-f, MR1, MX1-MX8 (each in `work/<ID>.md`).
-- 0.3.2: TK1, DP1, OP1, SP1-9, SP12-13 (the split). Running: SP14, SP15, SP16, SP18.
+- Merged 21-28 Oct: waves 1-6, the release audit, the Seen batches SQ1-SQ13, LR1 to CX1, and laptop part 3's SPD, P3A, FX1-FX6 (FX3b-FX5b) (each note in `mcp/work/<ID>.md`).
+- 29 Oct-1 Nov (laptop parts 4-8): TB2, TB1, TB1b, TB1c, MP1, MP1b, MP1c, MR1, MP1d, MX1, MP1e, MX2, MP1f, MX3, MX4, MX5, MX6, MX7, MX8 (each in `work/<ID>.md`).
+- 0.3.2 (this branch): TK1, DP1, OP1, SP1-9, SP12-13, SP15 (the split). Running: SP14, SP16, SP18, HR1.
 
 ## Next step
 1. 0.3.1: the laptop's yes, then the owner's merge to main. 2. 0.3.2 after it.
