@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.1
+- **A large plan is no longer cut:** a plan close to the answer limit (one report in English and Arabic with every
+  option on) says once what it repeated (the flip cards' back and helper measure names, the confirmed date), so every
+  flip card stays in the plan; smaller plans read exactly as before.
 - **A fourth test run in Power BI Desktop:** a chart lined up under a heatmap's grid keeps its English padding, value
   axis and sort as well as its place, so each bar stands under its own hour, and the day names beside a heatmap get room
   for their last row, so no scrollbar covers them.

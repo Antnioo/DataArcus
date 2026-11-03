@@ -6,6 +6,11 @@
 //   H2  its length differs by at most 200 characters between a short and a long folder
 //   H3  no field of the long-folder answer repeats the folder more than once (root names it)
 //   H4  check_report and create_arabic_twin's plan from the long folder: the same, at most one mention of the folder
+//   H5  the B5 plan says its repeats once (lib/plan-headroom.mjs): the flip cards' back and measure names, the confirmed
+//       date and how many others, each relationship by its other end
+//   U1-U4  fitRepeats: an answer under AIM is the same object; the input is never changed (the plan's data and the
+//       approval page read their own copies); a card whose names differ keeps its list; before the date is confirmed
+//       every candidate stays (they are the question's choices)
 // Fixture: the golden model (mcp/test-models/large-synthetic, made up).   node test-0.3.2-hr1.mjs  (HR1_SHOW=1 lists
 // every field that mentions the folder)
 import './test-env.mjs';
@@ -15,6 +20,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
 import { ANSWER_MAX } from './lib/answer.mjs';
+import { fitRepeats, AIM } from './lib/plan-headroom.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const problems = []; let checks = 0;
@@ -98,7 +104,27 @@ try {
     const m = mentions(b[k].j, b.ROOT), d = String(b[k].t).length - String(a[k].t).length;
     chk(() => !b[k].err && m.reduce((n, x) => n + x.n, 0) <= 1 && Math.abs(d) <= 200, () => `H4. ${k === 'check' ? 'check_report' : "create_arabic_twin's plan"} names the folder once and does not grow with it (${d}): ${b[k].err ? String(b[k].t).slice(0, 300) : JSON.stringify(byField(m))}`);
   });
+  const J = b.plan.j || {}, F = J.flipCards || {}, G = J.gulfDates || {};
+  chk(() => F.back && F.measureNames && (F.cards || []).length === 4 && F.cards.every((c) => !('back' in c) && !('measures' in c) && c.title && c.measure && (c.pages || []).length)
+    && (G.candidates || []).length === 1 && G.candidates[0].status === 'confirmed' && G.otherCandidates === 11 && /^to Calendar\[Date\]$/.test(G.candidates[0].relationship) && !(J.slots || []).some((x) => 'galleryWhy' in x),
+  () => `H5. the B5 plan says its repeats once: ${JSON.stringify({ back: F.back, names: !!F.measureNames, cards: F.cards, candidates: G.candidates, others: G.otherCandidates }).slice(0, 700)}`);
 } catch (e) { problems.push('threw: ' + String(e && e.stack || e).slice(0, 800)); }
+// ---------- U: fitRepeats on made-up answers ----------
+{
+  const back = { description: 'none', value: 'v', yearOnYear: 'yes' }, pad = 'x'.repeat(AIM);
+  const card = (n, m, pages, measures) => ({ card: n, title: m, measure: `T[${m}]`, back, pages, measures });
+  const big = { pad, flipCards: { cards: [card(1, 'A', ['P1', 'P2'], ['A (flip front)', 'A (flip back)', 'A (flip backdrop)', 'A (flip front) 2', 'A (flip back) 2', 'A (flip backdrop) 2']),
+    card(2, 'B', ['P1'], ['B (flip front) 2', 'B (flip back) 2', 'B (flip backdrop) 2'])], bookmarks: 6 },
+  gulfDates: { candidates: [{ field: 'S[D]', relationship: 'S[D] -> C[Date]', active: true, status: 'candidate' }, { field: 'S[E]', relationship: 'S[E] -> C[Date]', active: false, status: 'candidate' }], askNext: { id: 'dateRole' } } };
+  const small = { flipCards: big.flipCards, gulfDates: big.gulfDates }, copy = JSON.stringify(big);
+  chk(() => fitRepeats(small) === small, () => 'U1. an answer under AIM is returned as it is');
+  const f = fitRepeats(big);
+  chk(() => JSON.stringify(big) === copy && f !== big, () => 'U2. fitRepeats never changes its input');
+  chk(() => f.flipCards.back && !('measures' in f.flipCards.cards[0]) && JSON.stringify(f.flipCards.cards[1].measures) === JSON.stringify(big.flipCards.cards[1].measures) && f.flipCards.measureNames,
+    () => `U3. the rule's names said once; a card whose names differ keeps its list: ${JSON.stringify(f.flipCards).slice(0, 500)}`);
+  chk(() => f.gulfDates.candidates.length === 2 && !('otherCandidates' in f.gulfDates) && f.gulfDates.candidates.every((c) => c.relationship === 'to C[Date]') && f.gulfDates.askNext,
+    () => `U4. before the date is confirmed every candidate stays: ${JSON.stringify(f.gulfDates)}`);
+}
 fs.rmSync(SHORT, { recursive: true, force: true }); fs.rmSync(LONGP, { recursive: true, force: true });
 
 if (problems.length) { console.log(`FAIL  hr1  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
