@@ -25,12 +25,18 @@
   same file). Mutations: GLASS.t 35 -> 36 fails 11 of 13 and the website sp6 4 of 4 (preview and theme); a hue x 60.0001
   fails C1. Website sp6 4.
 - **Before -> after (lines):** design-engine.js 1304 -> 950; design-colours.js 236 (new); design-glass.js 166 (new).
-- **Areas:** see "Runs" below. **CI:** see below.
-- **State:** RUNNING the gate.
-- **Resume:** the areas' result, then CI.
+- **Areas** (2bfe822, the last code commit, SP2 merged in): report, arabic, core 71 of 71 suites PASS; every suite
+  the base ran (report, arabic: 59) has the same count after. Website: sp6 4, design-engine 600, theme-generator(-lab)
+  922 each, theme-logo 753, pbip 111, layout(-lab) 512 each. Lint 0, check:min, csp, ar-pages, sitemap: no change.
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41564683132 on e437847** (Linux, Windows, macOS).
+- **State: DONE.**
+- **Resume:** none; the reviewer's merge.
 
 ## Runs
-(filled at the end)
+- Base 04a9922 (worktree): report + arabic 59 suites PASS. After 090d527: report + arabic + core 70 PASS. After the
+  merge 2bfe822: 71 PASS (+ sp2). Core was not run on the base locally (its suites pass after, CI green).
+- integration/0.3.2 moved to 66f93a0 (SP2) while CI ran: merged in (tests.json's report area: both sides' paths), the
+  first CI run cancelled; the second failed only agent-memory (this note's summary labels), fixed in e437847.
 
 ## CHANGELOG line
 - **Inside the design engine, colours and the glass look:** the colour math and the glass look each have a file of
