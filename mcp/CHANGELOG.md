@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **Inside the Arabic twin:** the rules that say what kind a visual is, which chart axis is time and what keeps reading
+  left to right inside a mirrored visual have a file of their own; every twin and every right-to-left chart is exactly
+  what it was before.
 - **A chart under a heatmap that cannot move:** when lining it up under the heatmap's grid would cover another
   visual, it stays where the plain mirror puts it but keeps its English sort, value axis and padding, so its hours still
   read left to right like the grid above it.

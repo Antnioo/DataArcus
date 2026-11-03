@@ -16,7 +16,7 @@ task routes.
   engine (`design-engine.js`), the health check (`model-health-engine.js`; its DAX tokens and report references `dax-reference-parser.js`; its model index `model-index.js`;
   `model-health-tmdl.js`, `gulf-health.js`),
   the calendar generator (`calendar-generator.js`, `gulf-dates.js`), the measured rules (`report-rules.js`,
-  `label-limits.js`, `layout-check.js`, `report-a11y.js`), the mirror engine for right to left (`report-mirror.js`),
+  `label-limits.js`, `layout-check.js`, `report-a11y.js`), the mirror engine for right to left (`report-mirror.js`; its named rules `mirror-policy.js`),
   the preview renderer (`page-preview.js`) and the SVG KPI compiler (`svg-kpi-compiler.js`; its expression tree and
   preview evaluator `svg-expressions.js`, its SVG text safety `svg-escape.js`, its DAX code generation `svg-codegen.js`).
 - **The MCP server** (`mcp/server.mjs`, stdio): 11 tools, from `read_model` to `check_report` (every tool and option:
@@ -80,7 +80,7 @@ task routes.
 |---|---|
 | A website page or tool | the page's HTML and its `assets/js/` engine; `node scripts/test-site-config.mjs`; `scripts/tests/run-all.mjs` |
 | What a report looks like (layout, sizes, visuals) | `assets/js/pbip-export.js`, `pbip-page.js` (tooltip pages: `pbip-tooltip.js`; page buttons and filter panels: `pbip-navigation.js`), `design-engine.js`; `report-rules.js` for measured limits |
-| Right to left and Arabic | `assets/js/report-mirror.js`; `mcp/lib/twin-*.mjs` (by step), `terminology.mjs`; `assets/data/arabic-report-words.json` |
+| Right to left and Arabic | `assets/js/report-mirror.js` (which family, which axis is time, what keeps left to right: `mirror-policy.js`); `mcp/lib/twin-*.mjs` (by step), `terminology.mjs`; `assets/data/arabic-report-words.json` |
 | Reading models | `assets/js/pbip-bind.js`, `tmdl-model.js` (the website's folder or file: `model-import-browser.js`); `mcp/lib/model.mjs`, `scope.mjs` |
 | Model health | `assets/js/model-health-engine.js` (DAX tokens and report references: `dax-reference-parser.js`; the normalised model, its index and dependency references: `model-index.js`), `model-health-tmdl.js`, `gulf-health.js` |
 | A tool's inputs or answer | `mcp/tools/<tool_name>.mjs`, `mcp/lib/agent-text.mjs`, `mcp/TOOLS.md` |
