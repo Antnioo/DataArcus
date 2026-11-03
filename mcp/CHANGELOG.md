@@ -56,6 +56,8 @@ package's manifest; this file says what is in it.
   file of its own; every plan, answer and written file is exactly what it was before.
 - **Inside the design engine, colours and the glass look:** the colour math and the glass look each have a file of
   their own, shared by the website and the MCP; every theme, picture and layout is exactly what it was before.
+- **The website, steadier and plainer:** the Model Health Check article no longer jumps when its font arrives on a
+  phone, and the site's own pages and scripts no longer use the long dash (a quote of Microsoft's guidance keeps it).
 
 ## [0.3.1]: 2026-11-03 (the version for testers)
 Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports

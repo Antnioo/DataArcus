@@ -1,5 +1,6 @@
 // The website's configuration files, checked on every push (owner's rule 2026-10-06: any website change runs a check
 // on all site config files). No network: it reads the repo as GitHub Pages publishes it.
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -84,6 +85,32 @@ for (const u of locs) {
 // (round 19: a script's folder from a URL's pathname is "/C:/..." and %-encoded on Windows: fileURLToPath, as here)
 const scriptsWith = (dir) => fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true }).flatMap((f) => f.isDirectory() ? (f.name === 'node_modules' ? [] : scriptsWith(path.join(dir, f.name))) : /\.m?js$/.test(f.name) && !/\.min\.js$/.test(f.name) ? [path.join(dir, f.name)] : []);
 for (const f of ['scripts', 'mcp'].flatMap(scriptsWith)) ok(!/import\.meta\.url\)\.pathname/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')), `${f}: builds a path from the module URL's pathname (use fileURLToPath)`);
+
+// No em dash (U+2014) in the repository's own text (the owner, 27 Oct, D-1027-15; 0.3.2 ED1): every tracked page,
+// translation, script, style, data and note file, outside the job notes (mcp/work/), the changelog's history and
+// Bootstrap's vendor files. A page or translation may not write it as an entity either. The one exception is a
+// word-for-word quote of someone else's page (QUOTED): written &mdash; in the sources, and as the character itself in
+// the generated Arabic copy (ar-pages.mjs saves the page as the browser serialises it). Code that recognises the
+// character names it by its escape (\u2014).
+const EM = String.fromCharCode(0x2014);
+const DASH_TEXT = /\.(html|m?js|cjs|css|json|md|ya?ml|txt|xml|svg|webmanifest|tmdl|dax|tsv)$/i;
+const DASH_SKIP = /^(mcp\/work\/|mcp\/CHANGELOG\.md$|assets\/css\/vendor\/|node_modules\/)/;
+// file: why its one literal em dash stays (MCP code, out of the website's scope; a regex that strips a trailing dash)
+const DASH_ALLOWED = { 'mcp/lib/redesign.mjs': 1 };
+// Microsoft's bi-directional relationship guidance, quoted in the best-practice-exceptions article (EN and AR)
+const QUOTED = ["must be bi-directional&mdash;it isn't possible to configure otherwise"].flatMap((q) => [q, q.replace('&mdash;', EM)]);
+let dashFiles = [];
+try { dashFiles = execFileSync('git', ['ls-files', '-z'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).split('\0').filter((f) => f && DASH_TEXT.test(f) && !DASH_SKIP.test(f) && exists(f)); }
+catch (e) { fails.push(`em dash check: git ls-files failed (${e.message})`); }
+ok(dashFiles.length > 500, `em dash check: only ${dashFiles.length} tracked text files (expected the whole repository)`);
+for (const f of dashFiles) {
+  const t = QUOTED.reduce((s, q) => s.split(q).join(''), read(f)), lit = t.split(EM).length - 1;
+  ok(lit === (DASH_ALLOWED[f] || 0), `${f}: ${lit} em dash(es) (U+2014): use a comma, a colon, parentheses or " - "`);
+  if (/\.(html|js)$/.test(f)) {
+    const left = t.match(/&mdash;|&#8212;|&#x2014;/gi);
+    ok(!left, `${f}: writes an em dash as ${left && left[0]} outside a quoted title`);
+  }
+}
 
 // the AI agent's public pages say what the MCP server has (0.2.9, the audit's A7-10): the number of tools, in English
 // and Arabic, a line for each tool on the beta page, and check_report (not create_report) named as the offline check
@@ -213,4 +240,4 @@ for (const f of ['scripts', 'mcp'].flatMap(scriptsWith)) ok(!/import\.meta\.url\
 }
 
 if (fails.length) { console.error(`FAIL  site config: ${fails.length} problem(s)\n- ` + fails.join('\n- ')); process.exit(1); }
-console.log(`PASS  site config: _config, CNAME, robots, sitemap (${locs.length} URLs), icons, manifest, security.txt, llms.txt, ${pages.length} pages`);
+console.log(`PASS  site config: _config, CNAME, robots, sitemap (${locs.length} URLs), icons, manifest, security.txt, llms.txt, ${pages.length} pages, no em dash in ${dashFiles.length} files`);
