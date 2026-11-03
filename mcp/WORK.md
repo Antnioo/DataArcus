@@ -4,15 +4,14 @@ The current release only, capped (60 lines, 3,200 characters: `scripts/check-age
 [CLAUDE.md, "Keeping the memory"](CLAUDE.md#keeping-the-memory). Each job: `mcp/work/<ID>.md`, its `## Summary`
 first. Finished entries: [work/archive/](work/archive/README.md).
 
-## Where it stands (0.3.1, 27 Oct)
-- `integration/0.3.1` (from main d501c78): builders branch from it and push only their branch; the reviewer merges;
-  one PR integration -> main at the end, the owner merges (the owner: max 4 builders for three rounds, then 2-3).
-- Merged 21-28 Oct: waves 1-6, the release audit, the Seen batches SQ1-SQ13, LR1 to CX1, and laptop part 3's SPD, P3A, FX1-FX6 (FX3b-FX5b) (each note in `mcp/work/<ID>.md`).
-- 29 Oct-1 Nov (laptop parts 4-8): TB2, TB1, TB1b, TB1c, MP1, MP1b, MP1c, MR1, MP1d, MX1, MP1e, MX2, MP1f, MX3, MX4, MX5, MX6, MX7, MX8 (each in `work/<ID>.md`).
-- 0.3.2 (this branch): TK1, DP1, OP1, HR1-HR2 (answers fit uncut), SP1-9, SP12-16, SP18-20 (the split). Running: none.
+## Where it stands (0.3.2, 3 Nov)
+- 0.3.1 shipped: on main at b79a7ed6 (#104, #114, "## [0.3.1]: 2026-11-03"); each job's note in `mcp/work/<ID>.md`.
+- `integration/0.3.2`: builders branch from it, push only their branch; the reviewer merges; the owner merges to main.
+- 0.3.2: TK1, DP1, OP1, HR1-HR2 (answers fit uncut), SP1-9, SP12-16, SP18-20 (the split). R032
+  (`release/0.3.2-prep`): main merged in, the version 0.3.2, its own CHANGELOG section. Running: none.
 
 ## Next step
-1. 0.3.1: the laptop's yes, then the owner's merge to main. 2. 0.3.2 after it.
+1. The reviewer: R032 into integration/0.3.2. 2. 0.3.2's other jobs; the release day flips the download lines.
 
 ## Open decisions (the owner's; no work before his go)
 - L6 "Seen" 1: Arabic DA measures for the twin and the bilingual report's Arabic half.
