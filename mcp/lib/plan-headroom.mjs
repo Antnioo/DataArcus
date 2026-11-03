@@ -6,6 +6,12 @@
 //   - gulfDates.candidates: once the person confirmed the date, that one and how many others there were (before it,
 //     every candidate: they are the question's choices); each relationship by its other end only
 //   - slots[].galleryWhy: said on gallery.slots for that page and title
+// (0.3.2 HR2, B-295) the bilingual step before the Arabic texts (no plan id yet) answered 42,710 and capAnswer cut
+// bilingual.notTranslated, the texts the person labels; past AIM it now says too:
+//   - bilingual.notTranslated by its why: each why (and whyAr) once, its texts (each text and where) under it
+//   - bilingual.terminology.sheet[].why: the why of a status that two rows or more share, once in whyByStatus
+//   - forAuthoring[].position: when every one is its slot's (slots[], by role: x, y, w, h) and its tabOrder its z,
+//     each { role, kind, z } and the rule once (forAuthoringPosition)
 // Only an answer past AIM (95% of ANSWER_MAX) changes: every other answer stays byte for byte as it was. Answer only:
 // the plan's data, its binding and the approval page read their own copies, never this one.
 import { ANSWER_MAX, out } from './answer.mjs';
@@ -43,12 +49,44 @@ function datesOnce(g) {
   return o;
 }
 
+// insert `extra` right after key `after` (the answer keeps its order)
+const withAfter = (o, after, fn, extra) => { const x = {}; Object.entries(o).forEach(([k, v]) => { x[k] = k === after ? fn(v) : v; if (k === after) Object.assign(x, extra); }); return x; };
+
+function notTranslatedOnce(nt) {
+  if (!nt.every((x) => x && typeof x === 'object' && typeof x.why === 'string')) return null;
+  const groups = new Map();
+  nt.forEach(({ why, whyAr, ...t }) => { const k = JSON.stringify([why, whyAr == null ? null : whyAr]); if (!groups.has(k)) groups.set(k, Object.assign({ why }, whyAr == null ? {} : { whyAr }, { texts: [] })); groups.get(k).texts.push(t); });
+  return groups.size < nt.length ? [...groups.values()] : null;
+}
+
+function termsOnce(t) {
+  const n = {}; t.sheet.forEach((r) => { if (r && typeof r.why === 'string') { const m = n[r.status] = n[r.status] || {}; m[r.why] = (m[r.why] || 0) + 1; } });
+  const by = {}; Object.entries(n).forEach(([st, m]) => { const [w, k] = Object.entries(m).sort((a, b) => b[1] - a[1])[0]; if (k > 1) by[st] = w; });
+  if (!Object.keys(by).length) return t;
+  return withAfter(t, 'sheet', (sh) => sh.map((r) => { if (!r || by[r.status] !== r.why) return r; const { why, ...x } = r; return x; }), { whyByStatus: by });
+}
+
+const POS = ['x', 'y', 'z', 'width', 'height', 'tabOrder'];
+function authoringOnce(a) {
+  const slots = a.slots, roles = slots.map((s) => s && s.role);
+  const ok = a.forAuthoring.length > 0 && a.forAuthoring.every((f) => { const p = f && f.position, i = roles.indexOf(f && f.role), sl = slots[i];
+    return p && sl && roles.lastIndexOf(f.role) === i && sl.kind === f.kind && Object.keys(p).every((k) => POS.includes(k)) && p.z != null && p.tabOrder === p.z && p.x === sl.x && p.y === sl.y && p.width === sl.w && p.height === sl.h; });
+  if (!ok) return a;
+  return withAfter(a, 'forAuthoring', (fa) => fa.map(({ position, ...f }) => Object.assign(f, { z: position.z })), { forAuthoringPosition: 'Each visual\'s x, y, width and height are its slot\'s (slots, by role: x, y, w, h); its tab order is its z.' });
+}
+
 /** The plan's answer, with its repeats said once when it is past AIM; otherwise the same object. */
 export function fitRepeats(a) {
   if (!a || typeof a !== 'object' || size(a) <= AIM) return a;
   const o = Object.assign({}, a);
   if (o.flipCards && Array.isArray(o.flipCards.cards)) o.flipCards = flipOnce(o.flipCards);
   if (o.gulfDates && Array.isArray(o.gulfDates.candidates)) o.gulfDates = datesOnce(o.gulfDates);
+  if (o.bilingual && typeof o.bilingual === 'object') {
+    const b = Object.assign({}, o.bilingual), g = Array.isArray(b.notTranslated) ? notTranslatedOnce(b.notTranslated) : null;
+    if (g) b.notTranslated = g;
+    if (b.terminology && Array.isArray(b.terminology.sheet)) b.terminology = termsOnce(b.terminology);
+    o.bilingual = b;
+  }
   if (o.gallery && Array.isArray(o.slots)) o.slots = o.slots.map((s) => { if (!s || s.galleryWhy == null) return s; const { galleryWhy, ...x } = s; return x; });
-  return o;
+  return Array.isArray(o.forAuthoring) && Array.isArray(o.slots) ? authoringOnce(o) : o;
 }
