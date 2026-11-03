@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.1
+- **The day names beside a heatmap never replace a visual of the report:** they take a free name on their page, the
+  plan and the approval page name them, a heatmap whose padded rows may not all fit keeps its own row names, and their box is the
+  heatmap's own height with no scrollbar.
 - **A large plan is no longer cut:** a plan close to the answer limit (one report in English and Arabic with every
   option on) says once what it repeated (the flip cards' back and helper measure names, the confirmed date), so every
   flip card stays in the plan; smaller plans read exactly as before.

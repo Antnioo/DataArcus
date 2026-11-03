@@ -634,7 +634,7 @@
   // there than that: B1, said.
   // Returns { ok: true, textSize, width (the names table's), slack } or { ok: false, why }
   const WEEKDAY = /^(week ?day|day ?name|day of (the )?week|dayofweek|week ?day name)$/i;
-  const ROW_LINE = 15.1 / 8, ROW_PAD = 2, ROW_TITLE = 1.6, ROW_MARGINS = 6, TABLE_PAD_MORE = 6;
+  const ROW_LINE = 15.1 / 8, ROW_PAD = 2, ROW_TITLE = 1.6, ROW_MARGINS = 6, TABLE_PAD_MORE = 6, TABLE_EDGES = 4;
   const padOf = (json, side) => { const e = (entries(json.visual.visualContainerObjects, 'padding') || []).find((x) => !x.selector && isObj(x.properties) && x.properties[side] !== undefined); const n = e ? parseFloat(String(lit(e.properties[side])).replace(/D$/, '')) : 0; return Number.isFinite(n) ? n : 0; };
   function heatmapBeside(json, opts) {
     if (kindOf(json) !== 'matrix' || !isObj(json.position) || !Number.isFinite(json.position.height)) return { ok: false, why: 'not a matrix' };
@@ -644,7 +644,10 @@
     if (typeof name !== 'string' || !WEEKDAY.test(name.trim())) return { ok: false, why: 'its rows are not the days of the week (told from the row field\'s name)' };
     const ob = isObj(v.objects) ? v.objects : {}, pv = (k, x) => { const e = (Array.isArray(ob[k]) ? ob[k] : []).find((y) => isObj(y) && !y.selector && isObj(y.properties) && y.properties[x] !== undefined); return e ? e.properties[x] : undefined; };
     const pt = parseFloat(String(lit(pv('grid', 'textSize')) || lit(pv('values', 'fontSize')) || lit(pv('rowHeaders', 'fontSize')) || '10').replace(/D$/, '')) || 10;
-    const rowH = ROW_LINE * pt + ROW_PAD, total = lit(pv('subTotals', 'rowSubtotals')) !== 'false' ? 1 : 0;
+    // (0.3.2 HM1, B-299: Codex F1-1, rowPadding 6 at 10pt in a box 190 passed: its 8 rows are 269) a row counts the
+    // matrix's grid.rowPadding, above and below its text
+    const rp = parseFloat(String(lit(pv('grid', 'rowPadding'))).replace(/D$/, ''));
+    const rowH = ROW_LINE * pt + ROW_PAD + (Number.isFinite(rp) && rp > 0 ? 2 * rp : 0), total = lit(pv('subTotals', 'rowSubtotals')) !== 'false' ? 1 : 0;
     const t = (entries(v.visualContainerObjects, 'title') || []).find((e) => !e.selector && isObj(e.properties)), titled = !!(t && lit(t.properties.show) === 'true');
     const need = (7 + 1 + total) * rowH + (titled ? rowH * ROW_TITLE : 0) + ROW_MARGINS;
     if (need > json.position.height + 0.5) return { ok: false, why: `its 7 rows may not all fit its box (about ${Math.round(need)} high, its box ${Math.round(json.position.height)}): names beside it could not follow a scroll` };
@@ -655,7 +658,7 @@
     const slack = padOf(json, opts && opts.mirrored ? 'left' : 'right');
     if (slack < TABLE_PAD_MORE - 0.01) return { ok: false, why: `its box has no room beside its grid for the names table's cell padding (${TABLE_PAD_MORE} more than a row header's; its padding there ${round(slack)}): names beside it would wrap` };
     if (json.position.width <= (R - 1 + TABLE_PAD_MORE) * 2) return { ok: false, why: 'its box is too narrow for the names beside its grid' };
-    return { ok: true, textSize: pt, width: round(R - 1 + TABLE_PAD_MORE), slack: TABLE_PAD_MORE };
+    return { ok: true, textSize: pt, width: round(R - 1 + TABLE_PAD_MORE), slack: TABLE_PAD_MORE, rowHeight: rowH, need };
   }
   // the twin's heatmap (mirrored) and its names table: the names table in the room of the English row headers (no padding
   // of its own at its sides, so its column is all of it), the matrix the rest of the box, its grid filling it
@@ -673,7 +676,10 @@
     const vco = r.table.visual.visualContainerObjects, pe = plainEntry(vco, 'padding').properties;
     pe.left = mk('0D'); pe.right = mk('0D');
     const to = r.table.visual.objects, rq = to.columnFormatting[0].selector.metadata;
-    to.columnWidth = [{ properties: { value: mk(h.width + 'D') }, selector: { metadata: rq } }];
+    // (0.3.2 HM1, B-300, laptop part 14, Desktop 2.159: its one column 43.06 in its 43.1 box drew a horizontal scrollbar
+    // thumb under the last name: the table's own edges count) its column TABLE_EDGES narrower than its box: 1 px of the
+    // table's edge line a side, and 1 a side for Desktop's rounding to device pixels; still wider than English's strip
+    to.columnWidth = [{ properties: { value: mk(round(h.width - TABLE_EDGES) + 'D') }, selector: { metadata: rq } }];
     to.values[0].properties.wordWrap = mk('false');
     Object.assign(to.columnHeaders[0].properties, { wordWrap: mk('false'), autoSizeColumnWidth: mk('false') });
     const g = to.grid[0].properties; if (g.textSize === undefined) g.textSize = mk(h.textSize + 'D');
@@ -682,16 +688,15 @@
     // Microsoft's capabilities give a tableEx no header switch (columnHeaders has no show) and no row height (a row is
     // grid.textSize and grid.rowPadding, both the matrix's above): its blank header takes the matrix's column header
     // outline (a table draws a line under its header by default) and its values the row headers' outline (the names
-    // stand for them); its box one row of the matrix's text taller (same top, so its rows stay level with the grid's),
+    // stand for them); its box one row of the matrix's text taller (same top, so its rows stay level with the grid's; until 0.3.2 HM1, below),
     // kept inside its page or group (o.bottom: the room under the box's top there)
     const mo = isObj(json.visual.objects) ? json.visual.objects : {}, OUT = ['outlineStyle', 'outlineWeight', 'outlineColor'];
     const plainOf = (card) => ((Array.isArray(mo[card]) ? mo[card] : []).find((e) => isObj(e) && !e.selector && isObj(e.properties)) || {}).properties || {};
     const ch = plainOf('columnHeaders'), rh = plainOf('rowHeaders');
     OUT.forEach((k) => { if (ch[k] !== undefined) to.columnHeaders[0].properties[k] = clone(ch[k]); if (rh[k] !== undefined) to.values[0].properties[k] = clone(rh[k]); });
-    const rp = parseFloat(String(lit(plainOf('grid').rowPadding)).replace(/D$/, ''));
-    const oneRow = ROW_LINE * h.textSize + ROW_PAD + (Number.isFinite(rp) ? 2 * rp : 0), tp = r.table.position;
-    const room = o && Number.isFinite(o.bottom) ? o.bottom - tp.y : Infinity;
-    tp.height = round(Math.max(tp.height, Math.min(tp.height + oneRow, room)));
+    // (0.3.2 HM1, B-300, laptop part 14: the box one row taller, 209.2 against the matrix's 188.3) the box exactly the
+    // matrix's (rowNamesBeside's: same y, same height), so it never leaves the page or group the matrix is in
+    // (o.bottom no longer read); its header and rows, rowPadding counted (B-299), fit it by heatmapBeside's own check
     return r;
   }
   // json: a visual.json; { ok: true } when the twin writes it as a table, else { ok: false, why }

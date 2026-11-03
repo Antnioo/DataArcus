@@ -39,7 +39,6 @@ const call = async (a) => { const r = await handler(a), t = (r.content || []).ma
 // ---- a made-up report from a spec (as twin-fuzz's materialize) ----
 const put = (f, x) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, typeof x === 'string' ? x : JSON.stringify(x, null, 2) + '\n'); };
 const schema = (s) => 'https://developer.microsoft.com/json-schemas/fabric/' + s + '/schema.json';
-const VS = schema('item/report/definition/visualContainer/2.1.0');
 const L = (v) => ({ expr: { Literal: { Value: String(v) } } });
 const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
 const num = (p) => parseFloat(String(lit(p)).replace(/D$/, ''));
@@ -126,7 +125,8 @@ try {
   chk(() => /^Nothing was written/.test(refused) && /v0Names/.test(refused), () => `U4. the writer refuses to write the added table over the report's own v0Names (a hard error): ${refused || 'written over, silently'}`);
   const sv = visualsIn(rep('same')), tables = sv.filter((x) => x.json.visual && x.json.visual.visualType === 'tableEx'), shapes = sv.filter((x) => x.json.visual && x.json.visual.visualType === 'shape');
   const names = (pg) => sv.filter((x) => x.rel.startsWith(pg + '/')).map((x) => x.json.name.toLowerCase());
-  chk(() => tables.length === 1 && shapes.length === 2 && at(sv, 'p0/visuals/v0Names/visual.json').json.visual.visualType === 'shape' && names(tables[0].rel.split('/')[0]).filter((n) => n === tables[0].json.name.toLowerCase()).length === 1, () => `U5. the EN-AR copy: both shapes kept, one names table under a name of its own: ${sv.map((x) => x.rel + ' ' + x.json.visual.visualType).join(', ')}`);
+  chk(() => tables.length === 1 && shapes.length === 2 && at(sv, 'p0/visuals/v0Names/visual.json').json.visual.visualType === 'shape' && names(tables[0].rel.split('/')[0]).filter((n) => n === tables[0].json.name.toLowerCase()).length === 1
+    && J(((runs.same.plan || {}).mirrors || []).find((x) => x && x.kind === 'heatmapNames')).includes(tables[0].rel.split('/')[0] + '/' + tables[0].json.name), () => `U5. the EN-AR copy: both shapes kept, one names table under a name of its own, the plan naming it as written: ${sv.map((x) => x.rel + ' ' + x.json.visual.visualType).join(', ')} ${J(((runs.same.plan || {}).mirrors || []).find((x) => x && x.kind === 'heatmapNames'))}`);
   const lv = visualsIn(rep('lower'));
   chk(() => at(lv, 'p0/visuals/v0names/visual.json') && at(lv, 'p0/visuals/v0names/visual.json').json.visual.visualType === 'shape' && at(lv, 'p0/visuals/v0Names2/visual.json') && !at(lv, 'p0/visuals/v0Names/visual.json'), () => `U6. a folder that differs only in case is taken (one folder on Windows and macOS): ${lv.map((x) => x.rel).join(', ')}`);
 
@@ -142,7 +142,7 @@ try {
   chk(() => !fv.some((x) => x.json.visual && x.json.visual.visualType === 'tableEx'), () => `F1. F1-1 (rowPadding 6, 10pt, box 190: need ${need(10, 6, 8)}): no names table beside it: ${fv.map((x) => x.rel).join(', ')}`);
   chk(() => /p0\/v0/.test(J(runs.f11.plan && runs.f11.plan.cannot)) && /may not all fit/.test(J(runs.f11.plan && runs.f11.plan.cannot)), () => `F2. the plan says why F1-1's heatmap keeps no names (its rows may not all fit): ${J(runs.f11.plan && runs.f11.plan.cannot)}`);
   const ft = visualsIn(rep('fits')).find((x) => x.json.visual && x.json.visual.visualType === 'tableEx');
-  chk(() => ft && Math.abs(ft.json.position.height - 220) < 0.01, () => `F3 (guard). a padded heatmap that fits (rowPadding 2, need ${need(10, 2, 8)} in 220) keeps its names, its box the matrix's: ${ft && J(ft.json.position)}`);
+  chk(() => ft && Math.abs(ft.json.position.height - 220) < 0.01 && lit(ft.json.visual.objects.grid[0].properties.rowPadding) === '2D', () => `F3. a padded heatmap that fits (rowPadding 2, need ${need(10, 2, 8)} in 220) keeps its names, its box the matrix's, the matrix's rowPadding written on it (was mx7 H5): ${ft && J(ft.json.position)} ${ft && J(ft.json.visual.objects.grid)}`);
 
   // ---- B-300 ----
   const ccv = visualsIn(rep('cc')), ct = ccv.find((x) => x.json.visual.visualType === 'tableEx'), cm = ccv.find((x) => x.json.visual.visualType === 'pivotTable');
