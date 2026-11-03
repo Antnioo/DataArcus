@@ -143,7 +143,9 @@ export default async function ({ browser, url }) {
       await v.ctx.route(/fonts\.googleapis\.com\/css2/, (r) => r.fulfill({ status: 200, contentType: 'text/css', headers: { 'access-control-allow-origin': '*' }, body: css(/Arabic/.test(r.request().url()) ? 'IBM Plex Sans Arabic' : 'Inter') }));
       await v.ctx.route(/fonts\.gstatic\.com\/x\//, async (r) => { await new Promise((ok) => setTimeout(ok, delay)); r.fulfill({ status: 200, contentType: 'font/woff2', headers: { 'access-control-allow-origin': '*' }, body: fs.readFileSync(fontFile(/700/.test(r.request().url()) ? 700 : 400)) }); });
     };
-    for (const page of ['tools/power-bi-theme-generator.html', 'articles/article-power-bi-model-ai-ready.html', 'tools/power-bi-licensing-cost-calculator.html']) for (const vp of [[1440, 900], [390, 844]]) {
+    // (0.3.2 ED1, B-292: the Health Check article's second paragraph had a line that fitted Inter by 0.12 px at 390 px,
+    // so the fallback wrapped it and the swap moved the first screen 0.103; its words now break alike in both fonts)
+    for (const page of ['tools/power-bi-theme-generator.html', 'articles/article-power-bi-model-ai-ready.html', 'tools/power-bi-licensing-cost-calculator.html', 'articles/article-power-bi-model-health-check.html']) for (const vp of [[1440, 900], [390, 844]]) {
       const v = await visitor(browser, { viewport: vp }); await lateFonts(v, 500);
       await v.ctx.addInitScript(() => { window.__cls = 0; new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: 'layout-shift', buffered: true }); });
       await v.pg.goto(`${url}/${page}?lang=en`, { waitUntil: 'load' }); await v.pg.waitForTimeout(2500);
