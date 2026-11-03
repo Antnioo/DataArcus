@@ -34,12 +34,6 @@
   // a measure's DAX: the reader's (META), or the expression the object carries (a model.bim measure, a caller's)
   const exprOf = (o) => { if (!o) return ''; const e = metaOf(o).expr; if (e != null) return e; const x = o.expr != null ? o.expr : o.expression; return Array.isArray(x) ? x.join('\n') : x == null ? '' : String(x); };
   // ---------- reading the model ----------
-  const decodeText = (u8) => {
-    if (u8.length >= 2 && u8[0] === 0xff && u8[1] === 0xfe) return new TextDecoder('utf-16le').decode(u8.subarray(2));
-    if (u8.length >= 3 && u8[0] === 0xef && u8[1] === 0xbb && u8[2] === 0xbf) return new TextDecoder('utf-8').decode(u8.subarray(3));
-    if (u8.length >= 2 && u8[1] === 0x00) return new TextDecoder('utf-16le').decode(u8);
-    return new TextDecoder('utf-8').decode(u8);
-  };
   // (the audit's A1-8: one TMDL parse for the website and the MCP: a TMDL folder is read by tmdl-model.js into the
   // model's JSON, as a model.bim is, and the picker's fields and relationships come from that JSON; this file has no
   // TMDL parser of its own any more)
@@ -87,61 +81,14 @@
   // Power BI's hidden automatic date tables are not fields anyone picks
   const clean = (tables) => tables.filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name));
 
-  // The MCP reader's limits (mcp/lib/model.mjs PBIT_LIMITS, the Health Check worker's too): a file over them is refused
-  // before it is read (the audit of the reading block, "seen": the website read a model.bim of any size)
-  const MB = 1024 * 1024, LIMITS = { model: 64 * MB, entry: 32 * MB, total: 128 * MB, file: 300 * MB };
-  const tooBig = () => new Error('TOO_BIG');
-  // A folder from <input webkitdirectory>: the .SemanticModel folder itself, or a project folder holding one.
-  // A model is known by its whole path, not its name: a copy with the same name in a subfolder (a backup) is another
-  // model, and the one nearest the top of the chosen folder is used.
-  async function fromFolder(fileList) {
-    const files = Array.from(fileList || []), rel = (f) => f.webkitRelativePath || f.name;
-    // .Dataset is the older name of the model folder, still in Microsoft's own definition.pbir example
-    const modelOf = (f) => { const m = rel(f).match(/^((?:[^/]+\/)*?[^/]+\.(?:SemanticModel|Dataset))\//i); return m ? m[1] : null; };
-    const depth = (p) => p.split('/').length;
-    const models = [...new Set(files.map(modelOf).filter(Boolean))].sort((a, b) => depth(a) - depth(b) || (a < b ? -1 : a > b ? 1 : 0));
-    if (!models.length) throw new Error('NO_SEMANTIC_MODEL');
-    const path = models[0], folder = path.replace(/^.*\//, ''), inside = files.filter((f) => modelOf(f) === path);
-    const bim = inside.find((f) => /\/model\.bim$/i.test(f.webkitRelativePath || f.name));
-    let tables, relationships = [];
-    if (bim && (bim.size || 0) > LIMITS.model) throw tooBig();
-    if (bim) { const j = JSON.parse(decodeText(new Uint8Array(await bim.arrayBuffer()))); tables = fromTmsl(j); relationships = relsOfTmsl(j); }
-    else {
-      const tmdl = inside.filter((f) => /\/definition\/.+\.tmdl$/i.test(f.webkitRelativePath || f.name));
-      if (!tmdl.some((f) => /\/definition\/tables\/[^/]+\.tmdl$/i.test(f.webkitRelativePath || f.name))) throw new Error('NO_MODEL');
-      if (tmdl.some((f) => (f.size || 0) > LIMITS.entry) || tmdl.reduce((n, f) => n + (f.size || 0), 0) > LIMITS.total) throw tooBig();
-      const parts = [];
-      for (const f of tmdl) parts.push({ path: rel(f).slice(path.length + 1), text: decodeText(new Uint8Array(await f.arrayBuffer())) });
-      const j = Tmdl().fromFiles(parts);
-      tables = fromTmsl(j); relationships = relsOfTmsl(j);
-    }
-    // the reports already next to the model (X.Report folders, X.pbip files), so the new one never takes their name
-    const dir = path.includes('/') ? path.replace(/\/[^/]*$/, '') + '/' : '', reports = new Set();
-    files.forEach((f) => {
-      const p = rel(f); if (!p.startsWith(dir)) return;
-      const m = p.slice(dir.length).match(/^([^/]+)\.pbip$|^([^/]+)\.Report\//i); if (m) reports.add(m[1] || m[2]);
-    });
-    return { folder, path, others: models.length - 1, reports: [...reports], tables: clean(tables), relationships };
-  }
-  // A model.bim, or a .pbit (unzipped by the Model Health Check's worker, which already reads them)
-  function fromFile(file, workerUrl) {
-    if (/\.pbix$/i.test(file.name)) return Promise.reject(new Error('PBIX'));
-    if ((file.size || 0) > (/\.pbit$/i.test(file.name) ? LIMITS.file : LIMITS.model)) return Promise.reject(tooBig());
-    return file.arrayBuffer().then((buf) => {
-      const u8 = new Uint8Array(buf);
-      if (!(u8[0] === 0x50 && u8[1] === 0x4b)) { const j = JSON.parse(decodeText(u8)); return { tables: clean(fromTmsl(j)), relationships: relsOfTmsl(j) }; }
-      return new Promise((resolve, reject) => {
-        const w = new Worker(workerUrl);
-        w.onmessage = (ev) => {
-          const d = ev.data;
-          if (d.type === 'done') { w.terminate(); resolve({ tables: clean(fromTmsl({ tables: d.result.rawTables })), relationships: relsOfTmsl({ relationships: d.result.relationships }) }); }
-          else if (d.type === 'error') { w.terminate(); reject(new Error(d.code)); }
-        };
-        w.onerror = () => { w.terminate(); reject(new Error('PARSE')); };
-        w.postMessage({ buffer: buf, fileName: file.name }, [buf]);
-      });
-    });
-  }
+  // the browser's input (0.3.2 SP14: model-import-browser.js reads a chosen folder or a model.bim / .pbit, with the size
+  // limits and the .pbix refusal; it calls this file's parsers, handed over here, never copies of them)
+  const Import = () => (typeof module !== 'undefined' && module.exports ? require('./model-import-browser.js') : root.DAModelImport);
+  const readers = { fromTmsl, relsOfTmsl, clean, tmdl: Tmdl };
+  // A folder from <input webkitdirectory> (the .SemanticModel folder itself, or a project folder holding one)
+  const fromFolder = (fileList) => Import().fromFolder(fileList, readers);
+  // A model.bim, or a .pbit (unzipped by the Model Health Check's worker at workerUrl)
+  const fromFile = (file, workerUrl) => Import().fromFile(file, workerUrl, readers);
 
   // ---------- suggestions ----------
   // A percentage: a % in the format or the name, or a name that says ratio or rate. "Margin" and "share" are money

@@ -125,7 +125,7 @@ try {
     chk(() => calls === 1 && !/webkitRelativePath|new Worker|decodeText|LIMITS|TOO_BIG|PBIX|arrayBuffer|TextDecoder/.test(bindSrc),
       () => `M1 pbip-bind.js's fromFolder must forward to model-import-browser.js (called ${calls} times) and hold no reading code of its own`);
     const L = Imp.LIMITS;
-    chk(() => !/function fromTmsl|relsOfTmsl\s*=|LocalDateTable_|fromFiles\s*\(\s*parts\s*\)\s*;\s*$|require\(['"]\.\/pbip-bind/.test(imp) && !/dataType:|measures:\s*\(/.test(imp)
+    chk(() => !/function fromTmsl|relsOfTmsl\s*=|LocalDateTable_|require\(['"]\.\/pbip-bind/.test(imp) && !/dataType:|measures:\s*\(/.test(imp)
       && /mcp\/lib\/model\.mjs PBIT_LIMITS/.test(imp) && L.model === PBIT_LIMITS.model && L.entry === PBIT_LIMITS.entry && L.total === PBIT_LIMITS.total && L.file === PBIT_LIMITS.file,
       () => `M2 model-import-browser.js must call pbip-bind's parsers (no copy of them) and keep the MCP's limits, with the comment that ties them: ${JSON.stringify(L)}`);
     const tg = read('theme-generator.js'), at = (f) => tg.indexOf('/assets/js/' + f + '.min.js?v='), once = (f) => tg.split('/assets/js/' + f + '.min.js?v=').length === 2;
