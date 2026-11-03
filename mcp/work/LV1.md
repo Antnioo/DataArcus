@@ -25,7 +25,7 @@
   (the bilingual report: its Arabic title measures are this job's), 10 -> 11 checks (see Results).
 - **Answer size (L-1102-06):** the twin's plan answer holds no DAX: 31,360 on the base, 31,316-31,397 over four
   runs after (the spread is the run's random ids); fx1 three times: see Results.
-- **State:** the reviewer's follow-up (18:55): origin/integration/0.3.2 (e3f01231: DT1, HM1) merged in once; CI below.
+- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41698862581 on 3d1c53a5 (after the merge of e3f01231).
 - **Resume:** none; the reviewer's merge.
 
 ## Results
@@ -50,6 +50,8 @@
   isolates taken out, is the base's e3986dff... (L1; DT1 did not change that file). R5 now holds both: plan 24,008
   afe21a41..., report 9,010 ab368695..., files 204 9bba676c... (the answer and the files as on LV1's branch, the plan's
   length DT1's). WORK.md: integration's line (DT1, HM1-HM2, Running: ED1, LV1) with LV1's note named.
+  On 3d1c53a5: lv1 18, sp3 11, sp1 11, dt1 7, hm1 16, hm2 15, hr1 10, hr2 7, bilingual-report 33, fx1 22 checks PASS;
+  lint 0. CI green: https://github.com/Antnioo/DataArcus/actions/runs/41698862581 on 3d1c53a5 (first attempt).
 
 ## CHANGELOG line
 "An Arabic label beside a value reads in order: in the Arabic twin, a card or title that joins your approved Arabic
