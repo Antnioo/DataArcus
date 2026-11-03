@@ -37,7 +37,8 @@
   theme-generator.min.js stamp 20261103sp8m. CI's first run failed website sp8 only: a folder's files come in the file
   system's order, which differs on CI; the suite now sorts them by path (product unchanged), recorded again on 095d4db.
 - **CI green before the SP7 merge: https://github.com/Antnioo/DataArcus/actions/runs/41578855895 on cc3adbc5.**
-- **State:** CI pending (after the SP7 merge).
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41582166636 on 7264654a.**
+- **State: DONE.**
 - **Resume:** none; the reviewer's merge.
 
 ## CHANGELOG line
