@@ -596,7 +596,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadBind = () => binding || (binding = (window.DABind ? Promise.resolve(window.DABind)
       : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('/assets/js/field-meaning.min.js?v=20261011t'))
         .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=20261026a')))
-        .then(() => loadScript('/assets/js/pbip-bind.min.js?v=20261028fx4b')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
+        // (SP8: the picker's drawing is field-picker-ui.js's, which pbip-bind.js calls: loaded first)
+        .then(() => (window.DAFieldPicker ? null : loadScript('/assets/js/field-picker-ui.min.js?v=20261103sp8')))
+        .then(() => loadScript('/assets/js/pbip-bind.min.js?v=20261103sp8')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
     // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)
