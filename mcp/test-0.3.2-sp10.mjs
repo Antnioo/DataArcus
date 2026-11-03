@@ -105,7 +105,10 @@ const MADE = [
   vc('mCustom', 300, 200, { visualType: 'madeUpChart0123456789ABCDEF0123456789AB', query: { queryState: { Category: { projections: [col(D, 'Date')] } } } }),
   vc('mNoType', 200, 100, {}),
   vc('mUnreadable', 200, 100, 'not an object'),
-  vc('mNewCardDown1D', 200, 300, { visualType: 'cardVisual', query: { queryState: { Data: { projections: [mea(T, 'Open'), mea(T, 'Closed'), mea(T, 'Late')] } } }, objects: { layout: [{ properties: { orientation: L('1D'), rowCount: L('3L') } }] } })
+  vc('mNewCardDown1D', 200, 300, { visualType: 'cardVisual', query: { queryState: { Data: { projections: [mea(T, 'Open'), mea(T, 'Closed'), mea(T, 'Late')] } } }, objects: { layout: [{ properties: { orientation: L('1D'), rowCount: L('3L') } }] } }),
+  vc('mYearCol', 400, 200, { visualType: 'clusteredColumnChart', query: { queryState: { Category: { projections: [col(T, 'Year')] }, Y: { projections: [mea(T, 'Sales')] } } } }),
+  vc('mPillsLow', 900, 50, { visualType: 'advancedSlicerVisual', query: { queryState: { Values: { projections: [col(T, 'Region')] } } }, objects: { layout: [{ properties: { cellPadding: L('4L') } }] } }),
+  vc('mPillsTall', 900, 120, { visualType: 'advancedSlicerVisual', query: { queryState: { Values: { projections: [col(T, 'Region')] } } }, objects: { layout: [{ properties: { cellPadding: L('4L') } }] } })
 ];
 pages.push({ id: 'made-up', page: { width: 1280, height: 720 }, visuals: MADE });
 
@@ -193,7 +196,7 @@ if (moved) {
     const reqs = (p.match(/require\(([^)]*)\)/g) || []).map((x) => x.slice(8, -1));
     const atJ = (f) => tg.indexOf('/assets/js/' + f + '?v='), n = tg.split('/assets/js/mirror-policy.min.js?v=').length - 1;
     return /require\('\.\/mirror-policy\.js'\)/.test(m) && /root\.DAMirrorPolicy/.test(m) && !/const (COLUMN|BAR|WATERFALL|SLICER|SIDELESS|TIME_NAME|DATE_LIKE|ONE_ROW_H) =|function (kindOf|isTime)\(/.test(m) &&
-      JSON.stringify(reqs) === JSON.stringify(["'./visual-types.js'"]) && !/report-mirror|visual-gallery|\beval\s*\(|new Function/.test(p) &&
+      JSON.stringify(reqs) === JSON.stringify(["'./visual-types.js'"]) && !/\beval\s*\(|new Function|\bimport\s*\(|Gallery\(\)/.test(p) &&
       n === 1 && atJ('visual-types.min.js') > 0 && atJ('visual-types.min.js') < atJ('mirror-policy.min.js') && atJ('mirror-policy.min.js') < atJ('report-mirror.min.js') && fs.existsSync(path.join(JS, 'mirror-policy.min.js'));
   }, () => 'P10 the families, the time names and the content rules must live in mirror-policy.js only (it requires visual-types.js alone), report-mirror.js read them, and the theme generator load mirror-policy.min.js once, after visual-types and before report-mirror');
 }

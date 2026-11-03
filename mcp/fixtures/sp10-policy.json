@@ -4605,6 +4605,175 @@
      "sha": "c95db552fea9b014f852cac5:1144"
     }
    }
+  },
+  "made-up/mYearCol": {
+   "kind": "column",
+   "time": {
+    "dt": true,
+    "none": true
+   },
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "660e057a01f947d0f74014ae:1051"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "6a33ea5ecb1b1de95b4cc360:882"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "660e057a01f947d0f74014ae:1051"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "660e057a01f947d0f74014ae:1051"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "6a33ea5ecb1b1de95b4cc360:882"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "660e057a01f947d0f74014ae:1051"
+    }
+   }
+  },
+  "made-up/mPillsLow": {
+   "kind": "slicer",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "pills",
+     "changes": [
+      "position",
+      "order"
+     ],
+     "sha": "51a6f7b9ad6c361adc67d0c4:732"
+    },
+    "B": {
+     "kind": "pills",
+     "changes": [
+      "position",
+      "order"
+     ],
+     "sha": "51a6f7b9ad6c361adc67d0c4:732"
+    },
+    "C": {
+     "kind": "pills",
+     "changes": [
+      "position",
+      "order"
+     ],
+     "sha": "51a6f7b9ad6c361adc67d0c4:732"
+    },
+    "D": {
+     "kind": "pills",
+     "changes": [
+      "position",
+      "order"
+     ],
+     "sha": "51a6f7b9ad6c361adc67d0c4:732"
+    },
+    "E": {
+     "kind": "pills",
+     "changes": [
+      "position",
+      "order"
+     ],
+     "sha": "51a6f7b9ad6c361adc67d0c4:732"
+    },
+    "K": {
+     "kind": "pills",
+     "changes": [
+      "position",
+      "order"
+     ],
+     "sha": "51a6f7b9ad6c361adc67d0c4:732"
+    }
+   }
+  },
+  "made-up/mPillsTall": {
+   "kind": "slicer",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "a19a426fd20763a86f4ec665:585"
+    },
+    "B": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "a19a426fd20763a86f4ec665:585"
+    },
+    "C": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "a19a426fd20763a86f4ec665:585"
+    },
+    "D": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "a19a426fd20763a86f4ec665:585"
+    },
+    "E": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "a19a426fd20763a86f4ec665:585"
+    },
+    "K": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "a19a426fd20763a86f4ec665:585"
+    }
+   }
   }
  },
  "pages": {
@@ -4813,9 +4982,9 @@
    }
   },
   "made-up": {
-   "sha": "d1d35a1237f5f2af94c28b78:29490",
+   "sha": "cac56b99cbd96c7f20df87eb:31682",
    "kinds": {
-    "column": 10,
+    "column": 11,
     "bar": 2,
     "waterfallNative": 4,
     "table": 2,
@@ -4823,8 +4992,8 @@
     "matrix": 1,
     "plain": 3,
     "newCard": 3,
-    "pills": 1,
-    "slicer": 2,
+    "pills": 2,
+    "slicer": 3,
     "other": 1,
     "custom": 2,
     "unreadable": 1
