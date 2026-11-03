@@ -16,8 +16,8 @@
 //   U2  approvalHtml of a made-up plan whose every name is hostile (HTML, quotes, an instruction)
 //   S1  setup: every plan made, its page served, its prompt asked; no secret in any page or prompt
 //   after the move: P1 approval-window.mjs re-exports approval-disclosure.mjs's functions (the same objects); P2
-//   approval-disclosure.mjs imports no node:http, node:crypto or node:child_process, writes no HTML tag and holds no
-//   state, and approval-window.mjs defines none of the moved names
+//   approval-disclosure.mjs imports no node:http, node:crypto or node:child_process, writes no HTML element and holds no
+//   module state (no top-level let, var or Map), and approval-window.mjs defines none of the moved names
 //   node test-0.3.2-sp23.mjs
 import './test-env.mjs';
 import fs from 'node:fs';
@@ -169,7 +169,7 @@ if (moved) {
   const DEFS = ['summaryOf', 'languagesSections', 'termSheet', 'INPUT_WORDS', 'KIND_NAME', 'GROUPS', 'NOT_CHECKED', 'TERM_STATUS', 'wfRtlSaid', 'BLANK_LABEL', 'GLASS_LABEL'];
   const defined = (t, n) => new RegExp(`(?:function|const|let)\\s+${n}\\b`).test(t);
   const codeOnly = src.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
-  chk(() => !/node:(?:http|crypto|child_process)/.test(src) && !/approval-window/.test(codeOnly) && !/<\/?[a-z][a-z0-9]*[\s>]/i.test(codeOnly) && !/new Map\(|\blet\s+\w+\s*=/.test(codeOnly) && !/\bsecret\b|onDecide|decide\(/.test(codeOnly)
+  chk(() => !/node:(?:http|crypto|child_process)/.test(src) && !/approval-window/.test(codeOnly) && !/<\/?(?:html|head|body|main|p|div|span|ul|ol|li|table|tr|td|h[1-6]|details|summary|bdi|strong|form|button|input|svg|figure|figcaption|style|script|meta|title)\b/i.test(codeOnly) && !/new (?:Map|Set|WeakMap)\(|^(?:let|var) /m.test(codeOnly.replace(/^[ \t]+.*$/gm, '')) && !/\bsecret\b|onDecide|decide\(/.test(codeOnly)
     && DEFS.every((n) => defined(src, n) && !defined(win, n)), () => `P2. approval-disclosure.mjs is pure (no http, crypto, child process, tag, state, secret or callback) and approval-window.mjs defines none of ${DEFS.filter((n) => !defined(src, n) || defined(win, n)).join(', ')}`);
 }
 
