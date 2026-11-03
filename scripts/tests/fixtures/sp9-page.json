@@ -1,0 +1,188 @@
+{
+ "en": {
+  "sample": {
+   "app": {
+    "length": 15728,
+    "sha256": "f7c7ce42de7ff811722df39fbddde43a85792bbdbdf44e0ed181fb540ad24408",
+    "start": "Contoso-Sales-Demo.pbit · checked in under 0.1 s Check another file56Needs work "
+   },
+   "tab:issues": {
+    "length": 15235,
+    "sha256": "c86220b420754f86d4d1d94167ac7099447feabaa27c6906668015fa4dae71de",
+    "start": "All 26Performance 10Maintainability 7Best practice 9 CSVHighAuto date/time is on"
+   },
+   "tab:fix": {
+    "length": 8748,
+    "sha256": "036f5d8ca3d3507def106d38971df5ea3d002b7b5fd774cec949abc842bea1ab",
+    "start": "Safe order0 of 6 done1. Save a copy of your .pbixEvery step below changes the mo"
+   },
+   "tab:unused": {
+    "length": 907,
+    "sha256": "b14ef390571118285bbad932c34e6e37e8b0a77650c72f541933ee9ee074d76a",
+    "start": "\"Unused\" means not used by any visual, filter, measure, relationship, sort or se"
+   },
+   "tab:measures": {
+    "length": 653,
+    "sha256": "80612bdec92d62e4da9e517bcf561683d690c87bdbd358e2a179820159330140",
+    "start": "AllIn visualsUnused30 measuresDiscountunusedDiscount %unusedOld KPIunusedTest Me"
+   },
+   "tab:tables": {
+    "length": 1190,
+    "sha256": "918fd8543cac6947fca9e5624d7c988d2fb7271bbc787bcc1b779fc265bd6f75",
+    "start": "TableTypeColumnsMeasuresUnused columnsMeasuresDAX table1300Value stringSalesImpo"
+   },
+   "tab:rels": {
+    "length": 359,
+    "sha256": "ebe0d26d227d9655a5c3aef83a5430cd678879acb805a85c577defc2436684f6",
+    "start": "From (many side)To (one side)CardinalityFilterActiveSales[CustomerKey]Customer[C"
+   },
+   "tab:docs": {
+    "length": 595,
+    "sha256": "d1235c96fd05c43968ea601b15e4df38fb2d890f2c8d926e92509e46af3a6725",
+    "start": "Full documentationOne HTML page with the health score, every issue, all tables a"
+   }
+  },
+  "tricky.pbit": {
+   "app": {
+    "length": 6191,
+    "sha256": "0ed0185bf01a5b70785de1f79302edb13c08eb9e7f9e99943261d90a9000d3e2",
+    "start": "tricky.pbit · checked in under 0.1 s Check another file80Good Performance72 Main"
+   },
+   "tab:issues": {
+    "length": 5730,
+    "sha256": "decc6e6f872d81821291f148f6e5d077f60055c521fb0dc2786658a779462c30",
+    "start": "All 9Performance 2Maintainability 4Best practice 3 CSVMediumRelationships that f"
+   },
+   "tab:fix": {
+    "length": 4002,
+    "sha256": "25f39b3714183a5c63ac39a6cc77e717bb177a54208b010071f808064ee48256",
+    "start": "Safe order0 of 5 done1. Save a copy of your .pbixEvery step below changes the mo"
+   },
+   "tab:unused": {
+    "length": 487,
+    "sha256": "c378072007449bcbca0ba591e3c8d4ca5c15f6b1ce47bb1874d3f35814ae84df",
+    "start": "\"Unused\" means not used by any visual, filter, measure, relationship, sort or se"
+   },
+   "tab:measures": {
+    "length": 229,
+    "sha256": "8a65d775892d942c414fd0c462968c3ec08d37f06d79d69da3e356731e108fe7",
+    "start": "AllIn visualsUnused11 measuresCommentedunusedIteratorNet1 Per BoxunusedSame Twic"
+   },
+   "tab:tables": {
+    "length": 395,
+    "sha256": "424e71548b213e834f5186b4dbe2c4bc8a93a0d3b710d22960b293b1340f063a",
+    "start": "TableTypeColumnsMeasuresUnused columnsSalesImport684Amount doubleQty/Box int64Re"
+   },
+   "tab:rels": {
+    "length": 110,
+    "sha256": "c0cb2239d949e8e0ff97cb734b6ebe64c5afe2fd02303aef1a8055c4b453b60b",
+    "start": "From (many side)To (one side)CardinalityFilterActiveBob's Sales[Region Key]Sales"
+   },
+   "tab:docs": {
+    "length": 595,
+    "sha256": "d1235c96fd05c43968ea601b15e4df38fb2d890f2c8d926e92509e46af3a6725",
+    "start": "Full documentationOne HTML page with the health score, every issue, all tables a"
+   }
+  },
+  "broken.zip": {
+   "app": {
+    "length": 587,
+    "sha256": "7a817c72493790264cba504df07caae87dad88efccc14441d233545b9b5829ce",
+    "start": "broken.zip Check another fileNo score: part of this model could not be read1 mod"
+   }
+  }
+ },
+ "ar": {
+  "sample": {
+   "app": {
+    "length": 14152,
+    "sha256": "3dcc03ecefc6c97e8877dc02f9a9fa95b3bf76b691206ae5ab144941eabfb4fd",
+    "start": "Contoso-Sales-Demo.pbit · تم الفحص في أقل من 0.1 ث افحص ملفًا آخر56يحتاج تحسين ا"
+   },
+   "tab:issues": {
+    "length": 13716,
+    "sha256": "83b76f5eda4f37957126c8eb7c9fae00088b6388948a77421a23414905d0417e",
+    "start": "الكل 26الأداء 10سهولة الصيانة 7أفضل الممارسات 9 CSVعاليةخاصية Auto date/time مفع"
+   },
+   "tab:fix": {
+    "length": 8382,
+    "sha256": "f251c568cae3c922c2d550ef26a5897b0c2f9cb8fa4088f99f0c63146bc56272",
+    "start": "الترتيب الآمنتم 0 من 61. احفظ نسخة من ملف ‎.pbixكل خطوة بالأسفل تغيّر النموذج، ف"
+   },
+   "tab:unused": {
+    "length": 880,
+    "sha256": "00051a1ab0e0e0a5723feca3f182eb93e82817d5ba810ef4271d0af41753d0cb",
+    "start": "\"غير مستخدم\" تعني غير مستخدم في أي visual أو فلتر أو مقياس أو علاقة أو ترتيب أو "
+   },
+   "tab:measures": {
+    "length": 686,
+    "sha256": "da550122110896bb2b5fbdeaf8758733286093578ecdad5bacdc52c580aab3f7",
+    "start": "الكلفي visualsغير مستخدم30 مقياسDiscountغير مستخدمDiscount %غير مستخدمOld KPIغير"
+   },
+   "tab:tables": {
+    "length": 1190,
+    "sha256": "886705fdec6433e1bb3a12da97b1ea7af814c976c90b6ffc89810e3c8c6e861b",
+    "start": "الجدولالنوعالأعمدةالمقاييسأعمدة غير مستخدمةMeasuresجدول DAX1300Value stringSales"
+   },
+   "tab:rels": {
+    "length": 381,
+    "sha256": "127d605a78a6dead108244139058c3b3f66c8daf106f189f2e17ce32021c80e5",
+    "start": "من (جهة many)إلى (جهة one)نوع العلاقةالتصفيةنشطةSales[CustomerKey]Customer[Custo"
+   },
+   "tab:docs": {
+    "length": 501,
+    "sha256": "305b7d6c09a0bb68d6db8c7ffe026edace6e30035802e19f504ba55e03dad581",
+    "start": "توثيق كاملصفحة HTML واحدة فيها التقييم وكل المشاكل وكل الجداول والأعمدة وكل مقيا"
+   }
+  },
+  "tricky.pbit": {
+   "app": {
+    "length": 5476,
+    "sha256": "45514765a4ca49f3ec865421a0a6a8180a1326b4ecd889051cd205321f1072a2",
+    "start": "tricky.pbit · تم الفحص في أقل من 0.1 ث افحص ملفًا آخر80جيد الأداء72 سهولة الصيان"
+   },
+   "tab:issues": {
+    "length": 5077,
+    "sha256": "c7db3fbf2f48aa13ff35d6cd3f19f6759ef08e2750fa64972b80b7066ea4de38",
+    "start": "الكل 9الأداء 2سهولة الصيانة 4أفضل الممارسات 3 CSVمتوسطةعلاقات تصفّي في الاتجاهين"
+   },
+   "tab:fix": {
+    "length": 3704,
+    "sha256": "e915a5705463ed191c19a049f9711653261a8b3ff85bb34b254e67b7be4d8ee9",
+    "start": "الترتيب الآمنتم 0 من 51. احفظ نسخة من ملف ‎.pbixكل خطوة بالأسفل تغيّر النموذج، ف"
+   },
+   "tab:unused": {
+    "length": 454,
+    "sha256": "3d4ac8fae70038e64c3c24b6309f920ea93892f49ea6df002e8966ef3882e18e",
+    "start": "\"غير مستخدم\" تعني غير مستخدم في أي visual أو فلتر أو مقياس أو علاقة أو ترتيب أو "
+   },
+   "tab:measures": {
+    "length": 250,
+    "sha256": "fd44de3aca74edb39a3dd6a91aba1fda9973592677c78457b30f590a61015719",
+    "start": "الكلفي visualsغير مستخدم11 مقياسCommentedغير مستخدمIteratorNet1 Per Boxغير مستخد"
+   },
+   "tab:tables": {
+    "length": 393,
+    "sha256": "8f412b954aedc4a020a13ff4477dc11c0e912ed1507e714297d768868f6f7bda",
+    "start": "الجدولالنوعالأعمدةالمقاييسأعمدة غير مستخدمةSalesImport684Amount doubleQty/Box in"
+   },
+   "tab:rels": {
+    "length": 109,
+    "sha256": "005f7de1dd265b9993aaf67bad84bf455155023397b11efd494d9d5815a6b38f",
+    "start": "من (جهة many)إلى (جهة one)نوع العلاقةالتصفيةنشطةBob's Sales[Region Key]Sales Reg"
+   },
+   "tab:docs": {
+    "length": 501,
+    "sha256": "305b7d6c09a0bb68d6db8c7ffe026edace6e30035802e19f504ba55e03dad581",
+    "start": "توثيق كاملصفحة HTML واحدة فيها التقييم وكل المشاكل وكل الجداول والأعمدة وكل مقيا"
+   }
+  },
+  "broken.zip": {
+   "app": {
+    "length": 513,
+    "sha256": "541f6f0a1280828f7353906a761988a7a1308cc0002b0e515ae6e6cf6a4256e9",
+    "start": "broken.zip افحص ملفًا آخرلا توجد نتيجة: تعذّرت قراءة جزء من هذا النموذجتعذّرت قر"
+   }
+  }
+ }
+}

@@ -1,0 +1,57 @@
+{
+ "about": "test-0.3.2-sp9.mjs: analyze()'s output, the tokens and report references, and check_model_health's answer, recorded on the base (normalised: the working folder, the plan id and the path separator)",
+ "records": {
+  "A1 the health project (model.bim and a PBIR report)": {
+   "length": 8467,
+   "sha256": "2d8a84aaa1419da0f9771d5f71176827134203ffa8d9dcecd22e738f4f9f3d53"
+  },
+  "A2 the twin project": {
+   "length": 5087,
+   "sha256": "ac4fadf7aa03eff8e9365ff1b1dd8d809dafa79128ab2f9d8149bab5a6170b68"
+  },
+  "A3 a TMDL project (folder)": {
+   "length": 7512,
+   "sha256": "30de70af5d2c0d4ac072e242a25a819cc60aabf14b7c53ff581e283bcc9dfaf4"
+  },
+  "A4 the same project as a .pbit": {
+   "length": 7954,
+   "sha256": "60da2d0f4ef94ff8527d5fa3f9d5ba89c1eaa00a3280a9e6ee55f6ae4d86afbf"
+  },
+  "A5 the Ramadan TMDL project": {
+   "length": 31439,
+   "sha256": "d73f1340bb1343748ef2bda0e3082bb3e704c687bc5d8fb1f77fadee234d1033"
+  },
+  "A6 legacy.pbit (a legacy Layout)": {
+   "length": 5802,
+   "sha256": "b0c216a11e7e301374e6068d31397125779116e6963167c2530378b3dd8bc7f4"
+  },
+  "A7 the tricky DAX, model only": {
+   "length": 14547,
+   "sha256": "402ab4e7921c1ae4cb3388334852263b64c7e3d822781970ccee4dd57ef83913"
+  },
+  "A8 the tricky DAX with a PBIR report": {
+   "length": 15124,
+   "sha256": "20c9b79b08de265c44ce72a292745b7d12870ac09b4ac750c7985842815fc017"
+  },
+  "A9 the Arabic model with a legacy report": {
+   "length": 8125,
+   "sha256": "a02600c85ea20b5136d07ff7b36f90e4c409feaa265db1ac1ee26cf94763ea04"
+  },
+  "A10 DAX tables and a function, model only": {
+   "length": 3452,
+   "sha256": "438ad1038924112391d2f0c9a94e8d26a731f6c32271f117c519a0d30dd83960"
+  },
+  "A11 the incomplete TMDL model (a table file empty)": {
+   "length": 7826,
+   "sha256": "0f67ff441e3e6bfe62653d05ba83198d2bf1f55a2c0186fe806a9051e05a5f7c"
+  },
+  "T1": {
+   "length": 7074,
+   "sha256": "ceaabebb83dbce7afc1b64bd2cd739a08fe72127d24348658bc2c654e87c2492"
+  },
+  "Q1": {
+   "length": 13935,
+   "sha256": "135ee338afdda1518fe0f93cac56f0a0523550226d346e7c93867e9ee840f59e"
+  }
+ }
+}

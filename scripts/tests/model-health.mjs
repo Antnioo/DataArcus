@@ -7,7 +7,8 @@ import zlib from 'node:zlib';
 import { ROOT, visitor } from './lib.mjs';
 
 // the engine and the TMDL builder exactly as the browser loads them (minified)
-const load = (file) => { const m = { exports: {} }; new Function('module', 'exports', 'self', fs.readFileSync(path.join(ROOT, 'assets/js', file), 'utf8'))(m, m.exports, undefined); return m.exports; };
+// (0.3.2 SP9) a file's require (the engine's dax-reference-parser.js) loads its neighbour the same way, minified or not
+const load = (file) => { const m = { exports: {} }; new Function('module', 'exports', 'self', 'require', fs.readFileSync(path.join(ROOT, 'assets/js', file), 'utf8'))(m, m.exports, undefined, (dep) => load(path.basename(dep).replace(/(\.min)?\.js$/, /\.min\.js$/.test(file) ? '.min.js' : '.js'))); return m.exports; };
 // (0.2.9: the page loads field-meaning.min.js first, the rule the TMDL builder reads; so does this test)
 globalThis.DataArcusFieldMeaning = load('field-meaning.min.js');
 
