@@ -29,7 +29,7 @@ task routes.
   - **the write path**: `artifact.mjs` (the exact files a plan builds and their digest), `files.mjs` (the one writer
     of new file trees: all or nothing, never over anything), `write-io.mjs` (one new file, never half-written);
   - **the checkers**: `check-report.mjs` (Microsoft's validator offline, schemas bundled in `mcp/schemas/`, and the
-    measured rules), `design-lint.mjs`, `plan-lint.mjs`, `arabic-lens.mjs`;
+    measured rules; each page's language: `check-language.mjs`), `design-lint.mjs`, `plan-lint.mjs`, `arabic-lens.mjs`;
   - **the Arabic twin**: `arabic-twin.mjs` (the twin, the EN-AR copy and the bilingual report's Arabic half), with
     `terminology.mjs`, `arabic-names.mjs`, `arabic-terms.mjs`; every Arabic path mirrors through `report-mirror.js`;
   - what leaves the server: `answer.mjs` (every answer), `agent-text.mjs` (the instructions and shared descriptions).
@@ -85,7 +85,7 @@ task routes.
 | Model health | `assets/js/model-health-engine.js` (DAX tokens and report references: `dax-reference-parser.js`; the normalised model, its index and dependency references: `model-index.js`), `model-health-tmdl.js`, `gulf-health.js` |
 | A tool's inputs or answer | `mcp/tools/<tool_name>.mjs`, `mcp/lib/agent-text.mjs`, `mcp/TOOLS.md` |
 | Approval or writing | `mcp/lib/plans.mjs`, `approval-window.mjs`, `artifact.mjs`, `files.mjs`, `write-io.mjs` |
-| Checking reports | `mcp/lib/check-report.mjs`, `arabic-lens.mjs`, `design-lint.mjs`; `assets/js/layout-check.js` |
+| Checking reports | `mcp/lib/check-report.mjs`, `check-language.mjs`, `arabic-lens.mjs`, `design-lint.mjs`; `assets/js/layout-check.js` |
 | Tests and CI | `mcp/tests.json`, `mcp/run-tests.mjs`, `mcp/test.mjs` (`SHARDS`), `.github/workflows/tests.yml`, `scripts/ci-sum.mjs` |
 | Public claims (README, PRIVACY, the MCP page) | `mcp/test-0.3.0-claims.mjs`, `mcp/test-release-text.mjs` |
 

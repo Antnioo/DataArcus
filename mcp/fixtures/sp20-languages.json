@@ -1,0 +1,453 @@
+{
+ "about": "SP20: each page's language (pageLanguages, filledLanguages) for 12 made-up reports, and sha256 of check_report's whole answer on 4, recorded on integration/0.3.2 0eb9eb9 (before the language section moved); test-0.3.2-sp20.mjs",
+ "languages": {
+  "L1:english:en": {
+   "pages": {
+    "en1": "en",
+    "en2": "en"
+   },
+   "by": {
+    "texts": 2
+   }
+  },
+  "L1:english:ar": {
+   "pages": {
+    "en1": "en",
+    "en2": "en"
+   },
+   "by": {
+    "texts": 2
+   }
+  },
+  "L1:english:null": {
+   "pages": {
+    "en1": "en",
+    "en2": "en"
+   },
+   "by": {
+    "texts": 2
+   }
+  },
+  "F1:english": {
+   "pages": {
+    "en1": "en",
+    "en2": "en"
+   },
+   "by": {
+    "texts": 2
+   }
+  },
+  "L1:arabic:en": {
+   "pages": {
+    "ar1": "ar",
+    "ar2": "ar"
+   },
+   "by": {
+    "texts": 2
+   }
+  },
+  "L1:arabic:ar": {
+   "pages": {
+    "ar1": "ar",
+    "ar2": "ar"
+   },
+   "by": {
+    "texts": 2
+   }
+  },
+  "L1:arabic:null": {
+   "pages": {
+    "ar1": "ar",
+    "ar2": "ar"
+   },
+   "by": {
+    "texts": 2
+   }
+  },
+  "F1:arabic": {
+   "pages": {
+    "ar1": "ar",
+    "ar2": "ar"
+   },
+   "by": {
+    "texts": 2
+   }
+  },
+  "L1:enArCopy:en": {
+   "pages": {
+    "p1": "en",
+    "p1ar": "ar",
+    "p2": "en",
+    "p2ar": "ar"
+   },
+   "by": {
+    "buttons": 4
+   }
+  },
+  "L1:enArCopy:ar": {
+   "pages": {
+    "p1": "en",
+    "p1ar": "ar",
+    "p2": "en",
+    "p2ar": "ar"
+   },
+   "by": {
+    "buttons": 4
+   }
+  },
+  "L1:enArCopy:null": {
+   "pages": {
+    "p1": "en",
+    "p1ar": "ar",
+    "p2": "en",
+    "p2ar": "ar"
+   },
+   "by": {
+    "buttons": 4
+   }
+  },
+  "F1:enArCopy": {
+   "pages": {
+    "p1": "en",
+    "p1ar": "ar",
+    "p2": "en",
+    "p2ar": "ar"
+   },
+   "by": {
+    "buttons": 4
+   }
+  },
+  "L1:tooltipFromArabic:en": {
+   "pages": {
+    "a1": "ar",
+    "a2": "ar",
+    "tip": "ar"
+   },
+   "by": {
+    "texts": 2,
+    "links": 1
+   }
+  },
+  "L1:tooltipFromArabic:ar": {
+   "pages": {
+    "a1": "ar",
+    "a2": "ar",
+    "tip": "ar"
+   },
+   "by": {
+    "texts": 2,
+    "links": 1
+   }
+  },
+  "L1:tooltipFromArabic:null": {
+   "pages": {
+    "a1": "ar",
+    "a2": "ar",
+    "tip": "ar"
+   },
+   "by": {
+    "texts": 2,
+    "links": 1
+   }
+  },
+  "F1:tooltipFromArabic": {
+   "pages": {
+    "a1": "ar",
+    "a2": "ar",
+    "tip": "ar"
+   },
+   "by": {
+    "texts": 2,
+    "links": 1
+   }
+  },
+  "L1:drillthrough:en": {
+   "pages": {
+    "d1": "en",
+    "dt": "en"
+   },
+   "by": {
+    "texts": 1,
+    "links": 1
+   }
+  },
+  "L1:drillthrough:ar": {
+   "pages": {
+    "d1": "en",
+    "dt": "en"
+   },
+   "by": {
+    "texts": 1,
+    "links": 1
+   }
+  },
+  "L1:drillthrough:null": {
+   "pages": {
+    "d1": "en",
+    "dt": "en"
+   },
+   "by": {
+    "texts": 1,
+    "links": 1
+   }
+  },
+  "F1:drillthrough": {
+   "pages": {
+    "d1": "en",
+    "dt": "en"
+   },
+   "by": {
+    "texts": 1,
+    "links": 1
+   }
+  },
+  "L1:hebrew:en": {
+   "pages": {
+    "h1": "he",
+    "h2": "en"
+   },
+   "by": {
+    "texts": 2
+   }
+  },
+  "L1:hebrew:ar": {
+   "pages": {
+    "h1": "he",
+    "h2": "en"
+   },
+   "by": {
+    "texts": 2
+   }
+  },
+  "L1:hebrew:null": {
+   "pages": {
+    "h1": "he",
+    "h2": "en"
+   },
+   "by": {
+    "texts": 2
+   }
+  },
+  "F1:hebrew": {
+   "pages": {
+    "h1": "he",
+    "h2": "en"
+   },
+   "by": {
+    "texts": 2
+   }
+  },
+  "L1:noText:en": {
+   "pages": {
+    "n1": "en",
+    "n2": "en"
+   },
+   "by": {
+    "report": 2
+   }
+  },
+  "L1:noText:ar": {
+   "pages": {
+    "n1": "ar",
+    "n2": "ar"
+   },
+   "by": {
+    "report": 2
+   }
+  },
+  "L1:noText:null": {
+   "pages": {},
+   "by": {}
+  },
+  "F1:noText": {
+   "pages": {
+    "n1": "en",
+    "n2": "en"
+   },
+   "by": {}
+  },
+  "L1:mixedTitles:en": {
+   "pages": {
+    "m1": "en",
+    "m2": "en",
+    "m3": "en"
+   },
+   "by": {
+    "texts": 1,
+    "report": 2
+   }
+  },
+  "L1:mixedTitles:ar": {
+   "pages": {
+    "m1": "en",
+    "m2": "ar",
+    "m3": "ar"
+   },
+   "by": {
+    "texts": 1,
+    "report": 2
+   }
+  },
+  "L1:mixedTitles:null": {
+   "pages": {
+    "m1": "en"
+   },
+   "by": {
+    "texts": 1
+   }
+  },
+  "F1:mixedTitles": {
+   "pages": {
+    "m1": "en",
+    "m2": "en",
+    "m3": "en"
+   },
+   "by": {
+    "texts": 1
+   }
+  },
+  "L1:oneWayButtons:en": {
+   "pages": {
+    "o1": "en",
+    "o2": "en",
+    "s1": "en",
+    "s2": "en"
+   },
+   "by": {
+    "texts": 4
+   }
+  },
+  "L1:oneWayButtons:ar": {
+   "pages": {
+    "o1": "en",
+    "o2": "en",
+    "s1": "en",
+    "s2": "en"
+   },
+   "by": {
+    "texts": 4
+   }
+  },
+  "L1:oneWayButtons:null": {
+   "pages": {
+    "o1": "en",
+    "o2": "en",
+    "s1": "en",
+    "s2": "en"
+   },
+   "by": {
+    "texts": 4
+   }
+  },
+  "F1:oneWayButtons": {
+   "pages": {
+    "o1": "en",
+    "o2": "en",
+    "s1": "en",
+    "s2": "en"
+   },
+   "by": {
+    "texts": 4
+   }
+  },
+  "L1:linksDisagree:en": {
+   "pages": {
+    "l1": "ar",
+    "l2": "en",
+    "shared": "en"
+   },
+   "by": {
+    "texts": 2,
+    "report": 1
+   }
+  },
+  "L1:linksDisagree:ar": {
+   "pages": {
+    "l1": "ar",
+    "l2": "en",
+    "shared": "ar"
+   },
+   "by": {
+    "texts": 2,
+    "report": 1
+   }
+  },
+  "L1:linksDisagree:null": {
+   "pages": {
+    "l1": "ar",
+    "l2": "en"
+   },
+   "by": {
+    "texts": 2
+   }
+  },
+  "F1:linksDisagree": {
+   "pages": {
+    "l1": "ar",
+    "l2": "en",
+    "shared": "en"
+   },
+   "by": {
+    "texts": 2
+   }
+  },
+  "L1:enHeCopy:en": {
+   "pages": {
+    "e1": "en",
+    "e1he": "he"
+   },
+   "by": {
+    "buttons": 2
+   }
+  },
+  "L1:enHeCopy:ar": {
+   "pages": {
+    "e1": "en",
+    "e1he": "he"
+   },
+   "by": {
+    "buttons": 2
+   }
+  },
+  "L1:enHeCopy:null": {
+   "pages": {
+    "e1": "en",
+    "e1he": "he"
+   },
+   "by": {
+    "buttons": 2
+   }
+  },
+  "F1:enHeCopy": {
+   "pages": {
+    "e1": "en",
+    "e1he": "he"
+   },
+   "by": {
+    "buttons": 2
+   }
+  },
+  "L1:empty:en": {
+   "pages": {},
+   "by": {}
+  },
+  "L1:empty:ar": {
+   "pages": {},
+   "by": {}
+  },
+  "L1:empty:null": {
+   "pages": {},
+   "by": {}
+  },
+  "F1:empty": {
+   "pages": {},
+   "by": {}
+  }
+ },
+ "answers": {
+  "english": "ee51e965ab6e49b7c37fcddeb2af398bf190e0fbba3c758fb80cfa39965640be",
+  "enArCopy": "05d00dfed4e6f855a02df2ee137f67970ff9d4754877f608c2016be7dd54469b",
+  "tooltipFromArabic": "df1814ecafaad6fcf69ccf56fefc431069691c79e7a0146a82edbdb516643b63",
+  "mixedTitles": "a84c7abbb4a53f4073add34f172e073256c4ac326d68946abab4549d0064fdea"
+ }
+}
