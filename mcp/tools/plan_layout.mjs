@@ -1,16 +1,15 @@
 // The plan_layout tool: its registration (description, inputs, handler) and its own helpers; server.mjs registers it in its place.
 // (0.3.1 S9: moved out of server.mjs as it was, no change of behaviour)
-import path from 'node:path';
 import { z } from 'zod';
-import { inside, loadModel, visible, modelOf, refuseUnreadable } from '../lib/model.mjs';
+import { loadModel, visible, modelOf, refuseUnreadable } from '../lib/model.mjs';
 import { designRtl, buildTheme, pageOf, planLayout, kindLabel, projectPages, isGlassPng } from '../lib/design.mjs';
-import { AIM, scopeOf } from '../lib/scope.mjs';
+import { scopeOf } from '../lib/scope.mjs';
 import { proposeArabic } from '../lib/arabic-names.mjs';
 import { writtenName, readableName } from '../lib/display-names.mjs';
 import { scriptModel, resolveSwitch, switchSaid, SCRIPT_SUFFIX } from '../lib/metric-switcher.mjs';
 import { existingTheme } from '../lib/read-report.mjs';
 import { planNative, nativeArtifact, shownOf } from '../lib/native-copy.mjs';
-import { planRedesign } from '../lib/redesign.mjs';
+import { samplePlan, redesignProblems, redesignPlan } from '../lib/plan-variants.mjs';
 import { planPreview, planLint, aggregationAnswer } from '../lib/plan-lint.mjs';
 import { checkArtifact, digestOf, modelPrintOf, bindingOf } from '../lib/artifact.mjs';
 import { validatorVerdict } from '../lib/check-report.mjs';   // (0.3.1 P3A: the validator's findings in check_report's kinds)
@@ -23,15 +22,13 @@ import * as DateQ from '../lib/gulf-date-questions.mjs';
 import { UNTRUSTED } from '../lib/agent-text.mjs';
 import { whereSaid, relOf, NEVER_APPLIED, NEVER_APPLIED_AR } from '../lib/plain-words.mjs';
 import { planTwin, monthOffer as calendarOffer, twinPreview } from '../lib/arabic-twin.mjs';
-import { freeFolder, sampleFiles, sampleSaid, sampleSaidAr, sampleWrites, sampleWritesAr } from '../lib/sample-project.mjs';
-import { out, fitLists } from '../lib/answer.mjs';
 import { lookOf, bilingualSaid, BILINGUAL_LAST, NOT_TRANSLATED_WHY, englishTitles, sayArabicPlan, pageSizeSaid } from '../lib/plan-disclosure.mjs';
-import { pretty, text, safe } from '../lib/tool-answer.mjs';
+import { text, safe } from '../lib/tool-answer.mjs';
 import { READS, focusInput, tablesInput, modelPath, pageInput, langInput, strictInputs } from '../lib/tool-inputs.mjs';
 import { modelRef } from '../lib/plan-keys.mjs';
 import { formatsAnswer } from '../lib/fix-scripts.mjs';
 import { relsOf, fieldsAndProblems, axesProblems, axesOf } from '../lib/report-fields.mjs';
-import { unknownKeys, CREATE_REPORT_INPUTS, REPORT_LOOK, withLookDefaults, reportPin, redesignPin, samplePin, redesignOnly, heldInputs } from '../lib/report-inputs.mjs';
+import { unknownKeys, CREATE_REPORT_INPUTS, REPORT_LOOK, withLookDefaults, reportPin, redesignOnly, heldInputs } from '../lib/report-inputs.mjs';
 import { topSaid, phoneAnswer, calendarSaid } from '../lib/report-said.mjs';
 import { BLANK_PNG_BYTES, reportRun } from '../lib/report-run.mjs';
 import { createRequire } from 'node:module';
@@ -77,53 +74,9 @@ function bilingualOf(built, ab) {
   const files = P.copy.files.map((f) => ({ path: pre + f.rel, data: f.data != null ? f.data : byRel.get(f.from) })).concat(built.files.filter((f) => !f.path.startsWith(pre)));
   return { files, P, base };
 }
-// (0.3.1 C) plan_layout with sample: the made-up project in the first free folder, a plan of its own kind (sample). The
-// folder is the plan's "model" key (its path; no print: nothing is there yet), so the gate stays as it is; create_report
-// writes it with the same inputs. Any model input with it is a plan problem
-const SAMPLE_KEYS = ['sample', 'lang'];
-function samplePlan(a) {
-  const other = Object.keys(a).filter((k) => !SAMPLE_KEYS.includes(k) && a[k] !== undefined);
-  if (other.length) return { planProblems: [`sample is a plan of its own (a made-up project in a new folder, no model of the user's): leave ${other.join(', ')} out.`], sayFirst: 'No plan id: change the call as the problem says, then call plan_layout again.' };
-  const folder = freeFolder(), files = sampleFiles(folder), said = sampleSaid(folder);
-  return { sample: Object.assign({}, said, { files: files.map((f) => f.path) }), sayFirst: 'Nothing was written. Show the user what the sample holds (sample: the tables, the date table, that every name and number is made up) and the files it writes; wait for their go, then approve_plan, then create_report with path (sample.folder) and the planId.',
-    plan: Plans.proposal(Plans.propose('sample', { key: inside(folder), print: null }, sampleWrites(folder, files.length), { pins: { create_report: samplePin({ path: folder, lang: a.lang }) }, inputs: { create_report: heldInputs({ sample: true, lang: a.lang }) }, sample: said, ...(a.lang === 'ar' ? { sampleAr: sampleSaidAr(folder) } : {}), outputs: files.map((f) => f.path), outputsAt: '.', writesAr: sampleWritesAr(folder, files.length) })) };
-}
-// (0.3, J13 redesign step 2: lib/redesign.mjs) plan_layout with redesignFrom: every page of the original, copied with the
-// allowlisted patches; a plan of its own kind (redesign), written by create_report with the same inputs
-function redesignPlan(a) {
-  const problems = [];
-  if (!a.path) problems.push('redesignFrom needs path (the original\'s model), so the copy is checked to be on it.');
-  // (0.3.1 SQ10, L6-S4) the new report's options too: a redesign never uses them (daxFunctions, flipCards...), so one given
-  // (other than its default) is said, never dropped silently
-  const defaults = withLookDefaults({});
-  const other = ['pages', 'design', 'customVisualsFrom', 'planFields', 'fields', 'layout'].filter((k) => a[k] != null)
-    .concat(REPORT_LOOK.filter((k) => a[k] !== undefined && a[k] !== defaults[k]));
-  if (other.length) problems.push(`redesignFrom is a plan of its own (a copy of the original with the allowlisted changes): leave ${other.join(', ')} out.`);
-  if (problems.length) return { planProblems: problems, sayFirst: 'No plan id: change the call as each problem says, then call plan_layout again.' };
-  const m = refuseUnreadable(loadModel(a.path)), R = planRedesign(a.redesignFrom, m, { titles: a.titles, restyle: a.restyle, consistentText: a.consistentText, keepPositions: a.keepPositions }), pin = redesignPin(a);
-  const writes = [`the new report "${R.answer.newReport}" and its "${visible(R.name)}.pbip" next to the original: a copy of every file of "${R.answer.original.replace(/: only read, never changed$/, '')}" with the ${R.answer.counts.changed} change(s) listed; the original is not changed`];
-  const shown = { original: R.answer.original, newReport: R.answer.newReport, pages: R.answer.pages, theme: R.answer.theme || null, text: R.answer.text || null, keptAsIs: R.answer.keptAsIs };
-  return Object.assign({ redesign: redesignFit(JSON.parse(JSON.stringify(R.answer)), a.redesignPages) }, R.problems.length ? { planProblems: R.problems, sayFirst: 'This redesign can\'t be written as asked: no plan id. Change it as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
-    : { plan: Plans.proposal(attached(Plans.propose('redesign', modelRef(m, a.path), writes, { pins: { create_report: pin }, inputs: { create_report: heldInputs(a) }, patches: R.patches.map((x) => ({ file: x.file, pointer: x.pointer, to: x.to, op: x.op })), shown,
-      outputs: R.files.concat(R.added).map((r) => `${visible(R.name)}.Report/${r}`).concat([`${visible(R.name)}.pbip`]), outputsAt: relOf(path.dirname(inside(a.redesignFrom))), copied: R.files.length }),
-      // (0.3.1 AF2, the release audit's F08) the copy's exact files, built now with the logical id chosen now, kept with the
-      // plan (this session only) and bound to its pins and the model's print: after the go they are written byte for byte
-      R.tree ? { files: R.tree, digest: R.digest, logicalId: R.logicalId, copy: 'redesign', pin, modelPrint: modelPrintOf(m), binding: bindingOf(R.digest, pin, modelPrintOf(m)) } : null)) });
-}
-// (0.3.0 Q1) the redesign's answer grows with every page (a two-page report with every option on: 35,098 characters, its
-// pages' lists 20,384 of them). Cut at that cause, in this order, until it fits: the visuals not changed, the patches (the
-// same changes as file edits), then the changes; each with its count. The approval window shows every one of them
-// (the plan's own copy, never cut), and redesignPages lists one page's in full here
-function redesignFit(r, only) {
-  if (only && only.length) { const want = new Set(only.map(String)); r.pagesNotShown = (r.pages || []).filter((p) => !want.has(p.id) && !want.has(p.page)).length; r.pages = (r.pages || []).filter((p) => want.has(p.id) || want.has(p.page)); }
-  const size = (x) => pretty(out({ redesign: x })).length + 2500, pages = r.pages || [];
-  // (0.3.1 CS1) the consistent copy's lists of visuals kept as they are go with the visuals not changed
-  const tiers = [() => pages.map((p) => [p, 'notChanged']).concat(r.text ? [[r.text, 'untouched'], [r.text, 'kept']] : []), () => [[r, 'patches']], () => pages.map((p) => [p, 'changes'])];
-  let cut = 0;
-  for (const t of tiers) { const f = fitLists(r, t, size, AIM); if (!f) break; cut += f.cut; if (f.k > 0) break; }
-  if (cut) r.listsCut = { how: `This plan lists fewer visuals than it changes or keeps, to stay under ${AIM.toLocaleString('en-US')} characters ("<list>NotListed" says how many each list leaves out). DataArcus's approval window shows every change and every visual not changed before the person approves. To list one page in full here, call plan_layout again with the same inputs and redesignPages: ["<page id>"] (redesign.pages[].id); the plan is the same.` };
-  return r;
-}
+// (0.3.2 SP2) the sample and the redesign (lib/plan-variants.mjs) give their answer and what to propose: proposed here, the
+// one place a plan is proposed, its plan block the answer's last key; the redesign's exact copy kept with it (J14, AF2)
+const proposed = (v) => (v.propose ? Object.assign(v.answer, { plan: Plans.proposal(attached(Plans.propose(v.propose.kind, v.propose.model, v.propose.writes, v.propose.data), v.propose.artifact)) }) : v.answer);
 
 export function register(server, ctx) {
   const { LIMITS } = ctx;
@@ -161,8 +114,8 @@ export function register(server, ctx) {
     }), annotations: READS
   }, safe(async (a) => {
     // (0.3, J13 redesign step 2) a redesign of an existing report is a plan of its own: a copy with allowlisted patches
-    if (a.redesignFrom != null) return text(redesignPlan(a));
-    if (a.sample) return text(samplePlan(a));
+    if (a.redesignFrom != null) { const no = redesignProblems(a); return text(no ? no.answer : proposed(redesignPlan(a, refuseUnreadable(loadModel(a.path))))); }
+    if (a.sample) return text(proposed(samplePlan(a)));
     // formats fixed at the source (the owner's ask, 6 Oct 2026): with the model, the fields that lack their right format
     // come first, with the script (check_model_health's kind of script, for the report's fields only)
     let formats = {}, arabicNames = {}, displayNamesAns = {}, m0 = null, planNames = null, notTranslated = null;
