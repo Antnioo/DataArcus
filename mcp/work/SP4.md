@@ -18,8 +18,9 @@
   with 4 KPI slots on 2 measures and a text slot without text), recorded on the base in `fixtures/sp4-answers.json`
   (commit 5d752c1, before the move); B1 re-exports, B2 no IO. Two mutations in the moved code ("Count of" spelled
   differently; card formats not listed): sp4 FAIL, sp3 still PASS (so sp4 adds reach).
-- **Expected -> got:** sp3 10 -> 10 (fixture untouched); sp4 3 of 5 on the base (B1, B2 by design) -> 5 of 5;
-  sq15b 25 -> 25 (S2 reads planBinding in report-bind.mjs: the file name moved, not the check).
+- **Expected checks:** sp3 10 -> 10 (fixture untouched); sp4 3 of 5 on the base (B1, B2 by design) -> 5 of 5;
+  sq15b 25 -> 25 (S2 reads planBinding in report-bind.mjs: the file name moved, not the check); every other the same.
+- **Got:** as expected (Areas below).
 - **Before -> after:** `lib/report-run.mjs` 455 -> 383 lines; `lib/report-bind.mjs` 119 lines (new).
 - **Areas (base 04a9922 in a worktree -> after 144a838):** report 44 -> 45 suites (sp4 added; every other count the
   same: glass-default 43, sq13 39, sq15b 25, sp3 10); core 10 -> 10 (mutation 198, 76 mutants killed); checker 7 -> 7;
