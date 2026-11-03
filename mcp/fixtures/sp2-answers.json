@@ -1,0 +1,45 @@
+{
+ "about": "test-0.3.2-sp2.mjs: plan_layout's sample and redesign answers recorded on the base (normalised: the plan id and the working folder)",
+ "answers": {
+  "S1 the sample in Arabic": {
+   "err": false,
+   "length": 3142,
+   "sha256": "8f387ae0223ad4969ecbc3d7c423235508ea1ac6ae36f054bb5586da2ce1e833"
+  },
+  "S2 the sample with a model input": {
+   "err": false,
+   "length": 224,
+   "sha256": "41469cb66ad37ee898ead8cd3d77eccd8f879268bd376225a6362ebe82d7607f"
+  },
+  "R1 a redesign without path": {
+   "err": false,
+   "length": 196,
+   "sha256": "a78d96e1f35898a2de9b10feb81f600f084a8b4a5f599867a52193c9b4cc4996"
+  },
+  "R2 a redesign with a new report's inputs": {
+   "err": false,
+   "length": 238,
+   "sha256": "1fd45c7df3b8133d971572d40d009bda581f5b0ce542916fee54d59fd3293407"
+  },
+  "R3 a redesign listing one page": {
+   "err": false,
+   "length": 6800,
+   "sha256": "07a5c4b0043f72f41921964be0d1c1eb72a44db70665950e45f6532dc5d014d4"
+  },
+  "R4 a redesign with its options": {
+   "err": false,
+   "length": 9699,
+   "sha256": "d2fa82d735256fece41cddab264cbaea0381d8395a53843f36b39f33a19ebcc8"
+  },
+  "R5 a redesign whose copy is already there": {
+   "err": false,
+   "length": 7661,
+   "sha256": "e9c98621d63c6e2165903c015346a24fc45118c82d529d43c0763a8b5ff570c9"
+  },
+  "R6 a redesign titling a visual that is not there": {
+   "err": false,
+   "length": 7630,
+   "sha256": "bfd7f7dede3671abf8ff05f69b4d71bbd89aa3f77cb31b9e2285ab99fd021854"
+  }
+ }
+}
