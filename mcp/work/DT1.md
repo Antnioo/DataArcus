@@ -18,7 +18,7 @@
   pages, files and writes keep readOriginal's order (sp3: create_report's answer and its 204 files byte for byte).
 - **Expected checks:** (written first) dt1 red on e2cf676 (D1, D2), green after; hr1 10, hr2 7 green; no other line
   moves unless it reads the texts' order. Sizes not above the base's. **Got:** dt1 red on e2cf676 (7 of 7: D1 x2, D2,
-  D3, U1-U3), 7 checks green on 26fd6a9f; hr1 10, hr2 7. One other suite moved, by this job: sp3 R5 (see Results).
+  D3, U1-U3), 7 checks green on 26fd6a9f; hr1 10, hr2 7. Two other suites moved, by this job: sp3 R5 and sp1 P6 (see Results).
 - **Answer size (L-1102-06), B5, 5 runs each:** dt1's flow (hr1's person): the step before the Arabic texts
   36,481-36,528 on the base (10 runs) -> 36,475 every run; the plan with an id 37,029-37,065 -> 37,019. The probe's
   flow: 37,774-37,902 -> 37,774; 36,169-36,195 -> 36,156. Never grows; one number per step.
@@ -30,12 +30,19 @@
   plan entry, CHANGELOG), 10f42ef3 (merge of origin/integration/0.3.2 at 0c6ad5d0, HM2: no conflict), then WORK.md and
   this note.
 - Line counts: lib/twin-texts.mjs +21 -2; lib/twin-read.mjs +5 -1; test-0.3.2-dt1.mjs 0 -> 148 (new); tests.json +1;
-  fixtures/sp3-answers.json 2 values; CHANGELOG.md +2; WORK.md's 0.3.2 line names DT1.
+  fixtures/sp3-answers.json and sp1-answers.json 2 values each; CHANGELOG.md +2; WORK.md's 0.3.2 line names DT1.
 - sp3 R5 ("bilingual"), the one expected value this job changed: plan_layout's answer 24,021 -> 24,008 characters, a
   new sha256. Measured (both answers dumped, SP3_DUMP): the same 24 texts and the same 6 terminology rows, in the new
   order (the sheet follows the texts), and one mark that follows the order: "Total Sales" (a field and a chart title)
   is said `field: true` only when its first place is the field (see Seen 1). create_report's answer and the written
   files: unchanged (the recorded sha256 of both kept).
+- sp1 P6 ("bilingual", found by CI run 41673663474, the core area I had not finished locally): plan_layout's answer
+  26,114 -> 26,254 characters, a new sha256. Measured (dumped, SP1_DUMP, base and after): the same 24 texts, the same
+  terminology rows and the same 25 notTranslated (the order of each one's where aside), the same English titles in
+  planProblems, in the new order; the two first-place field marks (Seen 1); and `terminology.askNext`, the first
+  missing term asked, is now the first field a person reads ("Total Sales", 4 places listed) instead of "Product"
+  (2 places): the +140 characters. That choice followed the random order before (sp1's ids are seeded). The B5 plan,
+  the one near the cap, did not grow (above).
 - Before the merge, on 26fd6a9f: report 57 suites, arabic 15, checker 8, twin 31 passed; dt1, hr1, hr2,
   bilingual-report (33), fx1 (22) and sp3 (10) three times each (sp3 twice), all PASS. Lint: exit 0.
 
@@ -65,6 +72,7 @@ none
   (textsFrom, moreTexts) puts a text on another page of the list than before; the same texts, labels and approval.
 
 ## Seen, not in scope
+0. The local core area did not finish within this session's 10-minute command limit (test.mjs); CI ran it.
 1. In `bilingualSaid` (`lib/plan-disclosure.mjs`), a wording shown in several places takes `field: true` and
    `spaces` from its first place only: now stable (one order), but "Total Sales" is a field and is not marked one
    when its title comes first. Order-free would add about 65 characters to B5.
