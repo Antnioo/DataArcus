@@ -22,13 +22,14 @@
 - **Answer size (L-1102-06), B5, 5 runs each:** dt1's flow (hr1's person): the step before the Arabic texts
   36,481-36,528 on the base (10 runs) -> 36,475 every run; the plan with an id 37,029-37,065 -> 37,019. The probe's
   flow: 37,774-37,902 -> 37,774; 36,169-36,195 -> 36,156. Never grows; one number per step.
-- **State:** the code is done, merged with integration at 0c6ad5d0; the areas and CI (see Results).
-- **Resume:** CI on the branch, then `CI green: <url> on <sha>` here.
+- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41679003262 on db206ce2.
+- **Resume:** none; the reviewer's merge.
 
 ## Results
 - Commits: 6774c79 (the plan), 67c9d907 (the guard red, in `ignored`), 26fd6a9f (the code, dt1 in `suites`, sp3's R5
   plan entry, CHANGELOG), 10f42ef3 (merge of origin/integration/0.3.2 at 0c6ad5d0, HM2: no conflict), then WORK.md and
-  this note.
+  this note; db206ce2 (sp1's P6 value, after CI run 41673663474 failed on it: linux and windows sp1 P6; macOS shards 1-2
+  cancelled with no FAIL line, no rerun needed as the whole run was made again).
 - Line counts: lib/twin-texts.mjs +21 -2; lib/twin-read.mjs +5 -1; test-0.3.2-dt1.mjs 0 -> 148 (new); tests.json +1;
   fixtures/sp3-answers.json and sp1-answers.json 2 values each; CHANGELOG.md +2; WORK.md's 0.3.2 line names DT1.
 - sp3 R5 ("bilingual"), the one expected value this job changed: plan_layout's answer 24,021 -> 24,008 characters, a
@@ -45,6 +46,8 @@
   the one near the cap, did not grow (above).
 - Before the merge, on 26fd6a9f: report 57 suites, arabic 15, checker 8, twin 31 passed; dt1, hr1, hr2,
   bilingual-report (33), fx1 (22) and sp3 (10) three times each (sp3 twice), all PASS. Lint: exit 0.
+- After the merge (10f42ef3 and on): report 57, arabic 15, checker 8, twin 32 suites passed; sp1 11 checks. Lint: exit 0.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41679003262 on db206ce2 (every shard, Linux, Windows, macOS).
 
 ## CHANGELOG line
 "The texts to label in Arabic come in one order: the bilingual plan and the Arabic twin list the texts the way a
