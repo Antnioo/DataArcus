@@ -1,0 +1,63 @@
+{
+  "failures": {
+    "P1": [
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v15/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v15/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v15/visual.json"
+        ]
+      }
+    ],
+    "D1": [
+      {
+        "why": "byte difference between independent plans",
+        "files": [
+          "Synthetic AR.Report/.platform"
+        ]
+      }
+    ],
+    "B2": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v4",
+          "p0/v12"
+        ]
+      }
+    ],
+    "B2new": [
+      {
+        "why": "new overlap introduced, not said in the plan, one of the two is a group box",
+        "files": [
+          "p0/v4",
+          "p0/v12",
+          "English [{\"x\":458,\"y\":384,\"width\":104,\"height\":147,\"z\":4000},{\"x\":128,\"y\":255,\"width\":287,\"height\":208,\"z\":12000}]",
+          "Arabic [{\"x\":906,\"y\":384,\"width\":104,\"height\":147,\"z\":4000},{\"x\":865,\"y\":255,\"width\":287,\"height\":208,\"z\":12000}]",
+          "plan on v4: movedByRule: moved with a button beside it",
+          "plan on v12: none",
+          "in pictureChecks.newOverlaps: false"
+        ]
+      }
+    ]
+  },
+  "extra": {
+    "validatorOriginal": [],
+    "normalizedRepeat": true,
+    "normalizedRenamed": true
+  }
+}

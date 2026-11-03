@@ -1,0 +1,80 @@
+{
+  "pages": [
+    {
+      "id": "p0",
+      "width": 1280,
+      "height": 720,
+      "visuals": [
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v2",
+          "position": {
+            "x": 722,
+            "y": 349,
+            "width": 313,
+            "height": 236,
+            "z": 2000
+          },
+          "visualGroup": {}
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v10",
+          "position": {
+            "x": 401,
+            "y": 386,
+            "width": 435,
+            "height": 169,
+            "z": 10000
+          },
+          "visual": {
+            "visualType": "slicer"
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v13",
+          "position": {
+            "x": 159,
+            "y": 53,
+            "width": 90,
+            "height": 106,
+            "z": 13000
+          },
+          "visual": {
+            "visualType": "actionButton",
+            "objects": {
+              "text": [
+                {
+                  "properties": {
+                    "text": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "'Synthetic action page 2 visual 13'"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "icon": [
+                {
+                  "properties": {
+                    "shapeType": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "'rightArrow'"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "parentGroupName": "v2"
+        }
+      ]
+    }
+  ]
+}
