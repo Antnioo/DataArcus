@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **An Arabic label beside a value reads in order:** in the Arabic twin, a card or title that joins your approved
+  Arabic words with a value of the model (a day, an hour, a count) keeps each value in its place, so "Thursday" or
+  "11:00 PM" no longer swaps with the Arabic around it; your words are written exactly as you approved them.
 - **A chart under a heatmap that cannot move:** when lining it up under the heatmap's grid would cover another
   visual, it stays where the plain mirror puts it but keeps its English sort, value axis and padding, so its hours still
   read left to right like the grid above it.
