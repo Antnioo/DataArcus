@@ -1,6 +1,6 @@
 # DataArcus MCP: what stays on your machine, and what your AI app sees
 
-Plain English. Checked against 0.3.1 (the version `mcp/package.json` names): each 0.3 change updated this page for
+Plain English. Checked against 0.3.2 (the version `mcp/package.json` names): each 0.3 change updated this page for
 what it changed; the whole page was last read against the code on 2026-10-19 (R7: every sentence, with its evidence
 in `mcp/work/R7-claims.md`), and
 0.3.1's new paths (the Arabic lens, one report in English and Arabic, the sample project, the approval page's pictures

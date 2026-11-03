@@ -184,7 +184,9 @@ check(/`languages: "en\+ar"`/.test(pl) && /`bilingual`/.test(pl) && /`sample`/.t
 check(/`sample: true`/.test(cr) && /made-up/.test(cr) && /never a row/.test(cr) && /`languages: "en\+ar"`/.test(cr), 'D5-P3. PRIVACY.md\'s create_report row does not say the sample writes a made-up project (never a row in the answer) and what languages "en+ar" returns');
 // (changed on purpose, 0.3.1 CX2, Codex's F06: the approval page draws at most 12 pages or pairs)
 check(/draws up to 12 Arabic pages/.test(pv) && !/draws each Arabic page/.test(pv) && /the same `\.mcpb`/.test(pv), 'D5-P4. PRIVACY.md does not say the approval page draws the twin\'s Arabic pages on your computer, nor that the plugin installs the same .mcpb');
-check(/Checked against 0\.3\.1/.test(pv.slice(0, 600)), 'D5-P5. PRIVACY.md\'s header is not checked against 0.3.1');
+// (3 Nov, the 0.3.2 release prep) the version being shipped, read where it is set (mcp/package.json), never a literal
+const PKG_V = JSON.parse(read('./package.json')).version;
+check(pv.slice(0, 600).includes(`Checked against ${PKG_V}`), `D5-P5. PRIVACY.md's header is not checked against ${PKG_V} (mcp/package.json's version)`);
 // D5-S PRODUCT_SPEC.md: 0.3.1's three options said, and the platforms as the release says them
 check(/0\.3\.1/.test(spec) && /`lens: "arabic"`/.test(spec) && /`languages: "en\+ar"`/.test(spec) && /`sample: true`/.test(spec), 'D5-S1. PRODUCT_SPEC.md says nothing of 0.3.1 (the Arabic lens, languages "en+ar", the sample)');
 check(/Writes Power BI projects on Windows, macOS and Linux; open them in Power BI Desktop on Windows, or deploy the project to Fabric/.test(spec), 'D5-S2. PRODUCT_SPEC.md does not say the platforms in the release\'s words');
@@ -197,7 +199,8 @@ check(/From 0\.3\.1/.test(tl('en', 'check_report')) && /ready for Arabic/.test(t
 check(/From 0\.3\.1/.test(tl('en', 'plan_layout')) && /English and Arabic/.test(tl('en', 'plan_layout')) && /0\.3\.1/.test(tl('ar', 'plan_layout')), 'D5-B2. beta-page plan_layout (EN, AR) does not say one report in English and Arabic comes with 0.3.1');
 check(EN.html.includes('From 0.3.1') && AR.html.includes('0.3.1'), 'D5-B3. the MCP page (EN, AR) does not carry the 0.3.1 tool lines (scripts/ar-pages.mjs --write and the page)');
 // D5-W the forbidden words, a Mac claim and a matrix promise, over the texts this sweep touched
-const unrel = (read('./CHANGELOG.md').match(/^## \[Unreleased\][^\n]*\n([\s\S]*?)(?=^## )/m) || [])[1] || '';
+// (3 Nov, the 0.3.1 release) 0.3.1's section by its version: "[Unreleased]: 0.3.1" before the release, "[0.3.1]" after
+const unrel = (read('./CHANGELOG.md').match(/^## \[(?:Unreleased\]: 0\.3\.1|0\.3\.1\])[^\n]*\n([\s\S]*?)(?=^## )/m) || [])[1] || '';
 const D5_TEXTS = { 'PRODUCT_SPEC.md': spec, 'llms.txt': llms, 'CHANGELOG [Unreleased]': unrel.replace(/\s+/g, ' ') };
 for (const [f, t] of Object.entries(D5_TEXTS)) {
   for (const [re, what] of BANNED) { const m = re.exec(t); check(t && !m, `D5-W. ${f}: ${t ? what + ': "' + (m ? t.slice(Math.max(0, m.index - 40), m.index + 60) : '') + '"' : 'empty'}`); }
@@ -456,7 +459,7 @@ for (const [k, t] of [['articleAr', GC.articleAr], ['articleTr', arHalf(GC.artic
 {
   const box = { window: {} }; (await import('node:vm')).runInNewContext(read('../assets/js/translations/beta-page.js'), box);
   const N = (l) => (((box.window.betaPageTranslations || {})[l] || {}).beta || {}).new31 || {}, en = N('en'), ar = N('ar');
-  const cl = flat('./CHANGELOG.md'), un = cl.slice(cl.indexOf('## [Unreleased]'), cl.indexOf('## [', cl.indexOf('## [Unreleased]') + 5));
+  const cl = flat('./CHANGELOG.md'), at = cl.search(/## \[(?:Unreleased\]: 0\.3\.1|0\.3\.1\])/), un = cl.slice(at, cl.indexOf('## [', at + 5));
   const pages = [EN.html, AR.html];
   // F05: glass for reports DataArcus plans; hand-placed pages and a theme used alone said as they are
   check(!/every new report create_report writes has it/.test(un) && /planned with plan_layout/.test(un) && /Pages you place yourself/.test(un) && /still to be measured/.test(un), 'CX2-F05. CHANGELOG: glass on "every new report"; hand-placed pages and a theme used alone not said');

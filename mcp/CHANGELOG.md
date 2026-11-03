@@ -4,7 +4,7 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
-## [Unreleased]: 0.3.1
+## [Unreleased]: 0.3.2
 - **A chart under a heatmap that cannot move:** when lining it up under the heatmap's grid would cover another
   visual, it stays where the plain mirror puts it but keeps its English sort, value axis and padding, so its hours still
   read left to right like the grid above it.
@@ -13,25 +13,6 @@ package's manifest; this file says what is in it.
   flip card stays in the plan; smaller plans read exactly as before.
 - **Every text that stays English is listed:** the bilingual plan's step before the Arabic texts (every option on) is
   no longer cut; it says each reason once, with its texts under it, so the person sees every text to label.
-- **A fourth test run in Power BI Desktop:** a chart lined up under a heatmap's grid keeps its English padding, value
-  axis and sort as well as its place, so each bar stands under its own hour, and the day names beside a heatmap get room
-  for their last row, so no scrollbar covers them.
-- **A third test run in Power BI Desktop:** the day names beside a heatmap by weekday no longer wrap onto two lines, so
-  they stay level with the grid's rows without a scrollbar of their own, and a chart lined up under a heatmap's grid
-  stays under the same hours as in English.
-- **Arabic twin checks on thousands of made-up reports:** a button widened for its Arabic text no longer pushes a chart
-  beside it off the page (it takes width from a slicer only where everything it moves stays on the page), a bar chart
-  kept over a table stays on the page, and the plan names every visual moved beside a widened button.
-- **A second test run in Power BI Desktop:** a table in the Arabic twin leaves room for Power BI's vertical scrollbar,
-  so its first column stays whole at the right edge when there are more rows than fit; a heatmap by weekday shows its
-  day names beside a grid exactly as wide as the English one when the English report sets the day column's width
-  (otherwise it is kept as it is, and the plan says why); a heatmap whose seven rows fit is no longer called too short.
-- **The last fixes from a test run in Power BI Desktop:** an Arabic twin with a heatmap by weekday opens again in Desktop
-  and keeps its grid as wide as in English; a legend keeps each item's colour; an agent card's contact line stays whole;
-  a table narrower than its box keeps its first column at the right edge, and one wider keeps the columns English shows.
-- **What a test run in Power BI Desktop found in the Arabic twin's tables:** a column's names keep their English width
-  (no longer narrowed for a longer Arabic header), the first column stays the rightmost one in view, a matrix with row
-  levels can be written flat when you choose it, and a heatmap by weekday shows its day names beside its grid.
 - **Shorter tool descriptions and answers:** fewer tokens in every conversation; every answer, errors too, within the
   cap.
 - **Inside the MCP:** the words a report plan says are kept in one file of their own; every plan says exactly what it
@@ -64,6 +45,52 @@ package's manifest; this file says what is in it.
   measure it writes, on the website and from the MCP, is exactly what it was before.
 - **Inside the MCP, check_report:** the code that tells each page's language has a file of its own; every page is told
   the same language, and every check gives the same answer as before.
+- **Inside the MCP, the report's answer:** what create_report says after writing a report is put together in one file
+  of its own; every answer and every written file is exactly what it was before.
+- **Inside the MCP, the report's fields:** how a report picks and names its fields and their number formats is in one
+  file of its own; every plan, answer and written file is exactly what it was before.
+- **Inside the design engine, colours and the glass look:** the colour math and the glass look each have a file of
+  their own, shared by the website and the MCP; every theme, picture and layout is exactly what it was before.
+- **The website, steadier and plainer:** the Model Health Check article no longer jumps when its font arrives on a
+  phone, and the site's own pages and scripts no longer use the long dash (a quote of Microsoft's guidance keeps it).
+
+## [0.3.1]: 2026-11-03 (the version for testers)
+Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports
+opens, every page reads right to left, and Microsoft's validator finds nothing in a twin that its English report does
+not have. In short:
+- **The Arabic twin's tables and matrices:** a matrix that is a list is written as a table, so its first column reads
+  on the right; a matrix with row levels can be written flat when you choose it; a table keeps its English column
+  widths and the columns English shows, its first column at the right edge; a heatmap by weekday shows its day names
+  beside its grid, and a chart lined up under the grid keeps each bar under its own hour.
+- **Try it without a model of your own:** a made-up Gulf retail project, written after you approve, with four next
+  steps to try on it.
+- **Is your report ready for Arabic?** `check_report` with `lens: "arabic"` reads any report and says page by page what
+  reads wrong in Arabic and how to fix it; it changes nothing.
+- **One report in English and Arabic:** `languages: "en+ar"` writes the English pages and their Arabic pages in one
+  report, with a language button on every page, once you approve the Arabic texts.
+- **Safer:** the Arabic twin writes exactly what you approved, or nothing; a name that reads like an instruction to the
+  AI is flagged and not followed.
+
+Every change, newest first:
+- **A fourth test run in Power BI Desktop:** a chart lined up under a heatmap's grid keeps its English padding, value
+  axis and sort as well as its place, so each bar stands under its own hour, and the day names beside a heatmap get room
+  for their last row, so no scrollbar covers them.
+- **A third test run in Power BI Desktop:** the day names beside a heatmap by weekday no longer wrap onto two lines, so
+  they stay level with the grid's rows without a scrollbar of their own, and a chart lined up under a heatmap's grid
+  stays under the same hours as in English.
+- **Arabic twin checks on thousands of made-up reports:** a button widened for its Arabic text no longer pushes a chart
+  beside it off the page (it takes width from a slicer only where everything it moves stays on the page), a bar chart
+  kept over a table stays on the page, and the plan names every visual moved beside a widened button.
+- **A second test run in Power BI Desktop:** a table in the Arabic twin leaves room for Power BI's vertical scrollbar,
+  so its first column stays whole at the right edge when there are more rows than fit; a heatmap by weekday shows its
+  day names beside a grid exactly as wide as the English one when the English report sets the day column's width
+  (otherwise it is kept as it is, and the plan says why); a heatmap whose seven rows fit is no longer called too short.
+- **The last fixes from a test run in Power BI Desktop:** an Arabic twin with a heatmap by weekday opens again in Desktop
+  and keeps its grid as wide as in English; a legend keeps each item's colour; an agent card's contact line stays whole;
+  a table narrower than its box keeps its first column at the right edge, and one wider keeps the columns English shows.
+- **What a test run in Power BI Desktop found in the Arabic twin's tables:** a column's names keep their English width
+  (no longer narrowed for a longer Arabic header), the first column stays the rightmost one in view, a matrix with row
+  levels can be written flat when you choose it, and a heatmap by weekday shows its day names beside its grid.
 - **More of the Arabic twin like the English:** more matrices that are lists are written as tables, so their first column
   reads on the right; a column the English hides stays hidden; a table wider than its box shows the same columns as
   the English, its first column at the right; the plan names legends whose Arabic may be cut, and says on its own line
@@ -88,12 +115,6 @@ package's manifest; this file says what is in it.
   `aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb`. In Claude Desktop, uninstall 0.3.1 (Settings >
   Extensions > DataArcus for Power BI > Uninstall), then double-click the 0.3.0 file and choose Install. Your reports
   stay where they were written.
-- **Inside the MCP, the report's answer:** what create_report says after writing a report is put together in one file
-  of its own; every answer and every written file is exactly what it was before.
-- **Inside the MCP, the report's fields:** how a report picks and names its fields and their number formats is in one
-  file of its own; every plan, answer and written file is exactly what it was before.
-- **Inside the design engine, colours and the glass look:** the colour math and the glass look each have a file of
-  their own, shared by the website and the MCP; every theme, picture and layout is exactly what it was before.
 - **Bars and columns are never too thick:** where the number of categories is known (a chart kept to its top N, days,
   months, quarters, a field of two or a few known values), a bar or column is at most 36 thick on a 1280 x 720 page
   (45 at 1920 x 1080), so three bars or columns no longer fill the chart; the space between them grows evenly, on the
@@ -442,8 +463,6 @@ package's manifest; this file says what is in it.
   Power BI Desktop places it; a title indented with tabs keeps its room on the icon's side; a chart drawn over a table
   or matrix keeps its place on it, and no visual lands on a matrix's row headers; an Arabic help line that starts with
   a number or ends with a full stop reads in the right order.
-- **The website, steadier and plainer:** the Model Health Check article no longer jumps when its font arrives on a
-  phone, and the site's own pages and scripts no longer use the long dash (a quote of Microsoft's guidance keeps it).
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
