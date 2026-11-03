@@ -26,8 +26,10 @@
 - **Areas (on 71378c08):** report 46 of 46 (sp5 12, sp7 11, glass-tables 113, phone 355, dax-functions 92); core 11
   of 11 (mutation 198: 76 mutants, all killed); arabic 15 of 15; website sp7 3, sp5 3, pbip 111, theme-generator 922, theme-generator-lab 922, design-engine 600,
   layout-canvas 31; lint 0; check-min (stamps against main) and test-site-config pass; csp, ar-pages, sitemap clean.
-- **State:** the move is done and checked here; CI on the branch next.
-- **Resume:** CI on the branch (`gh workflow run tests.yml --ref feat/0.3.2-sp7`).
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41570057046 on 4c90c01a** (first run, every job green;
+  integration/0.3.2 had not moved from 90eaa7c: nothing merged in).
+- **State: DONE.**
+- **Resume:** none; the reviewer's merge.
 
 ## CHANGELOG line
 - **Inside the report writer:** the tooltip pages (the card and the bars shown when a chart is hovered) are made in a
