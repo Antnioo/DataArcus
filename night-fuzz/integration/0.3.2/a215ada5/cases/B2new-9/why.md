@@ -33,6 +33,6 @@ Found by: generated, seeds 2026112279 (lab copy in the night lab; the reduced sp
 ## Replays
 
 - a215ada5: fails P1, D1, B2, B2new
-- 550cea1b: fails P1, D1, B2, B2new
+- 550cea1b: fails P1, D1, B2, B2unsaid, B2new
 
 Replay: `node fuzz.mjs /path/to/DataArcus --replay spec.json --out <absolute path inside the lab folder>` with the night lab's copy of fuzz.mjs (it adds D1n, B2new and X1; see REPORT.md).

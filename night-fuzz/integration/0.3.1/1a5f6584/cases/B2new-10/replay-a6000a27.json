@@ -50,6 +50,20 @@
         ]
       }
     ],
+    "B2unsaid": [
+      {
+        "why": "new overlap the plan does not mention (no group box involved)",
+        "files": [
+          "p0/v7",
+          "p0/v14",
+          "English [{\"x\":370,\"y\":632,\"width\":177,\"height\":168,\"z\":7000},{\"x\":680,\"y\":498,\"width\":99,\"height\":273,\"z\":14000}]",
+          "Arabic [{\"x\":733,\"y\":632,\"width\":177,\"height\":168,\"z\":7000},{\"x\":448,\"y\":498,\"width\":355,\"height\":273,\"z\":14000}]",
+          "plan on v7: movedByRule: gave width to a button beside it",
+          "plan on v14: fitted.buttons",
+          "page kept left to right: false; picture: "
+        ]
+      }
+    ],
     "B2new": [
       {
         "why": "new overlap introduced, not said in the plan",

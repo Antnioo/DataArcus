@@ -43,6 +43,20 @@
         ]
       }
     ],
+    "B2unsaid": [
+      {
+        "why": "new overlap the plan does not mention (no group box involved)",
+        "files": [
+          "p0/v4",
+          "p0/v8",
+          "English [{\"x\":1118,\"y\":50,\"width\":108,\"height\":189,\"z\":4000},{\"x\":170,\"y\":3,\"width\":135,\"height\":116,\"z\":8000}]",
+          "Arabic [{\"x\":0,\"y\":50,\"width\":320,\"height\":189,\"z\":4000},{\"x\":185,\"y\":3,\"width\":135,\"height\":116,\"z\":8000}]",
+          "plan on v4: fitted.buttons",
+          "plan on v8: none",
+          "page kept left to right: false; picture: "
+        ]
+      }
+    ],
     "B2new": [
       {
         "why": "new overlap introduced, not said in the plan",

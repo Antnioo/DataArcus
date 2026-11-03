@@ -43,6 +43,20 @@
         ]
       }
     ],
+    "B2unsaid": [
+      {
+        "why": "new overlap the plan does not mention (no group box involved)",
+        "files": [
+          "p0/v16",
+          "p0/v20",
+          "English [{\"x\":434,\"y\":133,\"width\":418,\"height\":253,\"z\":16000},{\"x\":1149,\"y\":316,\"width\":131,\"height\":208,\"z\":20000}]",
+          "Arabic [{\"x\":428,\"y\":133,\"width\":418,\"height\":253,\"z\":16000},{\"x\":403,\"y\":316,\"width\":131,\"height\":208,\"z\":20000}]",
+          "plan on v16: none",
+          "plan on v20: movedByRule: a bar chart over a table or matrix that stays left to right: kept on it, its bars' direction kept",
+          "page kept left to right: false; picture: "
+        ]
+      }
+    ],
     "B2new": [
       {
         "why": "new overlap introduced, not said in the plan",
