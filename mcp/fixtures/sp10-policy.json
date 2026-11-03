@@ -1,0 +1,4778 @@
+{
+ "about": "SP10: the twin's policy answers (kind, time axis, mirrorVisual under six option sets, mirrorPage) recorded on integration/0.3.2 at e3f0123, before the move to mirror-policy.js",
+ "visuals": {
+  "twin-project/p1overview/btnDetails": {
+   "kind": "button",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "deacd6e9d6850884d16fd698:1118"
+    },
+    "B": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "deacd6e9d6850884d16fd698:1118"
+    },
+    "C": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "deacd6e9d6850884d16fd698:1118"
+    },
+    "D": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "deacd6e9d6850884d16fd698:1118"
+    },
+    "E": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "deacd6e9d6850884d16fd698:1118"
+    },
+    "K": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "deacd6e9d6850884d16fd698:1118"
+    }
+   }
+  },
+  "twin-project/p1overview/btnReset": {
+   "kind": "button",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "icon",
+      "title"
+     ],
+     "sha": "68334bd8f4c2625b907983db:1078"
+    },
+    "B": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "icon",
+      "title"
+     ],
+     "sha": "68334bd8f4c2625b907983db:1078"
+    },
+    "C": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "icon",
+      "title"
+     ],
+     "sha": "68334bd8f4c2625b907983db:1078"
+    },
+    "D": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "icon",
+      "title"
+     ],
+     "sha": "68334bd8f4c2625b907983db:1078"
+    },
+    "E": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "icon",
+      "title"
+     ],
+     "sha": "68334bd8f4c2625b907983db:1078"
+    },
+    "K": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "icon",
+      "title"
+     ],
+     "sha": "68334bd8f4c2625b907983db:1078"
+    }
+   }
+  },
+  "twin-project/p1overview/cardOrders": {
+   "kind": "plain",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "8756cdef9997e39f68addac4:521"
+    },
+    "B": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "8756cdef9997e39f68addac4:521"
+    },
+    "C": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "8756cdef9997e39f68addac4:521"
+    },
+    "D": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "8756cdef9997e39f68addac4:521"
+    },
+    "E": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "8756cdef9997e39f68addac4:521"
+    },
+    "K": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "8756cdef9997e39f68addac4:521"
+    }
+   }
+  },
+  "twin-project/p1overview/cardSales": {
+   "kind": "plain",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "510b312d94ef6a441adb80ca:746"
+    },
+    "B": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "510b312d94ef6a441adb80ca:746"
+    },
+    "C": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "510b312d94ef6a441adb80ca:746"
+    },
+    "D": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "510b312d94ef6a441adb80ca:746"
+    },
+    "E": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "510b312d94ef6a441adb80ca:746"
+    },
+    "K": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "510b312d94ef6a441adb80ca:746"
+    }
+   }
+  },
+  "twin-project/p1overview/colRegion": {
+   "kind": "column",
+   "time": {
+    "dt": false,
+    "none": false
+   },
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "c086335cbd36d2b1493c1805:1502"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "c086335cbd36d2b1493c1805:1502"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "c086335cbd36d2b1493c1805:1502"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "c086335cbd36d2b1493c1805:1502"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "c086335cbd36d2b1493c1805:1502"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "c086335cbd36d2b1493c1805:1502"
+    }
+   }
+  },
+  "twin-project/p1overview/grpInner": {
+   "kind": "group",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a6d9c9f4371706109707e22:358"
+    },
+    "B": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a6d9c9f4371706109707e22:358"
+    },
+    "C": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a6d9c9f4371706109707e22:358"
+    },
+    "D": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a6d9c9f4371706109707e22:358"
+    },
+    "E": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a6d9c9f4371706109707e22:358"
+    },
+    "K": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a6d9c9f4371706109707e22:358"
+    }
+   }
+  },
+  "twin-project/p1overview/grpKpi": {
+   "kind": "group",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "22c6bf6cebf45f4eea83226f:327"
+    },
+    "B": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "22c6bf6cebf45f4eea83226f:327"
+    },
+    "C": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "22c6bf6cebf45f4eea83226f:327"
+    },
+    "D": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "22c6bf6cebf45f4eea83226f:327"
+    },
+    "E": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "22c6bf6cebf45f4eea83226f:327"
+    },
+    "K": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "22c6bf6cebf45f4eea83226f:327"
+    }
+   }
+  },
+  "twin-project/p1overview/lineMonth": {
+   "kind": "column",
+   "time": {
+    "dt": true,
+    "none": true
+   },
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "d2b5678d8f4f8e2086feaebc:1333"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "padding",
+      "title"
+     ],
+     "sha": "48b499236c70117ccb010c6e:1325"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "d2b5678d8f4f8e2086feaebc:1333"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "d2b5678d8f4f8e2086feaebc:1333"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "padding",
+      "title"
+     ],
+     "sha": "48b499236c70117ccb010c6e:1325"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "d2b5678d8f4f8e2086feaebc:1333"
+    }
+   }
+  },
+  "twin-project/p1overview/nav": {
+   "kind": "navigator",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "navigator",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "33957739af62a22bdad1d348:510"
+    },
+    "B": {
+     "kind": "navigator",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "33957739af62a22bdad1d348:510"
+    },
+    "C": {
+     "kind": "navigator",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "33957739af62a22bdad1d348:510"
+    },
+    "D": {
+     "kind": "navigator",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "33957739af62a22bdad1d348:510"
+    },
+    "E": {
+     "kind": "navigator",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "33957739af62a22bdad1d348:510"
+    },
+    "K": {
+     "kind": "navigator",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "33957739af62a22bdad1d348:510"
+    }
+   }
+  },
+  "twin-project/p1overview/slRegion": {
+   "kind": "slicer",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "bfdaef0819c966a36c3d61a3:578"
+    },
+    "B": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "bfdaef0819c966a36c3d61a3:578"
+    },
+    "C": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "bfdaef0819c966a36c3d61a3:578"
+    },
+    "D": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "bfdaef0819c966a36c3d61a3:578"
+    },
+    "E": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "bfdaef0819c966a36c3d61a3:578"
+    },
+    "K": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "bfdaef0819c966a36c3d61a3:578"
+    }
+   }
+  },
+  "twin-project/p1overview/title": {
+   "kind": "textbox",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "85ab32fefa717108fc5f4123:512"
+    },
+    "B": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "85ab32fefa717108fc5f4123:512"
+    },
+    "C": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "85ab32fefa717108fc5f4123:512"
+    },
+    "D": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "85ab32fefa717108fc5f4123:512"
+    },
+    "E": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "85ab32fefa717108fc5f4123:512"
+    },
+    "K": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "85ab32fefa717108fc5f4123:512"
+    }
+   }
+  },
+  "twin-project/p2details/barProduct": {
+   "kind": "bar",
+   "time": {
+    "dt": false,
+    "none": false
+   },
+   "runs": {
+    "A": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "4f1e539d28cee7b8e9207fc4:1268"
+    },
+    "B": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "4f1e539d28cee7b8e9207fc4:1268"
+    },
+    "C": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "4f1e539d28cee7b8e9207fc4:1268"
+    },
+    "D": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "4f1e539d28cee7b8e9207fc4:1268"
+    },
+    "E": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "4f1e539d28cee7b8e9207fc4:1268"
+    },
+    "K": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "34d9baad15cf926f5185a01b:1074"
+    }
+   }
+  },
+  "twin-project/p2details/btnBack": {
+   "kind": "button",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "cab28e3cfa2cbb83d23f2433:1123"
+    },
+    "B": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "cab28e3cfa2cbb83d23f2433:1123"
+    },
+    "C": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "cab28e3cfa2cbb83d23f2433:1123"
+    },
+    "D": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "cab28e3cfa2cbb83d23f2433:1123"
+    },
+    "E": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "cab28e3cfa2cbb83d23f2433:1123"
+    },
+    "K": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "cab28e3cfa2cbb83d23f2433:1123"
+    }
+   }
+  },
+  "twin-project/p2details/customGauge": {
+   "kind": "custom",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "13ccddc1e61eead2407aba90:625"
+    },
+    "B": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "13ccddc1e61eead2407aba90:625"
+    },
+    "C": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "13ccddc1e61eead2407aba90:625"
+    },
+    "D": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "13ccddc1e61eead2407aba90:625"
+    },
+    "E": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "13ccddc1e61eead2407aba90:625"
+    },
+    "K": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "13ccddc1e61eead2407aba90:625"
+    }
+   }
+  },
+  "twin-project/p2details/note2": {
+   "kind": "textbox",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "ac68d335940f12d61d3fddfb:507"
+    },
+    "B": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "ac68d335940f12d61d3fddfb:507"
+    },
+    "C": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "ac68d335940f12d61d3fddfb:507"
+    },
+    "D": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "ac68d335940f12d61d3fddfb:507"
+    },
+    "E": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "ac68d335940f12d61d3fddfb:507"
+    },
+    "K": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "ac68d335940f12d61d3fddfb:507"
+    }
+   }
+  },
+  "twin-project/p2details/tblProducts": {
+   "kind": "table",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a0afeeb524ab6b40512f415e:1408"
+    },
+    "B": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a0afeeb524ab6b40512f415e:1408"
+    },
+    "C": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a0afeeb524ab6b40512f415e:1408"
+    },
+    "D": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a0afeeb524ab6b40512f415e:1408"
+    },
+    "E": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a0afeeb524ab6b40512f415e:1408"
+    },
+    "K": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a0afeeb524ab6b40512f415e:1408"
+    }
+   }
+  },
+  "twin-project/p3tooltip/tipCard": {
+   "kind": "plain",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "273ec6940f828ba3ad64e859:504"
+    },
+    "B": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "273ec6940f828ba3ad64e859:504"
+    },
+    "C": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "273ec6940f828ba3ad64e859:504"
+    },
+    "D": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "273ec6940f828ba3ad64e859:504"
+    },
+    "E": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "273ec6940f828ba3ad64e859:504"
+    },
+    "K": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "273ec6940f828ba3ad64e859:504"
+    }
+   }
+  },
+  "health-project/1191ff80f72c1a663a1b/99e6252eb6ead4faace5": {
+   "kind": "table",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a1b7e0a9aec7dcfb09e809de:1572"
+    },
+    "B": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a1b7e0a9aec7dcfb09e809de:1572"
+    },
+    "C": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a1b7e0a9aec7dcfb09e809de:1572"
+    },
+    "D": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a1b7e0a9aec7dcfb09e809de:1572"
+    },
+    "E": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a1b7e0a9aec7dcfb09e809de:1572"
+    },
+    "K": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a1b7e0a9aec7dcfb09e809de:1572"
+    }
+   }
+  },
+  "health-project/b23cd988888cb1c32ad5/30e84ab3b0d21c8d4e48": {
+   "kind": "textbox",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text",
+      "title"
+     ],
+     "sha": "b6c4a477fdcd6caabbd61bf5:1053"
+    },
+    "B": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text",
+      "title"
+     ],
+     "sha": "b6c4a477fdcd6caabbd61bf5:1053"
+    },
+    "C": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text",
+      "title"
+     ],
+     "sha": "b6c4a477fdcd6caabbd61bf5:1053"
+    },
+    "D": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text",
+      "title"
+     ],
+     "sha": "b6c4a477fdcd6caabbd61bf5:1053"
+    },
+    "E": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text",
+      "title"
+     ],
+     "sha": "b6c4a477fdcd6caabbd61bf5:1053"
+    },
+    "K": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text",
+      "title"
+     ],
+     "sha": "b6c4a477fdcd6caabbd61bf5:1053"
+    }
+   }
+  },
+  "hm1/F1-1.json#0/v0": {
+   "kind": "matrix",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "25bff5405171e63d5b29b73e:1144"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "25bff5405171e63d5b29b73e:1144"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "25bff5405171e63d5b29b73e:1144"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "25bff5405171e63d5b29b73e:1144"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "25bff5405171e63d5b29b73e:1144"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "25bff5405171e63d5b29b73e:1144"
+    }
+   }
+  },
+  "hm1/M1-1.json#0/v0": {
+   "kind": "matrix",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    }
+   }
+  },
+  "hm1/M1-1.json#0/v0Names": {
+   "kind": "plain",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "B": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "C": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "D": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "E": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "K": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    }
+   }
+  },
+  "hm1/N1-25.json#0/v0": {
+   "kind": "matrix",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    }
+   }
+  },
+  "hm1/N1-25.json#0/v0Names": {
+   "kind": "plain",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "B": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "C": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "D": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "E": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "K": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    }
+   }
+  },
+  "hm2/A1-1.json#0/v0": {
+   "kind": "matrix",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "24831b409c0bd8b8cdbbaa24:1188"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "24831b409c0bd8b8cdbbaa24:1188"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "24831b409c0bd8b8cdbbaa24:1188"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "24831b409c0bd8b8cdbbaa24:1188"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "24831b409c0bd8b8cdbbaa24:1188"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "24831b409c0bd8b8cdbbaa24:1188"
+    }
+   }
+  },
+  "hm2/A1-1.json#0/v1": {
+   "kind": "column",
+   "time": {
+    "dt": false,
+    "none": false
+   },
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "2a29266e1005ae5043166ff1:943"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "2a29266e1005ae5043166ff1:943"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "2a29266e1005ae5043166ff1:943"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "2a29266e1005ae5043166ff1:943"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "2a29266e1005ae5043166ff1:943"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "2a29266e1005ae5043166ff1:943"
+    }
+   }
+  },
+  "twin-fuzz/B1-1.json#0/v7": {
+   "kind": "column",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "ce66302237cad33ff63f6aed:520"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "ce66302237cad33ff63f6aed:520"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "ce66302237cad33ff63f6aed:520"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "ce66302237cad33ff63f6aed:520"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "ce66302237cad33ff63f6aed:520"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "ce66302237cad33ff63f6aed:520"
+    }
+   }
+  },
+  "twin-fuzz/B1-1.json#0/v8": {
+   "kind": "button",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "2676c5d5f12d589c6a8830fa:480"
+    },
+    "B": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "2676c5d5f12d589c6a8830fa:480"
+    },
+    "C": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "2676c5d5f12d589c6a8830fa:480"
+    },
+    "D": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "2676c5d5f12d589c6a8830fa:480"
+    },
+    "E": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "2676c5d5f12d589c6a8830fa:480"
+    },
+    "K": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "2676c5d5f12d589c6a8830fa:480"
+    }
+   }
+  },
+  "twin-fuzz/B1-1.json#0/v9": {
+   "kind": "slicer",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "4d6d108dc189589954d15e45:276"
+    },
+    "B": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "4d6d108dc189589954d15e45:276"
+    },
+    "C": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "4d6d108dc189589954d15e45:276"
+    },
+    "D": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "4d6d108dc189589954d15e45:276"
+    },
+    "E": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "4d6d108dc189589954d15e45:276"
+    },
+    "K": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "4d6d108dc189589954d15e45:276"
+    }
+   }
+  },
+  "twin-fuzz/B1-3.json#0/v1": {
+   "kind": "matrix",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "07a2287aee8692d9e4bbf17a:395"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "07a2287aee8692d9e4bbf17a:395"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "07a2287aee8692d9e4bbf17a:395"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "07a2287aee8692d9e4bbf17a:395"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "07a2287aee8692d9e4bbf17a:395"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "07a2287aee8692d9e4bbf17a:395"
+    }
+   }
+  },
+  "twin-fuzz/B1-3.json#0/v5": {
+   "kind": "bar",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "c73271e2166304afd729a29e:593"
+    },
+    "B": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "c73271e2166304afd729a29e:593"
+    },
+    "C": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "c73271e2166304afd729a29e:593"
+    },
+    "D": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "c73271e2166304afd729a29e:593"
+    },
+    "E": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "c73271e2166304afd729a29e:593"
+    },
+    "K": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "5293fbddbaca551940563f49:399"
+    }
+   }
+  },
+  "twin-fuzz/B2-1.json#0/v12": {
+   "kind": "matrix",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "671799ce68d378fa869a9094:399"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "671799ce68d378fa869a9094:399"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "671799ce68d378fa869a9094:399"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "671799ce68d378fa869a9094:399"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "671799ce68d378fa869a9094:399"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "671799ce68d378fa869a9094:399"
+    }
+   }
+  },
+  "twin-fuzz/B2-1.json#0/v13": {
+   "kind": "table",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bdb34cd36ce9fe49e7386c3c:395"
+    },
+    "B": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bdb34cd36ce9fe49e7386c3c:395"
+    },
+    "C": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bdb34cd36ce9fe49e7386c3c:395"
+    },
+    "D": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bdb34cd36ce9fe49e7386c3c:395"
+    },
+    "E": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bdb34cd36ce9fe49e7386c3c:395"
+    },
+    "K": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bdb34cd36ce9fe49e7386c3c:395"
+    }
+   }
+  },
+  "twin-fuzz/B2new-1.json#0/v8": {
+   "kind": "column",
+   "time": {
+    "dt": false,
+    "none": false
+   },
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "082e707ef0758755029bfd0a:734"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "082e707ef0758755029bfd0a:734"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "082e707ef0758755029bfd0a:734"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "082e707ef0758755029bfd0a:734"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "082e707ef0758755029bfd0a:734"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "082e707ef0758755029bfd0a:734"
+    }
+   }
+  },
+  "twin-fuzz/B2new-1.json#0/v15": {
+   "kind": "column",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "b54423ccec277388502a4878:511"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "b54423ccec277388502a4878:511"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "b54423ccec277388502a4878:511"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "b54423ccec277388502a4878:511"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "b54423ccec277388502a4878:511"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "b54423ccec277388502a4878:511"
+    }
+   }
+  },
+  "twin-fuzz/B2new-1.json#0/v21": {
+   "kind": "matrix",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "d8ebc0ac9dde6fed1502cb22:613"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "d8ebc0ac9dde6fed1502cb22:613"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "d8ebc0ac9dde6fed1502cb22:613"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "d8ebc0ac9dde6fed1502cb22:613"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "d8ebc0ac9dde6fed1502cb22:613"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "d8ebc0ac9dde6fed1502cb22:613"
+    }
+   }
+  },
+  "twin-fuzz/B2new-2.json#0/v5": {
+   "kind": "plain",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d4237eb3823d4494cf96971d:274"
+    },
+    "B": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d4237eb3823d4494cf96971d:274"
+    },
+    "C": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d4237eb3823d4494cf96971d:274"
+    },
+    "D": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d4237eb3823d4494cf96971d:274"
+    },
+    "E": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d4237eb3823d4494cf96971d:274"
+    },
+    "K": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d4237eb3823d4494cf96971d:274"
+    }
+   }
+  },
+  "twin-fuzz/B2new-2.json#0/v6": {
+   "kind": "matrix",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bfcf5c69d166e27c7dd84e09:397"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bfcf5c69d166e27c7dd84e09:397"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bfcf5c69d166e27c7dd84e09:397"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bfcf5c69d166e27c7dd84e09:397"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bfcf5c69d166e27c7dd84e09:397"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bfcf5c69d166e27c7dd84e09:397"
+    }
+   }
+  },
+  "twin-fuzz/B2new-2.json#0/v9": {
+   "kind": "button",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "8db6e7f372abbb2de5cee0c2:478"
+    },
+    "B": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "8db6e7f372abbb2de5cee0c2:478"
+    },
+    "C": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "8db6e7f372abbb2de5cee0c2:478"
+    },
+    "D": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "8db6e7f372abbb2de5cee0c2:478"
+    },
+    "E": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "8db6e7f372abbb2de5cee0c2:478"
+    },
+    "K": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "8db6e7f372abbb2de5cee0c2:478"
+    }
+   }
+  },
+  "twin-fuzz/B2new-8.json#0/v5": {
+   "kind": "group",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5c8f73a350a6727eb55c4284:261"
+    },
+    "B": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5c8f73a350a6727eb55c4284:261"
+    },
+    "C": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5c8f73a350a6727eb55c4284:261"
+    },
+    "D": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5c8f73a350a6727eb55c4284:261"
+    },
+    "E": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5c8f73a350a6727eb55c4284:261"
+    },
+    "K": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5c8f73a350a6727eb55c4284:261"
+    }
+   }
+  },
+  "twin-fuzz/B2new-8.json#0/v17": {
+   "kind": "column",
+   "time": {
+    "dt": false,
+    "none": false
+   },
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "d5095a11d444120341ffd336:736"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "d5095a11d444120341ffd336:736"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "d5095a11d444120341ffd336:736"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "d5095a11d444120341ffd336:736"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "d5095a11d444120341ffd336:736"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "d5095a11d444120341ffd336:736"
+    }
+   }
+  },
+  "twin-fuzz/B2new-8.json#0/v18": {
+   "kind": "matrix",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "65f1396b5919f5a3448724ad:613"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "65f1396b5919f5a3448724ad:613"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "65f1396b5919f5a3448724ad:613"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "65f1396b5919f5a3448724ad:613"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "65f1396b5919f5a3448724ad:613"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "65f1396b5919f5a3448724ad:613"
+    }
+   }
+  },
+  "twin-fuzz/B3-1.json#0/v0": {
+   "kind": "button",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "bcbba8f1a1dd8e0617eb0c02:331"
+    },
+    "B": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "bcbba8f1a1dd8e0617eb0c02:331"
+    },
+    "C": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "bcbba8f1a1dd8e0617eb0c02:331"
+    },
+    "D": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "bcbba8f1a1dd8e0617eb0c02:331"
+    },
+    "E": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "bcbba8f1a1dd8e0617eb0c02:331"
+    },
+    "K": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "bcbba8f1a1dd8e0617eb0c02:331"
+    }
+   }
+  },
+  "twin-fuzz/M1-1.json#0/v1": {
+   "kind": "button",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "235daf8bee9834d46bc03f31:479"
+    },
+    "B": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "235daf8bee9834d46bc03f31:479"
+    },
+    "C": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "235daf8bee9834d46bc03f31:479"
+    },
+    "D": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "235daf8bee9834d46bc03f31:479"
+    },
+    "E": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "235daf8bee9834d46bc03f31:479"
+    },
+    "K": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "235daf8bee9834d46bc03f31:479"
+    }
+   }
+  },
+  "twin-fuzz/M1-1.json#0/v15": {
+   "kind": "group",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "659252a796ec531be08ecd9e:262"
+    },
+    "B": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "659252a796ec531be08ecd9e:262"
+    },
+    "C": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "659252a796ec531be08ecd9e:262"
+    },
+    "D": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "659252a796ec531be08ecd9e:262"
+    },
+    "E": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "659252a796ec531be08ecd9e:262"
+    },
+    "K": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "659252a796ec531be08ecd9e:262"
+    }
+   }
+  },
+  "twin-fuzz/M1-1.json#0/v24": {
+   "kind": "textbox",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "491e249494fc11d5ff4a7716:279"
+    },
+    "B": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "491e249494fc11d5ff4a7716:279"
+    },
+    "C": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "491e249494fc11d5ff4a7716:279"
+    },
+    "D": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "491e249494fc11d5ff4a7716:279"
+    },
+    "E": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "491e249494fc11d5ff4a7716:279"
+    },
+    "K": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "491e249494fc11d5ff4a7716:279"
+    }
+   }
+  },
+  "twin-fuzz/V1-1.json#0/v0": {
+   "kind": "matrix",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "f1df1e01e6f4bfe60f7285c4:688"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "f1df1e01e6f4bfe60f7285c4:688"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "f1df1e01e6f4bfe60f7285c4:688"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "f1df1e01e6f4bfe60f7285c4:688"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "f1df1e01e6f4bfe60f7285c4:688"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "f1df1e01e6f4bfe60f7285c4:688"
+    }
+   }
+  },
+  "made-up/mDateHier": {
+   "kind": "column",
+   "time": {
+    "dt": true,
+    "none": true
+   },
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "f8de88a75f8e8083314b743b:1598"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "2e38e4ee82ae85da2a7b324f:1185"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "time axis",
+      "title"
+     ],
+     "sha": "848a6a2c80cff29863b8ad92:1695"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "f8de88a75f8e8083314b743b:1598"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "2e38e4ee82ae85da2a7b324f:1185"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "f8de88a75f8e8083314b743b:1598"
+    }
+   }
+  },
+  "made-up/mDateHierLine": {
+   "kind": "column",
+   "time": {
+    "dt": true,
+    "none": true
+   },
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "16b47aca261091d81623a434:1619"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "6aadb42a69e54ade4a458760:1611"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "time axis",
+      "title"
+     ],
+     "sha": "560704510a82f93b82d6c464:1716"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "16b47aca261091d81623a434:1619"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "6aadb42a69e54ade4a458760:1611"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "16b47aca261091d81623a434:1619"
+    }
+   }
+  },
+  "made-up/mFiscalYear": {
+   "kind": "column",
+   "time": {
+    "dt": false,
+    "none": false
+   },
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "245b379808d05b16d413f6b0:1065"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "245b379808d05b16d413f6b0:1065"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "245b379808d05b16d413f6b0:1065"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "245b379808d05b16d413f6b0:1065"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "245b379808d05b16d413f6b0:1065"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "245b379808d05b16d413f6b0:1065"
+    }
+   }
+  },
+  "made-up/mFiscalYearDim": {
+   "kind": "column",
+   "time": {
+    "dt": true,
+    "none": false
+   },
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "2a887750c4912a10304fef94:1338"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "legend",
+      "title"
+     ],
+     "sha": "69022b91f8d17fdd2d8110bd:1161"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "2a887750c4912a10304fef94:1338"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "2a887750c4912a10304fef94:1338"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "legend",
+      "title"
+     ],
+     "sha": "69022b91f8d17fdd2d8110bd:1161"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "2a887750c4912a10304fef94:1338"
+    }
+   }
+  },
+  "made-up/mStartOfMonth": {
+   "kind": "column",
+   "time": {
+    "dt": true,
+    "none": false
+   },
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "92e0e4a10978a963b7cd4c75:1082"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "02915e9b89a363e568d269d2:903"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "time axis",
+      "title"
+     ],
+     "sha": "2355137ae8b89b8c2eecf5d7:1179"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "time axis",
+      "title"
+     ],
+     "sha": "2355137ae8b89b8c2eecf5d7:1179"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "02915e9b89a363e568d269d2:903"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "92e0e4a10978a963b7cd4c75:1082"
+    }
+   }
+  },
+  "made-up/mOrderDateCat": {
+   "kind": "column",
+   "time": {
+    "dt": true,
+    "none": true
+   },
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "ea837d8869f4a3a3983c2638:1166"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "0364d951ddeaf59e9c0f29af:989"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "ea837d8869f4a3a3983c2638:1166"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "ea837d8869f4a3a3983c2638:1166"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "0364d951ddeaf59e9c0f29af:989"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "ea837d8869f4a3a3983c2638:1166"
+    }
+   }
+  },
+  "made-up/mMonthName": {
+   "kind": "column",
+   "time": {
+    "dt": true,
+    "none": true
+   },
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "f10f8203db33a8805a1e11f0:1061"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "9ae099b15007b2a5b130ae78:1053"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "f10f8203db33a8805a1e11f0:1061"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "f10f8203db33a8805a1e11f0:1061"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "9ae099b15007b2a5b130ae78:1053"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "f10f8203db33a8805a1e11f0:1061"
+    }
+   }
+  },
+  "made-up/mArabicMonth": {
+   "kind": "column",
+   "time": {
+    "dt": true,
+    "none": true
+   },
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "1862574f35705e2ac4f53b41:1067"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "d1904e3867d28ed8d2dccbb4:892"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "1862574f35705e2ac4f53b41:1067"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "1862574f35705e2ac4f53b41:1067"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "d1904e3867d28ed8d2dccbb4:892"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "1862574f35705e2ac4f53b41:1067"
+    }
+   }
+  },
+  "made-up/mHolidayPackage": {
+   "kind": "column",
+   "time": {
+    "dt": false,
+    "none": false
+   },
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "44f84d04f7ef64c4fa26485b:1071"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "44f84d04f7ef64c4fa26485b:1071"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "44f84d04f7ef64c4fa26485b:1071"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "44f84d04f7ef64c4fa26485b:1071"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "44f84d04f7ef64c4fa26485b:1071"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "44f84d04f7ef64c4fa26485b:1071"
+    }
+   }
+  },
+  "made-up/mBarLegend": {
+   "kind": "bar",
+   "time": {
+    "dt": false,
+    "none": false
+   },
+   "runs": {
+    "A": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "legend",
+      "title"
+     ],
+     "sha": "14182ed80c22819555127ce7:1228"
+    },
+    "B": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "legend",
+      "title"
+     ],
+     "sha": "14182ed80c22819555127ce7:1228"
+    },
+    "C": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "legend",
+      "title"
+     ],
+     "sha": "14182ed80c22819555127ce7:1228"
+    },
+    "D": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "legend",
+      "title"
+     ],
+     "sha": "14182ed80c22819555127ce7:1228"
+    },
+    "E": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "legend",
+      "title"
+     ],
+     "sha": "14182ed80c22819555127ce7:1228"
+    },
+    "K": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "891d3a23dc4b658a5d6fb16f:942"
+    }
+   }
+  },
+  "made-up/mBarHiddenAxis": {
+   "kind": "bar",
+   "time": {
+    "dt": false,
+    "none": false
+   },
+   "runs": {
+    "A": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "3e7bb5549a97fd1cea0e1677:1004"
+    },
+    "B": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "3e7bb5549a97fd1cea0e1677:1004"
+    },
+    "C": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "3e7bb5549a97fd1cea0e1677:1004"
+    },
+    "D": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "3e7bb5549a97fd1cea0e1677:1004"
+    },
+    "E": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "3e7bb5549a97fd1cea0e1677:1004"
+    },
+    "K": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "5ed11b41c272e8416dbbe3cc:856"
+    }
+   }
+  },
+  "made-up/mComboMonth": {
+   "kind": "column",
+   "time": {
+    "dt": true,
+    "none": true
+   },
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "f7c01b80554670514aeb335b:1240"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "89551459f428ecba454a2f93:1068"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "f7c01b80554670514aeb335b:1240"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "f7c01b80554670514aeb335b:1240"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "89551459f428ecba454a2f93:1068"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "f7c01b80554670514aeb335b:1240"
+    }
+   }
+  },
+  "made-up/mWaterfallMonth": {
+   "kind": "waterfall",
+   "time": {
+    "dt": true,
+    "none": true
+   },
+   "runs": {
+    "A": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "3d4e49ac2e654371fd913ace:799"
+    },
+    "B": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "3d4e49ac2e654371fd913ace:799"
+    },
+    "C": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "3d4e49ac2e654371fd913ace:799"
+    },
+    "D": {
+     "kind": "waterfallKept",
+     "changes": [
+      "position",
+      "value axis"
+     ],
+     "sha": "97f749e83182032e4b3298e3:1027"
+    },
+    "E": {
+     "kind": "waterfallTime",
+     "changes": [
+      "position",
+      "value axis"
+     ],
+     "sha": "64f4f0a3ac906ee435dcf02e:900"
+    },
+    "K": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "3d4e49ac2e654371fd913ace:799"
+    }
+   }
+  },
+  "made-up/mWaterfallFiscal": {
+   "kind": "waterfall",
+   "time": {
+    "dt": false,
+    "none": false
+   },
+   "runs": {
+    "A": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "b2a5b1722852d8f8c2a1c9d1:684"
+    },
+    "B": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "b2a5b1722852d8f8c2a1c9d1:684"
+    },
+    "C": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "b2a5b1722852d8f8c2a1c9d1:684"
+    },
+    "D": {
+     "kind": "waterfallKept",
+     "changes": [
+      "position",
+      "value axis"
+     ],
+     "sha": "3fc8d1c1c7f53e720e2dd183:924"
+    },
+    "E": {
+     "kind": "waterfallKept",
+     "changes": [
+      "position",
+      "value axis"
+     ],
+     "sha": "3fc8d1c1c7f53e720e2dd183:924"
+    },
+    "K": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "b2a5b1722852d8f8c2a1c9d1:684"
+    }
+   }
+  },
+  "made-up/mWaterfallDate": {
+   "kind": "waterfall",
+   "time": {
+    "dt": true,
+    "none": false
+   },
+   "runs": {
+    "A": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "e5e9903688f1d0d490694c72:692"
+    },
+    "B": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "e5e9903688f1d0d490694c72:692"
+    },
+    "C": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "e5e9903688f1d0d490694c72:692"
+    },
+    "D": {
+     "kind": "waterfall",
+     "changes": [
+      "position",
+      "waterfall",
+      "value axis",
+      "sort"
+     ],
+     "sha": "54dc62bd4c8934086ce9cc28:7632"
+    },
+    "E": {
+     "kind": "waterfallTime",
+     "changes": [
+      "position",
+      "value axis"
+     ],
+     "sha": "c03396664da66c6d23652f12:805"
+    },
+    "K": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "e5e9903688f1d0d490694c72:692"
+    }
+   }
+  },
+  "made-up/mWaterfallCat": {
+   "kind": "waterfall",
+   "time": {
+    "dt": false,
+    "none": false
+   },
+   "runs": {
+    "A": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "6152b642158ad75c11eefa33:845"
+    },
+    "B": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "6152b642158ad75c11eefa33:845"
+    },
+    "C": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "6152b642158ad75c11eefa33:845"
+    },
+    "D": {
+     "kind": "waterfallKept",
+     "changes": [
+      "position",
+      "value axis"
+     ],
+     "sha": "e77b5f7ca48b2e4911198e2d:996"
+    },
+    "E": {
+     "kind": "waterfallKept",
+     "changes": [
+      "position",
+      "value axis"
+     ],
+     "sha": "e77b5f7ca48b2e4911198e2d:996"
+    },
+    "K": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "6152b642158ad75c11eefa33:845"
+    }
+   }
+  },
+  "made-up/mTable1": {
+   "kind": "table",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "alignment",
+      "title"
+     ],
+     "sha": "46178f51e6e69f45084f7732:903"
+    },
+    "B": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "alignment",
+      "title"
+     ],
+     "sha": "46178f51e6e69f45084f7732:903"
+    },
+    "C": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "alignment",
+      "title"
+     ],
+     "sha": "46178f51e6e69f45084f7732:903"
+    },
+    "D": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "alignment",
+      "title"
+     ],
+     "sha": "46178f51e6e69f45084f7732:903"
+    },
+    "E": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "alignment",
+      "title"
+     ],
+     "sha": "46178f51e6e69f45084f7732:903"
+    },
+    "K": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "alignment",
+      "title"
+     ],
+     "sha": "46178f51e6e69f45084f7732:903"
+    }
+   }
+  },
+  "made-up/mTable3": {
+   "kind": "table",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "status icons",
+      "columns",
+      "alignment",
+      "alignment",
+      "title"
+     ],
+     "sha": "6f72dc76c849c3263c4fbe6d:1581"
+    },
+    "B": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "status icons",
+      "columns",
+      "alignment",
+      "alignment",
+      "title"
+     ],
+     "sha": "6f72dc76c849c3263c4fbe6d:1581"
+    },
+    "C": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "status icons",
+      "columns",
+      "alignment",
+      "alignment",
+      "title"
+     ],
+     "sha": "6f72dc76c849c3263c4fbe6d:1581"
+    },
+    "D": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "status icons",
+      "columns",
+      "alignment",
+      "alignment",
+      "title"
+     ],
+     "sha": "6f72dc76c849c3263c4fbe6d:1581"
+    },
+    "E": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "status icons",
+      "columns",
+      "alignment",
+      "alignment",
+      "title"
+     ],
+     "sha": "6f72dc76c849c3263c4fbe6d:1581"
+    },
+    "K": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "status icons",
+      "columns",
+      "alignment",
+      "alignment",
+      "title"
+     ],
+     "sha": "6f72dc76c849c3263c4fbe6d:1581"
+    }
+   }
+  },
+  "made-up/mMatrixFlat": {
+   "kind": "matrix",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "matrixAsTable",
+     "changes": [
+      "position",
+      "matrix as table",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "119ef27a24d760c42765d1a5:1241"
+    },
+    "B": {
+     "kind": "matrixAsTable",
+     "changes": [
+      "position",
+      "matrix as table",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "119ef27a24d760c42765d1a5:1241"
+    },
+    "C": {
+     "kind": "matrixAsTable",
+     "changes": [
+      "position",
+      "matrix as table",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "119ef27a24d760c42765d1a5:1241"
+    },
+    "D": {
+     "kind": "matrixAsTable",
+     "changes": [
+      "position",
+      "matrix as table",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "119ef27a24d760c42765d1a5:1241"
+    },
+    "E": {
+     "kind": "matrixAsTable",
+     "changes": [
+      "position",
+      "matrix as table",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "119ef27a24d760c42765d1a5:1241"
+    },
+    "K": {
+     "kind": "matrixAsTable",
+     "changes": [
+      "position",
+      "matrix as table",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "119ef27a24d760c42765d1a5:1241"
+    }
+   }
+  },
+  "made-up/mHeatmap": {
+   "kind": "matrix",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "1cafa1065eedcfe9c37544e7:1031"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "1cafa1065eedcfe9c37544e7:1031"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "1cafa1065eedcfe9c37544e7:1031"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "1cafa1065eedcfe9c37544e7:1031"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "1cafa1065eedcfe9c37544e7:1031"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "1cafa1065eedcfe9c37544e7:1031"
+    }
+   }
+  },
+  "made-up/mCard": {
+   "kind": "plain",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a90448f785b5af8d819395a:471"
+    },
+    "B": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a90448f785b5af8d819395a:471"
+    },
+    "C": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a90448f785b5af8d819395a:471"
+    },
+    "D": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a90448f785b5af8d819395a:471"
+    },
+    "E": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a90448f785b5af8d819395a:471"
+    },
+    "K": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a90448f785b5af8d819395a:471"
+    }
+   }
+  },
+  "made-up/mKpi": {
+   "kind": "plain",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d42852ac6ea037364986afff:646"
+    },
+    "B": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d42852ac6ea037364986afff:646"
+    },
+    "C": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d42852ac6ea037364986afff:646"
+    },
+    "D": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d42852ac6ea037364986afff:646"
+    },
+    "E": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d42852ac6ea037364986afff:646"
+    },
+    "K": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d42852ac6ea037364986afff:646"
+    }
+   }
+  },
+  "made-up/mNewCardAcross": {
+   "kind": "newCard",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "margins",
+      "title"
+     ],
+     "sha": "970bc924787ea8efada724c3:1119"
+    },
+    "B": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "margins",
+      "title"
+     ],
+     "sha": "970bc924787ea8efada724c3:1119"
+    },
+    "C": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "margins",
+      "title"
+     ],
+     "sha": "970bc924787ea8efada724c3:1119"
+    },
+    "D": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "margins",
+      "title"
+     ],
+     "sha": "970bc924787ea8efada724c3:1119"
+    },
+    "E": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "margins",
+      "title"
+     ],
+     "sha": "970bc924787ea8efada724c3:1119"
+    },
+    "K": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "margins",
+      "title"
+     ],
+     "sha": "970bc924787ea8efada724c3:1119"
+    }
+   }
+  },
+  "made-up/mNewCardDown": {
+   "kind": "newCard",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "title"
+     ],
+     "sha": "211fb6c241891da359f95f52:959"
+    },
+    "B": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "title"
+     ],
+     "sha": "211fb6c241891da359f95f52:959"
+    },
+    "C": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "title"
+     ],
+     "sha": "211fb6c241891da359f95f52:959"
+    },
+    "D": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "title"
+     ],
+     "sha": "211fb6c241891da359f95f52:959"
+    },
+    "E": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "title"
+     ],
+     "sha": "211fb6c241891da359f95f52:959"
+    },
+    "K": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "title"
+     ],
+     "sha": "211fb6c241891da359f95f52:959"
+    }
+   }
+  },
+  "made-up/mPillsOneRow": {
+   "kind": "slicer",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "pills",
+     "changes": [
+      "position",
+      "order"
+     ],
+     "sha": "45d4e9b0b2fbeb4ed5569a50:736"
+    },
+    "B": {
+     "kind": "pills",
+     "changes": [
+      "position",
+      "order"
+     ],
+     "sha": "45d4e9b0b2fbeb4ed5569a50:736"
+    },
+    "C": {
+     "kind": "pills",
+     "changes": [
+      "position",
+      "order"
+     ],
+     "sha": "45d4e9b0b2fbeb4ed5569a50:736"
+    },
+    "D": {
+     "kind": "pills",
+     "changes": [
+      "position",
+      "order"
+     ],
+     "sha": "45d4e9b0b2fbeb4ed5569a50:736"
+    },
+    "E": {
+     "kind": "pills",
+     "changes": [
+      "position",
+      "order"
+     ],
+     "sha": "45d4e9b0b2fbeb4ed5569a50:736"
+    },
+    "K": {
+     "kind": "pills",
+     "changes": [
+      "position",
+      "order"
+     ],
+     "sha": "45d4e9b0b2fbeb4ed5569a50:736"
+    }
+   }
+  },
+  "made-up/mPillsGrid": {
+   "kind": "slicer",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "f138d196b488dcaa21e36053:583"
+    },
+    "B": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "f138d196b488dcaa21e36053:583"
+    },
+    "C": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "f138d196b488dcaa21e36053:583"
+    },
+    "D": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "f138d196b488dcaa21e36053:583"
+    },
+    "E": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "f138d196b488dcaa21e36053:583"
+    },
+    "K": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "f138d196b488dcaa21e36053:583"
+    }
+   }
+  },
+  "made-up/mSlicerList": {
+   "kind": "slicer",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "47290b9db1411939f2184c3b:483"
+    },
+    "B": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "47290b9db1411939f2184c3b:483"
+    },
+    "C": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "47290b9db1411939f2184c3b:483"
+    },
+    "D": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "47290b9db1411939f2184c3b:483"
+    },
+    "E": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "47290b9db1411939f2184c3b:483"
+    },
+    "K": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "47290b9db1411939f2184c3b:483"
+    }
+   }
+  },
+  "made-up/mDonutLegend": {
+   "kind": "plain",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "legend order"
+     ],
+     "sha": "78cf13a61db9d574417f5f9f:1040"
+    },
+    "B": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "legend order"
+     ],
+     "sha": "78cf13a61db9d574417f5f9f:1040"
+    },
+    "C": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "legend order"
+     ],
+     "sha": "78cf13a61db9d574417f5f9f:1040"
+    },
+    "D": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "legend order"
+     ],
+     "sha": "78cf13a61db9d574417f5f9f:1040"
+    },
+    "E": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "legend order"
+     ],
+     "sha": "78cf13a61db9d574417f5f9f:1040"
+    },
+    "K": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "legend order"
+     ],
+     "sha": "78cf13a61db9d574417f5f9f:1040"
+    }
+   }
+  },
+  "made-up/mScatter": {
+   "kind": "other",
+   "time": {
+    "dt": false,
+    "none": false
+   },
+   "runs": {
+    "A": {
+     "kind": "other",
+     "changes": [
+      "position"
+     ],
+     "sha": "d6ebd01effd501c13cb90a6b:815"
+    },
+    "B": {
+     "kind": "other",
+     "changes": [
+      "position"
+     ],
+     "sha": "d6ebd01effd501c13cb90a6b:815"
+    },
+    "C": {
+     "kind": "other",
+     "changes": [
+      "position"
+     ],
+     "sha": "d6ebd01effd501c13cb90a6b:815"
+    },
+    "D": {
+     "kind": "other",
+     "changes": [
+      "position"
+     ],
+     "sha": "d6ebd01effd501c13cb90a6b:815"
+    },
+    "E": {
+     "kind": "other",
+     "changes": [
+      "position"
+     ],
+     "sha": "d6ebd01effd501c13cb90a6b:815"
+    },
+    "K": {
+     "kind": "other",
+     "changes": [
+      "position"
+     ],
+     "sha": "d6ebd01effd501c13cb90a6b:815"
+    }
+   }
+  },
+  "made-up/mCustom": {
+   "kind": "custom",
+   "time": {
+    "dt": true,
+    "none": true
+   },
+   "runs": {
+    "A": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "6632548ba502c13252c1b370:511"
+    },
+    "B": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "6632548ba502c13252c1b370:511"
+    },
+    "C": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "6632548ba502c13252c1b370:511"
+    },
+    "D": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "6632548ba502c13252c1b370:511"
+    },
+    "E": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "6632548ba502c13252c1b370:511"
+    },
+    "K": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "6632548ba502c13252c1b370:511"
+    }
+   }
+  },
+  "made-up/mNoType": {
+   "kind": "custom",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "54ac568c167aa835c49d7c41:262"
+    },
+    "B": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "54ac568c167aa835c49d7c41:262"
+    },
+    "C": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "54ac568c167aa835c49d7c41:262"
+    },
+    "D": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "54ac568c167aa835c49d7c41:262"
+    },
+    "E": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "54ac568c167aa835c49d7c41:262"
+    },
+    "K": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "54ac568c167aa835c49d7c41:262"
+    }
+   }
+  },
+  "made-up/mUnreadable": {
+   "kind": "unreadable",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "unreadable",
+     "changes": [
+      "position"
+     ],
+     "sha": "5343b992d2a772ff28183346:283"
+    },
+    "B": {
+     "kind": "unreadable",
+     "changes": [
+      "position"
+     ],
+     "sha": "5343b992d2a772ff28183346:283"
+    },
+    "C": {
+     "kind": "unreadable",
+     "changes": [
+      "position"
+     ],
+     "sha": "5343b992d2a772ff28183346:283"
+    },
+    "D": {
+     "kind": "unreadable",
+     "changes": [
+      "position"
+     ],
+     "sha": "5343b992d2a772ff28183346:283"
+    },
+    "E": {
+     "kind": "unreadable",
+     "changes": [
+      "position"
+     ],
+     "sha": "5343b992d2a772ff28183346:283"
+    },
+    "K": {
+     "kind": "unreadable",
+     "changes": [
+      "position"
+     ],
+     "sha": "5343b992d2a772ff28183346:283"
+    }
+   }
+  }
+ },
+ "pages": {
+  "twin-project/p1overview": {
+   "sha": "4eda4b8482c2ab4bbaa4a918:7932",
+   "kinds": {
+    "button": 2,
+    "plain": 2,
+    "column": 2,
+    "group": 2,
+    "navigator": 1,
+    "slicer": 1,
+    "textbox": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "twin-project/p2details": {
+   "sha": "932cde08a4e23039777c5dac:4633",
+   "kinds": {
+    "bar": 1,
+    "button": 1,
+    "custom": 1,
+    "textbox": 1,
+    "table": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "twin-project/p3tooltip": {
+   "sha": "6f04f13a71116fff9d39f446:459",
+   "kinds": {
+    "plain": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "health-project/1191ff80f72c1a663a1b": {
+   "sha": "6057b5d2d4731647b04a4104:1497",
+   "kinds": {
+    "table": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "health-project/b23cd988888cb1c32ad5": {
+   "sha": "90fe3abb429311ab08dce607:991",
+   "kinds": {
+    "textbox": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "hm1/F1-1.json#0": {
+   "sha": "f52e3ac17f2f1711be57f9c8:1080",
+   "kinds": {
+    "matrix": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "hm1/M1-1.json#0": {
+   "sha": "e037e866b9cb868852f8ee3a:1238",
+   "kinds": {
+    "matrix": 1,
+    "plain": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "hm1/N1-25.json#0": {
+   "sha": "e037e866b9cb868852f8ee3a:1238",
+   "kinds": {
+    "matrix": 1,
+    "plain": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "hm2/A1-1.json#0": {
+   "sha": "6285d03e79becf040ecf0382:1982",
+   "kinds": {
+    "matrix": 1,
+    "column": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "twin-fuzz/B1-1.json#0": {
+   "sha": "0acbbfdd8bc356983bd6b360:1115",
+   "kinds": {
+    "column": 1,
+    "button": 1,
+    "slicer": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "twin-fuzz/B1-3.json#0": {
+   "sha": "fa80aa41f94d50f587c9c561:875",
+   "kinds": {
+    "matrix": 1,
+    "bar": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "twin-fuzz/B2-1.json#0": {
+   "sha": "348586c028ed0f78ffe52024:686",
+   "kinds": {
+    "matrix": 1,
+    "table": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "twin-fuzz/B2new-1.json#0": {
+   "sha": "a8c004ae17cf672f8e6946f3:1661",
+   "kinds": {
+    "column": 2,
+    "matrix": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "twin-fuzz/B2new-2.json#0": {
+   "sha": "b04c67b04f9de3bd05b9d0f4:1002",
+   "kinds": {
+    "plain": 1,
+    "matrix": 1,
+    "button": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "twin-fuzz/B2new-8.json#0": {
+   "sha": "7eb24ebb08d851fe974c6770:1435",
+   "kinds": {
+    "group": 1,
+    "column": 1,
+    "matrix": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "twin-fuzz/B3-1.json#0": {
+   "sha": "a4715caa7ba6268d6f2ea1a5:285",
+   "kinds": {
+    "button": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "twin-fuzz/M1-1.json#0": {
+   "sha": "497594aac5c07ecc72983d70:880",
+   "kinds": {
+    "button": 1,
+    "group": 1,
+    "textbox": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "twin-fuzz/V1-1.json#0": {
+   "sha": "27fef86aa6d17cdb19a0e337:634",
+   "kinds": {
+    "matrix": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  },
+  "made-up": {
+   "sha": "785b9ba1e8a357ec116588a2:28411",
+   "kinds": {
+    "column": 10,
+    "bar": 2,
+    "waterfallNative": 4,
+    "table": 2,
+    "matrixAsTable": 1,
+    "matrix": 1,
+    "plain": 3,
+    "newCard": 2,
+    "pills": 1,
+    "slicer": 2,
+    "other": 1,
+    "custom": 2,
+    "unreadable": 1
+   },
+   "units": {
+    "on": [],
+    "bars": []
+   }
+  }
+ }
+}
