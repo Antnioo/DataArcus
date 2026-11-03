@@ -9,6 +9,7 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 - `integration/0.3.2`: builders branch from it, push only their branch; the reviewer merges; the owner merges to main.
 - 0.3.2: TK1, DP1, OP1, HR1-HR2 (answers fit uncut), HM1-HM2, R032 (main in, version 0.3.2, its own
   CHANGELOG section), DT1 (one texts order), ED1 (site: em dashes, phone shift), SP1-9, SP12-16, SP18-20 (the split). Running: LV1, SP11.
+- VC1 (the twin names a turned chart with a running calculation; `work/VC1.md`): pushed, for review; Desktop RD2-D2.
 
 ## Next step
 1. The reviewer: R032 into integration/0.3.2. 2. 0.3.2's other jobs; the release day flips the download lines.
