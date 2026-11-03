@@ -172,12 +172,16 @@ function fitProject(dir) {
   // (MX2: Fintech's watchlist) a column English hides (4 wide, under HIDDEN_W) stays hidden: never widened for its header
   const tblHid = box('tblHid', 940, 420, 320, 200, 9800, { visualType: 'tableEx', query: { queryState: { Values: { projections: [col(T, 'Product'), col(T, 'Region'), { field: { Aggregation: { Expression: { Column: { Expression: { SourceRef: { Entity: T } }, Property: 'Amount' } }, Function: 0 } }, queryRef: 'Sum(Sales.Amount)', nativeQueryRef: 'Sum of Amount' }] } } },
     objects: { columnWidth: [cw('Sales.Product', 4), cw('Sales.Region', 90), cw('Sum(Sales.Amount)', 90)] } });
+  // (0.3.2 TT1: tblFit's header was cut only because its stale entries counted, B-289; fixed, it fits) a table with no
+  // spare room, so the cut path stays reached: its Arabic Product header in its English 50
+  const tblCut = box('tblCut', 700, 640, 120, 70, 9900, { visualType: 'tableEx', query: { queryState: { Values: { projections: [col(T, 'Product'), { field: { Aggregation: { Expression: { Column: { Expression: { SourceRef: { Entity: T } }, Property: 'Amount' } }, Function: 0 } }, queryRef: 'Sum(Sales.Amount)', nativeQueryRef: 'Sum of Amount' }] } } },
+    objects: { columnWidth: [cw('Sales.Product', 50), cw('Sum(Sales.Amount)', 60)] } });
   page('fit', 1280, 720, [
     slicer('slA', 0, 20, 400, 40, 1000), slicer('slB', 400, 20, 400, 40, 2000), button('btnLong', 800, 20, 80, 40, 3000, 'Reset'), card('cardTop', 880, 20, 400, 40, 4000),
     card('cardL', 0, 100, 220, 40, 5000), button('btnIcon', 220, 100, 100, 40, 5500, 'Clear', 10), card('cardR', 320, 100, 960, 40, 6000),
     card('cardC1', 0, 150, 400, 40, 6500), button('btnCut', 400, 150, 60, 40, 7000, 'Go'), card('cardC2', 460, 150, 820, 40, 7500),
     textbox('tbGrow', 20, 200, 160, 30, 8000, 'Notes'), card('cardT1', 600, 200, 200, 30, 8200), textbox('tbCut', 800, 200, 80, 30, 8400, 'Note'), card('cardT2', 880, 200, 200, 30, 8600),
-    tbl, tblMay, tblHid]);
+    tbl, tblMay, tblHid, tblCut]);
   page('heat', 1280, 800, [heat('heatG', { x: 543.33, y: 434.17, width: 317.5, height: 188.33 }), hours('hoursG', { x: 557.5, y: 603.75, width: 310, height: 82.5 })]);
   put(pj, pages);
 }

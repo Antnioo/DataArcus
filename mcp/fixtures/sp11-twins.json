@@ -100,8 +100,8 @@
   "T7 twin-fuzz B2new-1": {
    "plan": {
     "err": false,
-    "length": 7997,
-    "sha256": "8d957a7a8653a86167c40cad4b2f771a61d0834839c9cdb95d5e80f68343ec6e"
+    "length": 8292,
+    "sha256": "98f2f05195e4caad03ee94550faefd54f33ae48be3b94a2ee35339e1c1a0cf1a"
    },
    "write": {
     "err": false,
@@ -132,8 +132,8 @@
   "T9 twin-fuzz B2new-8": {
    "plan": {
     "err": false,
-    "length": 7430,
-    "sha256": "6477ce203369ae236172a36598af07a256fab551814d54f3fa61984f219d0106"
+    "length": 7723,
+    "sha256": "af4b23fd9f36e71cb8e87808085721256198a2e518b7f9e0f6d4e2c5940f1fe4"
    },
    "write": {
     "err": false,
@@ -228,33 +228,33 @@
   "T15 the fitting shapes, their own report": {
    "plan": {
     "err": false,
-    "length": 21215,
-    "sha256": "e0402f230f62082e8e36455dc6b05c561c1fd9b3628661585037c93563fb4fa4"
+    "length": 21369,
+    "sha256": "4b20c152da9e85fdda19569acebb629d41260e0ff324f113b04932ade35ea7e9"
    },
    "write": {
     "err": false,
-    "length": 8008,
-    "sha256": "1d99bf23375f87a1674bf97ae78c703c4e9a8005ffbe2d8efbddb7ab2fa6cdcd"
+    "length": 8162,
+    "sha256": "59b6627eb99e95e15eaeee2d6cb4a024f16a1f02918b621a31795860185c0237"
    },
    "files": {
-    "count": 108,
-    "sha256": "70c2a130621f0a6bcec94997aa019ee9cb18c430c4a0135f6579381f5df0d5ca"
+    "count": 110,
+    "sha256": "1bc2d76fd96866b5bcc6602d5644b9afa923c0ec2e1c22dc7459501d41f171e8"
    }
   },
   "T16 the fitting shapes, both languages in one report": {
    "plan": {
     "err": false,
-    "length": 25913,
-    "sha256": "af06eda376e85cad17049909899e5423e7bd6f5df88546f2c4c9968e13427cb8"
+    "length": 26067,
+    "sha256": "9190152aef59e55aa132e8b0b80ead2fb76583da9d7f0d50c64e476fa2de79ab"
    },
    "write": {
     "err": false,
-    "length": 12484,
-    "sha256": "eeba12a6406cb839ff5ef048d76d14f5fd9a4aee33024f3311c74b46681ce939"
+    "length": 12638,
+    "sha256": "69c389afe41233393624d958d07370a714e76db43d4d4c89b8603b6c16640fe4"
    },
    "files": {
-    "count": 160,
-    "sha256": "6367c46b46f638a2e7b349169a0f6610a57dd8bf62cdf5e0106b44e50317c298"
+    "count": 163,
+    "sha256": "1ee8465d64fc1e34996071d91d9fc6a8349894377794e8cb0b135a9c5400cc78"
    }
   },
   "T17 twin-fuzz seed 20261102": {

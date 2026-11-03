@@ -97,7 +97,6 @@ try {
 
 // ---------- C (B-302): through create_arabic_twin, as hm2 does ----------
 try {
-  const Plans = await import('./lib/plans.mjs');
   const { register } = await import('./tools/create_arabic_twin.mjs');
   let handler = null;
   register({ registerTool: (name, def, h) => { if (name === 'create_arabic_twin') handler = h; } }, {});

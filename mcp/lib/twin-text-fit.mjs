@@ -194,7 +194,13 @@ export function fitHeaders(page, visuals, origByName, ctx, at) {
     const m = (x) => Rules.headerNeed(head(x), T, font, sc), need = (x) => m(x).needW;
     // (MX3: no column gives its width for another's header any more, so which are text columns no longer matters here)
     const cols = H.cols.map((c) => c.p);
-    let spare = Math.floor(p.width - 36 * sc - o.columnWidth.filter((e) => isObj(e) && isObj(e.properties)).reduce((a, e) => a + (num(e.properties.value) || 0), 0));
+    // (0.3.2 TT1, B-289: Fintech p3's tasks keep two entries for fields no longer in it; counted, a header there never grew)
+    // only the visual's current fields count in its spare room; a stale entry stays in the file as it is (the twin never
+    // deletes the person's settings), not counted
+    const qs = isObj(v.visual.query) && isObj(v.visual.query.queryState) ? v.visual.query.queryState : {}, current = new Set();
+    Object.values(qs).forEach((r) => { if (isObj(r) && Array.isArray(r.projections)) r.projections.forEach((x) => { if (isObj(x) && typeof x.queryRef === 'string') current.add(x.queryRef); }); });
+    const stale = (e) => isObj(e.selector) && typeof e.selector.metadata === 'string' && !current.has(e.selector.metadata);
+    let spare = Math.floor(p.width - 36 * sc - o.columnWidth.filter((e) => isObj(e) && isObj(e.properties) && !stale(e)).reduce((a, e) => a + (num(e.properties.value) || 0), 0));
     // (0.3.1 MX2, Fintech p1's watchlist: its first column, 4 wide in English, came out a cut sliver «القسم») a column
     // the original hides (narrower than HIDDEN_W) stays hidden: never widened for its header
     cols.filter((x) => widthOf(x.queryRef) >= HIDDEN_W && widthOf(x.queryRef) + 0.5 < need(x)).forEach((x) => {

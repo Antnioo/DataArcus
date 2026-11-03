@@ -69,6 +69,10 @@ function keepView(page, visuals, at) {
     let i = vis.length, used = 0; while (i > 0 && used + w(vis[i - 1]) <= room + 0.5) { used += w(vis[i - 1]); i--; }
     const whole = vis.slice(i);
     if (!whole.length) return;
+    // (0.3.2 TT1, B-290: MX2's watchlist, its 4-wide Department, ended as a sliver after the names) a table that fits puts
+    // its hidden columns first too, as a wider one does: at the left end, where Power BI starts the table against the
+    // box's edge, as English's sits at its left; the names end at the room's edge. Widths unchanged
+    if (i === 0 && hidden.length && ps.slice(0, hidden.length).some((x) => !hidden.includes(x))) qs.projections = hidden.concat(vis);
     if (i === 0) { const slack = room - 1 - used; if (slack >= 0.5) { setW(vis[0], w(vis[0]) + slack); out.push({ page: safeName(at), visual: safeName(String(v.name)), shown: vis.length, behind: 0 }); } return; }
     const part = vis[i - 1], slice = room - used;
     let shown, behind;
@@ -123,6 +127,16 @@ function landsOn(pg, r, extra, j, x) {
     return null;
   } finally { posOf(ct).x = was; }
 }
+// (0.3.2 TT1, B-302: HM2's A1-1 kept at its mirror stood 31 px, about one cell, off its grid; the plan said only "kept
+// at its mirror") the kept-at-mirror line; over 2 px it says the shift (the mirror less the lined-up place: HM2's) from
+// the grid's cells, in English and Arabic; 2 px or less, the line as before
+export function keptAtMirrorLine(hit, shift) {
+  const rule = 'kept at its mirror, its inside as English (sort, axis side, padding: the grid reads left to right), not lined up with its heatmap\'s grid: there it would cover ' + hit + ', which it does not in English';
+  if (!(Math.abs(shift) > 2)) return { rule };
+  const n = Math.round(Math.abs(shift)), left = shift < 0;
+  return { rule: rule + `; it stands ${n} px ${left ? 'left' : 'right'} of its grid's cells`,
+    ruleAr: `أُبقي في موضع انعكاسه، وداخله كما في الإنجليزية (الفرز وجهة المحور والحشو: الشبكة تُقرأ من اليسار إلى اليمين)، ولم يُحاذَ مع شبكة خريطته الحرارية: هناك كان سيغطي ${hit}، وهو لا يغطيه في الإنجليزية؛ ويقف على بُعد ${n} بكسل إلى ${left ? 'يسار' : 'يمين'} خلايا شبكتها` };
+}
 function underGrids(pg, r, pageW, extra) {
   const lit0 = (p) => (p && p.expr && p.expr.Literal ? parseFloat(String(p.expr.Literal.Value).replace(/D$/, '')) : NaN);
   const qs = (v) => (isObj(v) && isObj(v.visual) && isObj(v.visual.query) && isObj(v.visual.query.queryState) ? v.visual.query.queryState : {});
@@ -152,7 +166,7 @@ function underGrids(pg, r, pageW, extra) {
       // inside, Descending sort, value axis switched, padding swapped: Call Center's hour 9 stood under «10») the grid
       // still reads left to right, so the chart keeps English's inside whether it moves or not
       const hit = landsOn(pg, r, extra, j, x);
-      if (hit) { keepInside(ce, ct); (r.moved = r.moved || []).push({ visual: String(ct.name), rule: 'kept at its mirror, its inside as English (sort, axis side, padding: the grid reads left to right), not lined up with its heatmap\'s grid: there it would cover ' + hit + ', which it does not in English' }); return; }
+      if (hit) { keepInside(ce, ct); (r.moved = r.moved || []).push(Object.assign({ visual: String(ct.name) }, keptAtMirrorLine(hit, q.x - want))); return; }
       q.x = x;
       keepInside(ce, ct);
       (r.moved = r.moved || []).push({ visual: String(ct.name), rule: 'kept lined up with its heatmap\'s grid, as English: its offset, padding, axis side and sort (the grid reads left to right)' + (Math.abs(x - want) > 0.01 ? ', moved to stay inside its page' : '') });
@@ -509,7 +523,7 @@ export function buildTwin(P, labels) {
       if (!P.keepLtr(pg)) iconRoom(r.visuals, (r.moved = r.moved || []));
     }
     // (MP1d) last, on every mirrored page: no visual comes out smaller than the guard allows
-    (r.moved || []).forEach((m) => ruleMoves.push({ where: safeName(pg.id) + '/' + safeName(m.visual), rule: m.rule }));
+    (r.moved || []).forEach((m) => ruleMoves.push(Object.assign({ where: safeName(pg.id) + '/' + safeName(m.visual), rule: m.rule }, m.ruleAr ? { ruleAr: m.ruleAr } : {})));
     if (!P.keepLtr(pg)) { try { keepSize(pg.visuals.map((v) => v.json), r.visuals, pageOf(pg).width, new Set(extra.map((x) => x.from))).forEach((k) => sizeKept.push({ where: safeName(pg.id) + '/' + safeName(k.visual), what: k.what })); } catch (e) { /* a shape not expected: left as it is */ } }
     // (0.3.0 D3) the phone layout: mirrored as the page is (a page kept left to right keeps its phone layout too), its
     // texts as approved, each page tab as wide as its Arabic name by the writer's own rule
