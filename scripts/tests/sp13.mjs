@@ -100,6 +100,7 @@ export default async function ({ browser, url }) {
     if (whole && now.zip !== g.zip) bad.push(`the whole ZIP differs (${now.zip.slice(0, 12)}, recorded ${String(g.zip).slice(0, 12)}; PNGs differ: ${Object.keys(now.png).filter((k) => now.png[k] !== (g.png || {})[k]).length})`);
     check(!bad.length, `${lang === 'en' ? 'W1' : 'W2'} ${lang} download: ${bad.join('; ')}`);
   }
+  if (!record) check(!badOrder, `W3 the page must load pbip-navigation once, after pbip-tooltip, before pbip-page and pbip-export: ${loaded.join(' | ')}`);
   if (record) { fs.writeFileSync(GOLD, JSON.stringify(got, null, 1) + '\n'); checks += 2; }
   return { checks, problems };
 }

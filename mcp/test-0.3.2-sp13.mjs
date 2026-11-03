@@ -17,9 +17,11 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
 const problems = []; let checks = 0;
 const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } catch (e) { err = ' (threw: ' + String(e && e.message || e).slice(0, 200) + ')'; } checks++; if (!ok) { let m = ''; try { m = msg(); } catch (e) { m = 'unexpected shape'; } problems.push(m + err); } };
 const sha = (t) => crypto.createHash('sha256').update(t).digest('hex');
@@ -128,6 +130,20 @@ const COVER = {
 };
 chk(() => Object.values(COVER).every(Boolean) && Object.values(got).every((v) => v.report && !v.report.err),
   () => `C1. the runs cover the navigation paths: missing ${JSON.stringify(Object.keys(COVER).filter((k) => !COVER[k]))}; written ${Object.values(got).filter((v) => v.report && !v.report.err).length} of ${CASES.length}`);
+
+// ---------- after the move (SP13): pbip-page.js assembles, pbip-navigation.js builds; the website loads it after pbip-tooltip ----------
+const SRC = (f) => fs.readFileSync(path.join(HERE, '..', 'assets', 'js', f), 'utf8');
+const pageSrc = SRC('pbip-page.js'), navSrc = SRC('pbip-navigation.js'), Nav = require('../assets/js/pbip-navigation.js');
+chk(() => ['tabsLayout', 'headerPlan', 'pageButtons', 'filterRail', 'filterPanel'].every((f) => typeof Nav[f] === 'function') && /require\('\.\/pbip-navigation\.js'\)/.test(pageSrc)
+  && ['N.tabsLayout(', 'N.headerPlan(', 'N.pageButtons(', 'N.filterRail(', 'N.filterPanel('].every((t) => pageSrc.includes(t))
+  && !/const SLICER_MIN = |const closeText = |const openText = |tabs\.rows\.forEach/.test(pageSrc) && /const SLICER_MIN = 24;/.test(navSrc)
+  && !/\badd\(|\brnd\(|\bjson\(|\bcontainer\(|\bD \+ '\/pages/.test(navSrc),
+  () => 'M1 pbip-page.js\'s write must be the page assembly over pbip-navigation.js (tabsLayout, headerPlan, pageButtons, filterRail, filterPanel), which holds the page buttons\' and filter panels\' rules once and writes no file, names no visual');
+const tg = SRC('theme-generator.js'), list = (tg.match(/const BUILDER = \[([^\]]*)\]/) || [])[1] || '';
+const at = (f) => list.indexOf('/assets/js/' + f + '.min.js?v='), once = (f) => list.split('/assets/js/' + f + '.min.js?v=').length === 2;
+chk(() => ['text-measure', 'pbip-query', 'pbip-sizing', 'pbip-tooltip', 'pbip-navigation', 'pbip-page'].every(once) && ['text-measure', 'pbip-query', 'pbip-sizing'].every((f) => at(f) < at('pbip-navigation'))
+  && /'\/assets\/js\/pbip-tooltip\.min\.js\?v=[^']*', '\/assets\/js\/pbip-navigation\.min\.js\?v=[^']*', '\/assets\/js\/pbip-page\.min\.js/.test(list),
+  () => 'M2 theme-generator.js\'s BUILDER loads pbip-navigation once, right after pbip-tooltip and before pbip-page: ' + list.slice(0, 300));
 
 if (problems.length) { console.log(`FAIL script=test-0.3.2-sp13.mjs cause=${problems[0].slice(0, 300)}`); problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  sp13  ${problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  sp13  ${checks} checks`);

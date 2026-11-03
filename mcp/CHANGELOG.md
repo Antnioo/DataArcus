@@ -34,6 +34,9 @@ package's manifest; this file says what is in it.
   on the website and from the MCP, is byte for byte what it was before.
 - **Inside the report writer:** the tooltip pages (the card and the bars shown when a chart is hovered) are made in a
   file of their own; every report, on the website and from the MCP, is byte for byte what it was before.
+- **Inside the report writer:** the page buttons and the filter panels (the tabs, the slicers with their Reset, the
+  slide-in panel) are made in a file of their own; every report, on the website and from the MCP, is byte for byte what
+  it was before.
 - **More of the Arabic twin like the English:** more matrices that are lists are written as tables, so their first column
   reads on the right; a column the English hides stays hidden; a table wider than its box shows the same columns as
   the English, its first column at the right; the plan names legends whose Arabic may be cut, and says on its own line

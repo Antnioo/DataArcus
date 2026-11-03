@@ -571,9 +571,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // report-mirror.js after the visual catalog it reads, before the writer whose Arabic charts it turns round; 0.3.2 SP5:
     // the writer's ZIP and its sample model, pbip-zip.js and pbip-sample.js (after pbip-query.js, which it reads), before it;
     // 0.3.2 SP7: the tooltip pages' builder, pbip-tooltip.js (after pbip-query, pbip-sizing and story-titles, which it
-    // reads), before pbip-page.js, which calls it)
+    // reads), before pbip-page.js, which calls it; 0.3.2 SP13: the page buttons' and filter panels' builder,
+    // pbip-navigation.js, right after it, before pbip-page.js, which calls it)
     const BUILDER = ['/assets/js/text-measure.min.js?v=20261102op1', '/assets/js/story-titles.min.js?v=20261027tt2', '/assets/js/visual-types.min.js?v=20261019u1', '/assets/js/report-mirror.min.js?v=20261102mx8', '/assets/js/pbip-query.min.js?v=20261026lr1', '/assets/js/pbip-sizing.min.js?v=20261102op1', '/assets/js/pbip-notes.min.js?v=20261028fx5b',
-      '/assets/js/label-limits.min.js?v=20261027r4a', '/assets/js/pbip-tooltip.min.js?v=20261103sp7', '/assets/js/pbip-page.min.js?v=20261103sp7', '/assets/js/report-a11y.min.js?v=20261025sq5',
+      '/assets/js/label-limits.min.js?v=20261027r4a', '/assets/js/pbip-tooltip.min.js?v=20261103sp7', '/assets/js/pbip-navigation.min.js?v=20261103sp13', '/assets/js/pbip-page.min.js?v=20261103sp13', '/assets/js/report-a11y.min.js?v=20261025sq5',
       '/assets/js/pbip-zip.min.js?v=20261102sp5', '/assets/js/pbip-sample.min.js?v=20261102sp5', '/assets/js/pbip-export.min.js?v=20261102sp5'];
     // (0.3.1 FX5: the page loads the sizes and what they read, for the canvas's bars; a script already on the page is not
     // loaded again)
