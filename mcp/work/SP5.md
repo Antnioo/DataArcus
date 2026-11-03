@@ -34,6 +34,11 @@
   10 of 10 (mutation 198: 76 mutants, all killed); release 5 of 5; website sp5 3, pbip 111, theme-generator 922, theme-generator-lab 922, layout-canvas 31, design-engine 600;
   lint 0; check-min (stamps compared with main) and test-site-config pass.
 - **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41552576033 on dc104b0d** (first run, every job green).
+- **Merged integration/0.3.2 in (66f93a01: SP2, SP3, MX8)** at 5cbc054e: both sides kept (BUILDER with report-mirror
+  at mx8; theme-generator.min.js stamp 20261103sp5m; both CHANGELOG lines; WORK.md integration's, 3,198 characters).
+  After it: sp5 12, sp1 11, sp2 10, sp3 10; report 45 of 45; website sp5 3, pbip 111, theme-generator 922,
+  theme-generator-lab 922, layout-canvas 31; lint 0; check-min, csp, ar-pages pass.
+  **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41561762058 on 5cbc054e.**
 - **State: DONE.**
 - **Resume:** none; the reviewer's merge.
 
