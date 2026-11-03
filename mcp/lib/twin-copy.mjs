@@ -121,6 +121,8 @@ function tabInOrder(visuals, btn, dir) {
   sibs.slice(at).forEach((v) => { v.position.tabOrder = posOf(v).tabOrder + 1; });
 }
 
+/** (0.3.2 HM1) the refusal when a visual the twin adds would land on one of the report's own */
+export const addedTaken = (name, page) => `Nothing was written: the visual the twin adds, "${String(name).slice(0, 80)}" on page "${String(page).slice(0, 80)}", has the name or folder of a visual of the report, and DataArcus never writes over a visual it did not build. Make the plan again (call this tool without planId), show it to the user and wait for their go.`;
 // P: the plan's own (R, keepLtr, tabsShown); built: buildTwin's; labels: by the mirror engine's ids. Returns the copy as
 // a list of files { rel, data } (data: the bytes to write, or from: the original's file copied as it is), and what the
 // plan says: pairs, buttons, syncGroups, bookmarks, tabs
@@ -130,7 +132,7 @@ export function languageCopy(P, built, labels) {
   const arOf = new Map(R.pages.map((pg) => [String(pg.id), newId('page\u0000' + pg.id)])), names = new Map();
   R.pages.forEach((pg) => names.set(String(pg.id), new Map(pg.visuals.map((v) => [String(v.json.name), newId('visual\u0000' + arOf.get(String(pg.id)) + '\u0000' + v.json.name)]))));
   const bmOf = new Map(R.bookmarks.map((b) => [String(b.json.name), newId('bookmark\u0000' + b.json.name)]));
-  const changed = new Map(), added = [], pairs = [], buttons = [], syncGroups = [], bothShown = new Map();
+  const changed = new Map(), added = [], addedVisuals = [], pairs = [], buttons = [], syncGroups = [], bothShown = new Map();
   const BOTH_SHOWN = 'both pages of this pair stay in the tabs (neither hidden), so a reader reaches each from the tabs';
   const jsonEq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   // an Arabic visual's names and links: its own name and group, its page links, tooltip pages, drillthrough and bookmarks
@@ -230,7 +232,14 @@ export function languageCopy(P, built, labels) {
       else added.push({ rel, from: f });
     });
     // (0.3.1 MX3) a visual the twin adds to the Arabic page (a heatmap's names), named after its matrix's new name
-    (extra || []).forEach((x) => { const j = clone(x.json); j.name = (nm.get(x.from) || x.from) + 'Names'; renameFilters(j, arId, x.from + 'Names'); added.push({ rel: arFolder + 'visuals/' + j.name + '/visual.json', data: json(j) }); });
+    // (0.3.2 HM1, B-296) its suffix as the plan named it (Names, Names2...), free of the Arabic page's own names, never
+    // over a file already there (a hard error)
+    const arTaken = new Set(arV.map((v) => String(isObj(v) ? v.name : '').toLowerCase()).concat(added.filter((f) => f.rel.startsWith(arFolder + 'visuals/')).map((f) => f.rel.slice((arFolder + 'visuals/').length).split('/')[0].toLowerCase())));
+    (extra || []).forEach((x) => { const j = clone(x.json), sfx = String(x.json.name).startsWith(String(x.from)) ? String(x.json.name).slice(String(x.from).length) : 'Names', base = (nm.get(x.from) || x.from) + sfx;
+      j.name = base; for (let k = 2; arTaken.has(j.name.toLowerCase()); k++) j.name = base + '_' + k;
+      const rel = arFolder + 'visuals/' + j.name + '/visual.json';
+      if (R.files.some((f) => f.toLowerCase().startsWith((arFolder + 'visuals/' + j.name + '/').toLowerCase())) || added.some((f) => f.rel === rel)) throw new Error(addedTaken(j.name, arId));
+      arTaken.add(j.name.toLowerCase()); renameFilters(j, arId, String(x.json.name)); added.push({ rel, data: json(j) }); addedVisuals.push({ page: arId, name: safeName(j.name), beside: safeName(nm.get(x.from) || x.from) }); });
     const shown = (pgj) => !(isObj(pgj) && pgj.visibility === hidden);
     pairs.push(Object.assign({ english: { id: safeName(id), name: safeName(typeof P0.displayName === 'string' ? P0.displayName : ''), hidden: !shown(enPage) },
       arabic: { id: arId, name: safeName(isObj(arPage) && typeof arPage.displayName === 'string' ? arPage.displayName : ''), hidden: !shown(arPage) } }, tooltip ? { tooltip: true } : {}, drill ? { drillthrough: true } : {}, bothShown.has(id) ? { bothShown: bothShown.get(id) } : {}));
@@ -297,5 +306,5 @@ export function languageCopy(P, built, labels) {
     : { shown: 'the Arabic pages (the report opens on the first Arabic page)', hidden: `the English pages (hidden in the tabs): each Arabic page's "English" button opens its English page, whose «${EN}» button goes back`, tooltipPages: 'stay hidden in both languages',
       service: `In the Power BI service (and Desktop's reading view) a reader sees one tab per Arabic page; the English pages are not in the page list and are reached by the "English" button, and «${EN}» brings the reader back. In Desktop's editing view every page is listed, the hidden ones marked hidden.` };
   if (bothShown.size) tabs.bothShown = `${bothShown.size} page pair${bothShown.size === 1 ? '' : 's'} with no free place for a language button: ${BOTH_SHOWN} (pairs: bothShown)`;
-  return { files, pairs, buttons, syncGroups, bookmarks: R.bookmarks.length, activePage, tabs, notes, tabsShown };
+  return { files, pairs, buttons, syncGroups, bookmarks: R.bookmarks.length, activePage, tabs, notes, tabsShown, addedVisuals };
 }
