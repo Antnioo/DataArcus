@@ -1,0 +1,343 @@
+[
+  {
+    "label": "twin",
+    "lang": "en",
+    "planId": "plan-5a38fa76da52",
+    "colours": "report theme",
+    "pages": {
+      "before": 3,
+      "after": 6,
+      "added": 3,
+      "tooltipPagesAdded": 2
+    },
+    "files": {
+      "before": 30,
+      "byteIdentical": 27,
+      "changed": [
+        "definition/pages/pages.json",
+        "definition/report.json",
+        ".platform"
+      ],
+      "added": 32
+    },
+    "clashes": {
+      "pageIds": 0,
+      "extensionMeasuresDiffering": 0,
+      "extensionMeasuresIdentical": 0
+    },
+    "pageSize": {
+      "original": [
+        "1280x720",
+        "1920x1080",
+        "320x240 Tooltip"
+      ],
+      "newPage": "1280x720",
+      "displayOption": "FitToPage"
+    },
+    "bookmarks": {
+      "before": [
+        [
+          "bmDetails",
+          "p2details"
+        ],
+        [
+          "bmReset",
+          "p1overview"
+        ]
+      ],
+      "after": [
+        [
+          "bmDetails",
+          "p2details"
+        ],
+        [
+          "bmReset",
+          "p1overview"
+        ]
+      ],
+      "same": true
+    },
+    "dangling": {
+      "before": 0,
+      "after": 0,
+      "fresh": []
+    },
+    "validator": {
+      "original": {
+        "errors": 0,
+        "warnings": 0,
+        "byCode": {}
+      },
+      "copy": {
+        "errors": 0,
+        "warnings": 1,
+        "byCode": {
+          "PBIR_TEXTBOX_HEIGHT_BELOW_FLOOR": "warning x1"
+        }
+      }
+    },
+    "rules": {
+      "original": {
+        "A11Y_ALT_TEXT": 10
+      },
+      "copy": {
+        "TOOLTIP_SCROLL": 1,
+        "A11Y_ALT_TEXT": 10,
+        "COVER_CARDS": 1
+      },
+      "copyStatus": "incomplete",
+      "originalStatus": "incomplete",
+      "blocking": []
+    },
+    "theme": {
+      "stylePropertiesToBakeOntoVisuals": 73,
+      "visualTypes": [
+        "cardVisual",
+        "clusteredBarChart",
+        "lineChart",
+        "tableEx",
+        "textbox"
+      ],
+      "stylesTheDataArcusThemeSetsButTheReportsDoesNot": [
+        "textbox",
+        "cardVisual",
+        "lineChart",
+        "clusteredBarChart",
+        "tableEx"
+      ],
+      "literalColoursOnThePage": 31,
+      "themeColourRefs": 0,
+      "reportThemeHasVisualStyles": 0
+    },
+    "pageBindingNames": {
+      "count": 3,
+      "unique": true
+    },
+    "nameRule": true,
+    "newPageRtl": {
+      "arabicLetters": 0,
+      "textAlignRight": 0,
+      "textAlignLeft": 12,
+      "cardXs": [
+        0,
+        16,
+        16,
+        630,
+        646,
+        856
+      ]
+    }
+  },
+  {
+    "label": "sample",
+    "lang": "en",
+    "planId": "plan-8d6c22e26afc",
+    "pages": {
+      "before": 1,
+      "after": 4,
+      "added": 3,
+      "tooltipPagesAdded": 2
+    },
+    "files": {
+      "before": 6,
+      "byteIdentical": 3,
+      "changed": [
+        "definition/pages/pages.json",
+        "definition/report.json",
+        ".platform"
+      ],
+      "added": 32
+    },
+    "clashes": {
+      "pageIds": 0,
+      "extensionMeasuresDiffering": 0,
+      "extensionMeasuresIdentical": 0
+    },
+    "pageSize": {
+      "original": [
+        "1280x720"
+      ],
+      "newPage": "1280x720",
+      "displayOption": "FitToPage"
+    },
+    "bookmarks": {
+      "before": [],
+      "after": [],
+      "same": true
+    },
+    "dangling": {
+      "before": 0,
+      "after": 0,
+      "fresh": []
+    },
+    "validator": {
+      "original": {
+        "errors": 0,
+        "warnings": 0,
+        "byCode": {}
+      },
+      "copy": {
+        "errors": 0,
+        "warnings": 1,
+        "byCode": {
+          "PBIR_TEXTBOX_HEIGHT_BELOW_FLOOR": "warning x1"
+        }
+      }
+    },
+    "rules": {
+      "original": {},
+      "copy": {
+        "TOOLTIP_SCROLL": 1,
+        "COVER_CARDS": 1
+      },
+      "copyStatus": "incomplete",
+      "originalStatus": "incomplete",
+      "blocking": []
+    },
+    "theme": {
+      "stylePropertiesToBakeOntoVisuals": 73,
+      "visualTypes": [
+        "cardVisual",
+        "clusteredBarChart",
+        "lineChart",
+        "tableEx",
+        "textbox"
+      ],
+      "stylesTheDataArcusThemeSetsButTheReportsDoesNot": [
+        "textbox",
+        "cardVisual",
+        "lineChart",
+        "clusteredBarChart",
+        "tableEx"
+      ],
+      "literalColoursOnThePage": 31,
+      "themeColourRefs": 0,
+      "reportThemeHasVisualStyles": 0
+    },
+    "pageBindingNames": {
+      "count": 2,
+      "unique": true
+    },
+    "nameRule": true,
+    "newPageRtl": {
+      "arabicLetters": 0,
+      "textAlignRight": 0,
+      "textAlignLeft": 12,
+      "cardXs": [
+        0,
+        16,
+        16,
+        630,
+        646,
+        856
+      ]
+    }
+  },
+  {
+    "label": "arabic",
+    "lang": "ar",
+    "planId": "plan-d91d2c574204",
+    "pages": {
+      "before": 3,
+      "after": 6,
+      "added": 3,
+      "tooltipPagesAdded": 2
+    },
+    "files": {
+      "before": 46,
+      "byteIdentical": 42,
+      "changed": [
+        "definition/pages/pages.json",
+        "definition/report.json",
+        "definition/reportExtensions.json",
+        ".platform"
+      ],
+      "added": 31
+    },
+    "clashes": {
+      "pageIds": 0,
+      "extensionMeasuresDiffering": 2,
+      "extensionMeasuresIdentical": 4
+    },
+    "pageSize": {
+      "original": [
+        "376x310 Tooltip",
+        "1280x720",
+        "320x420 Tooltip"
+      ],
+      "newPage": "1280x720",
+      "displayOption": "FitToPage"
+    },
+    "bookmarks": {
+      "before": [],
+      "after": [],
+      "same": true
+    },
+    "dangling": {
+      "before": 0,
+      "after": 0,
+      "fresh": []
+    },
+    "validator": {
+      "original": {
+        "errors": 0,
+        "warnings": 1,
+        "byCode": {
+          "PBIR_TEXTBOX_HEIGHT_BELOW_FLOOR": "warning x1"
+        }
+      },
+      "copy": {
+        "errors": 0,
+        "warnings": 2,
+        "byCode": {
+          "PBIR_TEXTBOX_HEIGHT_BELOW_FLOOR": "warning x2"
+        }
+      }
+    },
+    "rules": {
+      "original": {
+        "TOOLTIP_SCROLL": 1,
+        "COVER_CARDS": 1
+      },
+      "copy": {
+        "TOOLTIP_SCROLL": 2,
+        "COVER_CARDS": 2
+      },
+      "copyStatus": "incomplete",
+      "originalStatus": "incomplete",
+      "blocking": []
+    },
+    "theme": {
+      "stylePropertiesToBakeOntoVisuals": 0,
+      "visualTypes": [
+        "cardVisual",
+        "clusteredBarChart",
+        "lineChart",
+        "tableEx",
+        "textbox"
+      ],
+      "stylesTheDataArcusThemeSetsButTheReportsDoesNot": [],
+      "literalColoursOnThePage": 31,
+      "themeColourRefs": 0,
+      "reportThemeHasVisualStyles": 51
+    },
+    "pageBindingNames": {
+      "count": 4,
+      "unique": true
+    },
+    "nameRule": true,
+    "newPageRtl": {
+      "arabicLetters": 674,
+      "textAlignRight": 12,
+      "textAlignLeft": 0,
+      "cardXs": [
+        0,
+        16,
+        16,
+        436,
+        630,
+        646
+      ]
+    }
+  }
+]
