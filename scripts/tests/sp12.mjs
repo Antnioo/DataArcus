@@ -17,7 +17,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const GOLD = path.join(HERE, 'fixtures', 'sp12-designer.json');
 const STARTERS = ['ring', 'trend', 'bar', 'pill', 'spark', 'card', 'ramadan'];
 const sha = (s) => crypto.createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex').slice(0, 24) + ':' + Buffer.byteLength(s, 'utf8');
-const moved = fs.existsSync(path.join(ROOT, 'assets/js/svg-expressions.js'));
+const moved = ['svg-expressions.js', 'svg-escape.js'].every((f) => fs.existsSync(path.join(ROOT, 'assets/js', f)));
 
 const V = () => [{ id: 'sales', label: 'Sales', kind: 'measure', measure: 'Sales', sample: 1240000 }, { id: 'target', label: 'Target', kind: 'measure', measure: 'Target', sample: 1500000 }, { id: 'ach', label: 'Achievement', kind: 'ratio', a: 'sales', b: 'target' }];
 const txt = (o) => Object.assign({ type: 'text', name: 'Text', x: 10, y: 20, size: 12, weight: 400, anchor: 'start', fill: '#111111' }, o);
