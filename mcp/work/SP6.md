@@ -5,7 +5,7 @@
   B-280 / B-286 (the Codex split map: "Extract design-colours.js, design-metrics.js, design-glass.js, then design-state.js.
   Keep the public DAEngine object as facade"). One split only: colours and glass.
 - **Base:** `feat/0.3.2-sp6` from `origin/integration/0.3.2` at 04a9922. Pushed only this branch; never merged.
-- **What moved:** `assets/js/design-colours.js` (new, global `DAColours`): clampHex, hexToRgb ... calmPalette, CALM,
+- **Scope:** `assets/js/design-colours.js` (new, global `DAColours`): clampHex, hexToRgb ... calmPalette, CALM,
   Lab, CIEDE2000, colour-vision simulation, logoColours, logoTheme. `assets/js/design-glass.js` (new, global `DAGlass`):
   GLASS, isGlass, glassRgb, GLASS_MARK, isGlassPng, glassTables at the top; `make({ colours, roles, page, toPage,
   encodePng })` returns glassLook, glassFit, glassPixels, withGlassPicture, glassPng, glassCards (their caches inside).
@@ -21,12 +21,13 @@
   the zlib PNG and withGlassPicture; F1 the facade. Website `sp6` (`scripts/tests/sp6.mjs`): the generator EN and AR,
   glass and plain, the page as it is vs the base engine served in its place: preview screenshot pixel-identical,
   theme JSON and background PNG byte for byte.
-- **Expected -> got:** sp6 12 on the base, 13 after: **got 12 on the base (2dc65ee), 13 after** (recording twice gave the
+- **Expected checks:** sp6 12 on the base, 13 after: **got 12 on the base (2dc65ee), 13 after** (recording twice gave the
   same file). Mutations: GLASS.t 35 -> 36 fails 11 of 13 and the website sp6 4 of 4 (preview and theme); a hue x 60.0001
   fails C1. Website sp6 4.
 - **Before -> after (lines):** design-engine.js 1304 -> 950; design-colours.js 236 (new); design-glass.js 166 (new).
 - **Areas:** see "Runs" below. **CI:** see below.
-- **State:** RUNNING the gate. **Resume:** the areas' result, then CI.
+- **State:** RUNNING the gate.
+- **Resume:** the areas' result, then CI.
 
 ## Runs
 (filled at the end)
