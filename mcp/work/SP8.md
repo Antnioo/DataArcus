@@ -33,14 +33,11 @@
 - **Areas (on fa30b6b9):** report + model 61 suites passed; website sp8 3, sp5 3, pbip 111, theme-generator 922,
   theme-generator-lab 922, arabic-names 14, layout-canvas 31; lint 0; check-min (stamps vs main), test-site-config,
   changelog-words, csp pass.
-- **Merged integration/0.3.2 in (956c4d80, SP6)** at 84d8cd90: both sides kept (tests.json, run-all's lists, WORK.md
-  3,180 characters). CI 41576482704: every job green but website sp8 (EN and AR): the page reads a folder in the file
-  system's directory order, which differs on CI. The suite now hands the page the folder's files sorted by path
-  (an init script; the product unchanged), recorded again on the base code (095d4db, a worktree), then 3 after.
-- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41578855895 on cc3adbc5.**
-- **Merged integration/0.3.2 in again (a57e0941, SP7):** both sides kept (run-all's lists, MODULES.md, CHANGELOG,
-  pages); theme-generator.min.js rebuilt, stamp 20261103sp8m; WORK.md 3,180 characters.
-- **State: DONE.**
+- **Merged integration/0.3.2 in:** 956c4d80 (SP6) at 84d8cd90, a57e0941 (SP7) at eaf37c16, both sides kept;
+  theme-generator.min.js stamp 20261103sp8m. CI's first run failed website sp8 only: a folder's files come in the file
+  system's order, which differs on CI; the suite now sorts them by path (product unchanged), recorded again on 095d4db.
+- **CI green before the SP7 merge: https://github.com/Antnioo/DataArcus/actions/runs/41578855895 on cc3adbc5.**
+- **State:** CI pending (after the SP7 merge).
 - **Resume:** none; the reviewer's merge.
 
 ## CHANGELOG line
