@@ -17,9 +17,11 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
 const problems = []; let checks = 0;
 const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } catch (e) { err = ' (threw: ' + String(e && e.message || e).slice(0, 200) + ')'; } checks++; if (!ok) { let m = ''; try { m = msg(); } catch (e) { m = 'unexpected shape'; } problems.push(m + err); } };
 const sha = (t) => crypto.createHash('sha256').update(t).digest('hex');
@@ -114,6 +116,17 @@ const COVER = {
 };
 chk(() => Object.values(COVER).every(Boolean) && Object.values(got).every((v) => v.report && !v.report.err),
   () => `C1. the runs cover the tooltip paths: missing ${JSON.stringify(Object.keys(COVER).filter((k) => !COVER[k]))}; written ${Object.values(got).filter((v) => v.report && !v.report.err).length} of ${CASES.length}`);
+
+// ---------- after the move (SP7): pbip-page.js assembles, pbip-tooltip.js builds; the website loads it first ----------
+const SRC = (f) => fs.readFileSync(path.join(HERE, '..', 'assets', 'js', f), 'utf8');
+const pageSrc = SRC('pbip-page.js'), tipSrc = SRC('pbip-tooltip.js'), Tip = require('../assets/js/pbip-tooltip.js'), Page = require('../assets/js/pbip-page.js');
+chk(() => typeof Tip.tooltipPages === 'function' && typeof Page.tooltips === 'function' && /TP\.tooltipPages\(/.test(pageSrc) && /require\('\.\/pbip-tooltip\.js'\)/.test(pageSrc)
+  && !/const tipPage = |const tipSix = |const tipTop = |TOOLTIP-FIX-LAB/.test(pageSrc) && /const tipSix = 40 \+ 27 \* 6 \+ 8;/.test(tipSrc) && !/\badd\(|\brnd\(|\bjson\(|\bD \+ '\/pages/.test(tipSrc),
+  () => 'M1 pbip-page.js\'s tooltips must be the page assembly over pbip-tooltip.js (tooltipPages), which holds the tooltip rules once and writes no file, names no visual');
+const tg = SRC('theme-generator.js'), list = (tg.match(/const BUILDER = \[([^\]]*)\]/) || [])[1] || '';
+const at = (f) => list.indexOf('/assets/js/' + f + '.min.js?v='), once = (f) => list.split('/assets/js/' + f + '.min.js?v=').length === 2;
+chk(() => ['story-titles', 'pbip-query', 'pbip-sizing', 'pbip-tooltip', 'pbip-page'].every(once) && ['story-titles', 'pbip-query', 'pbip-sizing'].every((f) => at(f) < at('pbip-tooltip')) && at('pbip-tooltip') < at('pbip-page'),
+  () => 'M2 theme-generator.js\'s BUILDER loads pbip-tooltip once, after what it reads and before pbip-page: ' + list.slice(0, 300));
 
 if (problems.length) { console.log(`FAIL script=test-0.3.2-sp7.mjs cause=${problems[0].slice(0, 300)}`); problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  sp7  ${problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  sp7  ${checks} checks`);
