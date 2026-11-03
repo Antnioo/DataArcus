@@ -26,49 +26,17 @@
  * Browser and Node (module.exports / window.DAMirror). */
 (function (root) {
   'use strict';
-  const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
+  // the named rules (which family a visual is, which axis is time, which content keeps left to right) and the PBIR
+  // readers they use: mirror-policy.js (0.3.2 SP10), one home for each
+  const P = typeof module !== 'undefined' && module.exports ? require('./mirror-policy.js') : root.DAMirrorPolicy;
+  const { isObj, lit, strOf, entries, projections, first, kindOf, isCustom } = P;
   const mk = (v) => ({ expr: { Literal: { Value: v } } });
-  const strOf = (p) => { const v = lit(p); return typeof v === 'string' && /^'.*'$/s.test(v) ? v.slice(1, -1).replace(/''/g, "'") : null; };
   const str = (s) => mk("'" + String(s).replace(/'/g, "''") + "'");
   // (the fuzz test's F-T1..F-T3, 11 Oct: a report from anyone can hold any shape. Every read and write below checks the
   // shape it touches; a part of an unexpected shape is left exactly as it is, never written into or thrown on)
-  const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
   const clone = (o) => (o === undefined ? undefined : JSON.parse(JSON.stringify(o)));
-
-  // ---- the kinds ----
-  const COLUMN = ['columnChart', 'clusteredColumnChart', 'hundredPercentStackedColumnChart', 'lineChart', 'areaChart', 'stackedAreaChart', 'hundredPercentStackedAreaChart', 'lineClusteredColumnComboChart', 'lineStackedColumnComboChart', 'ribbonChart'];
-  // (a waterfall's steps follow its category order: the sort reverses them; its category axis has no invertAxis)
-  const WATERFALL = ['waterfallChart'];
-  const BAR = ['barChart', 'clusteredBarChart', 'hundredPercentStackedBarChart'];
-  const SLICER = ['slicer', 'advancedSlicerVisual', 'listSlicer', 'textSlicer'];
-  // visuals with nothing that has a side (the labs and round 13: they move only). Any other Power BI visual (a scatter
-  // chart, a decomposition tree...) is 'other': it moves only too, but the plan says no setting is proven
-  // for it (the cross-review's T6), instead of claiming it has no side
-  const SIDELESS = ['card', 'multiRowCard', 'kpi', 'gauge', 'donutChart', 'pieChart', 'funnel', 'treemap', 'map', 'filledMap', 'shapeMap', 'azureMap', 'image', 'shape', 'basicShape'];
-  // a custom visual: the shared catalog's test (visual-types.js; the reading block uses the same one). A visual with no
-  // type at all is treated as custom too: moved only
-  const VT = typeof module !== 'undefined' && module.exports ? require('./visual-types.js') : root.DAVisualTypes;
-  const isCustom = (type) => !type || VT.isCustom(type);
   // the right-to-left waterfall's builder, shared with the report writer (D1)
   const Gallery = () => (typeof module !== 'undefined' && module.exports ? require('./visual-gallery.js') : root.DAGallery || null);
-  function kindOf(json) {
-    if (!isObj(json)) return 'unreadable';
-    if (isObj(json.visualGroup)) return 'group';
-    if (!isObj(json.visual)) return 'unreadable';
-    const t = json.visual.visualType;
-    if (isCustom(t)) return 'custom';
-    if (COLUMN.includes(t)) return 'column';
-    if (BAR.includes(t)) return 'bar';
-    if (WATERFALL.includes(t)) return 'waterfall';
-    if (t === 'tableEx') return 'table';
-    if (t === 'pivotTable') return 'matrix';
-    if (t === 'cardVisual') return 'newCard';
-    if (t === 'textbox') return 'textbox';
-    if (t === 'actionButton') return 'button';
-    if (t === 'pageNavigator') return 'navigator';
-    if (SLICER.includes(t)) return 'slicer';
-    return SIDELESS.includes(t) ? 'plain' : 'other';
-  }
   const KIND_WHAT = {
     column: 'column, line, area and combo charts: value axis at the right, categories right to left by the sort',
     waterfall: 'waterfall charts: no Total column in Arabic: the last step on the left ends at the total, with no total label either (Power BI 2.159 does not draw it); every step\'s tooltip gives the running total. Power BI draws a waterfall left to right only and its axis holds only the model\'s members, so each is written as a stacked column chart drawn as a waterfall (an invisible base under each step, from the twin\'s own report measures): the running total in the original\'s order, the first period at the right and each step rising or falling from the one at its right, the value axis at the right, labels on the steps (a fall shown negative), the original waterfall\'s increase and decrease colours, no legend (a stacked column chart\'s legend would list the invisible base); hovering the empty space under a step shows its base in the tooltip. The series are named in Arabic: القاعدة، ارتفاع، انخفاض، ارتفاع تحت الصفر، انخفاض تحت الصفر، الإجمالي الجاري، الإجمالي',
@@ -100,8 +68,6 @@
 
   // ---- small helpers ----
   const round = (v) => { const r = Math.round(v * 100) / 100; return r === 0 ? 0 : r; };
-  // the entries of a formatting card that are objects (an odd one is skipped, never changed)
-  const entries = (bag, name) => (isObj(bag) && Array.isArray(bag[name]) ? bag[name].filter((e) => isObj(e) && (e.properties === undefined || isObj(e.properties))) : null);
   // the entry without a selector (made when missing), where axis and legend switches go; when the card or the entry has
   // an unexpected shape, a detached entry is returned: what is set on it goes nowhere, and the original stays as it is
   const detached = () => ({ properties: {} });
@@ -115,37 +81,20 @@
   };
   // a list inside an object, made when missing; null when something else is there
   const listIn = (bag, name) => { if (!isObj(bag)) return null; if (bag[name] === undefined) bag[name] = []; return Array.isArray(bag[name]) ? bag[name] : null; };
-  const projections = (query, role) => (isObj(query) && isObj(query.queryState) && isObj(query.queryState[role]) && Array.isArray(query.queryState[role].projections) ? query.queryState[role].projections : null);
-  const first = (ps) => (ps && isObj(ps[0]) ? ps[0] : null);
   const sameField = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   // (0.3.1 FX2, the laptop's H-1: "TopRight" was mirrored to "TopLeft", a value Power BI does not have, PBIR_FORMATTING_ENUM_INVALID)
   // a legend's positions as Microsoft's catalog has them (@microsoft/powerbi-core-visual-schema, every chart's
   // legend.position): Top is top left, Bottom bottom left, Left and Right their tops; the centred ones stay. A value
   // outside the catalog is kept as it is and said (kept)
   const LEGEND = { Top: 'TopRight', TopRight: 'Top', Bottom: 'BottomRight', BottomRight: 'Bottom', Left: 'Right', Right: 'Left', LeftCenter: 'RightCenter', RightCenter: 'LeftCenter', TopCenter: 'TopCenter', BottomCenter: 'BottomCenter' };
-  // a time category: a hierarchy level, a column of a date table, or a column named like a date part
-  const TIME_NAME = /\b(date|month|year|quarter|week|day|weekday|period)s?\b|التاريخ|الشهر|السنة|الربع|الأسبوع|اليوم/i;
-  function isTime(field, dateTables) {
-    if (!isObj(field)) return false;
-    if (field.HierarchyLevel) return true;
-    const c = field.Column; if (!isObj(c)) return false;
-    const ent = isObj(c.Expression) && isObj(c.Expression.SourceRef) ? c.Expression.SourceRef.Entity : null;
-    return (dateTables || []).includes(ent) || TIME_NAME.test(String(c.Property || ''));
-  }
 
   // a text box's paragraphs that are objects, and a paragraph's text runs that are objects
   const paragraphsOf = (v) => (entries(isObj(v) ? v.objects : null, 'general') || []).flatMap((e) => (isObj(e.properties) && Array.isArray(e.properties.paragraphs) ? e.properties.paragraphs : []).map((para, i) => (isObj(para) ? Object.assign(para, {}) : null)).filter(Boolean));
   const runsOf = (para) => (Array.isArray(para.textRuns) ? para.textRuns : []);
-
   // ---- the charts' right-to-left rules: one place, for the twin (mirrorVisual) and create_report's writer (mirrorChart;
   // 0.3.1 M1, the owner: "make sure the AR and twin are using the same engine"). v: the visual (visual.json's "visual"),
   // kind: kindOf's ('bar', 'column', 'waterfallKept' or 'waterfallTime': a waterfall that stays one gets its value axis at
   // the right). Changes v in place; what it changed is pushed to changes ----
-  // (0.3.1 MP1e) a button slicer no higher than this holds one row of buttons (Call Center's months: 50)
-  const ONE_ROW_H = 64;
-  // (0.3.1 MP1e) a date table's column whose name reads as a date (its type unknown to the model read): RepeatIQ's
-  // StartOfMonth, "Start of Month", "Order Date", "Month Start", "Day"
-  const DATE_LIKE = /(?:^|[\s_])(?:date|day)$|^date|start ?of ?[a-z]+$|startof[a-z]*$|(?:^|[\s_])[a-z]* ?start$/i;
   function chartRtl(v, kind, o, changes, kept0) {
     const kept = kept0 || [];
     const objects = () => (v.objects === undefined ? (v.objects = {}) : isObj(v.objects) ? v.objects : {});
@@ -160,7 +109,7 @@
       changes.push('value axis');
       const q = v.query, c0 = first(projections(q, 'Category'));
       const sd = isObj(q) && isObj(q.sortDefinition) && Array.isArray(q.sortDefinition.sort) && isObj(q.sortDefinition.sort[0]) ? q.sortDefinition : null;
-      const time = c0 && isTime(c0.field, o.dateTables), keepTime = o.timeRightToLeft === false && time;
+      const time = P.categoryIsTime(v, o.dateTables), keepTime = o.timeRightToLeft === false && time;
       if (sd) {
         // (0.3.0 S1, B-180) a sort by the category's own order key counts as a sort by the category: a helper of the
         // category's table in the visual's Tooltips role (the writer's Min of the month number, round 2; its "Month
@@ -183,20 +132,9 @@
         q.sortDefinition = { sort: (levels.length > 1 ? levels : [c0]).map((c) => ({ field: clone(c.field), direction: 'Descending' })), isDefaultSort: true };
         changes.push('sort');
       }
-      // (T-2 of the laptop's rc.2 twins: a continuous date axis ignores the sort, so time stayed left to right; on such
-      // an axis categoryAxis.invertAxis is honoured: round 13, "2027 at the left, 2022 at the right". Continuous: the
-      // category is a date column of the model (opts.dateColumns, "Table.Column") and the axis is not set Categorical)
-      const cf = c0 && isObj(c0.field) && isObj(c0.field.Column) ? c0.field.Column : null;
-      const cref = cf && isObj(cf.Expression) && isObj(cf.Expression.SourceRef) ? cf.Expression.SourceRef.Entity + '.' + cf.Property : null;
-      const axisType = (entries(v.objects, 'categoryAxis') || []).map((e) => strOf((e.properties || {}).axisType)).find((x) => x != null);
-      // (0.3.1 MP1e, laptop part 8: RepeatIQ's Monthly Sales on DateTable.StartOfMonth, a column the model read did not
-      // type a date, stayed left to right) any time category: a date table's column not typed text, or a date hierarchy level (isTime);
-      // Desktop ignores invertAxis on a categorical axis (T-2), where the sort above turns it
-      // (opts.textColumns: the model's text columns, a month name: categorical, turned by the sort alone)
-      // (only where the model's text columns are known, as in the twin: create_report's writer keeps its rule)
-      // a column by a name that reads as a date (StartOfMonth, Date, Month Start), not a month name or a year-month)
-      const timeCat = Array.isArray(o.textColumns) && c0 && isTime(c0.field, o.dateTables) && (!cf || (DATE_LIKE.test(String(cf.Property || '')) && !o.textColumns.includes(cref)));
-      if (((cref && (o.dateColumns || []).includes(cref)) || timeCat) && axisType !== 'Categorical' && o.timeRightToLeft !== false) { plainEntry(objects(), 'categoryAxis').properties.invertAxis = mk('true'); changes.push('time axis'); }
+      // a continuous time axis (a date column, or a time category the model does not type text, not set Categorical):
+      // inverted, time read from the right (mirror-policy.js invertsTimeAxis, T-2 and MP1e)
+      if (P.invertsTimeAxis(v, o)) { plainEntry(objects(), 'categoryAxis').properties.invertAxis = mk('true'); changes.push('time axis'); }
     }
     // legends: a legend entry, or a legend role (Series, Legend) in the query
     // (charts only: the labs saw it there; a donut's or a map's legend is left as it is)
@@ -254,7 +192,7 @@
     const v = json.visual;
     if (isObj(v) && mirrorShadow(v.visualContainerObjects, kept)) changes.push('shadow');
     else if (isObj(v) && themeShadow(v, isObj(o.theme) ? o.theme : isObj(o.waterfall) ? o.waterfall.theme : null)) changes.push('shadow');
-    if (!isObj(v) || kind === 'custom' || kind === 'group' || kind === 'unreadable') return { json, kind, changes };
+    if (!isObj(v) || P.movesOnly(kind)) return { json, kind, changes };
     // the visual's formatting cards: made when missing; an unexpected shape there gets a detached bag (nothing written)
     const bagOf = (name) => (v[name] === undefined ? (v[name] = {}) : isObj(v[name]) ? v[name] : {});
     const objects = () => bagOf('objects');
@@ -281,10 +219,9 @@
     // (o.keepDirection: a bar list mirrored as one block with its names beside it, T-6: its bars keep growing toward them)
     // (D7) opts.waterfallRtl "native" (visual-gallery.js WATERFALL_RTL_DEFAULT): Power BI's own waterfall kept as the
     // original has it, left to right (only its place is mirrored); "mirror": the stacked column chart below
-    if (kind === 'waterfall' && (Gallery() ? Gallery().waterfallRtlOf(o.waterfallRtl) : 'native') === 'native') kind = 'waterfallNative';
+    if (kind === 'waterfall') kind = P.waterfallKind(v, { mode: Gallery() ? Gallery().waterfallRtlOf(o.waterfallRtl) : 'native', timeRightToLeft: o.timeRightToLeft, dateTables: o.dateTables });
     // (D1) a waterfall: the stacked column chart that reads from the right, or kept left to right
     // (time kept left to right on request, opts.timeRightToLeft false: a waterfall over time stays one, its order as it is)
-    if (kind === 'waterfall' && o.timeRightToLeft === false && isTime((first(projections(v.query, 'Category')) || {}).field, o.dateTables)) kind = 'waterfallTime';
     if (kind === 'waterfall') {
       const wo = o.waterfall || {}, G = Gallery(), sc = (entries(v.objects, 'sentimentColors') || []).find((e) => !e.selector && isObj(e.properties)), th = isObj(wo.theme) ? wo.theme : {};
       const fill = (k, hex) => (sc && isObj(sc.properties[k]) ? clone(sc.properties[k]) : G && G.fillOf(hex));
@@ -308,16 +245,12 @@
     if (kind === 'bar' && o.keepDirection) { /* its bars keep their direction */ } else chartRtl(v, kind, o, changes, kept);
     // (0.3.0 L2) a button slicer on one row (the writer's pills): its buttons read from the right, by a descending sort on
     // its field (a sort it already has is turned round); one of several rows moves only
-    if (kind === 'slicer' && v.visualType === 'advancedSlicerVisual') {
-      const lay = (entries(v.objects, 'layout') || []).find((e) => !e.selector && isObj(e.properties)), f0 = first(projections(v.query, 'Values'));
-      // (0.3.1 MP1e, laptop part 8: Call Center's months, a 3 x 3 grid 50 px high, kept Jan at the left) one row of
-      // buttons: rowCount 1, or a layout too low for a second row (ONE_ROW_H)
-      const oneRow = lay && (String(lit(lay.properties.rowCount)) === '1L' || (Number.isFinite(p.height) && p.height <= ONE_ROW_H));
-      if (oneRow && f0 && isObj(f0.field) && isObj(v.query)) {
-        const sd = isObj(v.query.sortDefinition) && Array.isArray(v.query.sortDefinition.sort) && isObj(v.query.sortDefinition.sort[0]) ? v.query.sortDefinition.sort[0] : null;
-        if (sd) sd.direction = sd.direction === 'Descending' ? 'Ascending' : 'Descending'; else v.query.sortDefinition = { sort: [{ field: clone(f0.field), direction: 'Descending' }] };
-        kind = 'pills'; changes.push('order');
-      }
+    // (one row: mirror-policy.js oneRowButtons)
+    if (kind === 'slicer' && P.oneRowButtons(v, p.height)) {
+      const f0 = first(projections(v.query, 'Values'));
+      const sd = isObj(v.query.sortDefinition) && Array.isArray(v.query.sortDefinition.sort) && isObj(v.query.sortDefinition.sort[0]) ? v.query.sortDefinition.sort[0] : null;
+      if (sd) sd.direction = sd.direction === 'Descending' ? 'Ascending' : 'Descending'; else v.query.sortDefinition = { sort: [{ field: clone(f0.field), direction: 'Descending' }] };
+      kind = 'pills'; changes.push('order');
     }
     // tables, matrices, new cards
     // (0.3.1 MX1, the owner 1 Nov: "the patient id in page 2 in er still shows it on the left") a flat matrix (one row
@@ -352,8 +285,7 @@
       const ps = projections(v.query, 'Data');
       // (0.3.1 MP1e, laptop part 8: Fintech's four status lines, orientation "1D", came out bottom to top) only values
       // that run left to right are reversed: a vertical list ("1D") keeps its order
-      const lay = (entries(v.objects, 'layout') || []).find((e) => !e.selector && isObj(e.properties) && e.properties.orientation !== undefined);
-      const vertical = !!lay && String(lit(lay.properties.orientation)) === '1D';
+      const vertical = P.verticalValues(v);
       if (ps && ps.length > 1) {
         if (!vertical) ps.reverse();
         const es = listIn(objects(), 'value');
@@ -414,7 +346,7 @@
     // titles: an existing one right-aligned unless centred; a chart or table without one gets the alignment (its
     // default title is drawn at the left); visuals that only move get nothing
     const titles = entries(v.visualContainerObjects, 'title');
-    if (titles || ['column', 'bar', 'table', 'matrix', 'matrixAsTable', 'newCard'].includes(kind)) {
+    if (titles || P.titled(kind)) {
       const e = plainEntry(vco(), 'title'), a = strOf(e.properties.alignment);
       if (a !== 'center' && a !== 'right') { e.properties.alignment = str('right'); changes.push('title'); }
     }
