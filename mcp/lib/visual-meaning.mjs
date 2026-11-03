@@ -12,8 +12,9 @@
 // 1. The fields' shapes: which roles hold columns and which hold measures (an aggregation of a column is a value), the
 //    columns' data types (a date type, or a level of Power BI's date hierarchy, makes a time axis; a column's NAME never
 //    does), and how many columns a category role holds (more than one: drill levels, in their order).
-// 2. The role names, matched word by word against ROLE_WORDS: a custom visual names its roles in its own capabilities,
-//    so these are words, not a vendor's list. The table is the one place to adjust once real role names are read.
+// 2. The role names, matched word by word against ROLE_WORDS (visual-vocabulary.mjs): a custom visual names its roles
+//    in its own capabilities, so these are words, not a vendor's list. The table is the one place to adjust once real
+//    role names are read.
 // 3. A weak hint: words in the visual's id (FAMILY_HINTS, a short table). It only chooses among the kinds the fields can
 //    show (a "pie" word picks a pie for one measure by a category) and is set aside, and said so, when they can't.
 // Names in the report are untrusted: `why` and `lost` are written from role classes and counts only, never from a role,
@@ -22,6 +23,9 @@
 
 import { createRequire } from 'node:module';
 import { getCapabilities } from '@microsoft/powerbi-core-visual-schema';
+// (0.3.2 SP18) the role words and the family hints: their own module; the names exported here before are re-exported
+import { ROLE_WORDS, TO_WORDS, FAMILY_HINTS, OBJECT_HINTS, wordsOf, classOf, classesOf, hintsOf, objectHintOf } from './visual-vocabulary.mjs';
+export { ROLE_WORDS, FAMILY_HINTS, OBJECT_HINTS, wordsOf };
 
 // one test of custom versus native for every block (assets/js/visual-types.js, Microsoft's catalog)
 const VT = createRequire(import.meta.url)('../../assets/js/visual-types.js');
@@ -38,64 +42,7 @@ const DROPDOWN_FLOOR = 32 + 8 + 8;
 let VP = null;
 try { VP = await (await import('@microsoft/powerbi-report-authoring-cli')).getMetadataProvider(); } catch (e) { VP = null; }
 
-// ---- the role words (lower-case words; a role name is split at case changes, digits and other characters) ----
-// Order matters: a role takes the first class one of its words belongs to (ColumnValues: bar before value).
-export const ROLE_WORDS = {
-  tooltip: ['tooltip', 'tooltips'],
-  // a colour rule (a field that only colours the marks): never a series
-  colorRule: ['rule', 'rules'],
-  latitude: ['latitude', 'lat'],
-  longitude: ['longitude', 'lon', 'lng'],
-  location: ['location', 'locations', 'geo', 'address', 'place', 'places'],
-  node: ['node', 'nodes', 'link', 'links', 'edge', 'edges'],
-  from: ['source', 'sources', 'from', 'parent', 'parents', 'origin', 'start'],
-  // "target" is a network's end when it holds a column, a goal when it holds a measure
-  goal: ['goal', 'goals', 'target', 'targets', 'benchmark', 'baseline', 'to', 'child', 'children', 'destination', 'end'],
-  min: ['min', 'minimum'],
-  max: ['max', 'maximum'],
-  indicator: ['indicator', 'kpi'],
-  breakdown: ['breakdown'],
-  line: ['line', 'lines', 'secondary', 'y2'],
-  bar: ['column', 'columns', 'bar', 'bars', 'primary'],
-  series: ['series', 'legend', 'color', 'colour', 'colors', 'colours', 'stack', 'segment', 'segments', 'subcategory'],
-  x: ['x', 'xaxis'],
-  y: ['y', 'yaxis'],
-  size: ['size', 'bubble', 'radius', 'weight', 'weights'],
-  rows: ['row', 'rows'],
-  time: ['date', 'dates', 'time', 'timeline', 'period', 'periods', 'calendar', 'trend'],
-  category: ['category', 'categories', 'axis', 'group', 'groups', 'dimension', 'dimensions', 'label', 'labels', 'name', 'names', 'item', 'items', 'level', 'levels', 'hierarchy', 'drill', 'detail', 'details'],
-  value: ['value', 'values', 'measure', 'measures', 'amount', 'amounts', 'metric', 'metrics', 'data', 'total', 'totals']
-};
-// a "to" word that holds a column: the network's end (the goal class above with a column)
-const TO_WORDS = new Set(['target', 'targets', 'to', 'child', 'children', 'destination', 'end']);
-
-// ---- the weak hint: words in a custom visual's id (its trailing 32-character code left out) ----
-// Each entry: id words -> a kind. Only used when the fields can show that kind. Ordered: the first match counts.
-export const FAMILY_HINTS = {
-  donut: ['donut', 'doughnut', 'ring'],
-  pie: ['pie'],
-  combo: ['combo'],
-  waterfall: ['waterfall'],
-  time: ['timeline'],
-  network: ['network', 'graph', 'sankey', 'chord', 'flow'],
-  gauge: ['gauge', 'dial', 'bullet'],
-  kpi: ['kpi', 'indicator'],
-  map: ['map', 'geo'],
-  scatter: ['scatter', 'bubble'],
-  matrix: ['matrix', 'pivot'],
-  table: ['table', 'grid'],
-  slicer: ['slicer', 'filter'],
-  card: ['card', 'tile'],
-  area: ['area'],
-  line: ['line'],
-  column: ['column', 'facet'],
-  bar: ['bar']
-};
-
 // ---- the native visual of each kind (Power BI's visualType; null: no native visual shows it) ----
-// the custom visual's own format objects can name its form (weak, as the id's words): a pie drawn with a hole
-export const OBJECT_HINTS = { donut: ['donut', 'doughnut'] };
-
 export const NATIVE = {
   combo: 'lineClusteredColumnComboChart', column: 'clusteredColumnChart', bar: 'clusteredBarChart', line: 'lineChart', area: 'areaChart',
   pie: 'pieChart', donut: 'donutChart', waterfall: 'waterfallChart', scatter: 'scatterChart', map: 'azureMap', network: null,
@@ -115,23 +62,10 @@ const BUILTIN_KIND = {
 const DATE_LEVELS = new Set(['year', 'quarter', 'month', 'day', 'week', 'date']);
 const DATE_TYPES = /^(date|datetime|datetimezone)$/i;
 
-// a name split into lower-case words: "ColumnValues" -> column, values; "Y2" -> y2; "Trend Axis" -> trend, axis
-export const wordsOf = (s) => String(s || '').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)
-  .flatMap((w) => { const m = /^([a-z]+)\d+$/.exec(w); return m ? [w, m[1]] : [w]; }); // "Values1" -> values1, values (a vendor numbers its value roles)
-const classOf = (role, display) => { const w = wordsOf(role).concat(display ? wordsOf(display) : []); for (const [cls, list] of Object.entries(ROLE_WORDS)) { const hit = w.find((x) => list.includes(x)); if (hit) return { cls, word: hit }; } return { cls: 'other', word: null }; };
-// every class a role's words belong to (a vendor joins two: "sourceNodes", "kpiValue", "StartDate"), with the words
-const classesOf = (role, display) => { const w = wordsOf(role).concat(display ? wordsOf(display) : []); return { words: w, set: new Set(Object.entries(ROLE_WORDS).filter(([, list]) => w.some((x) => list.includes(x))).map(([c]) => c)) }; };
 const isValue = (f) => f.kind === 'measure' || f.kind === 'aggregation';
 const isCol = (f) => f.kind === 'column';
 const copy = (f) => Object.assign({}, f);
 
-// a custom visual's id words for the hint (the trailing code of 32 letters and digits left out)
-function hintsOf(type) {
-  const w = wordsOf(String(type || '').replace(/[0-9A-Fa-f]{32}$/, ''));
-  return Object.entries(FAMILY_HINTS).filter(([, list]) => w.some((x) => list.includes(x))).map(([kind]) => kind);
-}
-// the format objects' hint (OBJECT_HINTS): names only, never their values
-const objectHintOf = (objects) => { const w = (Array.isArray(objects) ? objects : []).flatMap((x) => wordsOf(x)); const e = Object.entries(OBJECT_HINTS).find(([, list]) => w.some((x) => list.includes(x))); return e ? e[0] : null; };
 // a value shown as a percentage, by its format string (quoted text left out): null when the format is not known
 const pctOf = (fmt) => (typeof fmt === 'string' ? /%/.test(fmt.replace(/"[^"]*"/g, '').replace(/\\./g, '')) : null);
 

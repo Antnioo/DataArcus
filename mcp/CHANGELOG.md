@@ -48,6 +48,8 @@ package's manifest; this file says what is in it.
   it was before.
 - **Inside the SVG KPI picture maker:** the formulas behind a picture and the escaping of its text have files of their
   own; every picture and DAX measure, on the website and from the MCP, is exactly what it was before.
+- **Inside the MCP, custom visuals:** the words that read a custom visual's roles and name are in a file of their own;
+  every custom visual is read as the same kind, with the same confidence and the same native choices as before.
 - **More of the Arabic twin like the English:** more matrices that are lists are written as tables, so their first column
   reads on the right; a column the English hides stays hidden; a table wider than its box shows the same columns as
   the English, its first column at the right; the plan names legends whose Arabic may be cut, and says on its own line

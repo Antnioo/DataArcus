@@ -21,7 +21,8 @@ task routes.
 - **The MCP server** (`mcp/server.mjs`, stdio): 11 tools, from `read_model` to `check_report` (every tool and option:
   `mcp/TOOLS.md`). Its modules are in `mcp/lib/`:
   - reading: `model.mjs` (models from disk, every path kept inside the working folder; the untrusted-text screen),
-    `read-report.mjs` (what a PBIR report holds), `scope.mjs` (large models);
+    `read-report.mjs` (what a PBIR report holds), `scope.mjs` (large models), `visual-meaning.mjs` (what a custom
+    visual shows and its native replacement; its role words and family hints: `visual-vocabulary.mjs`);
   - **the approval gate**: `plans.mjs` (plan ids, what each plan pins) and `approval-window.mjs` (the window in the
     person's browser, on 127.0.0.1 with a one-time link the AI never receives);
   - **the write path**: `artifact.mjs` (the exact files a plan builds and their digest), `files.mjs` (the one writer
