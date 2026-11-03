@@ -165,7 +165,8 @@ Object.assign(fs, orig);
   chk(() => p.includes('It refuses a `.pbix` (it holds Power BI\'s data cache) and data files (`.csv`, `.tsv`, `.xlsx`, `.xlsm`, `.xls`, `.parquet`) by their name, before opening them, and a template whose list of parts shows a data cache before reading the rest of it.'), () => 'F3. PRIVACY.md section 3 says a .pbix and data files are refused by name before opening');
   chk(() => !/Slicer selections, bookmark states and data are never read/.test(p) && p.includes('Slicer selections and bookmark states are read with the report\'s files but never returned; it reads none of your tables\' data.'), () => 'F3. PRIVACY.md\'s read_report row: slicer selections and bookmark states are read with the files, never returned');
   chk(() => !/Never reads filter values, slicer selections, bookmark states or data/.test(rm) && rm.includes('Filter values, slicer selections and bookmark states are read with the report\'s files but never returned; it reads none of your tables\' data.'), () => 'F3. TOOLS.md\'s read_report row says the same');
-  const rr = fs.readFileSync(path.join(HERE, 'lib/read-report.mjs'), 'utf8');
+  // (0.3.2 SP21) read_report's answer and its note moved to lib/report-answer.mjs; its check reads it there
+  const rr = fs.readFileSync(path.join(HERE, 'lib/report-answer.mjs'), 'utf8');
   chk(() => !/bookmark states and data are never read/.test(rr) && rr.includes('filter values, slicer selections and bookmark states are read with the report\\\'s files but never returned'), () => 'F3. read_report\'s note in every answer says the same');
   chk(() => !/are never read; titles/.test(server) && server.includes('filter values, slicer selections and bookmark states are read with the report\\\'s files but never returned'), () => 'F3. read_report\'s description says the same');
 }

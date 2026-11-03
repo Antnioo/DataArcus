@@ -1,0 +1,796 @@
+{
+  "answers": {
+    "twin text": {
+      "sha": "298c0e4446dc8ab82910e76f6f36f455c260bac4b86a18aa23933337931c3bf7",
+      "length": 2746
+    },
+    "twin json": {
+      "sha": "625f4503b98af5bd6bdf00ca773d33de90d06c6f9cadd2fdda054450dd4264c7",
+      "length": 7419
+    },
+    "twin pages [2]": {
+      "sha": "1cb613e997fda46e2b4213627fc0d81ee905748409635138d12a4823ba4c027f",
+      "length": 1741
+    },
+    "twin pages [1, 3] json": {
+      "sha": "0f97f5895d88e53a18558fd8d52967c3d86743e6a29d9e5b3ea26e260d1d5c80",
+      "length": 5153
+    },
+    "health text": {
+      "sha": "87b308888d9e5c77c443ded200f57745ce236d65abbdcae86dde8c3e956e3e42",
+      "length": 1010
+    },
+    "health json": {
+      "sha": "dd4a037edd8b0f35a8ffecf455abbbb7c5dcf36f8c49c14883a79c1b0fc739d4",
+      "length": 1810
+    },
+    "health pages [2]": {
+      "sha": "8ca04fd9680df6ff471ecc9a714b6ee8c1050d5c778af3d7094f838eb72b7a25",
+      "length": 924
+    },
+    "health pages [1, 3] json": {
+      "sha": "8ade61bb2e806a28549b9ee95d34b9f75492c58fdd4a756e6c7a1bc1a106a546",
+      "length": 1487
+    },
+    "service text": {
+      "sha": "3dd64de181be808582de75a09a11c4d939c8298b3d4e5d7fe5b667715cc6b1d7",
+      "length": 2993
+    },
+    "service json": {
+      "sha": "d2eae838fd472107261f42ae374e41c42df94c903cb98e2b6bd88ecf9844e825",
+      "length": 8378
+    },
+    "service pages [2]": {
+      "sha": "10d0d511a276701db30cbdee65574f906ef51ff4cfa2a094d2c2be890943eb42",
+      "length": 1794
+    },
+    "service pages [1, 3] json": {
+      "sha": "69aff2c162703d0dfb2cf8197a6c725ea1b50dd29511a86433714dcb025bb2fe",
+      "length": 5429
+    },
+    "bridge text": {
+      "sha": "a78d1cd706938b5c87139b93a1f16909ac80d57b0f18ff6f3b0342d8d6d01537",
+      "length": 78
+    },
+    "bridge json": {
+      "sha": "a78d1cd706938b5c87139b93a1f16909ac80d57b0f18ff6f3b0342d8d6d01537",
+      "length": 78
+    },
+    "bridge pages [2]": {
+      "sha": "a78d1cd706938b5c87139b93a1f16909ac80d57b0f18ff6f3b0342d8d6d01537",
+      "length": 78
+    },
+    "bridge pages [1, 3] json": {
+      "sha": "a78d1cd706938b5c87139b93a1f16909ac80d57b0f18ff6f3b0342d8d6d01537",
+      "length": 78
+    },
+    "none text": {
+      "sha": "d887476275452b1c43ec86f16019c5aa86809784eb67fa553f9ac4a8b01b50cc",
+      "length": 2680
+    },
+    "none json": {
+      "sha": "a67f3a3ca8573e449453154765113c878b2e30bcfd3cfa005d6488086b8b7d12",
+      "length": 7336
+    },
+    "none pages [2]": {
+      "sha": "5d30d667485e8babed0d64a2633c27e491a81f35a0d9c70dc486130fb6f03c6f",
+      "length": 1675
+    },
+    "none pages [1, 3] json": {
+      "sha": "83bf34207e4cfb69eb5d0136d3d1827385fecec88332c9704aaa89abf2a59ec5",
+      "length": 5070
+    },
+    "base text": {
+      "sha": "c9f3f9953f2dc37deb29dd8a41c6d616f77e5971057a5a2a9336e46ec276a571",
+      "length": 2727
+    },
+    "base json": {
+      "sha": "82b616802383418b2d6fb4684509d9c8925b38039cec7e2a22b9cf3449f1f9d1",
+      "length": 7396
+    },
+    "base pages [2]": {
+      "sha": "cbcf977e9caa8f2922484301570e08c243c4ce3376b9e17c1a9ca8256ed3e03e",
+      "length": 1722
+    },
+    "base pages [1, 3] json": {
+      "sha": "423171059ba7e9dc498e43fb0190658dc37813379bcf354982268bc0ce16bfec",
+      "length": 5130
+    },
+    "schema text": {
+      "sha": "298c0e4446dc8ab82910e76f6f36f455c260bac4b86a18aa23933337931c3bf7",
+      "length": 2746
+    },
+    "schema json": {
+      "sha": "625f4503b98af5bd6bdf00ca773d33de90d06c6f9cadd2fdda054450dd4264c7",
+      "length": 7419
+    },
+    "schema pages [2]": {
+      "sha": "1cb613e997fda46e2b4213627fc0d81ee905748409635138d12a4823ba4c027f",
+      "length": 1741
+    },
+    "schema pages [1, 3] json": {
+      "sha": "0f97f5895d88e53a18558fd8d52967c3d86743e6a29d9e5b3ea26e260d1d5c80",
+      "length": 5153
+    },
+    "arabic text": {
+      "sha": "2e4bfb14a2f3a2c3ce2fc6a438bd86e3d36d4d900e8740b11342e16a3834d5a2",
+      "length": 2886
+    },
+    "arabic json": {
+      "sha": "0bd0efac970903bb23729682d71aa639529d2eec2db639d8c9c1df156f655557",
+      "length": 7875
+    },
+    "arabic pages [2]": {
+      "sha": "cb48ed5f9c98078451e20c35d2b8ca1143eb2368d26586730b6997f10c0fe302",
+      "length": 1828
+    },
+    "arabic pages [1, 3] json": {
+      "sha": "8698caf89dd0e88379d9e082447171772e969fbe7627d724719ebd52fff6b614",
+      "length": 5308
+    },
+    "cap text": {
+      "sha": "afc8e9b28270d909981ce765dc611e30a13f3b5b9349b087563dd655182ff216",
+      "length": 2948
+    },
+    "cap json": {
+      "sha": "711eb585661834b2946c2082ec0cde3463c0f64e1b7fa1ac93fc17e4a8960795",
+      "length": 7672
+    },
+    "cap pages [2]": {
+      "sha": "bf079579a2117e2d30887f5739ddea170fcd98a6bbedb9c61c3113268aa4a3b0",
+      "length": 1796
+    },
+    "cap pages [1, 3] json": {
+      "sha": "bb1bca1d888b5494e4c9c24d9f20718b29ff481b048d2947d701db2b0fa4d502",
+      "length": 5268
+    },
+    "many text": {
+      "sha": "e16dc6763aa5b565403497df66e8319a3c95fd0cdf7f9280d8b0723380c8b3ac",
+      "length": 34132
+    },
+    "many json": {
+      "sha": "dcdc549ee5f772e21c4fc9ddc05ff3639c7c5dd5526b220f2cae548d5f2754ba",
+      "length": 28354
+    },
+    "many pages [2]": {
+      "sha": "ccc246daa1bfa7f434d2ca5b3cf79937a0b053dc01aad3c907e7790803cd74a6",
+      "length": 2363
+    },
+    "many pages [1, 3] json": {
+      "sha": "d6b6855a6f504d2a26a880bf7900171e1771c6135873a6568fd992175c8546b0",
+      "length": 6483
+    },
+    "untrusted text": {
+      "sha": "a6723c81dd640d54ef165faf6f1b50856261b4a2090526ba06b521e3bdd6411f",
+      "length": 3342
+    },
+    "untrusted json": {
+      "sha": "71f44cf5bcc3542832cb8cafd623904f56437232a0b70c6a27def7995b4bd1f7",
+      "length": 8387
+    },
+    "untrusted pages [2]": {
+      "sha": "7cea8fdce0d7bea108c49206b1a74de404551a33bb984e8673faab2ee7046828",
+      "length": 1791
+    },
+    "untrusted pages [1, 3] json": {
+      "sha": "e88d480026e4fa53b568c6f2e032d98cf3388c273b3d3966a2c2b74f1c55a413",
+      "length": 6121
+    },
+    "custom text": {
+      "sha": "4126df58aa1058878c7f1acaa0c1db7894269ce79ebd1d94b335f37946ae3639",
+      "length": 3586
+    },
+    "custom json": {
+      "sha": "9775e5ed9c022e84afe3ba95d9965003a5bfe666fcb69914368ffa5feea2cf82",
+      "length": 10394
+    },
+    "custom pages [2]": {
+      "sha": "c81586d44d52381292a422ee00fe025d4e33b488a41fd6023c91cbc570394242",
+      "length": 1828
+    },
+    "custom pages [1, 3] json": {
+      "sha": "6618487f19dabb76087096021d38d16736211bc719f7ca1d78d86d793c6196ff",
+      "length": 5267
+    },
+    "painted text": {
+      "sha": "8902a823c0909984d9d92beb535767a6c18ab9be70c241883fc440c19a0f8619",
+      "length": 3527
+    },
+    "painted json": {
+      "sha": "0bd5b4e7febfabf670999dfb700da762dcd9ea03dc28f941fdd5e87d19b23eb3",
+      "length": 10383
+    },
+    "painted pages [2]": {
+      "sha": "0c4c80b2bd69a0fe6ce6c51871fa686df1dc88b5164e8bc9a9a543cb3e110b95",
+      "length": 1726
+    },
+    "painted pages [1, 3] json": {
+      "sha": "4167b50c6eafa93b7841294953960445114ecf0a1190fc142155a24b5c0bd496",
+      "length": 5184
+    },
+    "stub text": {
+      "sha": "224adcf8e675a094bf827b68c3ad82c61b5cf9fe8e4b1f30dc3593535433f409",
+      "length": 2744
+    },
+    "stub json": {
+      "sha": "992f9ad0ec05ac6aba9839b538bea773216e210ccc3662118d5873424edcba06",
+      "length": 7421
+    },
+    "stub pages [2]": {
+      "sha": "336f5c6d42984a9893571a09d2a6e66acae2495d3d8ff6289a7f50a4048484c7",
+      "length": 1739
+    },
+    "stub pages [1, 3] json": {
+      "sha": "0d59242deea9f8405332a714fa4f17d15f93cc3c8840d7a478aabb3ee6e6b6cc",
+      "length": 5155
+    },
+    "cap pages [4] from 0 json": {
+      "sha": "724816ab56b6d90a9701b07077fae7705cb5295a0e0bdee5e93348750671ee7a",
+      "length": 39093
+    },
+    "cap pages [4] from 0 text": {
+      "sha": "05dafb8a88593359022d46fc191b674a04b69720519abd1643304bd27a78a3a6",
+      "length": 39686
+    },
+    "cap pages [4] from 96 json": {
+      "sha": "d8dbc3a7fb6d9905058ff9c3c3697f642d9bc8e1ebb10047393ec0d0173dd4b2",
+      "length": 38955
+    },
+    "cap pages [4] from 96 text": {
+      "sha": "14128127773313585a6741cf5ac0cc01aae8f80177f6c3657943111afa3097d0",
+      "length": 39676
+    },
+    "cap pages [4] from 191 json": {
+      "sha": "db7dc17a8cf0edd0951803ed6a8e52af7b53a69d6fc80911fbdc74a6485b39d1",
+      "length": 38964
+    },
+    "cap pages [4] from 191 text": {
+      "sha": "52d33ee3032f00d433785ce3cb6301df6546a9e81bedcc02d2c76897ac17c907",
+      "length": 31013
+    },
+    "cap pages [4] from 286 json": {
+      "sha": "d4e1995be16340c750c244a4e9b4b6804bc179fa439f1bcd709520ccb9e2cbd3",
+      "length": 39038
+    },
+    "cap pages [4] from 286 text": {
+      "sha": "ba77a7798fc6d871127404629334b24fd9c2eb36f7466e6c9f8acf0ed8fd4899",
+      "length": 18651
+    }
+  },
+  "identity": {
+    "twin": {
+      "reportIdentity": {
+        "ours": false,
+        "identity": {
+          "name": "twin-theme.json",
+          "card": "#ffffff",
+          "text": "#1f2937",
+          "accent": "#0f766e",
+          "themeColours": [
+            "#0f766e",
+            "#2563eb",
+            "#d97706",
+            "#7c3aed",
+            "#dc2626",
+            "#059669"
+          ],
+          "painted": []
+        }
+      },
+      "reportTheme": {
+        "name": "twin-theme.json",
+        "dataColors": [
+          "#0f766e",
+          "#2563eb",
+          "#d97706",
+          "#7c3aed",
+          "#dc2626",
+          "#059669"
+        ],
+        "card": "#ffffff",
+        "text": "#1f2937",
+        "accent": "#0f766e"
+      },
+      "paintedColours": []
+    },
+    "health": {
+      "reportIdentity": {
+        "ours": true,
+        "identity": null
+      },
+      "reportTheme": {
+        "name": "health-test-report-theme.json"
+      },
+      "paintedColours": [
+        [
+          "#ffffff",
+          4
+        ],
+        [
+          "#1a1a1a",
+          3
+        ],
+        [
+          "#dddddd",
+          3
+        ],
+        [
+          "#f3f4f6",
+          1
+        ],
+        [
+          "#fafbfb",
+          1
+        ]
+      ]
+    },
+    "service": {
+      "reportIdentity": {
+        "ours": false,
+        "identity": {
+          "name": "service-theme.json",
+          "background": "#f3f2f1",
+          "card": "#ffffff",
+          "border": "#ffffff",
+          "text": "#252423",
+          "accent": "#2b7bb9",
+          "radius": 12,
+          "shadow": true,
+          "themeColours": [
+            "#2b7bb9",
+            "#e07a1f",
+            "#4c9f70",
+            "#8c5bb5",
+            "#c8463d",
+            "#3a8fa3"
+          ],
+          "painted": []
+        }
+      },
+      "reportTheme": {
+        "name": "service-theme.json",
+        "dataColors": [
+          "#2b7bb9",
+          "#e07a1f",
+          "#4c9f70",
+          "#8c5bb5",
+          "#c8463d",
+          "#3a8fa3"
+        ],
+        "background": "#f3f2f1",
+        "card": "#ffffff",
+        "border": "#ffffff",
+        "text": "#252423",
+        "accent": "#2b7bb9",
+        "radius": 12,
+        "shadow": true
+      },
+      "paintedColours": []
+    },
+    "bridge": "THREW \"bridge/Sales.Report\" has no definition folder: it is not a PBIR report.",
+    "none": {
+      "reportIdentity": {
+        "ours": false,
+        "identity": null
+      },
+      "reportTheme": null,
+      "paintedColours": []
+    },
+    "base": {
+      "reportIdentity": {
+        "ours": false,
+        "identity": {
+          "name": "twin-theme.json",
+          "accent": "#0f766e",
+          "themeColours": [
+            "#aa33cc",
+            "#2e8b57"
+          ],
+          "painted": []
+        }
+      },
+      "reportTheme": {
+        "name": "twin-theme.json",
+        "dataColors": [
+          "#aa33cc",
+          "#2e8b57"
+        ],
+        "accent": "#0f766e"
+      },
+      "paintedColours": []
+    },
+    "schema": {
+      "reportIdentity": {
+        "ours": false,
+        "identity": {
+          "name": "twin-theme.json",
+          "card": "#ffffff",
+          "text": "#1f2937",
+          "accent": "#0f766e",
+          "themeColours": [
+            "#0f766e",
+            "#2563eb",
+            "#d97706",
+            "#7c3aed",
+            "#dc2626",
+            "#059669"
+          ],
+          "painted": []
+        }
+      },
+      "reportTheme": {
+        "name": "twin-theme.json",
+        "dataColors": [
+          "#0f766e",
+          "#2563eb",
+          "#d97706",
+          "#7c3aed",
+          "#dc2626",
+          "#059669"
+        ],
+        "card": "#ffffff",
+        "text": "#1f2937",
+        "accent": "#0f766e"
+      },
+      "paintedColours": []
+    },
+    "arabic": {
+      "reportIdentity": {
+        "ours": false,
+        "identity": {
+          "name": "twin-theme.json",
+          "card": "#ffffff",
+          "text": "#1f2937",
+          "accent": "#0f766e",
+          "themeColours": [
+            "#0f766e",
+            "#2563eb",
+            "#d97706",
+            "#7c3aed",
+            "#dc2626",
+            "#059669"
+          ],
+          "painted": []
+        }
+      },
+      "reportTheme": {
+        "name": "twin-theme.json",
+        "dataColors": [
+          "#0f766e",
+          "#2563eb",
+          "#d97706",
+          "#7c3aed",
+          "#dc2626",
+          "#059669"
+        ],
+        "card": "#ffffff",
+        "text": "#1f2937",
+        "accent": "#0f766e"
+      },
+      "paintedColours": []
+    },
+    "cap": {
+      "reportIdentity": {
+        "ours": false,
+        "identity": {
+          "name": "twin-theme.json",
+          "card": "#ffffff",
+          "text": "#1f2937",
+          "accent": "#0f766e",
+          "themeColours": [
+            "#0f766e",
+            "#2563eb",
+            "#d97706",
+            "#7c3aed",
+            "#dc2626",
+            "#059669"
+          ],
+          "painted": []
+        }
+      },
+      "reportTheme": {
+        "name": "twin-theme.json",
+        "dataColors": [
+          "#0f766e",
+          "#2563eb",
+          "#d97706",
+          "#7c3aed",
+          "#dc2626",
+          "#059669"
+        ],
+        "card": "#ffffff",
+        "text": "#1f2937",
+        "accent": "#0f766e"
+      },
+      "paintedColours": []
+    },
+    "many": {
+      "reportIdentity": {
+        "ours": false,
+        "identity": {
+          "name": "twin-theme.json",
+          "card": "#ffffff",
+          "text": "#1f2937",
+          "accent": "#0f766e",
+          "themeColours": [
+            "#0f766e",
+            "#2563eb",
+            "#d97706",
+            "#7c3aed",
+            "#dc2626",
+            "#059669"
+          ],
+          "painted": []
+        }
+      },
+      "reportTheme": {
+        "name": "twin-theme.json",
+        "dataColors": [
+          "#0f766e",
+          "#2563eb",
+          "#d97706",
+          "#7c3aed",
+          "#dc2626",
+          "#059669"
+        ],
+        "card": "#ffffff",
+        "text": "#1f2937",
+        "accent": "#0f766e"
+      },
+      "paintedColours": []
+    },
+    "untrusted": {
+      "reportIdentity": {
+        "ours": false,
+        "identity": {
+          "name": "twin-theme.json",
+          "card": "#ffffff",
+          "text": "#1f2937",
+          "accent": "#0f766e",
+          "themeColours": [
+            "#0f766e",
+            "#2563eb",
+            "#d97706",
+            "#7c3aed",
+            "#dc2626",
+            "#059669"
+          ],
+          "painted": []
+        }
+      },
+      "reportTheme": {
+        "name": "twin-theme.json",
+        "dataColors": [
+          "#0f766e",
+          "#2563eb",
+          "#d97706",
+          "#7c3aed",
+          "#dc2626",
+          "#059669"
+        ],
+        "card": "#ffffff",
+        "text": "#1f2937",
+        "accent": "#0f766e"
+      },
+      "paintedColours": []
+    },
+    "custom": {
+      "reportIdentity": {
+        "ours": false,
+        "identity": {
+          "name": "twin-theme.json",
+          "card": "#ffffff",
+          "text": "#1f2937",
+          "accent": "#0f766e",
+          "themeColours": [
+            "#0f766e",
+            "#2563eb",
+            "#d97706",
+            "#7c3aed",
+            "#dc2626",
+            "#059669"
+          ],
+          "painted": []
+        }
+      },
+      "reportTheme": {
+        "name": "twin-theme.json",
+        "dataColors": [
+          "#0f766e",
+          "#2563eb",
+          "#d97706",
+          "#7c3aed",
+          "#dc2626",
+          "#059669"
+        ],
+        "card": "#ffffff",
+        "text": "#1f2937",
+        "accent": "#0f766e"
+      },
+      "paintedColours": []
+    },
+    "painted": {
+      "reportIdentity": {
+        "ours": false,
+        "identity": {
+          "name": null,
+          "themeColours": [],
+          "painted": [
+            "#1f77b4",
+            "#2ca02c",
+            "#d62728",
+            "#ff7f0e"
+          ],
+          "text": "#333333"
+        }
+      },
+      "reportTheme": null,
+      "paintedColours": [
+        [
+          "#1f77b4",
+          3
+        ],
+        [
+          "#2ca02c",
+          1
+        ],
+        [
+          "#333333",
+          1
+        ],
+        [
+          "#d62728",
+          1
+        ],
+        [
+          "#eeeeee",
+          1
+        ],
+        [
+          "#f4f6f8",
+          1
+        ],
+        [
+          "#ff7f0e",
+          1
+        ]
+      ]
+    },
+    "stub": {
+      "reportIdentity": {
+        "ours": false,
+        "identity": {
+          "name": "Custom",
+          "background": "#f7f7f7",
+          "cardTransparent": 30,
+          "border": "#dddddd",
+          "text": "#222222",
+          "accent": "#cc3333",
+          "good": "#1a7f37",
+          "bad": "#cc0000",
+          "radius": 8,
+          "shadow": true,
+          "font": "Segoe UI Semibold",
+          "themeColours": [
+            "#cc3333",
+            "#00aa66",
+            "#3366cc",
+            "#118dff",
+            "#12239e",
+            "#e66c37",
+            "#6b007b",
+            "#e044a7"
+          ],
+          "painted": []
+        }
+      },
+      "reportTheme": {
+        "name": "Custom",
+        "dataColors": [
+          "#cc3333",
+          "#00aa66",
+          "#3366cc",
+          "#118dff",
+          "#12239e",
+          "#e66c37",
+          "#6b007b",
+          "#e044a7"
+        ],
+        "background": "#f7f7f7",
+        "cardTransparent": 30,
+        "border": "#dddddd",
+        "text": "#222222",
+        "accent": "#cc3333",
+        "good": "#1a7f37",
+        "bad": "#cc0000",
+        "radius": 8,
+        "shadow": true,
+        "font": "Segoe UI Semibold"
+      },
+      "paintedColours": []
+    }
+  },
+  "existing": {
+    "twin": {
+      "report": "Twin Sales",
+      "theme": {
+        "name": "twin-theme.json",
+        "card": "#ffffff",
+        "text": "#1f2937",
+        "accent": "#0f766e",
+        "themeColours": [
+          "#0f766e",
+          "#2563eb",
+          "#d97706",
+          "#7c3aed",
+          "#dc2626",
+          "#059669"
+        ],
+        "painted": []
+      },
+      "others": []
+    },
+    "twin two reports": {
+      "report": "Twin Sales",
+      "theme": {
+        "name": "twin-theme.json",
+        "card": "#ffffff",
+        "text": "#1f2937",
+        "accent": "#0f766e",
+        "themeColours": [
+          "#0f766e",
+          "#2563eb",
+          "#d97706",
+          "#7c3aed",
+          "#dc2626",
+          "#059669"
+        ],
+        "painted": []
+      },
+      "others": [
+        "Painted Copy"
+      ]
+    },
+    "twin two reports, want the copy": {
+      "report": "Painted Copy",
+      "theme": {
+        "name": null,
+        "themeColours": [],
+        "painted": [
+          "#1f77b4",
+          "#2ca02c",
+          "#d62728",
+          "#ff7f0e"
+        ],
+        "text": "#333333"
+      },
+      "others": [
+        "Twin Sales"
+      ]
+    },
+    "health": null,
+    "service": {
+      "report": "Service Orders",
+      "theme": {
+        "name": "service-theme.json",
+        "background": "#f3f2f1",
+        "card": "#ffffff",
+        "border": "#ffffff",
+        "text": "#252423",
+        "accent": "#2b7bb9",
+        "radius": 12,
+        "shadow": true,
+        "themeColours": [
+          "#2b7bb9",
+          "#e07a1f",
+          "#4c9f70",
+          "#8c5bb5",
+          "#c8463d",
+          "#3a8fa3"
+        ],
+        "painted": []
+      },
+      "others": []
+    }
+  }
+}

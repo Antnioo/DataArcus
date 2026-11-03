@@ -8,6 +8,12 @@ package's manifest; this file says what is in it.
 - **An Arabic label beside a value reads in order:** in the Arabic twin, a card or title that joins your approved
   Arabic words with a value of the model (a day, an hour, a count) keeps each value in its place, so "Thursday" or
   "11:00 PM" no longer swaps with the Arabic around it; your words are written exactly as you approved them.
+- **Inside the Arabic twin:** the rules that say what kind a visual is, which chart axis is time and what keeps reading
+  left to right inside a mirrored visual have a file of their own; every twin and every right-to-left chart is exactly
+  what it was before.
+- **The twin says when a turned chart holds a running calculation:** its plan names each visual it turns right to
+  left that holds a running sum, moving average, previous, next, first, last or rank calculation, in English and
+  Arabic, so its numbers can be checked against the original in Desktop; the twin itself is written as before.
 - **A chart under a heatmap that cannot move:** when lining it up under the heatmap's grid would cover another
   visual, it stays where the plain mirror puts it but keeps its English sort, value axis and padding, so its hours still
   read left to right like the grid above it.
@@ -55,12 +61,19 @@ package's manifest; this file says what is in it.
   the same language, and every check gives the same answer as before.
 - **Inside the MCP, the report's answer:** what create_report says after writing a report is put together in one file
   of its own; every answer and every written file is exactly what it was before.
+- **Inside the MCP, read_report:** what read_report says and a report's own colours (the theme identity a new design
+  starts from) are each worked out in a file of their own, which reads no file itself; every answer is exactly what it
+  was before.
 - **Inside the MCP, the report's fields:** how a report picks and names its fields and their number formats is in one
   file of its own; every plan, answer and written file is exactly what it was before.
 - **Inside the design engine, colours and the glass look:** the colour math and the glass look each have a file of
   their own, shared by the website and the MCP; every theme, picture and layout is exactly what it was before.
 - **The website, steadier and plainer:** the Model Health Check article no longer jumps when its font arrives on a
   phone, and the site's own pages and scripts no longer use the long dash (a quote of Microsoft's guidance keeps it).
+- **Inside the Arabic twin:** widening its buttons, text boxes and table headers to their Arabic texts has a file of
+  its own; every twin and its plan are byte for byte what they were before.
+- **Inside the MCP, the model reader:** the screen that marks names reading like instructions, how a name is shown,
+  the column types and the KPI list each have a file of their own; read_model answers exactly as before.
 - **Inside the MCP, the approval page:** what each approval page and the app's own prompt say about a plan is put
   together in one file of its own; every page and prompt is exactly what it was before, and only the click in
   DataArcus's own window approves a plan, as before.
