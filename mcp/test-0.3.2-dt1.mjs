@@ -90,8 +90,8 @@ function renameIds(reportDir) {
   walk(reportDir);
   return map;
 }
-// a text with its ids aside (a page's, a visual's, a bookmark's: hex of 20 to 24 characters)
-const noIds = (t) => JSON.stringify(t).replace(/\b[0-9a-f]{20,24}\b/g, '#');
+// a text with its ids aside (every page id, visual name and bookmark name, old and new)
+let idsRe = /(?!)/; const noIds = (t) => JSON.stringify(t).replace(idsRe, '#');
 
 const dirs = [];
 try {
@@ -114,7 +114,7 @@ try {
     await s.call('approve_plan', { planId: id }); const w = await s.call('create_report', { path: base.path, planId: id }); if (w.err) throw new Error('create_report: ' + String(w.t).slice(0, 300));
     const pbip = 'large/Small EN.pbip', rep = path.join(d, 'large', 'Small EN.Report');
     a1 = await twinTexts(s, pbip);
-    renameIds(rep);
+    const map = renameIds(rep); idsRe = new RegExp([...map.keys(), ...map.values()].sort((x, y) => y.length - x.length).join('|'), 'g');
     a2 = await twinTexts(s, pbip);
     // each visual's place, by its (new) name
     const pages = path.join(rep, 'definition', 'pages');
@@ -126,7 +126,7 @@ try {
     () => `D2. create_arabic_twin's texts in the same order with every id renamed: ${a1.length} -> ${a2.length} texts; the first that differs (${n}): ${a1[n] ? noIds(a1[n]).slice(0, 200) : ''} / ${a2[n] ? noIds(a2[n]).slice(0, 200) : ''}`);
   // D3: per page, the visuals in the order the texts first name them: top to bottom, then left to right
   const seen = new Map();
-  a2.forEach((t) => { const m = /^[a-zA-Z]+:([0-9a-f]{20,24})\/([0-9a-f]{20,24})(?:\/|$)/.exec(String(t.id)); if (!m) return; const k = m[1] + '/' + m[2]; if (!seen.has(m[1])) seen.set(m[1], []); if (!seen.get(m[1]).includes(k)) seen.get(m[1]).push(k); });
+  a2.forEach((t) => { const m = /^(?:phone:)?[a-zA-Z]+:([^/]+)\/([^/]+)(?:\/|$)/.exec(String(t.id)); if (!m) return; const k = m[1] + '/' + m[2]; if (!seen.has(m[1])) seen.set(m[1], []); if (!seen.get(m[1]).includes(k)) seen.get(m[1]).push(k); });
   const outOfOrder = [...seen.values()].flatMap((ks) => ks.slice(1).map((k, i) => [ks[i], k]).filter(([x, y]) => { const p = pos.get(x) || {}, q = pos.get(y) || {}; return (+p.y || 0) > (+q.y || 0) || ((+p.y || 0) === (+q.y || 0) && (+p.x || 0) > (+q.x || 0)); }));
   chk(() => seen.size >= 2 && [...seen.values()].some((ks) => ks.length > 3) && !outOfOrder.length,
     () => `D3. the texts in reading order (y, then x), each page: ${seen.size} pages; out of order: ${JSON.stringify(outOfOrder.slice(0, 3).map(([x, y]) => [pos.get(x), pos.get(y)]))}`);
