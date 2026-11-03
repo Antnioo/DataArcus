@@ -12,7 +12,7 @@ import { pathOut, json, isObj, EXT, BOOKMARKS, jsonAt } from './twin-read.mjs';
 import { rawLabels, sortKeys, normTerms } from './twin-texts.mjs';
 import { modelOf } from './twin-model.mjs';
 import { digestOf } from './artifact.mjs';
-import { newPlatform } from './twin-copy.mjs';
+import { newPlatform, addedTaken } from './twin-copy.mjs';
 import { planTwin } from './twin-plan.mjs';
 import { RES, registered } from './twin-pictures.mjs';
 import { createRequire } from 'node:module';
@@ -47,7 +47,11 @@ export function twinTree(P) {
     visuals.forEach((vj, i) => out.set(pg.visuals[i].rel, json(vj)));
     (mobiles || []).forEach((m, i) => { if (m) out.set(pg.visuals[i].mobile.rel, json(m)); });
     // (0.3.1 MX3) a visual the twin adds to the page (a heatmap's names beside it), in the page's own folder
-    (extra || []).forEach((x) => { const rel = pg.rel.slice(0, pg.rel.lastIndexOf('/') + 1) + 'visuals/' + x.json.name + '/visual.json'; out.set(rel, json(x.json)); added3.push(rel); });
+    // (0.3.2 HM1, B-296) never over a visual it did not build: a folder of the original's (without case: one folder on
+    // Windows and macOS) or a file already set is a hard error, nothing written (twin-plan.mjs freeAddedNames names it free)
+    (extra || []).forEach((x) => { const dir = pg.rel.slice(0, pg.rel.lastIndexOf('/') + 1) + 'visuals/' + x.json.name + '/', rel = dir + 'visual.json';
+      if (out.has(rel) || R.files.some((f) => f.toLowerCase().startsWith(dir.toLowerCase()))) throw new Error(addedTaken(x.json.name, pg.id));
+      out.set(rel, json(x.json)); added3.push(rel); });
   });
   if (P.built.ext) out.set(EXT, json(P.built.ext));
   // (0.3.1 MP1) the Arabic pages' flipped pictures, registered in the twin's report.json (the original's picture stays too)

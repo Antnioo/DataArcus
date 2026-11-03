@@ -25,7 +25,7 @@
   (the bilingual report: its Arabic title measures are this job's), 10 -> 11 checks (see Results).
 - **Answer size (L-1102-06):** the twin's plan answer holds no DAX: 31,360 on the base, 31,316-31,397 over four
   runs after (the spread is the run's random ids); fx1 three times: see Results.
-- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41685926766 on b26b0bde.
+- **State:** the reviewer's follow-up (18:55): origin/integration/0.3.2 (e3f01231: DT1, HM1) merged in once; CI below.
 - **Resume:** none; the reviewer's merge.
 
 ## Results
@@ -43,6 +43,13 @@
 - Lint: exit 0 (after the repo root's `npm ci`).
 - CI green: https://github.com/Antnioo/DataArcus/actions/runs/41685926766 on b26b0bde (the first attempt: macOS
   shard 4 cancelled with no FAIL line; `gh run rerun --failed` once: green).
+- **After the merge (the reviewer's follow-up, 3 Nov 18:55):** the one conflict, `fixtures/sp3-answers.json` R5,
+  re-measured on the merged tree, never one side: with integration's twin-texts.mjs (e3f01231) sp3's R5 matches DT1's
+  recorded values (plan 24,008 characters); with mine, the plan and the answer differ only in the files' `digest`
+  (equal with it masked), and the files only in `SP3 both.Report/definition/reportExtensions.json`, which, LV1's
+  isolates taken out, is the base's e3986dff... (L1; DT1 did not change that file). R5 now holds both: plan 24,008
+  afe21a41..., report 9,010 ab368695..., files 204 9bba676c... (the answer and the files as on LV1's branch, the plan's
+  length DT1's). WORK.md: integration's line (DT1, HM1-HM2, Running: ED1, LV1) with LV1's note named.
 
 ## CHANGELOG line
 "An Arabic label beside a value reads in order: in the Arabic twin, a card or title that joins your approved Arabic

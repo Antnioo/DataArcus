@@ -219,11 +219,30 @@ const DYNAMIC = {
   column: (c) => DYNAMIC.said(`A title given by the column ${safeName(c)} (the value chosen in it)`, `عنوان يعطيه العمود «${safeName(c)}» (القيمة المختارة فيه)`),
   param: (t) => DYNAMIC.said(`Power BI's title of a visual on the field parameter ${safeName(t)}, composed from the field chosen (if another field of the visual has an Arabic name, Power BI composes it from both)`, `عنوان Power BI لمرئي على معلمة الحقول «${safeName(t)}»، يُركَّب من الحقل المختار (وإن كان لحقل آخر في المرئي اسم عربي ركّبه Power BI من الاثنين)`)
 };
+// (0.3.2 DT1, B-294: bilingual.texts came out in a different order from run to run) the order the texts are listed in,
+// decided once: the order a person reads the report. Pages in the report's order (pages.json, readOriginal); on a page,
+// its visuals top to bottom, then left to right (position y, then x), a tie by z, tabOrder, the visual's type and its
+// texts (what a person sees), its file last (reached only when all of that is the same: never a random id while
+// anything shown differs); in a visual, its texts in their place (Mirror.textsOfVisual). Bookmarks in the Bookmarks
+// pane's order (bookmarks.json), the rest by their shown name. Only the order of the list: each text, its where and
+// its label slot are as before. The twin's build and copy keep readOriginal's order (by file).
+const num = (x) => (Number.isFinite(+x) ? +x : 0);
+const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+export function readingOrder(visuals) {
+  const key = (v) => { const j = isObj(v.json) ? v.json : {}, p = isObj(j.position) ? j.position : {}, vis = isObj(j.visual) ? j.visual : isObj(j.visualGroup) ? j.visualGroup : {};
+    let shown = ''; try { shown = Mirror.textsOfVisual('', j).map((t) => String(t.text)).join('\n'); } catch (e) { shown = ''; }
+    return [num(p.y), num(p.x), num(p.z), num(p.tabOrder), String(vis.visualType || (isObj(j.visualGroup) ? 'group' : '')), shown + '\u0000' + String(isObj(j.visualGroup) ? j.visualGroup.displayName || '' : ''), String(v.rel || '')]; };
+  const keyed = visuals.map((v) => [key(v), v]);
+  return keyed.sort(([a], [b]) => { for (let i = 0; i < a.length; i++) { const c = typeof a[i] === 'number' ? a[i] - b[i] : cmp(a[i], b[i]); if (c) return c; } return 0; }).map(([, v]) => v);
+}
+const bookmarksInOrder = (R) => { const at = new Map((R.bookmarkOrder || []).map((n, i) => [n, i])), shown = (b) => String(typeof b.json.displayName === 'string' ? b.json.displayName : '');
+  return R.bookmarks.slice().sort((a, b) => { const x = at.has(String(a.json.name)) ? at.get(String(a.json.name)) : Infinity, y = at.has(String(b.json.name)) ? at.get(String(b.json.name)) : Infinity;
+    return x !== y ? (x < y ? -1 : 1) : cmp(shown(a), shown(b)) || cmp(String(a.rel || ''), String(b.rel || '')); }); };
 export function textsOf(R) {
   const all = [], seen = new Set(), names = fieldNamesOf(R);
   const translatable = new Set(titleMeasuresOf(R).filter((x) => x.own && x.pd.branches).map((x) => x.entity + '\u0000' + x.name));
   const add = (t, where) => { if (seen.has(t.id)) return; seen.add(t.id); all.push(Object.assign(t, where)); };
-  R.pages.forEach((pg) => {
+  R.pages.forEach((pg0) => { const pg = Object.assign({}, pg0, { visuals: readingOrder(pg0.visuals) });   // (DT1: the reading order)
     add({ id: 'page:' + pg.id, kind: 'page', text: typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : '' }, { page: pg.id });
     // (rc.22, B-138: a page button kept its English text in the twin) a button that goes to a page knows that page
     const goesTo = (j) => { const l = ((((j || {}).visual || {}).visualContainerObjects || {}).visualLink || []).find((e) => e && e.properties) || {}, p = l.properties || {}, lit = (x) => (x && x.expr && x.expr.Literal ? String(x.expr.Literal.Value).replace(/^'|'$/g, '') : null);
@@ -264,7 +283,7 @@ export function textsOf(R) {
     // (0.3.0 D3) the phone layout's own texts: the header text box, a card's full title the writer wrapped for the phone
     pg.visuals.forEach((v) => { if (v.mobile) Mirror.textsOfMobile(pg.id, v.json, v.mobile.json).forEach((t) => add(Object.assign(t, { phone: true }), { page: pg.id, visual: String(v.json.name) })); });
   });
-  R.bookmarks.forEach((b) => add({ id: 'bookmark:' + b.json.name, kind: 'bookmark', text: typeof b.json.displayName === 'string' ? b.json.displayName : '' }, {}));
+  bookmarksInOrder(R).forEach((b) => add({ id: 'bookmark:' + b.json.name, kind: 'bookmark', text: typeof b.json.displayName === 'string' ? b.json.displayName : '' }, {}));
   // (SQ4, X1-S2) a bookmark group's name (bookmarks.json), shown in the Bookmarks pane above its bookmarks
   (R.bookmarkGroups || []).forEach((g) => add({ id: 'bookmarkGroup:' + g.name, kind: 'bookmarkGroup', text: g.displayName }, {}));
   // (rc.24) each visible text of the report's title measures, one per text across the report (the measures listed)

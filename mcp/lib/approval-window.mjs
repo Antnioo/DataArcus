@@ -250,7 +250,7 @@ const HEAD_AR = [['Report', 'التقرير'], ['Layout', 'التخطيط'], ['F
   ['Flip cards', 'البطاقات القابلة للقلب'], ['Status icons', 'أيقونات الحالة'], ['Waterfalls, right to left', 'الشلالات من اليمين إلى اليسار'], ['Metric switcher', 'مبدّل المقاييس'], ['Thinner bars', 'أشرطة أرفع'], ['Visual gallery', 'معرض المرئيات'],
   ['Custom visuals replaced', 'المرئيات المخصصة المستبدلة'],
   // (FX1) the rest an Arabic page shows
-  ['Not fully Arabic', 'ليست عربية بالكامل'], ['Matrices written as tables', 'المصفوفات المكتوبة جداول'], ['More', 'المزيد'], ['Already there, not written again', 'موجود من قبل، لا يُكتب مرة أخرى'], ['Answers to record', 'الإجابات التي ستُسجَّل']];
+  ['Not fully Arabic', 'ليست عربية بالكامل'], ['Matrices written as tables', 'المصفوفات المكتوبة جداول'], ['Visuals the twin adds', 'مرئيات تضيفها النسخة العربية'], ['More', 'المزيد'], ['Already there, not written again', 'موجود من قبل، لا يُكتب مرة أخرى'], ['Answers to record', 'الإجابات التي ستُسجَّل']];
 // (0.3.1 LR1) the sample section's row names in Arabic
 const SAMPLE_AR = { 'What it is': 'ما هو', 'Made up': 'بيانات تجريبية', Folder: 'المجلد', 'To open': 'للفتح', 'Date table': 'جدول التاريخ', Report: 'التقرير', Relationships: 'العلاقات', 'The rows': 'الصفوف' };
 // (SQ3, T1-S9: «تظهر بالإنجليزية · Shown in English (21, no Arabic text)» kept the count's words English only) a count
@@ -679,6 +679,10 @@ function summaryOf(kind, data) {
     const AT = d.preview && Array.isArray(d.preview.asTables) ? d.preview.asTables.slice(0, 30) : [];
     if (AT.length) sections.push({ heading: `Matrices written as tables (${AT.length})`, rows: AT.map((x) => [{ en: `Page "${String(x.page)}": ${x.title ? `"${String(x.title)}" ` : ''}(${String(x.visual)})`, ar: `صفحة «${String(x.pageAr || x.page)}»: ${x.titleAr || x.title ? `«${String(x.titleAr || x.title)}» ` : ''}(${String(x.visual)})` },
       { en: 'written as a table so its first column reads on the right: Power BI\'s matrix has no right-to-left setting', ar: 'كُتبت جدولًا ليُقرأ عمودها الأول من اليمين: لا يوجد في مصفوفة Power BI إعداد من اليمين إلى اليسار' }]) });
+    // (0.3.2 HM1, B-297: Codex N1-1) each visual the twin adds, by the name it is written under, beside its heatmap
+    const AD = Array.isArray(d.added) ? d.added.slice(0, 30) : [];
+    if (AD.length) sections.push({ heading: `Visuals the twin adds (${AD.length})`, rows: AD.map((x) => [{ en: `Page "${String(x.page)}": ${String(x.name)}`, ar: `صفحة «${String(x.page)}»: ${String(x.name)}` },
+      { en: `a table of the weekday names beside the heatmap ${String(x.beside)}, at its grid's right edge (a new visual; nothing of the report is written over)`, ar: `جدول بأسماء أيام الأسبوع بجانب الخريطة الحرارية ${String(x.beside)}، عند الحافة اليمنى لشبكتها (مرئي جديد؛ لا يُكتب فوق أي شيء من التقرير)` }]) });
     // (0.3.1 K2) what stays English or unmirrored in this report, in one line (Arabic first: the page is Arabic)
     const NF = d.notFullyArabic && typeof d.notFullyArabic === 'object' ? d.notFullyArabic : null;
     if (NF && NF.en) sections.push({ heading: 'Not fully Arabic', rows: [[{ en: 'In short', ar: 'باختصار' }, { en: String(NF.en), ar: String(NF.ar || NF.en) }]] });
