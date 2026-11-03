@@ -74,6 +74,9 @@ package's manifest; this file says what is in it.
   its own; every twin and its plan are byte for byte what they were before.
 - **Inside the MCP, the model reader:** the screen that marks names reading like instructions, how a name is shown,
   the column types and the KPI list each have a file of their own; read_model answers exactly as before.
+- **Inside the MCP, the approval page:** what each approval page and the app's own prompt say about a plan is put
+  together in one file of its own; every page and prompt is exactly what it was before, and only the click in
+  DataArcus's own window approves a plan, as before.
 
 ## [0.3.1]: 2026-11-03 (the version for testers)
 Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports

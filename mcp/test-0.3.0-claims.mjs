@@ -44,7 +44,7 @@ check(g.some((x) => x.label === 'Flip cards script' && x.paths.length === 1) && 
 const sm = summary('report', { outputs: ['R.Report/definition/report.json', 'R - flip cards.tmdl'], pins: { create_report: {} } }).files || [];
 check(sm.some((x) => x.label === 'Flip cards script') && !sm.some((x) => x.label === 'Format script'), 'A2-A1. the report page\'s file list says "Format script" for the flip cards\' script');
 // A2 the 3:1 rule for a data colour is WCAG 2.1's non-text contrast (1.4.11); Power BI's accessibility page states none
-const aw = read('./lib/approval-window.mjs');
+const aw = read('./lib/approval-window.mjs') + read('./lib/approval-disclosure.mjs');   // (0.3.2 SP23: what the page says moved there)
 check(!/Power BI's accessibility basics/.test(aw) && /WCAG 2\.1/.test(aw), 'A2-A2. the approval page credits the 3:1 rule for data colours to "Power BI\'s accessibility basics"');
 // A3 the app's prompt: the contrast it gives is the approved colour's, said as such, with the written colour's own
 const ps = promptSummary('report', { colours: { changed: [{ from: '#f4b183', to: '#c55a11', contrast: 1.9 }], card: '#ffffff' } });
@@ -108,7 +108,7 @@ check(/2\.159\.883\.0/.test(mreadme) && !/to the latest version/.test(mreadme) &
 // The forbidden words, in every file that speaks for DataArcus (EN and AR): no "first"/"only" of its kind, no
 // official, certified, partner, AI-powered; nothing on Microsoft's Power BI Report skill comparison; nothing of 0.3.1
 const SPEAK = ['./PRIVACY.md', './README.md', './TOOLS.md', '../README.md', './server.mjs', './lib/agent-text.mjs', './skills/report-design/SKILL.md',
-  './lib/approval-window.mjs', '../power-bi-mcp/index.html', '../ar/power-bi-mcp/index.html', '../assets/js/translations/beta-page.js'];
+  './lib/approval-window.mjs', './lib/approval-disclosure.mjs', '../power-bi-mcp/index.html', '../ar/power-bi-mcp/index.html', '../assets/js/translations/beta-page.js'];
 const BANNED = [
   [/\b(?:world'?s|our) first\b|\bthe first (?:MCP|tool|Power BI tool|of its kind)\b|\bfirst of its kind\b|\bonly (?:tool|MCP) (?:that|to|for)\b|\bthe only (?:tool|MCP|one that)\b/i, 'a first-of-kind or only-one claim'],
   [/\bofficial\b(?! (?:weekend|announcement|Ramadan|dates?|Microsoft))/i, '"official" said of DataArcus'],

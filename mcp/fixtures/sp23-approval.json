@@ -1,0 +1,117 @@
+{
+ "about": "SP23: sha256 and length of each approval page (the real server, GET on its link) and of the app's own prompt for 12 made-up plans, and of promptSummary at its cap and a hostile plan's page, recorded on integration/0.3.2 1ed6089 (before approval-disclosure.mjs). The secret, port, plan id, temp folder and the random page and visual folder names replaced by markers, the terminology sheet's rows sorted, \"\\\\\" by \"/\" (test-0.3.2-sp23.mjs).",
+ "pages": {
+  "report-en": {
+   "sha256": "fafddd14f370e1f32c06021983579270e769168f8f207d2eb0e03a775e473270",
+   "length": 95538
+  },
+  "report-ar": {
+   "sha256": "f10da90fde2f2de77fe5229deb994b64fd2140a4b1e33ac8cebb10692d9c74a2",
+   "length": 97647
+  },
+  "report-cap": {
+   "sha256": "78da36e474653848b61e811e95e8bc01dbfaac291af0f3885c15a2fe8e1231b2",
+   "length": 48530
+  },
+  "report-hostile": {
+   "sha256": "52785a3f2a9f96cb28e451b2a5ec6c32e8df4250bd886adf97e7700bfaf5e421",
+   "length": 95898
+  },
+  "twin": {
+   "sha256": "400feed18f2c775e93da5c8e219874945983015a385ce301a5745521fa1b76cc",
+   "length": 21978
+  },
+  "copy": {
+   "sha256": "9454b55563ad9cb76304322c8c0978bb87f658938ad986dd6f6545ff03620088",
+   "length": 38578
+  },
+  "theme-en": {
+   "sha256": "4f7cbe87bc2dab07883386dc0bc59a3d6cba78b7e89fa3a1684ce17cebd329eb",
+   "length": 6057
+  },
+  "theme-ar": {
+   "sha256": "851b33433209366297f1ca4a656fb8d7a0b4969ee8244beb14315beabe24c989",
+   "length": 6061
+  },
+  "redesign": {
+   "sha256": "24bac4b92868aedbbb8cab9986863658087576efd0cf82bb86443f70b8f02609",
+   "length": 15510
+  },
+  "calendar-ar": {
+   "sha256": "249c221a4276e1c283bdd91bc0ac48fc70936b9ed3fe600ed38942716c55155c",
+   "length": 6859
+  },
+  "scripts": {
+   "sha256": "1da92558ea3685de1a600e17ee85c65af300aff5eafc6361c74fd02c93abd955",
+   "length": 4924
+  },
+  "sample": {
+   "sha256": "a6cb3fd1027d4c7d1ed67b956b0d96d2e17ffc1d35f8daac14b3395554e7a74a",
+   "length": 7324
+  }
+ },
+ "prompts": {
+  "report-en": {
+   "sha256": "36a67213d25c7c4038cb369c01264344d4e555361d07f942954cf763b2645ad1",
+   "length": 818
+  },
+  "report-ar": {
+   "sha256": "9436212c17c9946824419a503420ea61dabb647d9009a00cea4d9c11ae067f48",
+   "length": 1744
+  },
+  "report-cap": {
+   "sha256": "34239f8985a9e09b0c38637ad1408679b7a616d96fbbd3403ebaadc39980b461",
+   "length": 787
+  },
+  "report-hostile": {
+   "sha256": "14db458a382de62be6d338f7e9d4eb457daf39f718efccafaa657d98e9c0029f",
+   "length": 822
+  },
+  "twin": {
+   "sha256": "da675e9234adea15c80d73a4d25d1a25d78c7445dc9151fe3da21469dbf1f7ad",
+   "length": 2225
+  },
+  "copy": {
+   "sha256": "672ae93263a19b9affc5b9431e7463d2a0ea265615627d5603961590be7b80b7",
+   "length": 2644
+  },
+  "theme-en": {
+   "sha256": "78a9c6d701b68586df0d27c3a70c7d230676bce492d02a0512ba1730fbef2ed0",
+   "length": 515
+  },
+  "theme-ar": {
+   "sha256": "aab4d63aeb8c99a7fc2679aa27cea1324202f1b73c36f98a4b627f071715c4fb",
+   "length": 1045
+  },
+  "redesign": {
+   "sha256": "73c0c923b65f2e3875a868bdf0e77a94e12a9c7b142eb9ed97aa17516bf4b44b",
+   "length": 742
+  },
+  "calendar-ar": {
+   "sha256": "8870b94ef645b657fc2c2f16c0b50214f22e49b86c798a0e7f2ff703727bf6b4",
+   "length": 1480
+  },
+  "scripts": {
+   "sha256": "5af7375f99a33d840fac27a8009daa2fa892f76c5b0d6255a78f628a4b5a719f",
+   "length": 929
+  },
+  "sample": {
+   "sha256": "cd439aabebcd3db82327a716877598016402b3b10cb897c6ded170251930dd62",
+   "length": 702
+  }
+ },
+ "unit": {
+  "capEn": {
+   "sha256": "849b368c5f0dbc1fac2970587f84cd26b68e55b1d882e364adaa5f67a460db81",
+   "length": 520
+  },
+  "capAr": {
+   "sha256": "1a026469028fe9cd88d9e2cb6f58ac4614641df0014981cb9bb70d61cd9ba9ad",
+   "length": 539
+  },
+  "hostile": {
+   "sha256": "08c663213cd79463b65bfa91148c59c826baa22de4c678922b7720a83f8808dc",
+   "length": 8367
+  }
+ }
+}
