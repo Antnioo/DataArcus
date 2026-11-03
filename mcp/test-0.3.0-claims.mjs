@@ -197,7 +197,8 @@ check(/From 0\.3\.1/.test(tl('en', 'check_report')) && /ready for Arabic/.test(t
 check(/From 0\.3\.1/.test(tl('en', 'plan_layout')) && /English and Arabic/.test(tl('en', 'plan_layout')) && /0\.3\.1/.test(tl('ar', 'plan_layout')), 'D5-B2. beta-page plan_layout (EN, AR) does not say one report in English and Arabic comes with 0.3.1');
 check(EN.html.includes('From 0.3.1') && AR.html.includes('0.3.1'), 'D5-B3. the MCP page (EN, AR) does not carry the 0.3.1 tool lines (scripts/ar-pages.mjs --write and the page)');
 // D5-W the forbidden words, a Mac claim and a matrix promise, over the texts this sweep touched
-const unrel = (read('./CHANGELOG.md').match(/^## \[Unreleased\][^\n]*\n([\s\S]*?)(?=^## )/m) || [])[1] || '';
+// (3 Nov, the 0.3.1 release) 0.3.1's section by its version: "[Unreleased]: 0.3.1" before the release, "[0.3.1]" after
+const unrel = (read('./CHANGELOG.md').match(/^## \[(?:Unreleased\]: 0\.3\.1|0\.3\.1\])[^\n]*\n([\s\S]*?)(?=^## )/m) || [])[1] || '';
 const D5_TEXTS = { 'PRODUCT_SPEC.md': spec, 'llms.txt': llms, 'CHANGELOG [Unreleased]': unrel.replace(/\s+/g, ' ') };
 for (const [f, t] of Object.entries(D5_TEXTS)) {
   for (const [re, what] of BANNED) { const m = re.exec(t); check(t && !m, `D5-W. ${f}: ${t ? what + ': "' + (m ? t.slice(Math.max(0, m.index - 40), m.index + 60) : '') + '"' : 'empty'}`); }
@@ -456,7 +457,7 @@ for (const [k, t] of [['articleAr', GC.articleAr], ['articleTr', arHalf(GC.artic
 {
   const box = { window: {} }; (await import('node:vm')).runInNewContext(read('../assets/js/translations/beta-page.js'), box);
   const N = (l) => (((box.window.betaPageTranslations || {})[l] || {}).beta || {}).new31 || {}, en = N('en'), ar = N('ar');
-  const cl = flat('./CHANGELOG.md'), un = cl.slice(cl.indexOf('## [Unreleased]'), cl.indexOf('## [', cl.indexOf('## [Unreleased]') + 5));
+  const cl = flat('./CHANGELOG.md'), at = cl.search(/## \[(?:Unreleased\]: 0\.3\.1|0\.3\.1\])/), un = cl.slice(at, cl.indexOf('## [', at + 5));
   const pages = [EN.html, AR.html];
   // F05: glass for reports DataArcus plans; hand-placed pages and a theme used alone said as they are
   check(!/every new report create_report writes has it/.test(un) && /planned with plan_layout/.test(un) && /Pages you place yourself/.test(un) && /still to be measured/.test(un), 'CX2-F05. CHANGELOG: glass on "every new report"; hand-placed pages and a theme used alone not said');

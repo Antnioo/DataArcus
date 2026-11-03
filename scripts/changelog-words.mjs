@@ -28,11 +28,18 @@ export function unreleased(md) {
   return m ? { text: m[1], lines: m[1].split('\n').filter((l) => l.trim()) } : null;
 }
 
+// (3 Nov, the 0.3.1 release) the section users read now: the file's first section, [Unreleased] or a version (an older
+// "[Unreleased]" lower in the file is history, never this)
+export function newest(md) {
+  const m = /^## \[[^\n]*\n([\s\S]*?)(?=^## |(?![\s\S]))/m.exec(String(md).replace(/\r\n/g, '\n'));
+  return m ? { text: m[1], lines: m[1].split('\n').filter((l) => l.trim()) } : null;
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const file = process.argv[2] || path.join(ROOT, 'mcp/CHANGELOG.md');
-  const sec = unreleased(fs.readFileSync(file, 'utf8'));
-  if (!sec) { console.log(`FAIL  changelog-words  no "## [Unreleased]" section in ${path.relative(ROOT, file)}`); process.exit(1); }
+  const sec = newest(fs.readFileSync(file, 'utf8'));
+  if (!sec) { console.log(`FAIL  changelog-words  no "## [Unreleased]" or version section in ${path.relative(ROOT, file)}`); process.exit(1); }
   const bad = internalCodes(sec.text);
-  if (bad.length) { console.log(`FAIL  changelog-words  ${bad.length} of ${sec.lines.length} [Unreleased] lines hold an internal code (keep codes in mcp/work/*.md):\n` + bad.map((b) => `      - ${b.codes.join(', ')}: ${b.line.trim().slice(0, 120)}`).join('\n')); process.exit(1); }
-  console.log(`PASS  changelog-words  ${sec.lines.length} checks (every [Unreleased] line in plain words)`);
+  if (bad.length) { console.log(`FAIL  changelog-words  ${bad.length} of ${sec.lines.length} [Unreleased] hold an internal code (keep codes in mcp/work/*.md):\n` + bad.map((b) => `      - ${b.codes.join(', ')}: ${b.line.trim().slice(0, 120)}`).join('\n')); process.exit(1); }
+  console.log(`PASS  changelog-words  ${sec.lines.length} checks (every line of the newest section in plain words)`);
 }
