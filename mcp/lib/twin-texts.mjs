@@ -79,8 +79,25 @@ function parseTitleDax(expr0, o) {
 }
 // the measure's DAX with the Arabic texts (one per branch, its {n} the branch's variables); a branch without a label keeps its own
 const daxText = (t) => '"' + String(t).replace(/"/g, '""') + '"';
+// (0.3.2 LV1, the owner's ER twin shot, 1 Nov: «الأكثر ازدحامًا: اليوم:Thursday الساعة:11:00 PM», the value glued and out
+// of reading order) in an Arabic label each value of the model is written in a first-strong isolate, UNICHAR ( 8296 ) &
+// value & UNICHAR ( 8297 ) (text-measure.js runs(), pbip-query.js isoNum), and a right-to-left mark, UNICHAR ( 8207 ), at
+// an end of the text that is a value (text-measure.js ends()). UNICHAR, not the marks inside the strings: the label's
+// texts stay byte for byte as approved, and no invisible character goes into the DAX. A label with no Arabic letter, or
+// a branch with no value, is written as before.
+const ISO_IN = 'UNICHAR ( 8296 )', ISO_OUT = 'UNICHAR ( 8297 )', RLM_DAX = 'UNICHAR ( 8207 )';
+function isoValues(pieces) {   // pieces: [{ v: variable } | { t: text }] of an Arabic label
+  const out = pieces.map((p) => (p.v != null ? `${ISO_IN} & ${p.v} & ${ISO_OUT}` : daxText(p.t)));
+  const blank = (p) => p.t != null && !p.t.trim();
+  const a = pieces.findIndex((p) => !blank(p)), z = pieces.length - 1 - [...pieces].reverse().findIndex((p) => !blank(p));
+  if (a >= 0 && pieces[a].v != null) out[a] = `${RLM_DAX} & ${out[a]}`;
+  if (z >= 0 && pieces[z].v != null) out[z] = `${out[z]} & ${RLM_DAX}`;
+  return out;
+}
 export function arabicDax(pd, labels) {
-  const one = (b, label) => { if (label == null) label = b.template; const out = []; String(label).split(/(\{\d+\})/).forEach((x) => { const v = /^\{(\d+)\}$/.exec(x); if (v) out.push(b.vars[+v[1] - 1]); else if (x) out.push(daxText(x)); }); return out.length ? out.join(' & ') : '""'; };
+  const one = (b, label) => { if (label == null) label = b.template; const pieces = []; String(label).split(/(\{\d+\})/).forEach((x) => { const v = /^\{(\d+)\}$/.exec(x); if (v) pieces.push({ v: b.vars[+v[1] - 1] }); else if (x) pieces.push({ t: x }); });
+    const out = TextMeasure.ARABIC.test(String(label)) && pieces.some((p) => p.v != null) ? isoValues(pieces) : pieces.map((p) => (p.v != null ? p.v : daxText(p.t)));
+    return out.length ? out.join(' & ') : '""'; };
   const bs = pd.branches.map((b, i) => one(b, labels[i]));
   return (pd.ret ? pd.prefix + 'RETURN ' : '') + (pd.cond != null ? `IF ( ${pd.cond}, ${bs[0]}, ${bs[1]} )` : bs[0]);
 }

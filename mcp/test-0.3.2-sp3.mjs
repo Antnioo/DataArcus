@@ -75,6 +75,7 @@ const SEED = pathToFileURL(path.join(HERE, 'fixtures', 'sp1', 'seeded-random.mjs
 const s = await serverClient(ROOT, { NODE_OPTIONS: [process.env.NODE_OPTIONS, `--import ${SEED}`].filter(Boolean).join(' ') });
 const ask = async (name, args) => { try { return await s.call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
 const got = {};
+let lv1Ext = null;   // (0.3.2 LV1) R5's reportExtensions.json, for L1 below
 try {
   for (const [name, dir, , args] of CASES) {
     let pl = await ask('plan_layout', args);
@@ -85,6 +86,7 @@ try {
     if (id) await ask('approve_plan', { planId: id });
     const cr = id ? await ask('create_report', { path: args.sample ? folder : args.path, planId: id }) : null;
     got[name] = { plan: { err: pl.err, t: norm(pl.t) }, report: cr ? { err: cr.err, t: norm(cr.t) } : null, files: folder ? filesOf(path.join(ROOT, folder)) : '' };
+    if (/^R5 /.test(name)) { const x = path.join(ROOT, folder, 'SP3 both.Report/definition/reportExtensions.json'); lv1Ext = fs.existsSync(x) ? fs.readFileSync(x, 'utf8') : null; }
   }
 } finally { await s.close(); }
 if (process.env.SP3_DUMP) fs.writeFileSync(process.env.SP3_DUMP, JSON.stringify(got, null, 1));
@@ -94,6 +96,15 @@ if (process.env.SP3_RECORD) fs.writeFileSync(GOLD, JSON.stringify({ about: 'test
 const gold = JSON.parse(fs.readFileSync(GOLD, 'utf8')).runs;
 for (const [name] of CASES) chk(() => gold[name] && JSON.stringify(now[name]) === JSON.stringify(gold[name]),
   () => `${name.split(' ')[0]}. "${name.replace(/^R\d+ /, '')}": create_report's answer and the written files are the base's, byte for byte: now ${JSON.stringify(now[name])}, recorded ${JSON.stringify(gold[name] || null)} (SP3_DUMP=<file> writes them)`);
+
+// (0.3.2 LV1, changed on purpose: R5's recorded plan, answer and files hashes are LV1's, by hand, not by SP3_RECORD) the
+// bilingual report's Arabic title measures write each value in a first-strong isolate; with those isolates taken out,
+// its reportExtensions.json is the base's file byte for byte (its hash as recorded on the base, 4418828), so nothing
+// else in R5 moved: the other differences were the plan's digest of these files
+const BASE_EXT = 'e3986dfffeed6a099ae26a92148014cb4e805cd8fa597d5e10191db82d1be036';
+const unLv1 = (t) => t.replace(/(?:UNICHAR \( 8207 \) & )?UNICHAR \( 8296 \) & (_[A-Za-z0-9_]+) & UNICHAR \( 8297 \)(?: & UNICHAR \( 8207 \))?/g, '$1');
+chk(() => lv1Ext && /UNICHAR \( 8296 \) & _s & UNICHAR \( 8297 \)/.test(lv1Ext) && (norm(unLv1(lv1Ext)) !== unLv1(lv1Ext) ? sha(norm(unLv1(lv1Ext))) : sha(unLv1(lv1Ext))) === BASE_EXT,
+  () => `L1. R5's reportExtensions.json is the base's but for LV1's isolates: ${lv1Ext ? sha(norm(unLv1(lv1Ext))) : 'not written'}`);
 
 // the answers show the pieces that moved (the notes, the number formats, the chart colours, the KPI values, the looks,
 // the scripts offered and the names), so each is compared; and a refusal (R7) and the files of every written run
