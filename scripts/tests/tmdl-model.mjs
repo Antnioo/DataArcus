@@ -7,7 +7,8 @@ import zlib from 'node:zlib';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const load = (file) => { const m = { exports: {} }; new Function('module', 'exports', 'self', fs.readFileSync(path.join(ROOT, 'assets/js', file), 'utf8'))(m, m.exports, undefined); return m.exports; };
+// (0.3.2 SP9) a file's require (the engine's dax-reference-parser.js) loads its neighbour the same way, minified or not
+const load = (file) => { const m = { exports: {} }; new Function('module', 'exports', 'self', 'require', fs.readFileSync(path.join(ROOT, 'assets/js', file), 'utf8'))(m, m.exports, undefined, (dep) => load(path.basename(dep).replace(/(\.min)?\.js$/, /\.min\.js$/.test(file) ? '.min.js' : '.js'))); return m.exports; };
 
 // Pairs saved from the same open model in Power BI Desktop: File > Save as (TMDL project) and File > Export > Power BI template
 export const PAIRS = ['tmdl-health', 'tmdl-ramadan'];
