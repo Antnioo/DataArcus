@@ -28,11 +28,16 @@
 - **Areas** (2bfe822, the last code commit, SP2 merged in): report, arabic, core 71 of 71 suites PASS; every suite
   the base ran (report, arabic: 59) has the same count after. Website: sp6 4, design-engine 600, theme-generator(-lab)
   922 each, theme-logo 753, pbip 111, layout(-lab) 512 each. Lint 0, check:min, csp, ar-pages, sitemap: no change.
-- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41564683132 on e437847** (Linux, Windows, macOS).
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41569248030 on 52276d8** (after merging in
+  integration/0.3.2 at 7797bf6, SP5 and SP4; Linux, Windows, macOS). The earlier green run: 41564683132 on e437847.
 - **State: DONE.**
 - **Resume:** none; the reviewer's merge.
 
 ## Runs
+- 3 Nov, the reviewer's message: merged integration/0.3.2 at 7797bf6 (SP5, SP4) in at 52276d8: run-all.mjs, tests.json and
+  the CHANGELOG kept both sides (sp4, sp5, sp6 once each); no .min.js or BUILDER stamp moved (one stamp per path). On
+  52276d8: report, arabic, core 73 of 73 PASS; website sp5 3, sp6 4, design-engine 600, theme-generator(-lab) 922,
+  theme-logo 753, pbip 111, layout(-lab) 512; lint 0; csp, ar-pages, sitemap: no change.
 - Base 04a9922 (worktree): report + arabic 59 suites PASS. After 090d527: report + arabic + core 70 PASS. After the
   merge 2bfe822: 71 PASS (+ sp2). Core was not run on the base locally (its suites pass after, CI green).
 - integration/0.3.2 moved to 66f93a0 (SP2) while CI ran: merged in (tests.json's report area: both sides' paths), the
