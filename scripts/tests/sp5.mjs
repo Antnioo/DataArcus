@@ -7,6 +7,7 @@
 // recorded, compared whole only with SP5_WHOLE=1 on the machine that recorded them.
 //   W1, W2  EN and AR: the same files in the same order, every file but the PNGs byte for byte, and the ZIP container
 //           byte for byte the writer's ZIP of its own entries (same clock)
+//   W3      the page loaded pbip-zip.min.js and pbip-sample.min.js after pbip-query, before pbip-export (SP5's move)
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -57,6 +58,7 @@ export default async function ({ browser, url }) {
   const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
   const record = process.env.SP5_RECORD === '1', whole = process.env.SP5_WHOLE === '1';
   const gold = record ? {} : JSON.parse(fs.readFileSync(GOLD, 'utf8')), got = {};
+  const loaded = []; let badOrder = false;
 
   for (const lang of ['en', 'ar']) {
     const v = await visitor(browser, { viewport: [1440, 900], downloads: true });
@@ -73,6 +75,10 @@ export default async function ({ browser, url }) {
     const asked = await Promise.race([dlp.then(() => false), v.pg.waitForSelector('#pbipNames:not([hidden])', { timeout: 60000 }).then(() => true)]);
     if (asked) { await v.pg.$$eval('#pbipNames input[type=checkbox]', (cs) => cs.forEach((c) => { c.checked = true; c.dispatchEvent(new Event('change', { bubbles: true })); })); await v.pg.click('#pbipNamesOk'); }
     const buf = fs.readFileSync(await (await dlp).path());
+    // (W3) the scripts the page loaded, in the order it asked for them (BUILDER loads one after the other): the writer's ZIP and sample model before the writer
+    const order = await v.pg.evaluate(() => performance.getEntriesByType('resource').sort((x, y) => x.startTime - y.startTime).map((x) => x.name).filter((x) => /\/pbip-(query|zip|sample|export)\.min\.js/.test(x)).map((x) => x.replace(/^.*\/(pbip-\w+)\.min\.js.*$/, '$1')));
+    loaded.push(lang + ': ' + order.join(' '));
+    if (!(order.includes('pbip-zip') && order.includes('pbip-sample') && order.indexOf('pbip-query') < order.indexOf('pbip-sample') && order.indexOf('pbip-zip') < order.indexOf('pbip-export') && order.indexOf('pbip-sample') < order.indexOf('pbip-export') && order.filter((x) => x === 'pbip-export').length === 1)) badOrder = true;
     if (v.errs.length) problems.push(`${lang}: ${v.errs.join(' | ')}`);
     await v.ctx.close();
 
@@ -90,6 +96,7 @@ export default async function ({ browser, url }) {
     if (whole && now.zip !== g.zip) bad.push(`the whole ZIP differs (${now.zip.slice(0, 12)}, recorded ${String(g.zip).slice(0, 12)}; PNGs differ: ${Object.keys(now.png).filter((k) => now.png[k] !== (g.png || {})[k]).length})`);
     check(!bad.length, `${lang === 'en' ? 'W1' : 'W2'} ${lang} download: ${bad.join('; ')}`);
   }
+  if (!record) check(!badOrder, `W3 the page must load pbip-query, then pbip-zip and pbip-sample, before pbip-export (once): ${loaded.join(' | ')}`);
   if (record) { fs.writeFileSync(GOLD, JSON.stringify(got, null, 1) + '\n'); checks += 2; }
   return { checks, problems };
 }

@@ -8,6 +8,8 @@
 //   Z3  the same entries give the same bytes twice, stored (no compression)
 //   S1-S4  build with the sample model, EN and AR (right to left) x two themes: the ZIP and every file
 //   F1  fitOptions for the sample, EN and AR;  A1  AR_MONTHS
+//   after the move: M1  the facade's zip and crc32 are pbip-zip.js's;  M2  the sample table is pbip-sample.js's model(lang)
+//   and pbip-export.js holds no second copy;  M3  theme-generator.js's BUILDER loads both after pbip-query, before the writer
 //   node test-0.3.2-sp5.mjs
 import fs from 'node:fs';
 import path from 'node:path';
@@ -64,6 +66,18 @@ try {
   }
   chk(() => same('F1', ['en', 'ar'].map((lang) => sha(JSON.stringify(Pbip.fitOptions(input(lang, 'DataArcus', false)))))), () => 'F1 fitOptions for the sample differ: ' + diff('F1'));
   chk(() => same('A1', Pbip.AR_MONTHS), () => 'A1 AR_MONTHS differ: ' + diff('A1'));
+
+  // ---------- after the move (SP5): the facade uses the two modules; the website loads them before it ----------
+  const Zip = require('../assets/js/pbip-zip.js'), Sample = require('../assets/js/pbip-sample.js');
+  chk(() => Pbip.zip === Zip.zip && Pbip.crc32 === Zip.crc32 && sha(Zip.zip(entries)) === sha(z), () => 'M1 pbip-export.js must give pbip-zip.js\'s zip and crc32 (one ZIP encoder)');
+  const src = fs.readFileSync(path.join(HERE, '..', 'assets', 'js', 'pbip-export.js'), 'utf8');
+  const bim = (lang) => { seed(1); const r = Pbip.build(input(lang, 'DataArcus', false)); return JSON.parse(r.files.find((f) => /model\.bim$/.test(f.path)).data).model.tables[0]; };
+  chk(() => ['en', 'ar'].every((lang) => JSON.stringify(Sample.model(lang)) === JSON.stringify(bim(lang))) && !/DATATABLE|0xedb88320|function sampleModel|function zip/.test(src),
+    () => 'M2 the sample table written is pbip-sample.js\'s model(lang), and pbip-export.js holds no second ZIP encoder or sample model');
+  const tg = fs.readFileSync(path.join(HERE, '..', 'assets', 'js', 'theme-generator.js'), 'utf8'), list = (tg.match(/const BUILDER = \[([^\]]*)\]/) || [])[1] || '';
+  const at = (f) => list.indexOf('/assets/js/' + f + '.min.js?v='), once = (f) => list.split('/assets/js/' + f + '.min.js?v=').length === 2;
+  chk(() => ['pbip-query', 'pbip-zip', 'pbip-sample', 'pbip-export'].every(once) && at('pbip-query') < at('pbip-sample') && at('pbip-zip') < at('pbip-export') && at('pbip-sample') < at('pbip-export'),
+    () => 'M3 theme-generator.js\'s BUILDER loads pbip-zip and pbip-sample once each, after pbip-query and before pbip-export: ' + list.slice(0, 300));
 
   if (RECORD) fs.writeFileSync(GOLD, JSON.stringify(got, null, 1) + '\n');
 } catch (e) { problems.push('crashed: ' + String(e && e.stack || e).slice(0, 400)); }
