@@ -1,0 +1,5278 @@
+{
+ "about": "test-0.3.2-sp19.mjs: planRedesign on 10 made-up reports, recorded on the base (integration/0.3.2 763632d): problems, patches and page entries verbatim, the whole answer as sha256 and length (the working folder normalised)",
+ "cases": {
+  "C1 the twin as it is": {
+   "problems": [],
+   "patches": [
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 600,
+     "to": 602
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/x",
+     "from": 660,
+     "to": 658
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/width",
+     "from": 580,
+     "to": 582
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/x",
+     "from": 760,
+     "to": 756
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 90,
+     "to": 76
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 220,
+     "to": 228
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/x",
+     "from": 1000,
+     "to": 996
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/width",
+     "from": 860,
+     "to": 864
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/height",
+     "from": 500,
+     "to": 522
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/width",
+     "from": 900,
+     "to": 916
+    },
+    {
+     "file": ".platform",
+     "pointer": "/metadata/displayName",
+     "from": null,
+     "to": "Twin Sales redesigned"
+    },
+    {
+     "file": ".platform",
+     "pointer": "/config/logicalId",
+     "from": null,
+     "to": "a new id"
+    }
+   ],
+   "pages": [
+    {
+     "id": "p1overview",
+     "page": "Overview",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Overview",
+       "visual": "colRegion",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "40,250 600x430",
+       "from": {
+        "x": 40,
+        "y": 250,
+        "w": 600,
+        "h": 430
+       },
+       "to": {
+        "x": 40,
+        "y": 246,
+        "w": 602,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "lineMonth",
+       "type": "lineChart",
+       "fields": [
+        "Calendar[Month Name]",
+        "[Total Sales]"
+       ],
+       "place": "660,250 580x430",
+       "from": {
+        "x": 660,
+        "y": 250,
+        "w": 580,
+        "h": 430
+       },
+       "to": {
+        "x": 658,
+        "y": 246,
+        "w": 582,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "slRegion",
+       "type": "slicer",
+       "fields": [
+        "Sales[Region]"
+       ],
+       "place": "760,90 220x140",
+       "from": {
+        "x": 760,
+        "y": 90,
+        "w": 220,
+        "h": 140
+       },
+       "to": {
+        "x": 756,
+        "y": 76,
+        "w": 228,
+        "h": 140
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnDetails",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,90 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "btnReset",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,150 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "cardOrders",
+       "type": "card",
+       "fields": [
+        "[Orders]"
+       ],
+       "place": "380,100 200x120",
+       "why": "inside the group Orders block: the group places it"
+      },
+      {
+       "visual": "cardSales",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "40,90 300x140",
+       "why": "inside the group KPI row: the group places it"
+      },
+      {
+       "visual": "grpInner",
+       "type": "group",
+       "fields": [],
+       "place": "360,90 380x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "grpKpi",
+       "type": "group",
+       "fields": [],
+       "place": "40,90 700x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "nav",
+       "type": "pageNavigator",
+       "fields": [],
+       "place": "880,20 360x40",
+       "why": "the page navigator: kept where it is"
+      },
+      {
+       "visual": "title",
+       "type": "textbox",
+       "fields": [],
+       "place": "40,20 600x50",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p2details",
+     "page": "Details",
+     "size": "1920 x 1080",
+     "changes": [
+      {
+       "page": "Details",
+       "visual": "barProduct",
+       "type": "clusteredBarChart",
+       "fields": [
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "1000,120 860x500",
+       "from": {
+        "x": 1000,
+        "y": 120,
+        "w": 860,
+        "h": 500
+       },
+       "to": {
+        "x": 996,
+        "y": 114,
+        "w": 864,
+        "h": 522
+       }
+      },
+      {
+       "page": "Details",
+       "visual": "tblProducts",
+       "type": "tableEx",
+       "fields": [
+        "Sales[Product]",
+        "Sum(Sales[Amount])",
+        "[Total Sales]"
+       ],
+       "place": "60,120 900x900",
+       "from": {
+        "x": 60,
+        "y": 120,
+        "w": 900,
+        "h": 900
+       },
+       "to": {
+        "x": 60,
+        "y": 114,
+        "w": 916,
+        "h": 900
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnBack",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1460,960 400x60",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "customGauge",
+       "type": "custom twinCustomGauge0123456789ABCDEF",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "1000,660 400x360",
+       "why": "a custom visual: copied as it is, never moved or changed"
+      },
+      {
+       "visual": "note2",
+       "type": "textbox",
+       "fields": [],
+       "place": "60,30 1800x60",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p3tooltip",
+     "page": "Tooltip",
+     "size": "320 x 240",
+     "changes": [],
+     "notChanged": [
+      {
+       "visual": "tipCard",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "12,12 200x100",
+       "why": "on a tooltip page: kept as it is"
+      }
+     ],
+     "why": "a tooltip page: kept as it is (its size is the tooltip's; the visuals that show it keep their link)",
+     "hidden": "hidden in view mode: copied as it is, with its visuals placed on the grid"
+    }
+   ],
+   "digest": "3d2557044a537890b48b4ff1ae66caed0f8e077b4588c4c95986ad09e0dd1b0e",
+   "answer": {
+    "length": 7292,
+    "sha256": "01dc11f9989ea8c15d1491c432e2eddccb5ed68fa7b016b4658817ed737d2604"
+   }
+  },
+  "C2 overlays: a No data card under its chart, a title box on a chart": {
+   "problems": [],
+   "patches": [
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 600,
+     "to": 602
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/x",
+     "from": 660,
+     "to": 658
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/width",
+     "from": 580,
+     "to": 582
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/x",
+     "from": 760,
+     "to": 756
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 90,
+     "to": 76
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 220,
+     "to": 228
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/x",
+     "from": 1000,
+     "to": 996
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/width",
+     "from": 860,
+     "to": 864
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/height",
+     "from": 500,
+     "to": 522
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/width",
+     "from": 900,
+     "to": 916
+    },
+    {
+     "page": "pOver",
+     "visual": "chSales",
+     "file": "definition/pages/pOver/visuals/v00/visual.json",
+     "pointer": "/position/width",
+     "from": 600,
+     "to": 602
+    },
+    {
+     "page": "pOver",
+     "visual": "noData",
+     "file": "definition/pages/pOver/visuals/v01/visual.json",
+     "pointer": "/position/width",
+     "from": 600,
+     "to": 602
+    },
+    {
+     "page": "pOver",
+     "visual": "chMargin",
+     "file": "definition/pages/pOver/visuals/v02/visual.json",
+     "pointer": "/position/x",
+     "from": 660,
+     "to": 658
+    },
+    {
+     "page": "pOver",
+     "visual": "chMargin",
+     "file": "definition/pages/pOver/visuals/v02/visual.json",
+     "pointer": "/position/width",
+     "from": 580,
+     "to": 582
+    },
+    {
+     "page": "pOver",
+     "visual": "tbHead",
+     "file": "definition/pages/pOver/visuals/v03/visual.json",
+     "pointer": "/position/x",
+     "from": 680,
+     "to": 678
+    },
+    {
+     "page": "pOver",
+     "visual": "chRegion",
+     "file": "definition/pages/pOver/visuals/v04/visual.json",
+     "pointer": "/position/y",
+     "from": 380,
+     "to": 384
+    },
+    {
+     "file": ".platform",
+     "pointer": "/metadata/displayName",
+     "from": null,
+     "to": "Twin Sales redesigned"
+    },
+    {
+     "file": ".platform",
+     "pointer": "/config/logicalId",
+     "from": null,
+     "to": "a new id"
+    }
+   ],
+   "pages": [
+    {
+     "id": "p1overview",
+     "page": "Overview",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Overview",
+       "visual": "colRegion",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "40,250 600x430",
+       "from": {
+        "x": 40,
+        "y": 250,
+        "w": 600,
+        "h": 430
+       },
+       "to": {
+        "x": 40,
+        "y": 246,
+        "w": 602,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "lineMonth",
+       "type": "lineChart",
+       "fields": [
+        "Calendar[Month Name]",
+        "[Total Sales]"
+       ],
+       "place": "660,250 580x430",
+       "from": {
+        "x": 660,
+        "y": 250,
+        "w": 580,
+        "h": 430
+       },
+       "to": {
+        "x": 658,
+        "y": 246,
+        "w": 582,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "slRegion",
+       "type": "slicer",
+       "fields": [
+        "Sales[Region]"
+       ],
+       "place": "760,90 220x140",
+       "from": {
+        "x": 760,
+        "y": 90,
+        "w": 220,
+        "h": 140
+       },
+       "to": {
+        "x": 756,
+        "y": 76,
+        "w": 228,
+        "h": 140
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnDetails",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,90 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "btnReset",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,150 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "cardOrders",
+       "type": "card",
+       "fields": [
+        "[Orders]"
+       ],
+       "place": "380,100 200x120",
+       "why": "inside the group Orders block: the group places it"
+      },
+      {
+       "visual": "cardSales",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "40,90 300x140",
+       "why": "inside the group KPI row: the group places it"
+      },
+      {
+       "visual": "grpInner",
+       "type": "group",
+       "fields": [],
+       "place": "360,90 380x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "grpKpi",
+       "type": "group",
+       "fields": [],
+       "place": "40,90 700x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "nav",
+       "type": "pageNavigator",
+       "fields": [],
+       "place": "880,20 360x40",
+       "why": "the page navigator: kept where it is"
+      },
+      {
+       "visual": "title",
+       "type": "textbox",
+       "fields": [],
+       "place": "40,20 600x50",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p2details",
+     "page": "Details",
+     "size": "1920 x 1080",
+     "changes": [
+      {
+       "page": "Details",
+       "visual": "barProduct",
+       "type": "clusteredBarChart",
+       "fields": [
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "1000,120 860x500",
+       "from": {
+        "x": 1000,
+        "y": 120,
+        "w": 860,
+        "h": 500
+       },
+       "to": {
+        "x": 996,
+        "y": 114,
+        "w": 864,
+        "h": 522
+       }
+      },
+      {
+       "page": "Details",
+       "visual": "tblProducts",
+       "type": "tableEx",
+       "fields": [
+        "Sales[Product]",
+        "Sum(Sales[Amount])",
+        "[Total Sales]"
+       ],
+       "place": "60,120 900x900",
+       "from": {
+        "x": 60,
+        "y": 120,
+        "w": 900,
+        "h": 900
+       },
+       "to": {
+        "x": 60,
+        "y": 114,
+        "w": 916,
+        "h": 900
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnBack",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1460,960 400x60",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "customGauge",
+       "type": "custom twinCustomGauge0123456789ABCDEF",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "1000,660 400x360",
+       "why": "a custom visual: copied as it is, never moved or changed"
+      },
+      {
+       "visual": "note2",
+       "type": "textbox",
+       "fields": [],
+       "place": "60,30 1800x60",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p3tooltip",
+     "page": "Tooltip",
+     "size": "320 x 240",
+     "changes": [],
+     "notChanged": [
+      {
+       "visual": "tipCard",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "12,12 200x100",
+       "why": "on a tooltip page: kept as it is"
+      }
+     ],
+     "why": "a tooltip page: kept as it is (its size is the tooltip's; the visuals that show it keep their link)",
+     "hidden": "hidden in view mode: copied as it is, with its visuals placed on the grid"
+    },
+    {
+     "id": "pOver",
+     "page": "Page pOver",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Page pOver",
+       "visual": "chSales",
+       "type": "lineChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "40,40 600x300",
+       "from": {
+        "x": 40,
+        "y": 40,
+        "w": 600,
+        "h": 300
+       },
+       "to": {
+        "x": 40,
+        "y": 40,
+        "w": 602,
+        "h": 300
+       },
+       "overlays": [
+        {
+         "visual": "noData",
+         "type": "card",
+         "fields": [
+          "[Total Sales]"
+         ],
+         "place": "40,40 600x300",
+         "from": {
+          "x": 40,
+          "y": 40,
+          "w": 600,
+          "h": 300
+         },
+         "to": {
+          "x": 40,
+          "y": 40,
+          "w": 602,
+          "h": 300
+         }
+        }
+       ],
+       "unit": "with what lies on it, moved with it: noData (card)"
+      },
+      {
+       "page": "Page pOver",
+       "visual": "chMargin",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "660,40 580x300",
+       "from": {
+        "x": 660,
+        "y": 40,
+        "w": 580,
+        "h": 300
+       },
+       "to": {
+        "x": 658,
+        "y": 40,
+        "w": 582,
+        "h": 300
+       },
+       "overlays": [
+        {
+         "visual": "tbHead",
+         "type": "textbox",
+         "fields": [],
+         "place": "680,50 300x40",
+         "from": {
+          "x": 680,
+          "y": 50,
+          "w": 300,
+          "h": 40
+         },
+         "to": {
+          "x": 678,
+          "y": 50,
+          "w": 300,
+          "h": 40
+         }
+        }
+       ],
+       "unit": "with what lies on it, moved with it: tbHead (textbox)"
+      },
+      {
+       "page": "Page pOver",
+       "visual": "chRegion",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "40,380 1200x300",
+       "from": {
+        "x": 40,
+        "y": 380,
+        "w": 1200,
+        "h": 300
+       },
+       "to": {
+        "x": 40,
+        "y": 384,
+        "w": 1200,
+        "h": 300
+       }
+      }
+     ],
+     "notChanged": []
+    }
+   ],
+   "digest": "4999f654b574876dfd094c4613a473f1fcdbd5614396ae5f7e68ce7e946cca00",
+   "answer": {
+    "length": 9291,
+    "sha256": "7b56bab415c6cc9e46072a2b42619638d0647719444928fe2a9f4b9745197fc7"
+   }
+  },
+  "C3 a panel behind one chart, a backdrop behind three": {
+   "problems": [],
+   "patches": [
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 600,
+     "to": 602
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/x",
+     "from": 660,
+     "to": 658
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/width",
+     "from": 580,
+     "to": 582
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/x",
+     "from": 760,
+     "to": 756
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 90,
+     "to": 76
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 220,
+     "to": 228
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/x",
+     "from": 1000,
+     "to": 996
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/width",
+     "from": 860,
+     "to": 864
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/height",
+     "from": 500,
+     "to": 522
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/width",
+     "from": 900,
+     "to": 916
+    },
+    {
+     "page": "pPanels",
+     "visual": "panel",
+     "file": "definition/pages/pPanels/visuals/v00/visual.json",
+     "pointer": "/position/x",
+     "from": 30,
+     "to": 16
+    },
+    {
+     "page": "pPanels",
+     "visual": "panel",
+     "file": "definition/pages/pPanels/visuals/v00/visual.json",
+     "pointer": "/position/y",
+     "from": 30,
+     "to": 16
+    },
+    {
+     "page": "pPanels",
+     "visual": "panel",
+     "file": "definition/pages/pPanels/visuals/v00/visual.json",
+     "pointer": "/position/width",
+     "from": 620,
+     "to": 646
+    },
+    {
+     "page": "pPanels",
+     "visual": "panel",
+     "file": "definition/pages/pPanels/visuals/v00/visual.json",
+     "pointer": "/position/height",
+     "from": 320,
+     "to": 338
+    },
+    {
+     "page": "pPanels",
+     "visual": "chIn",
+     "file": "definition/pages/pPanels/visuals/v01/visual.json",
+     "pointer": "/position/x",
+     "from": 40,
+     "to": 26
+    },
+    {
+     "page": "pPanels",
+     "visual": "chIn",
+     "file": "definition/pages/pPanels/visuals/v01/visual.json",
+     "pointer": "/position/y",
+     "from": 40,
+     "to": 26
+    },
+    {
+     "page": "pPanels",
+     "visual": "chSide",
+     "file": "definition/pages/pPanels/visuals/v02/visual.json",
+     "pointer": "/position/x",
+     "from": 700,
+     "to": 678
+    },
+    {
+     "page": "pPanels",
+     "visual": "chSide",
+     "file": "definition/pages/pPanels/visuals/v02/visual.json",
+     "pointer": "/position/y",
+     "from": 40,
+     "to": 16
+    },
+    {
+     "page": "pPanels",
+     "visual": "chSide",
+     "file": "definition/pages/pPanels/visuals/v02/visual.json",
+     "pointer": "/position/width",
+     "from": 540,
+     "to": 562
+    },
+    {
+     "page": "pPanels",
+     "visual": "chSide",
+     "file": "definition/pages/pPanels/visuals/v02/visual.json",
+     "pointer": "/position/height",
+     "from": 300,
+     "to": 338
+    },
+    {
+     "page": "pPanels",
+     "visual": "ch1",
+     "file": "definition/pages/pPanels/visuals/v04/visual.json",
+     "pointer": "/position/y",
+     "from": 390,
+     "to": 392
+    },
+    {
+     "page": "pPanels",
+     "visual": "ch1",
+     "file": "definition/pages/pPanels/visuals/v04/visual.json",
+     "pointer": "/position/width",
+     "from": 380,
+     "to": 389
+    },
+    {
+     "page": "pPanels",
+     "visual": "ch2",
+     "file": "definition/pages/pPanels/visuals/v05/visual.json",
+     "pointer": "/position/x",
+     "from": 450,
+     "to": 445
+    },
+    {
+     "page": "pPanels",
+     "visual": "ch2",
+     "file": "definition/pages/pPanels/visuals/v05/visual.json",
+     "pointer": "/position/y",
+     "from": 390,
+     "to": 392
+    },
+    {
+     "page": "pPanels",
+     "visual": "ch2",
+     "file": "definition/pages/pPanels/visuals/v05/visual.json",
+     "pointer": "/position/width",
+     "from": 380,
+     "to": 389
+    },
+    {
+     "page": "pPanels",
+     "visual": "ch3",
+     "file": "definition/pages/pPanels/visuals/v06/visual.json",
+     "pointer": "/position/x",
+     "from": 860,
+     "to": 850
+    },
+    {
+     "page": "pPanels",
+     "visual": "ch3",
+     "file": "definition/pages/pPanels/visuals/v06/visual.json",
+     "pointer": "/position/y",
+     "from": 390,
+     "to": 392
+    },
+    {
+     "page": "pPanels",
+     "visual": "ch3",
+     "file": "definition/pages/pPanels/visuals/v06/visual.json",
+     "pointer": "/position/width",
+     "from": 380,
+     "to": 390
+    },
+    {
+     "file": ".platform",
+     "pointer": "/metadata/displayName",
+     "from": null,
+     "to": "Twin Sales redesigned"
+    },
+    {
+     "file": ".platform",
+     "pointer": "/config/logicalId",
+     "from": null,
+     "to": "a new id"
+    }
+   ],
+   "pages": [
+    {
+     "id": "p1overview",
+     "page": "Overview",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Overview",
+       "visual": "colRegion",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "40,250 600x430",
+       "from": {
+        "x": 40,
+        "y": 250,
+        "w": 600,
+        "h": 430
+       },
+       "to": {
+        "x": 40,
+        "y": 246,
+        "w": 602,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "lineMonth",
+       "type": "lineChart",
+       "fields": [
+        "Calendar[Month Name]",
+        "[Total Sales]"
+       ],
+       "place": "660,250 580x430",
+       "from": {
+        "x": 660,
+        "y": 250,
+        "w": 580,
+        "h": 430
+       },
+       "to": {
+        "x": 658,
+        "y": 246,
+        "w": 582,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "slRegion",
+       "type": "slicer",
+       "fields": [
+        "Sales[Region]"
+       ],
+       "place": "760,90 220x140",
+       "from": {
+        "x": 760,
+        "y": 90,
+        "w": 220,
+        "h": 140
+       },
+       "to": {
+        "x": 756,
+        "y": 76,
+        "w": 228,
+        "h": 140
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnDetails",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,90 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "btnReset",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,150 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "cardOrders",
+       "type": "card",
+       "fields": [
+        "[Orders]"
+       ],
+       "place": "380,100 200x120",
+       "why": "inside the group Orders block: the group places it"
+      },
+      {
+       "visual": "cardSales",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "40,90 300x140",
+       "why": "inside the group KPI row: the group places it"
+      },
+      {
+       "visual": "grpInner",
+       "type": "group",
+       "fields": [],
+       "place": "360,90 380x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "grpKpi",
+       "type": "group",
+       "fields": [],
+       "place": "40,90 700x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "nav",
+       "type": "pageNavigator",
+       "fields": [],
+       "place": "880,20 360x40",
+       "why": "the page navigator: kept where it is"
+      },
+      {
+       "visual": "title",
+       "type": "textbox",
+       "fields": [],
+       "place": "40,20 600x50",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p2details",
+     "page": "Details",
+     "size": "1920 x 1080",
+     "changes": [
+      {
+       "page": "Details",
+       "visual": "barProduct",
+       "type": "clusteredBarChart",
+       "fields": [
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "1000,120 860x500",
+       "from": {
+        "x": 1000,
+        "y": 120,
+        "w": 860,
+        "h": 500
+       },
+       "to": {
+        "x": 996,
+        "y": 114,
+        "w": 864,
+        "h": 522
+       }
+      },
+      {
+       "page": "Details",
+       "visual": "tblProducts",
+       "type": "tableEx",
+       "fields": [
+        "Sales[Product]",
+        "Sum(Sales[Amount])",
+        "[Total Sales]"
+       ],
+       "place": "60,120 900x900",
+       "from": {
+        "x": 60,
+        "y": 120,
+        "w": 900,
+        "h": 900
+       },
+       "to": {
+        "x": 60,
+        "y": 114,
+        "w": 916,
+        "h": 900
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnBack",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1460,960 400x60",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "customGauge",
+       "type": "custom twinCustomGauge0123456789ABCDEF",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "1000,660 400x360",
+       "why": "a custom visual: copied as it is, never moved or changed"
+      },
+      {
+       "visual": "note2",
+       "type": "textbox",
+       "fields": [],
+       "place": "60,30 1800x60",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p3tooltip",
+     "page": "Tooltip",
+     "size": "320 x 240",
+     "changes": [],
+     "notChanged": [
+      {
+       "visual": "tipCard",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "12,12 200x100",
+       "why": "on a tooltip page: kept as it is"
+      }
+     ],
+     "why": "a tooltip page: kept as it is (its size is the tooltip's; the visuals that show it keep their link)",
+     "hidden": "hidden in view mode: copied as it is, with its visuals placed on the grid"
+    },
+    {
+     "id": "pPanels",
+     "page": "Page pPanels",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Page pPanels",
+       "visual": "panel",
+       "type": "shape",
+       "fields": [],
+       "place": "30,30 620x320",
+       "from": {
+        "x": 30,
+        "y": 30,
+        "w": 620,
+        "h": 320
+       },
+       "to": {
+        "x": 16,
+        "y": 16,
+        "w": 646,
+        "h": 338
+       },
+       "overlays": [
+        {
+         "visual": "chIn",
+         "type": "lineChart",
+         "fields": [
+          "Sales[Region]",
+          "Sales[Product]",
+          "[Total Sales]"
+         ],
+         "place": "40,40 600x300",
+         "from": {
+          "x": 40,
+          "y": 40,
+          "w": 600,
+          "h": 300
+         },
+         "to": {
+          "x": 26,
+          "y": 26,
+          "w": 600,
+          "h": 300
+         }
+        }
+       ],
+       "unit": "with what lies on it, moved with it: chIn (lineChart)"
+      },
+      {
+       "page": "Page pPanels",
+       "visual": "chSide",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "700,40 540x300",
+       "from": {
+        "x": 700,
+        "y": 40,
+        "w": 540,
+        "h": 300
+       },
+       "to": {
+        "x": 678,
+        "y": 16,
+        "w": 562,
+        "h": 338
+       }
+      },
+      {
+       "page": "Page pPanels",
+       "visual": "ch1",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "40,390 380x290",
+       "from": {
+        "x": 40,
+        "y": 390,
+        "w": 380,
+        "h": 290
+       },
+       "to": {
+        "x": 40,
+        "y": 392,
+        "w": 389,
+        "h": 290
+       }
+      },
+      {
+       "page": "Page pPanels",
+       "visual": "ch2",
+       "type": "lineChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "450,390 380x290",
+       "from": {
+        "x": 450,
+        "y": 390,
+        "w": 380,
+        "h": 290
+       },
+       "to": {
+        "x": 445,
+        "y": 392,
+        "w": 389,
+        "h": 290
+       }
+      },
+      {
+       "page": "Page pPanels",
+       "visual": "ch3",
+       "type": "areaChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "860,390 380x290",
+       "from": {
+        "x": 860,
+        "y": 390,
+        "w": 380,
+        "h": 290
+       },
+       "to": {
+        "x": 850,
+        "y": 392,
+        "w": 390,
+        "h": 290
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "backdrop",
+       "type": "shape",
+       "fields": [],
+       "place": "20,370 1240x330",
+       "why": "a shape: kept where it is (it frames or underlines other visuals)"
+      }
+     ]
+    }
+   ],
+   "digest": "1a0cba0b96b451f58e02c47cd5f18148db38ac3e24f339aa65a82900a5f72248",
+   "answer": {
+    "length": 11133,
+    "sha256": "e022a30c9eade391c02b7cfbd16e301ea9c24276f814ac3d6518281a9a147253"
+   }
+  },
+  "C4 a card laid over a custom visual": {
+   "problems": [],
+   "patches": [
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 600,
+     "to": 602
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/x",
+     "from": 660,
+     "to": 658
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/width",
+     "from": 580,
+     "to": 582
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/x",
+     "from": 760,
+     "to": 756
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 90,
+     "to": 76
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 220,
+     "to": 228
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/x",
+     "from": 1000,
+     "to": 996
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/width",
+     "from": 860,
+     "to": 864
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/height",
+     "from": 500,
+     "to": 522
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/width",
+     "from": 900,
+     "to": 916
+    },
+    {
+     "page": "pCustom",
+     "visual": "chBeside",
+     "file": "definition/pages/pCustom/visuals/v02/visual.json",
+     "pointer": "/position/x",
+     "from": 580,
+     "to": 584
+    },
+    {
+     "page": "pCustom",
+     "visual": "chBeside",
+     "file": "definition/pages/pCustom/visuals/v02/visual.json",
+     "pointer": "/position/width",
+     "from": 660,
+     "to": 656
+    },
+    {
+     "page": "pCustom",
+     "visual": "chLow",
+     "file": "definition/pages/pCustom/visuals/v03/visual.json",
+     "pointer": "/position/y",
+     "from": 360,
+     "to": 356
+    },
+    {
+     "file": ".platform",
+     "pointer": "/metadata/displayName",
+     "from": null,
+     "to": "Twin Sales redesigned"
+    },
+    {
+     "file": ".platform",
+     "pointer": "/config/logicalId",
+     "from": null,
+     "to": "a new id"
+    }
+   ],
+   "pages": [
+    {
+     "id": "p1overview",
+     "page": "Overview",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Overview",
+       "visual": "colRegion",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "40,250 600x430",
+       "from": {
+        "x": 40,
+        "y": 250,
+        "w": 600,
+        "h": 430
+       },
+       "to": {
+        "x": 40,
+        "y": 246,
+        "w": 602,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "lineMonth",
+       "type": "lineChart",
+       "fields": [
+        "Calendar[Month Name]",
+        "[Total Sales]"
+       ],
+       "place": "660,250 580x430",
+       "from": {
+        "x": 660,
+        "y": 250,
+        "w": 580,
+        "h": 430
+       },
+       "to": {
+        "x": 658,
+        "y": 246,
+        "w": 582,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "slRegion",
+       "type": "slicer",
+       "fields": [
+        "Sales[Region]"
+       ],
+       "place": "760,90 220x140",
+       "from": {
+        "x": 760,
+        "y": 90,
+        "w": 220,
+        "h": 140
+       },
+       "to": {
+        "x": 756,
+        "y": 76,
+        "w": 228,
+        "h": 140
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnDetails",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,90 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "btnReset",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,150 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "cardOrders",
+       "type": "card",
+       "fields": [
+        "[Orders]"
+       ],
+       "place": "380,100 200x120",
+       "why": "inside the group Orders block: the group places it"
+      },
+      {
+       "visual": "cardSales",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "40,90 300x140",
+       "why": "inside the group KPI row: the group places it"
+      },
+      {
+       "visual": "grpInner",
+       "type": "group",
+       "fields": [],
+       "place": "360,90 380x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "grpKpi",
+       "type": "group",
+       "fields": [],
+       "place": "40,90 700x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "nav",
+       "type": "pageNavigator",
+       "fields": [],
+       "place": "880,20 360x40",
+       "why": "the page navigator: kept where it is"
+      },
+      {
+       "visual": "title",
+       "type": "textbox",
+       "fields": [],
+       "place": "40,20 600x50",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p2details",
+     "page": "Details",
+     "size": "1920 x 1080",
+     "changes": [
+      {
+       "page": "Details",
+       "visual": "barProduct",
+       "type": "clusteredBarChart",
+       "fields": [
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "1000,120 860x500",
+       "from": {
+        "x": 1000,
+        "y": 120,
+        "w": 860,
+        "h": 500
+       },
+       "to": {
+        "x": 996,
+        "y": 114,
+        "w": 864,
+        "h": 522
+       }
+      },
+      {
+       "page": "Details",
+       "visual": "tblProducts",
+       "type": "tableEx",
+       "fields": [
+        "Sales[Product]",
+        "Sum(Sales[Amount])",
+        "[Total Sales]"
+       ],
+       "place": "60,120 900x900",
+       "from": {
+        "x": 60,
+        "y": 120,
+        "w": 900,
+        "h": 900
+       },
+       "to": {
+        "x": 60,
+        "y": 114,
+        "w": 916,
+        "h": 900
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnBack",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1460,960 400x60",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "customGauge",
+       "type": "custom twinCustomGauge0123456789ABCDEF",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "1000,660 400x360",
+       "why": "a custom visual: copied as it is, never moved or changed"
+      },
+      {
+       "visual": "note2",
+       "type": "textbox",
+       "fields": [],
+       "place": "60,30 1800x60",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p3tooltip",
+     "page": "Tooltip",
+     "size": "320 x 240",
+     "changes": [],
+     "notChanged": [
+      {
+       "visual": "tipCard",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "12,12 200x100",
+       "why": "on a tooltip page: kept as it is"
+      }
+     ],
+     "why": "a tooltip page: kept as it is (its size is the tooltip's; the visuals that show it keep their link)",
+     "hidden": "hidden in view mode: copied as it is, with its visuals placed on the grid"
+    },
+    {
+     "id": "pCustom",
+     "page": "Page pCustom",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Page pCustom",
+       "visual": "chBeside",
+       "type": "lineChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "580,40 660x300",
+       "from": {
+        "x": 580,
+        "y": 40,
+        "w": 660,
+        "h": 300
+       },
+       "to": {
+        "x": 584,
+        "y": 40,
+        "w": 656,
+        "h": 300
+       },
+       "narrower": "4 narrower: its row is placed on the grid, with margins and gaps of 16"
+      },
+      {
+       "page": "Page pCustom",
+       "visual": "chLow",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "40,360 1200x320",
+       "from": {
+        "x": 40,
+        "y": 360,
+        "w": 1200,
+        "h": 320
+       },
+       "to": {
+        "x": 40,
+        "y": 356,
+        "w": 1200,
+        "h": 320
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "gauge",
+       "type": "custom twinCustomGauge0123456789ABCDEF",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "40,40 500x300",
+       "overlays": [
+        {
+         "visual": "onGauge",
+         "type": "card",
+         "fields": [
+          "[Total Sales]"
+         ],
+         "place": "60,60 200x100"
+        }
+       ],
+       "unit": "with what lies on it, kept with it: onGauge (card)",
+       "why": "kept where it is, with what lies on it: gauge is a custom visual, so they are not moved"
+      }
+     ]
+    }
+   ],
+   "digest": "1c68b6dec120667889becc342cd621609f195a182d6b835e8c9d6e9a029849cb",
+   "answer": {
+    "length": 8689,
+    "sha256": "7505cac1ff91d87bbf8d6a558549d3de24749eacb52228dd7672255293b63d14"
+   }
+  },
+  "C5 a page already on the grid": {
+   "problems": [],
+   "patches": [
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 600,
+     "to": 602
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/x",
+     "from": 660,
+     "to": 658
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/width",
+     "from": 580,
+     "to": 582
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/x",
+     "from": 760,
+     "to": 756
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 90,
+     "to": 76
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 220,
+     "to": 228
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/x",
+     "from": 1000,
+     "to": 996
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/width",
+     "from": 860,
+     "to": 864
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/height",
+     "from": 500,
+     "to": 522
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/width",
+     "from": 900,
+     "to": 916
+    },
+    {
+     "file": ".platform",
+     "pointer": "/metadata/displayName",
+     "from": null,
+     "to": "Twin Sales redesigned"
+    },
+    {
+     "file": ".platform",
+     "pointer": "/config/logicalId",
+     "from": null,
+     "to": "a new id"
+    }
+   ],
+   "pages": [
+    {
+     "id": "p1overview",
+     "page": "Overview",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Overview",
+       "visual": "colRegion",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "40,250 600x430",
+       "from": {
+        "x": 40,
+        "y": 250,
+        "w": 600,
+        "h": 430
+       },
+       "to": {
+        "x": 40,
+        "y": 246,
+        "w": 602,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "lineMonth",
+       "type": "lineChart",
+       "fields": [
+        "Calendar[Month Name]",
+        "[Total Sales]"
+       ],
+       "place": "660,250 580x430",
+       "from": {
+        "x": 660,
+        "y": 250,
+        "w": 580,
+        "h": 430
+       },
+       "to": {
+        "x": 658,
+        "y": 246,
+        "w": 582,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "slRegion",
+       "type": "slicer",
+       "fields": [
+        "Sales[Region]"
+       ],
+       "place": "760,90 220x140",
+       "from": {
+        "x": 760,
+        "y": 90,
+        "w": 220,
+        "h": 140
+       },
+       "to": {
+        "x": 756,
+        "y": 76,
+        "w": 228,
+        "h": 140
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnDetails",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,90 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "btnReset",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,150 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "cardOrders",
+       "type": "card",
+       "fields": [
+        "[Orders]"
+       ],
+       "place": "380,100 200x120",
+       "why": "inside the group Orders block: the group places it"
+      },
+      {
+       "visual": "cardSales",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "40,90 300x140",
+       "why": "inside the group KPI row: the group places it"
+      },
+      {
+       "visual": "grpInner",
+       "type": "group",
+       "fields": [],
+       "place": "360,90 380x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "grpKpi",
+       "type": "group",
+       "fields": [],
+       "place": "40,90 700x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "nav",
+       "type": "pageNavigator",
+       "fields": [],
+       "place": "880,20 360x40",
+       "why": "the page navigator: kept where it is"
+      },
+      {
+       "visual": "title",
+       "type": "textbox",
+       "fields": [],
+       "place": "40,20 600x50",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p2details",
+     "page": "Details",
+     "size": "1920 x 1080",
+     "changes": [
+      {
+       "page": "Details",
+       "visual": "barProduct",
+       "type": "clusteredBarChart",
+       "fields": [
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "1000,120 860x500",
+       "from": {
+        "x": 1000,
+        "y": 120,
+        "w": 860,
+        "h": 500
+       },
+       "to": {
+        "x": 996,
+        "y": 114,
+        "w": 864,
+        "h": 522
+       }
+      },
+      {
+       "page": "Details",
+       "visual": "tblProducts",
+       "type": "tableEx",
+       "fields": [
+        "Sales[Product]",
+        "Sum(Sales[Amount])",
+        "[Total Sales]"
+       ],
+       "place": "60,120 900x900",
+       "from": {
+        "x": 60,
+        "y": 120,
+        "w": 900,
+        "h": 900
+       },
+       "to": {
+        "x": 60,
+        "y": 114,
+        "w": 916,
+        "h": 900
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnBack",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1460,960 400x60",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "customGauge",
+       "type": "custom twinCustomGauge0123456789ABCDEF",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "1000,660 400x360",
+       "why": "a custom visual: copied as it is, never moved or changed"
+      },
+      {
+       "visual": "note2",
+       "type": "textbox",
+       "fields": [],
+       "place": "60,30 1800x60",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p3tooltip",
+     "page": "Tooltip",
+     "size": "320 x 240",
+     "changes": [],
+     "notChanged": [
+      {
+       "visual": "tipCard",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "12,12 200x100",
+       "why": "on a tooltip page: kept as it is"
+      }
+     ],
+     "why": "a tooltip page: kept as it is (its size is the tooltip's; the visuals that show it keep their link)",
+     "hidden": "hidden in view mode: copied as it is, with its visuals placed on the grid"
+    },
+    {
+     "id": "pGrid",
+     "page": "Page pGrid",
+     "size": "1280 x 720",
+     "changes": [],
+     "notChanged": [
+      {
+       "visual": "g1",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "16,16 408x160",
+       "why": "already on the grid"
+      },
+      {
+       "visual": "g2",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "440,16 400x160",
+       "why": "already on the grid"
+      },
+      {
+       "visual": "g3",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "856,16 408x160",
+       "why": "already on the grid"
+      },
+      {
+       "visual": "g4",
+       "type": "lineChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "16,192 1248x512",
+       "why": "already on the grid"
+      }
+     ]
+    }
+   ],
+   "digest": "fded19c522740f0e83477a6e49d6abee48298df2c90255d5608f223eedf8d678",
+   "answer": {
+    "length": 7853,
+    "sha256": "5b16a8cfdb1db2399e5a7f02ad5187901d5a8da6b51c28da799e76e3af56e830"
+   }
+  },
+  "C6 a page too full for the grid": {
+   "problems": [],
+   "patches": [
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 600,
+     "to": 602
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/x",
+     "from": 660,
+     "to": 658
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/width",
+     "from": 580,
+     "to": 582
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/x",
+     "from": 760,
+     "to": 756
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 90,
+     "to": 76
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 220,
+     "to": 228
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/x",
+     "from": 1000,
+     "to": 996
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/width",
+     "from": 860,
+     "to": 864
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/height",
+     "from": 500,
+     "to": 522
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/width",
+     "from": 900,
+     "to": 916
+    },
+    {
+     "page": "pFull",
+     "visual": "r1",
+     "file": "definition/pages/pFull/visuals/v01/visual.json",
+     "pointer": "/position/x",
+     "from": 0,
+     "to": 16
+    },
+    {
+     "page": "pFull",
+     "visual": "r1",
+     "file": "definition/pages/pFull/visuals/v01/visual.json",
+     "pointer": "/position/y",
+     "from": 310,
+     "to": 316
+    },
+    {
+     "page": "pFull",
+     "visual": "r1",
+     "file": "definition/pages/pFull/visuals/v01/visual.json",
+     "pointer": "/position/width",
+     "from": 400,
+     "to": 386
+    },
+    {
+     "page": "pFull",
+     "visual": "r2",
+     "file": "definition/pages/pFull/visuals/v02/visual.json",
+     "pointer": "/position/x",
+     "from": 410,
+     "to": 418
+    },
+    {
+     "page": "pFull",
+     "visual": "r2",
+     "file": "definition/pages/pFull/visuals/v02/visual.json",
+     "pointer": "/position/y",
+     "from": 310,
+     "to": 316
+    },
+    {
+     "page": "pFull",
+     "visual": "r2",
+     "file": "definition/pages/pFull/visuals/v02/visual.json",
+     "pointer": "/position/width",
+     "from": 400,
+     "to": 386
+    },
+    {
+     "page": "pFull",
+     "visual": "r3",
+     "file": "definition/pages/pFull/visuals/v03/visual.json",
+     "pointer": "/position/y",
+     "from": 310,
+     "to": 316
+    },
+    {
+     "page": "pFull",
+     "visual": "r3",
+     "file": "definition/pages/pFull/visuals/v03/visual.json",
+     "pointer": "/position/width",
+     "from": 460,
+     "to": 444
+    },
+    {
+     "page": "pFull",
+     "visual": "r4",
+     "file": "definition/pages/pFull/visuals/v04/visual.json",
+     "pointer": "/position/x",
+     "from": 0,
+     "to": 16
+    },
+    {
+     "page": "pFull",
+     "visual": "r4",
+     "file": "definition/pages/pFull/visuals/v04/visual.json",
+     "pointer": "/position/y",
+     "from": 520,
+     "to": 532
+    },
+    {
+     "page": "pFull",
+     "visual": "r4",
+     "file": "definition/pages/pFull/visuals/v04/visual.json",
+     "pointer": "/position/width",
+     "from": 640,
+     "to": 621
+    },
+    {
+     "page": "pFull",
+     "visual": "r4",
+     "file": "definition/pages/pFull/visuals/v04/visual.json",
+     "pointer": "/position/height",
+     "from": 200,
+     "to": 172
+    },
+    {
+     "page": "pFull",
+     "visual": "r5",
+     "file": "definition/pages/pFull/visuals/v05/visual.json",
+     "pointer": "/position/x",
+     "from": 650,
+     "to": 653
+    },
+    {
+     "page": "pFull",
+     "visual": "r5",
+     "file": "definition/pages/pFull/visuals/v05/visual.json",
+     "pointer": "/position/y",
+     "from": 520,
+     "to": 532
+    },
+    {
+     "page": "pFull",
+     "visual": "r5",
+     "file": "definition/pages/pFull/visuals/v05/visual.json",
+     "pointer": "/position/width",
+     "from": 630,
+     "to": 611
+    },
+    {
+     "page": "pFull",
+     "visual": "r5",
+     "file": "definition/pages/pFull/visuals/v05/visual.json",
+     "pointer": "/position/height",
+     "from": 200,
+     "to": 172
+    },
+    {
+     "file": ".platform",
+     "pointer": "/metadata/displayName",
+     "from": null,
+     "to": "Twin Sales redesigned"
+    },
+    {
+     "file": ".platform",
+     "pointer": "/config/logicalId",
+     "from": null,
+     "to": "a new id"
+    }
+   ],
+   "pages": [
+    {
+     "id": "p1overview",
+     "page": "Overview",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Overview",
+       "visual": "colRegion",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "40,250 600x430",
+       "from": {
+        "x": 40,
+        "y": 250,
+        "w": 600,
+        "h": 430
+       },
+       "to": {
+        "x": 40,
+        "y": 246,
+        "w": 602,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "lineMonth",
+       "type": "lineChart",
+       "fields": [
+        "Calendar[Month Name]",
+        "[Total Sales]"
+       ],
+       "place": "660,250 580x430",
+       "from": {
+        "x": 660,
+        "y": 250,
+        "w": 580,
+        "h": 430
+       },
+       "to": {
+        "x": 658,
+        "y": 246,
+        "w": 582,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "slRegion",
+       "type": "slicer",
+       "fields": [
+        "Sales[Region]"
+       ],
+       "place": "760,90 220x140",
+       "from": {
+        "x": 760,
+        "y": 90,
+        "w": 220,
+        "h": 140
+       },
+       "to": {
+        "x": 756,
+        "y": 76,
+        "w": 228,
+        "h": 140
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnDetails",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,90 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "btnReset",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,150 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "cardOrders",
+       "type": "card",
+       "fields": [
+        "[Orders]"
+       ],
+       "place": "380,100 200x120",
+       "why": "inside the group Orders block: the group places it"
+      },
+      {
+       "visual": "cardSales",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "40,90 300x140",
+       "why": "inside the group KPI row: the group places it"
+      },
+      {
+       "visual": "grpInner",
+       "type": "group",
+       "fields": [],
+       "place": "360,90 380x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "grpKpi",
+       "type": "group",
+       "fields": [],
+       "place": "40,90 700x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "nav",
+       "type": "pageNavigator",
+       "fields": [],
+       "place": "880,20 360x40",
+       "why": "the page navigator: kept where it is"
+      },
+      {
+       "visual": "title",
+       "type": "textbox",
+       "fields": [],
+       "place": "40,20 600x50",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p2details",
+     "page": "Details",
+     "size": "1920 x 1080",
+     "changes": [
+      {
+       "page": "Details",
+       "visual": "barProduct",
+       "type": "clusteredBarChart",
+       "fields": [
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "1000,120 860x500",
+       "from": {
+        "x": 1000,
+        "y": 120,
+        "w": 860,
+        "h": 500
+       },
+       "to": {
+        "x": 996,
+        "y": 114,
+        "w": 864,
+        "h": 522
+       }
+      },
+      {
+       "page": "Details",
+       "visual": "tblProducts",
+       "type": "tableEx",
+       "fields": [
+        "Sales[Product]",
+        "Sum(Sales[Amount])",
+        "[Total Sales]"
+       ],
+       "place": "60,120 900x900",
+       "from": {
+        "x": 60,
+        "y": 120,
+        "w": 900,
+        "h": 900
+       },
+       "to": {
+        "x": 60,
+        "y": 114,
+        "w": 916,
+        "h": 900
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnBack",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1460,960 400x60",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "customGauge",
+       "type": "custom twinCustomGauge0123456789ABCDEF",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "1000,660 400x360",
+       "why": "a custom visual: copied as it is, never moved or changed"
+      },
+      {
+       "visual": "note2",
+       "type": "textbox",
+       "fields": [],
+       "place": "60,30 1800x60",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p3tooltip",
+     "page": "Tooltip",
+     "size": "320 x 240",
+     "changes": [],
+     "notChanged": [
+      {
+       "visual": "tipCard",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "12,12 200x100",
+       "why": "on a tooltip page: kept as it is"
+      }
+     ],
+     "why": "a tooltip page: kept as it is (its size is the tooltip's; the visuals that show it keep their link)",
+     "hidden": "hidden in view mode: copied as it is, with its visuals placed on the grid"
+    },
+    {
+     "id": "pFull",
+     "page": "Page pFull",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Page pFull",
+       "visual": "r1",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "0,310 400x200",
+       "from": {
+        "x": 0,
+        "y": 310,
+        "w": 400,
+        "h": 200
+       },
+       "to": {
+        "x": 16,
+        "y": 316,
+        "w": 386,
+        "h": 200
+       },
+       "narrower": "14 narrower: its row is placed on the grid, with margins and gaps of 16"
+      },
+      {
+       "page": "Page pFull",
+       "visual": "r2",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "410,310 400x200",
+       "from": {
+        "x": 410,
+        "y": 310,
+        "w": 400,
+        "h": 200
+       },
+       "to": {
+        "x": 418,
+        "y": 316,
+        "w": 386,
+        "h": 200
+       },
+       "narrower": "14 narrower: its row is placed on the grid, with margins and gaps of 16"
+      },
+      {
+       "page": "Page pFull",
+       "visual": "r3",
+       "type": "lineChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "820,310 460x200",
+       "from": {
+        "x": 820,
+        "y": 310,
+        "w": 460,
+        "h": 200
+       },
+       "to": {
+        "x": 820,
+        "y": 316,
+        "w": 444,
+        "h": 200
+       },
+       "narrower": "16 narrower: its row is placed on the grid, with margins and gaps of 16"
+      },
+      {
+       "page": "Page pFull",
+       "visual": "r4",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "0,520 640x200",
+       "from": {
+        "x": 0,
+        "y": 520,
+        "w": 640,
+        "h": 200
+       },
+       "to": {
+        "x": 16,
+        "y": 532,
+        "w": 621,
+        "h": 172
+       },
+       "narrower": "19 narrower: its row is placed on the grid, with margins and gaps of 16"
+      },
+      {
+       "page": "Page pFull",
+       "visual": "r5",
+       "type": "areaChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "650,520 630x200",
+       "from": {
+        "x": 650,
+        "y": 520,
+        "w": 630,
+        "h": 200
+       },
+       "to": {
+        "x": 653,
+        "y": 532,
+        "w": 611,
+        "h": 172
+       },
+       "narrower": "19 narrower: its row is placed on the grid, with margins and gaps of 16"
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "bigTable",
+       "type": "tableEx",
+       "fields": [
+        "Sales[Product]",
+        "Sum(Sales[Amount])",
+        "[Total Sales]"
+       ],
+       "place": "0,0 1280x300",
+       "why": "its row keeps its place: bigTable (a table) would get smaller and could draw a scrollbar"
+      },
+      {
+       "visual": "r6",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "100,690 300x120",
+       "why": "its row keeps its place: on the grid it would leave the page"
+      }
+     ]
+    }
+   ],
+   "digest": "a10af88df4b35f28793ef86d6acbdb7fda69ebfbee4975206abda314c3ac966d",
+   "answer": {
+    "length": 11155,
+    "sha256": "d92587be70c271f6688124c48d9ff0858ac3e509b903dc283e4c57704e569307"
+   }
+  },
+  "C7 two pages, each with a visual id twice": {
+   "problems": [],
+   "patches": [
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 600,
+     "to": 602
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/x",
+     "from": 660,
+     "to": 658
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/width",
+     "from": 580,
+     "to": 582
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/x",
+     "from": 760,
+     "to": 756
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 90,
+     "to": 76
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 220,
+     "to": 228
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/x",
+     "from": 1000,
+     "to": 996
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/width",
+     "from": 860,
+     "to": 864
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/height",
+     "from": 500,
+     "to": 522
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/width",
+     "from": 900,
+     "to": 916
+    },
+    {
+     "page": "pTwiceA",
+     "visual": "otherA",
+     "file": "definition/pages/pTwiceA/visuals/v02/visual.json",
+     "pointer": "/position/x",
+     "from": 30,
+     "to": 16
+    },
+    {
+     "page": "pTwiceA",
+     "visual": "otherA",
+     "file": "definition/pages/pTwiceA/visuals/v02/visual.json",
+     "pointer": "/position/y",
+     "from": 220,
+     "to": 224
+    },
+    {
+     "page": "pTwiceA",
+     "visual": "otherA",
+     "file": "definition/pages/pTwiceA/visuals/v02/visual.json",
+     "pointer": "/position/width",
+     "from": 1220,
+     "to": 1248
+    },
+    {
+     "page": "pTwiceB",
+     "visual": "tail",
+     "file": "definition/pages/pTwiceB/visuals/v02/visual.json",
+     "pointer": "/position/y",
+     "from": 660,
+     "to": 656
+    },
+    {
+     "page": "pTwiceB",
+     "visual": "tail",
+     "file": "definition/pages/pTwiceB/visuals/v02/visual.json",
+     "pointer": "/position/width",
+     "from": 300,
+     "to": 304
+    },
+    {
+     "page": "pTwiceB",
+     "visual": "tail",
+     "file": "definition/pages/pTwiceB/visuals/v02/visual.json",
+     "pointer": "/position/height",
+     "from": 50,
+     "to": 48
+    },
+    {
+     "file": ".platform",
+     "pointer": "/metadata/displayName",
+     "from": null,
+     "to": "Twin Sales redesigned"
+    },
+    {
+     "file": ".platform",
+     "pointer": "/config/logicalId",
+     "from": null,
+     "to": "a new id"
+    }
+   ],
+   "pages": [
+    {
+     "id": "p1overview",
+     "page": "Overview",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Overview",
+       "visual": "colRegion",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "40,250 600x430",
+       "from": {
+        "x": 40,
+        "y": 250,
+        "w": 600,
+        "h": 430
+       },
+       "to": {
+        "x": 40,
+        "y": 246,
+        "w": 602,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "lineMonth",
+       "type": "lineChart",
+       "fields": [
+        "Calendar[Month Name]",
+        "[Total Sales]"
+       ],
+       "place": "660,250 580x430",
+       "from": {
+        "x": 660,
+        "y": 250,
+        "w": 580,
+        "h": 430
+       },
+       "to": {
+        "x": 658,
+        "y": 246,
+        "w": 582,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "slRegion",
+       "type": "slicer",
+       "fields": [
+        "Sales[Region]"
+       ],
+       "place": "760,90 220x140",
+       "from": {
+        "x": 760,
+        "y": 90,
+        "w": 220,
+        "h": 140
+       },
+       "to": {
+        "x": 756,
+        "y": 76,
+        "w": 228,
+        "h": 140
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnDetails",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,90 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "btnReset",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,150 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "cardOrders",
+       "type": "card",
+       "fields": [
+        "[Orders]"
+       ],
+       "place": "380,100 200x120",
+       "why": "inside the group Orders block: the group places it"
+      },
+      {
+       "visual": "cardSales",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "40,90 300x140",
+       "why": "inside the group KPI row: the group places it"
+      },
+      {
+       "visual": "grpInner",
+       "type": "group",
+       "fields": [],
+       "place": "360,90 380x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "grpKpi",
+       "type": "group",
+       "fields": [],
+       "place": "40,90 700x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "nav",
+       "type": "pageNavigator",
+       "fields": [],
+       "place": "880,20 360x40",
+       "why": "the page navigator: kept where it is"
+      },
+      {
+       "visual": "title",
+       "type": "textbox",
+       "fields": [],
+       "place": "40,20 600x50",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p2details",
+     "page": "Details",
+     "size": "1920 x 1080",
+     "changes": [
+      {
+       "page": "Details",
+       "visual": "barProduct",
+       "type": "clusteredBarChart",
+       "fields": [
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "1000,120 860x500",
+       "from": {
+        "x": 1000,
+        "y": 120,
+        "w": 860,
+        "h": 500
+       },
+       "to": {
+        "x": 996,
+        "y": 114,
+        "w": 864,
+        "h": 522
+       }
+      },
+      {
+       "page": "Details",
+       "visual": "tblProducts",
+       "type": "tableEx",
+       "fields": [
+        "Sales[Product]",
+        "Sum(Sales[Amount])",
+        "[Total Sales]"
+       ],
+       "place": "60,120 900x900",
+       "from": {
+        "x": 60,
+        "y": 120,
+        "w": 900,
+        "h": 900
+       },
+       "to": {
+        "x": 60,
+        "y": 114,
+        "w": 916,
+        "h": 900
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnBack",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1460,960 400x60",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "customGauge",
+       "type": "custom twinCustomGauge0123456789ABCDEF",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "1000,660 400x360",
+       "why": "a custom visual: copied as it is, never moved or changed"
+      },
+      {
+       "visual": "note2",
+       "type": "textbox",
+       "fields": [],
+       "place": "60,30 1800x60",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p3tooltip",
+     "page": "Tooltip",
+     "size": "320 x 240",
+     "changes": [],
+     "notChanged": [
+      {
+       "visual": "tipCard",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "12,12 200x100",
+       "why": "on a tooltip page: kept as it is"
+      }
+     ],
+     "why": "a tooltip page: kept as it is (its size is the tooltip's; the visuals that show it keep their link)",
+     "hidden": "hidden in view mode: copied as it is, with its visuals placed on the grid"
+    },
+    {
+     "id": "pTwiceA",
+     "page": "Page pTwiceA",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Page pTwiceA",
+       "visual": "otherA",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "30,220 1220x460",
+       "from": {
+        "x": 30,
+        "y": 220,
+        "w": 1220,
+        "h": 460
+       },
+       "to": {
+        "x": 16,
+        "y": 224,
+        "w": 1248,
+        "h": 460
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "same",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "30,30 300x150",
+       "why": "its name is used twice on the page, so a patch could not name it"
+      },
+      {
+       "visual": "same",
+       "type": "lineChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "360,30 880x150",
+       "why": "its name is used twice on the page, so a patch could not name it"
+      }
+     ]
+    },
+    {
+     "id": "pTwiceB",
+     "page": "Page pTwiceB",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Page pTwiceB",
+       "visual": "tail",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "40,660 300x50",
+       "from": {
+        "x": 40,
+        "y": 660,
+        "w": 300,
+        "h": 50
+       },
+       "to": {
+        "x": 40,
+        "y": 656,
+        "w": 304,
+        "h": 48
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "dup",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "40,40 560x600",
+       "why": "its name is used twice on the page, so a patch could not name it"
+      },
+      {
+       "visual": "dup",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "640,40 600x600",
+       "why": "its name is used twice on the page, so a patch could not name it"
+      }
+     ]
+    }
+   ],
+   "digest": "ce80f3bd9c7cb2b01f6239666b3e742c9c4a49e79841456f773edbf395ce09d0",
+   "answer": {
+    "length": 9417,
+    "sha256": "078f22c53dcc8032e752e50d294d8376db3e3329139f7735b0da84ed2ad75438"
+   }
+  },
+  "C8 a 1920 x 1080 page: rows touching, a shape beside a row": {
+   "problems": [],
+   "patches": [
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 600,
+     "to": 602
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/x",
+     "from": 660,
+     "to": 658
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/width",
+     "from": 580,
+     "to": 582
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/x",
+     "from": 760,
+     "to": 756
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 90,
+     "to": 76
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 220,
+     "to": 228
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/x",
+     "from": 1000,
+     "to": 996
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/width",
+     "from": 860,
+     "to": 864
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/height",
+     "from": 500,
+     "to": 522
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/width",
+     "from": 900,
+     "to": 916
+    },
+    {
+     "page": "pLarge",
+     "visual": "k1",
+     "file": "definition/pages/pLarge/visuals/v01/visual.json",
+     "pointer": "/position/x",
+     "from": 20,
+     "to": 44
+    },
+    {
+     "page": "pLarge",
+     "visual": "k1",
+     "file": "definition/pages/pLarge/visuals/v01/visual.json",
+     "pointer": "/position/y",
+     "from": 0,
+     "to": 24
+    },
+    {
+     "page": "pLarge",
+     "visual": "k1",
+     "file": "definition/pages/pLarge/visuals/v01/visual.json",
+     "pointer": "/position/width",
+     "from": 600,
+     "to": 580
+    },
+    {
+     "page": "pLarge",
+     "visual": "k1",
+     "file": "definition/pages/pLarge/visuals/v01/visual.json",
+     "pointer": "/position/height",
+     "from": 400,
+     "to": 352
+    },
+    {
+     "page": "pLarge",
+     "visual": "k2",
+     "file": "definition/pages/pLarge/visuals/v02/visual.json",
+     "pointer": "/position/x",
+     "from": 630,
+     "to": 648
+    },
+    {
+     "page": "pLarge",
+     "visual": "k2",
+     "file": "definition/pages/pLarge/visuals/v02/visual.json",
+     "pointer": "/position/y",
+     "from": 0,
+     "to": 24
+    },
+    {
+     "page": "pLarge",
+     "visual": "k2",
+     "file": "definition/pages/pLarge/visuals/v02/visual.json",
+     "pointer": "/position/width",
+     "from": 1290,
+     "to": 1248
+    },
+    {
+     "page": "pLarge",
+     "visual": "k2",
+     "file": "definition/pages/pLarge/visuals/v02/visual.json",
+     "pointer": "/position/height",
+     "from": 400,
+     "to": 352
+    },
+    {
+     "file": ".platform",
+     "pointer": "/metadata/displayName",
+     "from": null,
+     "to": "Twin Sales redesigned"
+    },
+    {
+     "file": ".platform",
+     "pointer": "/config/logicalId",
+     "from": null,
+     "to": "a new id"
+    }
+   ],
+   "pages": [
+    {
+     "id": "p1overview",
+     "page": "Overview",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Overview",
+       "visual": "colRegion",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "40,250 600x430",
+       "from": {
+        "x": 40,
+        "y": 250,
+        "w": 600,
+        "h": 430
+       },
+       "to": {
+        "x": 40,
+        "y": 246,
+        "w": 602,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "lineMonth",
+       "type": "lineChart",
+       "fields": [
+        "Calendar[Month Name]",
+        "[Total Sales]"
+       ],
+       "place": "660,250 580x430",
+       "from": {
+        "x": 660,
+        "y": 250,
+        "w": 580,
+        "h": 430
+       },
+       "to": {
+        "x": 658,
+        "y": 246,
+        "w": 582,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "slRegion",
+       "type": "slicer",
+       "fields": [
+        "Sales[Region]"
+       ],
+       "place": "760,90 220x140",
+       "from": {
+        "x": 760,
+        "y": 90,
+        "w": 220,
+        "h": 140
+       },
+       "to": {
+        "x": 756,
+        "y": 76,
+        "w": 228,
+        "h": 140
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnDetails",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,90 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "btnReset",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,150 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "cardOrders",
+       "type": "card",
+       "fields": [
+        "[Orders]"
+       ],
+       "place": "380,100 200x120",
+       "why": "inside the group Orders block: the group places it"
+      },
+      {
+       "visual": "cardSales",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "40,90 300x140",
+       "why": "inside the group KPI row: the group places it"
+      },
+      {
+       "visual": "grpInner",
+       "type": "group",
+       "fields": [],
+       "place": "360,90 380x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "grpKpi",
+       "type": "group",
+       "fields": [],
+       "place": "40,90 700x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "nav",
+       "type": "pageNavigator",
+       "fields": [],
+       "place": "880,20 360x40",
+       "why": "the page navigator: kept where it is"
+      },
+      {
+       "visual": "title",
+       "type": "textbox",
+       "fields": [],
+       "place": "40,20 600x50",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p2details",
+     "page": "Details",
+     "size": "1920 x 1080",
+     "changes": [
+      {
+       "page": "Details",
+       "visual": "barProduct",
+       "type": "clusteredBarChart",
+       "fields": [
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "1000,120 860x500",
+       "from": {
+        "x": 1000,
+        "y": 120,
+        "w": 860,
+        "h": 500
+       },
+       "to": {
+        "x": 996,
+        "y": 114,
+        "w": 864,
+        "h": 522
+       }
+      },
+      {
+       "page": "Details",
+       "visual": "tblProducts",
+       "type": "tableEx",
+       "fields": [
+        "Sales[Product]",
+        "Sum(Sales[Amount])",
+        "[Total Sales]"
+       ],
+       "place": "60,120 900x900",
+       "from": {
+        "x": 60,
+        "y": 120,
+        "w": 900,
+        "h": 900
+       },
+       "to": {
+        "x": 60,
+        "y": 114,
+        "w": 916,
+        "h": 900
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnBack",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1460,960 400x60",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "customGauge",
+       "type": "custom twinCustomGauge0123456789ABCDEF",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "1000,660 400x360",
+       "why": "a custom visual: copied as it is, never moved or changed"
+      },
+      {
+       "visual": "note2",
+       "type": "textbox",
+       "fields": [],
+       "place": "60,30 1800x60",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p3tooltip",
+     "page": "Tooltip",
+     "size": "320 x 240",
+     "changes": [],
+     "notChanged": [
+      {
+       "visual": "tipCard",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "12,12 200x100",
+       "why": "on a tooltip page: kept as it is"
+      }
+     ],
+     "why": "a tooltip page: kept as it is (its size is the tooltip's; the visuals that show it keep their link)",
+     "hidden": "hidden in view mode: copied as it is, with its visuals placed on the grid"
+    },
+    {
+     "id": "pLarge",
+     "page": "Page pLarge",
+     "size": "1920 x 1080",
+     "changes": [
+      {
+       "page": "Page pLarge",
+       "visual": "k1",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "20,0 600x400",
+       "from": {
+        "x": 20,
+        "y": 0,
+        "w": 600,
+        "h": 400
+       },
+       "to": {
+        "x": 44,
+        "y": 24,
+        "w": 580,
+        "h": 352
+       },
+       "narrower": "20 narrower: its row is placed on the grid, with margins and gaps of 24"
+      },
+      {
+       "page": "Page pLarge",
+       "visual": "k2",
+       "type": "lineChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "630,0 1290x400",
+       "from": {
+        "x": 630,
+        "y": 0,
+        "w": 1290,
+        "h": 400
+       },
+       "to": {
+        "x": 648,
+        "y": 24,
+        "w": 1248,
+        "h": 352
+       },
+       "narrower": "42 narrower: its row is placed on the grid, with margins and gaps of 24"
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "bar",
+       "type": "shape",
+       "fields": [],
+       "place": "0,0 20x400",
+       "why": "a shape: kept where it is (it frames or underlines other visuals)"
+      },
+      {
+       "visual": "k3",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "0,400 960x680",
+       "why": "its row keeps its place: k4 (a table) would get smaller and could draw a scrollbar"
+      },
+      {
+       "visual": "k4",
+       "type": "tableEx",
+       "fields": [
+        "Sales[Product]",
+        "Sum(Sales[Amount])",
+        "[Total Sales]"
+       ],
+       "place": "960,400 900x600",
+       "why": "its row keeps its place: k4 (a table) would get smaller and could draw a scrollbar"
+      }
+     ],
+     "margins": [
+      "the grid's margin of 24 is not kept at the left of k1, k2: bar (shape) stays where it is beside it, so the row keeps 24 from it, 44 from the page's edge"
+     ]
+    }
+   ],
+   "digest": "89c1f9a58a1ee90c71057e4690d8ab35e9e7b1d2632a28776954a9880ff57ec9",
+   "answer": {
+    "length": 9677,
+    "sha256": "1600a5a17a688ed61b8037c8af2aec9715d91e5b17e4d2da7b19fd2a8afb43b3"
+   }
+  },
+  "C9 a group among visuals, a hidden visual": {
+   "problems": [],
+   "patches": [
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 600,
+     "to": 602
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/x",
+     "from": 660,
+     "to": 658
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/width",
+     "from": 580,
+     "to": 582
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/x",
+     "from": 760,
+     "to": 756
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 90,
+     "to": 76
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 220,
+     "to": 228
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/x",
+     "from": 1000,
+     "to": 996
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/width",
+     "from": 860,
+     "to": 864
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/height",
+     "from": 500,
+     "to": 522
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/width",
+     "from": 900,
+     "to": 916
+    },
+    {
+     "page": "pGroups",
+     "visual": "nearGrp",
+     "file": "definition/pages/pGroups/visuals/v03/visual.json",
+     "pointer": "/position/x",
+     "from": 560,
+     "to": 556
+    },
+    {
+     "page": "pGroups",
+     "visual": "nearGrp",
+     "file": "definition/pages/pGroups/visuals/v03/visual.json",
+     "pointer": "/position/y",
+     "from": 50,
+     "to": 48
+    },
+    {
+     "page": "pGroups",
+     "visual": "nearGrp",
+     "file": "definition/pages/pGroups/visuals/v03/visual.json",
+     "pointer": "/position/width",
+     "from": 680,
+     "to": 684
+    },
+    {
+     "page": "pGroups",
+     "visual": "lowCh",
+     "file": "definition/pages/pGroups/visuals/v05/visual.json",
+     "pointer": "/position/x",
+     "from": 660,
+     "to": 656
+    },
+    {
+     "page": "pGroups",
+     "visual": "lowCh",
+     "file": "definition/pages/pGroups/visuals/v05/visual.json",
+     "pointer": "/position/y",
+     "from": 380,
+     "to": 384
+    },
+    {
+     "page": "pGroups",
+     "visual": "lowCh",
+     "file": "definition/pages/pGroups/visuals/v05/visual.json",
+     "pointer": "/position/width",
+     "from": 580,
+     "to": 584
+    },
+    {
+     "file": ".platform",
+     "pointer": "/metadata/displayName",
+     "from": null,
+     "to": "Twin Sales redesigned"
+    },
+    {
+     "file": ".platform",
+     "pointer": "/config/logicalId",
+     "from": null,
+     "to": "a new id"
+    }
+   ],
+   "pages": [
+    {
+     "id": "p1overview",
+     "page": "Overview",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Overview",
+       "visual": "colRegion",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "40,250 600x430",
+       "from": {
+        "x": 40,
+        "y": 250,
+        "w": 600,
+        "h": 430
+       },
+       "to": {
+        "x": 40,
+        "y": 246,
+        "w": 602,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "lineMonth",
+       "type": "lineChart",
+       "fields": [
+        "Calendar[Month Name]",
+        "[Total Sales]"
+       ],
+       "place": "660,250 580x430",
+       "from": {
+        "x": 660,
+        "y": 250,
+        "w": 580,
+        "h": 430
+       },
+       "to": {
+        "x": 658,
+        "y": 246,
+        "w": 582,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "slRegion",
+       "type": "slicer",
+       "fields": [
+        "Sales[Region]"
+       ],
+       "place": "760,90 220x140",
+       "from": {
+        "x": 760,
+        "y": 90,
+        "w": 220,
+        "h": 140
+       },
+       "to": {
+        "x": 756,
+        "y": 76,
+        "w": 228,
+        "h": 140
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnDetails",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,90 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "btnReset",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,150 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "cardOrders",
+       "type": "card",
+       "fields": [
+        "[Orders]"
+       ],
+       "place": "380,100 200x120",
+       "why": "inside the group Orders block: the group places it"
+      },
+      {
+       "visual": "cardSales",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "40,90 300x140",
+       "why": "inside the group KPI row: the group places it"
+      },
+      {
+       "visual": "grpInner",
+       "type": "group",
+       "fields": [],
+       "place": "360,90 380x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "grpKpi",
+       "type": "group",
+       "fields": [],
+       "place": "40,90 700x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "nav",
+       "type": "pageNavigator",
+       "fields": [],
+       "place": "880,20 360x40",
+       "why": "the page navigator: kept where it is"
+      },
+      {
+       "visual": "title",
+       "type": "textbox",
+       "fields": [],
+       "place": "40,20 600x50",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p2details",
+     "page": "Details",
+     "size": "1920 x 1080",
+     "changes": [
+      {
+       "page": "Details",
+       "visual": "barProduct",
+       "type": "clusteredBarChart",
+       "fields": [
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "1000,120 860x500",
+       "from": {
+        "x": 1000,
+        "y": 120,
+        "w": 860,
+        "h": 500
+       },
+       "to": {
+        "x": 996,
+        "y": 114,
+        "w": 864,
+        "h": 522
+       }
+      },
+      {
+       "page": "Details",
+       "visual": "tblProducts",
+       "type": "tableEx",
+       "fields": [
+        "Sales[Product]",
+        "Sum(Sales[Amount])",
+        "[Total Sales]"
+       ],
+       "place": "60,120 900x900",
+       "from": {
+        "x": 60,
+        "y": 120,
+        "w": 900,
+        "h": 900
+       },
+       "to": {
+        "x": 60,
+        "y": 114,
+        "w": 916,
+        "h": 900
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnBack",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1460,960 400x60",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "customGauge",
+       "type": "custom twinCustomGauge0123456789ABCDEF",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "1000,660 400x360",
+       "why": "a custom visual: copied as it is, never moved or changed"
+      },
+      {
+       "visual": "note2",
+       "type": "textbox",
+       "fields": [],
+       "place": "60,30 1800x60",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p3tooltip",
+     "page": "Tooltip",
+     "size": "320 x 240",
+     "changes": [],
+     "notChanged": [
+      {
+       "visual": "tipCard",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "12,12 200x100",
+       "why": "on a tooltip page: kept as it is"
+      }
+     ],
+     "why": "a tooltip page: kept as it is (its size is the tooltip's; the visuals that show it keep their link)",
+     "hidden": "hidden in view mode: copied as it is, with its visuals placed on the grid"
+    },
+    {
+     "id": "pGroups",
+     "page": "Page pGroups",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Page pGroups",
+       "visual": "nearGrp",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "560,50 680x290",
+       "from": {
+        "x": 560,
+        "y": 50,
+        "w": 680,
+        "h": 290
+       },
+       "to": {
+        "x": 556,
+        "y": 48,
+        "w": 684,
+        "h": 290
+       }
+      },
+      {
+       "page": "Page pGroups",
+       "visual": "lowCh",
+       "type": "lineChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "660,380 580x300",
+       "from": {
+        "x": 660,
+        "y": 380,
+        "w": 580,
+        "h": 300
+       },
+       "to": {
+        "x": 656,
+        "y": 384,
+        "w": 584,
+        "h": 300
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "grpA",
+       "type": "group",
+       "fields": [],
+       "place": "40,40 500x300",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "inA",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "40,40 240x140",
+       "why": "inside the group grpA: the group places it"
+      },
+      {
+       "visual": "inB",
+       "type": "lineChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "290,40 250x300",
+       "why": "inside the group grpA: the group places it"
+      },
+      {
+       "visual": "hiddenCh",
+       "type": "areaChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "40,380 600x300",
+       "why": "hidden in the original (shown by a bookmark or a button): kept where it is"
+      }
+     ]
+    }
+   ],
+   "digest": "56d3c6a2f68ef665038214a4ec74b2b38a4b12681015cbcf3de08b84471afc5b",
+   "answer": {
+    "length": 9276,
+    "sha256": "fbd636c4c19b01207d423b25f996ff0965519b5fa1ffe5de859fd76301bc5faa"
+   }
+  },
+  "C10 titles, a restyle and consistentText report": {
+   "problems": [],
+   "patches": [
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 600,
+     "to": 602
+    },
+    {
+     "page": "p1overview",
+     "visual": "colRegion",
+     "file": "definition/pages/p1overview/visuals/colRegion/visual.json",
+     "pointer": "/visual/visualContainerObjects/title/0/properties/text/expr/Literal/Value",
+     "from": "'Sales by Region'",
+     "to": "'Regions'"
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/x",
+     "from": 660,
+     "to": 658
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/y",
+     "from": 250,
+     "to": 246
+    },
+    {
+     "page": "p1overview",
+     "visual": "lineMonth",
+     "file": "definition/pages/p1overview/visuals/lineMonth/visual.json",
+     "pointer": "/position/width",
+     "from": 580,
+     "to": 582
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/x",
+     "from": 760,
+     "to": 756
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/y",
+     "from": 90,
+     "to": 76
+    },
+    {
+     "page": "p1overview",
+     "visual": "slRegion",
+     "file": "definition/pages/p1overview/visuals/slRegion/visual.json",
+     "pointer": "/position/width",
+     "from": 220,
+     "to": 228
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/x",
+     "from": 1000,
+     "to": 996
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/width",
+     "from": 860,
+     "to": 864
+    },
+    {
+     "page": "p2details",
+     "visual": "barProduct",
+     "file": "definition/pages/p2details/visuals/barProduct/visual.json",
+     "pointer": "/position/height",
+     "from": 500,
+     "to": 522
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/y",
+     "from": 120,
+     "to": 114
+    },
+    {
+     "page": "p2details",
+     "visual": "tblProducts",
+     "file": "definition/pages/p2details/visuals/tblProducts/visual.json",
+     "pointer": "/position/width",
+     "from": 900,
+     "to": 916
+    },
+    {
+     "page": "pTitles",
+     "visual": "t1",
+     "file": "definition/pages/pTitles/visuals/v00/visual.json",
+     "pointer": "/position/x",
+     "from": 20,
+     "to": 16
+    },
+    {
+     "page": "pTitles",
+     "visual": "t1",
+     "file": "definition/pages/pTitles/visuals/v00/visual.json",
+     "pointer": "/position/y",
+     "from": 20,
+     "to": 16
+    },
+    {
+     "page": "pTitles",
+     "visual": "t1",
+     "file": "definition/pages/pTitles/visuals/v00/visual.json",
+     "pointer": "/position/width",
+     "from": 610,
+     "to": 592
+    },
+    {
+     "page": "pTitles",
+     "visual": "t1",
+     "file": "definition/pages/pTitles/visuals/v00/visual.json",
+     "pointer": "/visual/visualContainerObjects/title/0/properties/text/expr/Literal/Value",
+     "from": "'Sales by Region'",
+     "to": "'Sales by region'"
+    },
+    {
+     "page": "pTitles",
+     "visual": "t2",
+     "file": "definition/pages/pTitles/visuals/v01/visual.json",
+     "pointer": "/position/x",
+     "from": 600,
+     "to": 624
+    },
+    {
+     "page": "pTitles",
+     "visual": "t2",
+     "file": "definition/pages/pTitles/visuals/v01/visual.json",
+     "pointer": "/position/y",
+     "from": 30,
+     "to": 16
+    },
+    {
+     "page": "pTitles",
+     "visual": "t2",
+     "file": "definition/pages/pTitles/visuals/v01/visual.json",
+     "pointer": "/position/width",
+     "from": 660,
+     "to": 640
+    },
+    {
+     "page": "pTitles",
+     "visual": "t2",
+     "file": "definition/pages/pTitles/visuals/v01/visual.json",
+     "pointer": "/position/height",
+     "from": 320,
+     "to": 330
+    },
+    {
+     "page": "pTitles",
+     "visual": "t3",
+     "file": "definition/pages/pTitles/visuals/v02/visual.json",
+     "pointer": "/position/x",
+     "from": 20,
+     "to": 16
+    },
+    {
+     "page": "pTitles",
+     "visual": "t3",
+     "file": "definition/pages/pTitles/visuals/v02/visual.json",
+     "pointer": "/position/y",
+     "from": 370,
+     "to": 362
+    },
+    {
+     "page": "pTitles",
+     "visual": "t3",
+     "file": "definition/pages/pTitles/visuals/v02/visual.json",
+     "pointer": "/position/width",
+     "from": 1240,
+     "to": 1248
+    },
+    {
+     "page": "pTitles",
+     "visual": "t3",
+     "file": "definition/pages/pTitles/visuals/v02/visual.json",
+     "pointer": "/position/height",
+     "from": 330,
+     "to": 342
+    },
+    {
+     "file": "StaticResources/RegisteredResources/twin-theme.json",
+     "pointer": "/dataColors",
+     "from": [
+      "#0F766E",
+      "#2563EB",
+      "#D97706",
+      "#7C3AED",
+      "#DC2626",
+      "#059669"
+     ],
+     "to": [
+      "#4cc9f0",
+      "#f72585",
+      "#ffd166",
+      "#4361ee",
+      "#b5179e",
+      "#90e0ef",
+      "#7209b7",
+      "#06d6a0"
+     ]
+    },
+    {
+     "file": "StaticResources/RegisteredResources/twin-theme.json",
+     "pointer": "/foreground",
+     "from": "#1F2937",
+     "to": "#e8eaf6"
+    },
+    {
+     "file": "StaticResources/RegisteredResources/twin-theme.json",
+     "pointer": "/background",
+     "from": "#FFFFFF",
+     "to": "#15182a"
+    },
+    {
+     "file": "StaticResources/RegisteredResources/twin-theme.json",
+     "pointer": "/tableAccent",
+     "from": "#0F766E",
+     "to": "#4cc9f0"
+    },
+    {
+     "file": "StaticResources/RegisteredResources/twin-theme.json",
+     "pointer": "/good",
+     "from": null,
+     "to": "#06d6a0"
+    },
+    {
+     "file": "StaticResources/RegisteredResources/twin-theme.json",
+     "pointer": "/neutral",
+     "from": null,
+     "to": "#ffd166"
+    },
+    {
+     "file": "StaticResources/RegisteredResources/twin-theme.json",
+     "pointer": "/bad",
+     "from": null,
+     "to": "#ef476f"
+    },
+    {
+     "op": "remove",
+     "page": "pTitles",
+     "visual": "t2",
+     "file": "definition/pages/pTitles/visuals/v01/visual.json",
+     "pointer": "/visual/objects/labels/0/properties/fontFamily",
+     "from": "'Georgia'"
+    },
+    {
+     "op": "remove",
+     "page": "pTitles",
+     "visual": "t2",
+     "file": "definition/pages/pTitles/visuals/v01/visual.json",
+     "pointer": "/visual/objects/labels/0/properties/fontSize",
+     "from": "13D"
+    },
+    {
+     "file": ".platform",
+     "pointer": "/metadata/displayName",
+     "from": null,
+     "to": "Twin Sales redesigned"
+    },
+    {
+     "file": ".platform",
+     "pointer": "/config/logicalId",
+     "from": null,
+     "to": "a new id"
+    }
+   ],
+   "pages": [
+    {
+     "id": "p1overview",
+     "page": "Overview",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Overview",
+       "visual": "colRegion",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "40,250 600x430",
+       "from": {
+        "x": 40,
+        "y": 250,
+        "w": 600,
+        "h": 430
+       },
+       "to": {
+        "x": 40,
+        "y": 246,
+        "w": 602,
+        "h": 430
+       },
+       "title": {
+        "to": "Regions"
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "lineMonth",
+       "type": "lineChart",
+       "fields": [
+        "Calendar[Month Name]",
+        "[Total Sales]"
+       ],
+       "place": "660,250 580x430",
+       "from": {
+        "x": 660,
+        "y": 250,
+        "w": 580,
+        "h": 430
+       },
+       "to": {
+        "x": 658,
+        "y": 246,
+        "w": 582,
+        "h": 430
+       }
+      },
+      {
+       "page": "Overview",
+       "visual": "slRegion",
+       "type": "slicer",
+       "fields": [
+        "Sales[Region]"
+       ],
+       "place": "760,90 220x140",
+       "from": {
+        "x": 760,
+        "y": 90,
+        "w": 220,
+        "h": 140
+       },
+       "to": {
+        "x": 756,
+        "y": 76,
+        "w": 228,
+        "h": 140
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnDetails",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,90 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "btnReset",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1000,150 240x40",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "cardOrders",
+       "type": "card",
+       "fields": [
+        "[Orders]"
+       ],
+       "place": "380,100 200x120",
+       "why": "inside the group Orders block: the group places it"
+      },
+      {
+       "visual": "cardSales",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "40,90 300x140",
+       "why": "inside the group KPI row: the group places it"
+      },
+      {
+       "visual": "grpInner",
+       "type": "group",
+       "fields": [],
+       "place": "360,90 380x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "grpKpi",
+       "type": "group",
+       "fields": [],
+       "place": "40,90 700x140",
+       "why": "a group: it and its visuals keep their places (the group places them)"
+      },
+      {
+       "visual": "nav",
+       "type": "pageNavigator",
+       "fields": [],
+       "place": "880,20 360x40",
+       "why": "the page navigator: kept where it is"
+      },
+      {
+       "visual": "title",
+       "type": "textbox",
+       "fields": [],
+       "place": "40,20 600x50",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p2details",
+     "page": "Details",
+     "size": "1920 x 1080",
+     "changes": [
+      {
+       "page": "Details",
+       "visual": "barProduct",
+       "type": "clusteredBarChart",
+       "fields": [
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "1000,120 860x500",
+       "from": {
+        "x": 1000,
+        "y": 120,
+        "w": 860,
+        "h": 500
+       },
+       "to": {
+        "x": 996,
+        "y": 114,
+        "w": 864,
+        "h": 522
+       }
+      },
+      {
+       "page": "Details",
+       "visual": "tblProducts",
+       "type": "tableEx",
+       "fields": [
+        "Sales[Product]",
+        "Sum(Sales[Amount])",
+        "[Total Sales]"
+       ],
+       "place": "60,120 900x900",
+       "from": {
+        "x": 60,
+        "y": 120,
+        "w": 900,
+        "h": 900
+       },
+       "to": {
+        "x": 60,
+        "y": 114,
+        "w": 916,
+        "h": 900
+       }
+      }
+     ],
+     "notChanged": [
+      {
+       "visual": "btnBack",
+       "type": "actionButton",
+       "fields": [],
+       "place": "1460,960 400x60",
+       "why": "a button: kept where it is, with its action (page or bookmark)"
+      },
+      {
+       "visual": "customGauge",
+       "type": "custom twinCustomGauge0123456789ABCDEF",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "1000,660 400x360",
+       "why": "a custom visual: copied as it is, never moved or changed"
+      },
+      {
+       "visual": "note2",
+       "type": "textbox",
+       "fields": [],
+       "place": "60,30 1800x60",
+       "why": "a text box: kept where it is (the header and the lines drawn around it belong together)"
+      }
+     ]
+    },
+    {
+     "id": "p3tooltip",
+     "page": "Tooltip",
+     "size": "320 x 240",
+     "changes": [],
+     "notChanged": [
+      {
+       "visual": "tipCard",
+       "type": "card",
+       "fields": [
+        "[Total Sales]"
+       ],
+       "place": "12,12 200x100",
+       "why": "on a tooltip page: kept as it is"
+      }
+     ],
+     "why": "a tooltip page: kept as it is (its size is the tooltip's; the visuals that show it keep their link)",
+     "hidden": "hidden in view mode: copied as it is, with its visuals placed on the grid"
+    },
+    {
+     "id": "pTitles",
+     "page": "Page pTitles",
+     "size": "1280 x 720",
+     "changes": [
+      {
+       "page": "Page pTitles",
+       "visual": "t1",
+       "type": "clusteredColumnChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "20,20 610x330",
+       "from": {
+        "x": 20,
+        "y": 20,
+        "w": 610,
+        "h": 330
+       },
+       "to": {
+        "x": 16,
+        "y": 16,
+        "w": 592,
+        "h": 330
+       },
+       "narrower": "18 narrower: its row is placed on the grid, with margins and gaps of 16",
+       "title": {
+        "to": "Sales by region"
+       }
+      },
+      {
+       "page": "Page pTitles",
+       "visual": "t2",
+       "type": "lineChart",
+       "fields": [
+        "Sales[Region]",
+        "Sales[Product]",
+        "[Total Sales]"
+       ],
+       "place": "600,30 660x320",
+       "from": {
+        "x": 600,
+        "y": 30,
+        "w": 660,
+        "h": 320
+       },
+       "to": {
+        "x": 624,
+        "y": 16,
+        "w": 640,
+        "h": 330
+       },
+       "narrower": "20 narrower: its row is placed on the grid, with margins and gaps of 16",
+       "text": [
+        {
+         "class": "smallLightLabel",
+         "property": "fontFamily",
+         "from": "Georgia",
+         "to": "the theme's"
+        },
+        {
+         "class": "smallLightLabel",
+         "property": "fontSize",
+         "from": "13pt",
+         "to": "the theme's"
+        }
+       ]
+      },
+      {
+       "page": "Page pTitles",
+       "visual": "t3",
+       "type": "tableEx",
+       "fields": [
+        "Sales[Product]",
+        "Sum(Sales[Amount])",
+        "[Total Sales]"
+       ],
+       "place": "20,370 1240x330",
+       "from": {
+        "x": 20,
+        "y": 370,
+        "w": 1240,
+        "h": 330
+       },
+       "to": {
+        "x": 16,
+        "y": 362,
+        "w": 1248,
+        "h": 342
+       }
+      }
+     ],
+     "notChanged": []
+    }
+   ],
+   "digest": "13ef6740d7a0d8770d955246c98ed1739ed6d1157112a0249dae4a10a8eeeb73",
+   "answer": {
+    "length": 14246,
+    "sha256": "901ee5ced51b48a2032acc063187c86e0945c46df0003f48a78ba5121836bbeb"
+   }
+  }
+ }
+}
