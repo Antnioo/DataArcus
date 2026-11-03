@@ -40,6 +40,6 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const sec = newest(fs.readFileSync(file, 'utf8'));
   if (!sec) { console.log(`FAIL  changelog-words  no "## [Unreleased]" or version section in ${path.relative(ROOT, file)}`); process.exit(1); }
   const bad = internalCodes(sec.text);
-  if (bad.length) { console.log(`FAIL  changelog-words  ${bad.length} of ${sec.lines.length} [Unreleased] hold an internal code (keep codes in mcp/work/*.md):\n` + bad.map((b) => `      - ${b.codes.join(', ')}: ${b.line.trim().slice(0, 120)}`).join('\n')); process.exit(1); }
+  if (bad.length) { console.log(`FAIL  changelog-words  ${bad.length} of ${sec.lines.length} lines of the newest section hold an internal code (keep codes in mcp/work/*.md):\n` + bad.map((b) => `      - ${b.codes.join(', ')}: ${b.line.trim().slice(0, 120)}`).join('\n')); process.exit(1); }
   console.log(`PASS  changelog-words  ${sec.lines.length} checks (every line of the newest section in plain words)`);
 }
