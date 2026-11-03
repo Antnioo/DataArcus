@@ -228,33 +228,33 @@
   "T15 the fitting shapes, their own report": {
    "plan": {
     "err": false,
-    "length": 21100,
-    "sha256": "68e356597e75c10d1984504a308ad550cf28bc6d547677ee43a8bd694b5e306c"
+    "length": 21187,
+    "sha256": "681d657ccae2d76abe94f658b14c4bb972bc8dffc2721d33b532f4eacc09e286"
    },
    "write": {
     "err": false,
-    "length": 7894,
-    "sha256": "653a0d49fc9697b1b34f95d2f426a847b5814ad4b0a62eb2f20abe93854a7774"
+    "length": 7980,
+    "sha256": "38db56c5a5af836fba7d062ca70c2cf896576fc7dc3ec726cf5872330926bb03"
    },
    "files": {
-    "count": 106,
-    "sha256": "fe140f81ffaf84b12566d40d5f0df67e0b1d3ec63dd624ef9359e1bf8469ed96"
+    "count": 108,
+    "sha256": "14bd87cdaf5d60b5c2b4b858fcd8b792fe566ec3f96dee3668f61688864f89c9"
    }
   },
   "T16 the fitting shapes, both languages in one report": {
    "plan": {
     "err": false,
-    "length": 25767,
-    "sha256": "f2adb50de4e9ea15205f26a582c95b1a7571f0154b5a5b243b710504f84e6c7f"
+    "length": 25854,
+    "sha256": "13ffe841e72d2f47e4718d237ee5c1400198e14e50670f359ee52b023e36f5d9"
    },
    "write": {
     "err": false,
-    "length": 12339,
-    "sha256": "fb344af09072c8b81d4b62448aff0e22e415895096c675bc35227900d6e79349"
+    "length": 12425,
+    "sha256": "980ecb17720b12f9638910519426ac29a6fb85c7045f30dae007c355622571c3"
    },
    "files": {
-    "count": 157,
-    "sha256": "2dd2f24d92e57f0004f774e55fb1a0a129e527fee520800205a4b109f2ca2fed"
+    "count": 160,
+    "sha256": "1158cf2a0a5f410a518c04d653963d62dd97f8bd51b59020c90956231f0af103"
    }
   },
   "T17 twin-fuzz seed 20261102": {

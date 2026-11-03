@@ -136,7 +136,8 @@ function materialize(spec, dir) {
 // its icon off where that is not enough); a 60-wide
 // button between cards (cut); a text box with free room (widened, then taller) and one boxed in (cut); a table with
 // set column widths and two stale columnWidth entries for columns it no longer shows (B-289), its Arabic headers one
-// long (must wrap: cut) and one short (grows into the spare room). heat (1280 x 800): mx8's Call Center heatmap with its
+// long (must wrap: cut) and one short (grows into the spare room); a table with too little spare room (may be cut);
+// a table whose first column English hides (4 wide). heat (1280 x 800): mx8's Call Center heatmap with its
 // names table and its hour chart under it.
 const T = 'Sales', W = 'Work';
 const col = (t, c, d) => Object.assign({ field: { Column: { Expression: { SourceRef: { Entity: t } }, Property: c } }, queryRef: t + '.' + c, nativeQueryRef: c }, d ? { displayName: d } : {});
@@ -168,12 +169,15 @@ function fitProject(dir) {
     objects: { columnWidth: [cw('Sales.Product', 60), cw('Sales.Region', 50), cw('Sum(Sales.Amount)', 80), cw('Sales.Old Code', 150), cw('Sales.Old Name', 100)] } });
   const tblMay = box('tblMay', 700, 420, 209, 200, 9500, { visualType: 'tableEx', query: { queryState: { Values: { projections: [col(T, 'Region'), { field: { Aggregation: { Expression: { Column: { Expression: { SourceRef: { Entity: T } }, Property: 'Amount' } }, Function: 0 } }, queryRef: 'Sum(Sales.Amount)', nativeQueryRef: 'Sum of Amount' }] } } },
     objects: { columnWidth: [cw('Sales.Region', 70), cw('Sum(Sales.Amount)', 100)] } });
+  // (MX2: Fintech's watchlist) a column English hides (4 wide, under HIDDEN_W) stays hidden: never widened for its header
+  const tblHid = box('tblHid', 940, 420, 320, 200, 9800, { visualType: 'tableEx', query: { queryState: { Values: { projections: [col(T, 'Product'), col(T, 'Region'), { field: { Aggregation: { Expression: { Column: { Expression: { SourceRef: { Entity: T } }, Property: 'Amount' } }, Function: 0 } }, queryRef: 'Sum(Sales.Amount)', nativeQueryRef: 'Sum of Amount' }] } } },
+    objects: { columnWidth: [cw('Sales.Product', 4), cw('Sales.Region', 90), cw('Sum(Sales.Amount)', 90)] } });
   page('fit', 1280, 720, [
     slicer('slA', 0, 20, 400, 40, 1000), slicer('slB', 400, 20, 400, 40, 2000), button('btnLong', 800, 20, 80, 40, 3000, 'Reset'), card('cardTop', 880, 20, 400, 40, 4000),
     card('cardL', 0, 100, 220, 40, 5000), button('btnIcon', 220, 100, 100, 40, 5500, 'Clear', 10), card('cardR', 320, 100, 960, 40, 6000),
     card('cardC1', 0, 150, 400, 40, 6500), button('btnCut', 400, 150, 60, 40, 7000, 'Go'), card('cardC2', 460, 150, 820, 40, 7500),
     textbox('tbGrow', 20, 200, 160, 30, 8000, 'Notes'), card('cardT1', 600, 200, 200, 30, 8200), textbox('tbCut', 800, 200, 80, 30, 8400, 'Note'), card('cardT2', 880, 200, 200, 30, 8600),
-    tbl, tblMay]);
+    tbl, tblMay, tblHid]);
   page('heat', 1280, 800, [heat('heatG', { x: 543.33, y: 434.17, width: 317.5, height: 188.33 }), hours('hoursG', { x: 557.5, y: 603.75, width: 310, height: 82.5 })]);
   put(pj, pages);
 }
@@ -269,7 +273,7 @@ if (fs.existsSync(path.join(HERE, 'lib', 'twin-text-fit.mjs'))) {
     && /^import \{ HIDDEN_W, fitButtons, fitTextboxes, fitHeaders \} from '\.\/twin-text-fit\.mjs';$/m.test(pages) && Fit.HIDDEN_W === 10 && !/const HIDDEN_W = /.test(pages)
     && calls.every((i, k) => i > 0 && (k === 0 || i > calls[k - 1])),
   () => `M1 twin-pages.mjs defines no fitting function, imports fitButtons, fitTextboxes, fitHeaders and HIDDEN_W from twin-text-fit.mjs and calls them in the base's order (buttons, headers, keepView, text boxes, iconRoom, keepSize last): ${JSON.stringify(calls)}`);
-  chk(() => !/^\s*(let|var) /m.test(fit) && !/node:fs|readFileSync|writeFileSync|process\.|globalThis|Date\.now|Math\.random/.test(fit)
+  chk(() => !/^(let|var) /m.test(fit) && !/node:fs|readFileSync|writeFileSync|process\.|globalThis|Date\.now|Math\.random/.test(fit)
     && [...fit.matchAll(/^import .* from '([^']+)';$/gm)].map((m) => m[1]).every((m) => ['./read-report.mjs', './twin-read.mjs', './twin-visuals.mjs', 'node:module'].includes(m))
     && [...fit.matchAll(/^const (\w+) = /gm)].map((m) => m[1]).every((n) => ['require', 'Mirror', 'Rules', 'HIDDEN_W'].includes(n) || /^[A-Z_]+$/.test(n)),
   () => 'M2 twin-text-fit.mjs holds no module state (no top-level let or var; constants and the engines only) and does no IO (no fs, process, clock or randomness); it imports only read-report, twin-read, twin-visuals and the engines');
