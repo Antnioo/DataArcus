@@ -84,7 +84,8 @@ try {
   // ---------- L: one answer limit ----------
   const S = await import('./lib/scope.mjs'), R = await import('./lib/read-report.mjs');
   const src = (f) => fs.readFileSync(path.join(HERE, f), 'utf8');
-  chk(() => S.LIMIT === A.ANSWER_MAX && R.READ_CAP === A.ANSWER_MAX && S.AIM < A.ANSWER_MAX && /ANSWER_MAX/.test(src('lib/scope.mjs')) && /ANSWER_MAX/.test(src('lib/read-report.mjs')),
+  // (0.3.2 SP21) READ_CAP moved with read_report's answer to lib/report-answer.mjs; the check reads it there
+  chk(() => S.LIMIT === A.ANSWER_MAX && R.READ_CAP === A.ANSWER_MAX && S.AIM < A.ANSWER_MAX && /ANSWER_MAX/.test(src('lib/scope.mjs')) && /ANSWER_MAX/.test(src('lib/report-answer.mjs')),
     () => `L2. LIMIT, READ_CAP and AIM read from the one constant: ${S.LIMIT} ${R.READ_CAP} ${S.AIM}`);
   // where 40000 may stand as a number: the one constant, and an SVG design's own input size (report-fields.mjs:
   // what a person may pass, not an answer's size)
