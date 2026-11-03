@@ -1,0 +1,71 @@
+{
+  "failures": {
+    "P1": [
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v18/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v7/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v8/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v18/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v7/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v8/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v18/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v7/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v8/visual.json"
+        ]
+      }
+    ],
+    "D1": [
+      {
+        "why": "byte difference between independent plans",
+        "files": [
+          "Synthetic AR.Report/.platform"
+        ]
+      }
+    ],
+    "B2": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v8",
+          "p0/v17"
+        ]
+      }
+    ],
+    "B2new": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v8",
+          "p0/v17",
+          "English [{\"x\":723,\"y\":386,\"width\":179,\"height\":312,\"z\":8000},{\"x\":1001,\"y\":259,\"width\":527,\"height\":440,\"z\":17000}]",
+          "Arabic [{\"x\":727,\"y\":386,\"width\":477,\"height\":312,\"z\":8000},{\"x\":392,\"y\":259,\"width\":527,\"height\":440,\"z\":17000}]",
+          "plan on v8: fitted.buttons",
+          "plan on v17: movedByRule: gave width to a button beside it",
+          "in pictureChecks.newOverlaps: false"
+        ]
+      }
+    ]
+  },
+  "extra": {
+    "validatorOriginal": [
+      "PBIR_QUERY_STATE_MISSING"
+    ],
+    "normalizedRepeat": true,
+    "normalizedRenamed": true
+  }
+}
