@@ -12,6 +12,9 @@ package's manifest; this file says what is in it.
 - **An Arabic label beside a value reads in order:** in the Arabic twin, a card or title that joins your approved
   Arabic words with a value of the model (a day, an hour, a count) keeps each value in its place, so "Thursday" or
   "11:00 PM" no longer swaps with the Arabic around it; your words are written exactly as you approved them.
+- **Inside the Arabic twin:** the rules that say what kind a visual is, which chart axis is time and what keeps reading
+  left to right inside a mirrored visual have a file of their own; every twin and every right-to-left chart is exactly
+  what it was before.
 - **A chart under a heatmap that cannot move:** when lining it up under the heatmap's grid would cover another
   visual, it stays where the plain mirror puts it but keeps its English sort, value axis and padding, so its hours still
   read left to right like the grid above it.
