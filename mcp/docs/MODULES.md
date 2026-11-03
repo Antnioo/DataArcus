@@ -10,7 +10,8 @@ task routes.
   copies in `ar/`. Its Power BI tools run in the browser; nothing a visitor opens is uploaded.
 - **The engines** (`assets/js/*.js`, each with its `.min.js`): plain JavaScript that runs in the browser and in Node,
   **shared by the website and the MCP on purpose**, so both give the same answers. The model reader and field picker
-  (`pbip-bind.js`, `tmdl-model.js`), the report writer (`pbip-export.js`, `pbip-page.js`, `pbip-query.js`), the design
+  (`pbip-bind.js`, `tmdl-model.js`), the report writer (`pbip-export.js`, `pbip-page.js`, `pbip-query.js`; its ZIP `pbip-zip.js` and sample model
+  `pbip-sample.js`), the design
   engine (`design-engine.js`), the health check (`model-health-engine.js`, `model-health-tmdl.js`, `gulf-health.js`),
   the calendar generator (`calendar-generator.js`, `gulf-dates.js`), the measured rules (`report-rules.js`,
   `label-limits.js`, `layout-check.js`, `report-a11y.js`), the mirror engine for right to left (`report-mirror.js`)

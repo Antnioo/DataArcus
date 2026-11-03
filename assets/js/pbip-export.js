@@ -25,92 +25,11 @@
   const BOLD_TOTAL = "'Segoe UI Bold', wf_segoe-ui_bold, helvetica, arial, sans-serif";
 
 
-  // ---------- zip (stored) ----------
-  const CRC = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
-  const crc32 = (u) => { let c = 0xffffffff; for (let i = 0; i < u.length; i++) c = CRC[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
-  function zip(files) {
-    const enc = new TextEncoder(), parts = [], central = [];
-    let offset = 0;
-    const d = new Date(), time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
-    files.forEach((f) => {
-      const name = enc.encode(f.path), data = typeof f.data === 'string' ? enc.encode(f.data) : f.data, crc = crc32(data);
-      const h = new DataView(new ArrayBuffer(30));
-      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
-      h.setUint16(10, time, true); h.setUint16(12, date, true); h.setUint32(14, crc, true); h.setUint32(18, data.length, true); h.setUint32(22, data.length, true);
-      h.setUint16(26, name.length, true); h.setUint16(28, 0, true);
-      parts.push(new Uint8Array(h.buffer), name, data);
-      const c = new DataView(new ArrayBuffer(46));
-      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, 0, true);
-      c.setUint16(12, time, true); c.setUint16(14, date, true); c.setUint32(16, crc, true); c.setUint32(20, data.length, true); c.setUint32(24, data.length, true);
-      c.setUint16(28, name.length, true); c.setUint32(42, offset, true);
-      central.push(new Uint8Array(c.buffer), name);
-      offset += 30 + name.length + data.length;
-    });
-    const size = central.reduce((a, p) => a + p.length, 0), e = new DataView(new ArrayBuffer(22));
-    e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, size, true); e.setUint32(16, offset, true);
-    const all = parts.concat(central, [new Uint8Array(e.buffer)]), out = new Uint8Array(all.reduce((a, p) => a + p.length, 0));
-    let at = 0; all.forEach((p) => { out.set(p, at); at += p.length; });
-    return out;
-  }
+  // the stored ZIP (pbip-zip.js) and the sample model (pbip-sample.js), 0.3.2 SP5: in Node required here, in the browser
+  // loaded before this file (theme-generator.js's BUILDER list)
+  const { zip, crc32 } = (typeof module !== 'undefined' && module.exports ? require('./pbip-zip.js') : root.DAPbipZip);
+  const Sample = (typeof module !== 'undefined' && module.exports ? require('./pbip-sample.js') : root.DAPbipSample);
 
-  // ---------- sample data: a small sales table so the report opens looking finished ----------
-  const T = {
-    en: { table: 'Sample Data', month: 'Month', monthNo: 'Month No', category: 'Category', region: 'Region', revenue: 'Revenue', cost: 'Cost', orders: 'Orders', customers: 'Customers',
-      months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], cats: ['Electronics', 'Home', 'Fashion', 'Sports'], regions: ['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman'],
-      m: { rev: 'Total Revenue', ord: 'Total Orders', aov: 'Avg Order Value', mar: 'Margin %', cus: 'Total Customers', rpc: 'Revenue per Customer' } },
-    ar: { table: 'بيانات تجريبية', month: 'الشهر', monthNo: 'رقم الشهر', category: 'الفئة', region: 'المنطقة', revenue: 'الإيرادات', cost: 'التكلفة', orders: 'الطلبات', customers: 'العملاء',
-      months: AR_MONTHS, cats: ['إلكترونيات', 'المنزل', 'أزياء', 'رياضة'], regions: ['دبي', 'أبوظبي', 'الشارقة', 'عجمان'],
-      m: { rev: 'إجمالي الإيرادات', ord: 'إجمالي الطلبات', aov: 'متوسط قيمة الطلب', mar: 'هامش الربح %', cus: 'إجمالي العملاء', rpc: 'الإيراد لكل عميل' } }
-  };
-  function sampleModel(t) {
-    const rows = [];
-    t.months.forEach((mo, mi) => t.cats.forEach((ca, ci) => {
-      const base = 42000 + ci * 9000 + mi * 1800 + ((mi * 7 + ci * 13) % 9) * 1500, orders = Math.round(base / (180 + ci * 35));
-      rows.push('{' + [daxNames.string(mo), mi + 1, daxNames.string(ca), daxNames.string(t.regions[(mi + ci) % 4]), base, Math.round(base * (0.58 + ci * 0.04)), orders, Math.round(orders * 0.72)].join(', ') + '}');
-    }));
-    const tb = t.table, col = (name, dataType, extra) => Object.assign({ type: 'calculatedTableColumn', name, dataType, isNameInferred: true, isDataTypeInferred: true, sourceColumn: '[' + name + ']' }, extra || {});
-    const expr = 'DATATABLE(' + [t.month, 'STRING', t.monthNo, 'INTEGER', t.category, 'STRING', t.region, 'STRING', t.revenue, 'DOUBLE', t.cost, 'DOUBLE', t.orders, 'INTEGER', t.customers, 'INTEGER'].map((x, i) => (i % 2 ? x : daxNames.string(x))).join(', ') + ', {' + rows.join(', ') + '})';
-    const R = daxNames.column(tb, t.revenue), m = t.m;
-    return {
-      name: tb,
-      columns: [
-        col(t.month, 'string', { sortByColumn: t.monthNo, summarizeBy: 'none' }),
-        col(t.monthNo, 'int64', { isHidden: true, summarizeBy: 'none' }),
-        col(t.category, 'string', { summarizeBy: 'none' }),
-        col(t.region, 'string', { summarizeBy: 'none', dataCategory: 'City' }),
-        col(t.revenue, 'double', { isHidden: true, summarizeBy: 'sum', formatString: '#,0' }),
-        col(t.cost, 'double', { isHidden: true, summarizeBy: 'sum', formatString: '#,0' }),
-        col(t.orders, 'int64', { isHidden: true, summarizeBy: 'sum', formatString: '#,0' }),
-        col(t.customers, 'int64', { isHidden: true, summarizeBy: 'sum', formatString: '#,0' })
-      ],
-      partitions: [{ name: tb, mode: 'import', source: { type: 'calculated', expression: expr } }],
-      measures: [
-        { name: m.rev, expression: 'SUM(' + R + ')', formatString: '#,0' },
-        { name: m.ord, expression: 'SUM(' + daxNames.column(tb, t.orders) + ')', formatString: '#,0' },
-        { name: m.aov, expression: 'DIVIDE([' + m.rev + '], [' + m.ord + '])', formatString: '#,0.0' },
-        { name: m.mar, expression: 'DIVIDE(SUM(' + R + ') - SUM(' + daxNames.column(tb, t.cost) + '), SUM(' + R + '))', formatString: '0.0%' },
-        { name: m.cus, expression: 'SUM(' + daxNames.column(tb, t.customers) + ')', formatString: '#,0' },
-        { name: m.rpc, expression: 'DIVIDE([' + m.rev + '], [' + m.cus + '])', formatString: '#,0' }
-      ]
-    };
-  }
-  // Which fields each kind of visual shows. The sample data and a user's own model both come in this shape:
-  // { kpis: [f], measure: f, date: f, cats: { bar, column, donut, funnel, treemap, map }, y: { funnel, gauge },
-  //   table: [f], slicers: [f], tip: { card, cat, y, date } }, where f is a bound field (see proj above); tip.date is the
-  // month field for the tooltip's trend (optional: without it the report has the one tooltip page by category)
-  function sampleBind(t) {
-    const C = (c) => ({ t: t.table, c }), Me = (m) => ({ t: t.table, m }), m = t.m;
-    return {
-      // (the margin is a percent, formatted 0.0% in the sample model: its card shows that format, see cardObjects; round
-      // 12, the owner's rule: the "#,0" measures show their whole numbers, the "#,0.0" average automatic units)
-      kpis: [m.rev, m.ord, m.aov, m.mar, m.cus, m.rpc].map((x) => Object.assign(Me(x), x === m.mar ? { pct: true, pctFormat: '0.0%' } : x === m.aov ? {} : { wholeFormat: '#,0' })), measure: Me(m.rev), date: C(t.month),
-      cats: { bar: C(t.category), column: C(t.region), donut: C(t.category), funnel: C(t.category), treemap: C(t.category), map: C(t.region) },
-      y: { funnel: Me(m.ord), gauge: Me(m.mar) },
-      table: [C(t.region), Me(m.rev), Me(m.ord), Me(m.mar)],
-      slicers: [C(t.region), C(t.category), C(t.month)],
-      tip: { card: Object.assign(Me(m.rev), { wholeFormat: '#,0' }), cat: C(t.category), y: Me(m.ord), date: C(t.month) }
-    };
-  }
   /**
    * 0.2.9, audit 3's A3-9: build's contract, written down and checked at its top (checkBuild). The writer reads nothing
    * else from its caller. Sizes are page units (the page's own width and height).
@@ -137,7 +56,7 @@
    * @property {string} [cardFormat]  the card's format with kpiValues "full"
    * @property {string} [tableFormat]  a table column's format
    *
-   * @typedef {Object} Bind  the fields of each visual (sampleBind gives the sample's)
+   * @typedef {Object} Bind  the fields of each visual (pbip-sample.js bind gives the sample's)
    * @property {Field[]} [kpis]  one per KPI card, in order
    * @property {Field} [measure]  the main measure (line chart, cards, table titles)
    * @property {Field} [date]  the line chart's time axis (null: the line charts give their room away, fitSlots)
@@ -328,7 +247,7 @@
   // the slots the report gets. o: build's input (the pages' png not needed)
   function fitOptions(o) {
     const lang = o.lang === 'ar' ? 'ar' : 'en', rtl = !!o.rtl, font = o.font || 'Segoe UI', W = o.texts || {};
-    const own = !!(o.model && (o.model.byPath || o.model.byConnection)), sample = !!o.sample && !own, B = own ? (o.bind || null) : sample ? sampleBind(T[lang]) : null;
+    const own = !!(o.model && (o.model.byPath || o.model.byConnection)), sample = !!o.sample && !own, B = own ? (o.bind || null) : sample ? Sample.bind(lang) : null;
     const PAGES = o.pages && o.pages.length ? o.pages : [{ name: o.pageName, page: o.page, slots: o.slots }], { base } = nameOf(o, W);
     const ts = Page.themeSizes(o), c = Object.assign({ o, B, own, PAGES, base, rtl, font, W }, ts, Sizing.make({ font, LABEL: ts.LABEL }));
     return PAGES.map((pg) => Page.fitOf(c, pg));
@@ -341,12 +260,12 @@
     const themeCard = ((((((((o.theme || {}).visualStyles || {})['*'] || {})['*'] || {}).background || [])[0] || {}).color || {}).solid || {}).color;
     const readable = A11y.readable(o.theme, ((o.ui || {}).card) || themeCard);
     if (readable.changed.length) o = Object.assign({}, o, { theme: readable.theme });
-    const lang = o.lang === 'ar' ? 'ar' : 'en', t = T[lang], rtl = !!o.rtl, u = o.ui, font = o.font || 'Segoe UI';
+    const lang = o.lang === 'ar' ? 'ar' : 'en', rtl = !!o.rtl, u = o.ui, font = o.font || 'Segoe UI';
     const W = o.texts || {};
     // the data: the sample table, the user's own model (o.model: { byPath } or { byConnection }), or none
     const own = !!(o.model && (o.model.byPath || o.model.byConnection));
     const sample = !!o.sample && !own;
-    const B = own ? (o.bind || null) : sample ? sampleBind(t) : null;
+    const B = own ? (o.bind || null) : sample ? Sample.bind(lang) : null;
     // the notes: what the writer did that its caller should tell (pbip-notes.js)
     const n = Notes.make(o), { noData, rowLabels, timeExt } = n;
     // bars that fade by value (o.chartColors 'gradient', round 13): the two ends, or null when the colour cannot fade
@@ -407,7 +326,7 @@
       compatibilityLevel: 1567,
       model: {
         culture, dataAccessOptions: { legacyRedirects: true, returnErrorValuesAsNull: true }, defaultPowerBIDataSourceVersion: 'powerBI_V3', sourceQueryCulture: culture,
-        tables: sample ? [sampleModel(t)] : [],
+        tables: sample ? [Sample.model(lang)] : [],
         annotations: [{ name: '__PBI_TimeIntelligenceEnabled', value: '0' }, { name: 'PBI_ProTooling', value: '["DevMode"]' }]
       }
     }));
@@ -598,6 +517,6 @@
   }
 
   // AR_MONTHS: the one Arabic month list (the cross-review's duplicates: the twin uses it too)
-  const api = { build, isolateFiles, zip, crc32, textWidth, columnRoom, cellRoom, hasControl, daxNames, pageFilterOf, fitOptions, timeAxisPlan, barNameShare, AR_MONTHS: T.ar.months.slice() };
+  const api = { build, isolateFiles, zip, crc32, textWidth, columnRoom, cellRoom, hasControl, daxNames, pageFilterOf, fitOptions, timeAxisPlan, barNameShare, AR_MONTHS: AR_MONTHS.slice() };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbip = api;
 })(typeof self !== 'undefined' ? self : this);
