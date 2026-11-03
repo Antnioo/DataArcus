@@ -1,0 +1,65 @@
+{
+ "about": "test-0.3.2-sp15.mjs: normalizeModel, the index, daxRefs and aggBase (and analyze() for B1-B3), and check_model_health's answer on the incomplete model, recorded on the base (normalised: the working folder, the plan id and the path separator)",
+ "records": {
+  "N1 A1 the health project (model.bim and a PBIR report)": {
+   "length": 8444,
+   "sha256": "2f5794daf65332a2eefa600db726f8ff3f11d0290157a12c40233f66279d9eb5"
+  },
+  "N2 A2 the twin project": {
+   "length": 5215,
+   "sha256": "a21698838713519735665b020966dc0fc7a469ba553c3e1c9e8de442766afc58"
+  },
+  "N3 A3 a TMDL project (folder)": {
+   "length": 7278,
+   "sha256": "078d4bc8237aef9c66624669bed668118ad20b4f45d86bc92dc576c372b58390"
+  },
+  "N4 A4 the same project as a .pbit": {
+   "length": 7278,
+   "sha256": "078d4bc8237aef9c66624669bed668118ad20b4f45d86bc92dc576c372b58390"
+  },
+  "N5 A5 the Ramadan TMDL project": {
+   "length": 34062,
+   "sha256": "af115073b86a78103818bd77321b55d2cefea30b2f7758da91277d3e033eac24"
+  },
+  "N6 A6 legacy.pbit (a legacy Layout)": {
+   "length": 5536,
+   "sha256": "69f383c985be0c22e67d849a3105f0f59d3f57016e20ec6dada137b18a1fb1f5"
+  },
+  "N7 A7 the tricky DAX, model only": {
+   "length": 14341,
+   "sha256": "1d1a2496d118f6cdad06a7ab0d655d2e554e16a212e876e9ad78674536b32936"
+  },
+  "N8 A8 the tricky DAX with a PBIR report": {
+   "length": 14341,
+   "sha256": "1d1a2496d118f6cdad06a7ab0d655d2e554e16a212e876e9ad78674536b32936"
+  },
+  "N9 A9 the Arabic model with a legacy report": {
+   "length": 9030,
+   "sha256": "b60833b7ebc2aa2baac79fe50a14f699c0fedcae48a7703d52b4de55ac7b0d58"
+  },
+  "N10 A10 DAX tables and a function, model only": {
+   "length": 3883,
+   "sha256": "91d79a6d0105c6ed09d903ffda67f5defaecb2e0e40a259768399ada55f3cdf2"
+  },
+  "N11 A11 the incomplete TMDL model (a table file empty)": {
+   "length": 7278,
+   "sha256": "078d4bc8237aef9c66624669bed668118ad20b4f45d86bc92dc576c372b58390"
+  },
+  "N12 B1 calculation groups with a PBIR report": {
+   "length": 15654,
+   "sha256": "ab7085d28373855a2b247bd201e95a3574eeb752290f1499e01e1785a693bb65"
+  },
+  "N13 B2 measures using another table's measures, with a PBIR report": {
+   "length": 16580,
+   "sha256": "5314f044017ec4684d684c2b1b3178af9c5cbfc36a0d8e9637c7224ae8b2037a"
+  },
+  "N14 B3 the incomplete TMDL model (a table file that is not TMDL)": {
+   "length": 13002,
+   "sha256": "65f727d33622ad9cd660a168169438e0bd35af03e916ba6179a388af6f0f530a"
+  },
+  "Q1": {
+   "length": 3017,
+   "sha256": "d7fb2062b70d8786c37ee447577333f732ffca68ff699d22b1d619fe088ff591"
+  }
+ }
+}
