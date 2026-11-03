@@ -125,7 +125,7 @@ try {
   const planOf = async (spec, name) => { const dir = path.join(ROOT, name); fs.mkdirSync(dir); materialize(spec, dir); const p = await call({ path: name + '/Synthetic.pbip', arabicMonth: false }); if (!p.j || !p.j.plan) throw new Error('no plan: ' + p.t.slice(0, 300)); return { plan: p.j.plan, size: p.t.length, pj: p.j }; };
   const entry = (r, where) => ((r.plan.movedByRule || r.pj.movedByRule || (r.pj.answer || {}).movedByRule || []).find((x) => x.where === where) || {});
   const findMoves = (o, where, d = 0) => { if (!o || typeof o !== 'object' || d > 6) return null; if (Array.isArray(o.movedByRule)) { const e = o.movedByRule.find((x) => x.where === where); if (e) return e; } for (const v of Object.values(o)) { const f = findMoves(v, where, d + 1); if (f) return f; } return null; };
-  const noDash = (s) => !/—/.test(s);
+  const noDash = (s) => !/\u2014/.test(s);
 
   const a1 = JSON.parse(fs.readFileSync(path.join(HERE, 'fixtures/hm2/A1-1.json'), 'utf8'));
   a1.pages[0].visuals.push({ $schema: VS, name: 'block', position: { x: 255, y: 440, width: 15, height: 60, z: 3000, tabOrder: 3000 }, visual: { visualType: 'shape', objects: { shape: [{ properties: { tileShape: L("'rectangle'") } }] } } });
