@@ -10,7 +10,7 @@
 //   B3  the approval page shows both halves, every file grouped and counted; one click writes once
 //   B4  A3's sweep on the Arabic half: no Latin run the plan does not list as kept in English
 //   B5  every 0.3.0 option on: written, the pills synced, validator 0 errors, check_report 0 "can break", the sweep
-//       0 unlisted, every answer under 40,000 characters
+//       0 unlisted, every answer under 40,000 characters, no plan with an id cut (0.3.2 HR1)
 //   B6  X1's EN-AR copy syncs a pill slicer pair too (every slicer kind Microsoft's catalog says can sync)
 // (0.3.1, ported onto today's code: the Arabic half is the EN-AR copy's own build, so R1's language buttons and V1's
 // approval-page pairs come with it; the parity suite, test-0.3.1-mirror-parity.mjs, compares it with the copy)
@@ -56,8 +56,12 @@ const log = path.join(ROOT, 'links.txt'), links = () => (fs.existsSync(log) ? fs
 const linkAt = async (i) => { for (let k = 0; k < 100 && links().length <= i; k++) await sleep(50); return links()[i] || ''; };
 const s = await serverClient(ROOT, {});
 const w = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' });
-let biggest = { n: 0, tool: '' };
-const call = async (c, tool, args) => { const r = await c.call(tool, args); if (String(r.t).length > biggest.n) biggest = { n: String(r.t).length, tool }; return r; };
+let biggest = { n: 0, tool: '' }; const cutBy = [];
+// (0.3.2 HR1) a capped answer is under 40,000 by construction: a plan the person approves (a plan id) that was cut
+// (truncated.cut, capAnswer's) fails B5h too. A step before the plan id (the Arabic texts not given yet) can still be
+// cut: HR1's note, "For the owner"
+const call = async (c, tool, args) => { const r = await c.call(tool, args); if (String(r.t).length > biggest.n) biggest = { n: String(r.t).length, tool };
+  if (r.j && r.j.truncated && r.j.truncated.cut && r.j.plan && r.j.plan.planId) cutBy.push(`${tool} "${args && args.name}" ${String(r.t).length}: ${JSON.stringify(r.j.truncated.cut)}`); return r; };
 
 // the person: answers the Gulf date and shared-axes questions, approves an Arabic name for every field but one (declined:
 // kept in English), then an Arabic text for every text the terms do not give
@@ -217,7 +221,7 @@ try {
       chk(() => ENA.every((p) => pj(p).visibility === undefined || pj(p).type === 'Tooltip') && ARA.every((p) => pj(p).visibility === 'HiddenInViewMode'), () => `B5g. the Arabic half hidden in the tabs, the English shown: ${oa.map((p) => pj(p).visibility || 'shown')}`);
     }
   }
-  chk(() => biggest.n > 0 && biggest.n < 40000, () => `B5h. every answer under 40,000 characters: the largest ${biggest.n} (${biggest.tool})`);
+  chk(() => biggest.n > 0 && biggest.n < 40000 && !cutBy.length, () => `B5h. every answer under 40,000 characters, no plan with an id cut: the largest ${biggest.n} (${biggest.tool}); cut: ${cutBy.join('; ') || 'none'}`);
 
   // ---------- B6: X1's copy syncs the pills too ----------
   {
