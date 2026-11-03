@@ -3,59 +3,31 @@
     {
       "id": "p0",
       "width": 1280,
-      "height": 800,
+      "height": 720,
       "visuals": [
-        {
-          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
-          "name": "v7",
-          "position": {
-            "x": 370,
-            "y": 632,
-            "width": 177,
-            "height": 168,
-            "z": 7000
-          },
-          "visual": {
-            "visualType": "slicer"
-          }
-        },
         {
           "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
           "name": "v9",
           "position": {
-            "x": 1163,
-            "y": 536,
-            "width": 64,
-            "height": 262,
+            "x": 762,
+            "y": 381,
+            "width": 213,
+            "height": 309,
             "z": 9000
           },
           "visual": {
-            "visualType": "textbox"
+            "visualType": "areaChart"
           }
         },
         {
           "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
           "name": "v13",
           "position": {
-            "x": 153,
-            "y": 667,
-            "width": 354,
-            "height": 133,
+            "x": 1008,
+            "y": 275,
+            "width": 272,
+            "height": 332,
             "z": 13000
-          },
-          "visual": {
-            "visualType": "clusteredColumnChart"
-          }
-        },
-        {
-          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
-          "name": "v14",
-          "position": {
-            "x": 680,
-            "y": 498,
-            "width": 99,
-            "height": 273,
-            "z": 14000
           },
           "visual": {
             "visualType": "actionButton",
@@ -66,7 +38,7 @@
                     "text": {
                       "expr": {
                         "Literal": {
-                          "Value": "'Synthetic action page 0 visual 14'"
+                          "Value": "'Synthetic action page 2 visual 13'"
                         }
                       }
                     }
@@ -87,6 +59,20 @@
                 }
               ]
             }
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v17",
+          "position": {
+            "x": 357,
+            "y": 640,
+            "width": 233,
+            "height": 80,
+            "z": 17000
+          },
+          "visual": {
+            "visualType": "donutChart"
           }
         }
       ]

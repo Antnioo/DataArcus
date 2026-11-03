@@ -5,27 +5,24 @@
         "why": "exact digest binds files but answer does not enumerate their paths",
         "files": [
           "Synthetic AR.Report/.platform",
-          "Synthetic AR.Report/definition/pages/p0/visuals/v16/visual.json",
-          "Synthetic AR.Report/definition/pages/p0/visuals/v18/visual.json",
-          "Synthetic AR.Report/definition/pages/p0/visuals/v6/visual.json"
+          "Synthetic AR.Report/definition/pages/p0/visuals/v2/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v5/visual.json"
         ]
       },
       {
         "why": "exact digest binds files but answer does not enumerate their paths",
         "files": [
           "Synthetic AR.Report/.platform",
-          "Synthetic AR.Report/definition/pages/p0/visuals/v16/visual.json",
-          "Synthetic AR.Report/definition/pages/p0/visuals/v18/visual.json",
-          "Synthetic AR.Report/definition/pages/p0/visuals/v6/visual.json"
+          "Synthetic AR.Report/definition/pages/p0/visuals/v2/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v5/visual.json"
         ]
       },
       {
         "why": "exact digest binds files but answer does not enumerate their paths",
         "files": [
           "Synthetic AR.Report/.platform",
-          "Synthetic AR.Report/definition/pages/renamed1/visuals/v16/visual.json",
-          "Synthetic AR.Report/definition/pages/renamed1/visuals/v18/visual.json",
-          "Synthetic AR.Report/definition/pages/renamed1/visuals/v6/visual.json"
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v2/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v5/visual.json"
         ]
       }
     ],
@@ -39,30 +36,23 @@
     ],
     "B2": [
       {
-        "why": "existing overlap lost",
-        "files": [
-          "p0/v6",
-          "p0/v16"
-        ]
-      },
-      {
         "why": "new overlap introduced",
         "files": [
-          "p0/v6",
-          "p0/v18"
+          "p0/v3",
+          "p0/v5"
         ]
       }
     ],
     "B2new": [
       {
-        "why": "new overlap introduced",
+        "why": "new overlap introduced, said in pictureChecks.newOverlaps",
         "files": [
-          "p0/v6",
-          "p0/v18",
-          "English [{\"x\":812,\"y\":128,\"width\":158,\"height\":305,\"z\":6000},{\"x\":1061,\"y\":417,\"width\":110,\"height\":221,\"z\":18000}]",
-          "Arabic [{\"x\":310,\"y\":128,\"width\":158,\"height\":305,\"z\":6000},{\"x\":0,\"y\":417,\"width\":386,\"height\":221,\"z\":18000}]",
-          "plan on v6: movedByRule: in a matrix's side margin: narrowed off its row headers | movedByRule: moved with a button beside it",
-          "plan on v18: fitted.buttons",
+          "p0/v3",
+          "p0/v5",
+          "English [{\"x\":241,\"y\":486,\"width\":64,\"height\":234,\"z\":3000},{\"x\":350,\"y\":202,\"width\":334,\"height\":294,\"z\":5000}]",
+          "Arabic [{\"x\":975,\"y\":486,\"width\":64,\"height\":234,\"z\":3000},{\"x\":895,\"y\":202,\"width\":334,\"height\":294,\"z\":5000}]",
+          "plan on v3: none",
+          "plan on v5: movedByRule: moved with a button beside it",
           "in pictureChecks.newOverlaps: true"
         ]
       }

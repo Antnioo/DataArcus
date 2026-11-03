@@ -2,18 +2,18 @@
   "pages": [
     {
       "id": "p0",
-      "width": 1280,
-      "height": 800,
+      "width": 1920,
+      "height": 1080,
       "visuals": [
         {
           "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
-          "name": "v6",
+          "name": "v1",
           "position": {
-            "x": 1071,
-            "y": 526,
-            "width": 209,
-            "height": 274,
-            "z": 6000
+            "x": 1510,
+            "y": 115,
+            "width": 410,
+            "height": 447,
+            "z": 1000
           },
           "visual": {
             "visualType": "actionButton",
@@ -24,7 +24,7 @@
                     "text": {
                       "expr": {
                         "Literal": {
-                          "Value": "'Synthetic action page 0 visual 6'"
+                          "Value": "'Synthetic action page 0 visual 1'"
                         }
                       }
                     }
@@ -49,30 +49,30 @@
         },
         {
           "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
-          "name": "v7",
+          "name": "v14",
           "position": {
-            "x": 938,
-            "y": 369,
-            "width": 79,
-            "height": 203,
-            "z": 7000
+            "x": 58,
+            "y": 747,
+            "width": 597,
+            "height": 241,
+            "z": 14000
           },
           "visual": {
-            "visualType": "image"
+            "visualType": "actionButton"
           }
         },
         {
           "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
-          "name": "v8",
+          "name": "v16",
           "position": {
-            "x": 441,
-            "y": 309,
-            "width": 358,
-            "height": 65,
-            "z": 8000
+            "x": 682,
+            "y": 542,
+            "width": 125,
+            "height": 396,
+            "z": 16000
           },
           "visual": {
-            "visualType": "areaChart"
+            "visualType": "clusteredColumnChart"
           }
         }
       ]

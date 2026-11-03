@@ -1,4 +1,4 @@
-# B2new-2 (B2new): new overlap introduced
+# B2new-2 (B2new): new overlap introduced, said in pictureChecks.newOverlaps
 
 Branch integration/0.3.2, head a215ada512b7f51c68d9f7a195a41e22cb2b48d5. Previous head 550cea1bac7aed446ba17b56dec4f7c5bc13a0e3.
 
@@ -15,7 +15,7 @@ Found by: generated, seeds 2026112126 (lab copy in the night lab; the reduced sp
 ```json
 [
   {
-    "why": "new overlap introduced",
+    "why": "new overlap introduced, said in pictureChecks.newOverlaps",
     "files": [
       "p0/v8",
       "p0/v17",

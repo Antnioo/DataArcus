@@ -1,0 +1,68 @@
+{
+  "failures": {
+    "P1": [
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v1/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v13/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v1/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v13/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v1/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v13/visual.json"
+        ]
+      }
+    ],
+    "D1": [
+      {
+        "why": "byte difference between independent plans",
+        "files": [
+          "Synthetic AR.Report/.platform"
+        ]
+      }
+    ],
+    "B2": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v13",
+          "p0/v19"
+        ]
+      }
+    ],
+    "B2new": [
+      {
+        "why": "new overlap introduced, not said in the plan, one of the two is a group box",
+        "files": [
+          "p0/v13",
+          "p0/v19",
+          "English [{\"x\":553,\"y\":464,\"width\":64,\"height\":177,\"z\":13000},{\"x\":318,\"y\":310,\"width\":229,\"height\":213,\"z\":19000}]",
+          "Arabic [{\"x\":1584,\"y\":464,\"width\":64,\"height\":177,\"z\":13000},{\"x\":1373,\"y\":310,\"width\":229,\"height\":213,\"z\":19000}]",
+          "plan on v13: movedByRule: moved with a button beside it",
+          "plan on v19: none",
+          "in pictureChecks.newOverlaps: false"
+        ]
+      }
+    ]
+  },
+  "extra": {
+    "validatorOriginal": [
+      "PBIR_QUERY_STATE_MISSING"
+    ],
+    "normalizedRepeat": true,
+    "normalizedRenamed": true
+  }
+}

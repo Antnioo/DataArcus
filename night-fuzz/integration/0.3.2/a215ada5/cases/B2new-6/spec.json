@@ -2,18 +2,18 @@
   "pages": [
     {
       "id": "p0",
-      "width": 1920,
-      "height": 1080,
+      "width": 1280,
+      "height": 800,
       "visuals": [
         {
           "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
-          "name": "v13",
+          "name": "v6",
           "position": {
-            "x": 1585,
-            "y": 609,
-            "width": 335,
-            "height": 471,
-            "z": 13000
+            "x": 1113,
+            "y": 508,
+            "width": 109,
+            "height": 177,
+            "z": 6000
           },
           "visual": {
             "visualType": "actionButton",
@@ -24,7 +24,7 @@
                     "text": {
                       "expr": {
                         "Literal": {
-                          "Value": "'Synthetic action page 0 visual 13'"
+                          "Value": "'Synthetic action page 1 visual 6'"
                         }
                       }
                     }
@@ -49,30 +49,31 @@
         },
         {
           "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
-          "name": "v16",
+          "name": "v18",
           "position": {
-            "x": 857,
-            "y": 593,
-            "width": 791,
-            "height": 444,
-            "z": 16000
+            "x": 840,
+            "y": 457,
+            "width": 246,
+            "height": 306,
+            "z": 18000
           },
-          "visualGroup": {}
+          "visual": {
+            "visualType": "actionButton"
+          }
         },
         {
           "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
           "name": "v20",
           "position": {
-            "x": 223,
-            "y": 29,
-            "width": 331,
-            "height": 306,
+            "x": 338,
+            "y": 195,
+            "width": 452,
+            "height": 265,
             "z": 20000
           },
           "visual": {
-            "visualType": "slicer"
-          },
-          "parentGroupName": "v16"
+            "visualType": "pivotTable"
+          }
         }
       ]
     }

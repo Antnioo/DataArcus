@@ -48,7 +48,7 @@
     ],
     "B2new": [
       {
-        "why": "new overlap introduced",
+        "why": "new overlap introduced, said in pictureChecks.newOverlaps",
         "files": [
           "p0/v7",
           "p0/v12",

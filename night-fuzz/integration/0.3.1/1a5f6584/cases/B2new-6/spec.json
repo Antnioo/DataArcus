@@ -2,18 +2,32 @@
   "pages": [
     {
       "id": "p0",
-      "width": 1920,
-      "height": 1080,
+      "width": 1280,
+      "height": 800,
       "visuals": [
         {
           "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
-          "name": "v2",
+          "name": "v3",
           "position": {
-            "x": 387,
-            "y": 279,
-            "width": 227,
-            "height": 456,
-            "z": 2000
+            "x": 308,
+            "y": 658,
+            "width": 85,
+            "height": 142,
+            "z": 3000
+          },
+          "visual": {
+            "visualType": "shape"
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v7",
+          "position": {
+            "x": 1076,
+            "y": 354,
+            "width": 204,
+            "height": 228,
+            "z": 7000
           },
           "visual": {
             "visualType": "actionButton",
@@ -24,7 +38,7 @@
                     "text": {
                       "expr": {
                         "Literal": {
-                          "Value": "'Synthetic action page 1 visual 2'"
+                          "Value": "'Synthetic action page 0 visual 7'"
                         }
                       }
                     }
@@ -49,31 +63,15 @@
         },
         {
           "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
-          "name": "v7",
+          "name": "v12",
           "position": {
-            "x": 31,
-            "y": 125,
-            "width": 318,
-            "height": 369,
-            "z": 7000
+            "x": 505,
+            "y": 563,
+            "width": 165,
+            "height": 237,
+            "z": 12000
           },
-          "visual": {
-            "visualType": "slicer"
-          }
-        },
-        {
-          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
-          "name": "v9",
-          "position": {
-            "x": 1358,
-            "y": 152,
-            "width": 339,
-            "height": 422,
-            "z": 9000
-          },
-          "visual": {
-            "visualType": "actionButton"
-          }
+          "visualGroup": {}
         }
       ]
     }

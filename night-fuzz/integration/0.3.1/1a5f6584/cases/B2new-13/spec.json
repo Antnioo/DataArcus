@@ -1,0 +1,80 @@
+{
+  "pages": [
+    {
+      "id": "p0",
+      "width": 1280,
+      "height": 800,
+      "visuals": [
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v2",
+          "position": {
+            "x": 671,
+            "y": 85,
+            "width": 490,
+            "height": 119,
+            "z": 2000
+          },
+          "visualGroup": {}
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v4",
+          "position": {
+            "x": 1118,
+            "y": 50,
+            "width": 108,
+            "height": 189,
+            "z": 4000
+          },
+          "visual": {
+            "visualType": "actionButton",
+            "objects": {
+              "text": [
+                {
+                  "properties": {
+                    "text": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "'Synthetic action page 2 visual 4'"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "icon": [
+                {
+                  "properties": {
+                    "shapeType": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "'rightArrow'"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v8",
+          "position": {
+            "x": 170,
+            "y": 3,
+            "width": 135,
+            "height": 116,
+            "z": 8000
+          },
+          "visual": {
+            "visualType": "areaChart"
+          },
+          "parentGroupName": "v2"
+        }
+      ]
+    }
+  ]
+}

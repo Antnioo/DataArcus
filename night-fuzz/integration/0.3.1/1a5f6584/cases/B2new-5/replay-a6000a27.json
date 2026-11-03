@@ -5,24 +5,21 @@
         "why": "exact digest binds files but answer does not enumerate their paths",
         "files": [
           "Synthetic AR.Report/.platform",
-          "Synthetic AR.Report/definition/pages/p0/visuals/v1/visual.json",
-          "Synthetic AR.Report/definition/pages/p0/visuals/v16/visual.json"
+          "Synthetic AR.Report/definition/pages/p0/visuals/v6/visual.json"
         ]
       },
       {
         "why": "exact digest binds files but answer does not enumerate their paths",
         "files": [
           "Synthetic AR.Report/.platform",
-          "Synthetic AR.Report/definition/pages/p0/visuals/v1/visual.json",
-          "Synthetic AR.Report/definition/pages/p0/visuals/v16/visual.json"
+          "Synthetic AR.Report/definition/pages/p0/visuals/v6/visual.json"
         ]
       },
       {
         "why": "exact digest binds files but answer does not enumerate their paths",
         "files": [
           "Synthetic AR.Report/.platform",
-          "Synthetic AR.Report/definition/pages/renamed1/visuals/v1/visual.json",
-          "Synthetic AR.Report/definition/pages/renamed1/visuals/v16/visual.json"
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v6/visual.json"
         ]
       }
     ],
@@ -38,30 +35,28 @@
       {
         "why": "new overlap introduced",
         "files": [
-          "p0/v14",
-          "p0/v16"
+          "p0/v6",
+          "p0/v12"
         ]
       }
     ],
     "B2new": [
       {
-        "why": "new overlap introduced",
+        "why": "new overlap introduced, not said in the plan, one of the two is a group box",
         "files": [
-          "p0/v14",
-          "p0/v16",
-          "English [{\"x\":58,\"y\":747,\"width\":597,\"height\":241,\"z\":14000},{\"x\":682,\"y\":542,\"width\":125,\"height\":396,\"z\":16000}]",
-          "Arabic [{\"x\":1265,\"y\":747,\"width\":597,\"height\":241,\"z\":14000},{\"x\":1315,\"y\":542,\"width\":125,\"height\":396,\"z\":16000}]",
-          "plan on v14: none",
-          "plan on v16: movedByRule: moved with a button beside it",
+          "p0/v6",
+          "p0/v12",
+          "English [{\"x\":1125,\"y\":839,\"width\":795,\"height\":34,\"z\":6000},{\"x\":7,\"y\":601,\"width\":458,\"height\":428,\"z\":12000}]",
+          "Arabic [{\"x\":0,\"y\":839,\"width\":1920,\"height\":36,\"z\":6000},{\"x\":1455,\"y\":601,\"width\":458,\"height\":428,\"z\":12000}]",
+          "plan on v6: fitted.textboxes",
+          "plan on v12: none",
           "in pictureChecks.newOverlaps: false"
         ]
       }
     ]
   },
   "extra": {
-    "validatorOriginal": [
-      "PBIR_QUERY_STATE_MISSING"
-    ],
+    "validatorOriginal": [],
     "normalizedRepeat": true,
     "normalizedRenamed": true
   }

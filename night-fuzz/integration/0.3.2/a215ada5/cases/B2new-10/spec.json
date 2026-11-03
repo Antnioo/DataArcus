@@ -1,0 +1,51 @@
+{
+  "pages": [
+    {
+      "id": "p0",
+      "width": 1280,
+      "height": 800,
+      "visuals": [
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v2",
+          "position": {
+            "x": 238,
+            "y": 517,
+            "width": 483,
+            "height": 283,
+            "z": 2000
+          },
+          "visual": {
+            "visualType": "pivotTable"
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v9",
+          "position": {
+            "x": 53,
+            "y": 701,
+            "width": 357,
+            "height": 99,
+            "z": 9000
+          },
+          "visualGroup": {}
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v14",
+          "position": {
+            "x": 424,
+            "y": 696,
+            "width": 163,
+            "height": 104,
+            "z": 14000
+          },
+          "visual": {
+            "visualType": "clusteredBarChart"
+          }
+        }
+      ]
+    }
+  ]
+}

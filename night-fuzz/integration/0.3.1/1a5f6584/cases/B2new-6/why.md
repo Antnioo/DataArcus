@@ -1,10 +1,10 @@
-# B2new-6 (B2new): new overlap introduced
+# B2new-6 (B2new): new overlap introduced, not said in the plan, one of the two is a group box
 
 Branch integration/0.3.1, head 1a5f65847c837bae50608ef9dfed1f2b170f8e7c. Previous head a6000a279374788cf6f0a76246b08d41eff23f86.
 
 **OLD (fails on previous head too).**
 
-Found by: generated, seeds 2026111378 (lab copy in the night lab; the reduced spec is deletion-minimal under the lab's reducer).
+Found by: generated, seeds 2026111321 (lab copy in the night lab; the reduced spec is deletion-minimal under the lab's reducer).
 
 ## Cause (file:line at the head)
 
@@ -15,15 +15,15 @@ Found by: generated, seeds 2026111378 (lab copy in the night lab; the reduced sp
 ```json
 [
   {
-    "why": "new overlap introduced",
+    "why": "new overlap introduced, not said in the plan, one of the two is a group box",
     "files": [
-      "p0/v2",
-      "p0/v7",
-      "English [{\"x\":387,\"y\":279,\"width\":227,\"height\":456,\"z\":2000},{\"x\":31,\"y\":125,\"width\":318,\"height\":369,\"z\":7000}]",
-      "Arabic [{\"x\":1083,\"y\":279,\"width\":587,\"height\":456,\"z\":2000},{\"x\":1571,\"y\":125,\"width\":318,\"height\":369,\"z\":7000}]",
-      "plan on v2: fitted.buttons",
-      "plan on v7: movedByRule: gave width to a button beside it",
-      "in pictureChecks.newOverlaps: true"
+      "p0/v3",
+      "p0/v12",
+      "English [{\"x\":308,\"y\":658,\"width\":85,\"height\":142,\"z\":3000},{\"x\":505,\"y\":563,\"width\":165,\"height\":237,\"z\":12000}]",
+      "Arabic [{\"x\":887,\"y\":658,\"width\":85,\"height\":142,\"z\":3000},{\"x\":799,\"y\":563,\"width\":165,\"height\":237,\"z\":12000}]",
+      "plan on v3: none",
+      "plan on v12: movedByRule: moved with a button beside it",
+      "in pictureChecks.newOverlaps: false"
     ]
   }
 ]

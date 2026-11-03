@@ -1,10 +1,10 @@
-# B2new-6 (B2new): new overlap introduced
+# B2new-6 (B2new): new overlap introduced, said in pictureChecks.newOverlaps
 
 Branch integration/0.3.2, head a215ada512b7f51c68d9f7a195a41e22cb2b48d5. Previous head 550cea1bac7aed446ba17b56dec4f7c5bc13a0e3.
 
 **OLD (fails on previous head too).**
 
-Found by: generated, seeds 2026112262 (lab copy in the night lab; the reduced spec is deletion-minimal under the lab's reducer).
+Found by: generated, seeds 2026112253 (lab copy in the night lab; the reduced spec is deletion-minimal under the lab's reducer).
 
 ## Cause (file:line at the head)
 
@@ -15,13 +15,13 @@ Found by: generated, seeds 2026112262 (lab copy in the night lab; the reduced sp
 ```json
 [
   {
-    "why": "new overlap introduced",
+    "why": "new overlap introduced, said in pictureChecks.newOverlaps",
     "files": [
-      "p0/v13",
+      "p0/v18",
       "p0/v20",
-      "English [{\"x\":1585,\"y\":609,\"width\":335,\"height\":471,\"z\":13000},{\"x\":223,\"y\":29,\"width\":331,\"height\":306,\"z\":20000}]",
-      "Arabic [{\"x\":0,\"y\":609,\"width\":553,\"height\":471,\"z\":13000},{\"x\":237,\"y\":29,\"width\":331,\"height\":306,\"z\":20000}]",
-      "plan on v13: fitted.buttons",
+      "English [{\"x\":840,\"y\":457,\"width\":246,\"height\":306,\"z\":18000},{\"x\":338,\"y\":195,\"width\":452,\"height\":265,\"z\":20000}]",
+      "Arabic [{\"x\":369,\"y\":457,\"width\":246,\"height\":306,\"z\":18000},{\"x\":490,\"y\":195,\"width\":452,\"height\":265,\"z\":20000}]",
+      "plan on v18: movedByRule: moved with a button beside it",
       "plan on v20: none",
       "in pictureChecks.newOverlaps: true"
     ]

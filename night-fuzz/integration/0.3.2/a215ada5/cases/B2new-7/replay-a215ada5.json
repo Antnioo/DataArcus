@@ -5,24 +5,21 @@
         "why": "exact digest binds files but answer does not enumerate their paths",
         "files": [
           "Synthetic AR.Report/.platform",
-          "Synthetic AR.Report/definition/pages/p0/visuals/v2/visual.json",
-          "Synthetic AR.Report/definition/pages/p0/visuals/v5/visual.json"
+          "Synthetic AR.Report/definition/pages/p0/visuals/v13/visual.json"
         ]
       },
       {
         "why": "exact digest binds files but answer does not enumerate their paths",
         "files": [
           "Synthetic AR.Report/.platform",
-          "Synthetic AR.Report/definition/pages/p0/visuals/v2/visual.json",
-          "Synthetic AR.Report/definition/pages/p0/visuals/v5/visual.json"
+          "Synthetic AR.Report/definition/pages/p0/visuals/v13/visual.json"
         ]
       },
       {
         "why": "exact digest binds files but answer does not enumerate their paths",
         "files": [
           "Synthetic AR.Report/.platform",
-          "Synthetic AR.Report/definition/pages/renamed1/visuals/v2/visual.json",
-          "Synthetic AR.Report/definition/pages/renamed1/visuals/v5/visual.json"
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v13/visual.json"
         ]
       }
     ],
@@ -38,21 +35,21 @@
       {
         "why": "new overlap introduced",
         "files": [
-          "p0/v3",
-          "p0/v5"
+          "p0/v13",
+          "p0/v20"
         ]
       }
     ],
     "B2new": [
       {
-        "why": "new overlap introduced",
+        "why": "new overlap introduced, said in pictureChecks.newOverlaps",
         "files": [
-          "p0/v3",
-          "p0/v5",
-          "English [{\"x\":241,\"y\":486,\"width\":64,\"height\":234,\"z\":3000},{\"x\":350,\"y\":202,\"width\":334,\"height\":294,\"z\":5000}]",
-          "Arabic [{\"x\":975,\"y\":486,\"width\":64,\"height\":234,\"z\":3000},{\"x\":895,\"y\":202,\"width\":334,\"height\":294,\"z\":5000}]",
-          "plan on v3: none",
-          "plan on v5: movedByRule: moved with a button beside it",
+          "p0/v13",
+          "p0/v20",
+          "English [{\"x\":1585,\"y\":609,\"width\":335,\"height\":471,\"z\":13000},{\"x\":223,\"y\":29,\"width\":331,\"height\":306,\"z\":20000}]",
+          "Arabic [{\"x\":0,\"y\":609,\"width\":553,\"height\":471,\"z\":13000},{\"x\":237,\"y\":29,\"width\":331,\"height\":306,\"z\":20000}]",
+          "plan on v13: fitted.buttons",
+          "plan on v20: none",
           "in pictureChecks.newOverlaps: true"
         ]
       }

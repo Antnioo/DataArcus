@@ -1,0 +1,81 @@
+{
+  "pages": [
+    {
+      "id": "p0",
+      "width": 1280,
+      "height": 720,
+      "visuals": [
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v6",
+          "position": {
+            "x": 812,
+            "y": 128,
+            "width": 158,
+            "height": 305,
+            "z": 6000
+          },
+          "visual": {
+            "visualType": "lineChart"
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v16",
+          "position": {
+            "x": 263,
+            "y": 201,
+            "width": 594,
+            "height": 333,
+            "z": 16000
+          },
+          "visual": {
+            "visualType": "pivotTable"
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v18",
+          "position": {
+            "x": 1061,
+            "y": 417,
+            "width": 110,
+            "height": 221,
+            "z": 18000
+          },
+          "visual": {
+            "visualType": "actionButton",
+            "objects": {
+              "text": [
+                {
+                  "properties": {
+                    "text": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "'Synthetic action page 0 visual 18'"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "icon": [
+                {
+                  "properties": {
+                    "shapeType": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "'rightArrow'"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

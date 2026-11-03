@@ -6,7 +6,7 @@
         "files": [
           "Synthetic AR.Report/.platform",
           "Synthetic AR.Report/definition/pages/p0/visuals/v13/visual.json",
-          "Synthetic AR.Report/definition/pages/p0/visuals/v14/visual.json"
+          "Synthetic AR.Report/definition/pages/p0/visuals/v9/visual.json"
         ]
       },
       {
@@ -14,7 +14,7 @@
         "files": [
           "Synthetic AR.Report/.platform",
           "Synthetic AR.Report/definition/pages/p0/visuals/v13/visual.json",
-          "Synthetic AR.Report/definition/pages/p0/visuals/v14/visual.json"
+          "Synthetic AR.Report/definition/pages/p0/visuals/v9/visual.json"
         ]
       },
       {
@@ -22,7 +22,7 @@
         "files": [
           "Synthetic AR.Report/.platform",
           "Synthetic AR.Report/definition/pages/renamed1/visuals/v13/visual.json",
-          "Synthetic AR.Report/definition/pages/renamed1/visuals/v14/visual.json"
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v9/visual.json"
         ]
       }
     ],
@@ -36,30 +36,23 @@
     ],
     "B2": [
       {
-        "why": "existing overlap lost",
-        "files": [
-          "p0/v7",
-          "p0/v13"
-        ]
-      },
-      {
         "why": "new overlap introduced",
         "files": [
-          "p0/v7",
-          "p0/v14"
+          "p0/v9",
+          "p0/v17"
         ]
       }
     ],
     "B2new": [
       {
-        "why": "new overlap introduced",
+        "why": "new overlap introduced, not said in the plan",
         "files": [
-          "p0/v7",
-          "p0/v14",
-          "English [{\"x\":370,\"y\":632,\"width\":177,\"height\":168,\"z\":7000},{\"x\":680,\"y\":498,\"width\":99,\"height\":273,\"z\":14000}]",
-          "Arabic [{\"x\":733,\"y\":632,\"width\":177,\"height\":168,\"z\":7000},{\"x\":448,\"y\":498,\"width\":355,\"height\":273,\"z\":14000}]",
-          "plan on v7: movedByRule: gave width to a button beside it",
-          "plan on v14: fitted.buttons",
+          "p0/v9",
+          "p0/v17",
+          "English [{\"x\":762,\"y\":381,\"width\":213,\"height\":309,\"z\":9000},{\"x\":357,\"y\":640,\"width\":233,\"height\":80,\"z\":17000}]",
+          "Arabic [{\"x\":530,\"y\":381,\"width\":213,\"height\":309,\"z\":9000},{\"x\":690,\"y\":640,\"width\":233,\"height\":80,\"z\":17000}]",
+          "plan on v9: movedByRule: moved with a button beside it",
+          "plan on v17: none",
           "in pictureChecks.newOverlaps: false"
         ]
       }

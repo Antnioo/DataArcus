@@ -1,7 +1,7 @@
 # Night fuzz: integration/0.3.1 at 1a5f6584
 
 - Head: 1a5f65847c837bae50608ef9dfed1f2b170f8e7c (previous head for replays: a6000a279374788cf6f0a76246b08d41eff23f86)
-- Run: 2026-11-02T23:32:42Z to 2026-11-02T23:35:42Z UTC (3 min wall, 4 processes)
+- Run: 2026-11-03T00:29:30Z to 2026-11-03T00:32:28Z UTC (3 min wall, 4 processes)
 - Generated seeds: 2026111200 to 2026111499 (300); real shapes: 57 (evidence c9a151d9); reduced cases: 6 (lab's cases/); grid generator (X1): seeds 2026111200 to 2026111299 (100)
 - New failures (pass on a6000a27, fail on 1a5f6584): **none**
 
@@ -14,7 +14,7 @@
 | D1n | 0/300 | 0/57 | 0/100 | 0/300 / 0/57 / 0/100 | - |
 | M1 | 0/300 | 0/57 | 0/100 | 0/300 / 0/57 / 0/100 | - |
 | B1 | 0/300 | 0/57 | 0/100 | 0/300 / 0/57 / 0/100 | - |
-| B2new | 26/300 | 0/57 | 0/100 | 47/300 / 0/57 / 5/100 | new overlap introduced 26 |
+| B2new | 26/300 | 0/57 | 0/100 | 47/300 / 0/57 / 5/100 | new overlap introduced, said in pictureChecks.newOverlaps 22; new overlap introduced, not said in the plan, one of the two is a group box 4; new overlap introduced, not said in the plan 1 |
 | T1 | 0/300 | 0/57 | 0/100 | 0/300 / 0/57 / 0/100 | - |
 | S1 | 0/300 | 0/57 | 0/100 | 0/300 / 0/57 / 0/100 | - |
 | X1 | 0/300 | 0/57 | 0/100 | 0/300 / 0/57 / 51/100 | - |
@@ -43,16 +43,21 @@ D1n: D1 after normalising the twin's logical id (and renamed page ids). B2new: B
 
 | Case | Status | Failure | Cause |
 |---|---|---|---|
-| B2new-1 | OLD (fails on previous head too) | new overlap introduced | `mcp/lib/twin-pages.mjs:505` |
-| B2new-2 | OLD (fails on previous head too) | new overlap introduced | `mcp/lib/twin-pages.mjs:37` |
-| B2new-3 | OLD (fails on previous head too) | new overlap introduced | `mcp/lib/twin-pages.mjs:37` |
-| B2new-4 | OLD (fails on previous head too) | new overlap introduced | `mcp/lib/twin-pages.mjs:37` |
-| B2new-5 | OLD (fails on previous head too) | new overlap introduced | `mcp/lib/twin-pages.mjs:37` |
-| B2new-6 | OLD (fails on previous head too) | new overlap introduced | `mcp/lib/twin-pages.mjs:37` |
-| B2new-7 | OLD (fails on previous head too) | new overlap introduced | `mcp/lib/twin-pages.mjs:37` |
-| B2new-8 | OLD (fails on previous head too) | new overlap introduced | `mcp/lib/twin-pages.mjs:37` |
+| B2new-1 | OLD (fails on previous head too) | new overlap introduced, said in pictureChecks.newOverlaps | `mcp/lib/twin-pages.mjs:505` |
+| B2new-2 | OLD (fails on previous head too) | new overlap introduced, said in pictureChecks.newOverlaps | `mcp/lib/twin-pages.mjs:37` |
+| B2new-3 | OLD (fails on previous head too) | new overlap introduced, said in pictureChecks.newOverlaps | `mcp/lib/twin-pages.mjs:37` |
+| B2new-4 | OLD (fails on previous head too) | new overlap introduced, said in pictureChecks.newOverlaps | `mcp/lib/twin-pages.mjs:37` |
+| B2new-5 | OLD (fails on previous head too) | new overlap introduced, not said in the plan, one of the two is a group box | `mcp/lib/twin-pages.mjs:159` |
+| B2new-6 | OLD (fails on previous head too) | new overlap introduced, not said in the plan, one of the two is a group box | `mcp/lib/twin-pages.mjs:37` |
+| B2new-7 | OLD (fails on previous head too) | new overlap introduced, said in pictureChecks.newOverlaps | `mcp/lib/twin-pages.mjs:37` |
+| B2new-8 | OLD (fails on previous head too) | new overlap introduced, said in pictureChecks.newOverlaps | `mcp/lib/twin-pages.mjs:37` |
+| B2new-9 | OLD (fails on previous head too) | new overlap introduced, said in pictureChecks.newOverlaps | `mcp/lib/twin-pages.mjs:37` |
+| B2new-10 | OLD (fails on previous head too) | new overlap introduced, said in pictureChecks.newOverlaps | `mcp/lib/twin-pages.mjs:37` |
+| B2new-11 | OLD (fails on previous head too) | new overlap introduced, said in pictureChecks.newOverlaps | `mcp/lib/twin-pages.mjs:37` |
+| B2new-12 | OLD (fails on previous head too) | new overlap introduced, not said in the plan, one of the two is a group box | `mcp/lib/twin-pages.mjs:37` |
+| B2new-13 | OLD (fails on previous head too) | new overlap introduced, said in pictureChecks.newOverlaps | `mcp/lib/twin-pages.mjs:37` |
 
-Not reduced (the night lab reduces at most 4 per property and failure kind per process; the rest are counted above): 18 (B2new:new overlap introduced 18).
+Not reduced (the night lab reduces at most 4 per property and failure kind per process; the rest are counted above): 13 (B2new:new overlap introduced, said in pictureChecks.newOverlaps 13).
 
 X1 judged 75 lined-up chart and grid pairs; skipped 25 (English sets no row header width, so the grid's left edge is not in the files); not at English's offset but said in the plan (movedByRule "kept at its mirror", not counted as a failure): 3.
 
