@@ -2,7 +2,7 @@
 - **Approval:** the reviewer's brief "LV1" (3 Nov, B-276 first half); D-1016-01, D-1102-02, D-1103-09.
 - **Base:** `fix/0.3.2-lv1` from `origin/integration/0.3.2` at 4418828. Pushed only this branch. MCP only.
 - **Scope:** `lib/twin-texts.mjs` arabicDax() and its new helper isoValues(); no other lib file (twin-pages.mjs not
-  edited); rc24's one regex; the new suite lv1. Not the labels' words, the approval binding, model values in English.
+  edited); rc24's one regex; sp3's R5 hashes and its check L1; the new suite lv1. Not the labels' words, the approval binding, model values in English.
 - **The cause (confirmed red on the base):** arabicDax() split the approved label on {n} and pushed each branch
   variable bare between the label's string pieces: «اليوم:" & _d & " الساعة:" & _h», no isolate.
 - **Every place the twin joins an approved Arabic text with a model value (step 1, listed before any change):**
@@ -21,14 +21,26 @@
   pbip-query.js isoNum); Microsoft's validator: 0 errors on a twin with it (rc24 T-1, check_report).
 - **Expected checks:** (written first) lv1 red on 4418828, green after; rc24 T-1's regex changes on purpose (same
   count); no other suite's line moves; hr1 10, hr2 7. dt1 is not on the base (DT1 runs): not run.
-  **Got:** lv1 red on 4418828, 11 of 18 (the 7 isolate checks), 18 checks green after. Areas: see Results.
+  **Got:** lv1 red on 4418828, 11 of 18 (the 7 isolate checks), 18 green after. One line I did not expect: sp3's R5
+  (the bilingual report: its Arabic title measures are this job's), 10 -> 11 checks (see Results).
 - **Answer size (L-1102-06):** the twin's plan answer holds no DAX: 31,360 on the base, 31,316-31,397 over four
   runs after (the spread is the run's random ids); fx1 three times: see Results.
-- **State:** code done, area runs going.
-- **Resume:** the area runs, the merge of integration if it moved, CI.
+- **State:** code done, areas green; CI: see Results.
+- **Resume:** none; the reviewer's merge.
 
 ## Results
-(when done)
+- Commits: 0174eb75 (the plan), 2d0f436 (the red test, in `ignored`), 5564abf (the code, lv1 in `suites`,
+  rc24, CHANGELOG, WORK.md), then sp3's R5 (this note's commit). origin/integration/0.3.2 did not move (4418828): no merge.
+- Areas (base -> after): twin 32 -> 33 suites passed (lv1 18 checks; bilingual-report 33, fx1 22); arabic 15 passed
+  (tt1 28); report 56: rc24 28 and hr1 10, hr2 7 green; glass-tables failed only as this clone was shallow
+  (`git show cba24a5`), after `git fetch --unshallow` 113 checks PASS (as HR2 found); sp3 failed R5, see next.
+- sp3 R5 (changed on purpose, each one said): the bilingual report's `reportExtensions.json` differs (its "Title AR"
+  measures now isolate _s and _n), and so the plan's and the answer's `digest` of the files. Measured: with the base's
+  twin-texts.mjs, sp3 passes; the diff of the two runs' answers is the digest alone, of the files one file. R5's three
+  recorded sha256 (plan, report, files) set by hand to the new values (not SP3_RECORD), and a new check L1: that file,
+  LV1's isolates taken out, hashes to the base's recorded e3986dff...: 11 checks PASS.
+- fx1 three times: 22 checks each. The twin's plan answer: 31,360 -> 31,316 / 31,330 / 31,363 / 31,397 (noise).
+- Lint: exit 0 (after the repo root's `npm ci`).
 
 ## CHANGELOG line
 "An Arabic label beside a value reads in order: in the Arabic twin, a card or title that joins your approved Arabic
@@ -69,4 +81,6 @@ after its own label; the "Top N" chart titles «أعلى 6 من 10: ...» with 6
 
 ## Lessons for the reviewer
 - The ER card's text was a measure text (textMeasuresOf), not a title: both go through arabicDax, one fix.
+- A characterisation suite (sp3) records the bilingual report's files: a change to the twin's Arabic DAX moves it.
+  I updated only R5's three hashes by hand and proved with L1 that the one changed file is the base's but for LV1.
 - `npm run lint` needs the repo root's `npm ci` too, not only mcp's (it failed with a missing module before).
