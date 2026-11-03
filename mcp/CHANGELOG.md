@@ -25,6 +25,8 @@ package's manifest; this file says what is in it.
   cap.
 - **Inside the MCP:** the words a report plan says are kept in one file of their own; every plan says exactly what it
   said before.
+- **Inside the report writer:** the zip file and the sample sales data each have a file of their own; every download,
+  on the website and from the MCP, is byte for byte what it was before.
 - **More of the Arabic twin like the English:** more matrices that are lists are written as tables, so their first column
   reads on the right; a column the English hides stays hidden; a table wider than its box shows the same columns as
   the English, its first column at the right; the plan names legends whose Arabic may be cut, and says on its own line
