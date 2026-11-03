@@ -4545,6 +4545,66 @@
      "sha": "5343b992d2a772ff28183346:283"
     }
    }
+  },
+  "made-up/mNewCardDown1D": {
+   "kind": "newCard",
+   "time": null,
+   "runs": {
+    "A": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "title"
+     ],
+     "sha": "c95db552fea9b014f852cac5:1144"
+    },
+    "B": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "title"
+     ],
+     "sha": "c95db552fea9b014f852cac5:1144"
+    },
+    "C": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "title"
+     ],
+     "sha": "c95db552fea9b014f852cac5:1144"
+    },
+    "D": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "title"
+     ],
+     "sha": "c95db552fea9b014f852cac5:1144"
+    },
+    "E": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "title"
+     ],
+     "sha": "c95db552fea9b014f852cac5:1144"
+    },
+    "K": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "title"
+     ],
+     "sha": "c95db552fea9b014f852cac5:1144"
+    }
+   }
   }
  },
  "pages": {
@@ -4753,7 +4813,7 @@
    }
   },
   "made-up": {
-   "sha": "785b9ba1e8a357ec116588a2:28411",
+   "sha": "d1d35a1237f5f2af94c28b78:29490",
    "kinds": {
     "column": 10,
     "bar": 2,
@@ -4762,7 +4822,7 @@
     "matrixAsTable": 1,
     "matrix": 1,
     "plain": 3,
-    "newCard": 2,
+    "newCard": 3,
     "pills": 1,
     "slicer": 2,
     "other": 1,

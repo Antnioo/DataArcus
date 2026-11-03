@@ -104,7 +104,8 @@ const MADE = [
   vc('mScatter', 400, 300, { visualType: 'scatterChart', query: { queryState: { Category: { projections: [col(T, 'Region')] }, X: { projections: [mea(T, 'Sales')] }, Y: { projections: [mea(T, 'Margin')] } } } }),
   vc('mCustom', 300, 200, { visualType: 'madeUpChart0123456789ABCDEF0123456789AB', query: { queryState: { Category: { projections: [col(D, 'Date')] } } } }),
   vc('mNoType', 200, 100, {}),
-  vc('mUnreadable', 200, 100, 'not an object')
+  vc('mUnreadable', 200, 100, 'not an object'),
+  vc('mNewCardDown1D', 200, 300, { visualType: 'cardVisual', query: { queryState: { Data: { projections: [mea(T, 'Open'), mea(T, 'Closed'), mea(T, 'Late')] } } }, objects: { layout: [{ properties: { orientation: L('1D'), rowCount: L('3L') } }] } })
 ];
 pages.push({ id: 'made-up', page: { width: 1280, height: 720 }, visuals: MADE });
 
