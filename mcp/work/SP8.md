@@ -33,8 +33,12 @@
 - **Areas (on fa30b6b9):** report + model 61 suites passed; website sp8 3, sp5 3, pbip 111, theme-generator 922,
   theme-generator-lab 922, arabic-names 14, layout-canvas 31; lint 0; check-min (stamps vs main), test-site-config,
   changelog-words, csp pass.
-- **State:** CI pending.
-- **Resume:** merge origin/integration/0.3.2, CI.
+- **Merged integration/0.3.2 in (956c4d80, SP6)** at 84d8cd90: both sides kept (tests.json, run-all's lists, WORK.md
+  3,180 characters). CI 41576482704: every job green but website sp8 (EN and AR): the page reads a folder in the file
+  system's directory order, which differs on CI. The suite now hands the page the folder's files sorted by path
+  (an init script; the product unchanged), recorded again on the base code (095d4db, a worktree), then 3 after.
+- **State:** CI pending (second run).
+- **Resume:** CI.
 
 ## CHANGELOG line
 - **Inside the website's field picker:** the list where you choose a field for each visual has a file of its own; it
@@ -63,6 +67,9 @@ none
 none (the picker's HTML, the bindings and the download proven identical in Node and in the rendered page).
 
 ## Seen, not in scope
+- The picker's table groups (and the TMDL model's table order) follow the order the browser lists a chosen folder's
+  files, which is the file system's: two machines can show the same model's tables in a different order. Sorting the
+  files by path in `fromFolder` would fix it; a behaviour change (a later job, with its own record).
 - The picker's selects have no `aria-label`; each sits inside its `<label>`, which names it, so it reads fine.
 - `catalog(tables)` is computed twice per draw on the page (suggest, then the picker): cheap, unchanged.
 

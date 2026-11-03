@@ -4,7 +4,8 @@
 // before the move): its DOM (#pbipMap: every row's label, every select's attributes, options in order, optgroups and the
 // selected item), the same after two changed choices (the main measure and the first slicer, each to its last option),
 // and the download made after them (every file but the canvas-drawn PNGs, byte for byte; SP5's seeded random source and
-// fixed clock). Recorded in fixtures/sp8-picker.json; SP8_RECORD=1 records again (only on the base, never to make a run pass).
+// fixed clock; the folder's files in the order of their paths, which the file system gives in no fixed order).
+// Recorded in fixtures/sp8-picker.json; SP8_RECORD=1 records again (only on the base, never to make a run pass).
 //   W1, W2  EN and AR: the picker's DOM before and after the two choices, and the download's files
 //   W3      the page loaded field-picker-ui.min.js before pbip-bind.min.js, each once (SP8's move)
 import fs from 'node:fs';
@@ -30,6 +31,11 @@ const SEEDED = () => {
   const RealDate = Date, FIXED = new RealDate(2026, 10, 2, 10, 20, 30).getTime();
   Date = class extends RealDate { constructor(...a) { if (a.length) super(...a); else super(FIXED); } };
   Date.now = RealDate.now;
+  // a folder's files in the order of their paths: the browser gives them in the file system's own directory order,
+  // which differs between machines (this container's and CI's), and the picker groups its tables in the model's order
+  const files = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'files');
+  Object.defineProperty(HTMLInputElement.prototype, 'files', { configurable: true, set(v) { files.set.call(this, v); },
+    get() { const f = files.get.call(this); return f && this.webkitdirectory ? Array.from(f).sort((a, b) => (a.webkitRelativePath < b.webkitRelativePath ? -1 : a.webkitRelativePath > b.webkitRelativePath ? 1 : 0)) : f; } });
 };
 
 // a stored ZIP's entries in order
