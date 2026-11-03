@@ -115,10 +115,11 @@ try {
   chk(() => said5 && said5.leftOut && said5.leftOut.length === 1 && said5.measures.length === 3, () => `L7. the Arabic report the same: ${cut(b5.threw || said5)}`);
 
   // ---------- 0.2.9-reader-S8: plan-lint's binding is report-run's ----------
-  const pl = fs.readFileSync(path.join(HERE, 'lib/plan-lint.mjs'), 'utf8'), rr = fs.readFileSync(path.join(HERE, 'lib/report-run.mjs'), 'utf8');
+  // (0.3.2 SP4: planBinding moved to lib/report-bind.mjs; report-run.mjs re-exports it, plan-lint's import unchanged)
+  const pl = fs.readFileSync(path.join(HERE, 'lib/plan-lint.mjs'), 'utf8'), rr = fs.readFileSync(path.join(HERE, 'lib/report-run.mjs'), 'utf8'), rb = fs.readFileSync(path.join(HERE, 'lib/report-bind.mjs'), 'utf8');
   chk(() => !/Bind\.suggest\(/.test(pl) && !/const relsOf =/.test(pl) && !/\['kpis', F\.kpis\]/.test(pl), () => 'S1. plan-lint.mjs has no copy of the binding: no Bind.suggest, no relsOf, no pinned map of its own');
-  chk(() => /export function planBinding\(/.test(rr) && /import \{[^}]*planBinding[^}]*\} from '\.\/report-run\.mjs'/.test(pl) && !/\['kpis', F\.kpis\]/.test(rr.slice(rr.indexOf('export function reportRun('))),
-    () => 'S2. report-run.mjs exports the one page-and-binding function (planBinding), plan-lint calls it, and reportRun itself uses it (no pinned map of its own)');
+  chk(() => /export function planBinding\(/.test(rb) && /export \{[^}]*planBinding[^}]*\} from '\.\/report-bind\.mjs'/.test(rr) && /import \{[^}]*planBinding[^}]*\} from '\.\/report-run\.mjs'/.test(pl) && !/\['kpis', F\.kpis\]/.test(rr.slice(rr.indexOf('export function reportRun('))),
+    () => 'S2. report-bind.mjs has the one page-and-binding function (planBinding), report-run.mjs exports it, plan-lint calls it, and reportRun itself uses it (no pinned map of its own)');
   const RR = await import('./lib/report-run.mjs'), PL = await import('./lib/plan-lint.mjs'), { loadModel } = await import('./lib/model.mjs'), { fieldsAndProblems } = await import('./lib/report-fields.mjs');
   const m = loadModel('sw/M.SemanticModel'), F = fieldsAndProblems(m.tables, { kpis: ['Sales[Orders]', 'Sales[Total Sales]'], category: 'Sales[Region]', table: ['Sales[Region]', 'Sales[Orders]'] }).out;
   const design = planLayout({ layout: 'exec', lang: 'en' }).design;

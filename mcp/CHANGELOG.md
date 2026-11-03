@@ -30,6 +30,8 @@ package's manifest; this file says what is in it.
   said before.
 - **Inside the MCP:** the sample project's plan and a redesign's plan are made in a file of their own; each plan says
   and does exactly what it did before.
+- **Inside the report writer:** the zip file and the sample sales data each have a file of their own; every download,
+  on the website and from the MCP, is byte for byte what it was before.
 - **More of the Arabic twin like the English:** more matrices that are lists are written as tables, so their first column
   reads on the right; a column the English hides stays hidden; a table wider than its box shows the same columns as
   the English, its first column at the right; the plan names legends whose Arabic may be cut, and says on its own line
@@ -56,6 +58,8 @@ package's manifest; this file says what is in it.
   stay where they were written.
 - **Inside the MCP, the report's answer:** what create_report says after writing a report is put together in one file
   of its own; every answer and every written file is exactly what it was before.
+- **Inside the MCP, the report's fields:** how a report picks and names its fields and their number formats is in one
+  file of its own; every plan, answer and written file is exactly what it was before.
 - **Inside the design engine, colours and the glass look:** the colour math and the glass look each have a file of
   their own, shared by the website and the MCP; every theme, picture and layout is exactly what it was before.
 - **Bars and columns are never too thick:** where the number of categories is known (a chart kept to its top N, days,

@@ -10,7 +10,8 @@ task routes.
   copies in `ar/`. Its Power BI tools run in the browser; nothing a visitor opens is uploaded.
 - **The engines** (`assets/js/*.js`, each with its `.min.js`): plain JavaScript that runs in the browser and in Node,
   **shared by the website and the MCP on purpose**, so both give the same answers. The model reader and field picker
-  (`pbip-bind.js`, `tmdl-model.js`), the report writer (`pbip-export.js`, `pbip-page.js`, `pbip-query.js`), the design
+  (`pbip-bind.js`, `tmdl-model.js`), the report writer (`pbip-export.js`, `pbip-page.js`, `pbip-query.js`; its ZIP `pbip-zip.js` and sample model
+  `pbip-sample.js`), the design
   engine (`design-engine.js`), the health check (`model-health-engine.js`, `model-health-tmdl.js`, `gulf-health.js`),
   the calendar generator (`calendar-generator.js`, `gulf-dates.js`), the measured rules (`report-rules.js`,
   `label-limits.js`, `layout-check.js`, `report-a11y.js`), the mirror engine for right to left (`report-mirror.js`)
@@ -33,7 +34,8 @@ task routes.
     ctx)`; helpers more than one tool uses are `lib/tool-answer.mjs`, `tool-inputs.mjs`, `tool-limits.mjs`,
     `plan-keys.mjs`, `fix-scripts.mjs`, `hidden-names.mjs`, and for reports `report-inputs.mjs`, `report-fields.mjs`,
     `report-said.mjs`, `report-run.mjs` (one report's whole build, the plan's exact artifact and the write alike),
-    `report-result.mjs` (create_report's answer and its notes from the build, no IO);
+    `report-result.mjs` (create_report's answer and its notes from the build, no IO), `report-bind.mjs` (the
+    report's field identities, formats and bindings from the model's metadata and the plan's options, no IO);
   - the twin by step: `arabic-twin.mjs` re-exports `twin-read.mjs` (the source), `twin-visuals.mjs`, `twin-texts.mjs`
     (labels and terms), `twin-model.mjs`, `twin-copy.mjs` (the EN-AR copy, language buttons), `twin-pages.mjs`,
     `twin-plan.mjs`, `twin-preview.mjs`, `twin-write.mjs`;
