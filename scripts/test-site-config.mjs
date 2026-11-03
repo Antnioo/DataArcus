@@ -171,6 +171,13 @@ for (const f of dashFiles) {
   }
 }
 
+// (0.3.2 SP24) the Model Health Check's text downloads are built in health-downloads.js: both tool pages load it once,
+// before model-health.js, which calls it
+for (const f of ['tools/power-bi-model-health-check.html', 'ar/tools/power-bi-model-health-check.html']) {
+  const h = read(f), a = h.indexOf('health-downloads.min.js?v='), b = h.indexOf('js/model-health.min.js?v=');
+  ok(a >= 0 && a < b && h.split('health-downloads.min.js?v=').length === 2, `${f}: must load health-downloads.min.js once, before model-health.min.js (SP24)`);
+}
+
 // The Arabic copies at /ar/ (mcp/plans/ARABIC-INDEXING.md, option 2): each page in scripts/ar-pages.mjs's PAIRS and its
 // copy name each other (hreflang en, ar, x-default = English, fully qualified), each names itself as canonical, the copy
 // is lang="ar" dir="rtl" with its title, description and Open Graph in Arabic within the limits search results show,

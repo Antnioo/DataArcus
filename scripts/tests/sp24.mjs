@@ -118,7 +118,7 @@ export default async function ({ browser, url }) {
     const D = require('../../assets/js/health-downloads.js'), E = require('../../assets/js/model-health-engine.js');
     const bad = [];
     for (const [label, model] of [['tricky', trickyModel()], ['arabic', arabicModel()]]) {
-      const result = E.analyze(model, null), input = { result, rules: E.RULES, score: E.scoreFrom(result.findings, new Set()), date: '2026-11-03' };
+      const result = Object.assign(E.analyze(model, null), { meta: { fileName: label + '.bim', source: 'bim', hasReport: false } }), input = { result, rules: E.RULES, score: E.scoreFrom(result.findings, new Set()), date: '2026-11-03' };
       const before = JSON.stringify(input);
       for (const kind of ['findings-csv', 'measures-csv', 'doc-html', 'doc-md']) {
         const a = D.build(kind, input), b = D.build(kind, input);
