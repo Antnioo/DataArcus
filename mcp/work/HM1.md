@@ -118,3 +118,20 @@
 - A name the twin makes up is a write target: give it on the plan's side (free on its page, without case) and make the
   writer refuse a taken path, so a miss is a hard error, never a silent replace.
 - Check a fit on the written numbers (column + edges <= box; rows by the same estimate <= box), not on an intention.
+
+## After the merge with HM2
+- **Red:** integration/0.3.2 5dfd3161 (HM1 after R032), run 41683658929: hm2 9 of 12 on every system (A1, A2, A6): the A1-1
+  chart now lined up (x 351.17), where HM2 kept it at its mirror (x 319.83, shift -31.34).
+- **Cause: NO collision.** In the A1-1 twin, edges compared (tolerance 0.5 px): the names table `v0Names` x 1017-1060,
+  y 230-420 (the matrix's height, B-300); the matrix y 230-420; the lined-up chart x 351.17-1031.17, y 428-528. Both end
+  8 px above the chart's top, so no overlap (the 14.17 px they share in x does not matter). Before HM1 the table was
+  210.88 tall (bottom 440.88): 12.88 px into the chart, the only thing that blocked the move. There is no name collision
+  in A1-1 (`v0Names` is free there), so landsOn's by-name boxes were not involved; twin-pages.mjs not edited.
+- **Test changed (hm2, the reviewer's NO branch; no check weakened):** A1-A6 keep every expected value as HM2 wrote them
+  (x 319.83, "kept at its mirror", inside as English, the edges, size and top, shift -31.34), now on A1-1 plus a made-up
+  15 x 60 shape at English x 255, y 440 (10.17 px left of the chart there, overlapping nothing), where the lined-up chart
+  lands in the twin (Arabic x 1010-1025) and its mirror (ends at 999.83) does not. New L1-L3 on A1-1 as it is: the chart
+  lined up (x 351.17, "kept lined up"), its inside and every bar's edges as English's (shift 0, 0.5 px), the names table
+  and the matrix end above its top. hm2 12 -> 15 checks. `fixtures/hm2/A1-1.json` unchanged.
+- **Checks on wave/hm1-merge:** hm2 15, hm1 16, mx3 25, mx4 24, mx5 17, mx7 14, mx8 18, twin-fuzz 185; lint 0. (No mx6
+  suite: MX6 is twin-fuzz.)
