@@ -25,7 +25,7 @@
   (the bilingual report: its Arabic title measures are this job's), 10 -> 11 checks (see Results).
 - **Answer size (L-1102-06):** the twin's plan answer holds no DAX: 31,360 on the base, 31,316-31,397 over four
   runs after (the spread is the run's random ids); fx1 three times: see Results.
-- **State:** code done, areas green; CI: see Results.
+- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41685926766 on b26b0bde.
 - **Resume:** none; the reviewer's merge.
 
 ## Results
@@ -41,6 +41,8 @@
   LV1's isolates taken out, hashes to the base's recorded e3986dff...: 11 checks PASS.
 - fx1 three times: 22 checks each. The twin's plan answer: 31,360 -> 31,316 / 31,330 / 31,363 / 31,397 (noise).
 - Lint: exit 0 (after the repo root's `npm ci`).
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41685926766 on b26b0bde (the first attempt: macOS
+  shard 4 cancelled with no FAIL line; `gh run rerun --failed` once: green).
 
 ## CHANGELOG line
 "An Arabic label beside a value reads in order: in the Arabic twin, a card or title that joins your approved Arabic
