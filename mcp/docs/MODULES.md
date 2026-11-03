@@ -43,8 +43,9 @@ task routes.
   - the redesign (copy-and-patch): `redesign.mjs` (the allowlist, the plan, the copy, its check and the write) imports
     `redesign-grid.mjs` (0.3.2 SP19: the geometry, the units of visuals laid over others and the grid, no IO);
   - the twin by step: `arabic-twin.mjs` re-exports `twin-read.mjs` (the source), `twin-visuals.mjs`, `twin-texts.mjs`
-    (labels and terms), `twin-model.mjs`, `twin-copy.mjs` (the EN-AR copy, language buttons), `twin-pages.mjs`,
-    `twin-plan.mjs`, `twin-preview.mjs`, `twin-write.mjs`;
+    (labels and terms), `twin-model.mjs`, `twin-copy.mjs` (the EN-AR copy, language buttons), `twin-pages.mjs`
+    (0.3.2 SP11: its text, button and header fitting in `twin-text-fit.mjs`, one page in, changes and what is said
+    out), `twin-plan.mjs`, `twin-preview.mjs`, `twin-write.mjs`;
   - tests that read source text go through `mcp/test-source.mjs` (a new tool or lib module is found from there).
 - **Tests and CI**: the MCP's suites are listed once, by area, in `mcp/tests.json` and run by `mcp/run-tests.mjs`
   (`npm test` in `mcp/`); `mcp/test.mjs` runs every tool end to end and CI splits it in 4 shards. The website's

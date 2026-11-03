@@ -53,6 +53,8 @@ package's manifest; this file says what is in it.
   file of its own; every plan, answer and written file is exactly what it was before.
 - **Inside the design engine, colours and the glass look:** the colour math and the glass look each have a file of
   their own, shared by the website and the MCP; every theme, picture and layout is exactly what it was before.
+- **Inside the Arabic twin:** widening its buttons, text boxes and table headers to their Arabic texts has a file of
+  its own; every twin and its plan are byte for byte what they were before.
 
 ## [0.3.1]: 2026-11-03 (the version for testers)
 Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports
