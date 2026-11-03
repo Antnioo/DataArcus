@@ -1,0 +1,53 @@
+{
+ "about": "test-0.3.2-sp4.mjs: create_report's answers and the written files recorded on the base (normalised: the plan id, the working folder and the path separator)",
+ "runs": {
+  "P1 a model without measures, Arabic": {
+   "plan": {
+    "err": false,
+    "length": 15745,
+    "sha256": "9ed998c7ee04827f481c2e4cdd0cd6080ccad9c49508e383052da2f2b96516a1"
+   },
+   "report": {
+    "err": false,
+    "length": 11812,
+    "sha256": "abfeac06dc36039ba88effe8b76d308f7c5e6438912fd4689e8bc3596f975665"
+   },
+   "files": {
+    "count": 80,
+    "sha256": "1f148009eead0892a0a0c392fdcd397345cbc01ba74b341aee2b6167e496ceb2"
+   }
+  },
+  "P2 kpiValues full, a Ramadan page filter": {
+   "plan": {
+    "err": false,
+    "length": 14981,
+    "sha256": "e29d70067218d34b6eb82513eff2d6afe27159c4e6a341c472ddaa663478190e"
+   },
+   "report": {
+    "err": false,
+    "length": 10158,
+    "sha256": "3a963ac6b84e63668fffac9aacb08ab8bb384e1972de815923be7818fc04e46d"
+   },
+   "files": {
+    "count": 89,
+    "sha256": "e7e145f61a1206b9e2d8d9d4f9f215000835e6685a4785f2ef7c79a7f07d2283"
+   }
+  },
+  "P3 hand-placed pages, KPI slots left out": {
+   "plan": {
+    "err": false,
+    "length": 12063,
+    "sha256": "787e9009db69a6669a461a42921dc0a677e42c4a4ea685f2957ce21597ce8e5f"
+   },
+   "report": {
+    "err": false,
+    "length": 7891,
+    "sha256": "2ffbeff77332ab1bf3a648d12867e6e91d776dcdf212344dc28a72bd0d5284ef"
+   },
+   "files": {
+    "count": 34,
+    "sha256": "68cb4ec1ad12cef9110487b4b951c41685592aa4786f13e9ba8f1813c258c57d"
+   }
+  }
+ }
+}
