@@ -81,6 +81,19 @@ try {
     }
   }
 
+  // ---------- after the move (SP8): the picker is field-picker-ui.js's; the website loads it before pbip-bind ----------
+  const Picker = require('../assets/js/field-picker-ui.js'), read = (f) => fs.readFileSync(path.join(REPO, 'assets', 'js', f), 'utf8');
+  const bindSrc = read('pbip-bind.js'), ui = read('field-picker-ui.js');
+  let drawn = 0; const real = Picker.render;
+  try { Picker.render = (...a) => { drawn++; return real(...a); }; Bind.renderPicker(fakeEl(), [{ name: 'T', columns: [{ name: 'C', dataType: 'string' }], measures: [{ name: 'M', expression: '1' }] }], Bind.suggest([{ name: 'T', columns: [{ name: 'C', dataType: 'string' }], measures: [{ name: 'M', expression: '1' }] }], 1, { lang: 'en' }), (en) => en); } finally { Picker.render = real; }
+  chk(() => drawn === 1 && !/<optgroup|<select|tg-bind-row|daPick|addEventListener/.test(bindSrc) && Object.keys(Picker).join() === 'render',
+    () => `M1 pbip-bind.js's renderPicker must draw through field-picker-ui.js's render (called ${drawn} times) and hold no picker HTML or listener of its own`);
+  chk(() => !/require\(|fetch\(|XMLHttpRequest|FileReader|arrayBuffer|fromTmsl|fromFolder|suggest\(|catalog\(|import\(|localStorage|postMessage/.test(ui),
+    () => 'M2 field-picker-ui.js reads no model, no file and nothing from the network: it gets the catalog\'s fields and gives back the binding');
+  const tg = read('theme-generator.js'), at = (f) => tg.indexOf('/assets/js/' + f + '.min.js?v='), once = (f) => tg.split('/assets/js/' + f + '.min.js?v=').length === 2;
+  chk(() => once('field-picker-ui') && once('pbip-bind') && at('field-picker-ui') < at('pbip-bind') && at('field-picker-ui') > tg.indexOf('const loadBind'),
+    () => 'M3 theme-generator.js\'s loadBind must load field-picker-ui.min.js once, before pbip-bind.min.js');
+
   if (RECORD) fs.writeFileSync(GOLD, JSON.stringify(got, null, 1) + '\n');
 } catch (e) { problems.push('crashed: ' + String(e && e.stack || e).slice(0, 400)); }
 
