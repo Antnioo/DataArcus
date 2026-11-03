@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.1
+- **A chart under a heatmap that cannot move:** when lining it up under the heatmap's grid would cover another
+  visual, it stays where the plain mirror puts it but keeps its English sort, value axis and padding, so its hours still
+  read left to right like the grid above it.
 - **A large plan is no longer cut:** a plan close to the answer limit (one report in English and Arabic with every
   option on) says once what it repeated (the flip cards' back and helper measure names, the confirmed date), so every
   flip card stays in the plan; smaller plans read exactly as before.
