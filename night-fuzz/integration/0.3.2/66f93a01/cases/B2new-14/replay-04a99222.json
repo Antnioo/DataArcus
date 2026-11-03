@@ -1,0 +1,68 @@
+{
+  "failures": {
+    "P1": [
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v0/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v5/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v0/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v5/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v0/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v5/visual.json"
+        ]
+      }
+    ],
+    "D1": [
+      {
+        "why": "byte difference between independent plans",
+        "files": [
+          "Synthetic AR.Report/.platform"
+        ]
+      }
+    ],
+    "B2": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v4",
+          "p0/v5"
+        ]
+      }
+    ],
+    "B2new": [
+      {
+        "why": "new overlap introduced, said in pictureChecks.newOverlaps",
+        "files": [
+          "p0/v4",
+          "p0/v5",
+          "English [{\"x\":577,\"y\":571,\"width\":195,\"height\":79,\"z\":4000},{\"x\":1046,\"y\":568,\"width\":315,\"height\":143,\"z\":5000}]",
+          "Arabic [{\"x\":1148,\"y\":571,\"width\":195,\"height\":79,\"z\":4000},{\"x\":860,\"y\":568,\"width\":315,\"height\":143,\"z\":5000}]",
+          "plan on v4: movedByRule: a small visual kept on its host would cover another: mirrored on its own | keptTogether: small visuals on a bigger visual (badges, icons) [p0/v4 on v0]",
+          "plan on v5: movedByRule: a bar chart over a table or matrix that stays left to right: kept on it, its bars' direction kept",
+          "in pictureChecks.newOverlaps: true"
+        ]
+      }
+    ]
+  },
+  "extra": {
+    "validatorOriginal": [
+      "PBIR_QUERY_STATE_MISSING"
+    ],
+    "normalizedRepeat": true,
+    "normalizedRenamed": true
+  }
+}

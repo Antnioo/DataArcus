@@ -1,0 +1,81 @@
+{
+  "pages": [
+    {
+      "id": "p0",
+      "width": 1920,
+      "height": 1080,
+      "visuals": [
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v3",
+          "position": {
+            "x": 1802,
+            "y": 701,
+            "width": 85,
+            "height": 379,
+            "z": 3000
+          },
+          "visual": {
+            "visualType": "actionButton",
+            "objects": {
+              "text": [
+                {
+                  "properties": {
+                    "text": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "'Synthetic action page 0 visual 3'"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "icon": [
+                {
+                  "properties": {
+                    "shapeType": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "'rightArrow'"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v10",
+          "position": {
+            "x": 411,
+            "y": 198,
+            "width": 225,
+            "height": 362,
+            "z": 10000
+          },
+          "visual": {
+            "visualType": "slicer"
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v14",
+          "position": {
+            "x": 836,
+            "y": 318,
+            "width": 715,
+            "height": 438,
+            "z": 14000
+          },
+          "visual": {
+            "visualType": "pivotTable"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "pages": [
+    {
+      "id": "p0",
+      "width": 1920,
+      "height": 1080,
+      "visuals": [
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v2",
+          "position": {
+            "x": 149,
+            "y": 3,
+            "width": 449,
+            "height": 368,
+            "z": 2000
+          },
+          "visual": {
+            "visualType": "actionButton",
+            "objects": {
+              "text": [
+                {
+                  "properties": {
+                    "text": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "'Synthetic action page 1 visual 2'"
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "icon": [
+                {
+                  "properties": {
+                    "shapeType": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "'rightArrow'"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v20",
+          "position": {
+            "x": 1469,
+            "y": 797,
+            "width": 451,
+            "height": 283,
+            "z": 20000
+          },
+          "visual": {
+            "visualType": "tableEx"
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v21",
+          "position": {
+            "x": 756,
+            "y": 352,
+            "width": 706,
+            "height": 475,
+            "z": 21000
+          },
+          "visual": {
+            "visualType": "image"
+          }
+        }
+      ]
+    }
+  ]
+}
