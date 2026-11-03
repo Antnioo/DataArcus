@@ -6,7 +6,8 @@
 // the Copy button hands the clipboard. Recorded in fixtures/sp12-designer.json; SP12_RECORD=1 records again (only on
 // the base, never to make a run pass).
 //   W1, W2  EN and AR: every design's canvas SVG and copied DAX as recorded; no script ran from a design
-//   W3      (after the move) the page loaded svg-escape.min.js and svg-expressions.min.js once, before svg-kpi-compiler
+//   W3      (after the move) the page fetched svg-escape.min.js and svg-expressions.min.js once each and runs them
+//           before svg-kpi-compiler.min.js (its script tags' order: deferred scripts run in document order)
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -63,10 +64,15 @@ export default async function ({ browser, url }) {
     await v.ctx.addInitScript(CLIP);
     await v.ctx.addInitScript(() => { try { localStorage.setItem('dataarcus-svg-kpi-tour', '{"seen":true}'); } catch (e) { /* ignore */ } });
     await v.pg.goto(`${url}/tools/svg-kpi-designer.html?lang=${lang}`, { waitUntil: 'networkidle' });
-    // (W3) the compiler's scripts, in the order the page asked for them
-    const order = await v.pg.evaluate(() => performance.getEntriesByType('resource').sort((x, y) => x.startTime - y.startTime).map((x) => x.name).filter((x) => /\/svg-(escape|expressions|kpi-compiler)\.min\.js/.test(x)).map((x) => x.replace(/^.*\/(svg-[\w-]+)\.min\.js.*$/, '$1')));
-    loaded.push(lang + ': ' + order.join(' '));
-    if (!(order.filter((x) => x === 'svg-escape').length === 1 && order.filter((x) => x === 'svg-expressions').length === 1 && order.indexOf('svg-escape') < order.indexOf('svg-kpi-compiler') && order.indexOf('svg-expressions') < order.indexOf('svg-kpi-compiler'))) badOrder = true;
+    // (W3) the compiler's scripts: fetched once each, and run in the page's order (deferred scripts run in document
+    // order, whatever order the network fetched them in)
+    const { order, fetched } = await v.pg.evaluate(() => {
+      const name = (x) => x.replace(/^.*\/(svg-[\w-]+)\.min\.js.*$/, '$1'), ours = (x) => /\/svg-(escape|expressions|kpi-compiler)\.min\.js/.test(x);
+      return { order: [...document.scripts].map((s) => s.src).filter(ours).map(name), fetched: performance.getEntriesByType('resource').map((x) => x.name).filter(ours).map(name) };
+    });
+    loaded.push(lang + ': ' + order.join(' ') + ' (fetched ' + fetched.join(' ') + ')');
+    const once = (x) => order.filter((y) => y === x).length === 1 && fetched.filter((y) => y === x).length === 1;
+    if (!(once('svg-escape') && once('svg-expressions') && once('svg-kpi-compiler') && order.indexOf('svg-escape') < order.indexOf('svg-kpi-compiler') && order.indexOf('svg-expressions') < order.indexOf('svg-kpi-compiler'))) badOrder = true;
     for (const id of STARTERS) {
       await v.pg.click(`#starters [data-t="${id}"]`);
       now[id] = await one(v);

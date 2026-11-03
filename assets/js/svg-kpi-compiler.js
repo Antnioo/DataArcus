@@ -62,14 +62,10 @@
     throw new Error('node ' + n.k);
   }
 
-  // ---------- SVG text safety ----------
-  // Static text is escaped for XML, then for the data URL: % and # would break the image URL.
-  const xmlEsc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&apos;').replace(/"/g, '&quot;');
-  const urlEsc = (s) => String(s).replace(/%/g, '%25').replace(/#/g, '%23');
-  const safe = (s) => urlEsc(xmlEsc(s));
-  const hexOk = (c) => /^#[0-9a-fA-F]{6}$/.test(c || '');
-  const color = (c) => (c === 'none' ? 'none' : hexOk(c) ? urlEsc(c.toLowerCase()) : '%23000000');
-  const attrNum = (n) => { const v = Math.round((+n || 0) * 100) / 100; return String(Object.is(v, -0) ? 0 : v); };
+  // ---------- SVG text safety: svg-escape.js (0.3.2 SP12; the pages load it first): literal text (safe) and
+  // attributes (hexOk, color, attrNum) apart, as before ----------
+  const S = typeof module === 'object' && module.exports ? require('./svg-escape.js') : root.SVGKPIEscape;
+  const safe = S.safe, hexOk = S.hexOk, color = S.color, attrNum = S.attrNum;
 
   // ---------- the report's theme in a design (round 13, the owner's ask: a picture that looks part of its card) ----------
   // Seen in Desktop 2.158 on 6 Oct 2026 ("SC EN light 720", "SC EN dark 1080", "SC AR dark 720"): a design that names
