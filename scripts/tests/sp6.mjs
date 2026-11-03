@@ -6,7 +6,7 @@
 // pixel for pixel the same, and the downloaded theme JSON and background PNG byte for byte.
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
-import { ROOT, visitor, ready } from './lib.mjs';
+import { ROOT, visitor, ready, settle } from './lib.mjs';
 
 const PAGE = '/tools/power-bi-theme-generator.html';
 
@@ -19,7 +19,8 @@ export default async function ({ browser, url }) {
 
   // what one visit shows and downloads: the preview's pixels, the theme JSON, the background PNG
   const visit = async (lang, plainDesign, base) => {
-    const v = await visitor(browser, { downloads: true, plainDesign });
+    // (no smooth scroll, no animation: a screenshot taken while the page still moves differs at its edges by a pixel)
+    const v = await visitor(browser, { downloads: true, plainDesign, motion: 'reduce' });
     if (base) {
       await v.ctx.route(/\/assets\/js\/design-(colours|glass)\.min\.js/, (rt) => rt.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
       await v.ctx.route(/\/assets\/js\/design-engine\.min\.js/, (rt) => rt.fulfill({ status: 200, contentType: 'text/javascript', body: baseEngine }));
@@ -27,8 +28,8 @@ export default async function ({ browser, url }) {
     try {
       await v.pg.goto(`${url}${PAGE}?lang=${lang}`, { waitUntil: 'networkidle' });
       await ready(v.pg);
-      await v.pg.evaluate(() => document.getElementById('preview').scrollIntoView({ block: 'center' }));
-      await v.pg.waitForTimeout(300);
+      await v.pg.evaluate(() => document.getElementById('preview').scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await settle(v.pg);
       const shot = await v.pg.locator('#preview').screenshot({ animations: 'disabled' });
       const file = async (sel) => { const [d] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click(sel)]); return fs.readFileSync(await d.path()); };
       const theme = await file('#dlBtn'), png = await file('#pngBtn');

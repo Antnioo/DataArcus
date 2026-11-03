@@ -54,6 +54,8 @@ package's manifest; this file says what is in it.
   stay where they were written.
 - **Inside the MCP, the report's answer:** what create_report says after writing a report is put together in one file
   of its own; every answer and every written file is exactly what it was before.
+- **Inside the design engine, colours and the glass look:** the colour math and the glass look each have a file of
+  their own, shared by the website and the MCP; every theme, picture and layout is exactly what it was before.
 - **Bars and columns are never too thick:** where the number of categories is known (a chart kept to its top N, days,
   months, quarters, a field of two or a few known values), a bar or column is at most 36 thick on a 1280 x 720 page
   (45 at 1920 x 1080), so three bars or columns no longer fill the chart; the space between them grows evenly, on the

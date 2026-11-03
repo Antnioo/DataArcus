@@ -4,28 +4,69 @@
 - **Approval:** the reviewer's brief "SP6" (3 Nov); the owner D-1016-01, D-1027-05, D-1102-02, D-1102-04. Backlog
   B-280 / B-286 (the Codex split map: "Extract design-colours.js, design-metrics.js, design-glass.js, then design-state.js.
   Keep the public DAEngine object as facade"). One split only: colours and glass.
-- **Base:** `feat/0.3.2-sp6` from `origin/integration/0.3.2` at 04a9922. Push only this branch; never merge.
-- **Scope:** new `assets/js/design-colours.js` (global `DAColours`): the colour math (clampHex ... calmPalette, Lab,
-  CIEDE2000, colour-vision simulation, logoColours, logoTheme). New `assets/js/design-glass.js` (global `DAGlass`): the
-  glass look (GLASS, glassRgb, glassLook, glassFit, glassPixels, glassPng and its cache, GLASS_MARK, isGlassPng,
-  withGlassPicture, glassCards, glassTables). Stays in design-engine.js: presets, colours()/roles() (they bind a design
-  to the default palette), layout, metrics (OP1's), the PNG codec, theme construction, labels, state. DAEngine keeps every
-  name and result (the facade re-exports the moved functions themselves).
-- **No cycle, no globals in the moved code:** design-glass.js gets what it needs from the engine explicitly
-  (`DAGlass.make({ colours, roles, page, toPage, encodePng })`); design-colours.js reads nothing but its arguments
-  (logoTheme gets the repaired page colours as an argument; the engine's wrapper keeps `logoTheme(brand, o)`).
-- **Loaded:** Node through design-engine.js's literal `require('./design-colours.js')` / `('./design-glass.js')` (so
-  the MCP and its packaging pick them up); the browser: the 3 generator pages load both before design-engine.min.js
-  (after text-measure). theme-generator.js's BUILDER list has no design-engine (the page loads it): unchanged.
-- **Tests first:** new suite `sp6` (report), `mcp/test-0.3.2-sp6.mjs`, recorded on the base:
-  D1-D10: 10 made-up designs (glass on/off, 3 palettes, EN/AR, 1920x1080 / 1280x720 / 960x720): theme JSON, glassLook,
-  glassFit, the glass PNG (the JavaScript deflate, byte for byte) and its pixels, slots and project slots, background SVG
-  (sha256 in `fixtures/sp6-design.json`); C1: the colour functions on made-up inputs (logo pixels, palettes, CVD);
-  B1: a live A/B against the base engine (git show 04a9922) for the Node zlib PNG and withGlassPicture (zlib output
-  is per Node version, so not recorded); F1 (after the move): the facade's names identical, the moved ones the modules' own.
-  Website suite `sp6` (`scripts/tests/sp6.mjs`): the theme generator EN and AR, current vs the base engine served in its
-  place: the preview's screenshot pixel-identical and the downloaded theme identical.
-- **Expected:** sp6 12 checks on the base (D1-D10, C1, B1), 13 after (+F1); website sp6 4 checks (EN/AR x preview,
-  theme); every other suite's count unchanged. design-engine.js 1304 -> about 960 lines.
-- **Got:** (filled after the run)
-- **State:** PLAN pushed. **Resume:** write the suite on the base.
+- **Base:** `feat/0.3.2-sp6` from `origin/integration/0.3.2` at 04a9922. Pushed only this branch; never merged.
+- **What moved:** `assets/js/design-colours.js` (new, global `DAColours`): clampHex, hexToRgb ... calmPalette, CALM,
+  Lab, CIEDE2000, colour-vision simulation, logoColours, logoTheme. `assets/js/design-glass.js` (new, global `DAGlass`):
+  GLASS, isGlass, glassRgb, GLASS_MARK, isGlassPng, glassTables at the top; `make({ colours, roles, page, toPage,
+  encodePng })` returns glassLook, glassFit, glassPixels, withGlassPicture, glassPng, glassCards (their caches inside).
+  Stayed: presets, colours()/roles(), BAR_COLORS, DEFAULT_LOOK, layout, metrics (OP1's), the PNG codec, theme, labels,
+  state. Every base line is in one of the three files unchanged (sorted-line diff) but logoTheme's head and its `ui`.
+- **Loaded:** Node by design-engine.js's literal requires (the MCP and its packaging); the browser: the 3 generator
+  pages load design-colours, design-glass, design-engine (after text-measure), one new stamp `?v=20261103sp6` each.
+  theme-generator.js's BUILDER list holds no design-engine (the page loads it): unchanged. No worker loads it.
+- **Tests (written and recorded on the base first, commit 2):** `sp6` (report, `mcp/test-0.3.2-sp6.mjs`): D1-D10
+  (10 made-up designs: glass on/off, 5 palettes, EN/AR, 1920 / 1280 / 960 / custom, a broken saved design): theme JSON,
+  glassLook (and at t 20), glassFit, the glass PNG with the JavaScript deflate byte for byte, its pixels, slots, project
+  slots, background SVG, contrast checks, icons; C1 the colour functions; B1 the base engine (git show 04a9922) live:
+  the zlib PNG and withGlassPicture; F1 the facade. Website `sp6` (`scripts/tests/sp6.mjs`): the generator EN and AR,
+  glass and plain, the page as it is vs the base engine served in its place: preview screenshot pixel-identical,
+  theme JSON and background PNG byte for byte.
+- **Expected -> got:** sp6 12 on the base, 13 after: **got 12 on the base (2dc65ee), 13 after** (recording twice gave the
+  same file). Mutations: GLASS.t 35 -> 36 fails 11 of 13 and the website sp6 4 of 4 (preview and theme); a hue x 60.0001
+  fails C1. Website sp6 4.
+- **Before -> after (lines):** design-engine.js 1304 -> 950; design-colours.js 236 (new); design-glass.js 166 (new).
+- **Areas:** see "Runs" below. **CI:** see below.
+- **State:** RUNNING the gate. **Resume:** the areas' result, then CI.
+
+## Runs
+(filled at the end)
+
+## CHANGELOG line
+- **Inside the design engine, colours and the glass look:** the colour math and the glass look each have a file of
+  their own, shared by the website and the MCP; every theme, picture and layout is exactly what it was before.
+
+## Decisions I made
+- colours()/roles() stay in design-engine.js: they bind a design to the default palette (PRESETS.DataArcus), and
+  test-0.2.9-design A2-10 pins `mix(u.text, u.card, 0.35)` once in design-engine.js; moving them would mean editing it.
+- logoTheme moved with the colour math and takes the repaired page colours as a third argument; DAEngine.logoTheme
+  keeps `(brand, o)` and passes `colours({ ui: o.ui }).ui` (no default palette in design-colours.js).
+- design-glass.js gets the engine's pieces through `make()` (no cycle: the PNG codec stays in the engine as the brief
+  says, and glassPng needs it). Its pure parts are module-level, so DAEngine.GLASS === DAGlass.GLASS (F1).
+- DEFAULT_LOOK (a design default, not the look's drawing) stays in the engine, beside the other defaults.
+- The website check compares against the base engine served in place, in the same browser, not a recorded hash (fonts
+  differ per OS); the Node zlib PNG is compared live for the same reason (zlib's bytes per Node version).
+- The website check uses reduced motion and an instant scroll: with smooth scrolling 1 run in 6 differed by 4 edge
+  pixels at x 0 whatever the engine (now vs now too); after it, 12 of 12 identical.
+
+## For the owner
+none
+
+## Risky changes
+none (the 3 pages' script order is the only served change: design-colours, design-glass before design-engine)
+
+## Seen, not in scope
+- `scripts/tests/design-engine.mjs` crashed once (capture-design-fixtures.mjs:133 waitForFunction timeout) in a run
+  that overlapped my edits; passed 600 on the next run.
+
+## Lessons for the reviewer (design-state's split)
+- The engine's tests load it as `new Function(module, exports, self, require)` with require mapped to the .min.js
+  (scripts/tests/design-engine.mjs, theme-logo.mjs): a new module must be a literal `require('./x.js')`, and its .min.js
+  git-added before `build:min` (check-min only rebuilds tracked .min.js files).
+- Source-reading pins on design-engine.js: test-0.2.9-design (A2-10 roles' mix, kpiCards), test-0.3.1-ts1 (FHD_TEXT,
+  sizeAt), test-0.3.2-op1 (the default page, text-measure before design-engine on the 3 pages). repairState, upgrade
+  and fresh read PRESETS, FONTS, CHART_OPTIONS, LAYOUTS, BAR_COLORS, DEFAULT_PAGE: design-state.js would need them
+  passed (make() as here) or the presets moved first.
+- test-0.3.1-glass-tables N loads design-engine.js from cba24a5 alone; a base copy needs every file it requires
+  (sp6's B1 writes text-measure.js beside it).
+- SP6_BASE moves the comparisons' base; a later engine change that changes a theme on purpose makes sp6 (and the
+  website sp6) fail by design: re-record on that base, never on the change.
