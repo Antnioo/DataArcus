@@ -55,7 +55,11 @@ export function readOriginal(loc) {
   let ext = null; if (files.includes(EXT)) { try { const j = jsonAt(loc, EXT); ext = isObj(j) && Array.isArray(j.entities) ? j : null; } catch (e) { ext = null; } }
   // (SQ4, X1-S2: a bookmark group kept its English name) the groups of bookmarks.json that have a name to show
   let bookmarkGroups = []; if (files.includes(BOOKMARKS)) { try { const j = jsonAt(loc, BOOKMARKS); bookmarkGroups = (isObj(j) && Array.isArray(j.items) ? j.items : []).filter((it) => isObj(it) && Array.isArray(it.children) && (typeof it.name === 'string' || typeof it.name === 'number') && typeof it.displayName === 'string').map((it) => ({ name: String(it.name), displayName: it.displayName })); } catch (e) { bookmarkGroups = []; } }
-  return { files, left, pages, bookmarks, bookmarkGroups, pbir, unreadable, ext, theme: isObj(inv.themeJson) ? inv.themeJson : null, phone: files.some((f) => /\/mobile\.json$/.test(f)), hasPlatform: files.includes('.platform') };
+  // (0.3.2 DT1, B-294) the Bookmarks pane's order (bookmarks.json: each item, a group's bookmarks in it), for the texts'
+  // order (textsOf): the bookmarks' files come in the order of their names, random ids
+  let bookmarkOrder = []; if (files.includes(BOOKMARKS)) { try { const j = jsonAt(loc, BOOKMARKS); (isObj(j) && Array.isArray(j.items) ? j.items : []).forEach((it) => { if (!isObj(it)) return;
+    if (Array.isArray(it.children)) it.children.forEach((c) => { if (typeof c === 'string' || typeof c === 'number') bookmarkOrder.push(String(c)); }); else if (typeof it.name === 'string' || typeof it.name === 'number') bookmarkOrder.push(String(it.name)); }); } catch (e) { bookmarkOrder = []; } }
+  return { files, left, pages, bookmarks, bookmarkGroups, bookmarkOrder, pbir, unreadable, ext, theme: isObj(inv.themeJson) ? inv.themeJson : null, phone: files.some((f) => /\/mobile\.json$/.test(f)), hasPlatform: files.includes('.platform') };
 }
 
 export const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);

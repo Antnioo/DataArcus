@@ -11,6 +11,8 @@ package's manifest; this file says what is in it.
 - **A large plan is no longer cut:** a plan close to the answer limit (one report in English and Arabic with every
   option on) says once what it repeated (the flip cards' back and helper measure names, the confirmed date), so every
   flip card stays in the plan; smaller plans read exactly as before.
+- **The texts to label in Arabic come in one order:** the bilingual plan and the Arabic twin list the texts the way a
+  person reads the report (page by page, top to bottom, then left to right), the same on every run.
 - **Every text that stays English is listed:** the bilingual plan's step before the Arabic texts (every option on) is
   no longer cut; it says each reason once, with its texts under it, so the person sees every text to label.
 - **Shorter tool descriptions and answers:** fewer tokens in every conversation; every answer, errors too, within the
