@@ -2,10 +2,9 @@
 // write writes): one engine, kept whole.
 // (0.3.1 S9: moved out of server.mjs as it was, no change of behaviour)
 import path from 'node:path';
-import { loadModel, visible, inside, modelOf, nothingAt, refuseUnreadable } from './model.mjs';
+import { loadModel, inside, modelOf, nothingAt, refuseUnreadable } from './model.mjs';
 import { planLayout, absorb, imageSize, isSmall, projectPages, designRtl, buildTheme, texts, themeName, themeScaleOf, scaleTheme, textScale, isGlass, glassPng } from './design.mjs';
 import { scopeOf } from './scope.mjs';
-import { writtenName } from './display-names.mjs';
 import { resolveSwitch, switchReach, addSwitch, switchSaid, SWITCH_MIN, SWITCH_MAX } from './metric-switcher.mjs';
 import { takenNames } from './report-names.mjs';
 import { checkSummary, checkFiles } from './plan-lint.mjs';
@@ -20,6 +19,7 @@ import { withPlan, readUserFile, writeTree } from './files.mjs';
 import { modelRef, sameModelBeforeWrite } from './plan-keys.mjs';
 import { formatsAnswer, formatsScriptOf } from './fix-scripts.mjs';
 import { reportAnswer } from './report-result.mjs';
+import { fieldsDesign, fieldBinding, givenNames, namedFields, fieldsOf, keyOf } from './report-bind.mjs';
 import { relsOf, resolveFields, resolvePageFilters, resolveSvgColumns, slicersOf, axesProblems, axesOf } from './report-fields.mjs';
 import { unknownKeys, THEME_MAX, LOGO_MAX, BACKGROUND_MAX, reportPin } from './report-inputs.mjs';
 import { flipAnswer, barSaid } from './report-said.mjs';
@@ -42,23 +42,8 @@ const themeColors = (t) => {
   return Object.fromEntries(Object.entries(out).filter(([, v]) => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v)));
 };
 const themeOf = (p) => readUserFile(p, { kind: 'theme', max: THEME_MAX, json: true });
-// (SQ15b, 0.2.9-reader-S8: plan-lint's binding was a hand copy of this one) the page and the binding of a plan's fields,
-// create_report's and plan-lint's one rule. fieldsDesign: fields.kpis decides the number of cards (the design block's
-// A2-4: 0-6), and the plan's table fields the table's share of a narrow row (SQ13, 0.2.9-design-S2).
-export function fieldsDesign(design, F) {
-  return { design: F && F.kpis ? Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: Math.min(6, F.kpis.length) }) }) : design,
-    tableFields: F && F.table ? F.table.length : undefined };
-}
-// planBinding: the binding for n KPI cards, the picker's, with every field the plan names pinned (builder 7's audit A3-2:
-// the picker's rules are its own, so the website's download gets them too); the plan's measure, where it names one,
-// decides what is related (round 22b, the reviewer's second review, item 4). o: { m, pickFrom, lang, F, design?, full
-// (kpiValues "full"), more (create_report's page filters' options) }; with design, its fieldsDesign too.
-export function planBinding(o) {
-  const { m, pickFrom, lang, F } = o;
-  const pinned = F ? Object.fromEntries([['kpis', F.kpis], ['main', F.measure], ['date', F.timeAxis], ['catA', F.category], ['catB', F.category2], ['slicers', F.slicers], ['table', F.table]].filter(([, v]) => v)) : null;
-  const pickOpts = () => Object.assign(relsOf(m, lang), F && F.measure ? { main: F.measure } : {}, o.full ? { kpiValues: 'full' } : {}, pinned ? { pinned } : {}, o.more || {});
-  return Object.assign(o.design ? fieldsDesign(o.design, F) : {}, { pinned, pickOpts, bindFor: (n) => Bind.suggest(pickFrom, n, pickOpts()) });
-}
+// fieldsDesign and planBinding (create_report's and plan-lint's one page-and-binding rule): lib/report-bind.mjs (0.3.2 SP4)
+export { fieldsDesign, planBinding } from './report-bind.mjs';
 // create_report's one build (J14): plan_layout runs it with the plan's inputs (mode 'build': no gate; it returns the
 // files and finish, which writes them and makes the answer), create_report without an approved artifact (mode 'write':
 // its refusals as before, then "make the plan again" where it would write)
@@ -135,56 +120,11 @@ export function reportRun(a, mode) {
     return SV.map((c, i) => { if (c.page != null && !hasTable[c.page - 1]) throw new Error(`Nothing was written. svgColumns[${i}]: page ${c.page} has no table (pages with a table: ${hasTable.map((h, k) => (h ? k + 1 : 0)).filter(Boolean).join(', ')}).`);
       return (c.at = Object.assign({ page: c.page != null ? c.page - 1 : first, t: c.t, m: c.label, expression: c.expression, w: c.w, h: c.h }, c.expressionNoNumber ? { expressionNoNumber: c.expressionNoNumber } : {})); });
   };
-  // Round 10: the cards show automatic units with 2 decimals by default (kpiValues "auto"), so a card's own format is
-  // written only with kpiValues "full" (and then on the tooltip's card too). A table's measure column gets the same
-  // format on its projection in both modes (measured in Desktop: "format" on the projection, 13857 -> 13,857).
-  // (A3-3: the formats themselves are the picker's, by the one rule: cardFormat with kpiValues "full", tableFormat on a
-  // table's fields; here they are only listed for the answer)
-  // (round 13, seen in Desktop on 6 Oct: a card said 33.8% and the table's column of the same measure 0.34: a measure's
-  // table column carries the percent format its card shows: the picker's tableFormat)
-  const FULL = a.kpiValues === 'full', cardFormats = [], tableFormats = [];
-  // (SQ10, audit-3-picker-writer-S2: each measure once by its table and name, never by its "T[c]" text)
-  const listed = new Set(), listFormats = (b) => {
-    const list = (to, f, code) => { const id = f && JSON.stringify([to === cardFormats, String(f.t), String(f.m)]); if (f && f.m != null && code && !listed.has(id)) { listed.add(id); to.push({ field: keyOf(f), format: code }); } };
-    (b.kpis || []).forEach((f) => list(cardFormats, f, f && f.cardFormat)); (b.table || []).forEach((f) => list(tableFormats, f, f && f.tableFormat));
-    return b;
-  };
-  const usable = F && F.kpis ? F.kpis.map((k) => k.m) : Bind.suggest(pickFrom, 8, relsOf(m, a.lang)).kpis.filter(Boolean).map((k) => k.m);
-  // Round 12 (#25): a model without measures gets its numbers from its columns, counted or summed by the visuals
-  // (Bind.counts), so the report has cards, charts and a table instead of a page four fifths empty
-  // (0.3.1 TT1, the owner, 27 Oct: a title is wholly Arabic or wholly English) «عدد X» only for an Arabic column; an English
-  // one is "Count of X" in an Arabic report too (the mixed «عدد Order Id» made mixed titles)
-  const AR_COL = /[\u0600-\u06FF]/, arName = (word, en) => (c) => (AR_COL.test(c) ? word + ' ' + c : en + ' ' + c);
-  const COUNTS = usable.length ? [] : Bind.counts(pickFrom, a.lang === 'ar' ? { count: arName('عدد', 'Count of'), sum: arName('مجموع', 'Sum of') } : null, { lang: a.lang });
-  const nValues = usable.length || COUNTS.length;
-  // (round 16, design finding #14: "Count of Region" made a weak KPI): the cards take counts of ID-like columns and sums
-  // only; a count of a category column still feeds a chart or the table, never a card: fewer cards, and told
-  const KPI_COUNTS = COUNTS.filter((c) => !c.category), nCards = usable.length || KPI_COUNTS.length;
-  // The binding for n KPI cards: the picker's, with every given field in its place (builder 7's audit A3-2, 11 Oct: the
-  // picker's rules, the fixed slicers, the flag's day axis, the Arabic calendar names and the short day names, are the
-  // picker's own, so the website's download gets them too; the server passes options)
-  // (SQ15b, 0.2.9-reader-S8: planBinding below, the one function plan-lint calls too)
-  const PB = planBinding({ m, pickFrom, lang: a.lang, F, full: FULL,
-    more: PF ? { excludeColumns: PF.map((f) => ({ t: f.t, c: f.c })), axisFor: PF.map((f) => ({ t: f.t, c: f.c, values: f.values })) } : null });
-  // what the picker did for the page filters and the Arabic report, for the notes
-  const noted = (b) => { (b.excluded || []).forEach((x) => slicersDropped.push(`${x.t}[${x.c}]`)); if (b.axisBy) byFlagDay.push(b.axisBy); (b.calendarNames || []).forEach((x) => englishNames.add(`${x.t}[${x.c}]`));
-    // (kept as before A3-2, an open item: with fields or page filters the binding had no category pool, so the charts
-    // of a page take the plan's categories only)
-    if (F || PF) delete b.catPool;
-    return b; };
-  // a model without measures: the same binding, its numbers the columns the visuals count or sum (through build, so the
-  // table's and the tooltip's rules are the picker's)
-  const countBind = (n) => { const b = PB.bindFor(n), C = COUNTS, ch = b.choices;
-    const nb = Bind.build(Object.assign({}, ch, { kpis: Array.from({ length: n }, (_, i) => KPI_COUNTS[i] || null), main: C[0], table: [ch.catB || ch.catA, C[0], C[1]].filter((x, i, l) => x && l.indexOf(x) === i) }));
-    delete b.notReached; return noted(Object.assign({}, b, nb)); };
-  const bindFor = (n) => (COUNTS.length ? countBind(n) : noted(PB.bindFor(n)));
-  const cardNote = (asked, built, leftOut) => (COUNTS.length ? Object.assign({ asked, built, counted: KPI_COUNTS.slice(0, built).map((f) => f.name),
-    why: `The model has no measures, so the KPI cards, the charts and the table show counts and sums of its columns, made by the visuals themselves (${COUNTS.slice(0, 4).map((f) => f.name).join(', ')}); the model is not changed.${built < asked && COUNTS.some((c) => c.category) ? ` Fewer cards than asked: a count of a category column (${COUNTS.filter((c) => c.category).slice(0, 3).map((f) => f.name).join(', ')}) is not a KPI, so it is shown in a chart or the table, never on a card.` : ''} For real KPIs, propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again.` }, leftOut ? { leftOut } : {})
-    : built >= asked ? null : Object.assign({ asked, built, measures: usable.slice(0, built),
-    why: usable.length ? `The model has ${usable.length} measure${usable.length === 1 ? '' : 's'} a KPI card can show${sc.scope ? ' in this part of the model' : ''}, so ${built} of ${asked} KPI cards were built. Add measures to the model (in Power BI Desktop) for more cards, then create the report again.`
-      : 'The model has no measures, so no KPI card was built, and the charts were left out too (they have no value to show; see leftOutVisuals). The report has its header, filters and table only. Propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again.' }, leftOut ? { leftOut } : {}));
+  // (0.3.2 SP4) the binding (the measures a card can show, the columns counted without measures, the picker's binding
+  // with every pinned field, the cards' and the table's formats, the picker's notes): lib/report-bind.mjs, here as before
+  const FULL = a.kpiValues === 'full';
+  const { usable, COUNTS, nValues, nCards, bindFor, cardNote, listFormats, cardFormats, tableFormats, slicersDropped, byFlagDay, englishNames } = fieldBinding({ m, pickFrom, lang: a.lang, F, PF, full: FULL, sc });
   let kpiCards = null;
-  const slicersDropped = [], byFlagDay = [];
   const modelNames = Object.fromEntries(m.tables.map((t) => [t.name, (t.columns || []).map((c) => c.name).concat((t.measures || []).map((x) => x.name))]));
   // (D1: a right-to-left waterfall's running total follows its category's order: the model's sort-by columns and types)
   const modelColumns = Object.fromEntries(m.tables.map((t) => [t.name, Object.fromEntries((t.columns || []).map((c) => [c.name, Object.assign({ type: c.dataType || null }, c.sortBy ? { sortBy: String(c.sortBy) } : {})]))]));   // (round 23: for the report measures' free names)   // (round 23: line charts whose slot went to the visual beside them)
@@ -213,23 +153,11 @@ export function reportRun(a, mode) {
   // (0.3.1 GL1) a design with the glass look gets the engine's soft picture instead, at each page's size (glassPng)
   const kpisOf = (pages) => pages.reduce((n, p) => Math.max(n, p.slots.filter((s) => s.kind === 'kpi').length), 0) || 1;
   // display names: checked first, then put on the bound fields (the report writer shows a field's name when it has one)
-  const given = new Map();
-  for (const [k, v] of Object.entries(a.displayNames || {})) {
-    const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/), name = writtenName(v, `displayNames: ${visible(String(k)).slice(0, 160)}`);
-    if (!mk) throw new Error(`displayNames: "${k}" is not written as Table[Field]`);
-    if (!name || name.length > 80) throw new Error(`displayNames: the display name for ${k} is empty or longer than 80 characters`);
-    given.set(Bind.fieldKey(mk[1], mk[2]), { name, key: String(k), used: false });
-  }
-  const fieldsOf = (b) => (b ? [b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean) : []);
-  const keyOf = (f) => `${f.t}[${f.c != null ? f.c : f.m}]`;
+  const given = givenNames(a.displayNames);
   // the display names given, as copies of the bound fields (A3-2: never set on the picker's fields in place); a calendar
   // name the picker swapped for its Arabic column keeps the name given for the English one
-  const englishNames = new Set();
-  const named = (b) => { const from = new Map(((b && b.calendarSwaps) || []).map((w) => [Bind.fieldKey(w.to.t, w.to.c), Bind.fieldKey(w.from.t, w.from.c)]));
-    // (0.3.1 FX2, the laptop's A-1: a model with no measures showed «رقم الطلب» for the count of Order Id) a column the
-    // visual counts or sums keeps its aggregation in the name given: «عدد <name>», «مجموع <name>» (Count of, Sum of)
-    const aggName = (f, name) => (f.agg == null ? name : f.agg === 0 ? arName('مجموع', 'Sum of')(name) : arName('عدد', 'Count of')(name));
-    return Bind.mapFields(b, (f) => { const k = Bind.fieldKey(f.t, f.c != null ? f.c : f.m), g = given.get(k) || given.get(from.get(k)); if (!g) return f; g.used = true; return Object.assign({}, f, { name: aggName(f, g.name) }); }); };
+  // (0.3.2 SP4) the names given, put on copies of the bound fields: lib/report-bind.mjs
+  const named = (b) => namedFields(b, given);
   // the logo, as the website takes it: a PNG or JPG, 2 MB at most; its size is read so its box can take its shape
   const reportNotes = [];
   // (0.3.1 FX5b, the owner's D-1028-06) the distinct counts a bar or column chart's thickness follows: columnStats' (the

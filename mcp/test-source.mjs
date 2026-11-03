@@ -15,7 +15,7 @@ const there = (f) => fs.existsSync(path.join(HERE, f));
 
 // what server.mjs shared between its tools, moved to lib/ (in the order it stood in server.mjs)
 export const SERVER_LIBS = ['lib/tool-limits.mjs', 'lib/tool-answer.mjs', 'lib/tool-inputs.mjs', 'lib/plan-keys.mjs', 'lib/fix-scripts.mjs', 'lib/hidden-names.mjs',
-  'lib/report-fields.mjs', 'lib/report-inputs.mjs', 'lib/report-said.mjs', 'lib/report-run.mjs', 'lib/report-result.mjs'];
+  'lib/report-fields.mjs', 'lib/report-inputs.mjs', 'lib/report-said.mjs', 'lib/report-run.mjs', 'lib/report-result.mjs', 'lib/report-bind.mjs'];
 // the tools' modules, in the order server.mjs imports (and registers) them
 export const toolFiles = () => [...read('server.mjs').matchAll(/^import \{ register as \w+ \} from '\.\/(tools\/[a-z_]+\.mjs)';/gm)].map((m) => m[1]);
 export const serverFiles = () => ['server.mjs'].concat(toolFiles(), SERVER_LIBS.filter(there));
