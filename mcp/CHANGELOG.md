@@ -72,6 +72,8 @@ package's manifest; this file says what is in it.
   phone, and the site's own pages and scripts no longer use the long dash (a quote of Microsoft's guidance keeps it).
 - **Inside the Arabic twin:** widening its buttons, text boxes and table headers to their Arabic texts has a file of
   its own; every twin and its plan are byte for byte what they were before.
+- **Inside the MCP, the model reader:** the screen that marks names reading like instructions, how a name is shown,
+  the column types and the KPI list each have a file of their own; read_model answers exactly as before.
 
 ## [0.3.1]: 2026-11-03 (the version for testers)
 Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports
