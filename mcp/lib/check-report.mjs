@@ -23,6 +23,8 @@ import { fieldParametersOf, titleProblems } from './metric-switcher.mjs';
 import { NO_DIRECT_EDITS } from './agent-text.mjs';
 import { COPY_TAG } from './arabic-twin.mjs';
 import { KNOWN_TYPES, countsOf, mixedOf, boldItalicOf } from './text-format.mjs';   // (0.3.1 CS1: FORMAT_MIXED)
+import { langOfTexts, pageLanguages } from './check-language.mjs';   // (0.3.2 SP20: each page's language)
+export { pageLanguages, filledLanguages } from './check-language.mjs';
 
 const require = createRequire(import.meta.url);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -63,7 +65,7 @@ const family = (u) => { const m = /\/([A-Za-z]+)\/\d+\.\d+\.\d+\/schema/.exec(St
 // with the lint on. Its measured rules now take their input from the reading block's inventory(): the same files,
 // links never followed, the same limits, one reading for the rules and the lint.)
 // (A4-2, audit 4: a value that is not the object or list a rule expects, as null or a string, is read as none, never a crash)
-const arr = (v) => (Array.isArray(v) ? v : []);
+export const arr = (v) => (Array.isArray(v) ? v : []);
 // (0.3.0 step 2: the one copy is the shared check's, assets/js/layout-check.js)
 export const rulesInput = (inv) => LC.rulesInput(inv, { isCustom });   // (the reading block's one custom-visual test)
 
@@ -181,8 +183,8 @@ export const IMPACT = {
 // One entry per Desktop proof, each with its evidence. A validator finding is "known" only when it is exactly the proven
 // shape: the code, the object, the visual type (and its mode), every property one of the proven ones with a value of the
 // proven kind, no selector. Anything else, even one more property of the same object, stays the validator's error.
-const litOf = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
-const plainObj = (x) => x && typeof x === 'object' && !Array.isArray(x);
+export const litOf = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
+export const plainObj = (x) => x && typeof x === 'object' && !Array.isArray(x);
 export const VALIDATOR_GAPS = [{
   code: 'PBIR_FORMATTING_OBJECT_UNKNOWN', object: 'dropdown', visualType: 'slicer',
   // a dropdown slicer (the mode the report writer writes)
@@ -277,67 +279,8 @@ function impactCore(n, ctx) {
   return nothing;
 }
 
-// ---- each page's language (0.3.1 S1: an EN-AR copy, the English pages and their hidden Arabic copies with language
-// buttons, was judged all Arabic: its English pages were told to put their titles right and their Tab order right to
-// left) ----
-// a list of texts: 'ar' or 'he' when most of its letters are Arabic or Hebrew, 'en' when most are Latin, else null
-// (counted only, never returned)
-const AR_LETTERS = /[؀-ۿݐ-ݿﭐ-﻿]/g, HE_LETTERS = /[֐-׿יִ-ﭏ]/g, LAT_LETTERS = /[A-Za-z]/g;
-const langOfTexts = (list, latin) => { const l = list.join(' '), ar = (l.match(AR_LETTERS) || []).length, he = (l.match(HE_LETTERS) || []).length, lat = (l.match(LAT_LETTERS) || []).length;
-  return ar > lat && ar >= he ? 'ar' : he > lat ? 'he' : latin && lat > ar + he ? 'en' : null; };
-const litOfS = (p) => { const v = litOf(p); return v == null ? null : String(v).replace(/^'|'$/g, '').replace(/''/g, "'"); };
-const plainOf = (list) => arr(list).filter((e) => plainObj(e) && !e.selector && plainObj(e.properties)).reduce((a, e) => Object.assign(a, e.properties), {});
-const linkTo = (x) => { const l = plainOf((((x.json || {}).visual || {}).visualContainerObjects || {}).visualLink); return litOfS(l.type) === 'PageNavigation' ? litOfS(l.navigationSection) : null; };
-const buttonText = (x) => { const es = arr((((x.json || {}).visual || {}).objects || {}).text).filter((e) => plainObj(e) && plainObj(e.properties));
-  const d = es.find((e) => plainObj(e.selector) && e.selector.id === 'default') || es.find((e) => !e.selector); return d ? litOfS(d.properties.text) || '' : ''; };
-const titleOf = (x) => { const t = plainOf((((x.json || {}).visual || {}).visualContainerObjects || {}).title); return typeof litOf(t.text) === 'string' ? litOfS(t.text) : null; };
-/** Each page's language, told in this order: (1) a pair of page buttons going to each other's page (the language
- *  buttons of an EN-AR copy): the page whose button reads in Arabic (or Hebrew) letters is the Latin one, its counterpart
- *  the right-to-left one; (2) a page reached only from pages of one language (a tooltip or drillthrough page, a page
- *  button) takes it; (3) the page's own texts: its name and text boxes, and its visuals' titles, when they agree; (2) again; (4) else
- *  the report's language. inv: the reading layer's inventory; R: rulesInput's; fallback: the report's language.
- *  Returns { pages: { id: lang }, by: { buttons, links, texts, report } } (counts). The texts are counted, never returned. */
-export function pageLanguages(inv, R, fallback) {
-  const lang = {}, how = {}, set = (id, l, by) => { if (lang[id] == null && l) { lang[id] = l; how[id] = by; } };
-  const ids = new Set(R.pages.map((p) => String(p.id)));
-  // (1) the language buttons: reciprocal page buttons whose texts are in different scripts
-  const btns = R.visuals.filter((x) => x.type === 'actionButton' && x.page).map((x) => ({ from: String(x.page.id), to: linkTo(x), text: buttonText(x) })).filter((b) => b.to && ids.has(b.to) && b.to !== b.from);
-  const votes = {}, vote = (id, l) => { (votes[id] = votes[id] || new Set()).add(l); };
-  btns.forEach((b) => { const back = btns.find((c) => c.from === b.to && c.to === b.from); if (!back) return;
-    const mine = langOfTexts([b.text], true), theirs = langOfTexts([back.text], true);
-    if (!mine || !theirs || (mine === 'en') === (theirs === 'en')) return;
-    // the button names the other page's language
-    vote(b.from, mine === 'en' ? theirs : 'en'); vote(b.to, mine); });
-  Object.entries(votes).forEach(([id, v]) => { if (v.size === 1) set(id, [...v][0], 'buttons'); });
-  // (2) the pages that link to a page (tooltip, drillthrough, page buttons): all of one known language
-  const sources = {};
-  R.visuals.forEach((x) => { if (!x.page) return; const vco = ((x.json || {}).visual || {}).visualContainerObjects || {};
-    [linkTo(x), litOfS(plainOf(vco.visualTooltip).section), litOfS(plainOf(vco.visualLink).drillthroughSection)].forEach((to) => { if (to && ids.has(to) && to !== String(x.page.id)) (sources[to] = sources[to] || new Set()).add(String(x.page.id)); }); });
-  const byLinks = () => Object.entries(sources).forEach(([id, from]) => { if (lang[id] != null) return; const ls = new Set([...from].map((f) => lang[f]));
-    if (ls.size === 1 && !ls.has(undefined)) set(id, [...ls][0], 'links'); });
-  byLinks();
-  // (3) the page's own texts
-  inv.pages.forEach((pg) => { const id = String(pg.id); if (lang[id] != null) return;
-    const own = [pg.rawName].concat(pg.visuals.map((x) => x.rawText).filter((t) => typeof t === 'string'));
-    const page = R.pages.find((p) => String(p.id) === id), titles = page ? page.visuals.map(titleOf).filter(Boolean) : [];
-    // (its name and text boxes, and its titles, each on its own: when they disagree, as an English page name over Arabic
-    // titles, the report's language stands)
-    const a = langOfTexts(own, true), b = langOfTexts(titles, true);
-    set(id, a && b && a !== b ? null : a || b, 'texts'); });
-  byLinks();
-  // (4) the report's language
-  R.pages.forEach((p) => set(String(p.id), fallback, 'report'));
-  const by = {}; Object.values(how).forEach((k) => { by[k] = (by[k] || 0) + 1; });
-  return { pages: lang, by };
-}
-/** (0.3.1 SQ2) Every page's language: pageLanguages, and a page none of its signs tell takes the language most told
- *  pages have (right to left when more than half), else English. Returns { pages: { id: lang }, by } (the lens and
- *  the native copy). */
-export function filledLanguages(inv, R) {
-  const PL = pageLanguages(inv, R, null), told = Object.values(PL.pages), most = told.filter((l) => l === 'ar' || l === 'he').length > told.length / 2 ? 'ar' : 'en';
-  const pages = Object.assign({}, PL.pages); R.pages.forEach((pg) => { if (!pages[pg.id]) pages[pg.id] = most; });
-  return { pages, by: PL.by };
-}
+// ---- each page's language: lib/check-language.mjs (0.3.2 SP20; pageLanguages and filledLanguages re-exported above,
+// langOfTexts imported for the report's own language) ----
 // what the answer says of it: the counts, how they were told, and each page's (60 at most; the ids as safeName writes them)
 const pageLanguagesOut = (P) => { const e = Object.entries(P.pages), counts = {}; e.forEach(([, l]) => { counts[l] = (counts[l] || 0) + 1; });
   return Object.assign({ counts, by: P.by, pages: Object.fromEntries(e.slice(0, 60).map(([id, l]) => [safeName(id), l])) }, e.length > 60 ? { more: e.length - 60 } : {},
