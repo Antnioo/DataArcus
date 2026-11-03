@@ -184,7 +184,9 @@ check(/`languages: "en\+ar"`/.test(pl) && /`bilingual`/.test(pl) && /`sample`/.t
 check(/`sample: true`/.test(cr) && /made-up/.test(cr) && /never a row/.test(cr) && /`languages: "en\+ar"`/.test(cr), 'D5-P3. PRIVACY.md\'s create_report row does not say the sample writes a made-up project (never a row in the answer) and what languages "en+ar" returns');
 // (changed on purpose, 0.3.1 CX2, Codex's F06: the approval page draws at most 12 pages or pairs)
 check(/draws up to 12 Arabic pages/.test(pv) && !/draws each Arabic page/.test(pv) && /the same `\.mcpb`/.test(pv), 'D5-P4. PRIVACY.md does not say the approval page draws the twin\'s Arabic pages on your computer, nor that the plugin installs the same .mcpb');
-check(/Checked against 0\.3\.1/.test(pv.slice(0, 600)), 'D5-P5. PRIVACY.md\'s header is not checked against 0.3.1');
+// (3 Nov, the 0.3.2 release prep) the version being shipped, read where it is set (mcp/package.json), never a literal
+const PKG_V = JSON.parse(read('./package.json')).version;
+check(pv.slice(0, 600).includes(`Checked against ${PKG_V}`), `D5-P5. PRIVACY.md's header is not checked against ${PKG_V} (mcp/package.json's version)`);
 // D5-S PRODUCT_SPEC.md: 0.3.1's three options said, and the platforms as the release says them
 check(/0\.3\.1/.test(spec) && /`lens: "arabic"`/.test(spec) && /`languages: "en\+ar"`/.test(spec) && /`sample: true`/.test(spec), 'D5-S1. PRODUCT_SPEC.md says nothing of 0.3.1 (the Arabic lens, languages "en+ar", the sample)');
 check(/Writes Power BI projects on Windows, macOS and Linux; open them in Power BI Desktop on Windows, or deploy the project to Fabric/.test(spec), 'D5-S2. PRODUCT_SPEC.md does not say the platforms in the release\'s words');
