@@ -36,6 +36,9 @@ package's manifest; this file says what is in it.
   shows the same choices in the same order and the download is byte for byte what it was before.
 - **Inside the report writer:** the tooltip pages (the card and the bars shown when a chart is hovered) are made in a
   file of their own; every report, on the website and from the MCP, is byte for byte what it was before.
+- **Inside the Model Health Check, again:** the model's index (its tables, columns, measures and what each one uses)
+  is in a file of its own and is never changed once built; every check gives the same findings, unused fields, score and
+  questions as before.
 - **Inside the Model Health Check:** reading DAX and the fields a report uses is in a file of its own; every check, on
   the website and from the MCP, gives the same findings, unused fields, score and questions as before.
 - **More of the Arabic twin like the English:** more matrices that are lists are written as tables, so their first column

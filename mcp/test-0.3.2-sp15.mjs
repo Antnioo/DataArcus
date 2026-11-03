@@ -68,13 +68,15 @@ const calcGroupsReport = () => ({ format: 'pbir', files: [
   { path: 'definition/pages/p1/visuals/v1/visual.json', json: { visual: { visualType: 'matrix', query: { queryState: {
     Rows: { projections: [{ field: ent('Time Intelligence', 'Period') }] }, Values: { projections: [{ field: ent('Sales', 'Ratio', 'Measure') }] } } } } } }] });
 // B2 a measure using measures of another table: a measures-only table, qualified and unqualified, a column in the
-// measure table named like another table's measure, a calculated column using a measure, a chain three deep
+// measure table named like another table's measure, a calculated column using a measure, a chain three deep, a virtual
+// column named like a measure (it is the virtual column, not the measure)
 const crossTable = () => ({ compatibilityLevel: 1567, model: { culture: 'en-US', tables: [
   { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Cost', 'double'), col('Region', 'string'), col('Spare', 'string')],
     measures: [ms('Total', 'SUM ( Sales[Amount] )'), ms('Cost Sum', 'SUM ( Sales[Cost] )')] },
   { name: 'Metrics', partitions: mp('Metrics'), columns: [col('Total', 'double'), Object.assign(col('Flag', 'string'), { type: 'calculated', expression: 'IF ( [Total] > 0, "yes", "no" )' })],
     measures: [ms('Margin', '[Total] - [Cost Sum]'), ms('Qualified', "Sales[Total] + 'Sales'[Cost Sum]"), ms('Margin %', 'DIVIDE ( [Margin], [Total] )', { formatString: '0%' }),
-      ms('Chain', '[Margin %] * 2'), ms('Lonely', "COUNTROWS ( 'Metrics' )")] },
+      ms('Chain', '[Margin %] * 2'), ms('Lonely', "COUNTROWS ( 'Metrics' )"),
+      ms('Virtual Total', 'SUMX ( ADDCOLUMNS ( Sales, "Total", Sales[Amount] ), [Total] )')] },
   { name: '_Measures', partitions: mp('_Measures'), columns: [col('Value', 'int64', { isHidden: true })], measures: [ms('Headline', 'Metrics[Chain] + [Qualified]')] }] } });
 const crossTableReport = () => ({ format: 'pbir', files: [
   { path: 'definition/pages/p1/page.json', json: { name: 'p1', displayName: 'Page 1' } },
@@ -154,6 +156,7 @@ const COVER = {
   'a calculation item uses another table\'s measure': J('N12').dax.some(([w, , r]) => w === 'ci Time Intelligence|vs Target' && r.refs.includes('m:target')),
   'a measure uses another table\'s measure, qualified and not': J('N13').dax.some(([w, , r]) => w === 'm Margin' && r.refs.includes('m:total') && r.refs.includes('m:cost sum'))
     && J('N13').dax.some(([w, , r]) => w === 'm Qualified' && r.style.qualifiedMeasures.length === 2),
+  'a virtual column named like a measure is not the measure': J('N13').dax.some(([w, , r]) => w === 'm Virtual Total' && !r.refs.includes('m:total')),
   'unused fields found with a report (B1, B2)': ['N12', 'N13'].every((k) => /"UNUSED_COL"/.test(T(k)) && /"UNUSED_MEASURE"/.test(T(k))),
   'the incomplete model keeps its warning': /"unreadable":\{"message":"[^"]*Sales Agg\.tmdl/.test(T('N14')) && /Sales Agg\.tmdl/.test(q) && /^false\n\{"unreadable"/.test(q),
   'aggregations read': J('N9').agg.length === 2 && J('N9').agg.every(([, b]) => b)

@@ -19,7 +19,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
-import { copyFixtures, CASES as SP9_CASES, TRICKY, trickyModel, pbir, legacy } from './fixtures/health-models.mjs';
+import { copyFixtures, CASES as SP9_CASES, TRICKY, pbir, legacy } from './fixtures/health-models.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const require = createRequire(import.meta.url);
