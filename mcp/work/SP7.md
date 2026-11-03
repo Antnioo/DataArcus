@@ -20,7 +20,7 @@
   (sp5 has exec 1920 x 1080), seeded and clock fixed: every non-image file (4 pages, 2 of them tooltip pages) and the
   ZIP container as recorded; W3 after the move: pbip-tooltip loaded once, before pbip-page.
 - **Before -> after:** `assets/js/pbip-page.js` 1631 -> 1533 lines; `pbip-tooltip.js` 144 (new).
-- **Expected:** sp7 9 on the base, 11 after; website sp7 2 on the base, 3 after. **Got:** the same: sp7 9 on 9e70915
+- **Expected checks:** sp7 9 on the base, 11 after; website sp7 2 on the base, 3 after. **Got:** the same: sp7 9 on 9e70915
   (recorded on the base code), 11 on 71378c08, records unchanged; website sp7 2, then 3. A one-number change
   (tipSix + 1) fails sp7 T1-T7 on the base and after the move (then reverted); T8 (the empty page) is unaffected.
 - **Areas (on 71378c08):** report 46 of 46 (sp5 12, sp7 11, glass-tables 113, phone 355, dax-functions 92); core 11
