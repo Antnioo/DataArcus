@@ -21,7 +21,8 @@ task routes.
   preview evaluator `svg-expressions.js`, its SVG text safety `svg-escape.js`, its DAX code generation `svg-codegen.js`).
 - **The MCP server** (`mcp/server.mjs`, stdio): 11 tools, from `read_model` to `check_report` (every tool and option:
   `mcp/TOOLS.md`). Its modules are in `mcp/lib/`:
-  - reading: `model.mjs` (models from disk, every path kept inside the working folder; the untrusted-text screen),
+  - reading: `model.mjs` (models from disk, every path kept inside the working folder), `model-names.mjs` (the
+    untrusted-text screen and how a name is shown: pure), `model-metadata.mjs` (column types and KPIs: pure),
     `read-report.mjs` (what a PBIR report holds), `scope.mjs` (large models), `visual-meaning.mjs` (what a custom
     visual shows and its native replacement; its role words and family hints: `visual-vocabulary.mjs`);
   - **the approval gate**: `plans.mjs` (plan ids, what each plan pins) and `approval-window.mjs` (the window in the
