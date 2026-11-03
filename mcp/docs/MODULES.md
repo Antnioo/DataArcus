@@ -18,7 +18,7 @@ task routes.
   the calendar generator (`calendar-generator.js`, `gulf-dates.js`), the measured rules (`report-rules.js`,
   `label-limits.js`, `layout-check.js`, `report-a11y.js`), the mirror engine for right to left (`report-mirror.js`),
   the preview renderer (`page-preview.js`) and the SVG KPI compiler (`svg-kpi-compiler.js`; its expression tree and
-  preview evaluator `svg-expressions.js`, its SVG text safety `svg-escape.js`).
+  preview evaluator `svg-expressions.js`, its SVG text safety `svg-escape.js`, its DAX code generation `svg-codegen.js`).
 - **The MCP server** (`mcp/server.mjs`, stdio): 11 tools, from `read_model` to `check_report` (every tool and option:
   `mcp/TOOLS.md`). Its modules are in `mcp/lib/`:
   - reading: `model.mjs` (models from disk, every path kept inside the working folder; the untrusted-text screen),
