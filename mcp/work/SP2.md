@@ -22,8 +22,11 @@
   Guards after the move, counts unchanged: j14 30, write-gate 7, bilingual-report 33, mr1 26, bd1 18, sq10 29, sq13 39,
   0.3.0-claims 688. Lint 0.
 - **Before -> after:** `tools/plan_layout.mjs` 585 -> 538 lines; `lib/plan-variants.mjs` 69 lines (new).
-- **State:** the work committed; area runs and CI next.
-- **Resume:** areas core, report, checker; then CI.
+- **Areas** (on ab8a204, the last code commit): core, report, checker 61 of 61 suites PASS (glass-tables needs
+  cba24a5, absent from a shallow clone: 113 checks once fetched; the 14 after it run one by one, mutation 76 of 76 killed).
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41549509327 on 2bda676** (ab8a204's code + the note).
+- **State: DONE.**
+- **Resume:** none; the reviewer's merge.
 
 ## What moved
 `samplePlan` and `SAMPLE_KEYS`; `redesignPlan`, split in two: `redesignProblems(a)` (the request's own problems, before
@@ -47,6 +50,7 @@ redesign.mjs, `AIM`, `fitLists`, `out`, `pretty`, `samplePin`, `redesignPin`, `i
   than the plan's 7: one path of `R.problems` without a write-over. R4's preset is a real one (Midnight), so R4 plans.
 - X2 compares with the redesign copy's digest normalised: the test's own process is not seeded, so the logical id is
   new; R3 compares the same answer byte for byte through the seeded server.
+- CI was started while the local area runs were still going (same code; the order only saves wall-clock): both green.
 - tests.json's affected "report" list adds lib/plan-variants.mjs. ARCHITECTURE.md and docs/MODULES.md name none of the
   moved functions: unchanged.
 
