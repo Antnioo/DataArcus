@@ -28,7 +28,12 @@
   box grew to 244.88); W, V1, U5 green there. Moved on purpose: mx8 N4-N7, mx7 H1 (B-300), mx7 H5-H6 (B-299; the
   rowPadding copy check moved to hm1 F3). mx3 25, mx4 24, mx5 17, twin-fuzz 185, en-ar-copy 27 unchanged; fx1 3 x 22.
   Plan answer +23 to +60 characters, F1-1 +335 (its heatmap's why); all under 11,000 of 40,000.
-- **State:** code in at 12464b9; areas and CI below.
+- **Areas on ee1f29b:** twin 32, arabic 15, report 56, checker 8, core 11 suites passed; fx1 3 x 22; lint 0; site
+  config PASS; integration/0.3.2 did not move (e2cf676), no merge.
+- **State: NOT DONE (CI not green, no test failed).** Run https://github.com/Antnioo/DataArcus/actions/runs/41667464267 on
+  ee1f29bf: Linux 5 of 5, Windows 5 of 5, website green; macOS shards 0 and 4 cancelled with no FAIL line and no log;
+  the one rerun (`--failed`): shard 4 passed, shard 0 cancelled again after 15 min (no steps logged; its 40 min limit
+  not reached). Per the brief, not rerun again: the reviewer's call (a fresh `gh workflow run`).
 - **Resume:** the reviewer's merge; the laptop (below).
 
 ## Plan, per item
