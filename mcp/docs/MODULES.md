@@ -40,6 +40,8 @@ task routes.
     `report-said.mjs`, `report-run.mjs` (one report's whole build, the plan's exact artifact and the write alike),
     `report-result.mjs` (create_report's answer and its notes from the build, no IO), `report-bind.mjs` (the
     report's field identities, formats and bindings from the model's metadata and the plan's options, no IO);
+  - the redesign (copy-and-patch): `redesign.mjs` (the allowlist, the plan, the copy, its check and the write) imports
+    `redesign-grid.mjs` (0.3.2 SP19: the geometry, the units of visuals laid over others and the grid, no IO);
   - the twin by step: `arabic-twin.mjs` re-exports `twin-read.mjs` (the source), `twin-visuals.mjs`, `twin-texts.mjs`
     (labels and terms), `twin-model.mjs`, `twin-copy.mjs` (the EN-AR copy, language buttons), `twin-pages.mjs`,
     `twin-plan.mjs`, `twin-preview.mjs`, `twin-write.mjs`;
