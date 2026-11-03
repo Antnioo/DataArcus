@@ -27,12 +27,14 @@
 - **Expected checks:** sp9 14 on the base, 16 after; website sp9 2 on the base, 3 after. **Got:** the same: sp9 14 on
   0c97587 (recorded on the base code, 3 runs identical), 16 after the move, records unchanged; website sp9 2, then 3.
   Two one-line mutations of the parser (no `--` comments; no variation source) fail T1, and A8 and T1; reverted.
-- **Areas:** see "Results" below. **State:** the move done; CI next.
-- **Resume:** if CI is not green, read its FAIL line; else the reviewer's merge.
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41583584877 on 3a27334d** (first run, every job green;
+  integration/0.3.2 had not moved from a57e094: nothing merged in). **State: DONE.**
+- **Resume:** none; the reviewer's merge.
 
 ## Results
-- MCP: model 15/15 (sp9 16), safety and release (36 suites with model) pass; `--affected` below.
-- Website: sp9 3, model-health 255, tmdl-model 70, pbip 111; lint 0; check-min (stamps against main) and
+- MCP: model 15/15 (sp9 16), safety and release (36 suites with model) pass. A local `--affected` run was stopped by
+  my 20-minute timeout before it printed (no result); CI ran every suite (D-1102-02).
+- Website: sp9 3, model-health 255, tmdl-model 70, pbip 111, theme-generator 922, theme-generator-lab 922; lint 0; check-min (stamps against main) and
   test-site-config pass; check-literal-requires passes; changelog-words passes.
 
 ## CHANGELOG line
