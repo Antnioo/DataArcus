@@ -37,8 +37,9 @@
   3,180 characters). CI 41576482704: every job green but website sp8 (EN and AR): the page reads a folder in the file
   system's directory order, which differs on CI. The suite now hands the page the folder's files sorted by path
   (an init script; the product unchanged), recorded again on the base code (095d4db, a worktree), then 3 after.
-- **State:** CI pending (second run).
-- **Resume:** CI.
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41578855895 on cc3adbc5.**
+- **State: DONE.**
+- **Resume:** none; the reviewer's merge.
 
 ## CHANGELOG line
 - **Inside the website's field picker:** the list where you choose a field for each visual has a file of its own; it
