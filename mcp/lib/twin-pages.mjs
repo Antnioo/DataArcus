@@ -312,8 +312,11 @@ function underGrids(pg, r, pageW, extra) {
       // (0.3.1 MX8, the night lab's B2new-1..12 on a6000a27: the chart moved with its grid landed on a visual it did not
       // overlap in English) moved there it must cover nothing it did not cover in English (a heatmap's names table
       // counts as its matrix); else it keeps its plain mirror, said
+      // (0.3.2 HM2, laptop part 14, B-298; Codex's twin-fuzz-2 A1: kept at its mirror it still took the general mirror's
+      // inside, Descending sort, value axis switched, padding swapped: Call Center's hour 9 stood under «10») the grid
+      // still reads left to right, so the chart keeps English's inside whether it moves or not
       const hit = landsOn(pg, r, extra, j, x);
-      if (hit) { (r.moved = r.moved || []).push({ visual: String(ct.name), rule: 'kept at its mirror, not lined up with its heatmap\'s grid: there it would cover ' + hit + ', which it does not in English' }); return; }
+      if (hit) { keepInside(ce, ct); (r.moved = r.moved || []).push({ visual: String(ct.name), rule: 'kept at its mirror, its inside as English (sort, axis side, padding: the grid reads left to right), not lined up with its heatmap\'s grid: there it would cover ' + hit + ', which it does not in English' }); return; }
       q.x = x;
       keepInside(ce, ct);
       (r.moved = r.moved || []).push({ visual: String(ct.name), rule: 'kept lined up with its heatmap\'s grid, as English: its offset, padding, axis side and sort (the grid reads left to right)' + (Math.abs(x - want) > 0.01 ? ', moved to stay inside its page' : '') });
