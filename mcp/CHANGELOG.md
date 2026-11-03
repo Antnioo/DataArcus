@@ -37,13 +37,26 @@ package's manifest; this file says what is in it.
   on the website and from the MCP, is byte for byte what it was before.
 - **Inside the website's field picker:** the list where you choose a field for each visual has a file of its own; it
   shows the same choices in the same order and the download is byte for byte what it was before.
+- **Inside the website's model choice:** reading the project folder or the model file you choose has a file of its
+  own; the same models are read, the same files are refused, and the same messages are shown.
 - **Inside the report writer:** the tooltip pages (the card and the bars shown when a chart is hovered) are made in a
   file of their own; every report, on the website and from the MCP, is byte for byte what it was before.
+- **Inside the Model Health Check, again:** the model's index (its tables, columns, measures and what each one uses)
+  is in a file of its own and is never changed once built; every check gives the same findings, unused fields, score and
+  questions as before.
+- **Inside the MCP, the redesign:** placing a report's visuals on the grid (and keeping a visual laid over another with
+  it) is in a file of its own; every redesign plan moves, keeps and explains each visual exactly as before.
 - **Inside the Model Health Check:** reading DAX and the fields a report uses is in a file of its own; every check, on
   the website and from the MCP, gives the same findings, unused fields, score and questions as before.
 - **Inside the report writer:** the page buttons and the filter panels (the tabs, the slicers with their Reset, the
   slide-in panel) are made in a file of their own; every report, on the website and from the MCP, is byte for byte what
   it was before.
+- **Inside the SVG KPI picture maker:** the formulas behind a picture and the escaping of its text have files of their
+  own; every picture and DAX measure, on the website and from the MCP, is exactly what it was before.
+- **Inside the MCP, custom visuals:** the words that read a custom visual's roles and name are in a file of their own;
+  every custom visual is read as the same kind, with the same confidence and the same native choices as before.
+- **Inside the SVG KPI picture maker, again:** the code that writes a picture's DAX measure has a file of its own; every
+  measure it writes, on the website and from the MCP, is exactly what it was before.
 - **More of the Arabic twin like the English:** more matrices that are lists are written as tables, so their first column
   reads on the right; a column the English hides stays hidden; a table wider than its box shows the same columns as
   the English, its first column at the right; the plan names legends whose Arabic may be cut, and says on its own line

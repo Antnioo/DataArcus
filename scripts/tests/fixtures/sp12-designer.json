@@ -1,0 +1,86 @@
+{
+ "en": {
+  "ring": {
+   "svg": "65bc7c32e6f3c8f44ec626ee:728",
+   "dax": "e3b972bff162da7139d9b104:1702"
+  },
+  "trend": {
+   "svg": "8ea2177cc0a4c7b915e68d14:502",
+   "dax": "16b30ae9f2e9231f9e45612e:1610"
+  },
+  "bar": {
+   "svg": "af049971e8f4af9845298eee:731",
+   "dax": "d945d5ba4af83a7cc7cd49b8:2158"
+  },
+  "pill": {
+   "svg": "e2d8f564fa7f183ee397f94d:476",
+   "dax": "e743ea8705f3e391bbb3054c:1613"
+  },
+  "spark": {
+   "svg": "4561bec94058f059d1e4800e:1013",
+   "dax": "2447d9c3c0c5cd0b10876d79:3370"
+  },
+  "card": {
+   "svg": "8825efbbc0064a2504bfae96:1824",
+   "dax": "cff853044a5ed2e1e806043e:4919"
+  },
+  "ramadan": {
+   "svg": "6eaa71ac498fa4592e9c61d4:1669",
+   "dax": "2a9e727974bf95527fec278e:3580"
+  },
+  "adversarial markup": {
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 60\" class=\"kd-svg\" role=\"img\" aria-label=\"Design canvas\"><g data-l=\"0\"><text x=\"10\" y=\"20\" font-family=\"Segoe UI, sans-serif\" font-size=\"12\" font-weight=\"400\" text-anchor=\"start\" fill=\"#111111\">He said \"hi\" &amp; 'bye' &lt;b&gt;x&lt;/b&gt; ]]&gt; &lt;script&gt;window.__pwned=1&lt;/script&gt; 100% #1</text></g><g data-l=\"1\"><text x=\"10\" y=\"40\" font-family=\"Segoe UI, sans-serif\" font-size=\"12\" font-weight=\"400\" text-anchor=\"start\" fill=\"#111111\">&lt;i&gt;\"AED\"&lt;/i&gt; &amp; 1,240,000 ]]&gt;&lt;img src=x onerror=\"window.__pwned=2\"&gt;</text></g><g data-l=\"2\"><text x=\"10\" y=\"55\" font-family=\"Segoe UI, sans-serif\" font-size=\"12\" font-weight=\"400\" text-anchor=\"start\" fill=\"#000000\">&lt;a href='javascript:window.__pwned=3'&gt;go&lt;/a&gt;</text></g></svg>",
+   "dax": "KPI \"x\" <y> ]]]]> =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _Sales = [Sales]\nVAR _Target = [Target]\nVAR _Achievement = DIVIDE ( _Sales, _Target )\n-- Layer 2: Text\nVAR _L2_text = \"&lt;i&gt;&quot;AED&quot;&lt;/i&gt; &amp; \" & FORMAT ( IF ( ( ABS ( COALESCE ( _Sales, 0 ) ) < 0.5 ), 0, COALESCE ( _Sales, 0 ) ), \"#,0\", \"en-US\" ) & \" ]]&gt;&lt;img src=x onerror=&quot;window.__pwned=2&quot;&gt;\"\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='300' height='60' viewBox='0 0 300 60'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>He said &quot;hi&quot; &amp; &apos;bye&apos; &lt;b&gt;x&lt;/b&gt; ]]&gt; &lt;script&gt;window.__pwned=1&lt;/script&gt; 100%25 %231</text><text x='10' y='40' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text><text x='10' y='55' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>&lt;a href=&apos;javascript:window.__pwned=3&apos;&gt;go&lt;/a&gt;</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg"
+  },
+  "adversarial arabic": {
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 240 80\" class=\"kd-svg\" role=\"img\" aria-label=\"Design canvas\"><g data-l=\"0\"><text x=\"10\" y=\"20\" font-family=\"Segoe UI, sans-serif\" font-size=\"12\" font-weight=\"400\" text-anchor=\"start\" fill=\"#111111\">‏المبيعات ‫من‬ الهدف‎ &lt;&amp;&gt;</text></g><g data-l=\"1\"><text x=\"230\" y=\"50\" font-family=\"Segoe UI, sans-serif\" font-size=\"12\" font-weight=\"400\" text-anchor=\"end\" fill=\"#111111\">‏«62.5%»‎</text></g><g data-l=\"2\"><g transform=\"translate(240 0) scale(-1 1)\"><circle cx=\"40\" cy=\"40\" r=\"30\" fill=\"none\" stroke=\"#1e293b\" stroke-width=\"6\"></circle><circle cx=\"40\" cy=\"40\" r=\"30\" fill=\"none\" stroke=\"#00d4ff\" stroke-width=\"6\" transform=\"rotate(-90 40 40)\" stroke-dasharray=\"117.81 188.5\" stroke-opacity=\"1\"></circle></g></g></svg>",
+   "dax": "‏مبيعات «رمضان»‎ =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _sales = [المبيعات]\nVAR _target = [الهدف]\nVAR _ach = DIVIDE ( _sales, _target )\n-- Layer 2: Text\nVAR _L2_text = \"‏«\" & FORMAT ( IF ( ( ABS ( ( COALESCE ( _ach, 0 ) * 100 ) ) < 0.05 ), 0, ( COALESCE ( _ach, 0 ) * 100 ) ), \"#,0.0\", \"en-US\" ) & \"%25\" & \"»‎\"\n-- Layer 3: حلقة\nVAR _L3_p = MIN ( MAX ( COALESCE ( _ach, 0 ), 0 ), 1 )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80' viewBox='0 0 240 80'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>‏المبيعات ‫من‬ الهدف‎ &lt;&amp;&gt;</text><text x='230' y='50' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='end' fill='%23111111'>\"\n        & _L2_text\n        & \"</text><g transform='translate(240 0) scale(-1 1)'><circle cx='40' cy='40' r='30' fill='none' stroke='%231e293b' stroke-width='6'/><circle cx='40' cy='40' r='30' fill='none' stroke='%2300d4ff' stroke-width='6' transform='rotate(-90 40 40)' stroke-dasharray='\"\n        & FORMAT ( ( _L3_p * 188.4956 ), \"0.00\", \"en-US\" )\n        & \" 188.5' stroke-opacity='\"\n        & IF ( ( _L3_p > 0 ), \"1\", \"0\" )\n        & \"'/></g></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg"
+  },
+  "adversarial names": {
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 40\" class=\"kd-svg\" role=\"img\" aria-label=\"Design canvas\"><g data-l=\"0\"><text x=\"10\" y=\"20\" font-family=\"Segoe UI, sans-serif\" font-size=\"12\" font-weight=\"400\" text-anchor=\"start\" fill=\"#111111\">say \"\"hi\"\" +123,456,789,012,345,680.00</text></g><g data-l=\"1\"><text x=\"100000000000\" y=\"30\" font-family=\"Segoe UI, sans-serif\" font-size=\"12\" font-weight=\"400\" text-anchor=\"start\" fill=\"#111111\">123,456,789,012.3M</text></g></svg>",
+   "dax": "Net ]]]] \"Sales\" =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _Net_x = [Net ]]Sales[ \"q\"]\nVAR _B = [Tgt\"\"]\nVAR _C = ( _Net_x - _B )\n-- Layer 1: Text\nVAR _L1_text = \"say &quot;&quot;hi&quot;&quot; \" & IF ( ( COALESCE ( _C, 0 ) > 0 ), \"+\", \"\" ) & FORMAT ( IF ( ( ABS ( COALESCE ( _C, 0 ) ) < 0.005 ), 0, COALESCE ( _C, 0 ) ), \"#,0.00\", \"en-US\" )\n-- Layer 2: Text\nVAR _L2_text = IF ( ( ABS ( COALESCE ( _Net_x, 0 ) ) >= 1000000 ), FORMAT ( IF ( ( ABS ( ( COALESCE ( _Net_x, 0 ) / 1000000 ) ) < 0.05 ), 0, ( COALESCE ( _Net_x, 0 ) / 1000000 ) ), \"#,0.0\", \"en-US\" ) & \"M\", IF ( ( ABS ( COALESCE ( _Net_x, 0 ) ) >= 1000 ), FORMAT ( IF ( ( ABS ( ( COALESCE ( _Net_x, 0 ) / 1000 ) ) < 0.05 ), 0, ( COALESCE ( _Net_x, 0 ) / 1000 ) ), \"#,0.0\", \"en-US\" ) & \"K\", FORMAT ( IF ( ( ABS ( COALESCE ( _Net_x, 0 ) ) < 0.5 ), 0, COALESCE ( _Net_x, 0 ) ), \"#,0\", \"en-US\" ) ) )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L1_text\n        & \"</text><text x='100000000000' y='30' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg"
+  }
+ },
+ "ar": {
+  "ring": {
+   "svg": "bde165943e13a95961226f9e:738",
+   "dax": "e3b972bff162da7139d9b104:1702"
+  },
+  "trend": {
+   "svg": "b87113fbeb44323579fa61f9:512",
+   "dax": "16b30ae9f2e9231f9e45612e:1610"
+  },
+  "bar": {
+   "svg": "1c1cf63a7449467b06c6e54b:741",
+   "dax": "d945d5ba4af83a7cc7cd49b8:2158"
+  },
+  "pill": {
+   "svg": "54dcbac15e0680453b2c6931:486",
+   "dax": "e743ea8705f3e391bbb3054c:1613"
+  },
+  "spark": {
+   "svg": "ad542987e4d3ff1d41dd3426:1023",
+   "dax": "2447d9c3c0c5cd0b10876d79:3370"
+  },
+  "card": {
+   "svg": "65458da42fbc1378430359fe:1834",
+   "dax": "cff853044a5ed2e1e806043e:4919"
+  },
+  "ramadan": {
+   "svg": "a953c60332ec27f24bd81197:1679",
+   "dax": "2a9e727974bf95527fec278e:3580"
+  },
+  "adversarial markup": {
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 60\" class=\"kd-svg\" role=\"img\" aria-label=\"لوحة التصميم\"><g data-l=\"0\"><text x=\"10\" y=\"20\" font-family=\"Segoe UI, sans-serif\" font-size=\"12\" font-weight=\"400\" text-anchor=\"start\" fill=\"#111111\">He said \"hi\" &amp; 'bye' &lt;b&gt;x&lt;/b&gt; ]]&gt; &lt;script&gt;window.__pwned=1&lt;/script&gt; 100% #1</text></g><g data-l=\"1\"><text x=\"10\" y=\"40\" font-family=\"Segoe UI, sans-serif\" font-size=\"12\" font-weight=\"400\" text-anchor=\"start\" fill=\"#111111\">&lt;i&gt;\"AED\"&lt;/i&gt; &amp; 1,240,000 ]]&gt;&lt;img src=x onerror=\"window.__pwned=2\"&gt;</text></g><g data-l=\"2\"><text x=\"10\" y=\"55\" font-family=\"Segoe UI, sans-serif\" font-size=\"12\" font-weight=\"400\" text-anchor=\"start\" fill=\"#000000\">&lt;a href='javascript:window.__pwned=3'&gt;go&lt;/a&gt;</text></g></svg>",
+   "dax": "KPI \"x\" <y> ]]]]> =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _Sales = [Sales]\nVAR _Target = [Target]\nVAR _Achievement = DIVIDE ( _Sales, _Target )\n-- Layer 2: Text\nVAR _L2_text = \"&lt;i&gt;&quot;AED&quot;&lt;/i&gt; &amp; \" & FORMAT ( IF ( ( ABS ( COALESCE ( _Sales, 0 ) ) < 0.5 ), 0, COALESCE ( _Sales, 0 ) ), \"#,0\", \"en-US\" ) & \" ]]&gt;&lt;img src=x onerror=&quot;window.__pwned=2&quot;&gt;\"\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='300' height='60' viewBox='0 0 300 60'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>He said &quot;hi&quot; &amp; &apos;bye&apos; &lt;b&gt;x&lt;/b&gt; ]]&gt; &lt;script&gt;window.__pwned=1&lt;/script&gt; 100%25 %231</text><text x='10' y='40' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text><text x='10' y='55' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>&lt;a href=&apos;javascript:window.__pwned=3&apos;&gt;go&lt;/a&gt;</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg"
+  },
+  "adversarial arabic": {
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 240 80\" class=\"kd-svg\" role=\"img\" aria-label=\"لوحة التصميم\"><g data-l=\"0\"><text x=\"10\" y=\"20\" font-family=\"Segoe UI, sans-serif\" font-size=\"12\" font-weight=\"400\" text-anchor=\"start\" fill=\"#111111\">‏المبيعات ‫من‬ الهدف‎ &lt;&amp;&gt;</text></g><g data-l=\"1\"><text x=\"230\" y=\"50\" font-family=\"Segoe UI, sans-serif\" font-size=\"12\" font-weight=\"400\" text-anchor=\"end\" fill=\"#111111\">‏«62.5%»‎</text></g><g data-l=\"2\"><g transform=\"translate(240 0) scale(-1 1)\"><circle cx=\"40\" cy=\"40\" r=\"30\" fill=\"none\" stroke=\"#1e293b\" stroke-width=\"6\"></circle><circle cx=\"40\" cy=\"40\" r=\"30\" fill=\"none\" stroke=\"#00d4ff\" stroke-width=\"6\" transform=\"rotate(-90 40 40)\" stroke-dasharray=\"117.81 188.5\" stroke-opacity=\"1\"></circle></g></g></svg>",
+   "dax": "‏مبيعات «رمضان»‎ =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _sales = [المبيعات]\nVAR _target = [الهدف]\nVAR _ach = DIVIDE ( _sales, _target )\n-- Layer 2: Text\nVAR _L2_text = \"‏«\" & FORMAT ( IF ( ( ABS ( ( COALESCE ( _ach, 0 ) * 100 ) ) < 0.05 ), 0, ( COALESCE ( _ach, 0 ) * 100 ) ), \"#,0.0\", \"en-US\" ) & \"%25\" & \"»‎\"\n-- Layer 3: حلقة\nVAR _L3_p = MIN ( MAX ( COALESCE ( _ach, 0 ), 0 ), 1 )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80' viewBox='0 0 240 80'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>‏المبيعات ‫من‬ الهدف‎ &lt;&amp;&gt;</text><text x='230' y='50' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='end' fill='%23111111'>\"\n        & _L2_text\n        & \"</text><g transform='translate(240 0) scale(-1 1)'><circle cx='40' cy='40' r='30' fill='none' stroke='%231e293b' stroke-width='6'/><circle cx='40' cy='40' r='30' fill='none' stroke='%2300d4ff' stroke-width='6' transform='rotate(-90 40 40)' stroke-dasharray='\"\n        & FORMAT ( ( _L3_p * 188.4956 ), \"0.00\", \"en-US\" )\n        & \" 188.5' stroke-opacity='\"\n        & IF ( ( _L3_p > 0 ), \"1\", \"0\" )\n        & \"'/></g></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg"
+  },
+  "adversarial names": {
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 40\" class=\"kd-svg\" role=\"img\" aria-label=\"لوحة التصميم\"><g data-l=\"0\"><text x=\"10\" y=\"20\" font-family=\"Segoe UI, sans-serif\" font-size=\"12\" font-weight=\"400\" text-anchor=\"start\" fill=\"#111111\">say \"\"hi\"\" +123,456,789,012,345,680.00</text></g><g data-l=\"1\"><text x=\"100000000000\" y=\"30\" font-family=\"Segoe UI, sans-serif\" font-size=\"12\" font-weight=\"400\" text-anchor=\"start\" fill=\"#111111\">123,456,789,012.3M</text></g></svg>",
+   "dax": "Net ]]]] \"Sales\" =\n-- Made with the free DataArcus SVG KPI Designer: dataarcus.com/tools/svg-kpi-designer.html\n-- In Power BI set this measure's Data category to Image URL (Measure tools > Data category).\nVAR _Net_x = [Net ]]Sales[ \"q\"]\nVAR _B = [Tgt\"\"]\nVAR _C = ( _Net_x - _B )\n-- Layer 1: Text\nVAR _L1_text = \"say &quot;&quot;hi&quot;&quot; \" & IF ( ( COALESCE ( _C, 0 ) > 0 ), \"+\", \"\" ) & FORMAT ( IF ( ( ABS ( COALESCE ( _C, 0 ) ) < 0.005 ), 0, COALESCE ( _C, 0 ) ), \"#,0.00\", \"en-US\" )\n-- Layer 2: Text\nVAR _L2_text = IF ( ( ABS ( COALESCE ( _Net_x, 0 ) ) >= 1000000 ), FORMAT ( IF ( ( ABS ( ( COALESCE ( _Net_x, 0 ) / 1000000 ) ) < 0.05 ), 0, ( COALESCE ( _Net_x, 0 ) / 1000000 ) ), \"#,0.0\", \"en-US\" ) & \"M\", IF ( ( ABS ( COALESCE ( _Net_x, 0 ) ) >= 1000 ), FORMAT ( IF ( ( ABS ( ( COALESCE ( _Net_x, 0 ) / 1000 ) ) < 0.05 ), 0, ( COALESCE ( _Net_x, 0 ) / 1000 ) ), \"#,0.0\", \"en-US\" ) & \"K\", FORMAT ( IF ( ( ABS ( COALESCE ( _Net_x, 0 ) ) < 0.5 ), 0, COALESCE ( _Net_x, 0 ) ), \"#,0\", \"en-US\" ) ) )\nVAR _svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L1_text\n        & \"</text><text x='100000000000' y='30' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\"\n        & _L2_text\n        & \"</text></svg>\"\nRETURN\n    \"data:image/svg+xml;utf8,\" & _svg"
+  }
+ }
+}

@@ -598,7 +598,9 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=20261026a')))
         // (SP8: the picker's drawing is field-picker-ui.js's, which pbip-bind.js calls: loaded first)
         .then(() => (window.DAFieldPicker ? null : loadScript('/assets/js/field-picker-ui.min.js?v=20261103sp8')))
-        .then(() => loadScript('/assets/js/pbip-bind.min.js?v=20261103sp8')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
+        // (SP14: reading the chosen folder or file is model-import-browser.js's, which pbip-bind.js forwards to: loaded first)
+        .then(() => (window.DAModelImport ? null : loadScript('/assets/js/model-import-browser.min.js?v=20261103sp14')))
+        .then(() => loadScript('/assets/js/pbip-bind.min.js?v=20261103sp14')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
     // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)
@@ -664,7 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
       $('pbipModelFile').addEventListener('change', (e) => {
         const f = e.target.files && e.target.files[0]; if (!f) return;
         ownMsg(L('Reading the model…', 'جارٍ قراءة النموذج…'));
-        loadBind().then((DB) => DB.fromFile(f, '/assets/js/model-health-worker.min.js?v=20261103sp9')).then((res) => loaded('service', res, f.name)).catch((err) => failed('service', err));
+        loadBind().then((DB) => DB.fromFile(f, '/assets/js/model-health-worker.min.js?v=20261103sp15')).then((res) => loaded('service', res, f.name)).catch((err) => failed('service', err));
       });
     }
     const logoIn = $('pbipLogo');
