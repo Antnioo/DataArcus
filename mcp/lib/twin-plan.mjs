@@ -16,6 +16,7 @@ import { placeholderProblem, textsOf, rawLabels, cleanLabel, sameTextLabels, not
 import { modelOf, dateTablesOf, continuousColumnsOf, textColumnsOf, monthOffer, waterfallFacts } from './twin-model.mjs';
 import { COPY_TAG, LANG, languageCopy } from './twin-copy.mjs';
 import { buildTwin } from './twin-pages.mjs';
+import { orderCalcsOf, turnedBy, orderCalculationsSaid } from './twin-calcs.mjs';   // (0.3.2 VC1)
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
@@ -187,11 +188,13 @@ export function planTwin(a) {
       how: 'Approve a fixed Arabic title for it (its id in labels: it then no longer changes with the selection), or keep the names of those fields English too.',
       howAr: 'وافق على عنوان عربي ثابت له (بمعرّفه في labels: فلا يتغير بعد ذلك مع التحديد)، أو أبقِ أسماء تلك الحقول بالإنجليزية أيضًا' } : null; }).filter(Boolean);
   // what mirrors, counted per kind, and what cannot
-  const byKind = {}, kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [], kept: [], asTables: [], heatNames: [] }, together = { on: [], bars: [] };
+  const orderCalcs = [], byKind = {}, kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [], kept: [], asTables: [], heatNames: [] }, together = { on: [], bars: [] };
   const pages = R.pages.map((pg) => {
     if (keepLtr(pg)) return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length, leftToRight: (pictures.get(String(pg.id)) || {}).picture === 'asked' ? 'drawn on a picture that may hold words: kept left to right until its flip is approved (picturePages)' : 'drawn on a background picture: kept left to right' };
     const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), { timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: a.waterfallRtl, dateTables, dateColumns, textColumns, waterfall: Object.assign(waterfallFacts(model.m), { theme: R.theme }) });
     Object.entries(r.kinds).forEach(([k, n]) => { kinds[k] = (kinds[k] || 0) + n; });
+    // (0.3.2 VC1, RD2-D2) a visual turned that holds a running or neighbour visual calculation: named, its functions counted
+    pg.visuals.forEach((v, i) => { const f = turnedBy(v.json, r.visuals[i]) ? orderCalcsOf(v.json) : null; if (f) orderCalcs.push({ visual: safeName(pg.id) + '/' + safeName(v.json.name), functions: f }); });
     (r.waterfallsKept || []).forEach((x) => where.waterfallKept.push(safeName(pg.id) + '/' + safeName(x.name) + ' (' + x.why + ')'));
     (r.asTables || []).forEach((n) => where.asTables.push(safeName(pg.id) + '/' + safeName(n)));
     (r.kept || []).forEach((x) => where.kept.push(safeName(pg.id) + '/' + safeName(x.name) + ' (' + x.what + ' ' + safeName(x.value) + ')'));
@@ -390,7 +393,7 @@ export function planTwin(a) {
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: twinShown.report, pbip: twinShown.pbip, folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
-    pages, mirrors, cannot, ...(matrixChoices ? { matrixChoices } : {}), ...((built.keptInView || []).length ? { keptInView: built.keptInView.slice(0, 30).map((x) => Object.assign({}, x, { what: `wider than its box: it keeps the English view, the ${x.shown} columns English shows first (reversed: its first column at the box's right edge), the other ${x.behind} behind the scroll as in English; no width changed` })) } : {}), ...(notFullyArabic ? { notFullyArabic } : {}), phone, ...(keptTogether.length ? { keptTogether } : {}), ...(checkInTwin.length ? { checkInTwin } : {}), ...fitted,
+    pages, mirrors, cannot, ...(orderCalcs.length ? { orderCalculations: orderCalculationsSaid(orderCalcs) } : {}), ...(matrixChoices ? { matrixChoices } : {}), ...((built.keptInView || []).length ? { keptInView: built.keptInView.slice(0, 30).map((x) => Object.assign({}, x, { what: `wider than its box: it keeps the English view, the ${x.shown} columns English shows first (reversed: its first column at the box's right edge), the other ${x.behind} behind the scroll as in English; no width changed` })) } : {}), ...(notFullyArabic ? { notFullyArabic } : {}), phone, ...(keptTogether.length ? { keptTogether } : {}), ...(checkInTwin.length ? { checkInTwin } : {}), ...fitted,
     // (TW1, M1-S2: the tables that say «الإجمالي» on their total row are said in mirrors, Mirror.KIND_WHAT.table: the
     // answer's size is shared with the texts list, twinFit)
     ...(built.titleMeasures ? { titleMeasures: Object.assign({}, built.titleMeasures, { notTranslated: built.titleMeasures.notTranslated.slice(0, 30), written: built.titleMeasures.written.slice(0, 30), ...(built.titleMeasures.fixed ? { fixed: built.titleMeasures.fixed.slice(0, 30) } : {}), how: 'A chart title given by a measure of the report: each of its texts is listed above (kind titleMeasure). The twin writes its own measures "Title AR: ..." with the approved Arabic texts, in its own reportExtensions.json, and its charts use them; the original report and the model are not changed.' }) } : {}),
