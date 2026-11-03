@@ -9,11 +9,11 @@
   trailing dash from a title: MCP code, another builder's; kept, listed in the gate as the one allowed file, Seen).
   Bootstrap's vendor CSS and its .map hold one each (not ours; the gate skips `assets/css/vendor/`).
   - The article's dash (EN and AR, page and translations) is inside a word-for-word quote of Microsoft's
-    bi-directional guidance ("must be bi-directional—it isn't possible to configure otherwise", checked on
+    bi-directional guidance ("All one-to-one relationships must be bi-directional", an em dash, "it isn't possible to configure otherwise", checked on
     learn.microsoft.com today). The quote stays exact: written `&mdash;` (the same character on screen), and the gate
     allows the entity only inside that quote.
-  - arabic-calendar.js (a comment): «—» becomes "a dash"; pl300-bank/build.js (the bank's own guard): `/—/` becomes
-    `/—/` (the same test, no literal character); lib.mjs's comment: a colon.
+  - arabic-calendar.js (a comment): the quoted dash becomes "a dash"; pl300-bank/build.js (the bank's own guard):
+    its regex names the character by its escape (`\u2014`, the same test, no literal character); lib.mjs's comment: a colon.
 - **The gate:** `scripts/test-site-config.mjs` (runs in CI, tests.yml "site config") gains one check: every tracked text
   file (pages, translations, scripts, CSS, JSON, Markdown, YAML) outside mcp/work/, mcp/CHANGELOG.md and
   assets/css/vendor/ has no U+2014, and no page or translation writes it as `&mdash;`/`&#8212;`/`&#x2014;` outside

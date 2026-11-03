@@ -120,7 +120,7 @@ function check(q, where) {
   (q.refs || []).forEach((r) => { if (!R[r]) errs.push(t + ' unknown ref ' + r); used.add(r); });
   if (seenQ.has(q.q)) errs.push(t + ' duplicate'); seenQ.add(q.q);
   const txt = [q.q, q.exp, q.ar, ...q.opts.map(String), ...q.why].join(' ');
-  if (/—/.test(txt)) errs.push(t + ' em dash');
+  if (/\u2014/.test(txt)) errs.push(t + ' em dash');
   if (/ - [a-z]/.test(txt.replace(/<pre>[\s\S]*?<\/pre>/g, ''))) warn.push(t + ' spaced hyphen');
 }
 const out = { v: '2026-04-20', q: [], cases: [] };
