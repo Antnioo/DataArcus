@@ -58,6 +58,9 @@ package's manifest; this file says what is in it.
   the same language, and every check gives the same answer as before.
 - **Inside the MCP, the report's answer:** what create_report says after writing a report is put together in one file
   of its own; every answer and every written file is exactly what it was before.
+- **Inside the MCP, read_report:** what read_report says and a report's own colours (the theme identity a new design
+  starts from) are each worked out in a file of their own, which reads no file itself; every answer is exactly what it
+  was before.
 - **Inside the MCP, the report's fields:** how a report picks and names its fields and their number formats is in one
   file of its own; every plan, answer and written file is exactly what it was before.
 - **Inside the design engine, colours and the glass look:** the colour math and the glass look each have a file of
