@@ -5,6 +5,10 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **Arabic names in the model, as an option of the Arabic twin:** ask for it and the twin also writes a script you
+  apply in TMDL view that gives the model's fields the Arabic names you approved, for each Gulf culture; nothing else
+  is written, every name left in English is listed with why, and the names show in the Power BI service (Desktop keeps
+  the model's own names).
 - **The macOS tests run where changes are merged:** the full test run on macOS now runs on the main and release
   branches, on pull requests to main and on the check before each merge, no longer on every work branch; Linux and
   Windows still run everywhere, as before.

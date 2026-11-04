@@ -125,7 +125,9 @@
   const LISTS = { column: 'columns', measure: 'measures', hierarchy: 'hierarchies', level: 'levels', partition: 'partitions', calculationItem: 'calculationItems',
     annotation: 'annotations', extendedProperty: 'extendedProperties', variation: 'variations', tablePermission: 'tablePermissions', columnPermission: 'columnPermissions',
     perspectiveTable: 'perspectiveTables', perspectiveColumn: 'perspectiveColumns', perspectiveMeasure: 'perspectiveMeasures', perspectiveHierarchy: 'perspectiveHierarchies',
-    member: 'members', queryGroup: 'queryGroups' };
+    member: 'members', queryGroup: 'queryGroups',
+    // (0.3.2 AN1, RD10's gap 1) a culture's translations name each table under "model": every one kept, not the last only
+    table: 'tables' };
   // what the text after "=" is, per object type (a column with one is a calculated column)
   const DEFAULT = { measure: 'expression', column: 'expression', calculationItem: 'expression', expression: 'expression', function: 'expression',
     tablePermission: 'filterExpression', annotation: 'value', linguisticMetadata: 'content' };
@@ -258,7 +260,7 @@
         else if (n.type === 'annotation') parts.annotations.push(toJson(n, opts));
         else {
           const key = { table: 'tables', relationship: 'relationships', expression: 'expressions', function: 'functions', role: 'roles', perspective: 'perspectives',
-            cultureInfo: 'cultures', dataSource: 'dataSources', queryGroup: 'queryGroups' }[n.type];
+            cultureInfo: 'cultures', culture: 'cultures', dataSource: 'dataSources', queryGroup: 'queryGroups' }[n.type];   // (AN1, RD10's gap 2: Learn writes "culture", Desktop "cultureInfo")
           if (key) parts[key].push(toJson(n, opts));
         }
       }));
@@ -270,6 +272,7 @@
     parts.tables = order(parts.tables, 'table');
     parts.roles = order(parts.roles, 'role');
     parts.perspectives = order(parts.perspectives, 'perspective');
+    if (refs.culture) refs.cultureInfo = (refs.cultureInfo || []).concat(refs.culture);
     parts.cultures = order(parts.cultures, 'cultureInfo');
     parts.expressions = order(parts.expressions, 'expression');
     // a column of a DAX table is a calculated table column, as in a model.bim

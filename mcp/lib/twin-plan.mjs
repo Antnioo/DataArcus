@@ -17,6 +17,7 @@ import { modelOf, dateTablesOf, continuousColumnsOf, textColumnsOf, monthOffer, 
 import { COPY_TAG, LANG, languageCopy } from './twin-copy.mjs';
 import { buildTwin } from './twin-pages.mjs';
 import { orderCalcsOf, turnedBy, orderCalculationsSaid } from './twin-calcs.mjs';   // (0.3.2 VC1)
+import { namesOffer } from './model-culture.mjs';   // (0.3.2 AN1)
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
@@ -375,6 +376,8 @@ export function planTwin(a) {
   if (toEnglish) notTranslated.push({ text: LANG.ar.text, where: `language button (${toEnglish})`, why: 'the button on each Arabic page that opens its English page: a language switch names the language it opens in that language, as the English pages\' button reads «العربية»', ids: [] });
   // (0.3.0 J18) the terminology sheet: each field's places on the twin's own pages, as built
   const termRows = Terms.sheetOf(T.keys, T.term, Terms.placesOf({ pages: built.pages.filter((x) => isObj(x.page)).map((x) => ({ id: x.pg.id, name: Terms.plain(typeof x.page.displayName === 'string' ? x.page.displayName : x.pg.id), type: x.page.type, visuals: x.visuals })), ext: Terms.measuresOf(built.ext || R.ext) }, new Set(texts.filter((t) => t.kind === 'visualField').map((t) => t.rawId.slice('fieldAt:'.length)))), Terms.isolateLatin);
+  // (0.3.2 AN1) the Arabic names script (modelNames): the captions of this plan's own approved terms only
+  const names = namesOffer(a.modelNames, model, T.term, T.given, outBase), namesShown = names ? Object.fromEntries(Object.entries(names).filter(([k]) => k !== 'script')) : null;
   const PH = built.phone, phone = R.phone ? { mirrored: pagesKept ? 'mirrored like its page (a page kept left to right keeps its phone layout as it is)' : true, pages: PH.pages,
     how: 'The phone layout (mobile.json) is mirrored like the pages: every box on the 323-wide phone canvas, the KPI cards\' order reversed, text boxes to the right, and its texts are the approved Arabic. Each page tab there is as wide as its Arabic name on one line (the writer\'s phone rule), the first page at the right.',
     ...(PH.tabs.length ? { tabs: PH.tabs.slice(0, 60) } : {}), ...(PH.tabsCut.length ? { tabsCut: PH.tabsCut.slice(0, 60) } : {}) } : { mirrored: false, why: 'the report has none' };
@@ -389,7 +392,7 @@ export function planTwin(a) {
     if (ti && !altUnder.has(ti.id) && ti.raw.trim() === t.raw.trim() && labels[t.id] == null && labels[ti.id] == null) altUnder.set(ti.id, t.id); });
   const under = new Set(altUnder.values()), listed = texts.filter((t) => !under.has(t.id)).map((t) => (altUnder.has(t.id) ? Object.assign({}, t, { altTextToo: altUnder.get(t.id) }) : t));
   // (0.3, B-154) the model's fingerprint, pinned by the plan (null: no model read)
-  return { loc, R, logicalId, labels, texts, mixedTitles, textsUnknown, notTranslated, month, dateTables, dateColumns, pictureIds, pictures, keepLtr, built, addedVisuals, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, answer: capAnswer(twinFit({
+  return { loc, R, logicalId, labels, texts, mixedTitles, textsUnknown, notTranslated, month, dateTables, dateColumns, pictureIds, pictures, keepLtr, built, addedVisuals, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, names, answer: capAnswer(twinFit({
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: twinShown.report, pbip: twinShown.pbip, folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
@@ -417,6 +420,7 @@ export function planTwin(a) {
     terminology: Object.assign({ sheet: termRows.slice(termsFrom) }, termsFrom ? { termsFrom: Math.min(termsFrom, termRows.length) } : {}, Terms.askNextOf(termRows), { how: Terms.HOW_TWIN }, T.unknown.length ? { unknownTerms: T.unknown } : {}, T.notUsing.length ? { labelsNotUsingTerm: T.notUsing.slice(0, 60) } : {}),
     sayInPlan: 'Before the go, show the user notTranslated: every text that stays English in the twin, with why (each text the user approved no Arabic for, such as a field name kept as the model names it). A text with labelFrom takes the approved Arabic of the same text (a page button its page\'s name, an alt text or a phone copy the visual\'s title): show those too. altTextToo: the visual\'s alt text says the title\'s words and takes the title\'s Arabic (one label for both; a label for its id gives it its own). notShown: the original\'s title measures the twin\'s charts no longer use (kept in its file, shown nowhere).',
     arabicMonth: month.offered ? Object.assign(monthShown, { howToApplyAfterGo: howToApply }) : monthShown,
+    ...(names ? { arabicModelNames: namesShown } : {}),
     ...notCopiedOf(R.left),
     ...(R.unreadable.length ? { unreadable: { count: R.unreadable.length, note: 'files that are not JSON: copied as they are, not mirrored' } } : {}),
     sayFirst: 'Nothing was written. Show the user this plan: the twin\'s name and place, the pages, what mirrors, what cannot, and the Arabic texts. draftArabic comes from a fixed glossary; for every other text draft the Arabic yourself in modern, simple Standard Arabic (Western digits, product names in Latin letters, short and natural, not a word-for-word translation) and show each one to the user as a DRAFT. Never translate silently and never write a text the user has not approved: a text without an approved label stays as it is. Call this tool again with the approved texts as labels ({ id: text }) to get a plan id for exactly those, show it, and after the user\'s go call approve_plan, then this tool with planId.'
