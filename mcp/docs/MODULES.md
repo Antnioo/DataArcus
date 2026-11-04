@@ -106,3 +106,263 @@ Moved here unchanged by SQ12 (0.3.1, 26 Oct) from ARCHITECTURE.md's task routes 
 3. The plan and the write build it from the same pinned value (`report-run.mjs`), never from a fresh default.
 4. The approval page says it (`lookOf`, `summary`) in English and Arabic.
 5. A test: the plan with it, the write with another value refused; `mcp/TOOLS.md` says it in the tool's section.
+
+## Every module
+
+One row per module file: every `assets/js/*.js` but the `.min.js` copies, every `mcp/lib/*.mjs`, every
+`mcp/tools/*.mjs` (0.3.2 MD1). The row says what the file does; the file says how. **A new module gets its row
+here** (`file | job | in -> out | used by | pure`), in its part's table; `node scripts/check-modules.mjs` names a file
+without one, a row whose file is gone, a file with two rows and a "used by" name that is not a module or a page. The
+evidence for each row (exports, imports, what it touches, who loads it) is read from the code by
+`node scripts/modules-facts.mjs`; run it again after a split.
+
+- **in -> out**: what it takes and what it gives (for a page script: "the page's DOM").
+- **used by**: its main callers, by file name (a module, `server.mjs`, or a page by its path; every page has an
+  Arabic copy in `ar/` that loads the same files). Tests are not listed.
+- **pure**: yes when the file itself touches no DOM, storage, file system, network, worker or process, and writes no
+  global but its own export; otherwise what it touches. A pure module may call one that is not.
+- An engine in `assets/js/` runs in the browser (it sets one global, `window.X`) and in Node (`module.exports`).
+
+### The website engines
+
+In `assets/js/`. Shared by the website and the MCP on purpose: one engine per job.
+
+| file | job | in -> out | used by | pure |
+|---|---|---|---|---|
+| **The model reader and field picker** | | | | |
+| `tmdl-model.js` | reads a project's TMDL files into the model JSON a model.bim holds | TMDL files `[{ path, text }]` -> model JSON, the files it could not read and why (English and Arabic) | `model.mjs`, `pbip-bind.js`, `model-health-worker.js`, `check-report.mjs` | yes |
+| `pbip-bind.js` | "your own model": reads a model's structure, suggests a field for each slot, the binding | a model (TMDL, model.bim, .pbit) and the design's slots -> the catalog of fields and the binding | `model.mjs`, `report-bind.mjs`, `report-fields.mjs`, `plan_layout.mjs`, `theme-generator.js` | yes |
+| `field-meaning.js` | what a field's metadata says it holds (a percent, money, a count, text), one rule for the picker and the health check | a name, a format string, an expression -> its kind and the evidence | `pbip-bind.js`, `model-health-tmdl.js`, `axis-units.js` | yes |
+| `field-picker-ui.js` | the field picker's drawing: one row per choice | the catalog and the current binding -> the rows' HTML and the binding the choices make | `pbip-bind.js` | yes |
+| `model-import-browser.js` | the website's model input: a folder or a model file the visitor chose, read in the browser | a folder or a file -> the model's structure (never its data), or why it is refused | `pbip-bind.js` | no: worker |
+| **The report writer** | | | | |
+| `pbip-export.js` | builds a whole Power BI project (PBIR) from a design and a binding; puts the writer's modules together | a design, the model's fields, the binding, the language -> the project's files and the writer's notes | `report-run.mjs`, `plan-lint.mjs`, `fix-scripts.mjs`, `theme-generator.js` | yes |
+| `pbip-query.js` | the PBIR values, a field's projection and title, the one DAX quoter, each visual's query, order and filters, the report's own measures | a bound field, a visual's kind -> its query JSON and DAX names | `pbip-export.js`, `pbip-page.js`, `pbip-visuals.js`, `metric-switcher.mjs`, `twin-pages.mjs` | yes |
+| `pbip-sizing.js` | the writer's sizes measured in Desktop: text widths, a table's columns by their room, bar bands, the phone's tabs and titles | a report's font, label size and fields -> sizes in page units | `pbip-export.js`, `pbip-page.js`, `report-rules.js`, `page-preview.js`, `twin-pages.mjs` | yes |
+| `pbip-page.js` | one report page: its visuals in reading order (names, z and tab order, groups), its navigation, its phone layout, its tooltip pages | the design, the binding, the slots -> the page's and its visuals' files | `pbip-export.js` | yes |
+| `pbip-visuals.js` | each slot's visual: the shared look, the per-slot kind, the "No data" card, the phone look; calls the charts and tables builders | one slot's read-only input -> the visual's JSON and its notes | `pbip-page.js` | yes |
+| `pbip-visuals-charts.js` | the charts: their counts and kinds, top N, bar bands, time axes, hover, the mirror of an Arabic chart | the slot builder's input and the step's state -> the chart's JSON, filters, notes | `pbip-visuals.js` | yes |
+| `pbip-visuals-tables.js` | the cards, tables and slicers | the slot builder's input and the step's state -> the visual's JSON and notes | `pbip-visuals.js` | yes |
+| `pbip-tooltip.js` | the tooltip pages: the card, the Top 6 bar chart by category, the trend by month | the theme, the metrics, the binding, the direction -> the page's JSON and its visuals' JSON | `pbip-page.js` | yes |
+| `pbip-navigation.js` | the page buttons and filter panels: the tabs, the header's plan, the filter rail or strip, the slide-in panel | the theme, the metrics, the pages -> the buttons' and panels' visuals | `pbip-page.js` | yes |
+| `pbip-notes.js` | the writer's notes: what its caller should tell (tables that hold fewer fields, titles shortened...) | the build's events -> the notes list build returns | `pbip-export.js` | yes |
+| `pbip-sample.js` | the sample model, so a report made without a model opens looking finished, in English or Arabic | the language -> the sample table (model.bim) and its binding | `pbip-export.js` | yes |
+| `pbip-zip.js` | the writer's ZIP (stored, uncompressed) | `[{ path, data }]` -> the ZIP's bytes; crc32 | `pbip-export.js` | yes |
+| `story-titles.js` | a visual's title that says what it answers, from metadata only (never a value or a judgement), in English and Arabic | a measure, its axis, its time intelligence, display names -> the title and its fitted variants | `pbip-page.js`, `pbip-visuals.js`, `pbip-query.js`, `visual-gallery.js`, `report-a11y.js` | yes |
+| `visual-gallery.js` | three of Power BI's own visuals the writer adds only where the fields' roles fit (combo, waterfall, small multiples) | a slot's fields and their units -> the gallery kind, its query and title, or why not | `pbip-export.js`, `pbip-visuals.js`, `report-mirror.js`, `tool-inputs.mjs`, `report-run.mjs` | yes |
+| `axis-units.js` | which measures may share one value axis (an amount next to a percent, SAR next to AED: never) | the measures' metadata (and an answer remembered) -> same unit or not, the question to ask | `visual-gallery.js`, `visual-meaning.mjs`, `report-fields.mjs` | yes |
+| `label-limits.js` | a column chart or a bar chart, from the category labels' measured limits | an axis's known names (or the stand-in) and the slot's width -> the chart kind | `pbip-visuals-charts.js` | yes |
+| `aggregation.js` | the aggregation guard: values that must never be stacked or summed | a measure's DAX, format and name -> its class and the evidence (English and Arabic) | `plan-lint.mjs` | yes |
+| `text-measure.js` | the measured width of a line of text (Latin by letter, Arabic by measured em), the direction isolates round a Latin run in Arabic, the fonts offered | a text, its size, bold, font -> its width in page units | `pbip-sizing.js`, `report-rules.js`, `design-engine.js`, `story-titles.js`, `twin-pages.mjs` | yes |
+| **The design engine** | | | | |
+| `design-engine.js` | the Theme & Layout Generator's logic with no page: the theme JSON, page sizes, layout slots, the background picture | a design `{ name, font, data, ui, chart, layout }` and the language -> the theme JSON, the slots, the SVG background | `design.mjs`, `pbip-export.js`, `pbip-page.js`, `report-rules.js`, `tools/power-bi-theme-generator.html` | yes |
+| `design-colours.js` | the colour math: hex, contrast (WCAG), HSL, harmonies, the calm palette, CIEDE2000, colour-vision simulation, a logo's colours | colours -> colours, contrasts, palettes | `design-engine.js`, `design-glass.js` | yes |
+| `design-glass.js` | the glass look: its numbers, contrast checks, soft background picture (pixels and PNG), cards' and tables' styles | a design's colours and the page's units -> the look's theme parts and its PNG | `design-engine.js` | yes |
+| **The model health check** | | | | |
+| `model-health-engine.js` | the health check's orchestration: the dependency graph, the report's use, the score, the documentation data | model JSON and (optional) report files -> `analyze()`'s result: findings, score, questions, docs | `model-health-worker.js`, `check_model_health.mjs` | yes |
+| `dax-reference-parser.js` | the DAX tokens and the fields a report references | DAX text -> tokens; report JSON (PBIR or a legacy Layout) -> the fields it references | `model-index.js`, `health-rules.js`, `model-health-engine.js` | yes |
+| `model-index.js` | the model's normalised form, its frozen index and a DAX text's dependencies | model JSON -> the normalised model; it -> the index; DAX -> the objects it references | `health-rules.js`, `model-health-engine.js` | yes |
+| `health-rules.js` | the 37 rules: findings out | the normalised model, its index, the report's use -> findings | `model-health-engine.js` | yes |
+| `health-texts.js` | the rule catalogue: each rule's category, severity, texts in English and Arabic, and its source (data only) | none -> RULES, BPA_URL | `health-rules.js` | yes |
+| `health-confirm.js` | "Please confirm": the questions and their evidence, apart from the score | the normalised model and the user's tables -> the questions | `model-health-engine.js` | yes |
+| `model-health-tmdl.js` | the fix scripts: model objects back into TMDL as Desktop writes them; formats, sort columns, separators | model objects and the fixes chosen -> TMDL text and what to do by hand | `fix-scripts.mjs`, `check_model_health.mjs`, `flip-cards.mjs`, `status-icons.mjs`, `report-fields.mjs` | yes |
+| `health-downloads.js` | the health check's text downloads (the findings CSV, the measures CSV, the docs as HTML and Markdown) | the kind and the analysis -> `{ name, type, text }` | `tools/power-bi-model-health-check.html` | yes |
+| `confirm-memory.js` | a "Please confirm" answer reused while its metadata is unchanged (also the Arabic terms and the date questions' answers) | a question, its evidence, the records -> the answer kept or the question back; records to keep | `answers.mjs`, `terminology.mjs`, `gulf-date-questions.mjs`, `axis-units.js` | no: storage (the website keeps answers in the visitor's browser) |
+| `gulf-health.js` | the Gulf calendar check (not in the score): Hijri, Ramadan, Eid and weekend columns and measures, by name | a model -> what its calendars have and lack | `check_model_health.mjs`, `add_gulf_calendar.mjs`, `gulf-date-questions.mjs` | yes |
+| **The calendar and the Gulf** | | | | |
+| `calendar-generator.js` | the DAX calendar table: Gregorian, fiscal, Hijri (Umm al-Qura), Ramadan and Eid flags, GCC weekends, Arabic columns; and, below it, its page's script | options (range, country, columns) -> the DAX table text; the page: its DOM | `gulf-calendar.mjs`, `tools/dax-calendar-table-generator.html` | no: DOM, storage, browser files (its page part) |
+| `gulf-dates.js` | the UAE's announced Ramadan and Eid dates, each GCC country's weekend and its changes, VAT and pegs (data and lookups) | a year, a country -> the dates and weekends | `calendar-generator.js`, `gulf-health.js`, `gulf-calendar.mjs`, `gulf-date-questions.mjs` | yes |
+| `gulf-measures.js` | Ramadan and Eid measures (the same Ramadan days last Hijri year, its growth, the Eid windows) | the calendar's table and column names, a base measure -> DAX measures | `gulf-calendar.mjs`, `tools/dax-measure-builder.html` | yes |
+| `arabic-calendar.js` | the Arabic twins of a date table's text columns and flags (month and day names, Hijri, quarters) | a date table's columns -> the Arabic columns' DAX | `calendar-generator.js`, `pbip-query.js`, `label-limits.js`, `twin-model.mjs`, `arabic-lens.mjs` | yes |
+| **The measured rules and the check** | | | | |
+| `report-rules.js` | the measured rules: what Power BI Desktop draws, with its numbers and where measured; Arabic and right to left rules included | a parsed report -> findings in numbers and ids | `check-report.mjs`, `layout-check.js`, `page-preview.js`, `artifact.mjs`, `twin-text-fit.mjs` | yes |
+| `layout-check.js` | the check of a project before it is written or downloaded: the measured rules and the design lint on the files in memory | a project's files -> the lint and rule findings | `check-report.mjs`, `design-lint.mjs`, `plan-lint.mjs`, `theme-generator.js` | yes |
+| `report-a11y.js` | Power BI's accessibility basics: alt text, tab order in reading order (right to left in an Arabic report), titles, data colours at 3:1 | a page's visuals and theme -> the visuals with them applied; what is missing | `pbip-export.js`, `report-rules.js`, `twin-copy.mjs` | yes |
+| `visual-types.js` | which visual types are Power BI's own and which are custom (one list) | a visual type -> native, custom, slicer | `report-rules.js`, `layout-check.js`, `mirror-policy.js`, `visual-meaning.mjs` | yes |
+| `page-preview.js` | a picture of a planned page, drawn from the plan only (never data) for the approval window and the lab page | a page's slots or files -> its SVG picture and the notes | `approval-window.mjs`, `plan-lint.mjs`, `twin-preview.mjs`, `theme-generator.js` | yes |
+| **Right to left (the Arabic twin's engine)** | | | | |
+| `report-mirror.js` | the right-to-left twin of a PBIR report's pages and visuals, as Desktop was seen to honour it; the phone layout mirrored | a page's and visuals' JSON -> the mirrored JSON (never a file) | `twin-pages.mjs`, `twin-copy.mjs`, `twin-text-fit.mjs`, `arabic-lens.mjs`, `pbip-query.js` | yes |
+| `mirror-policy.js` | the twin's named rules: which family a visual is, which axis is time, what keeps left to right in a mirrored box | a visual's JSON and the model's facts -> a named answer | `report-mirror.js`, `twin-geometry.mjs` | yes |
+| `arabic-names.js` | Arabic display names drafted from DataArcus's fixed report words, then approved by the person | the English names and the word list -> drafts; the approved names | `arabic-names.mjs`, `theme-generator.js` | yes |
+| `visual-replace.js` | a custom visual's visual.json written as a native Power BI visual, after the person approved it | a visual's JSON and the mapping -> the native visual's JSON | `native-copy.mjs` | yes |
+| **The SVG KPI designer** | | | | |
+| `svg-kpi-compiler.js` | one design to a DAX measure that returns an SVG image URL, and the same SVG for the preview, from one expression tree | a design (layers, values, bindings) -> the DAX measure and the preview SVG | `report-fields.mjs`, `report-run.mjs`, `tools/svg-kpi-designer.html` | yes |
+| `svg-expressions.js` | the expression tree and its closed evaluator (the preview) | a node and sample values -> its value | `svg-kpi-compiler.js`, `svg-codegen.js` | yes |
+| `svg-codegen.js` | the tree printed as DAX (strings, numbers, measure names; a control character never written) | a node -> DAX text | `svg-kpi-compiler.js` | yes |
+| `svg-escape.js` | the SVG text safety: escaping, colours and numbers the picture may hold | a text, a colour, a number -> the safe text | `svg-kpi-compiler.js` | yes |
+| `svg-editor-store.js` | the designer's state, selection and undo history | commands -> the state and change events | `tools/svg-kpi-designer.html` | yes |
+| `svg-kpi-templates.js` | the starter designs (data only) | none -> TEMPLATES | `tools/svg-kpi-designer.html` | yes |
+
+### The browser pages' own scripts
+
+In `assets/js/`. Each draws one page (or every page) and holds no engine logic the MCP needs.
+
+| file | job | in -> out | used by | pure |
+|---|---|---|---|---|
+| `main.js` | every page's shared behaviour: the navbar, smooth scrolling, counters, the contact form (English and Arabic), the cookie consent, analytics events | the page's DOM | every page (`index.html`, `tools/index.html`, ...) | no: DOM, storage, network, the global dataArcusTrack |
+| `lang-manager.js` | the English and Arabic switch: the language from the address (`/ar/`), the saved choice or the browser; right to left and the Arabic font | the page's DOM and the translations | every page (`index.html`, `tools/index.html`, ...) | no: DOM, storage, the global langManager |
+| `theme-generator.js` | the Theme & Layout Generator page: controls, preview, downloads, the Power BI project; loads the writer's engines when needed | the page's DOM | `tools/power-bi-theme-generator.html`, `tools/power-bi-theme-generator-lab.html` | no: DOM, storage, network, browser files, the global __tgFoldSums |
+| `model-health.js` | the Model Health Check page: the file dropped, the worker started, every tab drawn in English or Arabic | the page's DOM | `tools/power-bi-model-health-check.html` | no: DOM, storage, network, worker, browser files |
+| `model-health-worker.js` | the health check's worker: unzips the file in memory within limits, finds the model and report, runs the engine | a file's bytes (a message) -> the analysis (a message) | `model-health.js`, `theme-generator.js` | no: worker, browser files |
+| `measure-builder.js` | the DAX Measure Builder page: time intelligence measures (MTD, YTD, prior year, rolling, Ramadan vs last Ramadan, Eid) as one DAX script, one TMDL script or each measure | the page's DOM | `tools/dax-measure-builder.html` | no: DOM, storage, browser files |
+| `licensing-calculator.js` | the licensing cost calculator: Pro, Premium Per User and Fabric for a number of creators and viewers, in USD, AED and SAR | the page's DOM | `tools/power-bi-licensing-cost-calculator.html` | no: DOM, storage, network |
+| `dp600-sim.js` | the exam practice simulator (DP-600, or PL-300 by `window.EXAM`); progress stays in the browser | the page's DOM | `tools/dp-600-practice-exam.html`, `tools/pl-300-practice-exam.html` | no: DOM, storage, network |
+| `svg-kpi-designer.js` | the SVG KPI Designer's editor: draw a KPI, bind its parts to measures, copy the DAX | the page's DOM | `tools/svg-kpi-designer.html` | no: DOM, storage, browser files |
+
+### The MCP: reading
+
+In `mcp/lib/`. A model and a report are read, never changed; their text is untrusted input.
+
+| file | job | in -> out | used by | pure |
+|---|---|---|---|---|
+| `model.mjs` | a user's model from disk (TMDL, model.bim, .pbit), every path kept inside the working folder; re-exports the name screen and the metadata | a path -> the model's metadata (never data), or a coded error | every tool, `read-report.mjs`, `scope.mjs`, `report-run.mjs`, `server.mjs` | no: fs, env |
+| `model-names.mjs` | the untrusted-text screen and how a name from a model or from disk is shown | a name -> the screened or shown name, and why | `model.mjs`, `model-metadata.mjs` | yes |
+| `model-metadata.mjs` | the model's metadata adapted for the tools: the model however it is wrapped, the column types, the KPI targets | the loaded model object -> the adapted metadata | `model.mjs` | yes |
+| `tool-names.mjs` | the tools by name, one list (a model's text that names one is flagged) | none -> TOOL_NAMES | `model-names.mjs` | yes |
+| `scope.mjs` | large models: a summary first, details on request; the part of a model a request is about | the model and the request -> the scoped model or the summary | `read_model.mjs`, `suggest_fields.mjs`, `check_model_health.mjs`, `plan_layout.mjs`, `report-run.mjs` | yes |
+| `hidden-names.mjs` | what a model hides and which of its names read like an instruction (flagged, never altered) | the model -> the hidden objects and the flagged names | `read_model.mjs`, `suggest_fields.mjs`, `check_model_health.mjs`, `report-result.mjs` | yes |
+| `read-report.mjs` | what a PBIR report holds, read from its files (or memory) and never changed: its one read boundary | a report's folder -> its inventory (pages, visuals, fields, theme) | `read_report.mjs`, `check-report.mjs`, `plan-lint.mjs`, `redesign.mjs`, `twin-read.mjs` | no: fs |
+| `report-answer.mjs` | read_report's answer, fitted by listing fewer pages or visuals, never cut | an inventory -> the answer (text or JSON) | `read-report.mjs` | yes |
+| `report-identity.mjs` | an existing report's theme identity, as a design needs it | the inventory's theme files and pages -> the identity | `read-report.mjs` | yes |
+| `report-names.mjs` | the report names already in use beside a model, so a new report never takes one | a folder -> the names taken | `report-run.mjs`, `plan-lint.mjs`, `scope.mjs` | no: fs |
+| `read-words.mjs` | the tools' words for the reading block's coded errors | an error code and its data -> the sentence | `tool-answer.mjs` | yes |
+| `visual-meaning.mjs` | what a visual shows, from its data roles, and the native visual that can replace a custom one | one visual of the inventory -> its meaning and its native replacement | `read-report.mjs`, `native-copy.mjs` | yes |
+| `visual-vocabulary.mjs` | the words that read a custom visual's role names and id | a role name, an id -> its words, class and hints | `visual-meaning.mjs` | yes |
+| `same-question.mjs` | the number check, layer 1: does each visual of a copy ask the model the same question as the original's | two reports on the same model -> each visual's verdict | `check-report.mjs` | no: fs, env |
+
+### The MCP: the approval gate
+
+In `mcp/lib/`. Nothing is written before the person's click.
+
+| file | job | in -> out | used by | pure |
+|---|---|---|---|---|
+| `plans.mjs` | the gate: plan ids, what each plan pins, the approval and the refusal | a proposal -> a plan id; an approval -> recorded; a write -> allowed or refused | every writing tool, `approve_plan.mjs`, `files.mjs`, `plan-keys.mjs` | no: env |
+| `plan-keys.mjs` | what a plan is pinned to: the model's key and print, the inputs, the check right before a write | a model, the inputs -> the keys; a plan id -> same model or refused | `create_report.mjs`, `plan_layout.mjs`, `generate_theme.mjs`, `report-run.mjs` | no: fs |
+| `approval-window.mjs` | DataArcus's own approval window on 127.0.0.1, with a one-time link the AI never receives | a plan -> the page served, the person's click | `approve_plan.mjs` | no: network, process, env |
+| `approval-disclosure.mjs` | what each approval page says: the disclosure summaries in words (no HTML, no HTTP) | a plan's kind and data -> the disclosure model | `approval-window.mjs` | yes |
+| `approval-ar.mjs` | the approval page's own words in Arabic, for an Arabic plan's page | an English label -> its Arabic | `approval-window.mjs`, `approval-disclosure.mjs` | yes |
+| `answers.mjs` | the "Please confirm" answers file next to the model (`confirm-memory.js`'s records), written only through the gate | a model's path, the answers -> the records read; the file written | `check_model_health.mjs`, `approval-window.mjs` | no: fs |
+
+### The MCP: the write path
+
+In `mcp/lib/`. One write, all or nothing, never over anything.
+
+| file | job | in -> out | used by | pure |
+|---|---|---|---|---|
+| `artifact.mjs` | the exact files a plan builds, checked, and their digest; the model's print | the built files, the model -> the checks and the digest | `report-run.mjs`, `create_report.mjs`, `twin-write.mjs`, `redesign.mjs` | no: fs, env |
+| `files.mjs` | the one writer of new file trees (all or nothing, never over anything) and the one reader of a file the user names | a tree of files and a plan id -> written, or nothing | `create_report.mjs`, `twin-write.mjs`, `redesign.mjs`, `fix-scripts.mjs`, `sample-project.mjs` | no: env |
+| `write-io.mjs` | one new file, never half-written; a failed write removes only what that call created | a path and bytes -> the file, or nothing | `files.mjs`, `model.mjs`, `answers.mjs`, `twin-write.mjs` | no: fs, env |
+| `fix-scripts.mjs` | the TMDL fix scripts next to the model: their names, the write, the formats answer | the fixes, the folder -> the script written and what it says | `check_model_health.mjs`, `add_gulf_calendar.mjs`, `plan_layout.mjs`, `report-run.mjs` | no: fs |
+| `model-script.mjs` | one helper for the model additions written as TMDL scripts (names that are free, the script file) | the model's names, the lines -> a free name, the script | `flip-cards.mjs`, `metric-switcher.mjs`, `status-icons.mjs`, `dax-functions.mjs`, `gulf-calendar.mjs` | yes |
+| `plain-words.mjs` | the words a person reads where they decide: what a script is, the 3 steps to apply it, where a file goes (English and Arabic) | a folder, a script -> the sentence | `approval-window.mjs`, `fix-scripts.mjs`, `plans.mjs`, `plan_layout.mjs` | no: fs |
+
+### The MCP: create_report and its options
+
+In `mcp/lib/`. One report's build, the same for the plan and the write.
+
+| file | job | in -> out | used by | pure |
+|---|---|---|---|---|
+| `report-run.mjs` | one report's whole build: the plan's exact artifact and the write alike | the inputs, the model, the plan -> the built files, the checks, the answer | `create_report.mjs`, `plan_layout.mjs`, `plan-lint.mjs` | yes |
+| `report-inputs.mjs` | create_report's inputs (plan_layout takes them too), their defaults and what a plan pins of them | none -> the schemas, LOOK_DEFAULTS, REPORT_LOOK, reportPin | `create_report.mjs`, `plan_layout.mjs`, `report-run.mjs`, `plan-disclosure.mjs` | yes |
+| `report-bind.mjs` | the report's field identities, formats and bindings | the model's metadata and the plan's options -> the binding | `report-run.mjs` | yes |
+| `report-fields.mjs` | a report's fields resolved against the model: fields, page filters, SVG columns, cards, chart axes, relationships | the requested fields and the model -> the resolved fields and the problems | `report-run.mjs`, `create_report.mjs`, `plan_layout.mjs`, `suggest_fields.mjs` | yes |
+| `report-result.mjs` | create_report's answer and its notes from the build | the build's metadata, the theme, the format script's answer -> the answer | `report-run.mjs` | yes |
+| `report-said.mjs` | the sentences the run and plan_layout both answer with (flip cards, top N, card values, phone layout, the Arabic calendar) | the build's facts -> sentences | `report-run.mjs`, `report-result.mjs`, `plan_layout.mjs` | yes |
+| `design.mjs` | the design tools' logic: a design from the tools' inputs, with every value not used said | the tools' inputs -> a design, the theme JSON, the slots | `generate_theme.mjs`, `plan_layout.mjs`, `report-run.mjs`, `redesign.mjs` | yes |
+| `plan-lint.mjs` | the planned page linted before the plan is shown: built by the shared writer in memory, read back and checked | a design and fields -> the lint, the preview, the checks | `plan_layout.mjs`, `report-run.mjs` | yes |
+| `plan-disclosure.mjs` | the plan's words: its look, the bilingual report's answer, an Arabic plan's title-language lines, the page size | a built plan -> what plan_layout's answer says | `plan_layout.mjs` | yes |
+| `plan-headroom.mjs` | the plan answer's headroom: what it repeats said once before the cap must cut | a plan's answer -> the fitted answer | `plan_layout.mjs` | yes |
+| `plan-variants.mjs` | plan_layout's two plans of their own kind: the sample and the redesign | the request (and the model plan) -> the plan | `plan_layout.mjs` | yes |
+| `sample-project.mjs` | the sample project: a made-up Gulf retail chain to try DataArcus on, in English or Arabic | a folder, the language -> the sample's files, what is said | `create_report.mjs`, `plan-variants.mjs`, `sample-counts.mjs` | yes |
+| `sample-counts.mjs` | the sample project's own distinct counts (made-up data, known from its definition) | the sample's path -> the counts, or none | `report-run.mjs` | no: fs |
+| `metric-switcher.mjs` | the metric switcher: a field parameter and one slicer switch a page's charts between 2-5 measures | the measures chosen, the model -> the TMDL script and what is said | `report-run.mjs`, `report-inputs.mjs`, `plan_layout.mjs`, `check-report.mjs` | yes |
+| `flip-cards.mjs` | flip cards: a KPI card turns over to a one-line description | the cards and the model -> the three Image visuals and the TMDL script | `report-run.mjs`, `plan_layout.mjs`, `approval-disclosure.mjs` | yes |
+| `status-icons.mjs` | status icons before a table's measure by conditional formatting | the option, the model -> the rules and the TMDL script | `report-run.mjs`, `report-inputs.mjs`, `plan_layout.mjs` | yes |
+| `dax-functions.mjs` | the DataArcus DAX function library (off by default): four user-defined functions and their measures in one TMDL script | the option, the model -> the script and what is said | `report-run.mjs`, `report-inputs.mjs`, `plan_layout.mjs`, `check-report.mjs` | yes |
+| `display-names.mjs` | readable display names for database-style field names, each said in the plan | a field name -> its readable name | `report-bind.mjs`, `twin-texts.mjs`, `plan_layout.mjs` | yes |
+| `glass-picture.mjs` | the glass page picture read back in Node: flipped for the Arabic pages, drawn small on the approval page | the engine's PNG -> its pixels, the flipped PNG, a preview URL | `plan-lint.mjs`, `twin-plan.mjs`, `twin-preview.mjs` | yes |
+| `gulf-calendar.mjs` | add_gulf_calendar: the Calendar Generator's table (Hijri, Ramadan, Eid, the weekend, Arabic columns) as a TMDL script | the model, the country, the options -> the script and what is said | `add_gulf_calendar.mjs`, `check_model_health.mjs` | yes |
+| `gulf-date-questions.mjs` | Gulf business dates and seasonal scope: which date, which grain, one Ramadan or every one, asked in English and Arabic | the model and the request -> the next question, or none | `plan_layout.mjs` | yes |
+| `native-copy.mjs` | a report's custom visuals replaced by native ones in a new report "<name> native" | a report and the approved replacements -> the copy's plan, files and write | `create_report.mjs`, `plan_layout.mjs` | yes |
+
+### The MCP: the redesign
+
+In `mcp/lib/`. A lossless copy with allowlisted patches, never a rebuild.
+
+| file | job | in -> out | used by | pure |
+|---|---|---|---|---|
+| `redesign.mjs` | the redesign: the plan, the copy, its check and the write | a report, the design, the patches asked -> the plan; the copy written | `create_report.mjs`, `plan-variants.mjs` | no: fs |
+| `redesign-grid.mjs` | the redesign's geometry: the units of visuals laid over others and the grid | a page and its top-level visuals -> the units and their fitted boxes | `redesign.mjs` | yes |
+| `redesign-kinds.mjs` | the patch kinds, one entry each: the allowlist the copy and its check read (the planned ones off) | none -> the kinds, their checks and refusals | `redesign.mjs` | yes |
+| `text-format.mjs` | each visual's own text formatting (font, size, bold, italic) by the theme's text class it overrides | an inventory and its theme -> the formats and the mixed ones | `check-report.mjs`, `redesign.mjs`, `redesign-kinds.mjs`, `approval-disclosure.mjs` | yes |
+
+### The MCP: the checkers
+
+In `mcp/lib/`. They read a report and never change it.
+
+| file | job | in -> out | used by | pure |
+|---|---|---|---|---|
+| `check-report.mjs` | check_report: Microsoft's validator offline (schemas bundled in `mcp/schemas/`) and the measured rules on any PBIR report | a report's path -> the findings and their fixes | `check_report.mjs`, `create_report.mjs`, `artifact.mjs`, `arabic-lens.mjs` | no: fs |
+| `check-language.mjs` | each page's language (Arabic or English), from its texts counted, never returned | the inventory and the rules' input -> `{ pages: { id: lang } }` | `check-report.mjs` | yes |
+| `design-lint.mjs` | the design lint's adapter for the MCP (the lint itself is `layout-check.js`) | the inventory and the model's tables -> lint findings | `check-report.mjs`, `artifact.mjs`, `plan-lint.mjs` | yes |
+| `arabic-lens.mjs` | check_report's Arabic lens: is this report ready for Arabic, per page, each finding with its fix in DataArcus's words | a report and its model -> the Arabic findings | `check_report.mjs` | yes |
+
+### The MCP: the Arabic twin
+
+In `mcp/lib/`. The right-to-left twin, the EN-AR copy and the bilingual report's Arabic half, step by step; every
+Arabic page mirrors through `report-mirror.js`.
+
+| file | job | in -> out | used by | pure |
+|---|---|---|---|---|
+| `arabic-twin.mjs` | the twin's entry: re-exports the steps' names others import | none -> the steps' exports | `create_arabic_twin.mjs`, `plan_layout.mjs`, `add_gulf_calendar.mjs`, `report-run.mjs`, `check-report.mjs` | yes |
+| `twin-read.mjs` | step 1: the original read strictly through the reading block (or from memory for a copy not yet written); the helpers every step uses | a report's folder -> its files in memory | `twin-plan.mjs`, `twin-pages.mjs`, `twin-copy.mjs`, `twin-write.mjs` | yes |
+| `twin-texts.mjs` | step 2: the texts a reader sees, the person's Arabic labels and terms, what is not translated | the original's texts and the terms -> the Arabic texts and DAX | `twin-pages.mjs`, `twin-plan.mjs`, `twin-write.mjs` | yes |
+| `twin-model.mjs` | step 3: the model next to the report: date tables (time left to right), the Arabic month column's offer, the right-to-left waterfall's facts | the model -> its date tables and offers | `twin-pages.mjs`, `twin-plan.mjs`, `arabic-twin.mjs` | yes |
+| `twin-copy.mjs` | step 4: English and Arabic in one report "<name> (EN-AR)": the language buttons, their tab order, the pages, links and bookmarks | the original and its twin pages -> the copy's files | `twin-plan.mjs`, `twin-write.mjs`, `native-copy.mjs`, `redesign.mjs` | yes |
+| `twin-pages.mjs` | step 5: the pages mirrored and fitted for the Arabic texts (buildTwin keeps the order, keepSize last) | one page and its visuals -> the Arabic page, its changes and what is said | `twin-plan.mjs` | yes |
+| `twin-text-fit.mjs` | step 5a: the text, button and header fitting of one mirrored page for Arabic | one page's twin -> its fitted texts | `twin-pages.mjs` | yes |
+| `twin-geometry.mjs` | step 5b: the geometry of one mirrored page (badges, tables, a heatmap's chart, indentation, the icon's room) | one page's twin -> its fixed boxes | `twin-pages.mjs` | yes |
+| `twin-visuals.mjs` | the PBIR visual helpers the steps share: a box, a type, literals, overlaps, new ids, a text's look | a visual -> its parts | `twin-pages.mjs`, `twin-copy.mjs`, `twin-geometry.mjs`, `twin-text-fit.mjs` | yes |
+| `twin-calcs.mjs` | the visual calculations whose result depends on the visual's order (turned in a mirrored visual), found by structure | a visual's projections -> the order calculations and what is said | `twin-plan.mjs`, `approval-disclosure.mjs` | yes |
+| `twin-pictures.mjs` | the pages drawn on a picture: each picture flipped for the Arabic page, a picture with words asked first | the pages' pictures -> the flipped pictures, what is said | `twin-plan.mjs`, `twin-write.mjs` | yes |
+| `page-picture.mjs` | a page's picture read (PNG or JPEG, by its own readers), flipped left to right and written as a PNG | the picture's bytes -> the flipped PNG; the panels' boxes | `twin-pictures.mjs`, `twin-geometry.mjs` | yes |
+| `twin-plan.mjs` | step 6: the plan, the twin or the copy built in memory, the answer's room | the original, the model, the options -> the plan | `arabic-twin.mjs`, `twin-write.mjs` | no: fs |
+| `twin-preview.mjs` | step 7: the twin's pages drawn on the approval page from the plan's own build | the plan's build -> the pages' pictures | `arabic-twin.mjs` | yes |
+| `twin-write.mjs` | step 8: the write, exactly the files the plan kept, after the person's go | a plan id -> the twin's files written, or nothing | `arabic-twin.mjs` | no: fs |
+| `model-culture.mjs` | Arabic names in the model itself: one TMDL script, a `cultureInfo` per Gulf culture from the terms approved | the approved terms -> the culture script | `twin-plan.mjs`, `twin-write.mjs`, `create_arabic_twin.mjs` | yes |
+| `terminology.mjs` | the Arabic terminology sheet: one approved English / Arabic alias per field, the same everywhere in the Arabic report | a report and the answers -> the sheet's rows and places | `twin-texts.mjs`, `twin-plan.mjs`, `arabic-lens.mjs`, `create_arabic_twin.mjs`, `plan_layout.mjs` | no: fs |
+| `arabic-names.mjs` | proposed Arabic display names, only from a fixed glossary of report words, for the person to approve | the fields' names -> the proposals | `plan_layout.mjs`, `twin-texts.mjs` | no: fs |
+| `arabic-terms.mjs` | DataArcus's own Arabic vocabulary: one term per concept, and the check of a text against it | a text -> the terms that differ | `terminology.mjs` | no: fs |
+
+### The MCP: what leaves the server, and the tools' helpers
+
+In `mcp/lib/`. Every answer, the instructions, and what more than one tool uses.
+
+| file | job | in -> out | used by | pure |
+|---|---|---|---|---|
+| `answer.mjs` | what leaves the server in an answer: every format character of a name written visibly, the answer capped and fitted | an answer -> the answer sent | `tool-answer.mjs`, `scope.mjs`, `report-answer.mjs`, `twin-plan.mjs` | yes |
+| `agent-text.mjs` | the server's instructions and the tool descriptions' shared sentences, from the tools' own limits | none -> the instructions and the shared texts | `server.mjs`, every tool | yes |
+| `tool-answer.mjs` | how every tool answers: the text scrubbed of local paths and capped, the errors, safe() around each handler | a tool's result or error -> its answer | every tool | no: fs |
+| `tool-inputs.mjs` | the input schemas more than one tool takes (zod) and what a tool does to the user's files | none -> the schemas and annotations | every tool, `report-inputs.mjs` | yes |
+| `tool-limits.mjs` | the tools' limits and the visual kinds a slot can be: one list | none -> LIMITS, VISUAL_KINDS | `server.mjs`, `tool-inputs.mjs`, `report-inputs.mjs`, `read_model.mjs` | yes |
+| `box-diff.mjs` | research code (not loaded by the server): two drawings of a page compared box by box | two drawings -> their overlap scores | none (a test) | yes |
+| `shadow-model.mjs` | research code (not loaded by the server): a shadow of a model, so Desktop draws a report without the model's data | a model's metadata -> the shadow's files | none (a test) | yes |
+
+### The tools
+
+In `mcp/tools/`. Each exports `register(server, ctx)`; `server.mjs` registers them in the order tools/list shows
+them. A tool's inputs and answer: [TOOLS.md](../TOOLS.md).
+
+| file | job | in -> out | used by | pure |
+|---|---|---|---|---|
+| `read_model.mjs` | read_model: a model's tables, columns, measures and relationships (metadata only; large models summarised) | a model's path -> its metadata | `server.mjs` | yes |
+| `suggest_fields.mjs` | suggest_fields: which of a model's fields fit each visual | a model's path and the visuals -> the suggestions | `server.mjs` | yes |
+| `check_model_health.mjs` | check_model_health: the health check, the Gulf calendar check, the questions and the fix scripts' plan | a model's path -> findings, score, questions; a plan id for the scripts | `server.mjs` | yes |
+| `generate_theme.mjs` | generate_theme: a Power BI theme from a design (or an existing report's), written after approval | a design -> the theme JSON; a plan id, then the file | `server.mjs` | yes |
+| `plan_layout.mjs` | plan_layout: the report's plan (or the sample's, the redesign's, the native copy's; with languages en+ar, both halves) built with the writer's own build and checked | the request and the model -> the plan and its planId | `server.mjs` | yes |
+| `approve_plan.mjs` | approve_plan: opens the approval window; only the person's click approves | a planId -> approved or not | `server.mjs` | no: env |
+| `create_report.mjs` | create_report: writes exactly the approved report (or redesign, native copy, sample) | a planId and the inputs -> the files written | `server.mjs` | yes |
+| `add_gulf_calendar.mjs` | add_gulf_calendar: the Gulf calendar table as a TMDL script, planned then written | a model's path and options -> a plan id, then the script | `server.mjs` | yes |
+| `read_report.mjs` | read_report: what a PBIR report holds | a report's path -> its inventory | `server.mjs` | yes |
+| `create_arabic_twin.mjs` | create_arabic_twin: the right-to-left Arabic twin, the EN-AR copy or the bilingual report, planned then written | a report's path and the Arabic options -> a plan id, then the files | `server.mjs` | yes |
+| `check_report.mjs` | check_report: the validator, the measured rules, the Arabic lens and the number check on any report | a report's path -> the findings | `server.mjs` | yes |
