@@ -31,11 +31,11 @@ const { ROOT, T, L, Q, obj, col, mea, box, cw, put, rd, schema, lf } = H;
 // ---- the measures project (made up): twin-project with its own reportExtensions.json and a page "msr" (1280 x 720) ----
 // cT1: a card titled by "Title: Top regions" (a variable in its text; "Title AR: Top regions" is taken, so the twin's is
 // "(2)"); cT2: a column chart titled by an IF of two texts; cT3: a bar chart titled with FORMAT (not translated, still
-// shown); cT4: a card titled by a measure of the model (stays as the model gives it); cND: a card showing the text
-// measure "No data: Orders", a selector naming it; tRL1, tRL2: two tables with the same columns, a text column first
-// (the row label measure, one for both: "(2)", the matrix written as a table took the first name); wf1, wf2: two waterfalls
-// of the same measure by month (mirrored: one measure); mx: a
-// matrix with a column chart (colFloor, 72 wide) in its right margin, cut to 56 (78 %, over KEEP_MIN but under the 60 px
+// shown; given an approved fixed Arabic title, it is said "fixed"); cT4: a card titled by a measure of the model (the
+// same); cND: a card showing the text measure "No data: Orders", a selector naming it; tRL1, tRL2: two tables with the
+// same columns, a text column first (one row label measure for both, "(2)": the matrix written as a table took the
+// first name; tRL1's text column coloured, its row label column takes the colour); wf1, wf2: two waterfalls of the
+// same measure by month (mirrored: one set of measures); mx: a matrix with a column chart (colFloor, 72 wide) in its right margin, cut to 56 (78 %, over KEEP_MIN but under the 60 px
 // floor: keepSize puts it back);
 // tabA, tabB: page tabs on the phone with an underline (lnA) under tabA; cND and cT1 on the phone too.
 const extM = (m) => ({ Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: T } }, Property: m } });
@@ -53,8 +53,8 @@ function measureProject(dir) {
     { name: 'Title: Year', dataType: 'Text', expression: '"Sales in " & FORMAT ( TODAY (), "yyyy" )' },
     { name: 'No data: Orders', dataType: 'Text', expression: 'IF ( ISBLANK ( [Orders] ), "No data for this selection", "" )' }] }] });
   const nd = { field: extM('No data: Orders'), queryRef: 'Sales.No data: Orders', nativeQueryRef: 'No data: Orders' };
-  const table = (name, y, z) => box(name, 360, y, 400, 190, z, { visualType: 'tableEx', query: { queryState: { Values: { projections: [col(T, 'Region'), mea(T, 'Total Sales'), mea(T, 'Orders')] } } },
-    objects: { columnWidth: [cw('Sales.Region', 120), cw('Sales.Total Sales', 110), cw('Sales.Orders', 90)] } });
+  const table = (name, y, z, more) => box(name, 360, y, 400, 190, z, { visualType: 'tableEx', query: { queryState: { Values: { projections: [col(T, 'Region'), mea(T, 'Total Sales'), mea(T, 'Orders')] } } },
+    objects: Object.assign({ columnWidth: [cw('Sales.Region', 120), cw('Sales.Total Sales', 110), cw('Sales.Orders', 90)] }, more || {}) });
   const wf = (name, y, z) => box(name, 800, y, 440, 190, z, { visualType: 'waterfallChart', query: { queryState: { Category: { projections: [col('Calendar', 'Month Name')] }, Y: { projections: [mea(T, 'Total Sales')] } } } });
   const vs = [
     box('cT1', 40, 40, 300, 110, 1000, { visualType: 'card', query: { queryState: { Values: { projections: [mea(T, 'Orders')] } } }, visualContainerObjects: titleBy(extM('Title: Top regions')) }),
@@ -62,7 +62,7 @@ function measureProject(dir) {
     box('cT3', 800, 40, 440, 190, 3000, { visualType: 'clusteredBarChart', query: { queryState: { Category: { projections: [col(T, 'Product')] }, Y: { projections: [mea(T, 'Orders')] } } }, visualContainerObjects: titleBy(extM('Title: Year')) }),
     box('cT4', 40, 170, 300, 110, 4000, { visualType: 'card', query: { queryState: { Values: { projections: [mea(T, 'Total Sales')] } } }, visualContainerObjects: titleBy({ Measure: { Expression: { SourceRef: { Entity: T } }, Property: 'Total Sales' } }) }),
     box('cND', 40, 300, 300, 100, 5000, { visualType: 'card', query: { queryState: { Values: { projections: [nd] } } }, objects: { labels: [{ properties: { fontSize: L('12D') }, selector: { metadata: 'Sales.No data: Orders' } }] } }),
-    table('tRL1', 250, 6000), table('tRL2', 460, 7000), wf('wf1', 250, 8000), wf('wf2', 460, 9000),
+    table('tRL1', 250, 6000, { columnFormatting: [{ properties: { fontColor: { solid: { color: Q('#1F6E43') } } }, selector: { metadata: 'Sales.Region' } }] }), table('tRL2', 460, 7000), wf('wf1', 250, 8000), wf('wf2', 460, 9000),
     box('mx', 40, 420, 280, 220, 10000, { visualType: 'pivotTable', query: { queryState: { Rows: { projections: [col(T, 'Region')] }, Values: { projections: [mea(T, 'Total Sales')] } } } }),
     box('colFloor', 304, 440, 72, 180, 11000, { visualType: 'clusteredColumnChart', query: { queryState: { Category: { projections: [col(T, 'Product')] }, Y: { projections: [mea(T, 'Orders')] } } } }),
     tab('tabA', 800, 'Overview', 'p1overview', 12000), tab('tabB', 950, 'Details', 'p2details', 13000),
@@ -108,6 +108,7 @@ const COVER = {
   'a text measure of its own (both languages), its visual moved to it': !!m2['Sales[No data AR: Orders]'] && /No data for this selection/.test((m2['Sales[No data: Orders]'] || {}).expression)
     && allVisuals('m2').some((v) => { const ps = ((((v.visual || {}).query || {}).queryState || {}).Values || {}).projections, p = ps && ps[0]; return p && p.field.Measure && p.field.Measure.Property === 'No data AR: Orders' && p.queryRef === 'Sales.No data AR: Orders' && p.nativeQueryRef === 'No data AR: Orders' && v.visual.objects.labels[0].selector.metadata === 'Sales.No data AR: Orders'; }),
   'one row label measure for two tables of the same DAX, a free name for another': !!m1['Sales[Row label: Region]'] && !!m1['Sales[Row label: Region (2)]'] && visualsOf('m1', 'tRL1').concat(visualsOf('m1', 'tRL2')).filter((v) => v.visual.query.queryState.Values.projections.some((p) => p.nativeQueryRef === 'Row label: Region (2)')).length === 2,
+  'the row label column keeps its text column\'s colour': visualsOf('m1', 'tRL1').some((v) => v.visual.objects.columnFormatting.some((e) => e.selector.metadata === 'Sales.Row label: Region (2)' && JSON.stringify(e.properties.fontColor || null).includes('#1F6E43'))),
   'the waterfall\'s measures, one for the same DAX': Object.keys(m1).filter((k) => /^Sales\[Waterfall /.test(k)).length === 7 && !Object.keys(m1).some((k) => /^Sales\[Waterfall .*\(2\)\]$/.test(k)) && visualsOf('m1', 'wf1').concat(visualsOf('m1', 'wf2')).every((v) => v.visual.visualType !== 'waterfallChart'),
   'keepSize: a chart cut to 56 px (78 %) kept its English size': /"where":"msr\/colFloor","what":"kept its English size: a rule would have shrunk it to 56 px wide and 180 px high \(English 72 x 180\)"/.test(said) && visualsOf('m1', 'colFloor').some((v) => v.position.width === 72),
   'the phone\'s tabs as wide as their Arabic names': mobilesOf('m1', 'tabA').some((m) => m.position.width !== 55) && mobilesOf('m1', 'lnA').some((m) => m.position.x !== 12)
@@ -118,10 +119,10 @@ chk(() => Object.values(COVER).every(Boolean), () => `C1. the runs reach every m
 const SRC = (f) => fs.readFileSync(path.join(HERE, 'lib', f), 'utf8');
 if (fs.existsSync(path.join(HERE, 'lib', 'twin-measures.mjs'))) {
   const pages = SRC('twin-pages.mjs'), ms = SRC('twin-measures.mjs'), M = await import('./lib/twin-measures.mjs');
-  const calls = ['twinMeasures(P, labels)', 'Mirror.mirrorPage(', 'badgesWithText(pg, r)', 'Mirror.labelVisual(', 'wholeTitles(vj.visual', 'M.rewire(vj', 'indentToEnd(pg.visuals[i].json, vj)', 'fitButtons(page', 'fitHeaders(page', 'keepView(page', 'growTables(', 'fitTextboxes(page', 'iconRoom(r.visuals', 'keepSize(pg.visuals', 'Mirror.mirrorMobile(', 'fitPhoneTabs(pg', 'M.said(pages'].map((c) => pages.indexOf(c));
+  const calls = ['twinMeasures(P, labels)', 'Mirror.mirrorPage(', 'badgesWithText(pg, r)', 'Mirror.labelVisual(', 'wholeTitles(vj.visual', 'M.rewire(vj', 'indentToEnd(pg.visuals[i].json, vj)', 'fitButtons(page', 'fitHeaders(page', 'keepView(page, r.visuals', 'growTables(r.visuals', 'fitTextboxes(page', 'iconRoom(r.visuals', 'keepSize(pg.visuals', 'Mirror.mirrorMobile(', 'fitPhoneTabs(pg, r.visuals', 'M.said(pages'].map((c) => pages.indexOf(c));
   const gone = ['rewireMeasures', 'rowLabelTable', 'fieldOk', 'takenAnywhere', 'rowLabelMeasure', 'textRename', 'wfWritten', 'rlWritten', 'shownTitle', 'stillShown', 'notTranslated', 'fixedTitles', 'EXT_SCHEMA'];
   chk(() => typeof M.twinMeasures === 'function' && typeof M.rewireMeasures === 'function' && typeof M.rowLabelTable === 'function'
-    && gone.every((h) => !new RegExp('\\b' + h + '\\b').test(pages)) && !/titleMeasuresOf|textMeasuresOf|arabicDax|waterfallFacts/.test(pages.replace(/^import .*$/gm, ''))
+    && gone.every((h) => !new RegExp('\\b' + h + '\\b').test(pages)) && !/\b(titleMeasuresOf|textMeasuresOf|arabicDax|waterfallFacts)\b/.test(pages.replace(/^import .*$/gm, ''))
     && /^import \{ twinMeasures \} from '\.\/twin-measures\.mjs';$/m.test(pages)
     && calls.every((i, k) => i > 0 && (k === 0 || i > calls[k - 1]))
     && /^export const KEEP_MIN = 0\.75, CHART_MIN = 60;$/m.test(pages) && /a\[k\] < b\[k\] \* KEEP_MIN \|\| \(chart\(e\) && a\[k\] < CHART_MIN && b\[k\] >= CHART_MIN\)/.test(pages),
