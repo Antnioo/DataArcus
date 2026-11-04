@@ -20,7 +20,8 @@
   mutation 76/76; lint 0. **Got:** exactly that (full runs: see Results).
 - **Merge:** integration/0.3.2 did not move (762bba0): no merge. mcp/docs/CONTRACTS.md is not on integration: its
   frame family line is below ("For CONTRACTS.md").
-- **State:** see the CI line.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41865756183 on c1e08c9
+- **State:** DONE (Linux and Windows; macOS runs where the reviewer merges).
 - **Resume:** none; the reviewer reads and merges.
 
 ## Three answers -> one (made-up inputs, page 1280 unless said; mirror / geometry / fitting)
