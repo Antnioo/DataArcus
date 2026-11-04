@@ -103,3 +103,135 @@ export const CASES = (viaLoader) => [
   ['A10 DAX tables and a function, model only', () => ({ model: daxTables(), report: null })],
   ['A11 the incomplete TMDL model (a table file empty)', () => viaLoader('broken/B.SemanticModel')]
 ];
+
+// ---------- (SP15) three more models, read by sp15 and sp27 ----------
+// B1 calculation groups: two groups with precedence, items using measures, SELECTEDMEASURE, a format string expression
+// using a measure of another table, a group column used by a report, a group nobody uses
+export const calcGroups = () => ({ compatibilityLevel: 1601, model: { culture: 'en-US', tables: [
+  { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Date', 'dateTime'), col('Unused', 'string')],
+    measures: [ms('Total', 'SUM ( Sales[Amount] )'), ms('Target', '1000'), ms('Ratio', 'DIVIDE ( [Total], [Target] )', { formatString: '0%' }), ms('Old Total', '[Total] * 2')] },
+  { name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime', { isKey: true }), col('Year', 'int64')] },
+  { name: 'Time Intelligence', partitions: [{ name: 'Time Intelligence', source: { type: 'calculationGroup' } }], calculationGroup: { precedence: 20, calculationItems: [
+    { name: 'Current', expression: 'SELECTEDMEASURE ()' },
+    { name: 'YTD', expression: "CALCULATE ( SELECTEDMEASURE (), DATESYTD ( 'Calendar'[Date] ) )", formatStringDefinition: { expression: 'IF ( ISSELECTEDMEASURE ( [Ratio] ), "0.0%", SELECTEDMEASUREFORMATSTRING () )' } },
+    { name: 'vs Target', expression: 'SELECTEDMEASURE () - [Target]' }] },
+    columns: [col('Period', 'string', { sourceColumn: 'Name' }), col('Ordinal', 'int64')] },
+  { name: 'Currency', partitions: [{ name: 'Currency', source: { type: 'calculationGroup' } }], calculationGroup: { calculationItems: [
+    { name: 'USD', expression: 'SELECTEDMEASURE () * 1', formatStringDefinition: { expression: '"$#,0"' } },
+    { name: 'Local', expression: "SELECTEDMEASURE () * MAX ( 'Rates'[Rate] )" }] },
+    columns: [col('Currency', 'string', { sourceColumn: 'Name' })] },
+  { name: 'Rates', partitions: mp('Rates'), columns: [col('Rate', 'double'), col('Code', 'string')] }],
+relationships: [{ name: 'r1', fromTable: 'Sales', fromColumn: 'Date', toTable: 'Calendar', toColumn: 'Date' }] } });
+export const calcGroupsReport = () => ({ format: 'pbir', files: [
+  { path: 'definition/pages/p1/page.json', json: { name: 'p1', displayName: 'Page 1' } },
+  { path: 'definition/pages/p1/visuals/v1/visual.json', json: { visual: { visualType: 'matrix', query: { queryState: {
+    Rows: { projections: [{ field: ent('Time Intelligence', 'Period') }] }, Values: { projections: [{ field: ent('Sales', 'Ratio', 'Measure') }] } } } } } }] });
+// B2 a measure using measures of another table: a measures-only table, qualified and unqualified, a column in the
+// measure table named like another table's measure, a calculated column using a measure, a chain three deep, a virtual
+// column named like a measure (it is the virtual column, not the measure)
+export const crossTable = () => ({ compatibilityLevel: 1567, model: { culture: 'en-US', tables: [
+  { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Cost', 'double'), col('Region', 'string'), col('Spare', 'string')],
+    measures: [ms('Total', 'SUM ( Sales[Amount] )'), ms('Cost Sum', 'SUM ( Sales[Cost] )')] },
+  { name: 'Metrics', partitions: mp('Metrics'), columns: [col('Total', 'double'), Object.assign(col('Flag', 'string'), { type: 'calculated', expression: 'IF ( [Total] > 0, "yes", "no" )' })],
+    measures: [ms('Margin', '[Total] - [Cost Sum]'), ms('Qualified', "Sales[Total] + 'Sales'[Cost Sum]"), ms('Margin %', 'DIVIDE ( [Margin], [Total] )', { formatString: '0%' }),
+      ms('Chain', '[Margin %] * 2'), ms('Lonely', "COUNTROWS ( 'Metrics' )"),
+      ms('Virtual Total', 'SUMX ( ADDCOLUMNS ( Sales, "Total", Sales[Amount] ), [Total] )')] },
+  { name: '_Measures', partitions: mp('_Measures'), columns: [col('Value', 'int64', { isHidden: true })], measures: [ms('Headline', 'Metrics[Chain] + [Qualified]')] }] } });
+export const crossTableReport = () => ({ format: 'pbir', files: [
+  { path: 'definition/pages/p1/page.json', json: { name: 'p1', displayName: 'Page 1' } },
+  { path: 'definition/pages/p1/visuals/v1/visual.json', json: { visual: { visualType: 'card', query: { queryState: { Values: { projections: [{ field: ent('_Measures', 'Headline', 'Measure') }, { field: ent('Sales', 'Region') }] } } } } } }] });
+
+
+// ---------- (SP27) the edge cases: the rules no other case raises, every question, the guards' shapes ----------
+const many = (n, f) => Array.from({ length: n }, (_, i) => f(i + 1));
+const rel = (fromTable, fromColumn, toTable, toColumn, extra) => Object.assign({ name: fromTable + '_' + toTable + '_' + fromColumn, fromTable, fromColumn, toTable, toColumn }, extra || {});
+// R: every rule the 14 other cases never raise (both naming styles, a both-way bridge, a many-to-many, an inactive
+// relationship unused and an active one turned on again, a text key, an automatic date table, FILTER over a table, a
+// variable and a measure, IFERROR, a division, a rate without a percent format, 20 measures without folders, twin DAX,
+// a long measure, a chain nine deep and a cycle, a trailing space, Table.Buffer, a long query) with a report that
+// names a table the model lacks
+export const rulesModel = () => ({ compatibilityLevel: 1567, model: { culture: 'en-US', tables: [
+  { name: 'fact Sales', partitions: [{ name: 'p', mode: 'import', source: { type: 'm', expression: 'let\n' + many(42, (i) => `  S${i} = Table.Buffer(#table({"A"}, {}))`).join(',\n') + '\nin\n  S42' } }],
+    columns: [col('Amount', 'double'), col('Customer Code', 'string'), col('Order Date', 'dateTime'), col('Ship Date', 'dateTime'), col('Name ', 'string'), col('Product Key', 'int64'), col('Qty', 'int64')],
+    measures: [ms('Total', 'SUM ( \'fact Sales\'[Amount] )', { displayFolder: 'Main', description: 'd' }),
+      ms('Count', 'COUNTROWS ( \'fact Sales\' )', { displayFolder: 'Main', description: 'd' }),
+      ms('Filtered', "CALCULATE ( [Total], FILTER ( 'fact Sales', 'fact Sales'[Amount] > 0 ) )"),
+      ms('Filtered Var', "CALCULATE ( [Total], FILTER ( ALL ( 'fact Sales' ), 'fact Sales'[Amount] > MAX ( 'fact Sales'[Amount] ) ) )"),
+      ms('Filtered Measure', "CALCULATE ( [Total], FILTER ( 'fact Sales', [Count] > 1 ) )"),
+      ms('Safe', 'IFERROR ( [Total] / 2, 0 )'), ms('Per Order', '[Total] / [Count]'),
+      ms('Margin %', 'DIVIDE ( 1, 2 )', { formatString: '#,0.00' }), ms('Rate Count', 'COUNTROWS ( \'fact Sales\' )', { formatString: '#,0.00' }),
+      ms('Twin A', "CALCULATE ( SUM ( 'fact Sales'[Amount] ), 'fact Sales'[Qty] > 1 )"), ms('Twin B', "CALCULATE ( SUM ( 'fact Sales'[Amount] ), 'fact Sales'[Qty] > 1 )"),
+      ms('Long', 'VAR a = 1\n' + many(61, (i) => `  + ${i}`).join('\n') + '\nRETURN a'),
+      ms('Ship Total', "CALCULATE ( [Total], USERELATIONSHIP ( 'fact Sales'[Ship Date], 'dim_Date'[Date] ) )"),
+      ms('Again', "CALCULATE ( [Total], USERELATIONSHIP ( 'fact Sales'[Order Date], 'dim_Date'[Date] ) )"),
+      ms('L1', '[Total] + 1'), ...many(8, (i) => ms('L' + (i + 1), `[L${i}] + 1`)),
+      ms('Loop A', '[Loop B] + 1'), ms('Loop B', '[Loop A] + 1')] },
+  { name: 'Plain', partitions: mp('Plain'), columns: [col('Value', 'double')], measures: many(20, (i) => ms('Plain ' + i, `SUM ( Plain[Value] ) * ${i}`)) },
+  { name: 'dim_Customer', partitions: mp('dim_Customer'), columns: [col('Customer Code', 'string', { isKey: true }), col('City', 'string')] },
+  { name: 'dim_Date', partitions: mp('dim_Date'), dataCategory: 'Time', columns: [col('Date', 'dateTime', { isKey: true }), col('Year', 'int64')] },
+  { name: 'dim Product', partitions: mp('dim Product'), columns: [col('Product Key', 'int64', { isKey: true }), col('Colour', 'string')] },
+  { name: 'Bridge', partitions: mp('Bridge'), columns: [col('Product Key', 'int64'), col('Group Key', 'int64')] },
+  { name: 'Groups', partitions: mp('Groups'), columns: [col('Group Key', 'int64', { isKey: true }), col('Label', 'string')] },
+  { name: 'Tags', partitions: mp('Tags'), columns: [col('Tag', 'string'), col('Amount', 'double')] },
+  { name: 'LocalDateTable_0a1b', isHidden: true, partitions: [{ name: 'l', source: { type: 'calculated', expression: 'CALENDAR ( DATE ( 2020, 1, 1 ), DATE ( 2020, 12, 31 ) )' } }],
+    columns: [col('Date', 'dateTime'), col('Year', 'int64')] }],
+relationships: [rel('fact Sales', 'Customer Code', 'dim_Customer', 'Customer Code'), rel('fact Sales', 'Order Date', 'dim_Date', 'Date'),
+  rel('fact Sales', 'Ship Date', 'dim_Date', 'Date', { isActive: false }), rel('fact Sales', 'Product Key', 'dim Product', 'Product Key', { isActive: false }),
+  rel('Bridge', 'Product Key', 'dim Product', 'Product Key', { crossFilteringBehavior: 'bothDirections' }), rel('Bridge', 'Group Key', 'Groups', 'Group Key'),
+  rel('Tags', 'Tag', 'dim_Customer', 'City', { fromCardinality: 'many', toCardinality: 'many' })] } });
+export const rulesReport = () => ({ format: 'pbir', files: [
+  { path: 'definition/pages/p1/page.json', json: { name: 'p1', displayName: 'Page 1' } },
+  { path: 'definition/pages/p1/visuals/v1/visual.json', json: { visual: { visualType: 'tableEx', query: { queryState: { Values: { projections: [
+    { field: ent('fact Sales', 'Total', 'Measure') }, { field: ent('Gone', 'Old Column') }, { field: ent('fact Sales', 'Missing Measure', 'Measure') }, { field: ent('Groups', 'Label') }] } } } } } }] });
+// Q: every question (a total leaving out a category, a doubled aggregate, a name that says another column, a current
+// value moved by a day both ways, a ratio as a percentage, a value multiplied by 100 twice, an amount divided by 1,000
+// shown plain, a relationship on the wrong key, an unrelated date table and an unrelated fact table), and the shapes
+// that must not ask (a dynamic format, a previous value, a scaled name, a unit, a generic key)
+export const questionsModel = () => ({ compatibilityLevel: 1567, model: { culture: 'en-US', tables: [
+  { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Cases', 'int64'), col('Deaths', 'int64'), col('Category', 'string'), col('Date', 'dateTime'),
+    col('Customer Key', 'int64'), col('Billing Customer Key', 'int64'), col('Duration ms', 'int64')],
+    measures: [ms('Total Sales', 'CALCULATE ( SUM ( Sales[Amount] ), Sales[Category] <> "Returns" )'),
+      ms('Units Doubled', 'SUM(Sales[Cases]) + SUM(Sales[Cases])'), ms('Deaths', 'SUM ( Sales[Cases] )'),
+      ms('Current Cases', 'CALCULATE ( SUM ( Sales[Cases] ), DATEADD ( Sales[Date], -1, DAY ) )'),
+      ms('Latest Date', 'MAX ( Sales[Date] ) - 1'), ms('Previous Current Cases', 'CALCULATE ( SUM ( Sales[Cases] ), DATEADD ( Sales[Date], -1, DAY ) )'),
+      ms('Current Ratio', 'DIVIDE ( SUM ( Sales[Amount] ), 2 )', { formatString: '0.0%' }),
+      ms('Growth', 'DIVIDE ( SUM ( Sales[Amount] ), 3 ) * 100', { formatString: '0.0%' }),
+      ms('Revenue K', 'DIVIDE ( SUM ( Sales[Amount] ), 1000 )', { formatString: '#,0' }),
+      ms('Revenue', 'SUM ( Sales[Amount] ) / 1000000', { formatString: '#,0.0' }),
+      ms('Revenue Dynamic', 'SUM ( Sales[Amount] ) / 1000', { formatStringDefinition: { expression: '"#,0"' } }),
+      ms('Duration', 'SUM ( Sales[Duration ms] ) / 1000', { formatString: '#,0' })] },
+  { name: 'Customer', partitions: mp('Customer'), columns: [col('Billing Customer Key', 'int64', { isKey: true }), col('Name', 'string'), col('Id', 'int64')] },
+  { name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime', { isKey: true }), col('Year', 'int64')] },
+  { name: 'Orders', partitions: mp('Orders'), columns: [col('Product Code', 'string'), col('Qty', 'int64'), col('Note', 'string')] },
+  { name: 'Product', partitions: mp('Product'), columns: [col('Product Code', 'string', { isKey: true }), col('Colour', 'string')] }],
+relationships: [rel('Sales', 'Customer Key', 'Customer', 'Billing Customer Key'), rel('Product', 'Product Code', 'Customer', 'Name', { isActive: false })] } });
+// the guards' shapes: b148's doubled aggregate and its wrong relationship key; AUD-043's rate names in two languages
+export const guardModels = () => [
+  { model: { compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Qty', 'int64'), col('Amount', 'double')],
+    measures: [ms('Units Doubled', 'SUM(Sales[Qty]) + SUM(Sales[Qty])'), ms('Total Sales', 'SUM ( Sales[Amount] )')] }] } }, report: null },
+  { model: { model: { tables: [{ name: 'T', columns: [col('A', 'double')],
+    measures: ['Margin %', 'هامش الربح %', 'هامش الربح ٪', 'Margin ٪', 'Margin ％', 'نسبة الربح', 'Total Sales', 'إجمالي المبيعات', 'معدل الطلب'].map((n) => ms(n, 'DIVIDE ( 1, 2 )', { formatString: '#,0.00' })) }] } }, report: null },
+  { model: { compatibilityLevel: 1567, model: { tables: [
+    { name: 'Orders', partitions: mp('Orders'), columns: [col('Customer Id', 'int64'), col('Ship Customer Key', 'int64'), col('Amount', 'double')] },
+    { name: 'Customers', partitions: mp('Customers'), columns: [col('Ship Customer Key', 'int64', { isKey: true }), col('Name', 'string')] }],
+  relationships: [rel('Orders', 'Customer Id', 'Customers', 'Ship Customer Key')] } }, report: null }];
+// U: the unused-field claims with a report: a field parameter, a sort-by column, a measures table's placeholder, a
+// hierarchy, a role, a report measure, a column only a calculated column reads
+export const unusedModel = () => ({ compatibilityLevel: 1567, model: { culture: 'en-US', tables: [
+  { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Region', 'string'), col('Month', 'string', { sortByColumn: 'Month No' }), col('Month No', 'int64'), col('Spare', 'string'),
+    col('Hidden Spare', 'string', { isHidden: true }), Object.assign(col('Double Amount', 'double'), { type: 'calculated', expression: 'Sales[Amount] * 2' }), col('Raw', 'double'),
+    Object.assign(col('From Raw', 'double'), { type: 'calculated', expression: 'Sales[Raw] + 1' })],
+    hierarchies: [{ name: 'By Month', levels: [{ name: 'Month', column: 'Month' }] }], measures: [ms('Total', 'SUM ( Sales[Amount] )'), ms('Never', 'SUM ( Sales[Raw] )')] },
+  { name: '_Measures', partitions: mp('_Measures'), columns: [col('Value', 'int64', { isHidden: true })], measures: [ms('Headline', '[Total]')] },
+  { name: 'Pick', partitions: [{ name: 'Pick', source: { type: 'calculated', expression: '{ ( "Amount", NAMEOF ( Sales[Amount] ), 0 ) }' } }],
+    columns: [Object.assign(col('Pick', 'string'), { relatedColumnDetails: { groupByColumns: [{ groupingColumn: 'Pick Fields' }] } }), col('Pick Fields', 'string', { isHidden: true }), col('Pick Order', 'int64', { isHidden: true })] },
+  { name: 'Region Map', partitions: mp('Region Map'), columns: [col('Region', 'string', { isKey: true }), col('Owner', 'string')] },
+  { name: 'Nobody', partitions: mp('Nobody'), columns: [col('A', 'string'), col('B', 'int64')] }],
+relationships: [rel('Sales', 'Region', 'Region Map', 'Region')],
+roles: [{ name: 'Owners', tablePermissions: [{ name: 'Region Map', filterExpression: '[Owner] = USERPRINCIPALNAME ()' }] }] } });
+export const unusedReport = () => ({ format: 'pbir', files: [
+  { path: 'definition/pages/p1/page.json', json: { name: 'p1', displayName: 'Page 1' } },
+  { path: 'definition/pages/p1/visuals/v1/visual.json', json: { visual: { visualType: 'matrix', query: { queryState: { Rows: { projections: [
+    { field: { HierarchyLevel: { Expression: { Hierarchy: { Expression: { SourceRef: { Entity: 'Sales' } }, Hierarchy: 'By Month' } }, Level: 'Month' } } }, { field: ent('Pick', 'Pick') }] },
+    Values: { projections: [{ field: ent('_Measures', 'Headline', 'Measure') }, { field: ent('Sales', 'Double Amount') }] } } } } } },
+  { path: 'definition/reportExtensions.json', json: { entities: [{ name: 'Sales', measures: [{ name: 'Report Only', expression: 'SUM ( Sales[From Raw] )' }] }] } }] });

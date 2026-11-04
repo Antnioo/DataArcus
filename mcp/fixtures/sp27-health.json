@@ -1,0 +1,73 @@
+{
+ "about": "test-0.3.2-sp27.mjs: analyze() for 15 made-up inputs, the rule catalogue and the score, and check_model_health's answers, recorded on the base (normalised: the working folder, the plan id and the path separator)",
+ "records": {
+  "S1 the health project (model.bim and a PBIR report)": {
+   "length": 8469,
+   "sha256": "086e0c7dece09a7495e2dc490aa9a5762b65f805d30b10585fee06a72ac14f06"
+  },
+  "S2 the twin project": {
+   "length": 5089,
+   "sha256": "aabd9d6c0e815bf226c655851be99884f925e103a61aea9e99b44386b1952c55"
+  },
+  "S3 a TMDL project (folder)": {
+   "length": 7514,
+   "sha256": "3c654b2bfdc017b7de549b87bdafd68edcdd501003a47bfe1e9f3ecb64fd4698"
+  },
+  "S4 the same project as a .pbit": {
+   "length": 7956,
+   "sha256": "44f7a49eb965edf6375e3edb9fe0e60d8c66d8b3146f2d4162152b0748b4443c"
+  },
+  "S5 the Ramadan TMDL project": {
+   "length": 31441,
+   "sha256": "9943f231069712ba315b3ef702a0a4b5a17947e5a57e449db9b39cc0bb9a4b1d"
+  },
+  "S6 legacy.pbit (a legacy Layout)": {
+   "length": 5804,
+   "sha256": "1e8565248e232776a68b1a8e1de1d6eec846427480b7b44cd16cf0e3a0a221b2"
+  },
+  "S7 the tricky DAX, model only": {
+   "length": 14549,
+   "sha256": "e837a9a26d5867b8a76ec81d913e50d0f94686a8e8654ad9efd338316f0556d0"
+  },
+  "S8 the tricky DAX with a PBIR report": {
+   "length": 15126,
+   "sha256": "a1d5fbda55d482773ccb1e598fb809a8fe1d25fc463dbfe9cbd32e23c63df206"
+  },
+  "S9 the Arabic model with a legacy report": {
+   "length": 8127,
+   "sha256": "b04ab557dd88c5d0633056f54962e512a598fdae4b5005cd1454486d06312fbd"
+  },
+  "S10 DAX tables and a function, model only": {
+   "length": 3454,
+   "sha256": "ab9b8d1b8e042473510cba946f01937ecea916dae029cbfd2b6426b1d3f2c13f"
+  },
+  "S11 the incomplete TMDL model (a table file empty)": {
+   "length": 7828,
+   "sha256": "4ca30513a4781fabc164e8c4e590437e72a1ad587ffd2b35d8083e8e50efb5ef"
+  },
+  "S12 calculation groups with a PBIR report": {
+   "length": 7170,
+   "sha256": "88be20fa642a23a81a23bc15c091c5fd0ea8ca1aec43368390e7b0a2dec4a3b2"
+  },
+  "S13 measures using another table's measures, with a PBIR report": {
+   "length": 8543,
+   "sha256": "5ea55453d9e377113791e24bab57ce73945a5afadbf803e4b196c4c0dc07ef4c"
+  },
+  "S14 the incomplete TMDL model (a table file that is not TMDL)": {
+   "length": 6811,
+   "sha256": "4ea8dde8410d776558cdf47d8f52aa8bd9bf1f1d0fa117a51a2c6f59d0ab8b1c"
+  },
+  "S15 the edge cases: every rule, every question, the guards' models, the unused-field claims": {
+   "length": 125985,
+   "sha256": "c6f78fb2629e3a94f6d527107aef4405064ca366016cb0d7d9aaf41a6de4050e"
+  },
+  "K1": {
+   "length": 33481,
+   "sha256": "509fcd3c339c11c491719c3f58f336f8c727946e9286d0998b71429f12716a72"
+  },
+  "Q1": {
+   "length": 13905,
+   "sha256": "233da32fb2a3584481815f9fb8f8a1cad39a03fa1bca4301103d1c854a0bada2"
+  }
+ }
+}
