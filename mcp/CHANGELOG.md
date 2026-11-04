@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **Inside the design engine, the layout and the saved designs:** the page layout and text sizes, and the reading and
+  repair of saved designs, each have a file of their own, shared by the website and the MCP; every theme, layout and
+  saved design is exactly what it was before.
 - **The macOS tests run where changes are merged:** the full test run on macOS now runs on the main and release
   branches, on pull requests to main and on the check before each merge, no longer on every work branch; Linux and
   Windows still run everywhere, as before.

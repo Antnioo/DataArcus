@@ -27,6 +27,6 @@ options: `mcp/TOOLS.md`.
   pass the website's test suites too.
 - The theme and layout engine is shared too: `assets/js/design-engine.js` (colours, theme JSON, page sizes, layout slots,
   background SVG; the colour math in `design-colours.js`, the glass look in `design-glass.js`, the layout geometry and
-  text sizes in `design-metrics.js`, which it loads and re-exports), used by the Theme Generator pages and the MCP's design tools. The calendar generator
+  text sizes in `design-metrics.js`, the saved designs in `design-state.js`, which it loads and re-exports), used by the Theme Generator pages and the MCP's design tools. The calendar generator
   (`calendar-generator.js`) is shared too: `add_gulf_calendar` writes its table. Still browser-only: the Measure Builder.
 
