@@ -15,4 +15,4 @@ Not bundled: the report theme schema (`reportThemeSchema-*.json`, on raw.githubu
 `localSettings` (a user's local settings, 1.0.0 upstream) and any version
 newer than this copy (none published on 2026-10-19 for the October 2026 update): such files are listed under
 `notChecked`. To update: copy the folders again from a newer commit and change the commit above and `SCHEMA_COMMIT`
-in `mcp/lib/check-report.mjs`.
+in `mcp/lib/check-schema.mjs`.

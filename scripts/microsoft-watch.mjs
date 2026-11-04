@@ -33,13 +33,13 @@ const DOC = 'mcp/research/MICROSOFT-WATCH.md';
 
 // what a change may touch in DataArcus
 const TOUCH = {
-  bundled: "the bundled schemas check_report reads (`mcp/schemas`, `mcp/schemas/SOURCE.md`, `SCHEMA_COMMIT` in `mcp/lib/check-report.mjs`): until they are copied, check_report lists files with this version under notChecked",
+  bundled: "the bundled schemas check_report reads (`mcp/schemas`, `mcp/schemas/SOURCE.md`, `SCHEMA_COMMIT` in `mcp/lib/check-schema.mjs`): until they are copied, check_report lists files with this version under notChecked",
   writer: (v) => `the writer's schema versions (\`assets/js/pbip-query.js\` SCHEMA, \`assets/js/pbip-export.js\`): DataArcus writes ${v}, an older version on purpose so reports open in older Desktop builds; change it only if Desktop needs the newer one`,
   unbundled: (why) => `\`${STATE}\` (the version seen); not bundled on purpose: ${why}`,
   theme: "the theme generator (`assets/js/design-engine.js`: the theme JSON the website and `generate_theme` write), and check_report's theme note (the theme schema is not bundled: listed under notChecked)",
   themeState: `\`${STATE}\` themeSchema (once DataArcus's themes are checked against it)`,
-  validator: "the validator pin (`mcp/package.json`; the version VALIDATOR_VERSION reads), check_report's known notes (`VALIDATOR_GAPS` in `mcp/lib/check-report.mjs`)",
-  catalog: "the catalog pin (`mcp/package.json`: the validator reads the copy installed beside it), check_report's known notes (`VALIDATOR_GAPS` in `mcp/lib/check-report.mjs`: a gap is known only while the catalog lacks the object), `NATIVE_TYPES` in `assets/js/visual-types.js`",
+  validator: "the validator pin (`mcp/package.json`; the version VALIDATOR_VERSION reads), check_report's known notes (`VALIDATOR_GAPS` in `mcp/lib/check-impact.mjs`)",
+  catalog: "the catalog pin (`mcp/package.json`: the validator reads the copy installed beside it), check_report's known notes (`VALIDATOR_GAPS` in `mcp/lib/check-impact.mjs`: a gap is known only while the catalog lacks the object), `NATIVE_TYPES` in `assets/js/visual-types.js`",
   post: 'read it for report, visual and theme changes: it feeds the next "Power BI update" job (like U1, `mcp/work/U1.md`)',
   postState: `\`${STATE}\` featureSummary (once it is read)`
 };

@@ -4,7 +4,7 @@
 // read it through check-report.mjs, which re-exports pageLanguages and filledLanguages. The helpers litOf, plainObj and
 // arr are check-report.mjs's (one copy): this module and check-report.mjs import each other, and neither calls the
 // other's functions while it loads.
-import { litOf, plainObj, arr } from './check-report.mjs';
+import { litOf, plainObj, arr } from './check-impact.mjs';   // (0.3.2 SP41, B-320: no longer check-report.mjs's: the cycle broken)
 
 // ---- each page's language (0.3.1 S1: an EN-AR copy, the English pages and their hidden Arabic copies with language
 // buttons, was judged all Arabic: its English pages were told to put their titles right and their Tab order right to

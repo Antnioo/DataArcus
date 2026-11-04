@@ -8,6 +8,11 @@ task routes. [Every module](#every-module) (0.3.2 MD1): one row per file, kept t
 
 - **The website** (dataarcus.com, GitHub Pages): the HTML pages at the root, `tools/`, `articles/`, and their Arabic
   copies in `ar/`. Its Power BI tools run in the browser; nothing a visitor opens is uploaded.
+  Every page loads the site-wide scripts in this order: `site-navigation.js` (navigation and effects, the WhatsApp
+  button, the live report facades; it sends `dataarcus:embed`), `site-forms.js` (the contact and beta forms, tracking-free;
+  it sends `dataarcus:lead`), `site-analytics.js` (the analytics adapter and the cookie banner: the only site file that
+  calls gtag or Clarity or touches consent; it hears both events and the clicks), then `main.js` (the bootstrap: it
+  calls the three in order).
   Its practice exams (DP-600 and PL-300, `tools/*-practice-exam.html`): `dp600-sim.js` (the exam's settings, the bank's
   index and the wiring: it gives each module its storage, clock and random source); `exam-grade.js` (grading, pure: a
   question and an answer in, a credit out; a submitted mock's score and tallies; a practice session's summary);
@@ -19,7 +24,8 @@ task routes. [Every module](#every-module) (0.3.2 MD1): one row per file, kept t
 - **The engines** (`assets/js/*.js`, each with its `.min.js`): plain JavaScript that runs in the browser and in Node,
   **shared by the website and the MCP on purpose**, so both give the same answers: the model reader and field picker,
   the report writer, the design engine, the model health check, the calendar and the Gulf, the measured rules and the
-  check, right to left (the Arabic twin's engine, `report-mirror.js`), the SVG KPI designer. Every file:
+  check, right to left (the Arabic twin's engine, `report-mirror.js`), the SVG KPI designer, the website's language
+  (`lang-manager.js` and its `locale-*.js`). Every file:
   [the engines' rows](#the-website-engines); the pages' own scripts: [their rows](#the-browser-pages-own-scripts).
 - **The MCP server** (`mcp/server.mjs`, stdio): the entry only (setup, the instructions, one `register` import per
   tool, in the order tools/list shows them); 11 tools, from `read_model` to `check_report`, each
@@ -30,7 +36,8 @@ task routes. [Every module](#every-module) (0.3.2 MD1): one row per file, kept t
   [**the write path**](#the-mcp-the-write-path) (`artifact.mjs`, `files.mjs`, `write-io.mjs`),
   [create_report and its options](#the-mcp-create_report-and-its-options) (one report's whole build: `report-run.mjs`),
   [the redesign](#the-mcp-the-redesign) (copy-and-patch: `redesign.mjs`),
-  [**the checkers**](#the-mcp-the-checkers) (`check-report.mjs`),
+  [**the checkers**](#the-mcp-the-checkers) (`check-report.mjs`, its parts `check-schema.mjs`, `check-impact.mjs`,
+  `check-redact.mjs`, `check-language.mjs`),
   [**the Arabic twin**](#the-mcp-the-arabic-twin) (by step, `twin-*.mjs`, through `arabic-twin.mjs`; every Arabic path
   mirrors through `report-mirror.js`), and
   [what leaves the server and the tools' helpers](#the-mcp-what-leaves-the-server-and-the-tools-helpers)
@@ -69,6 +76,7 @@ task routes. [Every module](#every-module) (0.3.2 MD1): one row per file, kept t
 | Change | Start with |
 |---|---|
 | A website page or tool | the page's HTML and its `assets/js/` engine; `node scripts/test-site-config.mjs`; `scripts/tests/run-all.mjs` |
+| Site-wide behaviour (navigation, effects, forms, analytics, consent) | `assets/js/site-navigation.js`, `site-forms.js`, `site-analytics.js` (consent), `main.js` (the bootstrap); `scripts/tests/run-all.mjs sp35 consent site anchors` |
 | The practice exams | `assets/js/dp600-sim.js` (settings, wiring), `exam-grade.js` (scores), `exam-session.js` (the timed mock), `exam-progress.js` (saved progress, study plan), `exam-view.js` (screens); `scripts/tests/sp34.mjs`, `tools.mjs` |
 | What a report looks like (layout, sizes, visuals) | `assets/js/pbip-export.js` (it puts the writer together: [the writer's rows](#the-website-engines)), `design-engine.js`; `report-rules.js` for measured limits |
 | Themes, page layout and saved designs | `assets/js/design-engine.js` (DAEngine, the facade the generator page, `mcp/lib/design.mjs` and the writer call; its colours, glass, metrics and saved designs: [the design rows](#the-website-engines)) |
@@ -77,7 +85,7 @@ task routes. [Every module](#every-module) (0.3.2 MD1): one row per file, kept t
 | Model health | `assets/js/model-health-engine.js` ([its modules' rows](#the-website-engines)), the page `model-health.js` |
 | A tool's inputs or answer | `mcp/tools/<tool_name>.mjs`, `mcp/lib/agent-text.mjs`, `mcp/TOOLS.md` |
 | Approval or writing | `mcp/lib/plans.mjs`, `approval-window.mjs`, `artifact.mjs`, `files.mjs`, `write-io.mjs` |
-| Checking reports | `mcp/lib/check-report.mjs`, `check-language.mjs`, `arabic-lens.mjs`, `design-lint.mjs`; `assets/js/layout-check.js` |
+| Checking reports | `mcp/lib/check-report.mjs`, `check-schema.mjs`, `check-impact.mjs`, `check-redact.mjs`, `check-language.mjs`, `arabic-lens.mjs`, `design-lint.mjs`; `assets/js/layout-check.js` |
 | Tests and CI | `mcp/tests.json`, `mcp/run-tests.mjs`, `mcp/test.mjs` (`SHARDS`), `.github/workflows/tests.yml`, `scripts/ci-sum.mjs` |
 | Public claims (README, PRIVACY, the MCP page) | `mcp/test-0.3.0-claims.mjs`, `mcp/test-release-text.mjs` |
 | A new module (a split's new file) | its row in its part's table, [Every module](#every-module); `node scripts/check-modules.mjs` |
@@ -194,8 +202,14 @@ In `assets/js/`. Each draws one page (or every page) and holds no engine logic t
 
 | file | job | in -> out | used by | pure |
 |---|---|---|---|---|
-| `main.js` | every page's shared behaviour: the navbar, smooth scrolling, counters, the contact form (English and Arabic), the cookie consent, analytics events | the page's DOM | every page (`index.html`, `tools/index.html`, ...) | no: DOM, storage, network, the global dataArcusTrack |
-| `lang-manager.js` | the English and Arabic switch: the language from the address (`/ar/`), the saved choice or the browser; right to left and the Arabic font | the page's DOM and the translations | every page (`index.html`, `tools/index.html`, ...) | no: DOM, storage, the global langManager |
+| `main.js` | every page's bootstrap (0.3.2 SP35): calls the three modules below in the order the one file ran them | none -> `SiteAnalytics.init()`, `SiteNavigation.whatsapp()`, `SiteAnalytics.banner()` at script time; `SiteNavigation.init()`, `SiteForms.init()` on DOMContentLoaded | every page (78 pages: `index.html`, `tools/index.html`, ...) | no: DOM |
+| `site-navigation.js` | every page's navigation and effects: particles, AOS, the year, the navbar, the top offsets, a #section arrival, counters, the phone menu, the ripple, Escape, the blog's search and filters, the WhatsApp button, the live report facades (0.3.2 SP35) | the page's DOM, AOS and bootstrap -> DOM changes, and `dataarcus:embed` `{ dashboard }` per live report opened | every page (78 pages) | no: DOM |
+| `site-forms.js` | every page's forms, tracking-free: the contact and beta forms sent to Web3Forms, messages in English and Arabic, the validation UX (0.3.2 SP35) | a form and its result box -> a JSON POST, DOM changes, and `dataarcus:lead` `{ formId }` after a sent form | every page (78 pages) | no: DOM, network |
+| `site-analytics.js` | the analytics adapter and the cookie banner, the only site file that calls gtag or Clarity or touches `daConsent`; the tools send their events through its `window.dataArcusTrack` (0.3.2 SP35) | clicks, the page's events, `dataarcus:lead` `{ formId }` and `dataarcus:embed` `{ dashboard }` -> GA4 and Clarity events (each only when present), the consent choice | every page (78 pages) | no: DOM, storage, the global dataArcusTrack |
+| `lang-manager.js` | the English and Arabic switch, the orchestration: the language from the address (`/ar/`), ?lang=, the saved choice or the browser; an explicit choice saved (storage, ?lang=, history); the switcher; switching to the other language's own address or in place; it calls the three `locale-*.js` below (each method a one-line call), which every page loads before it | the page's DOM and the translations -> the page in its language, the global langManager | every page (`index.html`, `tools/index.html`, ...) | no: DOM, storage, the global langManager |
+| `locale-routes.js` | the locales (a descriptor each: language, direction, route availability), the Arabic copy's paths, the page-route table, one link's address on an Arabic copy, the other language's address | a path or address -> a path, an address, a boolean or the page's translation global's name (LocaleRoutes) | every page (`index.html`, `tools/index.html`, ...) | yes |
+| `locale-catalog.js` | the dictionaries: the common one and the page's own loaded and merged, a dotted key looked up | the dictionaries and a key -> new dictionaries, or the text or "[Missing: key]" (LocaleCatalog) | every page (`index.html`, `tools/index.html`, ...) | yes |
+| `locale-dom.js` | the page's language in the DOM: the translated elements and attributes, the Arabic copy's links, the direction and the Arabic fonts (moved as it was), the title and meta tags | a document, the lookup and the language -> that document changed (LocaleDom: translate, arLinks, direction, meta) | every page (`index.html`, `tools/index.html`, ...) | no: DOM (the document it is given, and this page's for the direction) |
 | `theme-generator.js` | the Theme & Layout Generator page's orchestration: the preview cards, contrast, the theme JSON and the glass gate, a theme from a logo, the sample thumbnail, the steps bar, folds and the example; mounts the three modules below; every script it loads on demand, each with its ?v= stamp (the writer, the model reader, the names, the check, the preview, the worker) | the page's DOM -> the page drawn; the store, `L` and the loaders handed to its modules | `tools/power-bi-theme-generator.html`, `tools/power-bi-theme-generator-lab.html` | no: DOM, storage, network, browser files, the global __tgFoldSums |
 | `theme-state-ui.js` | the generator's saved design: read back and repaired (the migration, the first visit's look), a store with get, update, replace, subscribe and save, and the page's other saved keys | `createStore({ storage, engine, key })` -> the store | `tools/power-bi-theme-generator.html`, `tools/power-bi-theme-generator-lab.html`, `ar/tools/power-bi-theme-generator.html` | yes |
 | `theme-layout-ui.js` | the generator's controls (colours, presets, Generate, name, font, chart styles) and its layout step (page size, layout buttons, sizes, Advanced options, the canvas and the slot table) | `mount({ store, engine, $, L, isAr, track, toast, hooks })` -> the layout api (slots, boxes, page, direction, the renders) | `tools/power-bi-theme-generator.html`, `tools/power-bi-theme-generator-lab.html`, `ar/tools/power-bi-theme-generator.html` | no: DOM |
@@ -311,7 +325,10 @@ In `mcp/lib/`. They read a report and never change it.
 
 | file | job | in -> out | used by | pure |
 |---|---|---|---|---|
-| `check-report.mjs` | check_report: Microsoft's validator offline (schemas bundled in `mcp/schemas/`) and the measured rules on any PBIR report | a report's path -> the findings and their fixes | `check_report.mjs`, `create_report.mjs`, `artifact.mjs`, `arabic-lens.mjs` | no: fs |
+| `check-report.mjs` | check_report's orchestration: Microsoft's validator offline, the schemas, the measured rules, the tool's own notes, the fix routes, the answer (capped); re-exports its parts' names | a report's path (and against, the original) -> `{ findings, notChecked, ... }` with each kind's counts | `check_report.mjs`, `create_report.mjs`, `plan_layout.mjs`, `artifact.mjs`, `arabic-lens.mjs`, `native-copy.mjs` | no: fs |
+| `check-schema.mjs` | the bundled schemas (`mcp/schemas/`, offline): each JSON file checked against the schema it names; the validator's installed version | `{ reportDir, files, big }` -> `{ checked, errors, findings, notChecked, big }` | `check-report.mjs`, `check-impact.mjs` | no: fs |
+| `check-impact.mjs` | each finding's kind (can break, Desktop opens, opened in Desktop, may look, a DataArcus rule) from the measured codes, the validator's known gaps, and the summary sentence; never a pass for what did not run | a finding -> its kind; the counts and what ran -> one sentence | `check-report.mjs`, `check-language.mjs` | yes |
+| `check-redact.mjs` | check_report's one redaction boundary: a validator's or a schema's message without the report's names or values, paths and names cleaned | a finding or a message -> what the answer may carry | `check-report.mjs`, `check-schema.mjs` | yes |
 | `check-language.mjs` | each page's language (Arabic or English), from its texts counted, never returned | the inventory and the rules' input -> `{ pages: { id: lang } }` | `check-report.mjs` | yes |
 | `design-lint.mjs` | the design lint's adapter for the MCP (the lint itself is `layout-check.js`) | the inventory and the model's tables -> lint findings | `check-report.mjs`, `artifact.mjs`, `plan-lint.mjs` | yes |
 | `arabic-lens.mjs` | check_report's Arabic lens: is this report ready for Arabic, per page, each finding with its fix in DataArcus's words | a report and its model -> the Arabic findings | `check_report.mjs` | yes |

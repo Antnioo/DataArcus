@@ -11,6 +11,9 @@ package's manifest; this file says what is in it.
 - **Inside the MCP, the redesign's text and changes:** the consistent copy's text and the changes a redesign makes to its
   copy (places, titles, theme colours, the copy's name) each have a file of their own; every redesign plan, check and
   written file is exactly what it was before.
+- **Inside the website's shared scripts:** navigation and effects, the forms, and the analytics with the cookie
+  banner each have a file of their own, and only the analytics file talks to Google Analytics or Clarity (after
+  consent, as before); every page looks and behaves exactly as before.
 - **Inside the design engine, the layout and the saved designs:** the page layout and text sizes, and the reading and
   repair of saved designs, each have a file of their own, shared by the website and the MCP; every theme, layout and
   saved design is exactly what it was before.
@@ -149,6 +152,12 @@ package's manifest; this file says what is in it.
 - **Inside the Theme Generator page:** the saved design, the colour and layout controls, and the downloads (with the
   reminder when a downloaded file is out of date) each have a file of their own; the page shows, saves and downloads
   exactly what it did before.
+- **Inside the MCP, check_report, finished:** checking the files against Microsoft's bundled schemas, telling what each
+  finding means for Power BI Desktop, and keeping the report's own names and values out of the answer each have a file
+  of their own; every check gives the same answer as before, and a check that did not run is still said, never a pass.
+- **Inside the website's language switch:** which pages have an Arabic copy and which translations each page uses,
+  loading the translations, and putting them on the page (its text, direction and share previews) each have a file of
+  their own; every page opens in the same language, reads and switches exactly as before.
 
 ## [0.3.1]: 2026-11-03 (the version for testers)
 Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports
