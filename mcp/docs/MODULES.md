@@ -108,6 +108,7 @@ here** (`file | job | in -> out | used by | pure`), in its part's table; `node s
 without one, a row whose file is gone, a file with two rows and a "used by" name that is not a module or a page. The
 evidence for each row (exports, imports, what it touches, who loads it) is read from the code by
 `node scripts/modules-facts.mjs`; run it again after a split.
+**Before writing a helper, look in [CONTRACTS.md](CONTRACTS.md) and here: one job lives in one place (D-1104-12).**
 
 - **in -> out**: what it takes and what it gives (for a page script: "the page's DOM").
 - **used by**: its main callers, by file name (a module, `server.mjs`, or a page by its path; every page has an
