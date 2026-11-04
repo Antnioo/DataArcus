@@ -1,0 +1,6287 @@
+{
+ "en sample": {
+  "steps": [
+   [
+    "drop",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ],
+   [
+    "result",
+    44713,
+    "463d553e1d51773e0753430fe238647417847380e8a180b15498f394c87ae1e1"
+   ],
+   [
+    "issues",
+    44713,
+    "463d553e1d51773e0753430fe238647417847380e8a180b15498f394c87ae1e1"
+   ],
+   [
+    "issues:more",
+    44738,
+    "5b436d41091b035387e46e26c399f2aaa2220bf6ba6b9be301b311b8460c7ab4"
+   ],
+   [
+    "issues:perf",
+    20771,
+    "fc38d2f2d12117fc29d891bfa453c108d3c3d52a1e482c78e01cf098d8c3d4de"
+   ],
+   [
+    "issues:ignored",
+    44775,
+    "e1311db4d674ce3a591c08c951ff96411204c149b66a334b21f44c99febded3e"
+   ],
+   [
+    "issues:again",
+    44721,
+    "ad7bda2821cfab854c830f7a5d0a1f05c4905df77eaf2fc8656acddb8c4815f2"
+   ],
+   [
+    "fix",
+    18086,
+    "40c3ed1a3ad00abbf1d0573afb484a789f4ad281545a35f61baaf021a7949980"
+   ],
+   [
+    "fix:step",
+    18103,
+    "5f822e64d4d08aa9bc205cbc298afcab68ce11ecc192a5cc59da4cac70d43e63"
+   ],
+   [
+    "unused",
+    7926,
+    "84593fff85fa59a7358b6f56164cd9077b047088e8a2bbb35c5009c9ec5ffc54"
+   ],
+   [
+    "unused:measure",
+    11528,
+    "7ee090057ba233dbf98fbbd479c7628fa457b7d69faade8ebfd19f72597d89eb"
+   ],
+   [
+    "measures",
+    11528,
+    "7ee090057ba233dbf98fbbd479c7628fa457b7d69faade8ebfd19f72597d89eb"
+   ],
+   [
+    "measures:open",
+    12416,
+    "c5a6567754b8982ecdcdf040e020debee6235846d1d7595fac2828ee25c3a7ca"
+   ],
+   [
+    "measures:dep",
+    11606,
+    "11be95389e8ae39e60b41dd3fd82f65918391760afb95bf7432f46d51545b483"
+   ],
+   [
+    "measures:search",
+    11443,
+    "3c02ca75e75b4a837675a4544a231e34c52dceae22a55f942ef4b038320cbd5d"
+   ],
+   [
+    "measures:unused",
+    7632,
+    "309bbd6ac8a7d12f23ea6d13a2fe3e2e23d8b0a73afcd3c1217e6aae5b06e4b2"
+   ],
+   [
+    "tables",
+    10158,
+    "9b9538712f28a13b7d2d18fabf77342d2980cfa9554df11ad5a746e568b6c035"
+   ],
+   [
+    "tables:open",
+    10161,
+    "36c0cdb4696fa6f05c0841d58cbf123a132607e75b61cef312bb183bda98fa42"
+   ],
+   [
+    "rels",
+    5685,
+    "f9ea82b93fe6262ea6b065466b79c4d078404d7d31bd865efc2d56d17b9e0193"
+   ],
+   [
+    "docs",
+    5421,
+    "4d26ee5c483bab06d7ee53523ef22c0f531359b91b0b8e53f9487605ad26e682"
+   ],
+   [
+    "flipped",
+    5261,
+    "8ee1ed0092c5c06c26a75c7478b3e5540cf24237df22c414c58bb34093f370b0"
+   ],
+   [
+    "flipped-back",
+    5421,
+    "4d26ee5c483bab06d7ee53523ef22c0f531359b91b0b8e53f9487605ad26e682"
+   ],
+   [
+    "new",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ]
+  ],
+  "events": [
+   [
+    "mh_sample",
+    {}
+   ],
+   [
+    "mh_analyze",
+    {
+     "file_type": "pbit",
+     "has_report": true,
+     "sample": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "AUTODATE",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "AUTODATE"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "AUTODATE",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "AUTODATE"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_quick"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_fixes"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_0"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_1"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_2"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_3"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_4"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_5"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_delete"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "quick",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "cols"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "ms"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    3564,
+    "4241963f5cb443527cb6a04a4a5cbcdf185de207268ebd8a615b7a37b0f229ac"
+   ],
+   [
+    1474,
+    "5113b959218795c84ada8acaa3b31eb3d0a0cfa2c9ef0caef35aa9caf11648fb"
+   ],
+   [
+    1501,
+    "3c5a3755a2150d99f148ec3da1b43189f772233463faaccc6015a67e57b5a811"
+   ],
+   [
+    2709,
+    "f60dec353fd81b92d4b636705844eb8c71d0f36406c4a503ba8cab0c77a89cd8"
+   ],
+   [
+    90,
+    "8f7f82a03448019d269d8557e13e2db4a7922307ddb5e5f64cbf5e47ab5a585d"
+   ],
+   [
+    91,
+    "52c7073a34b52330871e673a8ea40f8c919ab4ad04a999d75c049caccf747045"
+   ],
+   [
+    127,
+    "176f73e97d4dfda0e8bffce6456b478f2d8bf4189bb00b0b75e408fc422a1bf6"
+   ],
+   [
+    86,
+    "ad7349b2c860d82deb5001dbe1903b4a224d5803875ef99f56dc8831b50aabca"
+   ],
+   [
+    71,
+    "8374e64d8c426473547cc3b4229ac7cbe350b7c4f6a4f4205bf21df8b1543c02"
+   ],
+   [
+    107,
+    "fe123e16bf5b43a51c5f27ef328edd7f3712018e2fc99716d35d0b34f29b9804"
+   ],
+   [
+    559,
+    "fd25b68ea71e5cbf3d2d983dbe6b5f3a87883c74d0d8c3ca67063e4ddf11277b"
+   ],
+   [
+    439,
+    "7756443d6446068755bc98c7a2c3a96c7451f573eecc48e41543a7d2adbaca37"
+   ],
+   [
+    590,
+    "f80f6bc7ff84ddb3ab39f78b14fe0bddd4c0b361945e50799023f1834a442f36"
+   ],
+   [
+    141,
+    "a635833e8bc24b7514d90762c9f3ec7d3b2a6045b4b778c10f13780bab3d2dc8"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"contoso-sales-demo.pbit\":[{\"d\":\"<DATE>\",\"s\":56}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"contoso-sales-demo.pbit\":[\"quick\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName Contoso-Sales-Demo.pbit transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:report",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "en tricky.bim": {
+  "steps": [
+   [
+    "drop",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ],
+   [
+    "result",
+    17012,
+    "d7d0b76220d6b48fb0ddfe993e5048bd2ec82779bd7dc6974f5c6b681c38ee40"
+   ],
+   [
+    "issues",
+    17012,
+    "d7d0b76220d6b48fb0ddfe993e5048bd2ec82779bd7dc6974f5c6b681c38ee40"
+   ],
+   [
+    "issues:perf",
+    8158,
+    "36880727c48908c0d34e2f2fe64ef7b4e57ef99a38f2a86cd99d39a1f918be03"
+   ],
+   [
+    "issues:ignored",
+    17083,
+    "b340d688cc1c422643150d6774e98528d6b6310abad446492975336e19e5edbb"
+   ],
+   [
+    "issues:again",
+    17020,
+    "c3803c2c12e903d84e1d39866f081be76729603cdf030f3139f54e05871d51d2"
+   ],
+   [
+    "issues:answered",
+    16682,
+    "46c455dd25e1dd301d8f32ca4ab77a1b6cc24665d51473060ced0acfd43f4998"
+   ],
+   [
+    "fix",
+    9015,
+    "059c6f57e60e51f16d151ddbefd0e9f58bff3e2185bd2fbbaf87846216683a80"
+   ],
+   [
+    "fix:step",
+    9032,
+    "b87864739819c085cd2cf67eb6245417c26cb37bad7309d38e8634539701e083"
+   ],
+   [
+    "unused",
+    3550,
+    "d1a53f3c7efcf8049ca2b6c25763f9ebfa48f62d3f16b2b3599275645fdb4eee"
+   ],
+   [
+    "measures",
+    6178,
+    "9c5bf0fddda9fd8822264362cace3e0908b1081b9d68b968acb87b008a56e1c1"
+   ],
+   [
+    "measures:open",
+    7941,
+    "9b2be4b3ce61c192a4beaa8eca447be87e8199c9af1eb4e321b104a4a74dd9bd"
+   ],
+   [
+    "measures:dep",
+    7660,
+    "701a06ad8c81ab02f6e98da19a4a7b5f8c97665e01246256a9ddbabf45ebf895"
+   ],
+   [
+    "measures:search",
+    7661,
+    "307d8ec8f53fe85a5af135cd0dea7c2a0505c5dd2ac74e5616534b16132c7fde"
+   ],
+   [
+    "measures:unused",
+    5666,
+    "6de680aa91254d82578175c0993b6e7e86c24aa817fa4cc43e35ff54d55d696e"
+   ],
+   [
+    "tables",
+    5662,
+    "5e360c8657fa8949e3c4ef1d23837b41cfd12ad8c5f6c37a44c03e2ce3c4d5bd"
+   ],
+   [
+    "tables:open",
+    5665,
+    "85375c3a76f74f7baf25ea3c5a72b6a8be338f69de415ddf3d6e55ddd880facd"
+   ],
+   [
+    "rels",
+    4227,
+    "f7e017c213d785c43cd2f4c3ef874b6b22694dc7f7cf167e20d5c2d1d6850106"
+   ],
+   [
+    "docs",
+    5224,
+    "8de3592323c34dfa510b85db0189e1f979ae68bfe7668c6a82954374ba8c6fa7"
+   ],
+   [
+    "flipped",
+    5072,
+    "d1842c0b49eb5ca1b0c830b4702d811cb5eb15800e4f1f8a220af797b5399523"
+   ],
+   [
+    "flipped-back",
+    5224,
+    "8de3592323c34dfa510b85db0189e1f979ae68bfe7668c6a82954374ba8c6fa7"
+   ],
+   [
+    "new",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "bim",
+     "has_report": false,
+     "sample": false
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "BIDI",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "BIDI"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "BIDI",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "BIDI"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_quick"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_fixes"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "quick",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    1457,
+    "a698ec820ed327fbc04bc0c14d7bb962e7039d01679d6e82f921b8dfab123c6d"
+   ],
+   [
+    670,
+    "fbd032a5da7d3555c0d4a8af8d3c0ed4027c7bb72ae403807177e653f5756b5d"
+   ],
+   [
+    739,
+    "4b9635931b41a3df5479814a4364f2aa5fb45a9bc6f642e5ad1fe59994e7aa28"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-answers:a87877f57dfe9dd2a7b7d594db490cf11dd05ae1ef104bdb73e55703b2e4b9c1",
+    "[{\"questionHash\":\"ea5cb56399f864a2e9a8433fa7bf0c9744eabda1e4297c9008ff950197a52fd3\",\"objectHash\":\"2fb2db71984c6da35430f41579bd895803fae804bcdc89d44aba3c8c9af9ccc6\",\"answer\":\"intended\",\"evidenceSignature\":\"511f48c238e83cfebaeb8e851a295cb6605e3cede09e717d16b8dc1a5261fdc2\",\"at\":\"<TIME>\",\"by\":\"user\"}]"
+   ],
+   [
+    "dataarcus-mh-history",
+    "{\"tricky.bim\":[{\"d\":\"<DATE>\",\"s\":85}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"tricky.bim\":[\"quick\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName tricky.bim transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "en arabic.pbit": {
+  "steps": [
+   [
+    "drop",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ],
+   [
+    "result",
+    10856,
+    "a35e649eea873374b43221d4bbd1794c22e1e74b06405857f48c2392b00e9748"
+   ],
+   [
+    "issues",
+    10856,
+    "a35e649eea873374b43221d4bbd1794c22e1e74b06405857f48c2392b00e9748"
+   ],
+   [
+    "issues:perf",
+    4237,
+    "88c7281534667e64c01d06d0e9abff9c622fbe88d0207d196a1ba06d8c8992c4"
+   ],
+   [
+    "issues:ignored",
+    10697,
+    "3540d802d6f2bc10274168c9e5cb1ec707c63d13d7d4dbdecbab5d622ddbfff6"
+   ],
+   [
+    "issues:again",
+    10864,
+    "15f649590d2493cdfad208a55388d12154fbda3faba056e704eaf337f9d1467a"
+   ],
+   [
+    "fix",
+    8811,
+    "66c0c72cd9d20d2d0e29ce0d2dcdaecded0ec4406d39d125cdca609ae4fc6aae"
+   ],
+   [
+    "fix:step",
+    8828,
+    "9438360f411fa50b1abefd042909caebfff28adf0dfc9e843a1b1ae88e8acb95"
+   ],
+   [
+    "unused",
+    5229,
+    "ac0f26cb2596655346f2eee79b5626164f5beacae4e1625db538104c8f8a2b66"
+   ],
+   [
+    "unused:measure",
+    6080,
+    "df39d7577957927d5677956272bc23a15af18a5ec924eb8c2666febdca9f635f"
+   ],
+   [
+    "measures",
+    6080,
+    "df39d7577957927d5677956272bc23a15af18a5ec924eb8c2666febdca9f635f"
+   ],
+   [
+    "measures:open",
+    6872,
+    "5eb966b233c3d02e606ed12193e44a3bdc0629c5b78ea974e788088a7974e526"
+   ],
+   [
+    "measures:dep",
+    6393,
+    "6d5a81d857ca3e0688af69f7376203f1c7c5bedcd932e33ceb084d0c7088daaf"
+   ],
+   [
+    "measures:search",
+    5801,
+    "22c27cef008a234be3f9e1e6adcda31ae790b4637c18be9fa1aedd0542a0314d"
+   ],
+   [
+    "measures:unused",
+    5656,
+    "7c6518e237ad3149540a9c548e356fe29e7f1c2786e7267c4a2303982d2f7ac3"
+   ],
+   [
+    "tables",
+    5638,
+    "c0f0d8a71f1cafb6f9547346a544f6de1c91df0f24abffc4d6b007f322757c4b"
+   ],
+   [
+    "tables:open",
+    5641,
+    "1d149d5375b9108706488992b951244f78573f8e57a18ff4d2d4bc5f2dd3efce"
+   ],
+   [
+    "rels",
+    4132,
+    "b6663047943374676cfff0d97cfe387775bc08f6f9e93726dd2b7190496174e6"
+   ],
+   [
+    "docs",
+    5419,
+    "59f437de239bb40042651e059a8f6a2cd96015141c06f1c6ccceab2637ef123d"
+   ],
+   [
+    "flipped",
+    5266,
+    "8664fef855f340f77b7112785aac0f792f9bafb329f12ccada85034921eded33"
+   ],
+   [
+    "flipped-back",
+    5419,
+    "59f437de239bb40042651e059a8f6a2cd96015141c06f1c6ccceab2637ef123d"
+   ],
+   [
+    "new",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "pbit",
+     "has_report": true,
+     "sample": false
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "UNUSED_MEASURE",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "UNUSED_MEASURE"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "UNUSED_MEASURE",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "UNUSED_MEASURE"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_quick"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_fixes"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_delete"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "quick",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "cols"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "ms"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    464,
+    "ba507cfc388f29bfb33ffce1ad35d962f22eeee26e32d646927b297acd145e74"
+   ],
+   [
+    151,
+    "2fe6f463aad0afb554cee79cf68322caa22aac3d4f58165f52b39a0d3a12e3aa"
+   ],
+   [
+    141,
+    "8383e539b01980400592ebfa42f342806613466eca9f72a7251f1e0cf6e3d3d3"
+   ],
+   [
+    625,
+    "5233d3ee44d7d323833a0117774d4c99e09e7b418fc6f541620db5b2e740bf68"
+   ],
+   [
+    384,
+    "585c5794808893f95ab47711406ccf3ab462da7f32d8d913f64f9c13b19ffa85"
+   ],
+   [
+    264,
+    "5533bc8ac63e705d39386fe468875f17ae21be88cb059cf38907ef58a8d7f988"
+   ],
+   [
+    38,
+    "95b77d9fa2712ba583df31ed3b2d9ef3983335e93ab4b307324c0f2bae455388"
+   ],
+   [
+    11,
+    "4084770c5527f29acd96bb41e4b6ef9529ee3045c1b7e082e62839fc77c4e21c"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"arabic.pbit\":[{\"d\":\"<DATE>\",\"s\":93}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"arabic.pbit\":[\"quick\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName arabic.pbit transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:report",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "en dax-tables.bim": {
+  "steps": [
+   [
+    "drop",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ],
+   [
+    "result",
+    7596,
+    "4a41572529c9604e20a86dfb20fbaa914ab3d8ad8c7b63b04b82c05ddd95dc04"
+   ],
+   [
+    "issues",
+    7596,
+    "4a41572529c9604e20a86dfb20fbaa914ab3d8ad8c7b63b04b82c05ddd95dc04"
+   ],
+   [
+    "issues:perf",
+    3614,
+    "e490cf63ae8bf9d7bd6ce254fde219b980668b192889704112836dea8761e40e"
+   ],
+   [
+    "issues:ignored",
+    7324,
+    "fb38b07ea31edcb16ec208042f68019b4e5722a377360256ce10b988b6978bf0"
+   ],
+   [
+    "issues:again",
+    7604,
+    "71e51bde290aea0bd40f0b74a6f4a66773364990999a458d2dc7628d5f314281"
+   ],
+   [
+    "fix",
+    5329,
+    "b8ab762f220d5a2f4f75ce06532eabdef1fc4665746f93dcee27f112c057a7fc"
+   ],
+   [
+    "fix:step",
+    5346,
+    "68689798926d7081ef4024270a16a073a86b6a7ec6735bb1560dbd2758b30cd1"
+   ],
+   [
+    "unused",
+    3122,
+    "d0f2b22d26d607a68eecc3a9a9c2a3ad69606b3335becf34be595d6be4ad7f16"
+   ],
+   [
+    "measures",
+    4227,
+    "de6c9d3ead57959938365c901ebe5e3bb4cd48deb6f6b145317e220e44e45c3f"
+   ],
+   [
+    "measures:open",
+    5178,
+    "9801b811760c4b166cc3890485c254178282c1ac4346604dcc1aafdbee9341e8"
+   ],
+   [
+    "measures:search",
+    5179,
+    "328d4b384d424207456dd54cc6a23e72a24ee139edbd1332c3a892839ab10bc6"
+   ],
+   [
+    "measures:unused",
+    4707,
+    "237a7eeee7f025fd109279c4ffad7d77e5e596ceaa5578881ddb8f141bafb5e4"
+   ],
+   [
+    "tables",
+    3902,
+    "161442e3a3aa219c10d862dcbcfdc292264e078d324d3c1dd4316e4ef50be72f"
+   ],
+   [
+    "tables:open",
+    3905,
+    "72772023a7bd4bd0d1099b6825eecf9f5f33c8f2de7fa019cbbca51492aa4a4c"
+   ],
+   [
+    "rels",
+    3268,
+    "27a499f5a6b087682cd26a174346a394a39d29ca4289e846d7107aeceee00c5f"
+   ],
+   [
+    "docs",
+    4796,
+    "2719497792828c9113643985c940162a6a4bf9c44e60c8bf448d885d6f144670"
+   ],
+   [
+    "flipped",
+    4672,
+    "830220dc96ef9d744c89dc4ea012af15b939c66c33ea99bc24d91a9618ec5b88"
+   ],
+   [
+    "flipped-back",
+    4796,
+    "2719497792828c9113643985c940162a6a4bf9c44e60c8bf448d885d6f144670"
+   ],
+   [
+    "new",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "bim",
+     "has_report": false,
+     "sample": false
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "UNQUALIFIED_COLUMN",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "UNQUALIFIED_COLUMN"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "UNQUALIFIED_COLUMN",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "UNQUALIFIED_COLUMN"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "recheck",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    220,
+    "eff1019b16a354cd0637994af3808eae8b2309626af68d5218061abe74dcb4b4"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"dax-tables.bim\":[{\"d\":\"<DATE>\",\"s\":97}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"dax-tables.bim\":[\"recheck\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName dax-tables.bim transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "en no-measures.bim": {
+  "steps": [
+   [
+    "drop",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ],
+   [
+    "result",
+    8483,
+    "75161b1690c06b7b953f206cd30aedf761446b5671d5f1a14e10ff442c58c0d7"
+   ],
+   [
+    "issues",
+    8483,
+    "75161b1690c06b7b953f206cd30aedf761446b5671d5f1a14e10ff442c58c0d7"
+   ],
+   [
+    "issues:perf",
+    3820,
+    "d75528aa4604144c02aceaae0c52f08d8396832d21cc137167f3647e6826566f"
+   ],
+   [
+    "issues:ignored",
+    8313,
+    "f9a42f5863d0c4a0a5ac593105fbb2d9e938e0645dea8e06ed918ca9f57abb50"
+   ],
+   [
+    "issues:again",
+    8491,
+    "5d8b2eb0c15b2379f5e007caadc55bcd7115065725779c633e05d43857b1e70a"
+   ],
+   [
+    "fix",
+    7555,
+    "1710fb95265df7335da273c2fff27a387e7db822c2be73c89711c98ed07bbfd9"
+   ],
+   [
+    "fix:step",
+    7572,
+    "6469e2534fae4aad26e9e749d5a3a88fa3cc70619fb6ab45ab43b97da431437f"
+   ],
+   [
+    "unused",
+    3328,
+    "72e45b33dc35ebd7baa19eb4efa5cd8cc4ea59c46c3ab0a7d5f875087e03b972"
+   ],
+   [
+    "measures",
+    3964,
+    "67c11a6f9149920bdc6b6de711d45885d6269f9fb63e15f38e49bc952a1b0898"
+   ],
+   [
+    "measures:search",
+    3965,
+    "c8d831e0b2674cc8f28fc37f92596dcf8e53890be53a43f27f14bb722fe0a814"
+   ],
+   [
+    "measures:unused",
+    3965,
+    "802e3438e49df1ea0b6e1e7035b4edc25e254bc62487554a871372fb62bc73db"
+   ],
+   [
+    "tables",
+    4379,
+    "d15f009bb5935862b6b81d15dffc427cff5fdea07af59f408bbc0fbfb2b2f370"
+   ],
+   [
+    "tables:open",
+    4382,
+    "568de16e1fe9c290dd058dc49c832d9ed9208d530a276e87b67f4472be16686d"
+   ],
+   [
+    "rels",
+    3716,
+    "d4c9c33bb5ef7b0594b190b36af9593c903470b939e93b134162e17411aa2659"
+   ],
+   [
+    "docs",
+    5002,
+    "0425409969c4a591a3c1281bd814e074f502110d41060bd1e184819c4186a597"
+   ],
+   [
+    "flipped",
+    4879,
+    "49534d6ae40465cd3e04098f2e7132c9dae00926a07dc5a5f635a5b0e18f5557"
+   ],
+   [
+    "flipped-back",
+    5002,
+    "0425409969c4a591a3c1281bd814e074f502110d41060bd1e184819c4186a597"
+   ],
+   [
+    "new",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "bim",
+     "has_report": false,
+     "sample": false
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "SUMMARIZE_KEYS",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "SUMMARIZE_KEYS"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "SUMMARIZE_KEYS",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "SUMMARIZE_KEYS"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_quick"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_fixes"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "quick",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    1070,
+    "f7bff22f1b7cb672ae46a8bb99158c88e6439f23aa814a910da62f0b79f194f7"
+   ],
+   [
+    380,
+    "78d36ae718806489f9451a4d82292b0dfb3d9c900dc11b3240de77267959a36a"
+   ],
+   [
+    222,
+    "dea39b6900256085358d9f72463c025d9c8f6f0a1f4d9bec9df5ddb578c31a91"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"no-measures.bim\":[{\"d\":\"<DATE>\",\"s\":95}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"no-measures.bim\":[\"quick\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName no-measures.bim transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "en legacy.pbit": {
+  "steps": [
+   [
+    "drop",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ],
+   [
+    "result",
+    18931,
+    "9269125fe621852e84f244ca53a32ef19c3bb115fb07c5d5c7d2ce52d6c0d59f"
+   ],
+   [
+    "issues",
+    18931,
+    "9269125fe621852e84f244ca53a32ef19c3bb115fb07c5d5c7d2ce52d6c0d59f"
+   ],
+   [
+    "issues:perf",
+    5807,
+    "75d179d7fc95942a0da6aaeb315dfc5f9e49c374acc8ab0ee7521b83be72d88d"
+   ],
+   [
+    "issues:ignored",
+    18998,
+    "f9f0c9c38615939e2db4e7b9e997cb790c7e486d596cc891d151b92f11fcdc4b"
+   ],
+   [
+    "issues:again",
+    18939,
+    "3ade5a98dc01440578739bd98c871c4b7a59cad90e061a6c4b6d22714afc5eb3"
+   ],
+   [
+    "fix",
+    10966,
+    "ccb74104e40491b3977e7b3df6491435bd468380c059c56aedf862e29bf2c03f"
+   ],
+   [
+    "fix:step",
+    10983,
+    "c6c4178a10866b7f6b7b28e86109ccb2ac27d6bb11ba9881bfd8d3b359e08b7e"
+   ],
+   [
+    "unused",
+    5328,
+    "e1b94bb1043bef95d19238fa19a6f3ef6fd745c13f6d016135fb594440f98131"
+   ],
+   [
+    "unused:measure",
+    5823,
+    "1285d4ac3456fe55d29ef6f2f98b95c4d4b6ff66006587e0c22902c783c48ecb"
+   ],
+   [
+    "measures",
+    5823,
+    "1285d4ac3456fe55d29ef6f2f98b95c4d4b6ff66006587e0c22902c783c48ecb"
+   ],
+   [
+    "measures:open",
+    5823,
+    "1285d4ac3456fe55d29ef6f2f98b95c4d4b6ff66006587e0c22902c783c48ecb"
+   ],
+   [
+    "measures:search",
+    5824,
+    "54a3c84b81b5f48beed2cbb1a071f3885f6c7321b83701cefc42196e0a8817f9"
+   ],
+   [
+    "measures:unused",
+    5616,
+    "254e8e9df4b65296ae052a100c6b15af644a28aecc8c538197f2b0a57dca5e34"
+   ],
+   [
+    "tables",
+    5167,
+    "7e49080aa3c02bea7b8437536aaa5b43ed6ac11577eac22cb718d7243f05bd4f"
+   ],
+   [
+    "tables:open",
+    5170,
+    "961c952303f172b222ef0427360e040df8a65f1d04d02f70a06d20453cd31337"
+   ],
+   [
+    "rels",
+    4116,
+    "3204e78b3899de901824a57f73a74cdf50ea4671c3fb665bcec51bd993d23400"
+   ],
+   [
+    "docs",
+    5414,
+    "83f22e9d5f0215697b4f2efbe7b12f430fb40c91b31e504476e563065c9b1c9a"
+   ],
+   [
+    "flipped",
+    5265,
+    "8ca3f34ef13c51202ec5c6f771d2799712cce559b3a35a317555baaf26957d59"
+   ],
+   [
+    "flipped-back",
+    5414,
+    "83f22e9d5f0215697b4f2efbe7b12f430fb40c91b31e504476e563065c9b1c9a"
+   ],
+   [
+    "new",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "pbit",
+     "has_report": true,
+     "sample": false
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "MONTH_SORT",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "MONTH_SORT"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "MONTH_SORT",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "MONTH_SORT"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_quick"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_fixes"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_0"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_1"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_delete"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "quick",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "cols"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "ms"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    1070,
+    "96ccebfe3e6fd7ce9dfe729773b4cf80b8769e3b3ae0cf6f4ba534561a5e87d3"
+   ],
+   [
+    239,
+    "6729f6f0363803009c25f2cde94b4bd0ace7bc65771d5cb0300f3a753fc2eab2"
+   ],
+   [
+    174,
+    "bf30442e893ad35e65e3bebe15791a012eab01a155a18ba9c83aa8ca418ee0d6"
+   ],
+   [
+    237,
+    "072eb58ab1acf50323ce5e0f0a0323b723d6e972c4a2228e118272e29d8c78f9"
+   ],
+   [
+    70,
+    "731680e7050ca4cdb2f266adea9e5809d9f94efce18af13512aca69a8a533764"
+   ],
+   [
+    78,
+    "1e21d9ad8158821f5cb4b1c3fe8579db1a290a5646ab9673d178ea388ac5d0d9"
+   ],
+   [
+    380,
+    "abc03cb28aff53ea78a8f00e4472f46b3da43d177c4c991ca8bff175530417c2"
+   ],
+   [
+    260,
+    "3864755ac22f7b8e7cfca2990490aefb2ba39c7894a8427403895b78fafc5181"
+   ],
+   [
+    38,
+    "5bc38f41326cf83f1434f186ed9a2fa34bea390869e1d826a196412ee1ebddfb"
+   ],
+   [
+    12,
+    "d63cb32af187c096b6a9569912ab07c1e1879d8f052154bdae0c7a56fe126b75"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"legacy.pbit\":[{\"d\":\"<DATE>\",\"s\":84}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"legacy.pbit\":[\"quick\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName legacy.pbit transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:report",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "en Health Test.pbit": {
+  "steps": [
+   [
+    "drop",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ],
+   [
+    "result",
+    12532,
+    "94264106558baa0df4d5a92826a670306d0b32ebf7d5f562cd7ef6bd1732d0cb"
+   ],
+   [
+    "issues",
+    12532,
+    "94264106558baa0df4d5a92826a670306d0b32ebf7d5f562cd7ef6bd1732d0cb"
+   ],
+   [
+    "issues:perf",
+    6971,
+    "e6499e303b202cbb08771c804719f5c5487f7bddea8c099607817e9943e35f6b"
+   ],
+   [
+    "issues:ignored",
+    12378,
+    "dc3614a4c1534ca9b6db4b073019cda18632724b35ebfc011b8e2ffb811eed6c"
+   ],
+   [
+    "issues:again",
+    12540,
+    "e8022f42734c99d378b7e584b1d89b6aea1d1af8a00cff44bb4675dbf844d00e"
+   ],
+   [
+    "fix",
+    7439,
+    "aebf8372ea6745cc68189761063bc909ff1063bf32e79511eb34c817b3a8a40c"
+   ],
+   [
+    "fix:step",
+    7456,
+    "a844235b7ad9656ada46463d5b31b37d9181ae332f4a1b8f439bf91bc7604b9a"
+   ],
+   [
+    "unused",
+    5249,
+    "ebbbca8e3d05c523fc9b322a19d71a552920100c6de941efdf29fcad82eb42b7"
+   ],
+   [
+    "unused:measure",
+    5819,
+    "22d69ca2b21928ed497475fa4995398b52f8f94728193dbc4fa81f431482e01f"
+   ],
+   [
+    "measures",
+    5819,
+    "22d69ca2b21928ed497475fa4995398b52f8f94728193dbc4fa81f431482e01f"
+   ],
+   [
+    "measures:open",
+    5819,
+    "22d69ca2b21928ed497475fa4995398b52f8f94728193dbc4fa81f431482e01f"
+   ],
+   [
+    "measures:search",
+    5606,
+    "fbe2f2a91bbd4bcadc5babaa50321f46be077bc08efb0eec6468053b47a831b6"
+   ],
+   [
+    "measures:unused",
+    5398,
+    "2e28c75ba2a4cb6e853e19210a5ef626294ba5170efc16c288adb94a76f18a15"
+   ],
+   [
+    "tables",
+    5396,
+    "25dbc8f15b603e3bb5c4a7bef9de06f71483294986395930a3cee132eaf2588a"
+   ],
+   [
+    "tables:open",
+    5399,
+    "9b641b3494ba6c524d19b8ec6dd1b6ee4a1dd1ae5f6f0593d30a2b6ff61c8cc7"
+   ],
+   [
+    "rels",
+    4081,
+    "da3dde6d3b042aab43cd6a04697d98a4ef73b0831321a53c38716c87d9e572b1"
+   ],
+   [
+    "docs",
+    5382,
+    "ef7e7e980921045d2fc27c4621d71cae0d1914a16b6c89c31c264f99de8f0648"
+   ],
+   [
+    "flipped",
+    5236,
+    "7ff909d19317292b1c87ba966b48918d0e99f62618c7c54e283dcff7511fa68b"
+   ],
+   [
+    "flipped-back",
+    5382,
+    "ef7e7e980921045d2fc27c4621d71cae0d1914a16b6c89c31c264f99de8f0648"
+   ],
+   [
+    "new",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "pbit",
+     "has_report": true,
+     "sample": false
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "UNUSED_TABLE",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "UNUSED_TABLE"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "UNUSED_TABLE",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "UNUSED_TABLE"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_delete"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "measures",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "cols"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "ms"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    228,
+    "3d015a1a3deb21c93c1edc740600b164c59b25c2fde7eae6b33cc531eaf87323"
+   ],
+   [
+    372,
+    "b18e1991f2f7e444d7a843a8b74c260b1ccffe21eba6e7a0aedd287e8cdd5962"
+   ],
+   [
+    380,
+    "abc03cb28aff53ea78a8f00e4472f46b3da43d177c4c991ca8bff175530417c2"
+   ],
+   [
+    260,
+    "3864755ac22f7b8e7cfca2990490aefb2ba39c7894a8427403895b78fafc5181"
+   ],
+   [
+    37,
+    "302875b5d6a2f683b2789c9fc5c031832091c3f1789cd490619d303082506dc1"
+   ],
+   [
+    12,
+    "d63cb32af187c096b6a9569912ab07c1e1879d8f052154bdae0c7a56fe126b75"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"health test.pbit\":[{\"d\":\"<DATE>\",\"s\":92}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"health test.pbit\":[\"measures\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName Health Test.pbit transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:report",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "en ramadan.zip": {
+  "steps": [
+   [
+    "drop",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ],
+   [
+    "result",
+    9358,
+    "cfbba7ff51ff06dc32457a9fff485b74db90f6db92c762be14c82c540a5f51d6"
+   ],
+   [
+    "issues",
+    9358,
+    "cfbba7ff51ff06dc32457a9fff485b74db90f6db92c762be14c82c540a5f51d6"
+   ],
+   [
+    "issues:perf",
+    3590,
+    "45076b6098b5bc2f6226616b176ab146256b04ebb525a7cf08705b079e07e559"
+   ],
+   [
+    "issues:ignored",
+    9108,
+    "f11367b0471647b7d3811a41e726be2345610230ca646e387e4c40e0fcd3791b"
+   ],
+   [
+    "issues:again",
+    9366,
+    "20e7f0052be2d06be796ab7cb113af5567122589bb23ca1912b0275045007c40"
+   ],
+   [
+    "fix",
+    6933,
+    "fcb10c417ccdbf3952221dfaadc5d58a2726f2cb38f3d81494d943de1f3660e5"
+   ],
+   [
+    "fix:step",
+    6950,
+    "a752c75f30fde7ba4a244ed8d3782bbfb1692e1c56d14fa06d114dc8e69918bb"
+   ],
+   [
+    "unused",
+    3098,
+    "a987752c093dece5b91ff6934106be74e4eabc2ebde36ffacc25d5ba5e4f7294"
+   ],
+   [
+    "measures",
+    4667,
+    "5d0c0d6aa0696fe0512d5d42138a5bb4ccba17f7665a5e9cb39e2fa429fa74c3"
+   ],
+   [
+    "measures:open",
+    7119,
+    "a720d8db02ff92f1470689d805ae1d2c3150fa4d4ff4d6c205e93a1fc3132b82"
+   ],
+   [
+    "measures:dep",
+    6201,
+    "1dbc9117c48fb91fc4e89c3f54bba0e9e7c0643641559923684aaa4b9bdb8f71"
+   ],
+   [
+    "measures:search",
+    6202,
+    "220e81d4d8edc2f55c490da55374f24cf323e3121d86ee59b091bb840bab725b"
+   ],
+   [
+    "measures:unused",
+    5266,
+    "d4c7b7b2b37395c382456d31250437efc353b54888f66044b43ab2630c8fa6be"
+   ],
+   [
+    "tables",
+    6273,
+    "c2e87eeb4e7879ef9d27353fe4ed203d27ba7c77443958035b7c90191afe745e"
+   ],
+   [
+    "tables:open",
+    6276,
+    "a7e82035532cab0ddbe7b703356b92a16783d2d07f2bada1669d43d0a4cdb9aa"
+   ],
+   [
+    "rels",
+    3471,
+    "a5a8a43dd11299588f40938a24a9139a2f3bcf276e4be8e5c4c8e2c5ff5be590"
+   ],
+   [
+    "docs",
+    4772,
+    "73077dd6bc49b3e29ab9f316e94e416ddfc02c27037769fb73177355c63c2db7"
+   ],
+   [
+    "flipped",
+    4649,
+    "915c0b8c655ee7bcf6f995a4c4bc7cd153c0ffe164927d2d8e8a83f6db439936"
+   ],
+   [
+    "flipped-back",
+    4772,
+    "73077dd6bc49b3e29ab9f316e94e416ddfc02c27037769fb73177355c63c2db7"
+   ],
+   [
+    "new",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "zip",
+     "has_report": false,
+     "sample": false
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "FK_VISIBLE",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "FK_VISIBLE"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "FK_VISIBLE",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "FK_VISIBLE"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_quick"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "quick",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    443,
+    "a1bbde2ae8b9df5830844917cb94918b773539ffa0b9973aa507b9ab1234d8f5"
+   ],
+   [
+    1975,
+    "1faffda25b8c5126e73a857523ca72ae3dca1853c8a78022994ee255a769b5b7"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"ramadan.zip\":[{\"d\":\"<DATE>\",\"s\":99}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"ramadan.zip\":[\"quick\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName ramadan.zip transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:report",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "en health-project.zip": {
+  "steps": [
+   [
+    "drop",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ],
+   [
+    "result",
+    17321,
+    "b16b01095f42c69c82ed553ee4f8a90736dcb2e2ac02b395f09a09cba596c69f"
+   ],
+   [
+    "issues",
+    17321,
+    "b16b01095f42c69c82ed553ee4f8a90736dcb2e2ac02b395f09a09cba596c69f"
+   ],
+   [
+    "issues:perf",
+    7210,
+    "adf32a892361554e6db501563c0372a4d8c5b8cac7b984d20b084a415c99e5f1"
+   ],
+   [
+    "issues:ignored",
+    17373,
+    "c459ba5fcad62cc36ac710c19e6c9e69f607e53bc2f10b90eb093221d1bac912"
+   ],
+   [
+    "issues:again",
+    17329,
+    "8430ba9df957ed1898d25eaa9f97f0e613add46d1428777237f945538cf62c71"
+   ],
+   [
+    "fix",
+    10856,
+    "ce85f8bc9d637fb015e15f36c9cb0dd6cf23e4cfbb05c49ec3955d2e498134de"
+   ],
+   [
+    "fix:step",
+    10873,
+    "59d9cc0d31adb88f0151d9857e8e0471a6794af5d7c7d270addf9706f7699738"
+   ],
+   [
+    "unused",
+    5648,
+    "30c2a5b7a15ae86e186bfdaca972ca6279abc6e8d473360dd2d956315db232a0"
+   ],
+   [
+    "unused:measure",
+    5762,
+    "e1bc4895563ada968509fd3633403eedba55f65080f9b5ae147a8748b850a42f"
+   ],
+   [
+    "measures",
+    5762,
+    "e1bc4895563ada968509fd3633403eedba55f65080f9b5ae147a8748b850a42f"
+   ],
+   [
+    "measures:open",
+    5762,
+    "e1bc4895563ada968509fd3633403eedba55f65080f9b5ae147a8748b850a42f"
+   ],
+   [
+    "measures:search",
+    5565,
+    "ce9cce2c9f5c6892f7490c19e674ecff066b739610bb6401e45567a05d4393d8"
+   ],
+   [
+    "measures:unused",
+    5357,
+    "698dca5234a724c1e0372be943d2939884d8f96101283a6a01a0f0f044f5fcbc"
+   ],
+   [
+    "tables",
+    5723,
+    "66d2810e8f832555f47af139ec47dfdcf2cd0bc15f2e7006d02bbbea8e8b5b9a"
+   ],
+   [
+    "tables:open",
+    5726,
+    "ba3c225edb84c48dd10e99e59a5d150f9a92a64e172dcc1cf5776947e8723800"
+   ],
+   [
+    "rels",
+    4120,
+    "ff822f1f5814d9bde8f51543cd56d74e7b472fe5deb6fd95c651c52a0ff21516"
+   ],
+   [
+    "docs",
+    5421,
+    "bd634140b0c53943c39d3e93a95394759e116f36d8fbe9be9071fefd0eb7fd05"
+   ],
+   [
+    "flipped",
+    5269,
+    "5965155b2a92adf460fe5aef1efe2e36acd0c05ce1eb3df2e59ce5b182602083"
+   ],
+   [
+    "flipped-back",
+    5421,
+    "bd634140b0c53943c39d3e93a95394759e116f36d8fbe9be9071fefd0eb7fd05"
+   ],
+   [
+    "new",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "zip",
+     "has_report": true,
+     "sample": false
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "UNUSED_TABLE",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "UNUSED_TABLE"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "UNUSED_TABLE",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "UNUSED_TABLE"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_quick"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_fixes"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_0"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_1"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_delete"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "quick",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "cols"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "ms"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    1014,
+    "c43e1fe8dbedec04ffaf489b99df60865c2d31de00e075c738c433af4bbe4856"
+   ],
+   [
+    327,
+    "57f57f9dbc2767cf58088bf9f1feeb598743a70fd4b5df5d7c160e88e6b5b393"
+   ],
+   [
+    159,
+    "b2a5df97d13313501dfda0e10a3448b31ba59dd9fd585b426372ed9c5045d53e"
+   ],
+   [
+    268,
+    "d38416bfeed21cf8251b67a444c7e294aef732cc67d631a46a1e974ba7e4ac91"
+   ],
+   [
+    87,
+    "3ca6aff95bd07318153af9d18580d5140577780a2740992ec1a15e963b666bb9"
+   ],
+   [
+    86,
+    "25b96a8afa5bb9901584c1aca45930d3333154469dc1bee572319600b33745f4"
+   ],
+   [
+    380,
+    "abc03cb28aff53ea78a8f00e4472f46b3da43d177c4c991ca8bff175530417c2"
+   ],
+   [
+    260,
+    "3864755ac22f7b8e7cfca2990490aefb2ba39c7894a8427403895b78fafc5181"
+   ],
+   [
+    139,
+    "f01a6f3221fe1a65fea68daaecf90851404ef37274c3e0cd84a93085220599c6"
+   ],
+   [
+    12,
+    "d63cb32af187c096b6a9569912ab07c1e1879d8f052154bdae0c7a56fe126b75"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"health-project.zip\":[{\"d\":\"<DATE>\",\"s\":87}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"health-project.zip\":[\"quick\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName health-project.zip transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:report",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "en broken.zip": {
+  "steps": [
+   [
+    "drop",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ],
+   [
+    "result",
+    1101,
+    "ab069c4e94231d32f35a7c596b3d3092a4f3c6806f118d5a1e7056074c2d512a"
+   ],
+   [
+    "flipped",
+    1027,
+    "823b27dc1dbe970de224f1597bcdb51b8bb38c9b1cbd2657c5b249bb7a83b60f"
+   ],
+   [
+    "flipped-back",
+    1101,
+    "ab069c4e94231d32f35a7c596b3d3092a4f3c6806f118d5a1e7056074c2d512a"
+   ],
+   [
+    "new",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "zip",
+     "has_report": false
+    }
+   ]
+  ],
+  "clip": [],
+  "local": [],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName broken.zip transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:report",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "ar sample": {
+  "steps": [
+   [
+    "drop",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "result",
+    43008,
+    "cc216f009bb12e9b8e26a7618b3cc944026d0b7767543525ac9756f2790185c9"
+   ],
+   [
+    "issues",
+    43008,
+    "cc216f009bb12e9b8e26a7618b3cc944026d0b7767543525ac9756f2790185c9"
+   ],
+   [
+    "issues:more",
+    43031,
+    "77a6a74f28521c0077395975dd5c6bc302a560672f7fe0d5ef5d78a4775240f6"
+   ],
+   [
+    "issues:perf",
+    19819,
+    "fe328f6f6cb3c7b576544a4cc3ca09bfef0919375a1f044c1dbbdad780265b98"
+   ],
+   [
+    "issues:ignored",
+    43053,
+    "aa9c182eb92df6f208af6fa2360990e452863c51c11c5158ffbfb7769f2a9ad9"
+   ],
+   [
+    "issues:again",
+    43016,
+    "ef3006d7d1a698a30ad3437abda0584dc5e91eaf58d6a9ae16da7aca4b49efed"
+   ],
+   [
+    "fix",
+    17627,
+    "bfa92433d798b5c465be5ac3473059eb24e9947c601e826052782cad48fab4c6"
+   ],
+   [
+    "fix:step",
+    17644,
+    "e21c83a11c160d6563fb18886cc83b49ad05a5a629dc3249b4f3f7ea17bf8922"
+   ],
+   [
+    "unused",
+    7784,
+    "27a0431f5679b1e168b58a48bc7b7a8e728adf99c6becf65798bc367214c4832"
+   ],
+   [
+    "unused:measure",
+    11486,
+    "bee9d512f880943fbbab4ef58c9f26d68fb67b1959850c61de375ff44c0ba721"
+   ],
+   [
+    "measures",
+    11486,
+    "bee9d512f880943fbbab4ef58c9f26d68fb67b1959850c61de375ff44c0ba721"
+   ],
+   [
+    "measures:open",
+    12371,
+    "240a8b2c9a58e147e1fbfb64afe48a03bf6d6d91da1e97ab76d416cb56ad5635"
+   ],
+   [
+    "measures:dep",
+    11565,
+    "2187e294f4d2a09bdbb396df79c2a1cd46c5f398ecacce98e3bb58ef29fbb881"
+   ],
+   [
+    "measures:search",
+    11402,
+    "83100bab646989ed6d0d3c1e194bac413bde5364a5d2c53441566081fb1c038f"
+   ],
+   [
+    "measures:unused",
+    7591,
+    "71a5b748b3d8f8c8122742c40d521408626c6addffdfb94de4902f8404fc842e"
+   ],
+   [
+    "tables",
+    10071,
+    "bf70c432d56ad345dc9df943cf5d71ac948ea66affe18f2fd15f5d8e2afa55ba"
+   ],
+   [
+    "tables:open",
+    10074,
+    "b92fda2cb7bd5518447fc18482f3b60297aaac2cfae5ffc8fb6c27b46d70d363"
+   ],
+   [
+    "rels",
+    5620,
+    "6ac881b41063fb7319849d21b7cee265b4f77023e14d560f902899474173b056"
+   ],
+   [
+    "docs",
+    5261,
+    "8ee1ed0092c5c06c26a75c7478b3e5540cf24237df22c414c58bb34093f370b0"
+   ],
+   [
+    "flipped",
+    5421,
+    "4d26ee5c483bab06d7ee53523ef22c0f531359b91b0b8e53f9487605ad26e682"
+   ],
+   [
+    "flipped-back",
+    5261,
+    "8ee1ed0092c5c06c26a75c7478b3e5540cf24237df22c414c58bb34093f370b0"
+   ],
+   [
+    "new",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ]
+  ],
+  "events": [
+   [
+    "mh_sample",
+    {}
+   ],
+   [
+    "mh_analyze",
+    {
+     "file_type": "pbit",
+     "has_report": true,
+     "sample": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "AUTODATE",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "AUTODATE"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "AUTODATE",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "AUTODATE"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_quick"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_fixes"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_0"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_1"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_2"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_3"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_4"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_5"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_delete"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "quick",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "cols"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "ms"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    3564,
+    "4241963f5cb443527cb6a04a4a5cbcdf185de207268ebd8a615b7a37b0f229ac"
+   ],
+   [
+    1474,
+    "5113b959218795c84ada8acaa3b31eb3d0a0cfa2c9ef0caef35aa9caf11648fb"
+   ],
+   [
+    1501,
+    "3c5a3755a2150d99f148ec3da1b43189f772233463faaccc6015a67e57b5a811"
+   ],
+   [
+    2709,
+    "f60dec353fd81b92d4b636705844eb8c71d0f36406c4a503ba8cab0c77a89cd8"
+   ],
+   [
+    90,
+    "8f7f82a03448019d269d8557e13e2db4a7922307ddb5e5f64cbf5e47ab5a585d"
+   ],
+   [
+    91,
+    "52c7073a34b52330871e673a8ea40f8c919ab4ad04a999d75c049caccf747045"
+   ],
+   [
+    127,
+    "176f73e97d4dfda0e8bffce6456b478f2d8bf4189bb00b0b75e408fc422a1bf6"
+   ],
+   [
+    86,
+    "ad7349b2c860d82deb5001dbe1903b4a224d5803875ef99f56dc8831b50aabca"
+   ],
+   [
+    71,
+    "8374e64d8c426473547cc3b4229ac7cbe350b7c4f6a4f4205bf21df8b1543c02"
+   ],
+   [
+    107,
+    "fe123e16bf5b43a51c5f27ef328edd7f3712018e2fc99716d35d0b34f29b9804"
+   ],
+   [
+    559,
+    "fd25b68ea71e5cbf3d2d983dbe6b5f3a87883c74d0d8c3ca67063e4ddf11277b"
+   ],
+   [
+    439,
+    "7756443d6446068755bc98c7a2c3a96c7451f573eecc48e41543a7d2adbaca37"
+   ],
+   [
+    590,
+    "f80f6bc7ff84ddb3ab39f78b14fe0bddd4c0b361945e50799023f1834a442f36"
+   ],
+   [
+    141,
+    "a635833e8bc24b7514d90762c9f3ec7d3b2a6045b4b778c10f13780bab3d2dc8"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"contoso-sales-demo.pbit\":[{\"d\":\"<DATE>\",\"s\":56}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"contoso-sales-demo.pbit\":[\"quick\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName Contoso-Sales-Demo.pbit transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:report",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "ar tricky.bim": {
+  "steps": [
+   [
+    "drop",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "result",
+    16296,
+    "e7c85cf15dae312d1561413c280ab6ffd3f452f0bfb05820702e8e8d0da58a2d"
+   ],
+   [
+    "issues",
+    16296,
+    "e7c85cf15dae312d1561413c280ab6ffd3f452f0bfb05820702e8e8d0da58a2d"
+   ],
+   [
+    "issues:perf",
+    7760,
+    "edb28f05e8c6fdac8eaeb203fec8f67a8e8e7b3343acb728c5c504f8ac5c77f9"
+   ],
+   [
+    "issues:ignored",
+    16379,
+    "ce86fc9cc70c193279f3176a08189e8445dd848a86a31e3df012b30899545890"
+   ],
+   [
+    "issues:again",
+    16304,
+    "53fc37e86647bf8be06d89e08f8a21d90faf5655517cfa3306186af1be34ddda"
+   ],
+   [
+    "issues:answered",
+    15966,
+    "166f795fcc68491c16d0498c77356e7caf44f877c3c32719e601d8b7da4955d4"
+   ],
+   [
+    "fix",
+    8764,
+    "2ce65af63fe629e06ff8aa696478cc93716bbcc6eb4b9e4e1083d30cd6fdd5a9"
+   ],
+   [
+    "fix:step",
+    8781,
+    "5c6ffd60a4c87701ca6e7611f709975757f0a2ad062ed9973204c9b7db462d4b"
+   ],
+   [
+    "unused",
+    3482,
+    "f0ccd1894fbc8c99ebc37676443b672d5d05ab926cacd5f3153047b36b79540c"
+   ],
+   [
+    "measures",
+    6090,
+    "9191b5509d4b6fef555a50bfa4fb0e66a7281657816dd0ccd45f66fce0898a63"
+   ],
+   [
+    "measures:open",
+    7848,
+    "12ce94943285977cc2149391b0a6e57746df1dd021b60dc71ebe6ae371e13639"
+   ],
+   [
+    "measures:dep",
+    7579,
+    "69dc8bed73107a778a5888f928591ce5fc3e7f5e0f03676949c344732f42c7d8"
+   ],
+   [
+    "measures:search",
+    7580,
+    "7491cbfcf6d9d7c69924d9bdf808e3f15dd7f8b1dd6efbbe55e82f85890d8470"
+   ],
+   [
+    "measures:unused",
+    5585,
+    "1590e201803bab1626c5eee320e06907e5c7f4367f74245b9286bb5d68b6999c"
+   ],
+   [
+    "tables",
+    5577,
+    "accaf451404457d3343173ee759eca5303caa68420545bcefe24ed8efc2d6722"
+   ],
+   [
+    "tables:open",
+    5580,
+    "db091985ebed030d6e41a242b10bef53b28c76efe76e5471939966c292057b7a"
+   ],
+   [
+    "rels",
+    4151,
+    "e37879ab73beeb20beefcf6b391ce9a188439cd9020aafa1df72c99b89af0c22"
+   ],
+   [
+    "docs",
+    5072,
+    "d1842c0b49eb5ca1b0c830b4702d811cb5eb15800e4f1f8a220af797b5399523"
+   ],
+   [
+    "flipped",
+    5224,
+    "8de3592323c34dfa510b85db0189e1f979ae68bfe7668c6a82954374ba8c6fa7"
+   ],
+   [
+    "flipped-back",
+    5072,
+    "d1842c0b49eb5ca1b0c830b4702d811cb5eb15800e4f1f8a220af797b5399523"
+   ],
+   [
+    "new",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "bim",
+     "has_report": false,
+     "sample": false
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "BIDI",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "BIDI"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "BIDI",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "BIDI"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_quick"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_fixes"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "quick",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    1457,
+    "a698ec820ed327fbc04bc0c14d7bb962e7039d01679d6e82f921b8dfab123c6d"
+   ],
+   [
+    670,
+    "fbd032a5da7d3555c0d4a8af8d3c0ed4027c7bb72ae403807177e653f5756b5d"
+   ],
+   [
+    739,
+    "4b9635931b41a3df5479814a4364f2aa5fb45a9bc6f642e5ad1fe59994e7aa28"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-answers:a87877f57dfe9dd2a7b7d594db490cf11dd05ae1ef104bdb73e55703b2e4b9c1",
+    "[{\"questionHash\":\"ea5cb56399f864a2e9a8433fa7bf0c9744eabda1e4297c9008ff950197a52fd3\",\"objectHash\":\"2fb2db71984c6da35430f41579bd895803fae804bcdc89d44aba3c8c9af9ccc6\",\"answer\":\"intended\",\"evidenceSignature\":\"511f48c238e83cfebaeb8e851a295cb6605e3cede09e717d16b8dc1a5261fdc2\",\"at\":\"<TIME>\",\"by\":\"user\"}]"
+   ],
+   [
+    "dataarcus-mh-history",
+    "{\"tricky.bim\":[{\"d\":\"<DATE>\",\"s\":85}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"tricky.bim\":[\"quick\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName tricky.bim transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "ar arabic.pbit": {
+  "steps": [
+   [
+    "drop",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "result",
+    10493,
+    "890ebd294b0759648bab74f509e0a2120d92c25e46b4b20afbe541f1e5b1c27b"
+   ],
+   [
+    "issues",
+    10493,
+    "890ebd294b0759648bab74f509e0a2120d92c25e46b4b20afbe541f1e5b1c27b"
+   ],
+   [
+    "issues:perf",
+    4158,
+    "4ee0f0226e00cc412c38f6e1ec72d630267e326ea52130b6b21fac65f59f6056"
+   ],
+   [
+    "issues:ignored",
+    10339,
+    "552dd1d243dae7ce99aba6fff3c324cea1e1c72aad646201c23fa14632e4c325"
+   ],
+   [
+    "issues:again",
+    10501,
+    "78fd56a8a2fcdc27914466f88fe1b83bd5f7d60dfdb9d79cec3d1ca5f463ac5a"
+   ],
+   [
+    "fix",
+    8523,
+    "e567aee25e3d91736ca12d2e9dcda69c3c6e7dc9069e16257775945370a17eaf"
+   ],
+   [
+    "fix:step",
+    8540,
+    "3d2603036648acf42cc305cc595abab6623a4ec1d7fc433114ac76702d99c629"
+   ],
+   [
+    "unused",
+    5116,
+    "ccf51cbbb5b22d68a27cfc65792145ed108432097527958d42797166e7af91ce"
+   ],
+   [
+    "unused:measure",
+    6009,
+    "bae40777e36fc46709c96e0599ae781b80d8722c785e91c09414bcbed5061e3b"
+   ],
+   [
+    "measures",
+    6009,
+    "bae40777e36fc46709c96e0599ae781b80d8722c785e91c09414bcbed5061e3b"
+   ],
+   [
+    "measures:open",
+    6794,
+    "f80f5b3a8d30da5346cd59cb61d27c10d1fb605afea12d2659b236a4283b0976"
+   ],
+   [
+    "measures:dep",
+    6311,
+    "223e202d4423e793007d27084708742a872f7da5fb2bfde2b10eb86938b8d5ff"
+   ],
+   [
+    "measures:search",
+    5711,
+    "08f7c4b74db8100bfc0cc2e69dabb703364b56650fe3f01735afa5f33eea45e8"
+   ],
+   [
+    "measures:unused",
+    5566,
+    "a11404af110246f3529dd3819cd7d9d6017fb6efde7a6a9bf5a63e6852af01f0"
+   ],
+   [
+    "tables",
+    5556,
+    "80efb5d085b4ab072ba9aabfcb445af2358d01a43c39cc11890ca3be4d620bcd"
+   ],
+   [
+    "tables:open",
+    5559,
+    "24864d927c7dcfa41d2adcbd5ba3407f173186a157673d2ce0acf4e677e59735"
+   ],
+   [
+    "rels",
+    4052,
+    "a68781a7b7beb2120a5a3210fb68716f1bd4a487b5c178d10d1e97a0c89f5837"
+   ],
+   [
+    "docs",
+    5266,
+    "8664fef855f340f77b7112785aac0f792f9bafb329f12ccada85034921eded33"
+   ],
+   [
+    "flipped",
+    5419,
+    "59f437de239bb40042651e059a8f6a2cd96015141c06f1c6ccceab2637ef123d"
+   ],
+   [
+    "flipped-back",
+    5266,
+    "8664fef855f340f77b7112785aac0f792f9bafb329f12ccada85034921eded33"
+   ],
+   [
+    "new",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "pbit",
+     "has_report": true,
+     "sample": false
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "UNUSED_MEASURE",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "UNUSED_MEASURE"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "UNUSED_MEASURE",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "UNUSED_MEASURE"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_quick"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_fixes"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_delete"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "quick",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "cols"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "ms"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    464,
+    "ba507cfc388f29bfb33ffce1ad35d962f22eeee26e32d646927b297acd145e74"
+   ],
+   [
+    151,
+    "2fe6f463aad0afb554cee79cf68322caa22aac3d4f58165f52b39a0d3a12e3aa"
+   ],
+   [
+    141,
+    "8383e539b01980400592ebfa42f342806613466eca9f72a7251f1e0cf6e3d3d3"
+   ],
+   [
+    625,
+    "5233d3ee44d7d323833a0117774d4c99e09e7b418fc6f541620db5b2e740bf68"
+   ],
+   [
+    384,
+    "585c5794808893f95ab47711406ccf3ab462da7f32d8d913f64f9c13b19ffa85"
+   ],
+   [
+    264,
+    "5533bc8ac63e705d39386fe468875f17ae21be88cb059cf38907ef58a8d7f988"
+   ],
+   [
+    38,
+    "95b77d9fa2712ba583df31ed3b2d9ef3983335e93ab4b307324c0f2bae455388"
+   ],
+   [
+    11,
+    "4084770c5527f29acd96bb41e4b6ef9529ee3045c1b7e082e62839fc77c4e21c"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"arabic.pbit\":[{\"d\":\"<DATE>\",\"s\":93}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"arabic.pbit\":[\"quick\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName arabic.pbit transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:report",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "ar dax-tables.bim": {
+  "steps": [
+   [
+    "drop",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "result",
+    7319,
+    "86615e0309101f0b69c5b65818f4258653feefb7a5a15dc21340066db77c9b3d"
+   ],
+   [
+    "issues",
+    7319,
+    "86615e0309101f0b69c5b65818f4258653feefb7a5a15dc21340066db77c9b3d"
+   ],
+   [
+    "issues:perf",
+    3564,
+    "c5775f0b288114e21f2af6e9ac8db29d13c4554532da8c9a9768a2d20079f5e2"
+   ],
+   [
+    "issues:ignored",
+    7060,
+    "c25ae5bb1812369ccc8cf79528fb180ae4c4c2c681069163227cda39f94737d7"
+   ],
+   [
+    "issues:again",
+    7327,
+    "d5210eb6088581873ad924936088fcb63a92c2feda517572209845e38e078246"
+   ],
+   [
+    "fix",
+    5185,
+    "dc1d394a59ab9c60d0e37a3a2befe298a21a79db02b017a84fd635dd54121d67"
+   ],
+   [
+    "fix:step",
+    5202,
+    "98aab6bf2cdb4b797eb29f1f2a26c852c129869a65a0c1bf522ba8b7c7ae8bae"
+   ],
+   [
+    "unused",
+    3082,
+    "2f57c841dbdb6e2576a2b8bf2f1fcd5a55be0e669f2cc804027db5f165e7443d"
+   ],
+   [
+    "measures",
+    4167,
+    "b1ab7d5fc21ab383c138bc6929d024a3b1c3dd36f45077dd3e6abc57dd9dd66b"
+   ],
+   [
+    "measures:open",
+    5124,
+    "d7e3a5b83af08040c33272f47ecf5c1614238f0988ac40be04f5c1502d0966ba"
+   ],
+   [
+    "measures:search",
+    5125,
+    "cf09b801a1789fe7d916d46caf4d1edbc37dbbe0633408a92de9ad357a7ea81a"
+   ],
+   [
+    "measures:unused",
+    4653,
+    "118f9eeff6c3e4b278d5a29185cbf28a72868fd9b8ffe81b50222eefb81559ae"
+   ],
+   [
+    "tables",
+    3845,
+    "fd92c12ea591fea7c13ab3161881049a3649d848df4c4bec488283ac6c2f2b1d"
+   ],
+   [
+    "tables:open",
+    3848,
+    "2eb6db82b393fbcf6287638234e139e7e21245a1e56dc325bcea0ffff3adbba1"
+   ],
+   [
+    "rels",
+    3213,
+    "915e992a496af92e6fa65ded24ff9df719ba8ffde09299cc9ada300886b182e0"
+   ],
+   [
+    "docs",
+    4672,
+    "830220dc96ef9d744c89dc4ea012af15b939c66c33ea99bc24d91a9618ec5b88"
+   ],
+   [
+    "flipped",
+    4796,
+    "2719497792828c9113643985c940162a6a4bf9c44e60c8bf448d885d6f144670"
+   ],
+   [
+    "flipped-back",
+    4672,
+    "830220dc96ef9d744c89dc4ea012af15b939c66c33ea99bc24d91a9618ec5b88"
+   ],
+   [
+    "new",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "bim",
+     "has_report": false,
+     "sample": false
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "UNQUALIFIED_COLUMN",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "UNQUALIFIED_COLUMN"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "UNQUALIFIED_COLUMN",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "UNQUALIFIED_COLUMN"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "recheck",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    220,
+    "eff1019b16a354cd0637994af3808eae8b2309626af68d5218061abe74dcb4b4"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"dax-tables.bim\":[{\"d\":\"<DATE>\",\"s\":97}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"dax-tables.bim\":[\"recheck\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName dax-tables.bim transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "ar no-measures.bim": {
+  "steps": [
+   [
+    "drop",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "result",
+    8285,
+    "ee7d8b44aa574769bda1aece1dbb7aac79889c084732fe25397fac7ccd11b849"
+   ],
+   [
+    "issues",
+    8285,
+    "ee7d8b44aa574769bda1aece1dbb7aac79889c084732fe25397fac7ccd11b849"
+   ],
+   [
+    "issues:perf",
+    3771,
+    "44d8ef2a31dd50a739e43fd4e7f2ae00d056d98afda5212e5685878549829539"
+   ],
+   [
+    "issues:ignored",
+    8113,
+    "610aa10069f3b75794cbbc121c33623953af0338981610e59a48bf90abcd7b66"
+   ],
+   [
+    "issues:again",
+    8293,
+    "8a3c65f99ff7b824164157a77d19852b0d42bd035607f1d289483d7ae13a8f87"
+   ],
+   [
+    "fix",
+    7390,
+    "6eb1e20ebb3437b3badf55498acd122b23513f12d62de315e9181757949d8662"
+   ],
+   [
+    "fix:step",
+    7407,
+    "7b20301b5c98997f5e4cca7159898f5140618522eeeb849731818fb0206ed20d"
+   ],
+   [
+    "unused",
+    3289,
+    "af5dcd8f3c6d839ba9ab3711e254e4a557f510c28247f76f6b91746e77e49947"
+   ],
+   [
+    "measures",
+    3905,
+    "1fe245efa03e4e7d3dab6d29d294366110e6aaf7eac9d720af26d0ad22866dd1"
+   ],
+   [
+    "measures:search",
+    3906,
+    "594461eb8dd0aefda8b97003bd6190d6057ba617f7c60d1a6dec06f93e097b16"
+   ],
+   [
+    "measures:unused",
+    3906,
+    "e20268947afce9604bb78a0b0c0629d035298ae4572b867bb5d2533ac8174aa0"
+   ],
+   [
+    "tables",
+    4324,
+    "13a471649ab87a4d1285630d71e12b52057e05f7b2d6ab1714ec62c3ca35dc94"
+   ],
+   [
+    "tables:open",
+    4327,
+    "a1cff89ec8945179c94afc3f875289e6523bf8bf68b402b41649d66b91695946"
+   ],
+   [
+    "rels",
+    3666,
+    "922048cc769388bf9b38d44c732371fd3fa9367fcb3e049a084a5fc6c84d2aa1"
+   ],
+   [
+    "docs",
+    4879,
+    "49534d6ae40465cd3e04098f2e7132c9dae00926a07dc5a5f635a5b0e18f5557"
+   ],
+   [
+    "flipped",
+    5002,
+    "0425409969c4a591a3c1281bd814e074f502110d41060bd1e184819c4186a597"
+   ],
+   [
+    "flipped-back",
+    4879,
+    "49534d6ae40465cd3e04098f2e7132c9dae00926a07dc5a5f635a5b0e18f5557"
+   ],
+   [
+    "new",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "bim",
+     "has_report": false,
+     "sample": false
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "SUMMARIZE_KEYS",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "SUMMARIZE_KEYS"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "SUMMARIZE_KEYS",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "SUMMARIZE_KEYS"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_quick"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_fixes"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "quick",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    1070,
+    "f7bff22f1b7cb672ae46a8bb99158c88e6439f23aa814a910da62f0b79f194f7"
+   ],
+   [
+    380,
+    "78d36ae718806489f9451a4d82292b0dfb3d9c900dc11b3240de77267959a36a"
+   ],
+   [
+    222,
+    "dea39b6900256085358d9f72463c025d9c8f6f0a1f4d9bec9df5ddb578c31a91"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"no-measures.bim\":[{\"d\":\"<DATE>\",\"s\":95}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"no-measures.bim\":[\"quick\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName no-measures.bim transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "ar legacy.pbit": {
+  "steps": [
+   [
+    "drop",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "result",
+    18377,
+    "967b08fddf0e68b4dfd6f1c50a9b405259f86882855c75c25710432d81e2cd07"
+   ],
+   [
+    "issues",
+    18377,
+    "967b08fddf0e68b4dfd6f1c50a9b405259f86882855c75c25710432d81e2cd07"
+   ],
+   [
+    "issues:perf",
+    5674,
+    "5cba60070a2d81be0bee9b168020004bd1e8ea7f0e77f6a5781ff864eb54fe2d"
+   ],
+   [
+    "issues:ignored",
+    18447,
+    "65e8cbf454499d7a1cd1643e3f11a71f56baafc85fba1908ec2d76a48c3e3ac6"
+   ],
+   [
+    "issues:again",
+    18385,
+    "046dd1c60362d2a5be8d1a38dbc8969314db11cc5399ad1f16375e20c89d3009"
+   ],
+   [
+    "fix",
+    10622,
+    "b598b3f4683539c34bd1285c769ac53b4834f2a5fef18e4c15a9d20ffa72b326"
+   ],
+   [
+    "fix:step",
+    10639,
+    "a67518ca414532566747b33850b831533c1261e0b02e4d07050425e6cb677609"
+   ],
+   [
+    "unused",
+    5219,
+    "645a5d8d3f9f9c9c2ef02d615bb4b0228f729d344e9f7ee0ae36aa7fb6e2acef"
+   ],
+   [
+    "unused:measure",
+    5752,
+    "2152556390fd8e216f9088613af594567cd0e8a33567efde804d8449d6cd5580"
+   ],
+   [
+    "measures",
+    5752,
+    "2152556390fd8e216f9088613af594567cd0e8a33567efde804d8449d6cd5580"
+   ],
+   [
+    "measures:open",
+    5752,
+    "2152556390fd8e216f9088613af594567cd0e8a33567efde804d8449d6cd5580"
+   ],
+   [
+    "measures:search",
+    5753,
+    "642072ab64a81467c02aa668df06653418c7abc05f6fbe15bba463438a123165"
+   ],
+   [
+    "measures:unused",
+    5545,
+    "905596fd4eb5abf69d8303c65b4aeba3603ca0a29c5626dd634a3558421ddb09"
+   ],
+   [
+    "tables",
+    5089,
+    "8d2d7103ad2df0d629845d4354d308c46379fffa5c4974b373776cab785782d9"
+   ],
+   [
+    "tables:open",
+    5092,
+    "dd25e7ebcfc1978afe118a81114b3c1f44bc138254df27be6105356a9f89ee2a"
+   ],
+   [
+    "rels",
+    4040,
+    "747f70d6a906c23ce03509649b1c9b5eb2c763a818bee4915385a60abec1c9a2"
+   ],
+   [
+    "docs",
+    5265,
+    "8ca3f34ef13c51202ec5c6f771d2799712cce559b3a35a317555baaf26957d59"
+   ],
+   [
+    "flipped",
+    5414,
+    "83f22e9d5f0215697b4f2efbe7b12f430fb40c91b31e504476e563065c9b1c9a"
+   ],
+   [
+    "flipped-back",
+    5265,
+    "8ca3f34ef13c51202ec5c6f771d2799712cce559b3a35a317555baaf26957d59"
+   ],
+   [
+    "new",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "pbit",
+     "has_report": true,
+     "sample": false
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "MONTH_SORT",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "MONTH_SORT"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "MONTH_SORT",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "MONTH_SORT"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_quick"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_fixes"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_0"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_1"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_delete"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "quick",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "cols"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "ms"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    1070,
+    "96ccebfe3e6fd7ce9dfe729773b4cf80b8769e3b3ae0cf6f4ba534561a5e87d3"
+   ],
+   [
+    239,
+    "6729f6f0363803009c25f2cde94b4bd0ace7bc65771d5cb0300f3a753fc2eab2"
+   ],
+   [
+    174,
+    "bf30442e893ad35e65e3bebe15791a012eab01a155a18ba9c83aa8ca418ee0d6"
+   ],
+   [
+    237,
+    "072eb58ab1acf50323ce5e0f0a0323b723d6e972c4a2228e118272e29d8c78f9"
+   ],
+   [
+    70,
+    "731680e7050ca4cdb2f266adea9e5809d9f94efce18af13512aca69a8a533764"
+   ],
+   [
+    78,
+    "1e21d9ad8158821f5cb4b1c3fe8579db1a290a5646ab9673d178ea388ac5d0d9"
+   ],
+   [
+    380,
+    "abc03cb28aff53ea78a8f00e4472f46b3da43d177c4c991ca8bff175530417c2"
+   ],
+   [
+    260,
+    "3864755ac22f7b8e7cfca2990490aefb2ba39c7894a8427403895b78fafc5181"
+   ],
+   [
+    38,
+    "5bc38f41326cf83f1434f186ed9a2fa34bea390869e1d826a196412ee1ebddfb"
+   ],
+   [
+    12,
+    "d63cb32af187c096b6a9569912ab07c1e1879d8f052154bdae0c7a56fe126b75"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"legacy.pbit\":[{\"d\":\"<DATE>\",\"s\":84}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"legacy.pbit\":[\"quick\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName legacy.pbit transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:report",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "ar Health Test.pbit": {
+  "steps": [
+   [
+    "drop",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "result",
+    12137,
+    "9b44d2622f8a0ffa8dff4e0c50e8fc2212ebea7134b6ef1373d78f7049b66fd3"
+   ],
+   [
+    "issues",
+    12137,
+    "9b44d2622f8a0ffa8dff4e0c50e8fc2212ebea7134b6ef1373d78f7049b66fd3"
+   ],
+   [
+    "issues:perf",
+    6814,
+    "c6f19c3baed0508a5e3cb7e663d5f1273e6dc71b9b8921c3495c4456231ae7ef"
+   ],
+   [
+    "issues:ignored",
+    11988,
+    "5e5bb0fbf51ebb1db38b8d8b47ba995d987569f381e481e26733cb6432e1968c"
+   ],
+   [
+    "issues:again",
+    12145,
+    "6b17d295fa4e640a056cad2582c7b164d08949e2939c0bf7419071f169f6c50b"
+   ],
+   [
+    "fix",
+    7159,
+    "d5ca2c28f090f0ec3bfc9d2801e9102c9f42b0b228fb450b8a4361fe4379319d"
+   ],
+   [
+    "fix:step",
+    7176,
+    "012c161e57115b87329f03bb7aa2bf97891980f4ce8a79bc38c21eb9b57a6008"
+   ],
+   [
+    "unused",
+    5149,
+    "2285e9d928b53e2c5132bad20a882cf42a910cfb47e6209c8ce5d20d547051ad"
+   ],
+   [
+    "unused:measure",
+    5751,
+    "0b5babc03190abd32aa85e818f08bcdf9ab96c45b27c28685df8a1f6cafea879"
+   ],
+   [
+    "measures",
+    5751,
+    "0b5babc03190abd32aa85e818f08bcdf9ab96c45b27c28685df8a1f6cafea879"
+   ],
+   [
+    "measures:open",
+    5751,
+    "0b5babc03190abd32aa85e818f08bcdf9ab96c45b27c28685df8a1f6cafea879"
+   ],
+   [
+    "measures:search",
+    5534,
+    "d53d3d30d6655ded522e170040709f3ff15de9d8268a3decb133493a251c3bd2"
+   ],
+   [
+    "measures:unused",
+    5326,
+    "50dd18603e58ac467e235a510ff21ce28028fa8d58e10074f28160b02f5b6d27"
+   ],
+   [
+    "tables",
+    5325,
+    "876b2d551ff25b2097f28774e875908cc18ceeedc72d76bdab7457483610a042"
+   ],
+   [
+    "tables:open",
+    5328,
+    "7c40e9e26b570ce7d0aa9593e39c2e89de5758f957a3a8bccf1bed4cc76ba1cb"
+   ],
+   [
+    "rels",
+    4008,
+    "12b24c1bcb2bcdeb9408271874040e6cdd61831a6747103670a9f7db4a1777bb"
+   ],
+   [
+    "docs",
+    5236,
+    "7ff909d19317292b1c87ba966b48918d0e99f62618c7c54e283dcff7511fa68b"
+   ],
+   [
+    "flipped",
+    5382,
+    "ef7e7e980921045d2fc27c4621d71cae0d1914a16b6c89c31c264f99de8f0648"
+   ],
+   [
+    "flipped-back",
+    5236,
+    "7ff909d19317292b1c87ba966b48918d0e99f62618c7c54e283dcff7511fa68b"
+   ],
+   [
+    "new",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "pbit",
+     "has_report": true,
+     "sample": false
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "UNUSED_TABLE",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "UNUSED_TABLE"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "UNUSED_TABLE",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "UNUSED_TABLE"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_delete"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "measures",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "cols"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "ms"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    228,
+    "3d015a1a3deb21c93c1edc740600b164c59b25c2fde7eae6b33cc531eaf87323"
+   ],
+   [
+    372,
+    "b18e1991f2f7e444d7a843a8b74c260b1ccffe21eba6e7a0aedd287e8cdd5962"
+   ],
+   [
+    380,
+    "abc03cb28aff53ea78a8f00e4472f46b3da43d177c4c991ca8bff175530417c2"
+   ],
+   [
+    260,
+    "3864755ac22f7b8e7cfca2990490aefb2ba39c7894a8427403895b78fafc5181"
+   ],
+   [
+    37,
+    "302875b5d6a2f683b2789c9fc5c031832091c3f1789cd490619d303082506dc1"
+   ],
+   [
+    12,
+    "d63cb32af187c096b6a9569912ab07c1e1879d8f052154bdae0c7a56fe126b75"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"health test.pbit\":[{\"d\":\"<DATE>\",\"s\":92}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"health test.pbit\":[\"measures\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName Health Test.pbit transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:report",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "ar ramadan.zip": {
+  "steps": [
+   [
+    "drop",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "result",
+    9021,
+    "d76aff2cfec22045fea8a9b593e42ed5a1cbea21ed61436b3e0265c2fad83652"
+   ],
+   [
+    "issues",
+    9021,
+    "d76aff2cfec22045fea8a9b593e42ed5a1cbea21ed61436b3e0265c2fad83652"
+   ],
+   [
+    "issues:perf",
+    3541,
+    "382c5f4eadd20f394f3b9fd7126b67ec875f1048550392b3649f8ad29bc8e7da"
+   ],
+   [
+    "issues:ignored",
+    8783,
+    "852cc23a9f2bbb2404654adffd3fada145c17b15f550db04c9cd8ea02653f08a"
+   ],
+   [
+    "issues:again",
+    9029,
+    "780722b260bbb30b953c457a63587492fe620abdf0524034df026f70284fde7b"
+   ],
+   [
+    "fix",
+    6757,
+    "21299e556ea04be3163f47d45d3dbbeecf200cb2de30f88b778d546b2045ac48"
+   ],
+   [
+    "fix:step",
+    6774,
+    "021799ea12d781217a66e4bbeb2ceb460db65702356e3a938d8a6bcdfa643dd7"
+   ],
+   [
+    "unused",
+    3059,
+    "232533211162bf6fa25093f0c3617340d64a39dba1faa676cc8095be2f3e05ad"
+   ],
+   [
+    "measures",
+    4608,
+    "f69de9e2e639f32841f295abf7077f695bf4b87064b32d5875837ec4cf383181"
+   ],
+   [
+    "measures:open",
+    7056,
+    "6b82c2a7debce02ae70c4eee1cfb1747a9e92b9babed36a15525857290210e7e"
+   ],
+   [
+    "measures:dep",
+    6149,
+    "eb57129b75feea9fc947297436156d3d6377d06ac2922416a37a1532e8de9e4b"
+   ],
+   [
+    "measures:search",
+    6150,
+    "f80dae6bb20804cf0573b0da396bb7c97975d95a9b586b7ae4bf9907cddc0220"
+   ],
+   [
+    "measures:unused",
+    5214,
+    "e569acc3bc2976bbfb464996f16c832cb0c5d02313fa9d698add78940a6c39df"
+   ],
+   [
+    "tables",
+    6216,
+    "4a9265b778d89911a29bad10839f8d626730efcf08dbca8bb1b1d7e4b91b0989"
+   ],
+   [
+    "tables:open",
+    6219,
+    "dda318c7a9facc8cfa873d71dfc770d2265ae9d4362045cd57a43f7ef2784eda"
+   ],
+   [
+    "rels",
+    3421,
+    "c20b51e7183567da5156e8e8295fefd34acd44c2414233fe35bbfcefeb33ec6f"
+   ],
+   [
+    "docs",
+    4649,
+    "915c0b8c655ee7bcf6f995a4c4bc7cd153c0ffe164927d2d8e8a83f6db439936"
+   ],
+   [
+    "flipped",
+    4772,
+    "73077dd6bc49b3e29ab9f316e94e416ddfc02c27037769fb73177355c63c2db7"
+   ],
+   [
+    "flipped-back",
+    4649,
+    "915c0b8c655ee7bcf6f995a4c4bc7cd153c0ffe164927d2d8e8a83f6db439936"
+   ],
+   [
+    "new",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "zip",
+     "has_report": false,
+     "sample": false
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "FK_VISIBLE",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "FK_VISIBLE"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "FK_VISIBLE",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "FK_VISIBLE"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_quick"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "quick",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    443,
+    "a1bbde2ae8b9df5830844917cb94918b773539ffa0b9973aa507b9ab1234d8f5"
+   ],
+   [
+    1975,
+    "1faffda25b8c5126e73a857523ca72ae3dca1853c8a78022994ee255a769b5b7"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"ramadan.zip\":[{\"d\":\"<DATE>\",\"s\":99}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"ramadan.zip\":[\"quick\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName ramadan.zip transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:report",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "ar health-project.zip": {
+  "steps": [
+   [
+    "drop",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "result",
+    16807,
+    "bdf7467b3b7774093dfbf2359c2212c343caa0fc66c5f0154efafd56d8ee58e6"
+   ],
+   [
+    "issues",
+    16807,
+    "bdf7467b3b7774093dfbf2359c2212c343caa0fc66c5f0154efafd56d8ee58e6"
+   ],
+   [
+    "issues:perf",
+    7047,
+    "0b2661ee9469f7bf9a372886f8fc1195f01ba2d39ea3a49f5970778afd9e1433"
+   ],
+   [
+    "issues:ignored",
+    16849,
+    "7fe4b930b8e4356866146a89158a6d888b94cfb4f91686ca3a4a0398db5c6989"
+   ],
+   [
+    "issues:again",
+    16815,
+    "a3dcaf1beeec260971a5c9bc5223a27538c36756466acdac655adef8275dc6ce"
+   ],
+   [
+    "fix",
+    10521,
+    "e3aa6dfb8eb5659e27a1f4b16b8359028fcd25513091116fa22be143060de46e"
+   ],
+   [
+    "fix:step",
+    10538,
+    "cdc2d0706bfed08121a6a004cf6b040ad199375e61504a59d359719be5b147fe"
+   ],
+   [
+    "unused",
+    5542,
+    "8e50f66c76603dbf1a844420d2272c6607ad06168accbe74701a24f7b056b9ca"
+   ],
+   [
+    "unused:measure",
+    5688,
+    "61282778dfefcc992cc1541deaa5475004731fb3b0de4b998c38b0d9f6f6fffd"
+   ],
+   [
+    "measures",
+    5688,
+    "61282778dfefcc992cc1541deaa5475004731fb3b0de4b998c38b0d9f6f6fffd"
+   ],
+   [
+    "measures:open",
+    5688,
+    "61282778dfefcc992cc1541deaa5475004731fb3b0de4b998c38b0d9f6f6fffd"
+   ],
+   [
+    "measures:search",
+    5487,
+    "6a7ebd7cf625c6788ca8f10b061dd07f49b41c4020260c9b847467c888d1c617"
+   ],
+   [
+    "measures:unused",
+    5279,
+    "3a1eb2aa033622c57838f8a0ad90d80ce2ba08e1dd3d1dd580aa7a9bd6523ece"
+   ],
+   [
+    "tables",
+    5646,
+    "3eb81c30b7cea6a7ce836466fcd6020e7dffffd4df5754c4ee457ca8063cbaef"
+   ],
+   [
+    "tables:open",
+    5649,
+    "702840b6d50dffa0e377892904da25f52c4a1da880b52391c379f518811336fd"
+   ],
+   [
+    "rels",
+    4041,
+    "8a8a5dd4eb8124adad764334fe8e0ad67b0edfcd7c08e3c9889b051b1fb835a8"
+   ],
+   [
+    "docs",
+    5269,
+    "5965155b2a92adf460fe5aef1efe2e36acd0c05ce1eb3df2e59ce5b182602083"
+   ],
+   [
+    "flipped",
+    5421,
+    "bd634140b0c53943c39d3e93a95394759e116f36d8fbe9be9071fefd0eb7fd05"
+   ],
+   [
+    "flipped-back",
+    5269,
+    "5965155b2a92adf460fe5aef1efe2e36acd0c05ce1eb3df2e59ce5b182602083"
+   ],
+   [
+    "new",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "zip",
+     "has_report": true,
+     "sample": false
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "UNUSED_TABLE",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "UNUSED_TABLE"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "UNUSED_TABLE",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "UNUSED_TABLE"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_quick"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_fixes"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_0"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_1"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_delete"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "quick",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "cols"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "ms"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    1014,
+    "c43e1fe8dbedec04ffaf489b99df60865c2d31de00e075c738c433af4bbe4856"
+   ],
+   [
+    327,
+    "57f57f9dbc2767cf58088bf9f1feeb598743a70fd4b5df5d7c160e88e6b5b393"
+   ],
+   [
+    159,
+    "b2a5df97d13313501dfda0e10a3448b31ba59dd9fd585b426372ed9c5045d53e"
+   ],
+   [
+    268,
+    "d38416bfeed21cf8251b67a444c7e294aef732cc67d631a46a1e974ba7e4ac91"
+   ],
+   [
+    87,
+    "3ca6aff95bd07318153af9d18580d5140577780a2740992ec1a15e963b666bb9"
+   ],
+   [
+    86,
+    "25b96a8afa5bb9901584c1aca45930d3333154469dc1bee572319600b33745f4"
+   ],
+   [
+    380,
+    "abc03cb28aff53ea78a8f00e4472f46b3da43d177c4c991ca8bff175530417c2"
+   ],
+   [
+    260,
+    "3864755ac22f7b8e7cfca2990490aefb2ba39c7894a8427403895b78fafc5181"
+   ],
+   [
+    139,
+    "f01a6f3221fe1a65fea68daaecf90851404ef37274c3e0cd84a93085220599c6"
+   ],
+   [
+    12,
+    "d63cb32af187c096b6a9569912ab07c1e1879d8f052154bdae0c7a56fe126b75"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"health-project.zip\":[{\"d\":\"<DATE>\",\"s\":87}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"health-project.zip\":[\"quick\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName health-project.zip transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:report",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "ar broken.zip": {
+  "steps": [
+   [
+    "drop",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "result",
+    1027,
+    "823b27dc1dbe970de224f1597bcdb51b8bb38c9b1cbd2657c5b249bb7a83b60f"
+   ],
+   [
+    "flipped",
+    1101,
+    "ab069c4e94231d32f35a7c596b3d3092a4f3c6806f118d5a1e7056074c2d512a"
+   ],
+   [
+    "flipped-back",
+    1027,
+    "823b27dc1dbe970de224f1597bcdb51b8bb38c9b1cbd2657c5b249bb7a83b60f"
+   ],
+   [
+    "new",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "zip",
+     "has_report": false
+    }
+   ]
+  ],
+  "clip": [],
+  "local": [],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName broken.zip transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:report",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "en errors": {
+  "steps": [
+   [
+    "model.pbix",
+    419,
+    "fc99bc4f86c45539f2980c1ad38f374f56b6afd9f6ff43d734bf1b9634dd3f30"
+   ],
+   [
+    "model.pbix:again",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ],
+   [
+    "notes.bim",
+    319,
+    "b338984ee3b517e4a268aff0770fcaa2b33b2da1122d821e15dd35560ca531ef"
+   ],
+   [
+    "notes.bim:again",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ],
+   [
+    "bad.pbit",
+    282,
+    "00be11b9de1278fd121b1d3faef380ccb5f8a9f4411a339b396ac8dc3b61f1c3"
+   ],
+   [
+    "bad.pbit:again",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ],
+   [
+    "sample-unreachable",
+    305,
+    "c16e60abeb013aa9d99be1f6f8640562bb1be19ed8e0cef5014b9e26dce742a4"
+   ]
+  ],
+  "events": [
+   [
+    "mh_error",
+    {
+     "code": "PBIX"
+    }
+   ],
+   [
+    "mh_error",
+    {
+     "code": "NO_MODEL"
+    }
+   ],
+   [
+    "mh_error",
+    {
+     "code": "NOT_ZIP"
+    }
+   ],
+   [
+    "mh_sample",
+    {}
+   ],
+   [
+    "mh_error",
+    {
+     "code": "READ"
+    }
+   ]
+  ],
+  "clip": [],
+  "local": [],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName notes.bim transfer:1",
+   "msg 1 progress:model",
+   "msg 1 error:NO_MODEL",
+   "post 1 buffer,fileName bad.pbit transfer:1",
+   "msg 1 error:NOT_ZIP"
+  ],
+  "errs": []
+ },
+ "ar errors": {
+  "steps": [
+   [
+    "model.pbix",
+    381,
+    "7642aaf36688588f5f82691163e0537e9ff9aa21d7bd3dd92e6da5c4812dbd01"
+   ],
+   [
+    "model.pbix:again",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "notes.bim",
+    281,
+    "a1c53559e4f7cd161507c1b1b89972fbb41ebce7e891e27e3b03efdfce8433c2"
+   ],
+   [
+    "notes.bim:again",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "bad.pbit",
+    249,
+    "4a9613d2073245c3ab69c1303357a9e9b1a8ff21bf75f6270b5eba1346d6d841"
+   ],
+   [
+    "bad.pbit:again",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "sample-unreachable",
+    270,
+    "320dd5cf4422961668c0117fa43b78db4b3308eb60b13decb1bfc31aca3ca9f4"
+   ]
+  ],
+  "events": [
+   [
+    "mh_error",
+    {
+     "code": "PBIX"
+    }
+   ],
+   [
+    "mh_error",
+    {
+     "code": "NO_MODEL"
+    }
+   ],
+   [
+    "mh_error",
+    {
+     "code": "NOT_ZIP"
+    }
+   ],
+   [
+    "mh_sample",
+    {}
+   ],
+   [
+    "mh_error",
+    {
+     "code": "READ"
+    }
+   ]
+  ],
+  "clip": [],
+  "local": [],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName notes.bim transfer:1",
+   "msg 1 progress:model",
+   "msg 1 error:NO_MODEL",
+   "post 1 buffer,fileName bad.pbit transfer:1",
+   "msg 1 error:NOT_ZIP"
+  ],
+  "errs": []
+ },
+ "en life:cancel": {
+  "steps": [
+   [
+    "loading",
+    164,
+    "d895d18ada88bde3082f608ac8a6403bcaa05a40e5141ead210516203790c26c"
+   ],
+   [
+    "drop-during-run",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ],
+   [
+    "second",
+    17012,
+    "d7d0b76220d6b48fb0ddfe993e5048bd2ec82779bd7dc6974f5c6b681c38ee40"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "bim",
+     "has_report": false,
+     "sample": false
+    }
+   ]
+  ],
+  "clip": [],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"tricky.bim\":[{\"d\":\"<DATE>\",\"s\":85}]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName slow.bim transfer:1",
+   "terminate 1",
+   "new 2 model-health-worker.min.js?v=20261103sp15",
+   "post 2 buffer,fileName tricky.bim transfer:1",
+   "msg 2 progress:model",
+   "msg 2 progress:analyze",
+   "msg 2 done"
+  ],
+  "errs": []
+ },
+ "ar life:cancel": {
+  "steps": [
+   [
+    "loading",
+    155,
+    "5f7905d5d11bc57cbc056052fa9b05ab24b3d32eb73f8454fb77704881876047"
+   ],
+   [
+    "drop-during-run",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "second",
+    16296,
+    "e7c85cf15dae312d1561413c280ab6ffd3f452f0bfb05820702e8e8d0da58a2d"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "bim",
+     "has_report": false,
+     "sample": false
+    }
+   ]
+  ],
+  "clip": [],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"tricky.bim\":[{\"d\":\"<DATE>\",\"s\":85}]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName slow.bim transfer:1",
+   "terminate 1",
+   "new 2 model-health-worker.min.js?v=20261103sp15",
+   "post 2 buffer,fileName tricky.bim transfer:1",
+   "msg 2 progress:model",
+   "msg 2 progress:analyze",
+   "msg 2 done"
+  ],
+  "errs": []
+ },
+ "en life:reuse": {
+  "steps": [
+   [
+    "run1",
+    17012,
+    "d7d0b76220d6b48fb0ddfe993e5048bd2ec82779bd7dc6974f5c6b681c38ee40"
+   ],
+   [
+    "run2",
+    17073,
+    "edef0ae6452eef95bdce6ebb044d84618437a7c4efbb7cf31b8705f08941b1cb"
+   ],
+   [
+    "run3",
+    8483,
+    "75161b1690c06b7b953f206cd30aedf761446b5671d5f1a14e10ff442c58c0d7"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "bim",
+     "has_report": false,
+     "sample": false
+    }
+   ],
+   [
+    "mh_analyze",
+    {
+     "file_type": "bim",
+     "has_report": false,
+     "sample": false
+    }
+   ],
+   [
+    "mh_analyze",
+    {
+     "file_type": "bim",
+     "has_report": false,
+     "sample": false
+    }
+   ]
+  ],
+  "clip": [],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"tricky.bim\":[{\"d\":\"<DATE>\",\"s\":85},{\"d\":\"<DATE>\",\"s\":85}],\"no-measures.bim\":[{\"d\":\"<DATE>\",\"s\":95}]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName tricky.bim transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:analyze",
+   "msg 1 done",
+   "post 1 buffer,fileName tricky.bim transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:analyze",
+   "msg 1 done",
+   "post 1 buffer,fileName no-measures.bim transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "ar life:reuse": {
+  "steps": [
+   [
+    "run1",
+    16296,
+    "e7c85cf15dae312d1561413c280ab6ffd3f452f0bfb05820702e8e8d0da58a2d"
+   ],
+   [
+    "run2",
+    16347,
+    "aca8b040937ccb9f5545d455ac83bf07a93b5be4e32d0de737d130d71a59f826"
+   ],
+   [
+    "run3",
+    8285,
+    "ee7d8b44aa574769bda1aece1dbb7aac79889c084732fe25397fac7ccd11b849"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "bim",
+     "has_report": false,
+     "sample": false
+    }
+   ],
+   [
+    "mh_analyze",
+    {
+     "file_type": "bim",
+     "has_report": false,
+     "sample": false
+    }
+   ],
+   [
+    "mh_analyze",
+    {
+     "file_type": "bim",
+     "has_report": false,
+     "sample": false
+    }
+   ]
+  ],
+  "clip": [],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"tricky.bim\":[{\"d\":\"<DATE>\",\"s\":85},{\"d\":\"<DATE>\",\"s\":85}],\"no-measures.bim\":[{\"d\":\"<DATE>\",\"s\":95}]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName tricky.bim transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:analyze",
+   "msg 1 done",
+   "post 1 buffer,fileName tricky.bim transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:analyze",
+   "msg 1 done",
+   "post 1 buffer,fileName no-measures.bim transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "en life:blocked": {
+  "steps": [
+   [
+    "blocked",
+    314,
+    "12aad7ffd1031001e44f202f84c8001bc55e218600b9fecb8518abaa7771d931"
+   ],
+   [
+    "again",
+    925,
+    "047f8c4575bfc31d05a400848325b9b0926ff85db434d33bcd423db2c03ed011"
+   ]
+  ],
+  "events": [
+   [
+    "mh_error",
+    {
+     "code": "WORKER"
+    }
+   ]
+  ],
+  "clip": [],
+  "local": [],
+  "session": [],
+  "worker": [
+   "blocked",
+   "blocked"
+  ],
+  "errs": []
+ },
+ "ar life:blocked": {
+  "steps": [
+   [
+    "blocked",
+    252,
+    "f2a5effc90a317a7204e2de0a29a13d9f9320e2b3bc8b78b1d86f323ad4b2eea"
+   ],
+   [
+    "again",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ]
+  ],
+  "events": [
+   [
+    "mh_error",
+    {
+     "code": "WORKER"
+    }
+   ]
+  ],
+  "clip": [],
+  "local": [],
+  "session": [],
+  "worker": [
+   "blocked",
+   "blocked"
+  ],
+  "errs": []
+ },
+ "en life:failing": {
+  "steps": [
+   [
+    "failed1",
+    305,
+    "c16e60abeb013aa9d99be1f6f8640562bb1be19ed8e0cef5014b9e26dce742a4"
+   ],
+   [
+    "failed2",
+    305,
+    "c16e60abeb013aa9d99be1f6f8640562bb1be19ed8e0cef5014b9e26dce742a4"
+   ]
+  ],
+  "events": [
+   [
+    "mh_error",
+    {
+     "code": "PARSE"
+    }
+   ],
+   [
+    "mh_error",
+    {
+     "code": "PARSE"
+    }
+   ]
+  ],
+  "clip": [],
+  "local": [],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName tricky.bim transfer:1",
+   "error 1",
+   "terminate 1",
+   "new 2 model-health-worker.min.js?v=20261103sp15",
+   "post 2 buffer,fileName tricky.bim transfer:1",
+   "error 2",
+   "terminate 2"
+  ],
+  "errs": []
+ },
+ "ar life:failing": {
+  "steps": [
+   [
+    "failed1",
+    270,
+    "320dd5cf4422961668c0117fa43b78db4b3308eb60b13decb1bfc31aca3ca9f4"
+   ],
+   [
+    "failed2",
+    270,
+    "320dd5cf4422961668c0117fa43b78db4b3308eb60b13decb1bfc31aca3ca9f4"
+   ]
+  ],
+  "events": [
+   [
+    "mh_error",
+    {
+     "code": "PARSE"
+    }
+   ],
+   [
+    "mh_error",
+    {
+     "code": "PARSE"
+    }
+   ]
+  ],
+  "clip": [],
+  "local": [],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName tricky.bim transfer:1",
+   "error 1",
+   "terminate 1",
+   "new 2 model-health-worker.min.js?v=20261103sp15",
+   "post 2 buffer,fileName tricky.bim transfer:1",
+   "error 2",
+   "terminate 2"
+  ],
+  "errs": []
+ },
+ "en life:offline": {
+  "steps": [
+   [
+    "offline",
+    17012,
+    "d7d0b76220d6b48fb0ddfe993e5048bd2ec82779bd7dc6974f5c6b681c38ee40"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "bim",
+     "has_report": false,
+     "sample": false
+    }
+   ]
+  ],
+  "clip": [],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"tricky.bim\":[{\"d\":\"<DATE>\",\"s\":85}]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName tricky.bim transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "ar life:offline": {
+  "steps": [
+   [
+    "offline",
+    16296,
+    "e7c85cf15dae312d1561413c280ab6ffd3f452f0bfb05820702e8e8d0da58a2d"
+   ]
+  ],
+  "events": [
+   [
+    "mh_analyze",
+    {
+     "file_type": "bim",
+     "has_report": false,
+     "sample": false
+    }
+   ]
+  ],
+  "clip": [],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"tricky.bim\":[{\"d\":\"<DATE>\",\"s\":85}]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName tricky.bim transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "ar-page sample": {
+  "steps": [
+   [
+    "drop",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "result",
+    43008,
+    "cc216f009bb12e9b8e26a7618b3cc944026d0b7767543525ac9756f2790185c9"
+   ],
+   [
+    "issues",
+    43008,
+    "cc216f009bb12e9b8e26a7618b3cc944026d0b7767543525ac9756f2790185c9"
+   ],
+   [
+    "issues:more",
+    43031,
+    "77a6a74f28521c0077395975dd5c6bc302a560672f7fe0d5ef5d78a4775240f6"
+   ],
+   [
+    "issues:perf",
+    19819,
+    "fe328f6f6cb3c7b576544a4cc3ca09bfef0919375a1f044c1dbbdad780265b98"
+   ],
+   [
+    "issues:ignored",
+    43053,
+    "aa9c182eb92df6f208af6fa2360990e452863c51c11c5158ffbfb7769f2a9ad9"
+   ],
+   [
+    "issues:again",
+    43016,
+    "ef3006d7d1a698a30ad3437abda0584dc5e91eaf58d6a9ae16da7aca4b49efed"
+   ],
+   [
+    "fix",
+    17627,
+    "bfa92433d798b5c465be5ac3473059eb24e9947c601e826052782cad48fab4c6"
+   ],
+   [
+    "fix:step",
+    17644,
+    "e21c83a11c160d6563fb18886cc83b49ad05a5a629dc3249b4f3f7ea17bf8922"
+   ],
+   [
+    "unused",
+    7784,
+    "27a0431f5679b1e168b58a48bc7b7a8e728adf99c6becf65798bc367214c4832"
+   ],
+   [
+    "unused:measure",
+    11486,
+    "bee9d512f880943fbbab4ef58c9f26d68fb67b1959850c61de375ff44c0ba721"
+   ],
+   [
+    "measures",
+    11486,
+    "bee9d512f880943fbbab4ef58c9f26d68fb67b1959850c61de375ff44c0ba721"
+   ],
+   [
+    "measures:open",
+    12371,
+    "240a8b2c9a58e147e1fbfb64afe48a03bf6d6d91da1e97ab76d416cb56ad5635"
+   ],
+   [
+    "measures:dep",
+    11565,
+    "2187e294f4d2a09bdbb396df79c2a1cd46c5f398ecacce98e3bb58ef29fbb881"
+   ],
+   [
+    "measures:search",
+    11402,
+    "83100bab646989ed6d0d3c1e194bac413bde5364a5d2c53441566081fb1c038f"
+   ],
+   [
+    "measures:unused",
+    7591,
+    "71a5b748b3d8f8c8122742c40d521408626c6addffdfb94de4902f8404fc842e"
+   ],
+   [
+    "tables",
+    10071,
+    "bf70c432d56ad345dc9df943cf5d71ac948ea66affe18f2fd15f5d8e2afa55ba"
+   ],
+   [
+    "tables:open",
+    10074,
+    "b92fda2cb7bd5518447fc18482f3b60297aaac2cfae5ffc8fb6c27b46d70d363"
+   ],
+   [
+    "rels",
+    5620,
+    "6ac881b41063fb7319849d21b7cee265b4f77023e14d560f902899474173b056"
+   ],
+   [
+    "docs",
+    5261,
+    "8ee1ed0092c5c06c26a75c7478b3e5540cf24237df22c414c58bb34093f370b0"
+   ],
+   [
+    "flipped",
+    5421,
+    "4d26ee5c483bab06d7ee53523ef22c0f531359b91b0b8e53f9487605ad26e682"
+   ],
+   [
+    "flipped-back",
+    5261,
+    "8ee1ed0092c5c06c26a75c7478b3e5540cf24237df22c414c58bb34093f370b0"
+   ],
+   [
+    "new",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ]
+  ],
+  "events": [
+   [
+    "mh_sample",
+    {}
+   ],
+   [
+    "mh_analyze",
+    {
+     "file_type": "pbit",
+     "has_report": true,
+     "sample": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "issues"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "AUTODATE",
+     "on": true
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "AUTODATE"
+    }
+   ],
+   [
+    "mh_ignore",
+    {
+     "rule": "AUTODATE",
+     "on": false
+    }
+   ],
+   [
+    "mh_issue_open",
+    {
+     "rule": "AUTODATE"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "fix"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_quick"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_fixes"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_tmdl_formats"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_0"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_1"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_2"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_3"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_4"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_pq_5"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_move"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "script_te_delete"
+    }
+   ],
+   [
+    "mh_plan_step",
+    {
+     "step": "quick",
+     "done": true
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "unused"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "cols"
+    }
+   ],
+   [
+    "mh_copy",
+    {
+     "list": "ms"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "measures"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "tables"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "rels"
+    }
+   ],
+   [
+    "mh_tab",
+    {
+     "tab": "docs"
+    }
+   ]
+  ],
+  "clip": [
+   [
+    3564,
+    "4241963f5cb443527cb6a04a4a5cbcdf185de207268ebd8a615b7a37b0f229ac"
+   ],
+   [
+    1474,
+    "5113b959218795c84ada8acaa3b31eb3d0a0cfa2c9ef0caef35aa9caf11648fb"
+   ],
+   [
+    1501,
+    "3c5a3755a2150d99f148ec3da1b43189f772233463faaccc6015a67e57b5a811"
+   ],
+   [
+    2709,
+    "f60dec353fd81b92d4b636705844eb8c71d0f36406c4a503ba8cab0c77a89cd8"
+   ],
+   [
+    90,
+    "8f7f82a03448019d269d8557e13e2db4a7922307ddb5e5f64cbf5e47ab5a585d"
+   ],
+   [
+    91,
+    "52c7073a34b52330871e673a8ea40f8c919ab4ad04a999d75c049caccf747045"
+   ],
+   [
+    127,
+    "176f73e97d4dfda0e8bffce6456b478f2d8bf4189bb00b0b75e408fc422a1bf6"
+   ],
+   [
+    86,
+    "ad7349b2c860d82deb5001dbe1903b4a224d5803875ef99f56dc8831b50aabca"
+   ],
+   [
+    71,
+    "8374e64d8c426473547cc3b4229ac7cbe350b7c4f6a4f4205bf21df8b1543c02"
+   ],
+   [
+    107,
+    "fe123e16bf5b43a51c5f27ef328edd7f3712018e2fc99716d35d0b34f29b9804"
+   ],
+   [
+    559,
+    "fd25b68ea71e5cbf3d2d983dbe6b5f3a87883c74d0d8c3ca67063e4ddf11277b"
+   ],
+   [
+    439,
+    "7756443d6446068755bc98c7a2c3a96c7451f573eecc48e41543a7d2adbaca37"
+   ],
+   [
+    590,
+    "f80f6bc7ff84ddb3ab39f78b14fe0bddd4c0b361945e50799023f1834a442f36"
+   ],
+   [
+    141,
+    "a635833e8bc24b7514d90762c9f3ec7d3b2a6045b4b778c10f13780bab3d2dc8"
+   ]
+  ],
+  "local": [
+   [
+    "dataarcus-mh-history",
+    "{\"contoso-sales-demo.pbit\":[{\"d\":\"<DATE>\",\"s\":56}]}"
+   ],
+   [
+    "dataarcus-mh-ignored",
+    "[]"
+   ],
+   [
+    "dataarcus-mh-plan",
+    "{\"contoso-sales-demo.pbit\":[\"quick\"]}"
+   ]
+  ],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName Contoso-Sales-Demo.pbit transfer:1",
+   "msg 1 progress:model",
+   "msg 1 progress:report",
+   "msg 1 progress:analyze",
+   "msg 1 done"
+  ],
+  "errs": []
+ },
+ "ar-page errors": {
+  "steps": [
+   [
+    "model.pbix",
+    381,
+    "7642aaf36688588f5f82691163e0537e9ff9aa21d7bd3dd92e6da5c4812dbd01"
+   ],
+   [
+    "model.pbix:again",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "notes.bim",
+    281,
+    "a1c53559e4f7cd161507c1b1b89972fbb41ebce7e891e27e3b03efdfce8433c2"
+   ],
+   [
+    "notes.bim:again",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "bad.pbit",
+    249,
+    "4a9613d2073245c3ab69c1303357a9e9b1a8ff21bf75f6270b5eba1346d6d841"
+   ],
+   [
+    "bad.pbit:again",
+    868,
+    "52f5d71ef13ec87f93faf4c3ed9c86fafff3a9ae403e6172998bd38577636e7d"
+   ],
+   [
+    "sample-unreachable",
+    270,
+    "320dd5cf4422961668c0117fa43b78db4b3308eb60b13decb1bfc31aca3ca9f4"
+   ]
+  ],
+  "events": [
+   [
+    "mh_error",
+    {
+     "code": "PBIX"
+    }
+   ],
+   [
+    "mh_error",
+    {
+     "code": "NO_MODEL"
+    }
+   ],
+   [
+    "mh_error",
+    {
+     "code": "NOT_ZIP"
+    }
+   ],
+   [
+    "mh_sample",
+    {}
+   ],
+   [
+    "mh_error",
+    {
+     "code": "READ"
+    }
+   ]
+  ],
+  "clip": [],
+  "local": [],
+  "session": [],
+  "worker": [
+   "new 1 model-health-worker.min.js?v=20261103sp15",
+   "post 1 buffer,fileName notes.bim transfer:1",
+   "msg 1 progress:model",
+   "msg 1 error:NO_MODEL",
+   "post 1 buffer,fileName bad.pbit transfer:1",
+   "msg 1 error:NOT_ZIP"
+  ],
+  "errs": []
+ }
+}
