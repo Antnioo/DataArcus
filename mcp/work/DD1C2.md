@@ -14,7 +14,7 @@
   3. aacfadcf CONTRACTS.md family 1c starts with its one place; "Since DD1C" says all four; the top row 0 of
      10; the probe's 1c places fixed so they run (on the base the probe failed on 1c: twin-text-fit's destructured
      frameWidth was not found, and aroundTables was given a Map for byName, so it read 1280 for a valid group).
-- **Expected:** dd1c 61 -> 75; every other suite as on the base; mutation 76/76; lint 0. **Got:** see Results.
+- **Expected checks:** dd1c 61 -> 75; every other suite as on the base; mutation 76/76; lint 0. **Got:** see Results.
 - **Red proof:** with the old widthIn back, dd1c 68 of 75 (F2-F6, F13 grid, S4).
 - **Merge:** integration/0.3.2 did not move (240d179): no merge.
 - **Resume:** none once CI is green; the reviewer reads and merges.
