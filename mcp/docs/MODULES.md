@@ -2,58 +2,32 @@
 
 Moved here unchanged by A1 (0.3.1, 25 Oct) from [ARCHITECTURE.md](../../ARCHITECTURE.md) ("The parts", "One write,
 start to end", "Where to start reading"), which keeps the boundaries, the write in five lines, the invariants and the
-task routes.
+task routes. [Every module](#every-module) (0.3.2 MD1): one row per file, kept true by `scripts/check-modules.mjs`.
 
 ## The parts
 
 - **The website** (dataarcus.com, GitHub Pages): the HTML pages at the root, `tools/`, `articles/`, and their Arabic
   copies in `ar/`. Its Power BI tools run in the browser; nothing a visitor opens is uploaded.
 - **The engines** (`assets/js/*.js`, each with its `.min.js`): plain JavaScript that runs in the browser and in Node,
-  **shared by the website and the MCP on purpose**, so both give the same answers. The model reader and field picker
-  (`pbip-bind.js`, `tmdl-model.js`; the picker's drawing `field-picker-ui.js`; a chosen folder or file read in the
-  browser `model-import-browser.js`), the report writer (`pbip-export.js`, `pbip-page.js`, `pbip-query.js`; its ZIP `pbip-zip.js` and sample model
-  `pbip-sample.js`; its tooltip pages `pbip-tooltip.js`; its page buttons and filter panels `pbip-navigation.js`; its visuals `pbip-visuals.js`), the design
-  engine (`design-engine.js`), the health check (`model-health-engine.js`; its DAX tokens and report references `dax-reference-parser.js`; its model index `model-index.js`; its rules `health-rules.js` (their texts and sources `health-texts.js`); its "Please confirm" questions `health-confirm.js`; the page `model-health.js`, its text downloads `health-downloads.js`;
-  `model-health-tmdl.js`, `gulf-health.js`),
-  the calendar generator (`calendar-generator.js`, `gulf-dates.js`), the measured rules (`report-rules.js`,
-  `label-limits.js`, `layout-check.js`, `report-a11y.js`), the mirror engine for right to left (`report-mirror.js`; its named rules `mirror-policy.js`),
-  the preview renderer (`page-preview.js`) and the SVG KPI compiler (`svg-kpi-compiler.js`; its expression tree and
-  preview evaluator `svg-expressions.js`, its SVG text safety `svg-escape.js`, its DAX code generation `svg-codegen.js`;
-  the designer's state, selection and undo history `svg-editor-store.js`).
-- **The MCP server** (`mcp/server.mjs`, stdio): 11 tools, from `read_model` to `check_report` (every tool and option:
-  `mcp/TOOLS.md`). Its modules are in `mcp/lib/`:
-  - reading: `model.mjs` (models from disk, every path kept inside the working folder), `model-names.mjs` (the
-    untrusted-text screen and how a name is shown: pure), `model-metadata.mjs` (column types and KPIs: pure),
-    `read-report.mjs` (what a PBIR report holds: its one read boundary; read_report's answer: `report-answer.mjs`; a
-    report's theme identity: `report-identity.mjs`; both pure, reading no file), `scope.mjs` (large models),
-    `visual-meaning.mjs` (what a custom visual shows and its native replacement; its role words and family hints:
-    `visual-vocabulary.mjs`);
-  - **the approval gate**: `plans.mjs` (plan ids, what each plan pins) and `approval-window.mjs` (the window in the
-    person's browser, on 127.0.0.1 with a one-time link the AI never receives);
-  - **the write path**: `artifact.mjs` (the exact files a plan builds and their digest), `files.mjs` (the one writer
-    of new file trees: all or nothing, never over anything), `write-io.mjs` (one new file, never half-written);
-  - **the checkers**: `check-report.mjs` (Microsoft's validator offline, schemas bundled in `mcp/schemas/`, and the
-    measured rules; each page's language: `check-language.mjs`), `design-lint.mjs`, `plan-lint.mjs`, `arabic-lens.mjs`;
-  - **the Arabic twin**: `arabic-twin.mjs` (the twin, the EN-AR copy and the bilingual report's Arabic half), with
-    `terminology.mjs`, `arabic-names.mjs`, `arabic-terms.mjs`; every Arabic path mirrors through `report-mirror.js`;
-  - what leaves the server: `answer.mjs` (every answer), `agent-text.mjs` (the instructions and shared descriptions).
-  - **the tools** (0.3.1 S9): `mcp/server.mjs` is the entry only (setup, the instructions, one `register` import per
-    tool, in the order tools/list shows them); each tool is `mcp/tools/<tool_name>.mjs` exporting `register(server,
-    ctx)`; helpers more than one tool uses are `lib/tool-answer.mjs`, `tool-inputs.mjs`, `tool-limits.mjs`,
-    `plan-keys.mjs`, `fix-scripts.mjs`, `hidden-names.mjs`, and for reports `report-inputs.mjs`, `report-fields.mjs`,
-    `report-said.mjs`, `report-run.mjs` (one report's whole build, the plan's exact artifact and the write alike),
-    `report-result.mjs` (create_report's answer and its notes from the build, no IO), `report-bind.mjs` (the
-    report's field identities, formats and bindings from the model's metadata and the plan's options, no IO);
-  - the redesign (copy-and-patch): `redesign.mjs` (the plan, the copy, its check and the write) imports
-    `redesign-grid.mjs` (0.3.2 SP19: the geometry, the units of visuals laid over others and the grid, no IO) and
-    `redesign-kinds.mjs` (0.3.2 PK1: the patch kinds, one entry each, which are the allowlist the copy and its check
-    read; the planned ones off; no IO);
-  - the twin by step: `arabic-twin.mjs` re-exports `twin-read.mjs` (the source), `twin-visuals.mjs`, `twin-texts.mjs`
-    (labels and terms), `twin-model.mjs`, `twin-copy.mjs` (the EN-AR copy, language buttons), `twin-pages.mjs`
-    (0.3.2 SP11: its text, button and header fitting in `twin-text-fit.mjs`; SP26: its geometry, badges, tables, a
-    heatmap grid's chart, indentation and the icon's room, in `twin-geometry.mjs`; each one page in, changes and what is
-    said out; buildTwin keeps the order, keepSize last), `twin-plan.mjs`, `twin-preview.mjs`, `twin-write.mjs`;
-  - tests that read source text go through `mcp/test-source.mjs` (a new tool or lib module is found from there).
+  **shared by the website and the MCP on purpose**, so both give the same answers: the model reader and field picker,
+  the report writer, the design engine, the model health check, the calendar and the Gulf, the measured rules and the
+  check, right to left (the Arabic twin's engine, `report-mirror.js`), the SVG KPI designer. Every file:
+  [the engines' rows](#the-website-engines); the pages' own scripts: [their rows](#the-browser-pages-own-scripts).
+- **The MCP server** (`mcp/server.mjs`, stdio): the entry only (setup, the instructions, one `register` import per
+  tool, in the order tools/list shows them); 11 tools, from `read_model` to `check_report`, each
+  `mcp/tools/<tool_name>.mjs` exporting `register(server, ctx)` ([their rows](#the-tools); every tool and option:
+  `mcp/TOOLS.md`). Its modules are in `mcp/lib/`, by area:
+  [reading](#the-mcp-reading) (the model and the report, read and never changed: `model.mjs`, `read-report.mjs`),
+  [**the approval gate**](#the-mcp-the-approval-gate) (`plans.mjs`, `approval-window.mjs`),
+  [**the write path**](#the-mcp-the-write-path) (`artifact.mjs`, `files.mjs`, `write-io.mjs`),
+  [create_report and its options](#the-mcp-create_report-and-its-options) (one report's whole build: `report-run.mjs`),
+  [the redesign](#the-mcp-the-redesign) (copy-and-patch: `redesign.mjs`),
+  [**the checkers**](#the-mcp-the-checkers) (`check-report.mjs`),
+  [**the Arabic twin**](#the-mcp-the-arabic-twin) (by step, `twin-*.mjs`, through `arabic-twin.mjs`; every Arabic path
+  mirrors through `report-mirror.js`), and
+  [what leaves the server and the tools' helpers](#the-mcp-what-leaves-the-server-and-the-tools-helpers)
+  (`answer.mjs`, `agent-text.mjs`, `tool-answer.mjs`). Tests that read source text go through `mcp/test-source.mjs` (a
+  new tool or lib module is found from there).
 - **Tests and CI**: the MCP's suites are listed once, by area, in `mcp/tests.json` and run by `mcp/run-tests.mjs`
   (`npm test` in `mcp/`); `mcp/test.mjs` runs every tool end to end and CI splits it in 4 shards. The website's
   suites: `scripts/tests/run-all.mjs`. Repo checks (site config, result lines, CHANGELOG words, ...): `scripts/*.mjs`.
@@ -87,15 +61,16 @@ task routes.
 | Change | Start with |
 |---|---|
 | A website page or tool | the page's HTML and its `assets/js/` engine; `node scripts/test-site-config.mjs`; `scripts/tests/run-all.mjs` |
-| What a report looks like (layout, sizes, visuals) | `assets/js/pbip-export.js`, `pbip-page.js` (tooltip pages: `pbip-tooltip.js`; page buttons and filter panels: `pbip-navigation.js`; the visuals: `pbip-visuals.js`), `design-engine.js`; `report-rules.js` for measured limits |
-| Right to left and Arabic | `assets/js/report-mirror.js` (which family, which axis is time, what keeps left to right: `mirror-policy.js`); `mcp/lib/twin-*.mjs` (by step), `terminology.mjs`; `assets/data/arabic-report-words.json` |
+| What a report looks like (layout, sizes, visuals) | `assets/js/pbip-export.js` (it puts the writer together: [the writer's rows](#the-website-engines)), `design-engine.js`; `report-rules.js` for measured limits |
+| Right to left and Arabic | `assets/js/report-mirror.js`, `mirror-policy.js`; [the twin by step](#the-mcp-the-arabic-twin), `terminology.mjs`; `assets/data/arabic-report-words.json` |
 | Reading models | `assets/js/pbip-bind.js`, `tmdl-model.js` (the website's folder or file: `model-import-browser.js`); `mcp/lib/model.mjs`, `scope.mjs` |
-| Model health | `assets/js/model-health-engine.js` (DAX tokens and report references: `dax-reference-parser.js`; the normalised model, its index and dependency references: `model-index.js`; the rules, findings out: `health-rules.js`; the rule catalogue (texts and sources, data only): `health-texts.js`; the questions and their evidence, apart from the score: `health-confirm.js`), the page `model-health.js` (its text downloads: `health-downloads.js`), `model-health-tmdl.js`, `gulf-health.js` |
+| Model health | `assets/js/model-health-engine.js` ([its modules' rows](#the-website-engines)), the page `model-health.js` |
 | A tool's inputs or answer | `mcp/tools/<tool_name>.mjs`, `mcp/lib/agent-text.mjs`, `mcp/TOOLS.md` |
 | Approval or writing | `mcp/lib/plans.mjs`, `approval-window.mjs`, `artifact.mjs`, `files.mjs`, `write-io.mjs` |
 | Checking reports | `mcp/lib/check-report.mjs`, `check-language.mjs`, `arabic-lens.mjs`, `design-lint.mjs`; `assets/js/layout-check.js` |
 | Tests and CI | `mcp/tests.json`, `mcp/run-tests.mjs`, `mcp/test.mjs` (`SHARDS`), `.github/workflows/tests.yml`, `scripts/ci-sum.mjs` |
 | Public claims (README, PRIVACY, the MCP page) | `mcp/test-0.3.0-claims.mjs`, `mcp/test-release-text.mjs` |
+| A new module (a split's new file) | its row in its part's table, [Every module](#every-module); `node scripts/check-modules.mjs` |
 
 ## A new create_report option is pinned in the plan
 
