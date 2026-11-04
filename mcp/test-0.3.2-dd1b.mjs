@@ -7,10 +7,21 @@
 //   U5     the ledger's 12 made-up columnWidth entries: columnWidth pinned (12 checks)
 //   U6     never throws, never changes its input (odd shapes: null, an array, a string, a number, a cycle)
 //   U7     a bare value (a theme's own true, 12, 'x') is read as the literal's value
-// Made-up data only, no IO.   node test-0.3.2-dd1b.mjs
+//   P      every place of the families 1b-text, 1b-shown, 1b-number, 1b-bool and 1d (scripts/contracts-probe.mjs, run as
+//          it runs them) gives the rule's answer on every input: one answer per input per question; "shown" (report-a11y
+//          backgroundOf's show) is the bool reader's !== false
+//   C1-C3  the answers that changed, from what the callers do: report-a11y 60L transparent, redesign 'it''s',
+//          dax-functions 120L and an entry with no properties
+//   S1-S2  the readers that went are not defined again; every place still named holds no literal parse of its own
+// Made-up data only; reads the sources of the places.   node test-0.3.2-dd1b.mjs
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { FAMILIES, answerOf, placeName, definitions } from '../scripts/contracts-probe.mjs';
 
 const require = createRequire(import.meta.url);
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const V = require('../assets/js/pbir-values.js');
 
 const problems = []; let checks = 0;
@@ -72,6 +83,70 @@ chk(() => V.litNumber(L('1e3D')) === 1000 && V.litNumber(L('12M')) === 12 && V.l
 chk(() => V.litBool(true) === true && V.litBool(false) === false && V.litBool('false') === false && V.litBool(undefined) === null, () => 'U7 litBool on a bare value');
 chk(() => V.litNumber(12) === 12 && V.litNumber('12D') === 12 && V.litNumber('x') === null, () => 'U7 litNumber on a bare value');
 chk(() => V.litText("'x'") === 'x' && V.litText('x') === null && V.litShown(12) === '12', () => 'U7 litText / litShown on a bare value');
+
+// ---- P1-P5: every place of the ledger's families gives the rule's one answer (run as scripts/contracts-probe.mjs runs
+// it: its module, an engine's inner name, or its own definition read from its source) ----
+const RULES = {
+  '1b-text': (x) => V.litText(x.p), '1b-shown': (x) => V.litShown(x.p), '1b-number': (x) => V.litNumber(x.p),
+  '1b-bool': (x) => V.litBool(x.p), '1d': (x) => V.columnWidth(x.cw, 'T.a'),
+};
+for (const [id, rule] of Object.entries(RULES)) {
+  const f = FAMILIES.find((x) => x.id === id);
+  chk(() => f && f.places.length > 0 && f.inputs.length >= 12, () => `P ${id}: the probe has no such family, or too few places or inputs`);
+  if (!f) continue;
+  for (const input of f.inputs) {
+    const want = await answerOf({ how: 'export', run: async (x) => rule(x) }, input);
+    for (const place of f.places) {
+      const got = await answerOf(place, input);
+      chk(() => got.key === want.key, () => `P ${id} ${placeName(place)} on ${input.label}: ${got.shown}, the rule says ${want.shown}`);
+    }
+  }
+}
+// "shown" over the one bool reader (report-a11y show: anything but false is shown, a card that does not say is undefined)
+{
+  const A11y = require('../assets/js/report-a11y.js');
+  const shown = [];
+  LITERALS.forEach((x) => { const s = (() => { try { return A11y.backgroundOf({ theme: null }, { type: 'card', json: { visual: { visualContainerObjects: { background: [{ properties: Object.assign({ color: { solid: { color: L("'#112233'") } } }, x.p === undefined ? {} : { show: x.p }) }] } } } }, { json: {} }); } catch (e) { return 'throws'; } })();
+    shown.push([x.label, s, x.p === undefined || V.litBool(x.p) !== false ? '#112233' : '#ffffff']); });
+  shown.forEach(([label, got, want]) => chk(() => got === want, () => `P shown: report-a11y backgroundOf with show ${label}: ${got}, "shown" (!== false) says ${want}`));
+}
+
+// ---- C1-C3: the answers that changed, read from what the callers do ----
+{
+  // C1 (B-332) report-a11y: a background 60L transparent is more than half transparent (it read 60L as 0: drawn on its own colour)
+  const A11y = require('../assets/js/report-a11y.js');
+  const bg = (t) => A11y.backgroundOf({ theme: null }, { type: 'card', json: { visual: { visualContainerObjects: { background: [{ properties: { show: L('true'), color: { solid: { color: L("'#112233'") } }, transparency: L(t) } }] } } } }, { json: {} });
+  chk(() => bg('60L') === '#ffffff' && bg('60D') === '#ffffff' && bg('12L') === '#112233', () => `C1 report-a11y: 60L ${bg('60L')}, 60D ${bg('60D')}, 12L ${bg('12L')} (60 is more than half transparent: the page's #ffffff)`);
+  // C2 redesign danglingOf: a page button to the page 'it''s' goes to the page it's (the doubled quote undone)
+  const { danglingOf } = await import('./lib/redesign.mjs');
+  const files = { "definition/pages/it's/page.json": '{}', 'definition/pages/pages.json': JSON.stringify({ pageOrder: ["it's"] }),
+    "definition/pages/it's/visuals/b/visual.json": JSON.stringify({ name: 'b', visual: { visualType: 'actionButton', visualContainerObjects: { visualLink: [{ properties: { type: L("'PageNavigation'"), navigationSection: L("'it''s'") } }] } } }) };
+  const d = danglingOf(files);
+  chk(() => Array.isArray(d) && !d.some((x) => /-> page/.test(x)), () => `C2 redesign: a button to 'it''s' is said to dangle: ${JSON.stringify(d)}`);
+  // C3 dax-functions fitPictures widthOf (B-332): 120L and an entry with no properties, read from its source by the probe (P 1d)
+  const f = FAMILIES.find((x) => x.id === '1d'), place = f && f.places.find((p) => /dax-functions/.test(p.file));
+  const of = async (label) => (await answerOf(place, f.inputs.find((x) => x.label === label))).key;
+  const a = place ? [await of('120L'), await of('an entry with no properties')] : [];
+  chk(() => a[0] === '120' && a[1] === 'null', () => `C3 dax-functions widthOf: 120L ${a[0]}, no properties ${a[1]} (the rule: 120, null)`);
+}
+
+// ---- S1-S2: no place keeps its own reader ----
+// S1 the readers that went (their calls read pbir-values.js): none is defined again
+const GONE = [['mcp/lib/twin-visuals.mjs', 'litStr'], ['mcp/lib/twin-visuals.mjs', 'num'], ['mcp/lib/twin-geometry.mjs', 'litOf'], ['mcp/lib/twin-geometry.mjs', 'lit0'],
+  ['mcp/lib/twin-pages.mjs', 'lit'], ['mcp/lib/twin-texts.mjs', 'isOn'], ['mcp/lib/terminology.mjs', 'lit'], ['assets/js/pbip-query.js', 'S0'],
+  ['assets/js/report-a11y.js', 'tr'], ['assets/js/visual-replace.js', 'isTrue']];
+const src = (f) => fs.readFileSync(path.join(ROOT, ...f.split('/')), 'utf8').replace(/\r\n/g, '\n');
+GONE.forEach(([f, n]) => chk(() => definitions(src(f), n).length === 0, () => `S1 ${f} defines ${n} again: its calls read assets/js/pbir-values.js`));
+// S2 every place still named is the module's reader (or a call of it): no literal parse of its own
+const OWN = /\.Literal\b|parseFloat|\.replace\(|=== 'true'|=== 'false'|\+String\(/;
+// the one kept: mirror-policy.js strOf (sp10 P10 pins mirror-policy.js to require visual-types.js alone; P above pins it to
+// litText's answer on all 15 literals; the reviewer's call: mcp/work/DD1B.md)
+const KEPT = new Set(['assets/js/mirror-policy.js strOf']);
+for (const id of Object.keys(RULES)) for (const p of (FAMILIES.find((x) => x.id === id) || { places: [] }).places) {
+  if (KEPT.has(placeName(p))) continue;
+  const s = src(p.file), defs = definitions(s, p.fn);
+  chk(() => defs.length > 0 && defs.every((d) => !OWN.test(d.text)) && /pbir-values\.js|\bPV\b/.test(s), () => `S2 ${placeName(p)} reads a literal itself: ${defs.map((d) => d.text.slice(0, 120)).join(' / ')}`);
+}
 
 if (problems.length) { problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  dd1b  ${checks - problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  dd1b  ${checks} checks`);
