@@ -122,7 +122,46 @@ not a country but has its own rule (the generator's option "Sharjah government",
 Before the first change of each country, only the weekend that change replaced is known; earlier history was not
 checked, so a calendar that starts before it shows that weekend for every earlier year.
 
+## VAT standard rate by date
+`gulf-dates.js` `vat` (checked **2026-11-04**), used by add_gulf_calendar's `vat` option (the column
+`VAT Standard Rate %`; 0.3.2 GM1, RD5). The standard rate in force on the date only: zero-rated and exempt supplies,
+and the transitional contracts (Saudi Arabia: contracts before 11 May 2020 could keep 5 % to 30 June 2021; Bahrain:
+contracts before the change could keep 5 % to 31 December 2022), are not in a date column. Never tax advice.
+"Law" is the law RD5 found (3 Nov 2026, through the authority's page or a summary of it); "Read 4 Nov" is what was
+opened on 4 Nov 2026 from the cloud. Each authority's own page loaded where it says so, but none of them states the
+rate with its date (the UAE's FTA page shows "VAT 5%" in its calculator only; Bahrain's NBR refused the request), so
+the date is confirmed by PwC's Worldwide Tax Summaries (each page "last reviewed" in 2026) where it says so.
+
+| Country | Rule | Law | Read 4 Nov |
+|---|---|---|---|
+| UAE | 5 % from 2018-01-01 | Federal Decree-Law No. 8 of 2017 (WAM, 27 Aug 2017; FTA, tax.gov.ae) | 5 %: [FTA](https://tax.gov.ae/en/taxes/Vat.aspx) and [PwC, reviewed 9 Sep 2026](https://taxsummaries.pwc.com/united-arab-emirates/corporate/other-taxes) ("The general VAT rate is 5%"). **The start date is not on either page: to read on the laptop** |
+| Saudi Arabia | 5 % from 2018-01-01; 15 % from 2020-07-01 | ZATCA; Ministry of Finance announcement, 11 May 2020 | both: [PwC, reviewed 29 Jul 2026](https://taxsummaries.pwc.com/saudi-arabia/corporate/other-taxes) ("applicable from 1 January 2018"; "Effective 1 July 2020, the standard VAT rate was increased by the government to 15%") |
+| Bahrain | 5 % from 2019-01-01; 10 % from 2022-01-01 | Decree-Law No. 48 of 2018; Law No. 33 of 2021; NBR's transitional guide (24 Dec 2021) | the 2019 start and 10 % now: [PwC, reviewed 26 Jul 2026](https://taxsummaries.pwc.com/bahrain/corporate/other-taxes) ("implemented VAT on 1 January 2019. The current standard rate of VAT is 10%"). **The 2022-01-01 date of the 10 % is not on it: to read on the laptop** (nbr.gov.bh refused the request) |
+| Oman | 5 % from 2021-04-16 | Royal Decree 121/2020 (Official Gazette 18 Oct 2020, in force 180 days later) | [PwC, reviewed 7 Jul 2026](https://taxsummaries.pwc.com/oman/corporate/other-taxes) ("with effect from 16 April 2021. The standard rate of VAT in Oman is 5%"); the Tax Authority's [law page](https://tms.taxoman.gov.om/portal/web/taxportal/vat-law-regulations) lists the decree |
+| Qatar | no VAT in force: 0 | signed the GCC framework (5 %); no law in force, no date set | [PwC, reviewed 17 Sep 2026](https://taxsummaries.pwc.com/qatar/corporate/other-taxes) ("Currently, Qatar imposes no VAT or sales tax"); the General Tax Authority's [tax list](https://gta.gov.qa/en/taxes-info) has no VAT |
+| Kuwait | no VAT in force: 0 | signed the GCC framework; no law in force | [PwC, reviewed 22 Jul 2026](https://taxsummaries.pwc.com/kuwait/corporate/other-taxes) ("the GCC framework agreement is currently under discussion in the Parliament while the draft Law is under preparation") |
+
+When a country sets a date or changes its rate: a new `{ from, rate }` in `gulf-dates.js`, a row here, `checked` moved;
+a table made before keeps the old rules until it is generated again.
+
+## Currency pegs
+`gulf-dates.js` `pegs` (checked **2026-11-04**), used by add_gulf_calendar's `pegs` option (the table
+`Gulf Currency Pegs`, off by default; 0.3.2 GM1, RD5). Units of each currency per 1 US dollar, each its central
+bank's figure. No conversion measure is written: which amount is in which currency is the person's.
+
+| Currency | Per USD | Central bank | Read 4 Nov |
+|---|---|---|---|
+| AED | 3.6725 | Central Bank of the UAE (centralbank.ae, domestic market operations: buys 3.672, sells 3.673) | RD5's reading (3 Nov); **centralbank.ae refused the request on 4 Nov: to read on the laptop** |
+| SAR | 3.75 | SAMA (sama.gov.sa: "the official rate of 3.75 riyals to the dollar") | RD5's reading; **sama.gov.sa did not answer (503): to read on the laptop** |
+| QAR | 3.64 | Qatar Central Bank (qcb.gov.qa, exchange rate policy; Amiri Decree No. 34 of 2001) | RD5's reading; **qcb.gov.qa did not answer (503): to read on the laptop** |
+| BHD | 0.376 | Central Bank of Bahrain (cbb.gov.bh, monetary policy) | RD5's reading; **cbb.gov.bh did not answer (503): to read on the laptop** |
+| OMR | 0.3845 | Central Bank of Oman (cbo.gov.om: USD 2.6008 per rial since 1986; 1 / 2.6008 = 0.384497) | RD5's reading; **cbo.gov.om refused the request: to read on the laptop** |
+| KWD | none (a basket) | Central Bank of Kuwait | **Read on the bank's page:** [cbk.gov.kw, exchange rate policy](https://www.cbk.gov.kw/en/monetary-policy/exchange-rate-policy): "Effective 20 May 2007 by virtue of the Decree No. 147/2007, the KD exchange rate was repegged to an undisclosed weighted basket of international currencies". Never written as a number |
+
 ## Open
+- VAT and pegs (GM1, 4 Nov 2026): the UAE's VAT start date, Bahrain's 10 % date and the five fixed pegs were not
+  re-read on the authority's or bank's own page (their sites refused requests from the cloud); the rows say so. Read
+  them on the laptop and move `checked` if any differs.
 - The Bahrain, Kuwait and Qatar weekend sources are news reports of the decision, not the decrees themselves.
 - Several past Ramadan and Eid dates are sourced to a newspaper's report of the official announcement; the WAM
   pages for those years were not found in this check.

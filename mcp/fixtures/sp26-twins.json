@@ -4,33 +4,33 @@
   "T1 the twin-project fixture, its own report": {
    "plan": {
     "err": false,
-    "length": 12739,
-    "sha256": "9007acc75b4e4ba121ac327f10725c94b82d0143a350923d33ec424d8148cd6b"
+    "length": 12877,
+    "sha256": "484c6f243ee69183cb30ae995385247eba2610ecfd2874e35471bf7820c0cdd0"
    },
    "write": {
     "err": false,
     "length": 3703,
-    "sha256": "e128d507e06fb45b4a48540a83d65fb9518b0ec8ab88f94ba3222b5fa1974ac0"
+    "sha256": "77e101ce62f989bbbd229911a34dda9c247a7b44c46e2df2016ec5ed9c1938ea"
    },
    "files": {
     "count": 65,
-    "sha256": "280f50b7b6596f01f91432013973237ee6e17a829ae4b1de34adeb17f739ff0e"
+    "sha256": "fa0af57999386fb27447763e9d103f3b7f5a28d39dd335edfed62b8da0ec8b04"
    }
   },
   "T2 the twin-project fixture, both languages in one report": {
    "plan": {
     "err": false,
-    "length": 16230,
-    "sha256": "c9c49849d83327e9cfd823acfcde2f2e387b83cc73ee298fc5af8acce8671741"
+    "length": 16368,
+    "sha256": "d3f1a1a70489ca9a297985876c5087ea1906105ecace30b068aad7e627806f86"
    },
    "write": {
     "err": false,
     "length": 6970,
-    "sha256": "1667d3c0a437c497114a8bb95ff5eae998977963b1a9c9ff4bb26aa38fc92df2"
+    "sha256": "bebdbe655026fd4861d16faf8e8281e3c311a9e126a15ee0fa36626ced1c66ee"
    },
    "files": {
     "count": 92,
-    "sha256": "70455b8eb885433075ac887947218369fc97935f28c4f0a1ddfbc0081b74a988"
+    "sha256": "4b36467d6d9455634ee368491f0452efa3945c17a0c342f2867b54985cead4a2"
    }
   },
   "T3 the sample project": {
@@ -228,33 +228,33 @@
   "T15 the fitting shapes, their own report": {
    "plan": {
     "err": false,
-    "length": 21369,
-    "sha256": "4b20c152da9e85fdda19569acebb629d41260e0ff324f113b04932ade35ea7e9"
+    "length": 21507,
+    "sha256": "835884de729e1735f1043424265af07272c43bf69f048cb88bcab58a6bfcab2d"
    },
    "write": {
     "err": false,
     "length": 8162,
-    "sha256": "59b6627eb99e95e15eaeee2d6cb4a024f16a1f02918b621a31795860185c0237"
+    "sha256": "00c008075114aad6ffe8bc6e2fe9eebb90c73bfc0f4796e985a0212d1f1276cf"
    },
    "files": {
     "count": 110,
-    "sha256": "1bc2d76fd96866b5bcc6602d5644b9afa923c0ec2e1c22dc7459501d41f171e8"
+    "sha256": "58f638a46e7569476fcc4aedfae7d4f0daf71fc4b73c89f28f05aa6074f5e9d4"
    }
   },
   "T16 the fitting shapes, both languages in one report": {
    "plan": {
     "err": false,
-    "length": 26067,
-    "sha256": "9190152aef59e55aa132e8b0b80ead2fb76583da9d7f0d50c64e476fa2de79ab"
+    "length": 26205,
+    "sha256": "888a10b5cf4df7096f5102a049885ded470c49c6da711a908e0559a4bab463f9"
    },
    "write": {
     "err": false,
     "length": 12638,
-    "sha256": "69c389afe41233393624d958d07370a714e76db43d4d4c89b8603b6c16640fe4"
+    "sha256": "2e04811b0fbebb59ba42cf3700a368862606699643d45563b57fe4b02203bc30"
    },
    "files": {
     "count": 163,
-    "sha256": "1ee8465d64fc1e34996071d91d9fc6a8349894377794e8cb0b135a9c5400cc78"
+    "sha256": "94aa43e31e54c0f667a125edf65c3a6f104da98fbdd8f92e6ea0fa86115ebd59"
    }
   },
   "T17 twin-fuzz seed 20261102": {
@@ -340,33 +340,33 @@
   "T22 the geometry project, its own report": {
    "plan": {
     "err": false,
-    "length": 12377,
-    "sha256": "ee0cf9a3f7a33dcae066224a43bc5306ca9661a441044401c84d9f5df1998c9d"
+    "length": 12500,
+    "sha256": "edbb5bb5654b3f9615101abbfa503ee3d5c923e6877eed95ffb596e6418fecbc"
    },
    "write": {
     "err": false,
     "length": 3116,
-    "sha256": "b20ea80c3439dfb3b9047b7d00e80d41628b7365974cb91d6b8653feb0dbd253"
+    "sha256": "7e3efc1890a2de191ecb251bb2cffe5b19f9d9244cb4aff7feb6acdbafa33340"
    },
    "files": {
     "count": 51,
-    "sha256": "f1d0e52168412cdf4b1c0f0a6e633b113a904b680b01c2cc0c66b52ad873e8f7"
+    "sha256": "6c625a18dc502ecb53a52473dacc0d2a3b503f55c8240ebb764302d22df9cc7e"
    }
   },
   "T23 the geometry project, both languages in one report": {
    "plan": {
     "err": false,
-    "length": 14744,
-    "sha256": "9ea518e46d18515b36199d1e905f92dfce539bd50c685408defa2b7ebdb86bad"
+    "length": 14867,
+    "sha256": "2eb34eb8e4e266027fb1612336206c19eb3b30f2cee47237e962499d084b0e44"
    },
    "write": {
     "err": false,
     "length": 5259,
-    "sha256": "0d3e1d0efbb47738c59a328485ca3e31e9f766c5c38ac8a39987d05d530833ae"
+    "sha256": "81ae4bf0302acbff82d4324a6aea2b45bdb951cbb4c8567f49989fd17f6e898a"
    },
    "files": {
     "count": 71,
-    "sha256": "a3042e7fd5d6df20fe70176841e7c8e7b6800fda5366ac8cfc3ed70a389a9ba1"
+    "sha256": "eb00b4c6f8922b3f0b9dbd37de4f7fcfe621b35a843732b9c3a5b292d1016304"
    }
   }
  }

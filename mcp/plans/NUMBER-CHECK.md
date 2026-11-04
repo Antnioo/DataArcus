@@ -3,10 +3,14 @@
 **Plan only** (the reviewer's request on the owner's go, "go 4", 2026-10-04). No engine code, tests or Desktop runs
 were made for it. Written on `plan/check-report-number-check` from main `2268d6f`. Sources were read on 2026-10-04.
 
-**Why precision matters here.** Our public Position says: "A number check that proves every visual's values before
-and after a change is planned, not built" (`mcp/ROADMAP.md`). This plan is what that sentence promises. Every claim
-in it is sourced or marked **unverified** or **needs Desktop**. Until it is built and measured, the public wording
-stays "planned".
+**Why precision matters here.** Our public Position says (`mcp/ROADMAP.md`, since 0.3.2 NC1): "Layer 1 of the
+number check is built: `check_report` with `against` (the original report) says, visual by visual, whether a copy
+asks the model the same question (the same fields, aggregations, filters, sort, Top N, visual calculations and display
+units), from the files only. It does not run the queries, so it does not prove the values are the same. Layer 2, which
+would run each visual's query in Power BI Desktop and compare the results, is planned, not built." Layer 1 shipped as
+an option of `check_report`, not as the tool `check_numbers` below (the owner's "an option, not a 12th tool", C; RD2,
+`rd/0.3.2-number-check`). Every claim in this plan is sourced or marked **unverified** or **needs Desktop**. Until
+layer 2 is built and measured, the public wording for it stays "planned".
 
 ## What it is
 A tool, `check_numbers`, that compares two reports on the same model, the report **before** a change and the copy

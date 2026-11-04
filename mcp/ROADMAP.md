@@ -36,8 +36,11 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
        text, buttons and cards come from measurements in Power BI Desktop, not estimates (small pages still have open
        items). The free Model Health Check finds model problems (unused and broken fields, missing formats and sort
        columns, risky relationships, slow DAX patterns), and the Copilot-readiness audit starts from it;
-       Copilot-specific checks in it are planned. A number check that proves every visual's values before and after a
-       change is planned, not built.
+       Copilot-specific checks in it are planned. Layer 1 of the number check is built: `check_report` with `against`
+       (the original report) says, visual by visual, whether a copy asks the model the same question (the same
+       fields, aggregations, filters, sort, Top N, visual calculations and display units), from the files only. It
+       does not run the queries, so it does not prove the values are the same. Layer 2, which would run each
+       visual's query in Power BI Desktop and compare the results, is planned, not built.
     2. **The Gulf's business logic.** Ramadan moves about 11 days a year. The free Calendar Generator writes a DAX
        calendar with Hijri dates, the announced Ramadan and Eid dates (each with its source) and each Gulf country's
        weekend; the Measure Builder adds Ramadan vs last Ramadan and Eid window measures; the health check has a Gulf
