@@ -10,7 +10,8 @@
 //   X1  no private text (a validator's and a schema's message, a filter, a bookmark, a text box) in any answer
 //   E1  every skipped or incomplete check is said (validator.why, notChecked, the summary's "Not judged"), never a pass
 //   C1  the inputs reach every kind (canBreak, desktopOpens, openedInDesktop, dataarcusRule), sameQuestion, fixRoutes
-//   after check-schema.mjs: S1 the same schema functions re-exported; S2 check-report.mjs defines none of them
+//   after check-schema.mjs: S1 the same schema functions re-exported (VALIDATOR_VERSION too, once check-impact.mjs reads
+//   it there); S2 check-report.mjs defines none of them
 //   after check-impact.mjs: I1 the same impact functions re-exported; I2 check-report.mjs defines none of them;
 //   I3 no cycle: check-language.mjs, check-schema.mjs and check-impact.mjs import nothing from check-report.mjs
 //   node test-0.3.2-sp41.mjs
@@ -192,15 +193,15 @@ const importsCR = (f) => /from '\.\/check-report\.mjs'/.test(fs.readFileSync(pat
 const has = (f) => fs.existsSync(path.join(HERE, 'lib', f));
 if (has('check-schema.mjs')) {
   const SC = await import('./lib/check-schema.mjs');
-  chk(() => CR.pointer === SC.pointer && typeof SC.schemaCheck === 'function' && /^[0-9a-f]{7}$/.test(SC.SCHEMA_COMMIT), () => 'S1: check-report.mjs re-exports check-schema.mjs\'s pointer; schemaCheck and SCHEMA_COMMIT are exported there');
+  chk(() => CR.pointer === SC.pointer && (!has('check-impact.mjs') || CR.VALIDATOR_VERSION === SC.VALIDATOR_VERSION) && typeof SC.schemaCheck === 'function' && /^[0-9a-f]{7}$/.test(SC.SCHEMA_COMMIT), () => 'S1: check-report.mjs re-exports check-schema.mjs\'s pointer (and VALIDATOR_VERSION, once check-impact.mjs reads it there); schemaCheck and SCHEMA_COMMIT are exported there');
   const sd = defines(['SCHEMAS', 'SCHEMA_ROOT', 'SCHEMA_COMMIT', 'SCHEMA_FILE', 'ver', 'family', 'ajv', 'schemaWords', 'pointer', 'schemaCheck', 'AJV', 'WORDS']);
   chk(() => !sd.length && /from '\.\/check-schema\.mjs'/.test(src) && !/new Ajv\(/.test(src), () => `S2: check-report.mjs defines none of the schema section: ${sd.join(', ')}`);
 }
 if (has('check-impact.mjs')) {
   const CI = await import('./lib/check-impact.mjs');
-  const NAMES = ['impactOf', 'impactSummary', 'validatorVerdict', 'knownGap', 'openedLine', 'mayLookLine', 'IMPACT', 'DESKTOP_DRAWS', 'DESKTOP_OPENED', 'DESKTOP_OPENS_SOURCE', 'VALIDATOR_GAPS', 'arr', 'litOf', 'plainObj', 'VALIDATOR_VERSION', 'CHECKS'];
+  const NAMES = ['impactOf', 'impactSummary', 'validatorVerdict', 'knownGap', 'openedLine', 'mayLookLine', 'IMPACT', 'DESKTOP_DRAWS', 'DESKTOP_OPENED', 'DESKTOP_OPENS_SOURCE', 'VALIDATOR_GAPS', 'arr', 'litOf', 'plainObj', 'CHECKS'];
   chk(() => NAMES.every((n) => CR[n] !== undefined && CR[n] === CI[n]), () => `I1: check-report.mjs re-exports check-impact.mjs's ${NAMES.filter((n) => CR[n] !== CI[n]).join(', ')}`);
-  const id = defines(NAMES.concat(['DESKTOP_OPENS', 'OPENED_IN', 'listedIn', 'impactCore']));
+  const id = defines(NAMES.concat(['DESKTOP_OPENS', 'OPENED_IN', 'OPENED_FIX', 'listedIn', 'impactCore', 'VALIDATOR_VERSION']));
   chk(() => !id.length && /from '\.\/check-impact\.mjs'/.test(src), () => `I2: check-report.mjs defines none of the impact section: ${id.join(', ')}`);
   chk(() => ['check-language.mjs', 'check-schema.mjs', 'check-impact.mjs'].every((f) => !importsCR(f)), () => `I3: a module check-report.mjs imports imports it back: ${['check-language.mjs', 'check-schema.mjs', 'check-impact.mjs'].filter(importsCR).join(', ')}`);
 }

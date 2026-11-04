@@ -13,7 +13,9 @@
 //     large here that big did not hold. The same files give the same answer; the report is never changed.
 //   pointer(instancePath) -> the place of a schema error, in the schemas' own words ('…' for a key the report chose)
 //   SCHEMA_COMMIT: the commit of microsoft/json-schemas the bundle was copied from (mcp/schemas/SOURCE.md names it too)
+//   VALIDATOR_VERSION: the version of Microsoft's validator installed beside it (mcp/package.json pins it), read once
 // The compiled schemas and the schemas' words are read once, the first time they are needed (a cache of mcp/schemas).
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Ajv from 'ajv';
@@ -26,6 +28,7 @@ const SCHEMAS = path.join(HERE, '..', 'schemas');
 const SCHEMA_ROOT = 'https://developer.microsoft.com/json-schemas/';
 export const SCHEMA_COMMIT = 'af7b264';
 const SCHEMA_FILE = /^https:\/\/developer\.microsoft\.com\/json-schemas\/[A-Za-z0-9_./-]+\/\d+\.\d+\.\d+\/schema(?:[.-]embedded)?\.json$/;
+export const VALIDATOR_VERSION = (() => { try { return JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.resolve('@microsoft/powerbi-report-authoring-cli'))), '..', 'package.json'), 'utf8')).version; } catch (e) { return 'unknown'; } })();
 const ver = (u) => { const m = /\/(\d+\.\d+\.\d+)\/schema(?:[.-]embedded)?\.json$/.exec(String(u || '')); return m ? m[1] : null; };
 const family = (u) => { const m = /\/([A-Za-z]+)\/\d+\.\d+\.\d+\/schema/.exec(String(u || '')); return m ? m[1] : null; };
 

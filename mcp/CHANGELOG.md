@@ -140,6 +140,9 @@ package's manifest; this file says what is in it.
 - **Inside the Theme Generator page:** the saved design, the colour and layout controls, and the downloads (with the
   reminder when a downloaded file is out of date) each have a file of their own; the page shows, saves and downloads
   exactly what it did before.
+- **Inside the MCP, check_report, finished:** checking the files against Microsoft's bundled schemas, telling what each
+  finding means for Power BI Desktop, and keeping the report's own names and values out of the answer each have a file
+  of their own; every check gives the same answer as before, and a check that did not run is still said, never a pass.
 
 ## [0.3.1]: 2026-11-03 (the version for testers)
 Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports

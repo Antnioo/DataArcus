@@ -38,8 +38,8 @@ const TOUCH = {
   unbundled: (why) => `\`${STATE}\` (the version seen); not bundled on purpose: ${why}`,
   theme: "the theme generator (`assets/js/design-engine.js`: the theme JSON the website and `generate_theme` write), and check_report's theme note (the theme schema is not bundled: listed under notChecked)",
   themeState: `\`${STATE}\` themeSchema (once DataArcus's themes are checked against it)`,
-  validator: "the validator pin (`mcp/package.json`; the version VALIDATOR_VERSION reads), check_report's known notes (`VALIDATOR_GAPS` in `mcp/lib/check-report.mjs`)",
-  catalog: "the catalog pin (`mcp/package.json`: the validator reads the copy installed beside it), check_report's known notes (`VALIDATOR_GAPS` in `mcp/lib/check-report.mjs`: a gap is known only while the catalog lacks the object), `NATIVE_TYPES` in `assets/js/visual-types.js`",
+  validator: "the validator pin (`mcp/package.json`; the version VALIDATOR_VERSION reads), check_report's known notes (`VALIDATOR_GAPS` in `mcp/lib/check-impact.mjs`)",
+  catalog: "the catalog pin (`mcp/package.json`: the validator reads the copy installed beside it), check_report's known notes (`VALIDATOR_GAPS` in `mcp/lib/check-impact.mjs`: a gap is known only while the catalog lacks the object), `NATIVE_TYPES` in `assets/js/visual-types.js`",
   post: 'read it for report, visual and theme changes: it feeds the next "Power BI update" job (like U1, `mcp/work/U1.md`)',
   postState: `\`${STATE}\` featureSummary (once it is read)`
 };
