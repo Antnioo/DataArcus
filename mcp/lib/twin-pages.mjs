@@ -1,23 +1,23 @@
 // The Arabic twin, step 5: the pages mirrored (assets/js/report-mirror.js, the writer's engine) and fitted for the
 // Arabic texts: buttons, text boxes, table headers, phone tabs, the panels a text box must not become.
 // (0.3.2 SP11: the text fitting in twin-text-fit.mjs; SP26: the geometry, badges, tables, grids, indentation and the
-// icon's room, in twin-geometry.mjs; buildTwin keeps the order, keepSize last)
+// icon's room, in twin-geometry.mjs; SP40: the measure rewiring, in twin-measures.mjs; buildTwin keeps the order,
+// keepSize last)
 // (0.3.1 S9: moved out of lib/arabic-twin.mjs as it was, no change of behaviour; arabic-twin.mjs re-exports what others import)
 import { safeName } from './read-report.mjs';
 import { isObj, pageOf } from './twin-read.mjs';
 import { num, posOf, typeOf, litStr, Ls, absBox } from './twin-visuals.mjs';
-import { arabicDax, titleMeasuresOf, textMeasuresOf, autoTitlesOf, autoSentence, subtitleMeasuresOf } from './twin-texts.mjs';
-import { waterfallFacts } from './twin-model.mjs';
+import { autoTitlesOf, autoSentence, subtitleMeasuresOf } from './twin-texts.mjs';
 import { langButton } from './twin-copy.mjs';
 import { HIDDEN_W, fitButtons, fitTextboxes, fitHeaders } from './twin-text-fit.mjs';
 import { boxOk, badgesWithText, aroundTables, underGrids, indentToEnd, iconRoom } from './twin-geometry.mjs';
+import { twinMeasures } from './twin-measures.mjs';
 export { keptAtMirrorLine } from './twin-geometry.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
 const Sizing = require('../../assets/js/pbip-sizing.js');
 const TextMeasure = require('../../assets/js/text-measure.js');
-const Q = require('../../assets/js/pbip-query.js');
 
 // (0.3.1 TT1, the owner, 27 Oct: a title is wholly Arabic or wholly English) a visual's title and alt text the person left
 // English, isolated as a whole as the writer isolates an Arabic report's English title (text-measure.js isolateWhole)
@@ -156,56 +156,6 @@ function fitPhoneTabs(pg, visuals, mobiles, ctx, out) {
     const x0 = Math.min(gb.x, ...kids.map((q) => q.x)), x1 = Math.max(gb.x + gb.width, ...kids.map((q) => q.x + q.width));
     gb.x = Mirror.round(x0); gb.width = Mirror.round(x1 - x0); });
 }
-const EXT_SCHEMA = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json';
-
-// (0.3.0 X1) a visual of the Arabic pages moved to the Arabic copy of a report measure (rename: "Entity\0name" -> the
-// copy's name): the field, its queryRef and every selector naming it, and its nativeQueryRef, as Power BI names a
-// measure's projection ("Entity.Name", "Name")
-function rewireMeasures(vj, rename) {
-  const refs = new Map();
-  rename.forEach((to, k) => { const [entity, from] = k.split('\u0000'); refs.set(entity + '.' + from, { ref: entity + '.' + to, from, to }); });
-  const walk = (o) => {
-    if (Array.isArray(o)) { o.forEach(walk); return; }
-    if (!isObj(o)) return;
-    const ms = isObj(o.Measure) ? o.Measure : null, src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
-    if (src && src.Schema === 'extension' && rename.has(src.Entity + '\u0000' + ms.Property)) ms.Property = rename.get(src.Entity + '\u0000' + ms.Property);
-    const r = typeof o.queryRef === 'string' ? refs.get(o.queryRef) : null;
-    if (r && o.nativeQueryRef === r.from) o.nativeQueryRef = r.to;
-    Object.keys(o).forEach((k) => { if (typeof o[k] === 'string' && refs.has(o[k])) o[k] = refs.get(o[k]).ref; else walk(o[k]); });
-  };
-  walk(vj);
-}
-
-// (0.3.1 TW1, M1-S2: the twin's mirrored table had no "Total": Power BI writes it only in the first projection's column,
-// and only when that is a column of text (measured, round 10), and the reversed columns put a number first) A table whose
-// original starts with a column of text and shows a number takes the writer's right-to-left table (pbip-query.js
-// rowLabelOf, round 23, proven in Desktop 2.158 on 8 Oct): that column first at width 0 (hidden; it keeps the rows, their
-// order and what a click filters), the numbers as mirrored, and at the right the report measure "Row label: <Column>"
-// (rowLabelDax: the row's name, «الإجمالي» on the total row) under the column's header, with the column's width. A name
-// with a control character, or a number Power BI sums in a way DAX can't name, keeps the table as mirrored (AUD-032).
-// isText(t, c): the model's type allows text; extMeasure(t, want, expression): the measure's free name. Returns
-// "Table[Row label: ...]" or null
-const fieldOk = (f) => isObj(f) && isObj(f.Expression) && isObj(f.Expression.SourceRef) && !f.Expression.SourceRef.Schema && typeof f.Expression.SourceRef.Entity === 'string' && typeof f.Property === 'string';
-function rowLabelTable(vj, isText, extMeasure) {
-  const qs = typeOf(vj) === 'tableEx' && isObj(vj.visual.query) && isObj(vj.visual.query.queryState) ? vj.visual.query.queryState : null, ps = qs && isObj(qs.Values) && Array.isArray(qs.Values.projections) ? qs.Values.projections : null;
-  if (!ps || ps.length < 2 || !ps.every((p) => isObj(p) && isObj(p.field) && typeof p.queryRef === 'string')) return null;
-  const last = ps[ps.length - 1], col = last.field.Column;
-  if (!fieldOk(col) || !isText(col.Expression.SourceRef.Entity, col.Property)) return null;
-  const f = { t: col.Expression.SourceRef.Entity, c: col.Property }, rest = ps.slice(0, -1);
-  const vals = rest.filter((p) => (isObj(p.field.Measure) && !(isObj(p.field.Measure.Expression) && isObj(p.field.Measure.Expression.SourceRef) && p.field.Measure.Expression.SourceRef.Schema)) || (isObj(p.field.Aggregation) && p.displayName !== ' '));
-  const okVal = (p) => (p.field.Measure ? fieldOk(p.field.Measure) : isObj(p.field.Aggregation.Expression) && fieldOk(p.field.Aggregation.Expression.Column) && Q.AGG_DAX[p.field.Aggregation.Function] != null);
-  const names = (p) => (p.field.Measure ? [p.field.Measure.Expression.SourceRef.Entity, p.field.Measure.Property] : [p.field.Aggregation.Expression.Column.Expression.SourceRef.Entity, p.field.Aggregation.Expression.Column.Property]);
-  if (!vals.length || !vals.every(okVal) || [f.t, f.c].concat(...vals.map(names)).some((n) => Q.hasControl(n))) return null;
-  const name = extMeasure(f.t, Q.ROW_LABEL + Q.shown(f.c), Q.rowLabelDax(f, 'الإجمالي', vals)), ref = f.t + '.' + name;
-  qs.Values.projections = [last].concat(rest, [{ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: f.t } }, Property: name } }, queryRef: ref, nativeQueryRef: name, displayName: last.displayName != null ? last.displayName : (last.nativeQueryRef || f.c) }]);
-  const o = vj.visual.objects = isObj(vj.visual.objects) ? vj.visual.objects : {}, cw = o.columnWidth = Array.isArray(o.columnWidth) ? o.columnWidth : [];
-  const w = cw.find((e) => isObj(e) && isObj(e.selector) && e.selector.metadata === last.queryRef && isObj(e.properties));
-  if (w) cw.push({ properties: { value: w.properties.value }, selector: { metadata: ref } });
-  if (w) w.properties.value = { expr: { Literal: { Value: '0D' } } }; else cw.push({ properties: { value: { expr: { Literal: { Value: '0D' } } } }, selector: { metadata: last.queryRef } });
-  const cf = o.columnFormatting = Array.isArray(o.columnFormatting) ? o.columnFormatting : [];
-  cf.push({ properties: { alignment: Ls('Right'), styleHeader: { expr: { Literal: { Value: 'true' } } }, styleValues: { expr: { Literal: { Value: 'true' } } }, styleTotal: { expr: { Literal: { Value: 'true' } } } }, selector: { metadata: ref } });
-  return f.t + '[' + name + ']';
-}
 
 // (0.3.1 MP1d, the owner, 1 Nov, on part 7 vs part 8: Call Center's heatmap row cut to a sliver and nothing caught it)
 // the twin never shrinks a visual. Run last on each page, after every rule (the mirror, the badges, the tables, the
@@ -233,65 +183,14 @@ export function keepSize(enVisuals, arVisuals, W, shared) {
 // applied, ext (the twin's reportExtensions.json or null), titleMeasures, fitted }
 export function buildTwin(P, labels) {
   const { R } = P, opts = { timeRightToLeft: P.timeRightToLeft !== false, waterfallRtl: P.waterfallRtl, dateTables: P.dateTables, dateColumns: P.dateColumns, textColumns: P.textColumns };
-  // (D1) a waterfall's measures go into the twin's own reportExtensions.json (the original's copied, or a new one), each
-  // name free of the model's and the report's; the same DAX in the same table is one measure
-  const wfWritten = [];
-  opts.waterfall = Object.assign(waterfallFacts(P.model), { theme: R.theme, extMeasure: (t, want, expression, dataType, formatString) => {
-    if (!ext) ext = { $schema: EXT_SCHEMA, name: 'extension', entities: [] };
-    let e = ext.entities.find((x) => isObj(x) && x.name === t); if (!e) ext.entities.push(e = { name: t, measures: [] }); if (!Array.isArray(e.measures)) e.measures = [];
-    const had = wfWritten.find((x) => x.t === t && x.expression === expression); if (had) return had.m;
-    const names = takenAnywhere(); let m = want; for (let k = 2; names.has(m.toLowerCase()); k++) m = want + ' (' + k + ')';
-    e.measures.push(Object.assign({ name: m, dataType, expression }, formatString ? { formatString } : {})); wfWritten.push({ t, m, expression }); return m; } });
+  // (0.3.2 SP40) the twin's measures (twin-measures.mjs): its own copy of reportExtensions.json, the title, text,
+  // waterfall and row label measures, each name free; the mirror's waterfall takes its measures from it
+  const M = twinMeasures(P, labels);
+  opts.waterfall = M.waterfall;
   const TC = P.R.theme && isObj(P.R.theme.textClasses) ? P.R.theme.textClasses : {}, lab = isObj(TC.label) ? TC.label : {};
   const ctx = { text: { labelSize: +lab.fontSize || 10, font: lab.fontFace || 'Segoe UI' }, theme: R.theme };
-  let applied = 0;
-  // the title measures: the twin's own Arabic ones, named "Title AR: ...", beside the original's (which stay as they are)
-  const tms = titleMeasuresOf(R), rename = new Map(), written = [];
-  let ext = R.ext ? JSON.parse(JSON.stringify(R.ext)) : null;
-  // (D1: a measure's name is unique across the whole model, report measures included, without case (writer P3): the
-  // waterfall's names are checked against every table's and every report measure's)
-  const takenAnywhere = () => new Set([].concat(...((ext && ext.entities) || []).map((e) => (isObj(e) && Array.isArray(e.measures) ? e.measures.map((x) => (isObj(x) ? x.name : '')) : [])),
-    ...((P.model && P.model.tables) || []).map((t) => (t.columns || []).map((c) => c.name).concat((t.measures || []).map((c) => c.name)))).map((n) => String(n).toLowerCase()));
-  const taken = (entity) => { const e = ext.entities.find((x) => isObj(x) && x.name === entity), t = P.model && (P.model.tables || []).find((x) => x.name === entity);
-    return new Set([].concat((e && Array.isArray(e.measures) ? e.measures : []).map((x) => isObj(x) ? x.name : ''), t ? (t.columns || []).map((c) => c.name).concat((t.measures || []).map((c) => c.name)) : []).map((n) => String(n).toLowerCase())); };
-  tms.filter((x) => x.pd.branches && ext).forEach((x) => {
-    const ls = x.pd.branches.map((b) => (labels['titleText:' + b.template] != null ? labels['titleText:' + b.template] : null));
-    if (ls.every((l) => l == null)) return;
-    const e = ext.entities.find((y) => isObj(y) && y.name === x.entity), base = /^Title: /.test(x.name) ? 'Title AR: ' + x.name.slice(7) : 'Title AR: ' + x.name, names = taken(x.entity);
-    let name = base; for (let k = 2; names.has(name.toLowerCase()); k++) name = base + ' (' + k + ')';
-    e.measures.push(Object.assign(JSON.parse(JSON.stringify(x.measure)), { name, expression: arabicDax(x.pd, ls) }));
-    rename.set(x.entity + '\u0000' + x.name, name); written.push(safeName(x.entity + '[' + name + ']'));
-  });
-  // (0.3.0 D3) the report's other text measures a visual shows (the empty state): rewritten in the twin's own copy of
-  // reportExtensions.json (the original's file is only read), each text as approved
-  let rewritten = 0;
-  // (0.3.0 X1) both languages in one report: the English pages keep the measure as it is, the Arabic pages get their own
-  // ("No data AR: ..."), each name free as the waterfall's are, and their visuals are moved to it (textRename)
-  const textRename = new Map();
-  if (ext) textMeasuresOf(R).filter((x) => x.pd.branches).forEach((x) => {
-    const ls = x.pd.branches.map((b) => (b.template && labels['measureText:' + b.template] != null ? labels['measureText:' + b.template] : null));
-    if (ls.every((l) => l == null)) return;
-    const e = ext.entities.find((y) => isObj(y) && y.name === x.entity), m = e && Array.isArray(e.measures) ? e.measures.find((y) => isObj(y) && y.name === x.name) : null;
-    if (!m) return;
-    if (P.same) {
-      const base = /^No data: /.test(x.name) ? 'No data AR: ' + x.name.slice(9) : x.name + ' AR', names = takenAnywhere();
-      let name = base; for (let k = 2; names.has(name.toLowerCase()); k++) name = base + ' (' + k + ')';
-      e.measures.push(Object.assign(JSON.parse(JSON.stringify(m)), { name, expression: arabicDax(x.pd, ls) }));
-      textRename.set(x.entity + '\u0000' + x.name, name);
-    } else m.expression = arabicDax(x.pd, ls);
-    rewritten++; applied++;
-  });
-  // (TW1, M1-S2) the tables' row labels: each in the twin's reportExtensions.json, named free as the waterfall's are; the
-  // same DAX in the same table is one measure
-  const rlWritten = [], tables = [];
-  const typeIn = (t, c) => { const tb = P.model && (P.model.tables || []).find((x) => x.name === t), cl = tb && (tb.columns || []).find((x) => x.name === c); return cl ? String(cl.dataType || '') : ''; };
-  const isText = (t, c) => /^(|string|text|unknown)$/i.test(typeIn(t, c));
-  const rowLabelMeasure = (t, want, expression) => {
-    if (!ext) ext = { $schema: EXT_SCHEMA, name: 'extension', entities: [] };
-    let e = ext.entities.find((x) => isObj(x) && x.name === t); if (!e) ext.entities.push(e = { name: t, measures: [] }); if (!Array.isArray(e.measures)) e.measures = [];
-    const had = rlWritten.find((x) => x.t === t && x.expression === expression); if (had) return had.m;
-    const names = takenAnywhere(); let m = want; for (let k = 2; names.has(m.toLowerCase()); k++) m = want + ' (' + k + ')';
-    e.measures.push({ name: m, dataType: 'Text', expression }); rlWritten.push({ t, m, expression }); return m; };
+  let applied = M.applied;
+  const tables = [];
   const keptInView = [], laidOut = [], grown = [], fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [], textboxes: [], textboxesCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 }, sizeKept = [], ruleMoves = [];
   const pages = R.pages.map((pg) => {
     let page = pg.page;
@@ -323,12 +222,8 @@ export function buildTwin(P, labels) {
       // (TB1b) a subtitle given by a measure: written only as its approved Arabic (a fixed subtitle)
       subtitleMeasuresOf(vj).forEach(({ i }) => { const ar = labels[`text:${pg.id}/${vj.name}/c.subTitle.${i}.text`]; if (ar != null && String(ar).trim()) { vj.visual.visualContainerObjects.subTitle[i].properties.text = Ls(String(ar)); applied++; } });
       if (isObj(vj) && isObj(vj.visual)) wholeTitles(vj.visual.visualContainerObjects);
-      if (textRename.size) rewireMeasures(vj, textRename);
-      if (!P.keepLtr(pg)) { const rl = rowLabelTable(vj, isText, rowLabelMeasure); if (rl) tables.push({ page: safeName(pg.id), visual: safeName(String(vj.name)), measure: safeName(rl) }); }
-      if (!P.keepLtr(pg)) Mirror.rowLabelStyle(vj);   // (0.3.1 MX1) the row label column keeps its text column's colours
-      const t = isObj(vj) && isObj(vj.visual) && isObj(vj.visual.visualContainerObjects) && Array.isArray(vj.visual.visualContainerObjects.title) ? vj.visual.visualContainerObjects.title : [];
-      t.forEach((e) => { const ms = isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) && isObj(e.properties.text.expr.Measure) ? e.properties.text.expr.Measure : null, src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
-        if (src && src.Schema === 'extension' && rename.has(src.Entity + '\u0000' + ms.Property)) { ms.Property = rename.get(src.Entity + '\u0000' + ms.Property); applied++; } });
+      // (0.3.0 X1, TW1, MX1, the title measures) its measures: the Arabic copies, the table's row label, the title's own
+      { const m = M.rewire(vj, pg.id, !P.keepLtr(pg)); applied += m.applied; if (m.table) tables.push(m.table); }
     });
     if (!P.keepLtr(pg)) r.visuals.forEach((vj, i) => { if (pg.visuals[i] && Mirror.kindOf(vj) === 'textbox') indentToEnd(pg.visuals[i].json, vj); });
     // (the fitting reads and changes only the twin's copies)
@@ -363,17 +258,7 @@ export function buildTwin(P, labels) {
     if (mobiles.some(Boolean)) { phone.pages++; if (!P.keepLtr(pg)) { try { fitPhoneTabs(pg, r.visuals, mobiles, ctx, phone); } catch (e) { /* a shape not expected: left as it is */ } } }
     return { pg, page, visuals: r.visuals, mobiles, extra };
   });
-  // (0.3.1 TB1c, the laptop's part 5: the write said "translated: 0 ... stays as the model gives it" of two measure
-  // titles written as approved fixed Arabic) a title measure no title of the twin's pages still shows was replaced by
-  // approved fixed Arabic titles: fixed, not "not translated"
-  const shownTitle = new Set(); pages.forEach((x) => x.visuals.forEach((vj) => { const t = isObj(vj) && isObj(vj.visual) && isObj(vj.visual.visualContainerObjects) && Array.isArray(vj.visual.visualContainerObjects.title) ? vj.visual.visualContainerObjects.title : [];
-    t.forEach((e) => { const ms = isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) && isObj(e.properties.text.expr.Measure) ? e.properties.text.expr.Measure : null, src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
-      if (src) shownTitle.add((src.Schema === 'extension' ? 'ext' : 'model') + '\u0000' + src.Entity + '\u0000' + ms.Property); }); }));
-  const stillShown = (x) => shownTitle.has((x.own ? 'ext' : 'model') + '\u0000' + x.entity + '\u0000' + x.name);
-  const notTranslated = tms.filter((x) => !x.pd.branches && stillShown(x)).map((x) => ({ what: 'Chart title (from a title measure)', measure: safeName(x.entity + '[' + x.name + ']'), why: x.pd.why }));
-  const fixedTitles = tms.filter((x) => !x.pd.branches && !stillShown(x)).map((x) => ({ measure: safeName(x.entity + '[' + x.name + ']'), why: 'every title it gave is written as its approved fixed Arabic title (it no longer changes with the selection)' }));
-  // (0.3.0 D3) the original's own title measures the twin's charts no longer use: left in the twin's file as they are
-  // (X1: in one report the English pages still show them)
-  const notShown = P.same ? [] : [...rename.keys()].map((k) => { const [entity, name] = k.split('\u0000'); return { measure: safeName(entity + '[' + name + ']'), now: safeName(entity + '[' + rename.get(k) + ']'), why: 'the original\'s title measure: the twin\'s charts use their own Arabic one instead; left in the twin\'s reportExtensions.json as it is, and no visual of the twin shows it' }; });
-  return { pages, applied, phone, notShown, sizeKept, ruleMoves, keptInView, laidOut, grown, ext: written.length || rewritten || wfWritten.length || rlWritten.length ? ext : null, tables, fitted, titleMeasures: tms.length ? Object.assign({ measures: tms.length, translated: written.length, written, notTranslated }, fixedTitles.length ? { fixed: fixedTitles } : {}) : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
+  // (the measures: what is said of them, from the twin's pages as built)
+  const S = M.said(pages);
+  return { pages, applied, phone, notShown: S.notShown, sizeKept, ruleMoves, keptInView, laidOut, grown, ext: S.ext, tables, fitted, titleMeasures: S.titleMeasures, waterfallMeasures: S.waterfallMeasures, textMeasures: S.textMeasures };
 }

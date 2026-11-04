@@ -123,6 +123,9 @@ package's manifest; this file says what is in it.
 - **Inside the Arabic twin, its layout:** keeping a small icon with its text, a chart on a table or under a heatmap's
   grid, a text box's indentation and the room beside its icon have a file of their own; every twin and its plan are
   byte for byte what they were before.
+- **Inside the Arabic twin, its measures:** the twin's own Arabic title and "No data" measures, its waterfall and
+  table row label measures, and moving each visual to them have a file of their own; every twin and its plan are
+  byte for byte what they were before.
 - **Inside the MCP, the model reader:** the screen that marks names reading like instructions, how a name is shown,
   the column types and the KPI list each have a file of their own; read_model answers exactly as before.
 - **Inside the MCP, the approval page:** what each approval page and the app's own prompt say about a plan is put
