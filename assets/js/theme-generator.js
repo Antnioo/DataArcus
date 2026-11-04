@@ -289,8 +289,10 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(() => (window.DAModelFile ? null : loadScript('/assets/js/model-file.min.js?v=47bc00d4a4cb')))
       .then(() => (window.DAModelNearest ? null : loadScript('/assets/js/model-nearest.min.js?v=c6ffd3114120')))
       .then(() => (window.DAModelImport ? null : loadScript('/assets/js/model-import-browser.min.js?v=16b8206a59b7')))
+      // (DD1H: which column sorts a month or day name is sort-column.js's, which field-catalog.js reads when it loads: loaded first)
+      .then(() => (window.DASortColumn ? null : loadScript('/assets/js/sort-column.min.js?v=8fba2c19aba2')))
       // (SP30: the model's metadata, normalised, is field-catalog.js's, which pbip-bind.js reads when it loads: loaded first)
-      .then(() => (window.DAFieldCatalog ? null : loadScript('/assets/js/field-catalog.min.js?v=b4ddf4d0f03a')))
+      .then(() => (window.DAFieldCatalog ? null : loadScript('/assets/js/field-catalog.min.js?v=cf93392ccf9b')))
       // (SP30: the ranking is field-suggest.js's, which reads field-catalog.js and which pbip-bind.js reads: loaded between)
       .then(() => (window.DAFieldSuggest ? null : loadScript('/assets/js/field-suggest.min.js?v=748e6d5f87c5')))
       .then(() => loadScript('/assets/js/pbip-bind.min.js?v=600d69b2b551')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));

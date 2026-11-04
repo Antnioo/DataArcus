@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **The health check now finds the sort column the report writer finds:** a month or day name whose number column has
+  no type in the model files is now sorted by that number column in the fix script, as the report writer sorts it,
+  instead of the script adding a second number column of its own.
 - **The site now asks which model, as the MCP does:** choose a folder with two models side by side and the page names both
   and asks you to choose the model's own folder, instead of quietly using the first one by name.
 - **The Arabic twin, a visual in a broken group:** a visual inside a group whose size is not a usable number (a width
