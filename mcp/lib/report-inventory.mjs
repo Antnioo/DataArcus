@@ -13,13 +13,11 @@
 // No state: the answer comes from the source alone.
 import path from 'node:path';
 import { INSTRUCTION, LONG_TEXT, Linked, REPORT_LIMITS, safeName, safeText, TooBig } from './read-report.mjs';
-import { meaningInReport, VT } from './visual-meaning.mjs';
+import { meaningInReport, VT, PV } from './visual-meaning.mjs';
 
 // ---- reading a visual's parts ----
-const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
-const litStr = (p) => { const v = lit(p); return v == null ? null : /^'.*'$/s.test(String(v)) ? String(v).slice(1, -1).replace(/''/g, "'") : String(v).replace(/[DLM]$/, ''); };
-const litNum = (p) => { const n = parseFloat(lit(p)); return isNaN(n) ? null : n; };
-const litBool = (p) => { const v = lit(p); return v === 'true' || v === true ? true : v === 'false' || v === false ? false : null; };
+// (0.3.2 DD1B) read-only, the value as shown (12D -> "12"), its number and its true or false: assets/js/pbir-values.js
+const litStr = PV.litShown, litNum = PV.litNumber, litBool = PV.litBool;
 // (A5-2, audit 5: only objects; a null entry in a list made the whole reader throw)
 const entries = (list) => (Array.isArray(list) ? list.filter((e) => e && typeof e === 'object') : []);
 // a list of names (strings), for the lists that hold names, not objects

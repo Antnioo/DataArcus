@@ -14,6 +14,8 @@ import { freeNamer, tagOf, scriptFileOf } from './model-script.mjs';   // (the o
 import { besideSaid } from './plain-words.mjs';   // (0.3.1 R4A, T-9: the folder by its name and where it is)
 
 const require = createRequire(import.meta.url);
+// a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
+const { litText, litNumber } = require('../../assets/js/pbir-values.js');
 const Fix = require('../../assets/js/model-health-tmdl.js'), Pbip = require('../../assets/js/pbip-export.js');
 const dax = Pbip.daxNames;
 
@@ -22,9 +24,7 @@ const SCHEMA = { visual: S + 'item/report/definition/visualContainer/2.1.0/schem
   bookmark: S + 'item/report/definition/bookmark/1.4.0/schema.json', bookmarks: S + 'item/report/definition/bookmarksMetadata/1.0.0/schema.json' };
 const lit = (v) => ({ expr: { Literal: { Value: v } } }), str = (s) => lit("'" + String(s).replace(/'/g, "''") + "'"), bool = (b) => lit(b ? 'true' : 'false');
 const obj = (p) => [{ properties: p }];
-const litOf = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value) : '');
-const textOf = (p) => litOf(p).replace(/^'|'$/g, '').replace(/''/g, "'");
-const numOf = (p) => parseFloat(litOf(p));
+const textOf = litText, numOf = litNumber;
 export const FOLDER = 'DataArcus flip cards';
 export const SCRIPT_SUFFIX = ' - flip cards';
 const SUFFIX = { front: 'flip front', back: 'flip back', backdrop: 'flip backdrop' };

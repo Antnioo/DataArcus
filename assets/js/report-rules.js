@@ -9,8 +9,9 @@
 (function (root) {
   'use strict';
   const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
-  const num = (p) => parseFloat(lit(p));
-  const str = (p) => { const v = lit(p); return v == null ? '' : String(v).replace(/^'|'$/g, '').replace(/''/g, "'"); };
+  // a literal's text, number and true or false, a column's set width: pbir-values.js, their one home (0.3.2 DD1B)
+  const PV = typeof module !== 'undefined' && module.exports ? require('./pbir-values.js') : root.DAPbirValues;
+  const num = PV.litNumber, str = PV.litText;
   const entries = (list) => (Array.isArray(list) ? list : []);
   const plain = (list) => entries(list).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e.properties || {}), {});
   const withId = (list, id) => entries(list).filter((e) => e && e.selector && e.selector.id === id).reduce((a, e) => Object.assign(a, e.properties || {}), {});
@@ -97,7 +98,7 @@
   // (with its icon, as wide as the button is high), a page button one line (one), or two lines (half) when two fit its
   // height (two)
   function buttonNeed(x, R) {
-    const o = (x.json.visual || {}).objects || {}, tx = look(o.text), t = num(tx.fontSize) || R.labelSize, text = str(tx.text), n = text.length;
+    const o = (x.json.visual || {}).objects || {}, tx = look(o.text), t = num(tx.fontSize) || R.labelSize, text = str(tx.text) ?? '', n = text.length;
     if (!n) return null;
     if (isPageButton(x)) {
       const font = str(tx.fontFamily) || R.font, one = Math.ceil(PAGE_TW(text, t, font)), two = Math.ceil(PAGE_TWO_LINES(t, font)), half = Math.ceil((one - 10) / 2 + 10);
@@ -105,7 +106,7 @@
     }
     if (lit(plain(o.text).show) === 'false') return null;
     const icon = (str(look(o.icon).shapeType) || 'blank') !== 'blank' && lit(plain(o.icon).show) !== 'false';
-    return { page: false, t, n, font: str(tx.fontFamily), icon, needH: BTN_H(t), needW: Math.ceil(icon ? BTN_ICON_TW(text, t, str(tx.fontFamily)) + x.h : BTN_TW(t, n)) };
+    return { page: false, t, n, font: str(tx.fontFamily) ?? '', icon, needH: BTN_H(t), needW: Math.ceil(icon ? BTN_ICON_TW(text, t, str(tx.fontFamily)) + x.h : BTN_TW(t, n)) };
   }
 
   // (0.2.9.1, B-173: the one measurement of a table header, for TABLE_HEADER_CUT and the Arabic twin, which widens each
@@ -130,7 +131,7 @@
     const th = ((((theme || {}).visualStyles || {}).tableEx || {})['*']) || {}, first = (list, k) => (Array.isArray(list) && list[0] && typeof list[0] === 'object' ? list[0][k] : undefined);
     const t = num(hp.fontSize) || +first(th.columnHeaders, 'fontSize') || +first(th.values, 'fontSize') || 10, f = str(hp.fontFamily) || font;
     if (String(lit(hp.wordWrap)) === 'true' || !Array.isArray(o.columnWidth)) return { t, font: f, cols: [] };
-    const widthOf = (ref) => { const e = o.columnWidth.find((x) => x && x.selector && x.selector.metadata === ref && x.properties && Number.isFinite(num(x.properties.value))); return e ? num(e.properties.value) : null; };
+    const widthOf = (ref) => PV.columnWidth(o.columnWidth, ref);
     const ps = entries((((v.query || {}).queryState || {}).Values || {}).projections).filter((p) => p && typeof p.queryRef === 'string');
     const cols = ps.filter((p) => (widthOf(p.queryRef) || 0) > 1).map((p) => {
       const text = String(p.displayName != null ? p.displayName : p.nativeQueryRef || ''), width = widthOf(p.queryRef), m = headerNeed(text, t, f, sc);
@@ -147,7 +148,7 @@
       run(R, out) {
         R.visuals.forEach((x) => {
           const sizes = [];
-          const walk = (o) => { if (!o || typeof o !== 'object') return; for (const [k, v] of Object.entries(o)) { if (/^(fontSize|textSize)$/.test(k) && v && v.expr) sizes.push(num(v)); else if (k === 'textStyle' && v && v.fontSize) sizes.push(parseFloat(v.fontSize)); else walk(v); } };
+          const walk = (o) => { if (!o || typeof o !== 'object') return; for (const [k, v] of Object.entries(o)) { if (/^(fontSize|textSize)$/.test(k) && v && v.expr) sizes.push(num(v) ?? NaN); else if (k === 'textStyle' && v && v.fontSize) sizes.push(parseFloat(v.fontSize)); else walk(v); } };
           walk((x.json.visual || {}).objects); walk((x.json.visual || {}).visualContainerObjects);
           const bad = sizes.filter((t) => !isNaN(t) && (t < 8 || t > 60));
           if (bad.length) out(x, `${bad.length} text size${bad.length === 1 ? '' : 's'} outside 8-60pt (${bad.join(', ')}pt)`, 'Use sizes from 8 to 60pt: Power BI refuses a theme outside that range, and on a visual such a size draws badly.');
@@ -251,7 +252,7 @@
       run(R, out) {
         R.visuals.forEach((x) => {
           const t = plain(((x.json.visual || {}).visualContainerObjects || {}).visualTooltip);
-          if (t.type && str(t.type) !== 'Canvas' && str(t.type) !== 'Default' && t.section) out(x, `the tooltip page is linked with type "${str(t.type).replace(/[^A-Za-z]/g, '').slice(0, 20)}"`, 'Use type "Canvas" with the tooltip page\'s name in "section"; otherwise Desktop shows its default tooltip.');
+          if (t.type && str(t.type) !== 'Canvas' && str(t.type) !== 'Default' && t.section) out(x, `the tooltip page is linked with type "${String(str(t.type) ?? '').replace(/[^A-Za-z]/g, '').slice(0, 20)}"`, 'Use type "Canvas" with the tooltip page\'s name in "section"; otherwise Desktop shows its default tooltip.');
         });
       } },
     { id: 'IMAGE_FIT', group: 'selectors', severity: 'warning', source: SRC.round0,
@@ -362,7 +363,7 @@
           if (NOT_DATA.includes(x.type) || fields < 2) return;
           [['title', 'title'], ['subTitle', 'subtitle']].forEach(([card, said]) => {
             const t = entries((v.visualContainerObjects || {})[card]).filter((e) => e && !e.selector && e.properties);
-            const noText = !t.some((e) => e.properties.text !== undefined && !(lit(e.properties.text) !== undefined && !str(e.properties.text).trim()));
+            const noText = !t.some((e) => e.properties.text !== undefined && !(lit(e.properties.text) !== undefined && !(str(e.properties.text) ?? '').trim()));
             const shown = t.filter((e) => e.properties.show !== undefined), on = shown.length ? lit(shown[shown.length - 1].properties.show) === 'true' : null;
             // (FX3b) no "show" set (a missing title card, the owner's hand-made charts): the type's default title, from the
             // catalog; a subtitle is off unless switched on

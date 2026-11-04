@@ -22,6 +22,8 @@ import { MATRIX_SAID } from './arabic-twin.mjs';
 import { NO_DIRECT_EDITS } from './agent-text.mjs';
 
 const require = createRequire(import.meta.url);
+// a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
+const { litText, litBool } = require('../../assets/js/pbir-values.js');
 const Rules = require('../../assets/js/report-rules.js');
 const Mirror = require('../../assets/js/report-mirror.js');
 const ArabicCal = require('../../assets/js/arabic-calendar.js');
@@ -30,7 +32,7 @@ const ArabicCal = require('../../assets/js/arabic-calendar.js');
 const arr = (v) => (Array.isArray(v) ? v : []);
 const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
 const litOf = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
-const strOf = (p) => { const v = litOf(p); return v == null ? null : String(v).replace(/^'|'$/g, '').replace(/''/g, "'"); };
+const strOf = litText;
 const plainOf = (list) => arr(list).filter((e) => isObj(e) && !e.selector && isObj(e.properties)).reduce((a, e) => Object.assign(a, e.properties), {});
 const lookOf = (list) => { const d = arr(list).filter((e) => isObj(e) && isObj(e.selector) && e.selector.id === 'default' && isObj(e.properties)).reduce((a, e) => Object.assign(a, e.properties), {}); return Object.keys(d).length ? d : plainOf(list); };
 const vis = (x) => (isObj(x.json) && isObj(x.json.visual) ? x.json.visual : {});
@@ -39,7 +41,7 @@ const vco = (x) => (isObj(vis(x).visualContainerObjects) ? vis(x).visualContaine
 const projections = (x, role) => { const q = vis(x).query, s = isObj(q) && isObj(q.queryState) ? q.queryState : {}; return role ? arr((s[role] || {}).projections) : Object.values(s).flatMap((r) => arr(r && r.projections)); };
 const AR = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/, LAT = /[A-Za-z]/;
 const arabic = (t) => AR.test(String(t || '')), latinOnly = (t) => LAT.test(String(t || '')) && !arabic(t);
-const shownTitle = (x) => { const t = plainOf(vco(x).title); return strOf(t.show) === 'true' && typeof litOf(t.text) === 'string' ? strOf(t.text) : null; };
+const shownTitle = (x) => { const t = plainOf(vco(x).title); return litBool(t.show) === true && typeof litOf(t.text) === 'string' ? strOf(t.text) : null; };
 const buttonText = (x) => (x.type === 'actionButton' ? strOf(lookOf(objs(x).text).text) : null);
 const paragraphs = (x) => arr(plainOf(objs(x).general).paragraphs).filter(isObj);
 const boxText = (x) => paragraphs(x).map((p) => arr(p.textRuns).map((r) => (isObj(r) ? String(r.value || '') : '')).join('')).join('\n');
@@ -141,9 +143,9 @@ export function arabicLens(p) {
     if (fields.size) add(pg, 'FIELD_NAMES', `${fields.size} field name${fields.size === 1 ? '' : 's'} shown in English (axis titles, table headers, legends, slicer headers)${ar ? ' on a page meant for Arabic' : ''}`, fix(pg, 'Rename the field for each visual (double-click it in the visual\'s field well): Power BI shows that name everywhere the visual shows the field; the model is not renamed.', 'The twin names each field in the Arabic the user approves (the plan\'s field texts), for the visual only; the model is not renamed.'), { count: fields.size });
     // 4. charts and tables
     const ofKind = (k) => live.filter((x) => Mirror.kindOf(x.json) === k);
-    const bars = ofKind('bar').filter((x) => strOf(plainOf(objs(x).categoryAxis).switchAxisPosition) !== 'true');
+    const bars = ofKind('bar').filter((x) => litBool(plainOf(objs(x).categoryAxis).switchAxisPosition) !== true);
     if (bars.length) add(pg, 'BAR_LTR', `${bars.length} bar chart${bars.length === 1 ? ' has its' : 's have their'} names at the left and bars growing to the right`, fix(pg, 'For each bar chart: the category axis\'s Switch axis position on (names at the right) and the value axis\'s Invert range on (bars grow from the right), the two settings the twin writes.', `The twin mirrors them (${Mirror.KIND_WHAT.bar}).`), { count: bars.length });
-    const cols = ofKind('column').filter((x) => strOf(plainOf(objs(x).valueAxis).switchAxisPosition) !== 'true');
+    const cols = ofKind('column').filter((x) => litBool(plainOf(objs(x).valueAxis).switchAxisPosition) !== true);
     const isTime = (x) => { const m = (o) => JSON.stringify((Mirror.mirrorVisual(x.json, W, Object.assign({ dateTables }, o)).json.visual || {}).query); return m({ timeRightToLeft: true }) !== m({ timeRightToLeft: false }); };
     const timeCols = cols.filter(isTime), otherCols = cols.filter((x) => !timeCols.includes(x));
     if (timeCols.length) add(pg, 'TIME_AXIS', `${timeCols.length} chart${timeCols.length === 1 ? '' : 's'} over time (line, column, area or combo) ${timeCols.length === 1 ? 'runs' : 'run'} left to right: the first period at the left, the value axis at the left`,

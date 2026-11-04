@@ -5,6 +5,9 @@
 // arr are check-report.mjs's (one copy): this module and check-report.mjs import each other, and neither calls the
 // other's functions while it loads.
 import { litOf, plainObj, arr } from './check-impact.mjs';   // (0.3.2 SP41, B-320: no longer check-report.mjs's: the cycle broken)
+import { createRequire } from 'node:module';
+// a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
+const { litText } = createRequire(import.meta.url)('../../assets/js/pbir-values.js');
 
 // ---- each page's language (0.3.1 S1: an EN-AR copy, the English pages and their hidden Arabic copies with language
 // buttons, was judged all Arabic: its English pages were told to put their titles right and their Tab order right to
@@ -14,7 +17,7 @@ import { litOf, plainObj, arr } from './check-impact.mjs';   // (0.3.2 SP41, B-3
 const AR_LETTERS = /[؀-ۿݐ-ݿﭐ-﻿]/g, HE_LETTERS = /[֐-׿יִ-ﭏ]/g, LAT_LETTERS = /[A-Za-z]/g;
 export const langOfTexts = (list, latin) => { const l = list.join(' '), ar = (l.match(AR_LETTERS) || []).length, he = (l.match(HE_LETTERS) || []).length, lat = (l.match(LAT_LETTERS) || []).length;
   return ar > lat && ar >= he ? 'ar' : he > lat ? 'he' : latin && lat > ar + he ? 'en' : null; };
-const litOfS = (p) => { const v = litOf(p); return v == null ? null : String(v).replace(/^'|'$/g, '').replace(/''/g, "'"); };
+const litOfS = litText;
 const plainOf = (list) => arr(list).filter((e) => plainObj(e) && !e.selector && plainObj(e.properties)).reduce((a, e) => Object.assign(a, e.properties), {});
 const linkTo = (x) => { const l = plainOf((((x.json || {}).visual || {}).visualContainerObjects || {}).visualLink); return litOfS(l.type) === 'PageNavigation' ? litOfS(l.navigationSection) : null; };
 const buttonText = (x) => { const es = arr((((x.json || {}).visual || {}).objects || {}).text).filter((e) => plainObj(e) && plainObj(e.properties));

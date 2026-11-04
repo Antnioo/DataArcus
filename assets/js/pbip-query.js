@@ -26,7 +26,6 @@
   // ---------- small helpers ----------
   const lit = (v) => ({ expr: { Literal: { Value: v } } });
   const str = (s) => lit("'" + String(s).replace(/'/g, "''") + "'");
-  const S0 = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") : '');
   const bool = (b) => lit(b ? 'true' : 'false');
   const num = (n) => lit(n + 'D');
   const color = (hex) => ({ solid: { color: str(hex) } });
@@ -475,7 +474,7 @@
   }
 
   const api = {
-    S, SCHEMA, lit, str, S0, bool, num, color, obj, resource, LINE_WIDTH, lineStyle,
+    S, SCHEMA, lit, str, bool, num, color, obj, resource, LINE_WIDTH, lineStyle,
     json, rnd, guid, lum, contrast, mixHex, fieldCol, fieldMea, q, fname,
     shown, AGG, fieldAgg, isValue, proj, tproj, label, hasControl, daxSafe, daxNames,
     TYPES, CHARTS, TIME_WORDS, wordsOf, TIME_KINDS, isTime, sorted, HEX6, gradientEnds, gradientFill,

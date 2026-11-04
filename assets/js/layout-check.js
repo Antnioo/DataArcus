@@ -10,6 +10,8 @@
   const node = typeof module !== 'undefined' && module.exports;
   const VT = node ? require('./visual-types.js') : root.DAVisualTypes;
   const Rules = () => (node ? require('./report-rules.js') : root.DARules);
+  // a literal's text, number and true or false, a column's set width: pbir-values.js, their one home (0.3.2 DD1B)
+  const PV = node ? require('./pbir-values.js') : root.DAPbirValues;
 
   // ---------- the design lint (from mcp/lib/design-lint.mjs, unchanged in what it finds) ----------
   // LAYER checks (0.2.9 item 11): the design lint. It reads the reading layer's inventory (lib/read-report.mjs) and,
@@ -175,10 +177,8 @@
 // The same fields mcp/lib/read-report.mjs's inventory() gives the lint and the rules (the MCP's reader of any report
   // on disk keeps its own limits and screens), read from the files the report writer gives: [{ path, data }], paths
   // with or without the "<Name>.Report/" folder. opts.clean: how a title or text box is kept (the MCP screens it).
-  const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
-  const litStr = (p) => { const v = lit(p); return v == null ? null : /^'.*'$/s.test(String(v)) ? String(v).slice(1, -1).replace(/''/g, "'") : String(v).replace(/[DLM]$/, ''); };
-  const litNum = (p) => { const v = parseFloat(lit(p)); return isNaN(v) ? null : v; };
-  const litBool = (p) => { const v = lit(p); return v === 'true' || v === true ? true : v === 'false' || v === false ? false : null; };
+  // (the check reads a value as shown: 12D -> "12", as read_report says it)
+  const litStr = PV.litShown, litNum = PV.litNumber, litBool = PV.litBool;
   const entries = (list) => (Array.isArray(list) ? list.filter((e) => e && typeof e === 'object') : []);
   const plain = (list) => entries(list).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e.properties || {}), {});
   const anyOf = (list) => entries(list).reduce((a, e) => Object.assign(a, (e && e.properties) || {}), {});

@@ -8,6 +8,10 @@ package's manifest; this file says what is in it.
 - **The health check now finds the sort column the report writer finds:** a month or day name whose number column has
   no type in the model files is now sorted by that number column in the fix script, as the report writer sorts it,
   instead of the script adding a second number column of its own.
+- **A report's settings, read the same everywhere:** a text with an apostrophe in it (a page named it's) is read as it
+  is by the Arabic twin and the redesign, a background's transparency written as a whole number (60L) counts in the
+  contrast check, and a table's column widths are read the same by the check, the twin and the picture columns of a new
+  report (a width the picture columns could not read no longer stops them).
 - **The site now asks which model, as the MCP does:** choose a folder with two models side by side and the page names both
   and asks you to choose the model's own folder, instead of quietly using the first one by name.
 - **The Arabic twin, a visual in a broken group:** a visual inside a group whose size is not a usable number (a width

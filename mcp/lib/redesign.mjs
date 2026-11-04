@@ -33,6 +33,9 @@ import { digestOf } from './artifact.mjs';
 import { newPlatform } from './twin-copy.mjs';
 import { ROLES, THEME_STYLE_AT } from './text-format.mjs';
 import { box, shownBox, unitsOf, gridPage } from './redesign-grid.mjs';
+import { createRequire } from 'node:module';
+// a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
+const { litText } = createRequire(import.meta.url)('../../assets/js/pbir-values.js');
 // (0.3.2 SP38) the text restyling (the consistent copy's text) is in lib/redesign-text.mjs
 import { textPlan } from './redesign-text.mjs';
 // (0.3.2 SP38) the allowlisted patch records (place and size, titles, theme tokens, the copy's name) and why a visual is
@@ -297,7 +300,7 @@ const diffs = (a, b, at = '') => {
 // every reference between the report's files that could dangle, as "what -> target" when the target is missing
 export function danglingOf(files) {
   const J = (r) => { try { return parse(files[r]); } catch (e) { return null; } };
-  const L = (o) => (o && o.expr && o.expr.Literal ? String(o.expr.Literal.Value).replace(/^'|'$/g, '') : null);
+  const L = litText;   // (DD1B: a link's page, bookmark or tooltip page, read by the one reader)
   const out = [], pageIds = new Set(Object.keys(files).map((r) => /^definition\/pages\/([^/]+)\/page\.json$/.exec(r)).filter(Boolean).map((m) => m[1]));
   const names = {}; Object.keys(files).forEach((r) => { const m = /^definition\/pages\/([^/]+)\/visuals\/[^/]+\/visual\.json$/.exec(r); if (m) { const j = J(r); (names[m[1]] = names[m[1]] || new Map()).set(j && j.name, j); } });
   const meta = J('definition/pages/pages.json') || {};

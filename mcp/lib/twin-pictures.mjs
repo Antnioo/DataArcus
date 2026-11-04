@@ -5,9 +5,12 @@
 import { safeName } from './read-report.mjs';
 import { bytesAt, isObj, pageOf } from './twin-read.mjs';
 import { pagePicture, offPanel, newOverlaps } from './page-picture.mjs';
+import { createRequire } from 'node:module';
+// a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
+const { litText } = createRequire(import.meta.url)('../../assets/js/pbir-values.js');
 
 export const RES = 'StaticResources/RegisteredResources/';
-const lit = (p) => (isObj(p) && isObj(p.expr) && isObj(p.expr.Literal) && typeof p.expr.Literal.Value === 'string' ? p.expr.Literal.Value.replace(/^'|'$/g, '').replace(/''/g, "'") : null);
+const lit = litText;
 const Ls = (s) => ({ expr: { Literal: { Value: "'" + String(s).replace(/'/g, "''") + "'" } } });
 // a page's pictures in one of its cards (background, outspace): [{ entry's image object, name (the FILE), label, fit }].
 // (MP1b, laptop part 6 on the owner's reports) Desktop writes a picture with two names: image.name is the name shown to

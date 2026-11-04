@@ -346,7 +346,9 @@
 
   // ---- the pages, from what the report writer writes or from the design engine's slots ----
   const txt = (d) => (typeof d === 'string' ? d : new TextDecoder().decode(d));
-  const lit = (p) => { const v = p && p.expr && p.expr.Literal && p.expr.Literal.Value; return typeof v === 'string' && /^'.*'$/s.test(v) ? v.slice(1, -1).replace(/''/g, "'") : null; };
+  // a literal's text, number and true or false, a column's set width: pbir-values.js, their one home (0.3.2 DD1B)
+  const PV = typeof module !== 'undefined' && module.exports ? require('./pbir-values.js') : root.DAPbirValues;
+  const lit = PV.litText;
   // a visual's title as Desktop shows it: its text, or what the report measure a Top N title is made by shows when every
   // category shows (D5: the measure's NAME is made unique, "Title: X (2)"; its DAX returns "X": the writer's
   // IF ( _s = _n, "<title>", ... )); a measure we can't read keeps the name's title
@@ -362,10 +364,7 @@
   // J12: what Desktop draws from a visual's own settings (else the theme's): its title's size, font, weight, side, wrap and
   // padding; a text box's and a button's text and size; a card's value side; a table's columns and header size; a
   // chart's category and label size. Settings only, never a value.
-  const litOf = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
-  const numOf = (p) => { const v = litOf(p); const x = parseFloat(String(v == null ? '' : v).replace(/[DLM]$/, '')); return Number.isFinite(x) ? x : null; };
-  const strOf = (p) => { const v = litOf(p); return typeof v === 'string' && /^'.*'$/s.test(v) ? v.slice(1, -1).replace(/''/g, "'") : null; };
-  const boolOf = (p) => { const v = litOf(p); return v === 'true' || v === true ? true : v === 'false' || v === false ? false : null; };
+  const numOf = PV.litNumber, strOf = PV.litText, boolOf = PV.litBool;
   // the properties of a card's entries with no selector (or the default one), merged
   const props = (list, def) => (Array.isArray(list) ? list : []).filter((e) => e && e.properties && (!e.selector || (def && e.selector.id === 'default'))).reduce((a, e) => Object.assign(a, e.properties), {});
   const th1 = (theme, type, card, key) => { const vs = (theme && theme.visualStyles) || {}, f = (t) => (((vs[t] || {})['*'] || {})[card] || [])[0]; const e = f(type) || f('*'); return e && e[key] != null ? e[key] : null; };

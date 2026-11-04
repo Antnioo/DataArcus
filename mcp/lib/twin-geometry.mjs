@@ -22,6 +22,8 @@ const Mirror = require('../../assets/js/report-mirror.js');
 const Policy = require('../../assets/js/mirror-policy.js');
 const Units = require('../../assets/js/mirror-units.js');
 const TextMeasure = require('../../assets/js/text-measure.js');
+// a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
+const { litText, litNumber, litBool, columnWidth } = require('../../assets/js/pbir-values.js');
 // (0.3.1 MX7, laptop part 12: Call Center's hour chart 52c8e333 starts 27 left of its heatmap's grid and ends 8 right of
 // it in English; mirrored about its own box it started 8 left and ended 27 right, its bars still left to right, so they
 // stood a cell right of their hours) a matrix keeps its columns in English's left-to-right order (Power BI's matrix has
@@ -78,12 +80,11 @@ export function keptAtMirrorLine(hit, shift) {
     ruleAr: `أُبقي في موضع انعكاسه، وداخله كما في الإنجليزية (الفرز وجهة المحور والحشو: الشبكة تُقرأ من اليسار إلى اليمين)، ولم يُحاذَ مع شبكة خريطته الحرارية: هناك كان سيغطي ${hit}، وهو لا يغطيه في الإنجليزية؛ ويقف على بُعد ${n} بكسل إلى ${left ? 'يسار' : 'يمين'} خلايا شبكتها` };
 }
 export function underGrids(pg, r, pageW, extra) {
-  const lit0 = (p) => (p && p.expr && p.expr.Literal ? parseFloat(String(p.expr.Literal.Value).replace(/D$/, '')) : NaN);
   const qs = (v) => (isObj(v) && isObj(v.visual) && isObj(v.visual.query) && isObj(v.visual.query.queryState) ? v.visual.query.queryState : {});
   const has = (v, k) => isObj(qs(v)[k]) && Array.isArray(qs(v)[k].projections) && qs(v)[k].projections.length > 0;
-  const pad = (v) => { const e = (isObj(v.visual.visualContainerObjects) && Array.isArray(v.visual.visualContainerObjects.padding) ? v.visual.visualContainerObjects.padding : []).find((x) => isObj(x) && !x.selector && isObj(x.properties) && x.properties.left !== undefined); const n = e ? lit0(e.properties.left) : 0; return Number.isFinite(n) ? n : 0; };
+  const pad = (v) => { const e = (isObj(v.visual.visualContainerObjects) && Array.isArray(v.visual.visualContainerObjects.padding) ? v.visual.visualContainerObjects.padding : []).find((x) => isObj(x) && !x.selector && isObj(x.properties) && x.properties.left !== undefined); const n = e ? litNumber(e.properties.left) : 0; return Number.isFinite(n) ? n : 0; };
   const strip = (v) => { const rq = qs(v).Rows.projections[0] && qs(v).Rows.projections[0].queryRef, cw = isObj(v.visual.objects) && Array.isArray(v.visual.objects.columnWidth) ? v.visual.objects.columnWidth : [];
-    const e = cw.find((x) => isObj(x) && isObj(x.selector) && x.selector.metadata === rq && isObj(x.properties)); const n = e ? lit0(e.properties.value) : NaN; return Number.isFinite(n) ? n : null; };
+    return columnWidth(cw, rq); };
   const parent = (v) => (v.parentGroupName != null ? String(v.parentGroupName) : '');
   // (0.3.2 DD1C2) the frame: mirror-units.js frameWidth, the one rule (unknown: the chart keeps its wanted x, unclamped)
   const byName = Units.byNameOf(r.visuals), widthOf = (v) => Units.frameWidth({ width: pageW }, byName, v);
@@ -127,9 +128,8 @@ export function underGrids(pg, r, pageW, extra) {
 const textTurns = (v) => (isObj(v) && isObj(v.visual) && isObj(v.visual.objects) && Array.isArray(v.visual.objects.general) ? v.visual.objects.general : [])
   .some((e) => isObj(e) && isObj(e.properties) && Array.isArray(e.properties.paragraphs) && e.properties.paragraphs.some((pa) => isObj(pa) && pa.horizontalTextAlignment !== 'center'));
 export const boxOk = (v) => isObj(v) && isObj(v.position) && ['x', 'y', 'width', 'height'].every((k) => Number.isFinite(v.position[k]));
-const litOf = (p) => (isObj(p) && isObj(p.expr) && isObj(p.expr.Literal) ? String(p.expr.Literal.Value).replace(/^'|'$/g, '') : null);
 const titleAlign = (v) => { const t = isObj(v) && isObj(v.visual) && isObj(v.visual.visualContainerObjects) && Array.isArray(v.visual.visualContainerObjects.title) ? v.visual.visualContainerObjects.title.find((e) => isObj(e) && !e.selector && isObj(e.properties)) : null;
-  return t && litOf(t.properties.show) !== 'false' ? String(litOf(t.properties.alignment) || 'left').toLowerCase() : null; };
+  return t && litBool(t.properties.show) !== false ? String(litText(t.properties.alignment) || 'left').toLowerCase() : null; };
 const titleTurns = (en, ar) => { const a = titleAlign(en), b = titleAlign(ar); return a != null && b === 'right' && a !== 'right'; };
 const overlapOf = (a, b) => Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
 export function badgesWithText(pg, r) {

@@ -6,7 +6,7 @@
 // (0.3.1 S9: moved out of lib/arabic-twin.mjs as it was, no change of behaviour; arabic-twin.mjs re-exports what others import)
 import { safeName } from './read-report.mjs';
 import { isObj, pageOf } from './twin-read.mjs';
-import { num, posOf, typeOf, litStr, Ls, absBox } from './twin-visuals.mjs';
+import { posOf, typeOf, Ls, absBox } from './twin-visuals.mjs';
 import { autoTitlesOf, autoSentence, subtitleMeasuresOf } from './twin-texts.mjs';
 import { langButton } from './twin-copy.mjs';
 import { HIDDEN_W, fitButtons, fitTextboxes, fitHeaders } from './twin-text-fit.mjs';
@@ -18,6 +18,8 @@ const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
 const Sizing = require('../../assets/js/pbip-sizing.js');
 const TextMeasure = require('../../assets/js/text-measure.js');
+// a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
+const { litText, litNumber } = require('../../assets/js/pbir-values.js');
 
 // (0.3.1 TT1, the owner, 27 Oct: a title is wholly Arabic or wholly English) a visual's title and alt text the person left
 // English, isolated as a whole as the writer isolates an Arabic report's English title (text-measure.js isolateWhole)
@@ -28,7 +30,7 @@ function wholeTitles(vco) {
   Object.keys(WHOLE).forEach((k) => (Array.isArray(vco[k]) ? vco[k] : []).forEach((e) => {
     const p = isObj(e) && isObj(e.properties) ? e.properties[WHOLE[k]] : null, v = p && isObj(p.expr) && isObj(p.expr.Literal) ? p.expr.Literal.Value : null;
     if (typeof v !== 'string' || !/^'.*'$/s.test(v)) return;
-    const t = litStr(p), w = TextMeasure.isolateWhole(t);
+    const t = litText(p), w = TextMeasure.isolateWhole(t);
     if (w !== t) { e.properties[WHOLE[k]] = Ls(w); n++; }
   }));
   return n;
@@ -62,7 +64,7 @@ function keepView(page, visuals, at) {
     const qs = isObj(v.visual.query) && isObj(v.visual.query.queryState) && isObj(v.visual.query.queryState.Values) ? v.visual.query.queryState.Values : null, ps = qs && Array.isArray(qs.projections) ? qs.projections : null;
     if (!ps || ps.length < 2 || !ps.every((x) => isObj(x) && typeof x.queryRef === 'string')) return;
     const entry = (x) => v.visual.objects.columnWidth.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === x.queryRef && isObj(y.properties));
-    const w = (x) => { const e = entry(x); return e ? num(e.properties.value) : null; };
+    const w = (x) => { const e = entry(x); return e ? litNumber(e.properties.value) : null; };
     const setW = (x, n) => { entry(x).properties.value = { expr: { Literal: { Value: Mirror.round(n) + 'D' } } }; };
     if (!ps.every((x) => Number.isFinite(w(x)))) return;
     const hidden = ps.filter((x) => w(x) < HIDDEN_W), vis = ps.filter((x) => w(x) >= HIDDEN_W);
@@ -105,7 +107,7 @@ function growTables(visuals, origByName, at) {
     // column a width of 0, hidden, which is not the person's sizing)
     const oq = isObj(o.visual.query) && isObj(o.visual.query.queryState) && isObj(o.visual.query.queryState.Values) && Array.isArray(o.visual.query.queryState.Values.projections) ? o.visual.query.queryState.Values.projections : [];
     const ocw = isObj(o.visual.objects) && Array.isArray(o.visual.objects.columnWidth) ? o.visual.objects.columnWidth : [];
-    const hasW = (x) => ocw.some((y) => isObj(y) && isObj(y.selector) && isObj(x) && y.selector.metadata === x.queryRef && isObj(y.properties) && Number.isFinite(num(y.properties.value)));
+    const hasW = (x) => ocw.some((y) => isObj(y) && isObj(y.selector) && isObj(x) && y.selector.metadata === x.queryRef && isObj(y.properties) && litNumber(y.properties.value) != null);
     if (!oq.length || oq.every(hasW)) return;
     const obj = isObj(v.visual.objects) ? v.visual.objects : null;
     const ch = obj && Array.isArray(obj.columnHeaders) ? obj.columnHeaders : null;
@@ -127,9 +129,8 @@ function growTables(visuals, origByName, at) {
 // hold them. A row whose names can't all fit is shared in proportion, and said (tabsCut).
 function fitPhoneTabs(pg, visuals, mobiles, ctx, out) {
   const W = Mirror.PHONE_W, G = Sizing.PHONE_TAB.gap, box = (m) => (m && isObj(m.position) && ['x', 'y', 'width', 'height'].every((k) => Number.isFinite(m.position[k])) ? m.position : null);
-  const lit = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") : null);
-  const isTab = (v) => typeOf(v) === 'actionButton' && /PageNavigation/i.test(String(lit((((v.visual.visualContainerObjects || {}).visualLink || []).find((e) => isObj(e) && isObj(e.properties)) || { properties: {} }).properties.type)));
-  const textOf = (v) => { const es = isObj(v.visual.objects) && Array.isArray(v.visual.objects.text) ? v.visual.objects.text.filter((e) => isObj(e) && isObj(e.properties)) : [], t = es.map((e) => lit(e.properties.text)).find((x) => x != null), f = es.map((e) => lit(e.properties.fontFamily)).find((x) => x != null); return { text: t, font: f || ctx.text.font }; };
+  const isTab = (v) => typeOf(v) === 'actionButton' && /PageNavigation/i.test(String(litText((((v.visual.visualContainerObjects || {}).visualLink || []).find((e) => isObj(e) && isObj(e.properties)) || { properties: {} }).properties.type)));
+  const textOf = (v) => { const es = isObj(v.visual.objects) && Array.isArray(v.visual.objects.text) ? v.visual.objects.text.filter((e) => isObj(e) && isObj(e.properties)) : [], t = es.map((e) => litText(e.properties.text)).find((x) => x != null), f = es.map((e) => litText(e.properties.fontFamily)).find((x) => x != null); return { text: t, font: f || ctx.text.font }; };
   const tabs = visuals.map((v, i) => ({ v, m: mobiles[i], i })).filter((x) => isObj(x.v) && isObj(x.v.visual) && isTab(x.v) && box(x.m) && textOf(x.v).text != null);
   const orig = (x) => box(pg.visuals[x.i].mobile.json);
   const rows = [];

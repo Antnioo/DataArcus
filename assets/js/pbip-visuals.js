@@ -22,11 +22,13 @@
   const node = typeof module !== 'undefined' && module.exports;
   const Q = (node ? require('./pbip-query.js') : root.DAPbipQuery), Z = (node ? require('./pbip-sizing.js') : root.DAPbipSizing);
   const {
-    AR_LETTERS, CHARTS, S0, TYPES, bindQuery, bindStory, bool, kpiLabel,
+    AR_LETTERS, CHARTS, TYPES, bindQuery, bindStory, bool, kpiLabel,
     color, daxNames, hasControl, lit,
     mixHex, num, obj, pageFilterOf, proj, q, resource,
     shown, str
   } = Q;
+  // a literal's text, number and true or false, a column's set width: pbir-values.js, their one home (0.3.2 DD1B)
+  const PV = node ? require('./pbir-values.js') : root.DAPbirValues;
   // (0.3, J4: the story titles' rules, story-titles.js, loaded before pbip-query.js on the website's pages)
   const ST = (node ? require('./story-titles.js') : root.DAStoryTitles);
   // the families' steps (0.3.2 SP28: pbip-visuals-charts.js and pbip-visuals-tables.js, loaded before this file)
@@ -369,7 +371,7 @@
       // long for one line at 10pt wraps to two (titleWrap, as on the page) where two lines and the value fit the card,
       // otherwise it is shortened at a word with "…"; the phone shows the full name where the page shortened it.
       // (the rule: pbip-sizing.js phoneCardFit, the Arabic twin's too)
-      const tl = { fontSize: num(TIP_TITLE), fontColor: color(u.text) }, full = S0(((vis.visualContainerObjects || {}).general || [{ properties: {} }])[0].properties.altText);
+      const tl = { fontSize: num(TIP_TITLE), fontColor: color(u.text) }, full = PV.litText(((vis.visualContainerObjects || {}).general || [{ properties: {} }])[0].properties.altText) ?? '';
       const pf = phoneCardFit(shown && full ? full : '', p.w, p.h, TIP_TITLE, TIP_VALUE), c = pf.c;
       if (pf.mode === 'wrap') Object.assign(tl, { text: str(full), titleWrap: bool(true) });
       else if (pf.mode === 'cut') tl.text = str(oneLine(full, TIP_TITLE, pf.room));

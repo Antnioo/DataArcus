@@ -11,13 +11,15 @@
 // No state between calls and no IO: the engines' measures (report-rules.js) and the twin's pure helpers only.
 import { safeName } from './read-report.mjs';
 import { isObj } from './twin-read.mjs';
-import { num, posOf, typeOf, litStr, Ls, overlaps, holdsBox, absBox } from './twin-visuals.mjs';
+import { posOf, typeOf, Ls, overlaps, holdsBox, absBox } from './twin-visuals.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
 const Rules = require('../../assets/js/report-rules.js');
 // (0.3.2 DD1C) the frame a visual is placed in: mirror-units.js, the one home of that rule
 const { frameWidth, byNameOf } = require('../../assets/js/mirror-units.js');
+// a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
+const { litText, litNumber, columnWidth } = require('../../assets/js/pbir-values.js');
 
 // A button narrower than its Arabic text (check_report's buttonNeed) is widened: first toward its end (its left in the
 // twin), the visuals beside it in its row moving with it, then toward its start; inside its page or group, never over a
@@ -106,7 +108,7 @@ export function fitButtons(page, visuals, ctx, at) {
     // (b) else its text at the largest size, down to 8pt, at which its Arabic and its icon fit side by side (the writer's
     // rule for a slicer's header and a KPI card's title: the largest size, down to 8, at which it is whole)
     if (!b.page && b.icon && p.width + 0.5 < b.needW && Array.isArray(v.visual.objects.text)) {
-      const te = v.visual.objects.text.find((e) => isObj(e) && isObj(e.properties) && e.properties.text), tx = te ? litStr(te.properties.text) : '', font = b.font;
+      const te = v.visual.objects.text.find((e) => isObj(e) && isObj(e.properties) && e.properties.text), tx = te ? litText(te.properties.text) ?? '' : '', font = b.font;
       let t = Math.floor(b.t) - 1; while (t >= 8 && Math.ceil(Rules.MEASURED.BTN_ICON_TW(tx, t, font) + p.height) > p.width + 0.5) t--;
       if (t >= 8) { v.visual.objects.text.forEach((e) => { if (isObj(e) && isObj(e.properties) && 'fontSize' in e.properties) e.properties.fontSize = { expr: { Literal: { Value: t + 'D' } } }; }); sized = { from: b.t, to: t }; }
     }
@@ -189,8 +191,8 @@ export function fitHeaders(page, visuals, origByName, ctx, at) {
     const p = posOf(v); if (typeOf(v) !== 'tableEx' || !p || !isObj(v.visual.objects) || !Array.isArray(v.visual.objects.columnWidth)) return;
     const o = v.visual.objects, H = Rules.tableHeaders(v, ctx.theme, ctx.text.font, sc), T = H.t, font = H.font;
     if (!H.cols.length) return;
-    const entry = (ref) => o.columnWidth.find((e) => isObj(e) && isObj(e.selector) && e.selector.metadata === ref && isObj(e.properties) && Number.isFinite(num(e.properties.value)));
-    const widthOf = (ref) => { const e = entry(ref); return e ? num(e.properties.value) : null; };
+    const entry = (ref) => o.columnWidth.find((e) => isObj(e) && isObj(e.selector) && e.selector.metadata === ref && isObj(e.properties) && litNumber(e.properties.value) != null);
+    const widthOf = (ref) => columnWidth(o.columnWidth, ref);
     const setW = (ref, w) => { entry(ref).properties.value = { expr: { Literal: { Value: w + 'D' } } }; };
     const head = (x) => String(x.displayName != null ? x.displayName : x.nativeQueryRef || '');
     const m = (x) => Rules.headerNeed(head(x), T, font, sc), need = (x) => m(x).needW;
@@ -202,7 +204,7 @@ export function fitHeaders(page, visuals, origByName, ctx, at) {
     const qs = isObj(v.visual.query) && isObj(v.visual.query.queryState) ? v.visual.query.queryState : {}, current = new Set();
     Object.values(qs).forEach((r) => { if (isObj(r) && Array.isArray(r.projections)) r.projections.forEach((x) => { if (isObj(x) && typeof x.queryRef === 'string') current.add(x.queryRef); }); });
     const stale = (e) => isObj(e.selector) && typeof e.selector.metadata === 'string' && !current.has(e.selector.metadata);
-    let spare = Math.floor(p.width - 36 * sc - o.columnWidth.filter((e) => isObj(e) && isObj(e.properties) && !stale(e)).reduce((a, e) => a + (num(e.properties.value) || 0), 0));
+    let spare = Math.floor(p.width - 36 * sc - o.columnWidth.filter((e) => isObj(e) && isObj(e.properties) && !stale(e)).reduce((a, e) => a + (litNumber(e.properties.value) ?? 0), 0));
     // (0.3.1 MX2, Fintech p1's watchlist: its first column, 4 wide in English, came out a cut sliver «القسم») a column
     // the original hides (narrower than HIDDEN_W) stays hidden: never widened for its header
     cols.filter((x) => widthOf(x.queryRef) >= HIDDEN_W && widthOf(x.queryRef) + 0.5 < need(x)).forEach((x) => {
