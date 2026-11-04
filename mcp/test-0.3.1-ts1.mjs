@@ -36,7 +36,8 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   chk(() => E.FHD_TEXT === 1.25, () => `T1a. design-engine exports FHD_TEXT = 1.25 (the owner's decision): ${E.FHD_TEXT}`);
   chk(() => typeof E.textScale === 'function' && E.textScale(720) === 1 && E.textScale(1080) === 1.25 && E.textScale(2160) === 2 && E.textScale(360) === 0.75,
     () => `T1b. textScale: 1 at 720, 1.25 at 1080, 2 at 2160, 0.75 at 360: ${get(() => [720, 1080, 2160, 360].map(E.textScale))}`);
-  const de = src('../assets/js/design-engine.js');
+  // (0.3.2 SP29) the text sizes live in design-metrics.js (DAEngine re-exports them)
+  const de = src('../assets/js/design-metrics.js');
   chk(() => (de.match(/FHD_TEXT = /g) || []).length === 1 && /const sizeAt = \(n, h\) => [^\n]*textScale\(h\)/.test(de) && !/h \/ 720\) \* 2/.test(de),
     () => 'T1c. FHD_TEXT is set once and sizeAt reads textScale (no second copy of the page factor for text)');
   chk(() => /D-1027-16/.test(de) && /Codex/.test(de), () => 'T1d. the constant names the owner\'s decision (D-1027-16) and its source (Codex\'s text-sizes review)');
