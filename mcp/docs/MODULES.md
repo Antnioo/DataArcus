@@ -29,7 +29,7 @@ task routes.
     `read-report.mjs` (what a PBIR report holds: its one read boundary; read_report's answer: `report-answer.mjs`; a
     report's theme identity: `report-identity.mjs`; both pure, reading no file), `scope.mjs` (large models),
     `visual-meaning.mjs` (what a custom visual shows and its native replacement; its role words and family hints:
-    `visual-vocabulary.mjs`);
+    `visual-vocabulary.mjs`; the native visuals' capability validation: `visual-capabilities.mjs`);
   - **the approval gate**: `plans.mjs` (plan ids, what each plan pins) and `approval-window.mjs` (the window in the
     person's browser, on 127.0.0.1 with a one-time link the AI never receives);
   - **the write path**: `artifact.mjs` (the exact files a plan builds and their digest), `files.mjs` (the one writer

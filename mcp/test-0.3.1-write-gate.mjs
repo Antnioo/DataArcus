@@ -174,7 +174,7 @@ chk(() => Object.values(LIST).every((calls) => Object.values(calls).every((l) =>
 
 // ---- (0.3.1 SQ14, S1-S3) Microsoft's validator runs in the server's process: its modules are read too ----
 // DataArcus loads only the package's own entry (check-report.mjs and artifact.mjs: runReportValidation and
-// getMetadataProvider; visual-meaning.mjs: getMetadataProvider). Read on 26 Oct with the version mcp/package.json pins:
+// getMetadataProvider; visual-capabilities.mjs: getMetadataProvider). Read on 26 Oct with the version mcp/package.json pins:
 // the entry and the chunk it imports take from fs only existsSync, readFileSync, readdirSync, statSync and realpathSync;
 // they write no file, temporary or not. The temporary copy the validator checks is artifact.mjs's own (TMP, above).
 // The package's cli.js and preview/ do write files (its command line's output), and DataArcus never loads them (W6).

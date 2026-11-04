@@ -22,10 +22,12 @@
 // shows them screens them as read_report does.
 
 import { createRequire } from 'node:module';
-import { getCapabilities } from '@microsoft/powerbi-core-visual-schema';
 // (0.3.2 SP18) the role words and the family hints: their own module; the names exported here before are re-exported
 import { ROLE_WORDS, TO_WORDS, FAMILY_HINTS, OBJECT_HINTS, wordsOf, classOf, classesOf, hintsOf, objectHintOf } from './visual-vocabulary.mjs';
 export { ROLE_WORDS, FAMILY_HINTS, OBJECT_HINTS, wordsOf };
+// (0.3.2 SP37) the capability validation (Microsoft's capabilities and validator): its own module; fitsCapabilities re-exported
+import { isValue, isCol, capsOf, drillsIn, fitsCapabilities, roleLabel } from './visual-capabilities.mjs';
+export { fitsCapabilities };
 
 // one test of custom versus native for every block (assets/js/visual-types.js, Microsoft's catalog)
 const VT = createRequire(import.meta.url)('../../assets/js/visual-types.js');
@@ -36,12 +38,6 @@ const SZ = createRequire(import.meta.url)('../../assets/js/pbip-sizing.js').make
 // and the least a dropdown slicer takes with no header: Microsoft's validator (validateDropdownSlicerSizing,
 // PBIR_SLICER_HEIGHT_BELOW_FLOOR, an error): the selector 32 + its padding 8 above and below
 const DROPDOWN_FLOOR = 32 + 8 + 8;
-// Microsoft's validator's own table of required roles and maxima per visual type (its metadata provider): the referee
-// of every native visual this module chooses (the laptop proof of 11 Oct: a donut written with no value, a map with no
-// location: PBIR_ROLE_REQUIRED_MISSING; two categories in a donut: PBIR_ROLE_MAX_EXCEEDED)
-let VP = null;
-try { VP = await (await import('@microsoft/powerbi-report-authoring-cli')).getMetadataProvider(); } catch (e) { VP = null; }
-
 // ---- the native visual of each kind (Power BI's visualType; null: no native visual shows it) ----
 export const NATIVE = {
   combo: 'lineClusteredColumnComboChart', column: 'clusteredColumnChart', bar: 'clusteredBarChart', line: 'lineChart', area: 'areaChart',
@@ -62,8 +58,6 @@ const BUILTIN_KIND = {
 const DATE_LEVELS = new Set(['year', 'quarter', 'month', 'day', 'week', 'date']);
 const DATE_TYPES = /^(date|datetime|datetimezone)$/i;
 
-const isValue = (f) => f.kind === 'measure' || f.kind === 'aggregation';
-const isCol = (f) => f.kind === 'column';
 const copy = (f) => Object.assign({}, f);
 
 // a value shown as a percentage, by its format string (quoted text left out): null when the format is not known
@@ -318,54 +312,6 @@ export function meaningOf(visual, opts) {
   return out(kind, roles, Object.assign({ drill, series, confidence: conf, why: `${custom}: ${why}`, lost, htmlNeeded: kind === 'network', idFit: idFit === kind ? kind : null, named, targets }, aggregate ? { aggregate } : {}));
 }
 
-// ---- Microsoft's capabilities of the native visuals (@microsoft/powerbi-core-visual-schema, the version mcp/package.json pins) ----
-const capsOf = (type) => { try { return type ? getCapabilities(type) || null : null; } catch (e) { return null; } };
-const drillsIn = (type) => { const c = capsOf(type); return !!(c && c.drilldown); };
-// whether a native visual takes these fields in these roles: every role is one of its dataRoles, a Grouping role holds
-// columns and a Measure role values, and the counts meet one of its conditions (min, max, and kind: 0 a column, 1 a
-// value), in one of its data view mappings. Returns { ok, problems: [text] } (role names are the native's own).
-export function fitsCapabilities(type, roles) {
-  const caps = capsOf(type);
-  if (!caps) return { ok: false, problems: [`${type || 'no type'} is not in Microsoft's catalog of visuals`] };
-  const problems = [], dr = Object.fromEntries((caps.dataRoles || []).map((r) => [r.name, r]));
-  const used = Object.entries(roles || {}).filter(([, l]) => Array.isArray(l) && l.length);
-  for (const [r, l] of used) {
-    const d = dr[r];
-    if (!d) { problems.push(`${type} has no ${r} role`); continue; }
-    if (d.kind === 'Measure' && l.some(isCol)) problems.push(`${type}'s ${r} (${d.displayName || r}) takes values, not columns`);
-    if (d.kind === 'Grouping' && l.some(isValue)) {
-      // a Grouping role some condition lets hold values (kind 1: the scatter's and the map's X and Y)
-      const valuesOk = (caps.dataViewMappings || []).some((m) => (m.conditions || []).some((c) => c[r] && c[r].kind === 1));
-      if (!valuesOk) problems.push(`${type}'s ${r} (${d.displayName || r}) takes columns, not values`);
-    }
-  }
-  // a drill role's fields are levels: Power BI shows one at a time, so its conditions count one (a pie's Category max 1
-  // still drills through a hierarchy)
-  const drillRoles = (caps.drilldown && caps.drilldown.roles) || [];
-  const count = (r) => { const k = ((roles || {})[r] || []).length; return drillRoles.includes(r) ? Math.min(k, 1) : k; };
-  const meets = (c) => Object.entries(c).every(([r, k]) => {
-    if (!k || typeof k !== 'object' || !dr[r] && !(r in (roles || {}))) return true;
-    const nr = count(r);
-    if (k.min != null && nr < k.min) return false;
-    if (k.max != null && nr > k.max) return false;
-    if (k.kind === 1 && ((roles || {})[r] || []).some(isCol)) return false;
-    if (k.kind === 0 && ((roles || {})[r] || []).some(isValue)) return false;
-    return true;
-  });
-  const maps = caps.dataViewMappings || [];
-  const condOk = !maps.length || maps.some((m) => !m || !Array.isArray(m.conditions) || !m.conditions.length || m.conditions.some(meets));
-  if (!condOk) problems.push(`${type} can't show ${used.map(([r, l]) => `${l.length} in ${r}`).join(', ')} (none of its field-count conditions is met)`);
-  // Microsoft's validator: every required role filled, no role over its maximum (it counts every field, drill levels too)
-  const entry = VP ? VP.getVisualEntry(type) : null;
-  if (entry) {
-    entry.requiredRoles.filter((r) => !((roles || {})[r] || []).length).forEach((r) => problems.push(`${type} needs its ${r} role (${dr[r] && dr[r].displayName || r}) filled`));
-    Object.entries(entry.maxPerRole).filter(([r, mx]) => ((roles || {})[r] || []).length > mx).forEach(([r, mx]) => problems.push(`${type}'s ${r} takes at most ${mx} field(s)`));
-  }
-  return { ok: problems.length === 0, problems };
-}
-
-// the native visual's own name of a role (its display name in Desktop's field wells)
-const roleLabel = (type, r) => { const c = capsOf(type), d = c && (c.dataRoles || []).find((x) => x.name === r); return d && d.displayName ? d.displayName : r; };
 // (ST1, NC3-S2) the article before a kind's name: "an Azure map", "an area chart"
 const aOr = (w) => (/^[aeio]/i.test(String(w)) ? 'an ' : 'a ') + w;
 const LABEL = { combo: 'line and clustered column chart', column: 'clustered column chart', bar: 'clustered bar chart', line: 'line chart', area: 'area chart', pie: 'pie chart',
