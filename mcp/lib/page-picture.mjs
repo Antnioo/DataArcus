@@ -11,9 +11,14 @@
 // their panel (names and places).
 import zlib from 'node:zlib';
 import crypto from 'node:crypto';
+import { createRequire } from 'node:module';
+import { lru } from './small-cache.mjs';
+
+// (0.3.2 DD2P) the PNG chunk, the big-endian four bytes (written and read) and the CRC-32: png-bytes.js; the small cache:
+// small-cache.mjs
+const { be32, u32, pngChunk } = createRequire(import.meta.url)('../../assets/js/png-bytes.js');
 
 export const MAX_SIDE = 8192, MAX_PIXELS = 16 * 1024 * 1024;
-const u32 = (b, i) => ((b[i] << 24) | (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3]) >>> 0;
 const u16 = (b, i) => (b[i] << 8) | b[i + 1];
 const tooBig = (w, h) => !w || !h || w > MAX_SIDE || h > MAX_SIDE || w * h > MAX_PIXELS;
 
@@ -211,10 +216,6 @@ export function readPicture(bytes) {
 }
 
 // ---------- PNG written: RGBA (RGB when every pixel is opaque), each row filtered Sub ----------
-const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
-const crc32 = (b) => { let c = 0xffffffff; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
-const be = (v) => [v >>> 24, (v >>> 16) & 255, (v >>> 8) & 255, v & 255];
-const chunk = (type, body) => { const c = Buffer.alloc(12 + body.length); c.set(be(body.length)); c.write(type, 4, 'latin1'); c.set(body, 8); c.set(be(crc32(c.subarray(4, 8 + body.length))), 8 + body.length); return c; };
 export function writePng(w, h, rgba) {
   let opaque = true; for (let i = 3; i < rgba.length; i += 4) if (rgba[i] !== 255) { opaque = false; break; }
   const ch = opaque ? 3 : 4, row = w * ch, raw = new Uint8Array(h * (row + 1));
@@ -222,7 +223,7 @@ export function writePng(w, h, rgba) {
     const q = y * (row + 1); raw[q] = 1;
     for (let x = 0; x < w; x++) for (let c = 0; c < ch; c++) { const v = rgba[(y * w + x) * 4 + c], left = x ? rgba[(y * w + x - 1) * 4 + c] : 0; raw[q + 1 + x * ch + c] = (v - left) & 255; }
   }
-  return new Uint8Array(Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', Buffer.from(be(w).concat(be(h), [8, opaque ? 2 : 6, 0, 0, 0]))), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]));
+  return new Uint8Array(Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), pngChunk('IHDR', Uint8Array.from(be32(w).concat(be32(h), [8, opaque ? 2 : 6, 0, 0, 0]))), pngChunk('IDAT', zlib.deflateSync(raw)), pngChunk('IEND', new Uint8Array(0))]));
 }
 /** (tests only) a PNG of rgba written another way than writePng: a palette (with tRNS) or Adam7-interlaced RGBA, so the
  *  reader is checked on both (pngjs writes neither) */
@@ -234,16 +235,16 @@ export function testPng(w, h, rgba, o) {
     if (colours.size > 256) return null;
     const pl = [...colours.keys()].map((k) => k.split(',').map(Number)), raw = new Uint8Array(h * (w + 1));
     for (let y = 0; y < h; y++) raw.set(idx.subarray(y * w, y * w + w), y * (w + 1) + 1);
-    out.push(chunk('IHDR', Buffer.from(be(w).concat(be(h), [8, 3, 0, 0, 0]))), chunk('PLTE', Buffer.from(pl.flatMap((c) => c.slice(0, 3)))), chunk('tRNS', Buffer.from(pl.map((c) => c[3]))), chunk('IDAT', zlib.deflateSync(raw)));
+    out.push(pngChunk('IHDR', Uint8Array.from(be32(w).concat(be32(h), [8, 3, 0, 0, 0]))), pngChunk('PLTE', Buffer.from(pl.flatMap((c) => c.slice(0, 3)))), pngChunk('tRNS', Buffer.from(pl.map((c) => c[3]))), pngChunk('IDAT', zlib.deflateSync(raw)));
   } else {
     const parts = [];
     [[0, 0, 8, 8], [4, 0, 8, 8], [0, 4, 4, 8], [2, 0, 4, 4], [0, 2, 2, 4], [1, 0, 2, 2], [0, 1, 1, 2]].forEach(([x0, y0, dx, dy]) => {
       const pw = Math.ceil((w - x0) / dx), ph = Math.ceil((h - y0) / dy); if (pw <= 0 || ph <= 0) return;
       for (let y = 0; y < ph; y++) { parts.push(0); for (let x = 0; x < pw; x++) { const s = ((y0 + y * dy) * w + x0 + x * dx) * 4; parts.push(rgba[s], rgba[s + 1], rgba[s + 2], rgba[s + 3]); } }
     });
-    out.push(chunk('IHDR', Buffer.from(be(w).concat(be(h), [8, 6, 0, 0, 1]))), chunk('IDAT', zlib.deflateSync(Buffer.from(parts))));
+    out.push(pngChunk('IHDR', Uint8Array.from(be32(w).concat(be32(h), [8, 6, 0, 0, 1]))), pngChunk('IDAT', zlib.deflateSync(Buffer.from(parts))));
   }
-  return new Uint8Array(Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), ...out, chunk('IEND', Buffer.alloc(0))]));
+  return new Uint8Array(Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), ...out, pngChunk('IEND', new Uint8Array(0))]));
 }
 
 // ---------- the rule ----------
@@ -307,7 +308,6 @@ function wordsIn(R) {
 }
 
 // ---------- the last few pictures looked at, by their bytes ----------
-const lru = (max) => { const m = new Map(); return { get: (k) => { if (!m.has(k)) return undefined; const v = m.get(k); m.delete(k); m.set(k, v); return v; }, set: (k, v) => { m.delete(k); if (m.size >= max) m.delete(m.keys().next().value); m.set(k, v); } }; };
 const kept = lru(32);
 const keyOf = (b) => crypto.createHash('sha256').update(b).digest('hex') + ':' + b.length;
 /** A page picture for the Arabic page: { why } when it can't be read, else { iw, ih, png (the Arabic page's picture,
