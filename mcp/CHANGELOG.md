@@ -5,6 +5,10 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **A report's settings, read the same everywhere:** a text with an apostrophe in it (a page named it's) is read as it
+  is by the Arabic twin and the redesign, a background's transparency written as a whole number (60L) counts in the
+  contrast check, and a table's column widths are read the same by the check, the twin and the picture columns of a new
+  report (a width the picture columns could not read no longer stops them).
 - **The Arabic twin, a visual in a broken group:** a visual inside a group whose size is not a usable number (a width
   of 0, below 0, or text) is now mirrored, kept on its table and given room for its button inside its page, the same
   frame every step uses; before, one step could place it in the broken group and another in the page.

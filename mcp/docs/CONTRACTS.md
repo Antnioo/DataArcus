@@ -29,12 +29,12 @@ How it is kept true:
 | family | places | disagree on N of M inputs | who sees it | newest copy |
 |---|---|---|---|---|
 | [1a Is this column time?](#1a-is-this-column-time) | 4 | 12 of 24 | the twin, the preview, the writer, check_report | merge (pbip-query.js splits camel case, layout-check.js takes the Arabic article off, page-preview.js has the most words) |
-| [1b-text What text does a literal hold?](#1b-text-what-text-does-a-literal-hold) | 11 | 11 of 15 | check_report, read_report, the writer, the twin, the preview, the redesign | merge (tagged decoder) |
+| [1b-text What text does a literal hold?](#1b-text-what-text-does-a-literal-hold) | 11 | 0 of 15 | check_report, the writer, the twin, the preview, the redesign | one place since DD1B: `assets/js/pbir-values.js` `litText` (mirror-policy.js keeps an equal copy, pinned) |
 | [1b-shown What does a literal show?](#1b-shown-what-does-a-literal-show) | 2 | 0 of 15 | check_report, read_report | one place since DD1B: `assets/js/pbir-values.js` `litShown` |
-| [1b-number What number does a literal hold?](#1b-number-what-number-does-a-literal-hold) | 5 | 12 of 15 | check_report, read_report, the twin, the preview | merge (tagged decoder) |
-| [1b-bool What true or false does a literal hold?](#1b-bool-what-true-or-false-does-a-literal-hold) | 3 | 13 of 15 | check_report, read_report, the twin, the preview, the native copy | merge (tagged decoder) |
+| [1b-number What number does a literal hold?](#1b-number-what-number-does-a-literal-hold) | 5 | 0 of 15 | check_report, read_report, the twin, the preview | one place since DD1B: `assets/js/pbir-values.js` `litNumber` |
+| [1b-bool What true or false does a literal hold?](#1b-bool-what-true-or-false-does-a-literal-hold) | 3 | 0 of 15 | check_report, read_report, the twin, the preview, the native copy | one place since DD1B: `assets/js/pbir-values.js` `litBool` |
 | [1c How wide is the frame a visual is mirrored inside?](#1c-how-wide-is-the-frame-a-visual-is-mirrored-inside) | 4 | 0 of 10 | the twin | one place since DD1C2: `assets/js/mirror-units.js` `frameWidth` |
-| [1d What width did the report set for this table column?](#1d-what-width-did-the-report-set-for-this-table-column) | 5 | 3 of 12 | check_report, the twin, create_report | merge (tagged decoder) |
+| [1d What width did the report set for this table column?](#1d-what-width-did-the-report-set-for-this-table-column) | 5 | 0 of 12 | check_report, the twin, create_report | one place since DD1B: `assets/js/pbir-values.js` `columnWidth` |
 | [1f Is this text Arabic?](#1f-is-this-text-arabic) | 7 | 4 of 11 | every measured text, check_report, create_report, the twin | `text-measure.js` / `field-catalog.js` (the broad test) |
 | [1g Which model folder is read?](#1g-which-model-folder-is-read) | 2 | 4 of 8 | the website's model import, every MCP tool that reads a model | `model-discovery.mjs` (the browser's is stale) |
 | [1h Which column sorts this one?](#1h-which-column-sorts-this-one) | 2 | 3 of 11 | the website's field picker, check_model_health's fix script | `field-catalog.js` (the health check's is stale; keep its null-list adapter) |
@@ -103,6 +103,8 @@ question for mirror-policy).
 
 ## 1b-text What text does a literal hold?
 
+**One place:** assets/js/pbir-values.js litText (test mcp/test-0.3.2-dd1b.mjs).
+
 **Question:** a property's Literal (`{ expr: { Literal: { Value } } }`): the text it holds (`'Sales'` -> Sales, `''`
 undone to `'`), or nothing.
 
@@ -150,6 +152,16 @@ reader over the same parse, and `""` where a caller wants it is the caller's `||
 
 **The test that will pin it:** the probe's 15 literals (family `1b-text`; the same 15 pin 1b-number and 1b-bool).
 
+**Since DD1B (4 Nov):** every place above reads `assets/js/pbir-values.js` `litText` (an alias of it, or a call with
+`?? ''` where the caller wanted an empty text for nothing), except `mirror-policy.js` `strOf`, kept as its own copy
+because sp10's P10 pins mirror-policy.js to require visual-types.js alone; dd1b pins it to litText's answer on all 15
+literals (the reviewer's call: mcp/work/DD1B.md). Gone, their calls read litText (or the question they asked: a font size
+by litNumber, a show or bold by litBool): `pbip-query.js` `S0` (pbip-visuals.js), `terminology.mjs` `litText`,
+`twin-geometry.mjs` `litOf`, `twin-pages.mjs` `lit` (in `fitPhoneTabs`), `twin-visuals.mjs` `litStr` (twin-copy, twin-pages,
+twin-plan, twin-text-fit). Group B moved to [1b-shown](#1b-shown-what-does-a-literal-show). Changed: `'it''s'` in
+twin-geometry and redesign is "it's". The probe: one answer on all 15 inputs. The "Today" table above is the ledger's
+snapshot before DD1B.
+
 ## 1b-shown What does a literal show?
 
 **One place:** assets/js/pbir-values.js litShown (test mcp/test-0.3.2-dd1b.mjs).
@@ -167,6 +179,8 @@ the text a writer copies (1b-text).
 probe: one answer on all 15 inputs.
 
 ## 1b-number What number does a literal hold?
+
+**One place:** assets/js/pbir-values.js litNumber (test mcp/test-0.3.2-dd1b.mjs).
 
 **Question:** a property's Literal: the number it holds (`12D` -> 12, `12L` -> 12), or nothing.
 
@@ -204,7 +218,14 @@ answer for a real literal. The reviewer and the owner decide.
 
 **The test that will pin it:** the probe's 15 literals (family `1b-number`).
 
+**Since DD1B (4 Nov):** every place above reads `assets/js/pbir-values.js` `litNumber`; a caller that wanted 0 or NaN
+for nothing says `?? 0` or `?? NaN` where it calls. Gone: `twin-visuals.mjs` `num`, `twin-geometry.mjs` `lit0` (in
+`underGrids`), `report-a11y.js` `tr` (in `backgroundOf`: `12L` is 12, it was 0, B-332). The probe: one answer on all 15
+inputs. The "Today" table above is the ledger's snapshot before DD1B.
+
 ## 1b-bool What true or false does a literal hold?
+
+**One place:** assets/js/pbir-values.js litBool (test mcp/test-0.3.2-dd1b.mjs).
 
 **Question:** a property's Literal: true, false, or nothing.
 
@@ -242,6 +263,11 @@ false), C asks "is it shown" (anything but false -> shown, as Desktop shows a pa
 `=== true`, "shown" `!== false`. The reviewer and the owner decide.
 
 **The test that will pin it:** the probe's 15 literals (family `1b-bool`).
+
+**Since DD1B (4 Nov):** every place above reads `assets/js/pbir-values.js` `litBool`. The two questions over it, at
+the call: "on" is `=== true` (`twin-texts.mjs`, its `isOn` gone; `visual-replace.js` `formatFacts`, its `isTrue` gone),
+"shown" is `!== false` (`report-a11y.js` `show`, undefined when the card does not say; dd1b pins it). The probe: one
+answer on all 15 inputs. The "Today" table above is the ledger's snapshot before DD1B.
 
 ## 1c How wide is the frame a visual is mirrored inside?
 
@@ -285,6 +311,8 @@ snapshot before DD1C.
 
 ## 1d What width did the report set for this table column?
 
+**One place:** assets/js/pbir-values.js columnWidth (test mcp/test-0.3.2-dd1b.mjs).
+
 **Question:** a table's `columnWidth` entry for a column (by its queryRef): its width, or none.
 
 **Newest copy:** merge (tagged decoder). Verified: dax-functions.mjs `widthOf` reads `120L` as NaN, the others 120.
@@ -310,6 +338,11 @@ widthOf):
 reader), else `null`. The reviewer and the owner decide.
 
 **The test that will pin it:** the probe's 12 entries (family `1d`).
+
+**Since DD1B (4 Nov):** every place above is a call of `assets/js/pbir-values.js` `columnWidth` (the entries, the
+column's queryRef). Changed: dax-functions.mjs `widthOf` reads `120L` as 120 (it was NaN) and an entry with no
+properties as none (it threw a TypeError), B-332. The probe: one answer on all 12 inputs. The "Today" table above is the
+ledger's snapshot before DD1B.
 
 ## 1f Is this text Arabic?
 
