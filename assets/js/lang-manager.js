@@ -1,6 +1,6 @@
 // lang-manager.js - the language manager: it detects the visitor's language (an Arabic copy's address, then ?lang=,
 // then the saved choice, then the browser's), saves an explicit choice, builds the switcher and puts the pieces
-// together: the locales and page routes (locale-routes.js, loaded before it)
+// together: the locales and page routes (locale-routes.js) and the dictionaries (locale-catalog.js), loaded before it
 class LanguageManager {
   constructor() {
     this.currentLang = this.detectLanguage();
@@ -45,20 +45,11 @@ class LanguageManager {
     return 'en';
   }
   
-  // Load and merge translation files
+  // Load and merge translation files: the common dictionary, then the page's own over it (locale-catalog.js)
   loadTranslations() {
-    // Merge common translations
-    if (window.commonTranslations) {
-      this.translations = { ...window.commonTranslations };
-    }
-    
-    // Merge page-specific translations
-    const pageTranslations = this.getPageTranslations();
-    if (pageTranslations) {
-      this.mergeTranslations(pageTranslations);
-    }
+    this.translations = window.LocaleCatalog.load(window.commonTranslations, this.getPageTranslations(), this.translations);
   }
-  
+
   // The page's own path, whether a path has an Arabic copy (locale-routes.js)
   pagePath() {
     return window.LocaleRoutes.pagePath(window.location.pathname);
@@ -85,34 +76,15 @@ class LanguageManager {
     return key ? window[key] : null;
   }
 
-  // Deep merge translations
+  // Deep merge translations (locale-catalog.js)
   mergeTranslations(pageTranslations) {
-    for (const lang in pageTranslations) {
-      if (!this.translations[lang]) {
-        this.translations[lang] = {};
-      }
-      this.translations[lang] = this.deepMerge(
-        this.translations[lang], 
-        pageTranslations[lang]
-      );
-    }
+    this.translations = window.LocaleCatalog.merge(this.translations, pageTranslations);
   }
-  
-  // Deep merge utility function
+
   deepMerge(target, source) {
-    const output = { ...target };
-    
-    for (const key in source) {
-      if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
-        output[key] = this.deepMerge(target[key] || {}, source[key]);
-      } else {
-        output[key] = source[key];
-      }
-    }
-    
-    return output;
+    return window.LocaleCatalog.deepMerge(target, source);
   }
-  
+
   // Set language and persist
   setLanguage(lang) {
     if (!window.LocaleRoutes.LANGS.includes(lang)) return false;
@@ -163,23 +135,11 @@ class LanguageManager {
     }
   }
   
-  // Get translation text by key path
+  // Get translation text by key path (locale-catalog.js; a path through a text warns in the console)
   getText(path) {
-    const keys = path.split('.');
-    let value = this.translations[this.currentLang];
-    
-    for (const key of keys) {
-      if (value && typeof value === 'object') {
-        value = value[key];
-      } else {
-        console.warn(`Translation missing: ${path} for language: ${this.currentLang}`);
-        return `[Missing: ${path}]`;
-      }
-    }
-    
-    return value || `[Missing: ${path}]`;
+    return window.LocaleCatalog.text(this.translations, this.currentLang, path, (m) => console.warn(m));
   }
-  
+
   // Apply translations to DOM elements (of this page, or of another document: scripts/ar-pages.mjs translates the page's
   // own HTML with it to write the /ar/ copy)
   // (arCopy: the document is an Arabic copy; the generator passes it, as it translates from the English address)
