@@ -474,10 +474,10 @@ export const FAMILIES = [
     ] },
   { id: '1c', title: 'How wide is the frame a visual is mirrored inside?', question: "the width a visual's x is mirrored in: its parent group's, else the page's",
     inputs: FRAMES, places: [
-      P('assets/js/mirror-units.js', 'widthOf', 'export', async (x, get) => (await get())(x.page, byNameOf(x), frameOf(x))),
-      P('mcp/lib/twin-geometry.mjs', 'widthIn', 'source', async (x, get) => (await get({ r: { visuals: x.visuals }, pageW: x.page ? x.page.width : undefined }))(frameOf(x)), { within: 'underGrids' }),
-      P('mcp/lib/twin-text-fit.mjs', 'widthOf', 'source', async (x, get) => (await get({ byName: byNameOf(x), page: x.page }))(frameOf(x)), { within: 'fitButtons' }),
-      P('mcp/lib/twin-geometry.mjs', 'widthOf', 'source', async (x, get) => (await get({ byName: new Map(x.visuals.map((v) => [String(v.name), v])), pg: { page: x.page || undefined } }))(frameOf(x)), { within: 'aroundTables' }),
+      P('assets/js/mirror-units.js', 'frameWidth', 'export', async (x, get) => (await get())(x.page, byNameOf(x), frameOf(x))),
+      P('mcp/lib/twin-geometry.mjs', 'widthOf', 'source', async (x, get) => (await get({ byName: byNameOf(x), pageW: x.page ? x.page.width : undefined }))(frameOf(x)), { within: 'underGrids' }),
+      P('mcp/lib/twin-text-fit.mjs', 'widthOf', 'source', async (x, get) => (await get({ byName: byNameOf(x), page: x.page, frameWidth: await exported('assets/js/mirror-units.js', 'frameWidth') }))(frameOf(x)), { within: 'fitButtons' }),
+      P('mcp/lib/twin-geometry.mjs', 'widthOf', 'source', async (x, get) => (await get({ byName: byNameOf(x), pg: { page: x.page || undefined } }))(frameOf(x)), { within: 'aroundTables' }),
     ] },
   { id: '1d', title: 'What width did the report set for this table column?', question: "a table's columnWidth entry for a column (by its queryRef): its width, or none",
     inputs: WIDTHS, places: [
