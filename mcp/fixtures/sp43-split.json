@@ -1,0 +1,69 @@
+{
+ "about": "test-0.3.2-sp43.mjs: the three files' outputs recorded on the base (integration/0.3.2 4d97158; normalised: the plan id and the working folder)",
+ "runs": {
+  "B1": {
+   "length": 953,
+   "sha256": "94623b24bb5b146423194b8d0e4922bd555238c024e9b17d54c515e819c93bb0"
+  },
+  "B2": {
+   "length": 953,
+   "sha256": "6cdc3cde993390cfc4364fd853bdf1af97789040271bbc1fed5c5e0be79b133b"
+  },
+  "B3": {
+   "length": 14743,
+   "sha256": "6538f09cb47ebeea24e0eb7889a79b0a47aa4f765c6d4bd7938034f2e3476491"
+  },
+  "B4": {
+   "length": 14743,
+   "sha256": "716fbc5389aea8f42bfe64fc09ad01d9f630d64c130843f72686416b99d8d4cd"
+  },
+  "R1": {
+   "length": 15227,
+   "sha256": "e7b7a066168090665b774d2111540d5e754652bccc1d9809a55083085c6ccb7b"
+  },
+  "R2": {
+   "length": 27076,
+   "sha256": "d4fd4acffcdef4f63b6ccca4208c8e74a5a79a6c8acd79fd3f2623948a0c322b"
+  },
+  "R3": {
+   "length": 13518,
+   "sha256": "f12d43899f8c9c79372f26d9604338adc5d64bc044c2ace39f2f6708a951f351"
+  },
+  "R4": {
+   "length": 5386,
+   "sha256": "68843c04c05987516e944f80f2fae6b08d825ded251486476bb3725f3dfb289d"
+  },
+  "R5": {
+   "length": 15665,
+   "sha256": "aa9b047ea650af05270b0878a0d46eb579321778087860006ed16693c6784165"
+  },
+  "R6": {
+   "length": 5021,
+   "sha256": "5eac0177199dd195331d5ed770a85ac08d5b7ad4de1cfd5b944f31743641d17e"
+  },
+  "R7": {
+   "length": 542,
+   "sha256": "b3f3026fdf3a2c5bf74e20ab07db8cfab4cc9aadae90b3cdd3e0495c1b06ca4a"
+  },
+  "P1": {
+   "length": 60310,
+   "sha256": "b214df7d2fde06ab54052fdbe057660cc52c1f2b5fcedb2ea0220d66a35861c1"
+  },
+  "P2": {
+   "length": 24744,
+   "sha256": "a3a7885a01b2834a3a9c04e58f9b6222db56115a3e8c5cd09efd096179a3f93b"
+  },
+  "P3": {
+   "length": 26257,
+   "sha256": "9e31bcca3b7ded741d749a1b99ca9e9b3a607a21f7d6f1138000a1e899870ff4"
+  },
+  "P4": {
+   "length": 6058,
+   "sha256": "10c902be54231646c93722f36980cd0ccccfff3855980ebf5dc839c1b08be33b"
+  },
+  "P5": {
+   "length": 10684,
+   "sha256": "e840b68f85f75fea929238acdc34434c47061d973f78437e08e8934cd0d9ef60"
+  }
+ }
+}
