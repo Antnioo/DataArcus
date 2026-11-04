@@ -27,6 +27,8 @@
 (function (root) {
   // the one field-meaning rule (assets/js/field-meaning.js, shared with the health check: the block audit's A1-11, 11 Oct)
   const FM = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./field-meaning.js') : root.DataArcusFieldMeaning;
+  // the sort-column rule (0.3.2 DD1H): sort-column.js, its one home; the page loads it before this file
+  const SC = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./sort-column.js') : root.DASortColumn;
   /**
    * The field shape the picker gives out (builder 7's audit A3-9, 11 Oct: one documented contract):
    * @typedef {Object} Field
@@ -245,36 +247,14 @@
   const CAL_NAME = /(^|\s)(dates?|calendar)(\s*table)?$|^(dim\s*)?(time|period|periods)$|(^|\s)(التقويم|تقويم|التاريخ)$/i;
   const splitName = (n) => String(n).replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').trim();
 
-  // Month and weekday names sort A to Z unless the model gives them a sort-by column. For such a column without one,
-  // sortColumnFor finds the number column of the same table to sort by (the same rule as the Model Health Check's fix
-  // script, model-health-tmdl.js: keep the two alike; mcp/test.mjs compares them): a year-month number for "Month
-  // Year", a weekday number for a day name, a month number for a month name; a Hijri or fiscal name only by a Hijri or
-  // fiscal number. The report then sorts its charts by it, without touching the model.
-  const NAME_LIKE = /(^|\s|_)(month|day|weekday)\s*_?(name|short)$|^(day of week|weekday|mmm|mmmm)$|short\s*month|month\s*-?\s*year|^month\s*year$|^(اسم\s*)?(الشهر|اليوم)$/i;
-  const sortKind = (name) => (/month|الشهر/i.test(name) && /year|السنة/i.test(name) ? 'yearMonth' : /day|week|اليوم/i.test(name) ? 'day' : 'month');
-  const SORT_BY = {
-    yearMonth: /^(year\s*-?\s*month|month\s*-?\s*year|yyyymm)\s*(no|num|number|index|key|sort|order|id)?$/i,
-    day: /(weekday|day\s*of\s*week)\s*(no|num|number|index)?$|^weekday$|^رقم\s*اليوم$/i,
-    month: /month\s*(no|num|number|index)$|^month$|month\s*of\s*year|^رقم\s*الشهر$/i
-  };
-  const FAMILY = /hijri|fiscal|هجري|مالي/i;
-  const family = (n) => (String(n).match(FAMILY) || [''])[0].toLowerCase();
-  // the Gulf calendar's Arabic name columns ("Day Name (Arabic)") are the same kind of name as their English ones
-  const ARABIC_SUFFIX = /\s*\((arabic|عربي)\)\s*$/i;
-  const nameLike = (name) => NAME_LIKE.test(String(name).replace(ARABIC_SUFFIX, '').replace(FAMILY, '').trim());
+  // Month and weekday names sort A to Z unless the model gives them a sort-by column: which number column sorts such a
+  // name is the one rule in sort-column.js (0.3.2 DD1H; the Model Health Check's fix script reads it too, D-1104-12).
+  // The report then sorts its charts by it, without touching the model.
+  const { sortKind, SORT_BY, FAMILY, family, ARABIC_SUFFIX, nameLike } = SC;
   // a column's type as the readers give it, lower case; a column given with none (a DAX table's, a caller's own) is
   // unknown, never text (RULES-POWERBI.md: a missing type defaulted to text gives wrong findings; SQ13, 0.2.9-reader-S13)
-  const colType = (c) => String((c && c.dataType) || 'unknown').toLowerCase();
-  function sortColumnFor(columns, name) {
-    if (!nameLike(name)) return null;
-    const kind = sortKind(name), fam = family(name);
-    // a column the files give no type for (a DAX table's) counts only when its name says it is a number ("Month
-    // Number", "Year Month Sort", "Day of Week"): "Year Month" or "Month" alone may be text
-    const type = colType, plain = (c) => c.name.replace(FAMILY, '').trim();
-    const numberName = /(no|num|number|index|key|sort|order|id)$|day\s*of\s*week|month\s*of\s*year|^رقم/i;
-    const ok = (c) => c.name !== name && family(c.name) === fam && SORT_BY[kind].test(plain(c)) && (/^(int64|double|decimal|number)$/.test(type(c)) || (type(c) === 'unknown' && numberName.test(plain(c))));
-    return columns.find(ok) || null;
-  }
+  const colType = SC.colType;
+  const sortColumnFor = (columns, name) => SC.sortColumnFor(columns, name, colType);
   // Round 23 (the owner's rule, 8 Oct 2026: "in any model I want to make sure English in English reports and Arabic in
   // Arabic reports"; found in the 0.2.7 install test: on a bilingual model, Sales[City] and Sales[المدينة], an English
   // report took Sales[المدينة] for its column chart, its table and a slicer beside the City slicer). A field's language

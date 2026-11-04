@@ -36,7 +36,7 @@ How it is kept true:
 | [1d What width did the report set for this table column?](#1d-what-width-did-the-report-set-for-this-table-column) | 5 | 3 of 12 | check_report, the twin, create_report | merge (tagged decoder) |
 | [1f Is this text Arabic?](#1f-is-this-text-arabic) | 7 | 4 of 11 | every measured text, check_report, create_report, the twin | `text-measure.js` / `field-catalog.js` (the broad test) |
 | [1g Which model folder is read?](#1g-which-model-folder-is-read) | 3 | 0 of 8 | the website's model import, every MCP tool that reads a model | equal (one place: `model-nearest.js`) |
-| [1h Which column sorts this one?](#1h-which-column-sorts-this-one) | 2 | 3 of 11 | the website's field picker, check_model_health's fix script | `field-catalog.js` (the health check's is stale; keep its null-list adapter) |
+| [1h Which column sorts this one?](#1h-which-column-sorts-this-one) | 3 | 0 of 11 | the website's field picker, check_model_health's fix script | equal (one place: `sort-column.js`) |
 | [grid Does this visual keep its grid left to right?](#grid-does-this-visual-keep-its-grid-left-to-right) | 2 | 0 of 18 | the twin | equal |
 | [vt-slicer Is this visual a slicer?](#vt-slicer-is-this-visual-a-slicer) | 5 | 1 of 18 | read_report, check_report, the twin, the preview | (not in the audit) |
 | [vt-bar Is this visual a bar chart?](#vt-bar-is-this-visual-a-bar-chart) | 4 | 1 of 18 | the twin, the preview, check_report | (not in the audit) |
@@ -604,28 +604,32 @@ and the probe's 8 folders (family `1g`).
 
 ## 1h Which column sorts this one?
 
+**One place:** assets/js/sort-column.js sortColumnFor (test mcp/test-0.3.2-dd1h.mjs).
+
 **Question:** a month or day name column: the number column of its table that sorts it, or none.
 
-**Newest copy:** `field-catalog.js` (the Arabic suffix, 873a7a00, 6 Oct; a missing dataType read as unknown,
-1ebff206, 26 Oct); the health check's is stale, keep its null-list adapter. Verified. mcp/test.mjs's parity test
-gives every column a type and no suffix, so it passes while they differ.
+**Newest copy:** equal since DD1H (4 Nov): the rule is `sort-column.js` `sortColumnFor`, built from `field-catalog.js`'s
+(the Arabic suffix, 873a7a00, 6 Oct; a missing dataType read as unknown, 1ebff206, 26 Oct) with the health check's
+null-list behaviour (no list: null). The health check's own copy is gone.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/field-catalog.js` `sortColumnFor` | [engines](MODULES.md#the-website-engines) | the field picker (the website, suggest_fields, create_report's sort) |
-| `assets/js/model-health-tmdl.js` `sortColumnFor` | [engines](MODULES.md#the-website-engines) | check_model_health's fix script, the health check page |
+| `assets/js/sort-column.js` `sortColumnFor` | [engines](MODULES.md#the-website-engines) | the rule itself: both callers below read it |
+| `assets/js/field-catalog.js` `sortColumnFor` | [engines](MODULES.md#the-website-engines) | the field picker (the website, suggest_fields, create_report's sort); it passes its colType |
+| `assets/js/model-health-tmdl.js` `sortColumnFor` | [engines](MODULES.md#the-website-engines) | check_model_health's fix script, the health check page; a missing dataType is unknown, never text; no list gives null |
 
-**Today** (A: field-catalog sortColumnFor, B: model-health-tmdl sortColumnFor):
+**Today** (the probe: the rule, field-catalog sortColumnFor, model-health-tmdl sortColumnFor): all three answer the
+same on all 11 inputs. Before DD1H the health check answered null where the writer found the number column (a month
+number with no dataType; "Day Name (Arabic)"), and the writer threw on no column list: 3 of 11 inputs.
 
-| input | A | B |
-|---|---|---|
-| Month Name, Month Number with no dataType | "Month Number" | null |
-| Day Name (Arabic), Day of Week Number int64 | "Day of Week Number" | null |
-| Month Name, no column list at all | throws TypeError | null |
+| input | all three |
+|---|---|
+| Month Name, Month Number with no dataType | "Month Number" |
+| Day Name (Arabic), Day of Week Number int64 | "Day of Week Number" |
+| Month Name, no column list at all | null |
 
-**Decided answer:** proposed: A's rule with B's `(columns \|\| [])`. The reviewer and the owner decide.
-
-**The test that will pin it:** the probe's 11 tables (family `1h`).
+**The test that pins it:** `mcp/test-0.3.2-dd1h.mjs` (14 made-up column sets; the writer and the health check give
+one answer), mcp/test.mjs's comparison, and the probe's 11 tables (family `1h`).
 
 ## png-chunk What bytes make a PNG chunk?
 

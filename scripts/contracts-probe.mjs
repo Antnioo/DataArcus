@@ -575,6 +575,7 @@ export const FAMILIES = [
     ] },
   { id: '1h', title: 'Which column sorts this one?', question: "a month or day name column: the number column of its table that sorts it, or none",
     inputs: SORTS, places: [
+      P('assets/js/sort-column.js', 'sortColumnFor', 'export', sortBy),
       P('assets/js/field-catalog.js', 'sortColumnFor', 'export', sortBy),
       P('assets/js/model-health-tmdl.js', 'sortColumnFor', 'export', sortBy),
     ] },
