@@ -66,7 +66,7 @@ const parses = (body) => { try { new Function(body); return true; } catch (e) { 
 // the definitions of name in the file: { kind: 'decl' | 'expr', at (where its text starts), indent, end }
 const SPAN = 6000;   // a definition read from source is a short helper: its text is looked for this far only
 const defCache = new Map();
-function definitions(s, name) {
+export function definitions(s, name) {
   const ck = name + '\u0000' + s.length + '\u0000' + s.slice(0, 64);
   if (defCache.has(ck)) return defCache.get(ck);
   const out = [], esc = name.replace(/[$]/g, '\\$');
@@ -265,6 +265,7 @@ const ESCAPES = [
   { label: 'null', s: null }, { label: 'undefined', s: undefined }, { label: '12 (a number)', s: 12 },
 ];
 const esc1 = async (x, get) => (await get())(x.s);
+const esc1n = () => async (x, get) => (await get())(x.n);
 
 const BYTES = [
   { label: 'empty', b: [] }, { label: "'a'", b: [0x61] }, { label: "'123456789' (the check value)", b: [...'123456789'].map((c) => c.charCodeAt(0)) },
@@ -313,6 +314,7 @@ const FRAMES = [
   { label: 'a group named by a number', page: { width: 1280 }, visuals: [{ name: 7, visualGroup: {}, position: { x: 0, y: 0, width: 400, height: 300 } }, { name: 'v', parentGroupName: 7 }], of: 'v' },
   { label: 'no page size', page: {}, visuals: [{ name: 'v' }], of: 'v' },
   { label: 'no page at all', page: null, visuals: [{ name: 'v' }], of: 'v' },
+  { label: "a group whose width is a text ('400')", page: { width: 1280 }, visuals: [{ name: 'g', visualGroup: {}, position: { x: 0, y: 0, width: '400', height: 300 } }, { name: 'v', parentGroupName: 'g' }], of: 'v' },
   { label: 'a group named an empty text', page: { width: 1280 }, visuals: [{ name: '', visualGroup: {}, position: { x: 0, y: 0, width: 400, height: 300 } }, { name: 'v', parentGroupName: '' }], of: 'v' },
 ];
 const frameOf = (x) => x.visuals.find((v) => v.name === x.of);
@@ -329,6 +331,97 @@ const WIDTHS = [
 ];
 const tableOf = (x) => ({ visual: { visualType: 'tableEx', position: { x: 0, y: 0, width: 600, height: 300 }, query: { queryState: { Values: { projections: [{ queryRef: 'T.a', displayName: 'a' }] }, Rows: { projections: [{ queryRef: 'T.a' }] } } }, objects: { columnWidth: x.cw } } });
 
+
+// 1g: model folders a chosen folder holds (made up; no file is read: a read stops the probe's answer at the folder)
+const MODELS = [
+  { label: 'one model at the top', m: ['Sales.SemanticModel'] },
+  { label: 'two side by side', m: ['A.SemanticModel', 'B.SemanticModel'] },
+  { label: 'one at the top, one deeper', m: ['A.SemanticModel', 'sub/B.SemanticModel'] },
+  { label: 'two side by side in a project folder', m: ['p/A.SemanticModel', 'p/B.Dataset'] },
+  { label: 'the older .Dataset name alone', m: ['Old.Dataset'] },
+  { label: 'names that differ by letter case', m: ['b.SemanticModel', 'A.SemanticModel'] },
+  { label: 'a backup of the same name deeper', m: ['Sales.SemanticModel', 'backup/Sales.SemanticModel'] },
+  { label: 'three at the top', m: ['A.SemanticModel', 'B.SemanticModel', 'C.SemanticModel'] },
+];
+const pickedInBrowser = async (x, get) => {
+  const files = x.m.map((m) => ({ name: 'T.tmdl', webkitRelativePath: 'Pick/' + m + '/definition/tables/T.tmdl', size: 10, arrayBuffer: () => { throw Object.assign(new Error('READ'), { at: m }); } }));
+  try { await (await get())(files, { fromTmsl: () => [], relsOfTmsl: () => [], clean: (t) => t, tmdl: () => ({ fromFiles: () => ({}) }) }); return 'read nothing'; } catch (e) { return e.at ? 'uses ' + e.at : 'refuses ' + e.message; }
+};
+const pickedOnDisk = async (x, get) => {
+  const root = path.join(path.sep, 'w');
+  try { const d = (await get())(x.m.map((m) => path.join(root, ...m.split('/'))), root, 'w'); return 'uses ' + path.relative(root, d).split(path.sep).join('/'); } catch (e) { return 'refuses ' + (e.code || e.message); }
+};
+
+// 1h: a column's table (made up) and the column asked about
+const C = (name, dataType, more) => Object.assign({ name }, dataType ? { dataType } : {}, more || {});
+const SORTS = [
+  { label: 'Month Name, Month Number int64', name: 'Month Name', cols: [C('Month Name', 'string'), C('Month Number', 'int64')] },
+  { label: 'Month Name, Month Number with no dataType', name: 'Month Name', cols: [C('Month Name'), C('Month Number')] },
+  { label: 'Day Name (Arabic), Day of Week Number int64', name: 'Day Name (Arabic)', cols: [C('Day Name (Arabic)', 'string'), C('Day of Week Number', 'int64')] },
+  { label: 'Month Year, Year Month Number int64', name: 'Month Year', cols: [C('Month Year', 'string'), C('Year Month Number', 'int64')] },
+  { label: 'Hijri Month Name, both month numbers', name: 'Hijri Month Name', cols: [C('Month Number', 'int64'), C('Hijri Month Number', 'int64')] },
+  { label: 'Hijri Month Name, only the Gregorian number', name: 'Hijri Month Name', cols: [C('Month Number', 'int64')] },
+  { label: 'Month Name, Month Number as text', name: 'Month Name', cols: [C('Month Number', 'string')] },
+  { label: 'اسم الشهر, رقم الشهر int64', name: 'اسم الشهر', cols: [C('رقم الشهر', 'int64')] },
+  { label: 'Month Name, a DAX table column with no dataType', name: 'Month Name', cols: [C('Month Number', null, { type: 'calculatedTableColumn' })] },
+  { label: 'Sales (not a name to sort)', name: 'Sales', cols: [C('Month Number', 'int64')] },
+  { label: 'Month Name, no column list at all', name: 'Month Name', cols: null },
+];
+const sortBy = async (x, get) => { const c = (await get())(x.cols, x.name); return c ? c.name : null; };
+
+// a TMDL object name, quoted when it must be
+const TNAMES = ['Sales', 'Sales Amount', 'Sales-2024', "O'Brien", 'المبيعات', '_x', '1st', '', 'Date'].map((n) => ({ label: n === '' ? "'' (empty)" : n, n }));
+// four bytes read big-endian at an offset
+const U32 = [
+  { label: '00 00 00 01 at 0', b: [0, 0, 0, 1], i: 0 }, { label: 'FF FF FF FF at 0', b: [255, 255, 255, 255], i: 0 },
+  { label: '80 00 00 00 at 0 (the top bit)', b: [128, 0, 0, 0], i: 0 }, { label: '12 34 56 78 at 0', b: [0x12, 0x34, 0x56, 0x78], i: 0 },
+  { label: 'at offset 2', b: [9, 9, 0, 0, 1, 0], i: 2 }, { label: 'past the end', b: [1, 2], i: 0 },
+  { label: 'a 1x1 IHDR width', b: [0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1], i: 8 }, { label: 'an empty buffer', b: [], i: 0 },
+];
+// a small cache that forgets the least recently used: a list of steps, the answers of its gets
+const LRUS = [
+  { label: 'set a, get a', max: 2, ops: [['set', 'a', 1], ['get', 'a']] },
+  { label: 'get a missing key', max: 2, ops: [['get', 'x']] },
+  { label: 'three sets in a cache of two', max: 2, ops: [['set', 'a', 1], ['set', 'b', 2], ['set', 'c', 3], ['get', 'a'], ['get', 'b'], ['get', 'c']] },
+  { label: 'a get keeps a key', max: 2, ops: [['set', 'a', 1], ['set', 'b', 2], ['get', 'a'], ['set', 'c', 3], ['get', 'a'], ['get', 'b']] },
+  { label: 'a set again replaces', max: 2, ops: [['set', 'a', 1], ['set', 'a', 5], ['get', 'a']] },
+  { label: 'a cache of one', max: 1, ops: [['set', 'a', 1], ['set', 'b', 2], ['get', 'a'], ['get', 'b']] },
+  { label: 'undefined as a value', max: 2, ops: [['set', 'a', undefined], ['get', 'a']] },
+  { label: 'a set again keeps the other', max: 2, ops: [['set', 'a', 1], ['set', 'b', 2], ['set', 'a', 3], ['set', 'c', 4], ['get', 'a'], ['get', 'b']] },
+];
+const lruRun = async (x, get) => { const c = (await get())(x.max), out = []; for (const [op, k, v] of x.ops) { if (op === 'set') c.set(k, v); else out.push(c.get(k)); } return out.map((v) => (v === undefined ? 'undefined' : v)).join(' '); };
+// a PNG chunk: its type and body, the bytes written (length, type, body, CRC)
+const CHUNKS = [
+  { label: 'IEND, empty', t: 'IEND', b: [] }, { label: 'IHDR 1x1 RGB', t: 'IHDR', b: [0, 0, 0, 1, 0, 0, 0, 1, 8, 2, 0, 0, 0] },
+  { label: 'tEXt Comment', t: 'tEXt', b: [...Buffer.from('Comment\0made up', 'latin1')] }, { label: 'IDAT one byte', t: 'IDAT', b: [0] },
+  { label: 'a 300-byte body', t: 'IDAT', b: Array.from({ length: 300 }, (_, i) => i & 255) }, { label: 'a lower-case type', t: 'abcd', b: [1, 2, 3] },
+  { label: 'a body of 0xFF', t: 'IDAT', b: [255, 255, 255] }, { label: 'a 256-byte body', t: 'IDAT', b: Array.from({ length: 256 }, () => 7) },
+];
+const chunkHex = async (x, get) => { const c = (await get())(x.t, Uint8Array.from(x.b)); return Buffer.from(c).toString('hex').slice(0, 64) + (c.length > 32 ? '... (' + c.length + ' bytes)' : ''); };
+// the reading limits of a model file, by kind
+const LIMIT_KEYS = ['model', 'entry', 'total', 'file', 'entries', 'pbix', '', 'MODEL'].map((k) => ({ label: k === '' ? "'' (no kind)" : k, k }));
+const limitOf = async (x, get) => (await get())[x.k];
+// a text box's text: its paragraphs' runs
+const TB = (paragraphs) => ({ visual: { visualType: 'textbox', objects: paragraphs === undefined ? {} : { general: [{ properties: { paragraphs } }] } } });
+const BOXTEXTS = [
+  { label: 'one paragraph, one run', j: TB([{ textRuns: [{ value: 'Sales' }] }]) },
+  { label: 'one paragraph, two runs', j: TB([{ textRuns: [{ value: 'Sales ' }, { value: '2024' }] }]) },
+  { label: 'two paragraphs', j: TB([{ textRuns: [{ value: 'Top' }] }, { textRuns: [{ value: 'Bottom' }] }]) },
+  { label: 'an Arabic run', j: TB([{ textRuns: [{ value: 'المبيعات' }] }]) },
+  { label: 'a run with a number value', j: TB([{ textRuns: [{ value: 0 }] }]) },
+  { label: 'a run with no value', j: TB([{ textRuns: [{}] }]) },
+  { label: 'no paragraphs', j: TB(undefined) },
+  { label: 'an empty paragraph between two', j: TB([{ textRuns: [{ value: 'A' }] }, { textRuns: [] }, { textRuns: [{ value: 'B' }] }]) },
+  { label: 'spaces around', j: TB([{ textRuns: [{ value: '  Sales  ' }] }]) },
+];
+// BLANK arithmetic: a - b and a / b, BLANK as null
+const BLANKS = [];
+for (const o of ['-', '/']) for (const [a, b] of [[5, 3], [null, 3], [5, null], [null, null], [5, 0]]) BLANKS.push({ label: `${a == null ? 'BLANK' : a} ${o} ${b == null ? 'BLANK' : b}`, o, a, b });
+const blankByCompiler = async (x, get) => { const leaf = (v) => (v == null ? { k: 'blank' } : { k: 'num', n: v }); return (await get())({ k: 'op', o: x.o, a: leaf(x.a), b: leaf(x.b) }, { vars: {}, measures: {} }); };
+const blankByEditor = async (x, get) => {
+  const values = [{ id: 'a', kind: 'measure', measure: 'A' }, { id: 'b', kind: 'measure', measure: 'B' }, { id: 'r', kind: x.o === '-' ? 'diff' : 'ratio', a: 'a', b: 'b' }];
+  return (await get({ S: { design: { values } }, samples: () => ({ A: x.a, B: x.b }) }))().r;
+};
 
 export const FAMILIES = [
   { id: '1a', title: 'Is this column time?', question: 'a column named like this: is it a date part (a day, month, quarter, year, a date)?',
@@ -384,6 +477,7 @@ export const FAMILIES = [
       P('assets/js/mirror-units.js', 'widthOf', 'export', async (x, get) => (await get())(x.page, byNameOf(x), frameOf(x))),
       P('mcp/lib/twin-geometry.mjs', 'widthIn', 'source', async (x, get) => (await get({ r: { visuals: x.visuals }, pageW: x.page ? x.page.width : undefined }))(frameOf(x)), { within: 'underGrids' }),
       P('mcp/lib/twin-text-fit.mjs', 'widthOf', 'source', async (x, get) => (await get({ byName: byNameOf(x), page: x.page }))(frameOf(x)), { within: 'fitButtons' }),
+      P('mcp/lib/twin-geometry.mjs', 'widthOf', 'source', async (x, get) => (await get({ byName: new Map(x.visuals.map((v) => [String(v.name), v])), pg: { page: x.page || undefined } }))(frameOf(x)), { within: 'aroundTables' }),
     ] },
   { id: '1d', title: 'What width did the report set for this table column?', question: "a table's columnWidth entry for a column (by its queryRef): its width, or none",
     inputs: WIDTHS, places: [
@@ -403,11 +497,10 @@ export const FAMILIES = [
       P('mcp/lib/report-bind.mjs', 'AR_COL', 'source', async (x, get) => (await get()).test(x.s)),
       P('mcp/lib/twin-plan.mjs', 'arOf', 'source', async (x, get) => (await get())(x.s), { within: 'planTwin' }),
     ] },
-  { id: 'vt-table', title: 'Is this visual a table or a matrix?', question: 'a visual type: a table, a matrix, or neither (each place in its own words)',
+  { id: 'grid', title: 'Does this visual keep its grid left to right?', question: 'a visual type: a table or a matrix, whose columns Desktop keeps left to right in the twin',
     inputs: TYPES, places: [
-      P('assets/js/mirror-policy.js', 'kindOf', 'inner', async (x, get) => { const k = await mpKind(x.t, get); return { v: k === 'table' ? 'table' : k === 'matrix' ? 'matrix' : 'no', note: k }; }),
-      P('assets/js/page-preview.js', 'kindOf', 'inner', async (x, get) => { const k = await ppKind(x.t, get); return { v: k === 'table' ? (x.t === 'pivotTable' ? 'matrix' : 'table') : 'no', note: k }; }),
-      P('mcp/lib/page-picture.mjs', 'TABLES', 'source', async (x, get) => ({ v: (await get()).has(x.t) ? (x.t === 'pivotTable' ? 'matrix' : 'table') : 'no' })),
+      P('assets/js/mirror-policy.js', 'keepsGridLtr', 'inner', async (x, get) => (await get())({ visual: { visualType: x.t } })),
+      P('mcp/lib/page-picture.mjs', 'TABLES', 'source', async (x, get) => (await get()).has(x.t)),
     ] },
   { id: 'vt-slicer', title: 'Is this visual a slicer?', question: 'a visual type: is it a slicer (a visual that filters the page by its field)?',
     inputs: TYPES, places: [
@@ -424,11 +517,6 @@ export const FAMILIES = [
       P('assets/js/layout-check.js', 'BARS', 'inner', async (x, get) => (await get()).test(x.t)),
       P('mcp/lib/page-picture.mjs', 'BARS', 'source', async (x, get) => (await get()).test(x.t)),
     ] },
-  { id: 'order', title: 'In what order is a page read?', question: "a page's boxes: the order a person reads them (rows top to bottom; across, left to right, or right to left)",
-    inputs: ORDERS, places: [
-      P('assets/js/report-a11y.js', 'readingOrder', 'export', async (x, get) => (await get())(x.boxes, x.dir).map((b) => b.name).join(' ')),
-      P('mcp/lib/twin-texts.mjs', 'readingOrder', 'export', async (x, get) => (await get())(x.boxes.map((b) => ({ rel: b.name, name: b.name, json: { position: { x: b.x, y: b.y, width: b.w, height: b.h }, visual: { visualType: 'card' } } }))).map((v) => v.name).join(' ')),
-    ] },
   { id: 'canon', title: 'What is the canonical text of a plan?', question: 'a value: its JSON with keys sorted and undefined left out (the text a digest is taken of)',
     inputs: CANON, places: [
       P('mcp/lib/artifact.mjs', 'canon', 'source', async (x, get) => (await get())(x.v)),
@@ -442,12 +530,15 @@ export const FAMILIES = [
       P('mcp/lib/page-picture.mjs', 'crc32', 'source', crc),
       P('assets/js/theme-download-ui.js', 'crc32', 'source', crc),
     ] },
-  { id: 'overlap', title: 'Do these two boxes overlap?', question: 'two boxes on a page: do they overlap (more than a rounding)?',
+  { id: 'overlap', title: 'Do these two boxes overlap?', question: 'two boxes on a page: do they overlap by more than a rounding (half a pixel each way)?',
     inputs: BOXES, places: [
       P('mcp/lib/twin-visuals.mjs', 'overlaps', 'export', async (x, get) => (await get())(wh(x.a), wh(x.b))),
       P('mcp/lib/redesign-grid.mjs', 'overlap', 'source', async (x, get) => (await get())(xywh(x.a), xywh(x.b))),
-      P('mcp/lib/twin-geometry.mjs', 'overlapOf', 'source', async (x, get) => { const a = (await get())(wh(x.a), wh(x.b)); return { v: a > 0, note: 'area ' + Math.round(a * 100) / 100 }; }),
-      P('mcp/lib/page-picture.mjs', 'meets', 'source', async (x, get) => { const a = (await get())(xywh(x.a), xywh(x.b)); return { v: a > 4, note: 'area ' + Math.round(a * 100) / 100 + ', newOverlaps counts over 4' }; }),
+    ] },
+  { id: 'overlap-area', title: 'How much do two boxes overlap?', question: 'two boxes on a page: the area they share',
+    inputs: BOXES, places: [
+      P('mcp/lib/twin-geometry.mjs', 'overlapOf', 'source', async (x, get) => Math.round((await get())(wh(x.a), wh(x.b)) * 100) / 100),
+      P('mcp/lib/page-picture.mjs', 'meets', 'source', async (x, get) => Math.round((await get())(xywh(x.a), xywh(x.b)) * 100) / 100),
     ] },
   { id: 'contrast', title: 'What is the contrast of two colours?', question: 'two colours: their WCAG contrast ratio (1 to 21)',
     inputs: COLOURS, places: [
@@ -477,6 +568,59 @@ export const FAMILIES = [
       P('assets/js/model-health-worker.js', 'decodeText', 'source', decode),
       P('assets/js/model-import-browser.js', 'decodeText', 'source', decode),
       P('mcp/lib/model.mjs', 'decode', 'export', decode),
+    ] },
+  { id: '1g', title: 'Which model folder is read?', question: 'a chosen folder holding model folders: the one read, or a refusal',
+    inputs: MODELS, places: [
+      P('assets/js/model-import-browser.js', 'fromFolder', 'export', pickedInBrowser),
+      P('mcp/lib/model-discovery.mjs', 'nearestModel', 'export', pickedOnDisk),
+    ] },
+  { id: '1h', title: 'Which column sorts this one?', question: "a month or day name column: the number column of its table that sorts it, or none",
+    inputs: SORTS, places: [
+      P('assets/js/field-catalog.js', 'sortColumnFor', 'export', sortBy),
+      P('assets/js/model-health-tmdl.js', 'sortColumnFor', 'export', sortBy),
+    ] },
+  { id: 'tmdl-name', title: 'How is a name written in TMDL?', question: "a table or column name: as TMDL writes it (bare, or in single quotes with ' doubled)",
+    inputs: TNAMES, places: [
+      P('assets/js/model-health-tmdl.js', 'name', 'inner', esc1n()),
+      P('assets/js/measure-builder.js', 'tName', 'source', esc1n()),
+      P('mcp/lib/model-culture.mjs', 'q', 'source', esc1n()),
+      P('mcp/lib/sample-project.mjs', 'name', 'source', esc1n()),
+      P('mcp/lib/shadow-model.mjs', 'q', 'source', esc1n()),
+      P('mcp/lib/twin-model.mjs', 'tmdlName', 'source', esc1n()),
+    ] },
+  { id: 'u32', title: 'What number do four bytes hold?', question: 'bytes and an offset: the big-endian unsigned 32-bit number there (a PNG read)',
+    inputs: U32, places: [
+      P('mcp/lib/glass-picture.mjs', 'u32', 'source', async (x, get) => (await get())(Uint8Array.from(x.b), x.i)),
+      P('mcp/lib/page-picture.mjs', 'u32', 'source', async (x, get) => (await get())(Uint8Array.from(x.b), x.i)),
+    ] },
+  { id: 'lru', title: 'What does a small cache keep?', question: 'a cache of N entries: what its gets answer after these sets (the least recently used goes first)',
+    inputs: LRUS, places: [
+      P('mcp/lib/glass-picture.mjs', 'lru', 'source', lruRun),
+      P('mcp/lib/page-picture.mjs', 'lru', 'source', lruRun),
+    ] },
+  { id: 'png-chunk', title: 'What bytes make a PNG chunk?', question: "a chunk's type and body: its bytes (length, type, body, CRC-32)",
+    inputs: CHUNKS, places: [
+      P('assets/js/design-engine.js', 'chunk', 'source', chunkHex, { within: 'pngOf' }),
+      P('mcp/lib/glass-picture.mjs', 'chunk', 'source', chunkHex, { within: 'encode' }),
+      P('mcp/lib/page-picture.mjs', 'chunk', 'source', chunkHex),
+    ] },
+  { id: 'limits', title: 'How large may a model file be?', question: 'a kind of model file or entry: the size (or count) over which it is refused before it is read',
+    inputs: LIMIT_KEYS, places: [
+      P('assets/js/model-health-worker.js', 'LIMITS', 'source', limitOf),
+      P('assets/js/model-import-browser.js', 'LIMITS', 'export', limitOf),
+      P('mcp/lib/model.mjs', 'PBIT_LIMITS', 'export', limitOf),
+    ] },
+  { id: 'text-runs', title: 'What text does a text box hold?', question: "a text box's paragraphs: their runs' text, as one line",
+    inputs: BOXTEXTS, places: [
+      P('assets/js/layout-check.js', 'textOf', 'inner', async (x, get) => (await get())(x.j)),
+      P('mcp/lib/report-inventory.mjs', 'textOf', 'source', async (x, get) => (await get())(x.j)),
+      P('assets/js/report-a11y.js', 'textOf', 'inner', async (x, get) => (await get())(x.j.visual)),
+      P('assets/js/page-preview.js', 'textOf', 'inner', async (x, get) => (await get())(x.j)),
+    ] },
+  { id: 'blank', title: 'What is BLANK minus or divided by a number?', question: 'a - b and a / b with BLANK (null), as DAX answers them',
+    inputs: BLANKS, places: [
+      P('assets/js/svg-expressions.js', 'evalNode', 'inner', blankByCompiler),
+      P('assets/js/svg-editor-panels.js', 'evalValues', 'source', blankByEditor),
     ] },
 ];
 
