@@ -6,12 +6,12 @@ import { designRtl, buildTheme, pageOf, planLayout, kindLabel, projectPages, isG
 import { scopeOf } from '../lib/scope.mjs';
 import { proposeArabic } from '../lib/arabic-names.mjs';
 import { writtenName, readableName } from '../lib/display-names.mjs';
-import { scriptModel, resolveSwitch, switchSaid, SCRIPT_SUFFIX } from '../lib/metric-switcher.mjs';
+import { resolveSwitch, switchSaid, SCRIPT_SUFFIX } from '../lib/metric-switcher.mjs';
 import { existingTheme } from '../lib/read-report.mjs';
 import { planNative, nativeArtifact, shownOf } from '../lib/native-copy.mjs';
 import { samplePlan, redesignProblems, redesignPlan } from '../lib/plan-variants.mjs';
 import { planPreview, planLint, aggregationAnswer } from '../lib/plan-lint.mjs';
-import { checkArtifact, digestOf, modelPrintOf, bindingOf } from '../lib/artifact.mjs';
+import { modelPrintOf, bindingOf } from '../lib/artifact.mjs';
 import { validatorVerdict } from '../lib/check-report.mjs';   // (0.3.1 P3A: the validator's findings in check_report's kinds)
 import { BEFORE_APPLIED as FLIP_BEFORE } from '../lib/flip-cards.mjs';
 import { resolveIcons } from '../lib/status-icons.mjs';
@@ -21,7 +21,7 @@ import * as Terms from '../lib/terminology.mjs';
 import * as DateQ from '../lib/gulf-date-questions.mjs';
 import { UNTRUSTED } from '../lib/agent-text.mjs';
 import { whereSaid, relOf, NEVER_APPLIED, NEVER_APPLIED_AR } from '../lib/plain-words.mjs';
-import { planTwin, monthOffer as calendarOffer, twinPreview } from '../lib/arabic-twin.mjs';
+import { monthOffer as calendarOffer, twinPreview } from '../lib/arabic-twin.mjs';
 import { lookOf, bilingualSaid, BILINGUAL_LAST, NOT_TRANSLATED_WHY, englishTitles, sayArabicPlan, pageSizeSaid } from '../lib/plan-disclosure.mjs';
 import { text, safe } from '../lib/tool-answer.mjs';
 import { fitRepeats } from '../lib/plan-headroom.mjs';
@@ -31,7 +31,9 @@ import { formatsAnswer } from '../lib/fix-scripts.mjs';
 import { relsOf, fieldsAndProblems, axesProblems, axesOf } from '../lib/report-fields.mjs';
 import { unknownKeys, CREATE_REPORT_INPUTS, REPORT_LOOK, withLookDefaults, reportPin, redesignOnly, heldInputs } from '../lib/report-inputs.mjs';
 import { topSaid, phoneAnswer, calendarSaid } from '../lib/report-said.mjs';
-import { BLANK_PNG_BYTES, reportRun } from '../lib/report-run.mjs';
+import { BLANK_PNG_BYTES } from '../lib/report-run.mjs';
+// (0.3.2 SP43) the exact artifact: create_report's build with the plan's inputs, the EN-AR copy, the check and the digest
+import { exactArtifact } from '../lib/plan-artifact.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Bind = require('../../assets/js/pbip-bind.js');
@@ -42,39 +44,6 @@ const Gallery = require('../../assets/js/visual-gallery.js');
 const MUST_RUN = { validator: 'Microsoft\'s validator', references: 'the check of its fields against the model' };
 // (J14) a proposed plan keeps its exact artifact (plans.mjs, this process only); the plan id, for the proposal
 const attached = (id, art) => { if (art) Plans.attach(id, art); return id; };
-// plan_layout's exact artifact (J14): create_report's build with the plan's inputs, checked on every page; or why not
-async function exactArtifact(ab, pin, lang) {
-  let built;
-  try { built = reportRun(ab, 'build'); } catch (e) { return null; }
-  // (0.3.1 X2) languages "en+ar": the English report just built, made one report with its Arabic pages by the EN-AR
-  // copy's engine; the build's own file list takes the combined files, so the check, the digest and the write are theirs
-  let bilingual = null;
-  if (ab.languages === 'en+ar') { try { bilingual = bilingualOf(built, ab); } catch (e) { return null; } bilingual.english = built.files.slice(); built.files.splice(0, built.files.length, ...bilingual.files); }
-  // (L3) the metric switcher's page reads the table its script adds: its fields are checked against the model with it
-  const tables = built.metricSwitcher ? built.m.tables.concat(Bind.fromTmsl(scriptModel(built.metricSwitcher.table))) : built.m.tables;
-  // (L4) the flip cards' measures are written with the report, as a script the user applies first: counted as there
-  // (L5) the status icons' measures likewise
-  // (L6) the DAX functions' measures likewise
-  const pending = [].concat(built.flip ? built.flip.pending : [], built.icons ? built.icons.pending : [], built.dax ? built.dax.pending : []);
-  // (0.3.1 FX2, C23) an overlap blocks a report laid out by DataArcus (a design); pages placed by hand are the person's own
-  const check = await checkArtifact(built.files, tables, lang === 'ar' ? 'ar' : 'en', Object.assign(pending.length ? { pending } : {}, ab.design && !ab.pages ? { blockOverlap: true } : {}));
-  const digest = digestOf(built.files), modelPrint = modelPrintOf(built.m);
-  return { formatKeys: built.formatKeys, files: built.files, finish: built.finish, digest, modelPrint, pin, binding: bindingOf(digest, pin, modelPrint), check, a11y: built.a11y, barThickness: built.barThickness, slicers: built.slicers, gallery: built.gallery, waterfallRtl: built.waterfallRtl, metricSwitcher: built.metricSwitcher, flip: built.flip, icons: built.icons, dax: built.dax, bilingual };
-}
-// (0.3.1 X2, the owner, 20 Oct: "I wanna integrate that AR/EN toggle") the one engine of the EN-AR copy (X1,
-// lib/arabic-twin.mjs: planTwin into "same", which builds the Arabic pages exactly as the twin does, R1's language
-// buttons, tab order, fits and text boxes and M1's mirror included, and adds the buttons, the sync groups, the hidden tabs
-// and the bookmarks) run on the English report this plan built in memory, under the report's own name. Returns the
-// combined files (the report's, then the build's others: the .pbip and the model scripts, written once) and the twin's
-// plan, whose answer the plan shows
-function bilingualOf(built, ab) {
-  const rep = built.files.find((f) => /^[^/]+\.Report\//.test(f.path)), base = rep.path.split('/')[0].replace(/\.Report$/, ''), pre = base + '.Report/';
-  const P = planTwin({ inMemory: { files: built.files, base, projectDir: built.m.projectDir }, into: 'same', tabsShown: ab.tabsShown, textLabels: ab.arabicTexts || {}, terms: ab.arabicTerms || {},
-    arabicMonth: false, waterfallRtl: ab.waterfallRtl });
-  const byRel = new Map(built.files.filter((f) => f.path.startsWith(pre)).map((f) => [f.path.slice(pre.length), f.data]));
-  const files = P.copy.files.map((f) => ({ path: pre + f.rel, data: f.data != null ? f.data : byRel.get(f.from) })).concat(built.files.filter((f) => !f.path.startsWith(pre)));
-  return { files, P, base };
-}
 // (0.3.2 SP2) the sample and the redesign (lib/plan-variants.mjs) give their answer and what to propose: proposed here, the
 // one place a plan is proposed, its plan block the answer's last key; the redesign's exact copy kept with it (J14, AF2)
 const proposed = (v) => (v.propose ? Object.assign(v.answer, { plan: Plans.proposal(attached(Plans.propose(v.propose.kind, v.propose.model, v.propose.writes, v.propose.data), v.propose.artifact)) }) : v.answer);
