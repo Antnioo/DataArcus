@@ -20,6 +20,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
 const Policy = require('../../assets/js/mirror-policy.js');
+const Units = require('../../assets/js/mirror-units.js');
 const TextMeasure = require('../../assets/js/text-measure.js');
 // (0.3.1 MX7, laptop part 12: Call Center's hour chart 52c8e333 starts 27 left of its heatmap's grid and ends 8 right of
 // it in English; mirrored about its own box it started 8 left and ended 27 right, its bars still left to right, so they
@@ -156,13 +157,16 @@ export function badgesWithText(pg, r) {
 // (0.3.1 MP1d, laptop part 8: Desktop keeps a table's columns at its left edge in the twin too, whatever their number)
 // a matrix, or a table of any number of columns, as page-picture.mjs's check decides it (SP26: mirror-policy.js keepsGridLtr)
 export function aroundTables(pg, r, opts) {
-  const list = pg.visuals.map((v) => v.json), byName = new Map(list.filter(isObj).map((v) => [String(v.name), v])), arAt = new Map((r.visuals || []).map((v, i) => [isObj(v) ? String(v.name) : '', i]));
-  const widthOf = (v) => { const g = v.parentGroupName != null ? byName.get(String(v.parentGroupName)) : null; return g && boxOk(g) ? g.position.width : pageOf(pg).width; };
+  const list = pg.visuals.map((v) => v.json), arAt = new Map((r.visuals || []).map((v, i) => [isObj(v) ? String(v.name) : '', i]));
+  // (0.3.2 DD1C) the frame: mirror-units.js frameWidth, the one rule
+  const byName = Units.byNameOf(list), widthOf = (v) => Units.frameWidth(pageOf(pg), byName, v);
   list.filter((m) => boxOk(m) && Policy.keepsGridLtr(m) && arAt.has(String(m.name))).forEach((m0) => {
     const m1 = r.visuals[arAt.get(String(m0.name))];
     list.filter((v) => v !== m0 && boxOk(v) && !v.visualGroup && String(v.parentGroupName || '') === String(m0.parentGroupName || '') && arAt.has(String(v.name))).forEach((v0) => {
       const i = arAt.get(String(v0.name)), v1 = r.visuals[i], a = v0.position, b = m0.position, ov = overlapOf(a, b); if (!ov || !boxOk(v1) || !boxOk(m1)) return;
       if (Mirror.kindOf(v0) === 'bar' && ov >= a.width * a.height * 0.75 && Number.isFinite(a.z) && Number.isFinite(b.z) && a.z > b.z) {
+        // (DD1C) an unknown frame (no valid group, a page width not a number): never kept with a guess, left as mirrored
+        if (!Number.isFinite(widthOf(v0))) return;
         let k; try { k = Mirror.mirrorVisual(v0, widthOf(v0), Object.assign({}, opts, { keepDirection: true })).json; } catch (e) { return; }
         if (!isObj(k) || !isObj(k.position)) return;
         // (0.3.1 MX6, the fuzz lab's B1-3: a bar 57 left of its table's left edge, the table mirrored to x 0, went to x -57)

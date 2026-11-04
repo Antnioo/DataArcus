@@ -271,6 +271,10 @@ included. The reviewer and the owner decide.
 
 **The test that will pin it:** the probe's 10 frames (family `1c`).
 
+**Since DD1C (4 Nov):** three of the four read `assets/js/mirror-units.js` `frameWidth` (test `mcp/test-0.3.2-dd1c.mjs`):
+mirror-units, twin-text-fit `fitButtons`, twin-geometry `aroundTables`. Still its own rule: twin-geometry `underGrids`
+`widthIn` (DD1C2, next). The family counts as one place when it reads `frameWidth` too.
+
 ## 1d What width did the report set for this table column?
 
 **Question:** a table's `columnWidth` entry for a column (by its queryRef): its width, or none.
