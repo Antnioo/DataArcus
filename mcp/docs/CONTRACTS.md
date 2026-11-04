@@ -41,8 +41,8 @@ How it is kept true:
 | [vt-slicer Is this visual a slicer?](#vt-slicer-is-this-visual-a-slicer) | 5 | 1 of 18 | read_report, check_report, the twin, the preview | (not in the audit) |
 | [vt-bar Is this visual a bar chart?](#vt-bar-is-this-visual-a-bar-chart) | 4 | 1 of 18 | the twin, the preview, check_report | (not in the audit) |
 | [canon What is the canonical text of a plan?](#canon-what-is-the-canonical-text-of-a-plan) | 2 | 0 of 10 | every write (the approval's digest) | equal |
-| [crc What is the CRC-32 of these bytes?](#crc-what-is-the-crc-32-of-these-bytes) | 4 | 0 of 8 | every PNG and ZIP written | equal |
-| [png-chunk What bytes make a PNG chunk?](#png-chunk-what-bytes-make-a-png-chunk) | 2 | 0 of 8 | every PNG written | equal |
+| [crc What is the CRC-32 of these bytes?](#crc-what-is-the-crc-32-of-these-bytes) | 2 | 0 of 8 | every PNG and ZIP written | equal |
+| [png-chunk What bytes make a PNG chunk?](#png-chunk-what-bytes-make-a-png-chunk) | 1 | 0 of 8 | every PNG written | equal |
 | [u32 What number do four bytes hold?](#u32-what-number-do-four-bytes-hold) | 1 | 0 of 8 | the twin's and the glass's PNG reads | equal |
 | [lru What does a small cache keep?](#lru-what-does-a-small-cache-keep) | 1 | 0 of 8 | the twin's pictures, the glass | equal |
 | [overlap Do these two boxes overlap?](#overlap-do-these-two-boxes-overlap) | 2 | 0 of 9 | the twin, the redesign | equal |
@@ -436,10 +436,8 @@ hundredPercentStackedBarChart) in one list; the same for `stackedColumnChart`. T
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/design-engine.js` `crc32` | [engines](MODULES.md#the-website-engines) | generate_theme and the theme generator page (the background PNG) |
-| `assets/js/pbip-zip.js` `crc32` | [engines](MODULES.md#the-website-engines) | the website's .pbip download (the ZIP) |
-| `assets/js/theme-download-ui.js` `crc32` | [pages](MODULES.md#the-browser-pages-own-scripts) | the theme generator page (its PNG's text chunks) |
-| `assets/js/png-bytes.js` `crc32` | [engines](MODULES.md#the-website-engines) | the one place (DD2P): glass-picture.mjs (the glass background, create_report, the twin's flipped picture) and page-picture.mjs (the twin's page pictures) read it |
+| `assets/js/png-bytes.js` `crc32` | [engines](MODULES.md#the-website-engines) | the one place (DD2P): every PNG and ZIP written reads it: design-engine.js `pngOf` (generate_theme and the theme generator page's background PNG), theme-download-ui.js `textChunk` (the theme generator page's text chunks, through `pngChunk`), glass-picture.mjs (the glass background, create_report, the twin's flipped picture), page-picture.mjs (the twin's page pictures), pbip-zip.js `zip` |
+| `assets/js/pbip-zip.js` `crc32` | [engines](MODULES.md#the-website-engines) | the website's .pbip download (the ZIP): png-bytes.js `crc32` itself, exported here for pbip-export.js (the same function, not a copy) |
 
 **Today:** all 5 answer the same on all 8 inputs (the check value 0xCBF43926 for '123456789' included).
 
@@ -630,8 +628,7 @@ gives every column a type and no suffix, so it passes while they differ.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/design-engine.js` `chunk` (in `pngOf`) | [engines](MODULES.md#the-website-engines) | generate_theme and the theme generator page (the background PNG) |
-| `assets/js/png-bytes.js` `pngChunk` | [engines](MODULES.md#the-website-engines) | the one place (DD2P): glass-picture.mjs `encode` (the glass background) and page-picture.mjs `writePng` (the twin's page pictures) read it |
+| `assets/js/png-bytes.js` `pngChunk` | [engines](MODULES.md#the-website-engines) | the one place (DD2P): design-engine.js `pngOf` (generate_theme and the theme generator page's background PNG), theme-download-ui.js `textChunk` (the page's text chunks), glass-picture.mjs `encode` (the glass background) and page-picture.mjs `writePng` and `testPng` (the twin's page pictures) read it |
 
 **Today:** all 3 answer the same bytes on all 8 chunks.
 

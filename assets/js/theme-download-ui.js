@@ -76,13 +76,9 @@
     };
     $('slotCsv').addEventListener('click', downloadCsv);
     // PNG text metadata (tEXt chunks after the header) credit DataArcus without touching a single pixel
-    const CRC = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
-    const crc32 = (u) => { let c = 0xffffffff; for (const x of u) c = CRC[(c ^ x) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
-    const textChunk = (key, value) => {
-      const data = new TextEncoder().encode(`${key}\0${value}`.replace(/[^\x00-\xff]/g, '')), out = new Uint8Array(12 + data.length), v = new DataView(out.buffer);
-      v.setUint32(0, data.length); out.set([116, 69, 88, 116], 4); out.set(data, 8); v.setUint32(8 + data.length, crc32(out.subarray(4, 8 + data.length)));
-      return out;
-    };
+    // (0.3.2 DD2P) the chunk and its CRC-32: png-bytes.js pngChunk (DAPngBytes, loaded before this file), their one place
+    const PngBytes = root.DAPngBytes;
+    const textChunk = (key, value) => PngBytes.pngChunk('tEXt', new TextEncoder().encode(`${key}\0${value}`.replace(/[^\x00-\xff]/g, '')));
     const withCredits = (blob) => blob.arrayBuffer().then((buf) => {
       const png = new Uint8Array(buf), head = 33;   // 8-byte signature + 25-byte IHDR chunk
       const chunks = [textChunk('Software', 'DataArcus Power BI Theme & Layout Generator'), textChunk('Source', 'https://dataarcus.com/tools/power-bi-theme-generator.html')];

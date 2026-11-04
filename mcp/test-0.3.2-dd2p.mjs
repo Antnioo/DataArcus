@@ -136,7 +136,7 @@ const BASE_SHAS = {
 };
 const zlibSame = zlibHere === ZLIB_PIN;
 if (!zlibSame) notes.push(`node:zlib here writes other bytes (${zlibHere.slice(0, 16)}): the pictures it deflates are checked against the base's own source (P) only`);
-const now = outputs({ E, G, PP, Pbip, Zip, textChunk: textChunkFrom(fs.readFileSync(path.join(REPO, 'assets', 'js', 'theme-download-ui.js'), 'utf8'), globalThis) });
+const now = outputs({ E, G, PP, Pbip, Zip, textChunk: textChunkFrom(fs.readFileSync(path.join(REPO, 'assets', 'js', 'theme-download-ui.js'), 'utf8'), { DAPngBytes: P }) });
 const shasNow = {};
 now.forEach(([label, usesZlib, make], i) => {
   let got = null; try { got = sha(make()); } catch (e) { got = 'throws ' + e.message; }

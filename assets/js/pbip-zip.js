@@ -3,11 +3,12 @@
 // (uncompressed) ZIP out. zip(files): files is a list of { path, data } (data a text, written as UTF-8, or bytes); every
 // entry carries the time of the call (local time, as a ZIP keeps it). crc32(bytes): the ZIP's checksum.
 // In Node required by pbip-export.js; in the browser loaded before it (theme-generator.js's BUILDER list): DAPbipZip.
+// It reads png-bytes.js (DAPngBytes, loaded before it).
 (function (root) {
   'use strict';
   // ---------- zip (stored) ----------
-  const CRC = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
-  const crc32 = (u) => { let c = 0xffffffff; for (let i = 0; i < u.length; i++) c = CRC[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+  // the ZIP's checksum: png-bytes.js crc32, the one CRC-32 (0.3.2 DD2P); exported here as the same function
+  const crc32 = (typeof module !== 'undefined' && module.exports ? require('./png-bytes.js') : root.DAPngBytes).crc32;
   function zip(files) {
     const enc = new TextEncoder(), parts = [], central = [];
     let offset = 0;

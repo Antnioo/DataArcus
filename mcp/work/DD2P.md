@@ -17,8 +17,8 @@
   "Numbers"); mutation 76/76; `npm run lint` 0; check-min, stamps, check-contracts, check-modules --strict,
   check-agent-memory, check-result-lines green; the probe: crc 6 places, png-chunk 4, u32 3, lru 3 (the new place
   added beside the old ones until they go, then the module and its callers), one answer per input.
-- **State:** step 2 (glass-picture.mjs and page-picture.mjs read the modules; the probe and the ledger name them).
-- **Resume:** step 3 (the browser engines read png-bytes.js).
+- **State:** step 3 (design-engine.js, pbip-zip.js, theme-download-ui.js read png-bytes.js; the pages load it).
+- **Resume:** step 4 (the parity test).
 
 ## Plan (one commit each, every suite green between them)
 1. The two modules, their .min.js (png-bytes only: a browser file), the test dd2p (units: 8 byte strings, 8 chunks,
