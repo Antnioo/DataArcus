@@ -30,7 +30,8 @@ task routes.
     report's theme identity: `report-identity.mjs`; both pure, reading no file), `scope.mjs` (large models),
     `visual-meaning.mjs` (what a custom visual shows and its native replacement; its role words and family hints:
     `visual-vocabulary.mjs`; the native visuals' capability validation: `visual-capabilities.mjs`; the candidates
-    and their ranking: `visual-candidates.mjs`);
+    and their ranking: `visual-candidates.mjs`; what the plan says about the chosen replacement:
+    `replacement-disclosure.mjs`);
   - **the approval gate**: `plans.mjs` (plan ids, what each plan pins) and `approval-window.mjs` (the window in the
     person's browser, on 127.0.0.1 with a one-time link the AI never receives);
   - **the write path**: `artifact.mjs` (the exact files a plan builds and their digest), `files.mjs` (the one writer
