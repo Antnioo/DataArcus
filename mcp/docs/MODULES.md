@@ -63,7 +63,7 @@ task routes. [Every module](#every-module) (0.3.2 MD1): one row per file, kept t
 | A website page or tool | the page's HTML and its `assets/js/` engine; `node scripts/test-site-config.mjs`; `scripts/tests/run-all.mjs` |
 | What a report looks like (layout, sizes, visuals) | `assets/js/pbip-export.js` (it puts the writer together: [the writer's rows](#the-website-engines)), `design-engine.js`; `report-rules.js` for measured limits |
 | Right to left and Arabic | `assets/js/report-mirror.js`, `mirror-policy.js`; [the twin by step](#the-mcp-the-arabic-twin), `terminology.mjs`; `assets/data/arabic-report-words.json` |
-| Reading models | `assets/js/pbip-bind.js`, `tmdl-model.js` (the website's folder or file: `model-import-browser.js`); `mcp/lib/model.mjs`, `scope.mjs` |
+| Reading models | `assets/js/pbip-bind.js` (the binding; the fields and their ranking: [the reader's rows](#the-website-engines)), `tmdl-model.js` (the website's folder or file: `model-import-browser.js`); `mcp/lib/model.mjs`, `scope.mjs` |
 | Model health | `assets/js/model-health-engine.js` ([its modules' rows](#the-website-engines)), the page `model-health.js` |
 | A tool's inputs or answer | `mcp/tools/<tool_name>.mjs`, `mcp/lib/agent-text.mjs`, `mcp/TOOLS.md` |
 | Approval or writing | `mcp/lib/plans.mjs`, `approval-window.mjs`, `artifact.mjs`, `files.mjs`, `write-io.mjs` |
@@ -106,9 +106,11 @@ In `assets/js/`. Shared by the website and the MCP on purpose: one engine per jo
 |---|---|---|---|---|
 | **The model reader and field picker** | | | | |
 | `tmdl-model.js` | reads a project's TMDL files into the model JSON a model.bim holds | TMDL files `[{ path, text }]` -> model JSON, the files it could not read and why (English and Arabic) | `model.mjs`, `pbip-bind.js`, `model-health-worker.js`, `check-report.mjs` | yes |
-| `pbip-bind.js` | "your own model": reads a model's structure, suggests a field for each slot, the binding | a model (TMDL, model.bim, .pbit) and the design's slots -> the catalog of fields and the binding | `model.mjs`, `report-bind.mjs`, `report-fields.mjs`, `plan_layout.mjs`, `theme-generator.js` | yes |
-| `field-meaning.js` | what a field's metadata says it holds (a percent, money, a count, text), one rule for the picker and the health check | a name, a format string, an expression -> its kind and the evidence | `pbip-bind.js`, `model-health-tmdl.js`, `axis-units.js` | yes |
-| `field-picker-ui.js` | the field picker's drawing: one row per choice | the catalog and the current binding -> the rows' HTML and the binding the choices make | `pbip-bind.js` | yes |
+| `pbip-bind.js` | "your own model": reads a model (TMDL, model.bim, .pbit) and turns the suggestions into the binding; re-exports the catalog's and the ranking's names | a model and the design's slots -> the fields and the binding, visual by visual | `model.mjs`, `report-bind.mjs`, `report-fields.mjs`, `plan_layout.mjs`, `theme-generator.js` | yes |
+| `field-catalog.js` | a model's metadata read and normalised: the fields, the relationships, which tables a field reaches, calendars marked | the readers' tables (or TMSL JSON) -> the fields `{ measures, columns, hiddenMeasures }`, the relationships, the reach | `pbip-bind.js`, `field-suggest.js` | yes |
+| `field-suggest.js` | which field goes in each visual, ranked by fixed rules on the metadata (stable order, no random source), English or Arabic | the tables, the number of KPI cards, the options -> `{ choices, notes }` | `pbip-bind.js` | yes |
+| `field-meaning.js` | what a field's metadata says it holds (a percent, money, a count, text), one rule for the picker (through the catalog) and the health check | a name, a format string, an expression -> its kind and the evidence | `field-catalog.js`, `model-health-tmdl.js`, `axis-units.js` | yes |
+| `field-picker-ui.js` | the field picker's drawing: one row per choice | the catalog, the current binding and the element to draw in -> the rows drawn, the binding the choices make | `pbip-bind.js` | no: DOM (the element it is given) |
 | `model-import-browser.js` | the website's model input: a folder or a model file the visitor chose, read in the browser | a folder or a file -> the model's structure (never its data), or why it is refused | `pbip-bind.js` | no: worker |
 | **The report writer** | | | | |
 | `pbip-export.js` | builds a whole Power BI project (PBIR) from a design and a binding; puts the writer's modules together | a design, the model's fields, the binding, the language -> the project's files and the writer's notes | `report-run.mjs`, `plan-lint.mjs`, `fix-scripts.mjs`, `theme-generator.js` | yes |
@@ -166,6 +168,8 @@ In `assets/js/`. Shared by the website and the MCP on purpose: one engine per jo
 | `svg-codegen.js` | the tree printed as DAX (strings, numbers, measure names; a control character never written) | a node -> DAX text | `svg-kpi-compiler.js` | yes |
 | `svg-escape.js` | the SVG text safety: escaping, colours and numbers the picture may hold | a text, a colour, a number -> the safe text | `svg-kpi-compiler.js` | yes |
 | `svg-editor-store.js` | the designer's state, selection and undo history | commands -> the state and change events | `tools/svg-kpi-designer.html` | yes |
+| `svg-editor-pointer.js` | the designer's canvas pointer: select, move with snapping, resize; one undo step a drag | the stage element, the store, the viewport -> store commands, render requests, the guides | `tools/svg-kpi-designer.html` | no: DOM (the stage it is given) |
+| `svg-editor-panels.js` | the designer's panels: the layer list, the add bar, the properties and the data panel (English and Arabic) | the page's elements, the store, the designer's helpers -> the panels drawn, store commands, render requests | `tools/svg-kpi-designer.html` | no: DOM (the elements it is given) |
 | `svg-kpi-templates.js` | the starter designs (data only) | none -> TEMPLATES | `tools/svg-kpi-designer.html` | yes |
 
 ### The browser pages' own scripts

@@ -74,6 +74,8 @@ package's manifest; this file says what is in it.
   shows the same choices in the same order and the download is byte for byte what it was before.
 - **Inside the website's model choice:** reading the project folder or the model file you choose has a file of its
   own; the same models are read, the same files are refused, and the same messages are shown.
+- **Inside the field suggestions:** reading a model's fields and ranking which one goes in each visual each have a
+  file of their own, on the website and in the MCP; every suggestion is the same, in the same order.
 - **Inside the report writer:** the tooltip pages (the card and the bars shown when a chart is hovered) are made in a
   file of their own; every report, on the website and from the MCP, is byte for byte what it was before.
 - **Inside the Model Health Check, again:** the model's index (its tables, columns, measures and what each one uses)
@@ -120,6 +122,9 @@ package's manifest; this file says what is in it.
 - **Inside the MCP, the redesign's allowed changes:** each kind of change a redesign may make to its copy (the grid,
   titles, theme colours, the copy's name, consistent text) is one entry in a file of its own, which the copy's check
   reads; nothing new is allowed, and every redesign plan, check and written file is exactly what it was before.
+- **Inside the SVG KPI Designer, dragging and the panels:** moving and resizing on the canvas, and the layer list,
+  the properties and the data panels each have a file of their own; every click, drag, edit, undo and redo works
+  exactly as before.
 
 ## [0.3.1]: 2026-11-03 (the version for testers)
 Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports

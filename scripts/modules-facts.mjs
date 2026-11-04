@@ -173,7 +173,7 @@ function globalsOf(file, code) {
 }
 
 const TOUCH = {
-  DOM: /(?<![.$\w])document\s*\.|\bnew\s+Image\b|(?<![.$\w])window\.(?:addEventListener|location|getComputedStyle|matchMedia|scroll\w*|innerWidth|innerHeight|open|print|history|requestAnimationFrame)\b|(?<![.$\w])navigator\s*\.|\b(?:Mutation|Intersection|Resize)Observer\b|\bHTML\w*Element\b|\bshowDirectoryPicker\b/,
+  DOM: /(?<![.$\w])document\s*\.|\bnew\s+Image\b|(?<![.$\w])window\.(?:addEventListener|location|getComputedStyle|matchMedia|scroll\w*|innerWidth|innerHeight|open|print|history|requestAnimationFrame)\b|(?<![.$\w])navigator\s*\.|\b(?:Mutation|Intersection|Resize)Observer\b|\bHTML\w*Element\b|\bshowDirectoryPicker\b|\.(?:addEventListener|removeEventListener|appendChild|setAttribute|innerHTML|classList|querySelector(?:All)?|getBoundingClientRect|setPointerCapture)\b/,   // the last: an element it is given
   'browser files': /\bnew\s+(?:FileReader|Blob|File)\b|\bURL\.createObjectURL\b|\bDecompressionStream\b/,
   storage: /(?<![.$\w])(?:window\.)?(?:localStorage|sessionStorage|indexedDB)\b/,
   net: /(?<![.$\w])fetch\s*\(|\bXMLHttpRequest\b|\bWebSocket\b|\bsendBeacon\b/,
