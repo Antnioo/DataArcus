@@ -5,6 +5,11 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **Ramadan and Eid measures with the Gulf calendar:** add_gulf_calendar can add, for up to 5 of your measures, the
+  same Ramadan days of the Hijri year before (not the Gregorian last year, which pairs no Ramadan day with its own),
+  its growth and the Eid windows, the website's own measures; on request also a dated standard VAT rate column for
+  your country and a table of the Gulf currency pegs (the Kuwaiti dinar a basket, with no rate). Every rate and date
+  is sourced; nothing is tax advice, and your amounts are never read.
 - **Three small Arabic twin fixes:** a table header grows into its table's free room even when the table keeps widths
   for fields it no longer shows (those settings stay as they are); a column the English hides stays hidden at the
   table's left end, never as a thin strip after the names; a chart kept where the plain mirror puts it under a heatmap
