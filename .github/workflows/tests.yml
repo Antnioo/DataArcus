@@ -59,6 +59,10 @@ jobs:
       - name: Every module has its one row in MODULES.md
         run: node scripts/test-modules.mjs && node scripts/check-modules.mjs
 
+      # (CL1, 0.3.2) mcp/docs/CONTRACTS.md: every place of every family still there, the ledger and the probe agree
+      - name: Every place in the contract ledger is still there
+        run: node scripts/test-contracts.mjs && node scripts/check-contracts.mjs
+
       - name: The MCP CHANGELOG's [Unreleased] section is in plain words (no internal codes; users read it)
         run: node scripts/test-changelog-words.mjs && node scripts/changelog-words.mjs
 
