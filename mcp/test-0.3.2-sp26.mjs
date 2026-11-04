@@ -112,7 +112,7 @@ if (fs.existsSync(path.join(HERE, 'lib', 'twin-geometry.mjs'))) {
   chk(() => !/^(let|var) /m.test(geo) && !/node:fs|readFileSync|writeFileSync|process\.|globalThis|Date\.now|Math\.random/.test(geo)
     && [...geo.matchAll(/^import .* from '([^']+)';$/gm)].map((m) => m[1]).every((m) => ['./read-report.mjs', './twin-read.mjs', './twin-visuals.mjs', './page-picture.mjs', 'node:module'].includes(m))
     && /require\('\.\.\/\.\.\/assets\/js\/mirror-policy\.js'\)/.test(geo) && /Policy\.keepsGridLtr\(/.test(geo)
-    && !/kindOf\([^)]*\) === '(matrix|table)'/.test(geo) && !/'matrix' \|\| /.test(geo),
+    && !/'matrix'[^;\n]*\|\|[^;\n]*'table'|'table'[^;\n]*\|\|[^;\n]*'matrix'/.test(geo),
   () => 'M2 twin-geometry.mjs holds no module state (no top-level let or var) and does no IO (no fs, process, clock or randomness); it imports only read-report, twin-read, twin-visuals, page-picture and the engines, and reads the kinds that keep left to right from mirror-policy.js (keepsGridLtr), with no list of its own');
 }
 
