@@ -1,0 +1,6749 @@
+{
+ "about": "SP39: everything report-mirror.js hands out (mirrorVisual under 8 option sets, mirrorChart, the texts, labels and phone layout, the matrix and table helpers, mirrorPage, unitsOf, the page pictures and the api) recorded on integration/0.3.2 at 643e1e6, before the chart, text and unit moves",
+ "api": {
+  "names": [
+   "BLANK_PNG",
+   "FLAT_LOST",
+   "KIND_WHAT",
+   "MATRIX_RTL",
+   "MATRIX_RTL_DEFAULT",
+   "PHONE_W",
+   "flatMatrix",
+   "flatTable",
+   "heatmapBeside",
+   "heatmapNames",
+   "isCustom",
+   "kindOf",
+   "labelMobile",
+   "labelVisual",
+   "mirrorChart",
+   "mirrorMobile",
+   "mirrorPage",
+   "mirrorVisual",
+   "pageHasPicture",
+   "pageImages",
+   "round",
+   "rowLabelStyle",
+   "rowNamesBeside",
+   "textsOfMobile",
+   "textsOfVisual",
+   "unitsOf"
+  ],
+  "types": [
+   "string",
+   "string",
+   "object",
+   "object",
+   "string",
+   "number",
+   "function",
+   "function",
+   "function",
+   "function",
+   "function",
+   "function",
+   "function",
+   "function",
+   "function",
+   "function",
+   "function",
+   "function",
+   "function",
+   "function",
+   "function",
+   "function",
+   "function",
+   "function",
+   "function",
+   "function"
+  ],
+  "KIND_WHAT": "4dead3bc4cfd5540595ca76d:3923",
+  "MATRIX_RTL": [
+   "values",
+   "none",
+   "columnsDescending",
+   "alignRight",
+   "columnsDescendingAlignRight"
+  ],
+  "MATRIX_RTL_DEFAULT": "values",
+  "FLAT_LOST": "d75f3170f79139aefd5a9f4a:269",
+  "PHONE_W": 323,
+  "BLANK_PNG": "9bdbcc70561f72555873b946:92",
+  "round": [
+   0,
+   0,
+   1,
+   2.68,
+   0,
+   12.35,
+   1280
+  ],
+  "images": "[[],[],[\"w.png\"]]"
+ },
+ "visuals": {
+  "twin-project/p1overview/btnDetails": {
+   "runs": {
+    "A": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "deacd6e9d6850884d16fd698:1118"
+    },
+    "B": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "deacd6e9d6850884d16fd698:1118"
+    },
+    "C": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "deacd6e9d6850884d16fd698:1118"
+    },
+    "D": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "deacd6e9d6850884d16fd698:1118"
+    },
+    "E": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "deacd6e9d6850884d16fd698:1118"
+    },
+    "K": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "deacd6e9d6850884d16fd698:1118"
+    },
+    "M": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "shadow",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "de981ea2ebca0844e77946b6:1214"
+    },
+    "N": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "deacd6e9d6850884d16fd698:1118"
+    }
+   },
+   "chart": {
+    "A": "4ba3da8bf4926a1d79caf337:765",
+    "C": "4ba3da8bf4926a1d79caf337:765",
+    "B": "4ba3da8bf4926a1d79caf337:765"
+   },
+   "texts": "bdaea340aec892d97a3d8a9c:188",
+   "label": "078727a425497fee856c7d3d:1057",
+   "phone": "1920ea5e4a128e94164b9c5a:200",
+   "phoneLabel": "519dab2f7338279355934158:856",
+   "phoneMirror": "425e09d8b000213decf3b073:795",
+   "grid": "e171a998a656ecb2d20674aa:1233",
+   "pure": true
+  },
+  "twin-project/p1overview/btnReset": {
+   "runs": {
+    "A": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "icon",
+      "title"
+     ],
+     "sha": "68334bd8f4c2625b907983db:1078"
+    },
+    "B": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "icon",
+      "title"
+     ],
+     "sha": "68334bd8f4c2625b907983db:1078"
+    },
+    "C": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "icon",
+      "title"
+     ],
+     "sha": "68334bd8f4c2625b907983db:1078"
+    },
+    "D": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "icon",
+      "title"
+     ],
+     "sha": "68334bd8f4c2625b907983db:1078"
+    },
+    "E": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "icon",
+      "title"
+     ],
+     "sha": "68334bd8f4c2625b907983db:1078"
+    },
+    "K": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "icon",
+      "title"
+     ],
+     "sha": "68334bd8f4c2625b907983db:1078"
+    },
+    "M": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "shadow",
+      "icon",
+      "title"
+     ],
+     "sha": "fb26a522d9e397abf083a207:1174"
+    },
+    "N": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "icon",
+      "title"
+     ],
+     "sha": "68334bd8f4c2625b907983db:1078"
+    }
+   },
+   "chart": {
+    "A": "0ae530eb3fb13566bea727c2:734",
+    "C": "0ae530eb3fb13566bea727c2:734",
+    "B": "0ae530eb3fb13566bea727c2:734"
+   },
+   "texts": "44e53df385965105459ee8e9:168",
+   "label": "a642e812cb5a3711abd9a3ea:1041",
+   "phone": "966552f58e2a5351ccb5e624:180",
+   "phoneLabel": "0fc69daa23086cd355eb9a16:841",
+   "phoneMirror": "6fee43a5570f775a39fdd6dd:764",
+   "grid": "774d6c8c33cc1358a2104441:1201",
+   "pure": true
+  },
+  "twin-project/p1overview/cardOrders": {
+   "runs": {
+    "A": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "8756cdef9997e39f68addac4:521"
+    },
+    "B": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "8756cdef9997e39f68addac4:521"
+    },
+    "C": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "8756cdef9997e39f68addac4:521"
+    },
+    "D": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "8756cdef9997e39f68addac4:521"
+    },
+    "E": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "8756cdef9997e39f68addac4:521"
+    },
+    "K": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "8756cdef9997e39f68addac4:521"
+    },
+    "M": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "shadow"
+     ],
+     "sha": "2ac6a4fae21be38bae8bd2e1:644"
+    },
+    "N": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "8756cdef9997e39f68addac4:521"
+    }
+   },
+   "chart": {
+    "A": "b80f58be7f5ea0776e0c83d4:215",
+    "C": "b80f58be7f5ea0776e0c83d4:215",
+    "B": "b80f58be7f5ea0776e0c83d4:215"
+   },
+   "texts": "291d3f5e573d0e05de53023b:60",
+   "label": "131617300221b0d64df4ab9f:540",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "b60f08a1da3d069e9a31fffb:711",
+   "pure": true
+  },
+  "twin-project/p1overview/cardSales": {
+   "runs": {
+    "A": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "510b312d94ef6a441adb80ca:746"
+    },
+    "B": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "510b312d94ef6a441adb80ca:746"
+    },
+    "C": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "510b312d94ef6a441adb80ca:746"
+    },
+    "D": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "510b312d94ef6a441adb80ca:746"
+    },
+    "E": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "510b312d94ef6a441adb80ca:746"
+    },
+    "K": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "510b312d94ef6a441adb80ca:746"
+    },
+    "M": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "shadow",
+      "title"
+     ],
+     "sha": "eb7c90382d49c5142d03a6c3:842"
+    },
+    "N": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "510b312d94ef6a441adb80ca:746"
+    }
+   },
+   "chart": {
+    "A": "fee7b3c5e67c6a67a72bb9ae:435",
+    "C": "fee7b3c5e67c6a67a72bb9ae:435",
+    "B": "fee7b3c5e67c6a67a72bb9ae:435"
+   },
+   "texts": "61cbf4665e47d284628d6280:153",
+   "label": "b344ccdcdbc1f056a4a0ad96:782",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "7e18d07b41d6b79b18ff66c4:220",
+   "phoneMirror": "794bce7771e108283be5b8e3:208",
+   "grid": "e4109b2db5212cb7839ef54e:926",
+   "pure": true
+  },
+  "twin-project/p1overview/colRegion": {
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "c086335cbd36d2b1493c1805:1502"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "c086335cbd36d2b1493c1805:1502"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "c086335cbd36d2b1493c1805:1502"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "c086335cbd36d2b1493c1805:1502"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "c086335cbd36d2b1493c1805:1502"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "c086335cbd36d2b1493c1805:1502"
+    },
+    "M": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "725920858fbf21200b618d52:1598"
+    },
+    "N": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "c086335cbd36d2b1493c1805:1502"
+    }
+   },
+   "chart": {
+    "A": "968dc45f165aafc69ede9fd9:1184",
+    "C": "968dc45f165aafc69ede9fd9:1184",
+    "B": "968dc45f165aafc69ede9fd9:1184"
+   },
+   "texts": "026d56e593798097d78ee477:277",
+   "label": "600c51f2548b0f72bf0e0d01:1357",
+   "phone": "793268b1e016cae8272883c4:94",
+   "phoneLabel": "f639402381dd3725cf28c25f:437",
+   "phoneMirror": "f6567bd718954b5b02890dd9:403",
+   "grid": "d744e4256d58ebeaaed7bab1:1395",
+   "pure": true
+  },
+  "twin-project/p1overview/grpInner": {
+   "runs": {
+    "A": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a6d9c9f4371706109707e22:358"
+    },
+    "B": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a6d9c9f4371706109707e22:358"
+    },
+    "C": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a6d9c9f4371706109707e22:358"
+    },
+    "D": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a6d9c9f4371706109707e22:358"
+    },
+    "E": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a6d9c9f4371706109707e22:358"
+    },
+    "K": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a6d9c9f4371706109707e22:358"
+    },
+    "M": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a6d9c9f4371706109707e22:358"
+    },
+    "N": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5a6d9c9f4371706109707e22:358"
+    }
+   },
+   "chart": {
+    "A": "eb045d78d273107348b0300c:9",
+    "C": "eb045d78d273107348b0300c:9",
+    "B": "eb045d78d273107348b0300c:9"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "fc7aae7ebbbe8b507544bbb6:325",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "f13a459c2aa989ac1908a9a9:16",
+   "phoneMirror": "74234e98afe7498fb5daf1f3:4",
+   "grid": "b4ecb3b3eaec699169efa5a3:551",
+   "pure": true
+  },
+  "twin-project/p1overview/grpKpi": {
+   "runs": {
+    "A": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "22c6bf6cebf45f4eea83226f:327"
+    },
+    "B": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "22c6bf6cebf45f4eea83226f:327"
+    },
+    "C": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "22c6bf6cebf45f4eea83226f:327"
+    },
+    "D": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "22c6bf6cebf45f4eea83226f:327"
+    },
+    "E": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "22c6bf6cebf45f4eea83226f:327"
+    },
+    "K": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "22c6bf6cebf45f4eea83226f:327"
+    },
+    "M": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "22c6bf6cebf45f4eea83226f:327"
+    },
+    "N": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "22c6bf6cebf45f4eea83226f:327"
+    }
+   },
+   "chart": {
+    "A": "eb045d78d273107348b0300c:9",
+    "C": "eb045d78d273107348b0300c:9",
+    "B": "eb045d78d273107348b0300c:9"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "be42c7852e321424e6078293:291",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "f13a459c2aa989ac1908a9a9:16",
+   "phoneMirror": "74234e98afe7498fb5daf1f3:4",
+   "grid": "2384bfd8da8444f8f4bb183b:517",
+   "pure": true
+  },
+  "twin-project/p1overview/lineMonth": {
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "d2b5678d8f4f8e2086feaebc:1333"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "padding",
+      "title"
+     ],
+     "sha": "48b499236c70117ccb010c6e:1325"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "d2b5678d8f4f8e2086feaebc:1333"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "d2b5678d8f4f8e2086feaebc:1333"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "padding",
+      "title"
+     ],
+     "sha": "48b499236c70117ccb010c6e:1325"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "d2b5678d8f4f8e2086feaebc:1333"
+    },
+    "M": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "519864ab9349a3b2c4cad6bb:1429"
+    },
+    "N": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "d2b5678d8f4f8e2086feaebc:1333"
+    }
+   },
+   "chart": {
+    "A": "03cb407330136506ace8a43e:963",
+    "C": "03cb407330136506ace8a43e:963",
+    "B": "0cea078cd9b5d54d0c910f68:962"
+   },
+   "texts": "c2d7864e6eef45c058aeee69:226",
+   "label": "266de4355880c8b741ca4754:1238",
+   "phone": "eeb58fd769d0ad11340a265c:93",
+   "phoneLabel": "feee29c5a07ba4e9f4bb22de:367",
+   "phoneMirror": "22b682e2b3957f874db0341d:332",
+   "grid": "98914fd7670547e3f113b89f:1330",
+   "pure": true
+  },
+  "twin-project/p1overview/nav": {
+   "runs": {
+    "A": {
+     "kind": "navigator",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "33957739af62a22bdad1d348:510"
+    },
+    "B": {
+     "kind": "navigator",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "33957739af62a22bdad1d348:510"
+    },
+    "C": {
+     "kind": "navigator",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "33957739af62a22bdad1d348:510"
+    },
+    "D": {
+     "kind": "navigator",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "33957739af62a22bdad1d348:510"
+    },
+    "E": {
+     "kind": "navigator",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "33957739af62a22bdad1d348:510"
+    },
+    "K": {
+     "kind": "navigator",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "33957739af62a22bdad1d348:510"
+    },
+    "M": {
+     "kind": "navigator",
+     "changes": [
+      "position",
+      "shadow",
+      "title"
+     ],
+     "sha": "303260fd6c17adcd5205b477:606"
+    },
+    "N": {
+     "kind": "navigator",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "33957739af62a22bdad1d348:510"
+    }
+   },
+   "chart": {
+    "A": "2b5d5414ba11583e59366fa4:177",
+    "C": "2b5d5414ba11583e59366fa4:177",
+    "B": "2b5d5414ba11583e59366fa4:177"
+   },
+   "texts": "58b790381a66d903cd3f0ab3:72",
+   "label": "9e763f3aed9eb037be3c172f:444",
+   "phone": "ecd067e429d8a0eb071f64fb:78",
+   "phoneLabel": "207a66a7893349e62ae20bf0:250",
+   "phoneMirror": "c325c715eb4dd88b3e5f69ef:206",
+   "grid": "5570b6e5a20d4428bf81be56:637",
+   "pure": true
+  },
+  "twin-project/p1overview/slRegion": {
+   "runs": {
+    "A": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "bfdaef0819c966a36c3d61a3:578"
+    },
+    "B": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "bfdaef0819c966a36c3d61a3:578"
+    },
+    "C": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "bfdaef0819c966a36c3d61a3:578"
+    },
+    "D": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "bfdaef0819c966a36c3d61a3:578"
+    },
+    "E": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "bfdaef0819c966a36c3d61a3:578"
+    },
+    "K": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "bfdaef0819c966a36c3d61a3:578"
+    },
+    "M": {
+     "kind": "slicer",
+     "changes": [
+      "position",
+      "shadow"
+     ],
+     "sha": "2139da359180f9a5f7ac37c2:701"
+    },
+    "N": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "bfdaef0819c966a36c3d61a3:578"
+    }
+   },
+   "chart": {
+    "A": "7ae1017f592e24a6e282b4c7:302",
+    "C": "7ae1017f592e24a6e282b4c7:302",
+    "B": "7ae1017f592e24a6e282b4c7:302"
+   },
+   "texts": "e230620d0b941107a88d9cb3:60",
+   "label": "f70c22ff62e26f8df69a1886:597",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "99a919a525e65a6c074309d8:156",
+   "phoneMirror": "7c6f3b144515ddf2558c2296:145",
+   "grid": "6456a7de17c7b3d9b20f1a93:768",
+   "pure": true
+  },
+  "twin-project/p1overview/title": {
+   "runs": {
+    "A": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "85ab32fefa717108fc5f4123:512"
+    },
+    "B": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "85ab32fefa717108fc5f4123:512"
+    },
+    "C": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "85ab32fefa717108fc5f4123:512"
+    },
+    "D": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "85ab32fefa717108fc5f4123:512"
+    },
+    "E": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "85ab32fefa717108fc5f4123:512"
+    },
+    "K": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "85ab32fefa717108fc5f4123:512"
+    },
+    "M": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "shadow",
+      "text"
+     ],
+     "sha": "8ccba2322f913b1064e79967:635"
+    },
+    "N": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "85ab32fefa717108fc5f4123:512"
+    }
+   },
+   "chart": {
+    "A": "665db9f4f944a6187bd7b593:231",
+    "C": "665db9f4f944a6187bd7b593:231",
+    "B": "665db9f4f944a6187bd7b593:231"
+   },
+   "texts": "000e75b7533576ffeed1b04a:91",
+   "label": "118e76d05af380a23bfabc89:490",
+   "phone": "e736c85bfb8454791c7e5984:97",
+   "phoneLabel": "dc15f7d5f6748921b4541d75:300",
+   "phoneMirror": "241e6aec9cd28f77c638ca1a:267",
+   "grid": "d8afb4aaf16ee9419807a34f:692",
+   "pure": true
+  },
+  "twin-project/p2details/barProduct": {
+   "runs": {
+    "A": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "4f1e539d28cee7b8e9207fc4:1268"
+    },
+    "B": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "4f1e539d28cee7b8e9207fc4:1268"
+    },
+    "C": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "4f1e539d28cee7b8e9207fc4:1268"
+    },
+    "D": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "4f1e539d28cee7b8e9207fc4:1268"
+    },
+    "E": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "4f1e539d28cee7b8e9207fc4:1268"
+    },
+    "K": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "34d9baad15cf926f5185a01b:1074"
+    },
+    "M": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "shadow",
+      "axes",
+      "title"
+     ],
+     "sha": "c87b7381727f6ffaccbb04c1:1364"
+    },
+    "N": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "4f1e539d28cee7b8e9207fc4:1268"
+    }
+   },
+   "chart": {
+    "A": "45d07c7162e247e66b77ec5b:977",
+    "C": "45d07c7162e247e66b77ec5b:977",
+    "B": "45d07c7162e247e66b77ec5b:977"
+   },
+   "texts": "4e851df825ececa0677f907b:219",
+   "label": "60d407435b9089370235f428:1166",
+   "phone": "a698124e42c5681d58a916cd:95",
+   "phoneLabel": "3437a163a7a73f06f3109d61:302",
+   "phoneMirror": "1d4e37dcae1c88b9241e361c:269",
+   "grid": "ab265cb0d05c48f27fe43b2b:1260",
+   "pure": true
+  },
+  "twin-project/p2details/btnBack": {
+   "runs": {
+    "A": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "cab28e3cfa2cbb83d23f2433:1123"
+    },
+    "B": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "cab28e3cfa2cbb83d23f2433:1123"
+    },
+    "C": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "cab28e3cfa2cbb83d23f2433:1123"
+    },
+    "D": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "cab28e3cfa2cbb83d23f2433:1123"
+    },
+    "E": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "cab28e3cfa2cbb83d23f2433:1123"
+    },
+    "K": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "cab28e3cfa2cbb83d23f2433:1123"
+    },
+    "M": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "shadow",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "31c1b79d45950ce4cb8a4fbb:1219"
+    },
+    "N": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon",
+      "title"
+     ],
+     "sha": "cab28e3cfa2cbb83d23f2433:1123"
+    }
+   },
+   "chart": {
+    "A": "5707c309192772b14f2c9051:772",
+    "C": "5707c309192772b14f2c9051:772",
+    "B": "5707c309192772b14f2c9051:772"
+   },
+   "texts": "5cde2defb6cfd843a4c2cdfb:186",
+   "label": "bf24d795aca92ce7a4260ca6:1056",
+   "phone": "8c30d8f91c0449bc2684f28f:198",
+   "phoneLabel": "fe62b063ffea7825aad497ae:857",
+   "phoneMirror": "b2b59373190a05a0876812ad:802",
+   "grid": "ed1629da034ed580dc59548c:1238",
+   "pure": true
+  },
+  "twin-project/p2details/customGauge": {
+   "runs": {
+    "A": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "13ccddc1e61eead2407aba90:625"
+    },
+    "B": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "13ccddc1e61eead2407aba90:625"
+    },
+    "C": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "13ccddc1e61eead2407aba90:625"
+    },
+    "D": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "13ccddc1e61eead2407aba90:625"
+    },
+    "E": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "13ccddc1e61eead2407aba90:625"
+    },
+    "K": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "13ccddc1e61eead2407aba90:625"
+    },
+    "M": {
+     "kind": "custom",
+     "changes": [
+      "position",
+      "shadow"
+     ],
+     "sha": "ab6b769f01fb6b7a3a8d6c1a:748"
+    },
+    "N": {
+     "kind": "custom",
+     "changes": [
+      "position"
+     ],
+     "sha": "13ccddc1e61eead2407aba90:625"
+    }
+   },
+   "chart": {
+    "A": "8c759a87c85624b5cc9166e6:345",
+    "C": "8c759a87c85624b5cc9166e6:345",
+    "B": "8c759a87c85624b5cc9166e6:345"
+   },
+   "texts": "93bef0143cf87190c792fc92:70",
+   "label": "19ba6a5359f40b8568f81527:645",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "7355e8e4d42d2ddf9ef35f3e:158",
+   "phoneMirror": "29ed54887273f638eebed4e8:147",
+   "grid": "90764f70153958026bb5ed99:816",
+   "pure": true
+  },
+  "twin-project/p2details/note2": {
+   "runs": {
+    "A": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "ac68d335940f12d61d3fddfb:507"
+    },
+    "B": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "ac68d335940f12d61d3fddfb:507"
+    },
+    "C": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "ac68d335940f12d61d3fddfb:507"
+    },
+    "D": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "ac68d335940f12d61d3fddfb:507"
+    },
+    "E": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "ac68d335940f12d61d3fddfb:507"
+    },
+    "K": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "ac68d335940f12d61d3fddfb:507"
+    },
+    "M": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "shadow"
+     ],
+     "sha": "aea8f54c3ce1be4cf0393ad0:630"
+    },
+    "N": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "ac68d335940f12d61d3fddfb:507"
+    }
+   },
+   "chart": {
+    "A": "60010bd137044cec224f3fe9:234",
+    "C": "60010bd137044cec224f3fe9:234",
+    "B": "60010bd137044cec224f3fe9:234"
+   },
+   "texts": "e931ffd00a4bc61b221f4076:91",
+   "label": "634929531887edae8d901e61:493",
+   "phone": "4dbe4a0572afe4a19db869a0:97",
+   "phoneLabel": "59dafbc8b706f73d93b7b831:302",
+   "phoneMirror": "d03a3b44e6a0064c38fdb86f:269",
+   "grid": "941defc50eefd2b7fdacd11e:696",
+   "pure": true
+  },
+  "twin-project/p2details/tblProducts": {
+   "runs": {
+    "A": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a0afeeb524ab6b40512f415e:1408"
+    },
+    "B": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a0afeeb524ab6b40512f415e:1408"
+    },
+    "C": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a0afeeb524ab6b40512f415e:1408"
+    },
+    "D": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a0afeeb524ab6b40512f415e:1408"
+    },
+    "E": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a0afeeb524ab6b40512f415e:1408"
+    },
+    "K": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a0afeeb524ab6b40512f415e:1408"
+    },
+    "M": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "shadow",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "005b38f2f2c78326b0df967c:1504"
+    },
+    "N": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a0afeeb524ab6b40512f415e:1408"
+    }
+   },
+   "chart": {
+    "A": "3eff41d06f9172246c60d2a7:1097",
+    "C": "3eff41d06f9172246c60d2a7:1097",
+    "B": "3eff41d06f9172246c60d2a7:1097"
+   },
+   "texts": "be18ec248d3064e875a80e55:283",
+   "label": "5132d03a8ff4fb77fbc903e4:1511",
+   "phone": "70faba385b45d51b6a6c0aa5:88",
+   "phoneLabel": "0f327a5699442585bc29e25f:599",
+   "phoneMirror": "cf0f9a325059619bd6a45b39:558",
+   "grid": "366f4e8a930b003255c7ba79:1566",
+   "pure": true
+  },
+  "twin-project/p3tooltip/tipCard": {
+   "runs": {
+    "A": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "273ec6940f828ba3ad64e859:504"
+    },
+    "B": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "273ec6940f828ba3ad64e859:504"
+    },
+    "C": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "273ec6940f828ba3ad64e859:504"
+    },
+    "D": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "273ec6940f828ba3ad64e859:504"
+    },
+    "E": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "273ec6940f828ba3ad64e859:504"
+    },
+    "K": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "273ec6940f828ba3ad64e859:504"
+    },
+    "M": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "shadow"
+     ],
+     "sha": "a19873107d52e19d678e3aeb:627"
+    },
+    "N": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "273ec6940f828ba3ad64e859:504"
+    }
+   },
+   "chart": {
+    "A": "2b8e1a5586b5664c60d88ce9:230",
+    "C": "2b8e1a5586b5664c60d88ce9:230",
+    "B": "2b8e1a5586b5664c60d88ce9:230"
+   },
+   "texts": "93bef0143cf87190c792fc92:70",
+   "label": "f6c1f34c69351fda02d1722b:523",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "c0803c7be6e9503e4f0a6e55:694",
+   "pure": true
+  },
+  "health-project/1191ff80f72c1a663a1b/99e6252eb6ead4faace5": {
+   "runs": {
+    "A": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a1b7e0a9aec7dcfb09e809de:1572"
+    },
+    "B": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a1b7e0a9aec7dcfb09e809de:1572"
+    },
+    "C": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a1b7e0a9aec7dcfb09e809de:1572"
+    },
+    "D": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a1b7e0a9aec7dcfb09e809de:1572"
+    },
+    "E": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a1b7e0a9aec7dcfb09e809de:1572"
+    },
+    "K": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a1b7e0a9aec7dcfb09e809de:1572"
+    },
+    "M": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "shadow",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "7c6f9d5ab273ba3f8b254c34:1636"
+    },
+    "N": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "a1b7e0a9aec7dcfb09e809de:1572"
+    }
+   },
+   "chart": {
+    "A": "70e9ed79aa5822cb8ff02f5b:950",
+    "C": "70e9ed79aa5822cb8ff02f5b:950",
+    "B": "70e9ed79aa5822cb8ff02f5b:950"
+   },
+   "texts": "34458394c5cd0f22d76f95bd:381",
+   "label": "d478efa2adfa13aa346c6e3b:1349",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "89fa74183665591a33985b9c:220",
+   "phoneMirror": "5495f9b694557b36ac64b26e:208",
+   "grid": "50cbb61426b5d7b4f91baa7a:1427",
+   "pure": true
+  },
+  "health-project/b23cd988888cb1c32ad5/30e84ab3b0d21c8d4e48": {
+   "runs": {
+    "A": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text",
+      "title"
+     ],
+     "sha": "b6c4a477fdcd6caabbd61bf5:1053"
+    },
+    "B": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text",
+      "title"
+     ],
+     "sha": "b6c4a477fdcd6caabbd61bf5:1053"
+    },
+    "C": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text",
+      "title"
+     ],
+     "sha": "b6c4a477fdcd6caabbd61bf5:1053"
+    },
+    "D": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text",
+      "title"
+     ],
+     "sha": "b6c4a477fdcd6caabbd61bf5:1053"
+    },
+    "E": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text",
+      "title"
+     ],
+     "sha": "b6c4a477fdcd6caabbd61bf5:1053"
+    },
+    "K": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text",
+      "title"
+     ],
+     "sha": "b6c4a477fdcd6caabbd61bf5:1053"
+    },
+    "M": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "shadow",
+      "text",
+      "title"
+     ],
+     "sha": "80de8cf8aaa5e9d7e43ced6b:1117"
+    },
+    "N": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text",
+      "title"
+     ],
+     "sha": "b6c4a477fdcd6caabbd61bf5:1053"
+    }
+   },
+   "chart": {
+    "A": "a1a0f8a56c0a53f6f16993e1:696",
+    "C": "a1a0f8a56c0a53f6f16993e1:696",
+    "B": "a1a0f8a56c0a53f6f16993e1:696"
+   },
+   "texts": "35479841cb321e848979fe5f:274",
+   "label": "edf73fcde4f4660e118bfdc0:969",
+   "phone": "6b8936d156de2531ba0f21b0:286",
+   "phoneLabel": "926c4e032eb317eaef1b86e1:763",
+   "phoneMirror": "4520108552098aa0eb742618:732",
+   "grid": "b541864891eb7b9f1feb144d:1173",
+   "pure": true
+  },
+  "hm1/F1-1.json#0/v0": {
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "25bff5405171e63d5b29b73e:1144"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "25bff5405171e63d5b29b73e:1144"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "25bff5405171e63d5b29b73e:1144"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "25bff5405171e63d5b29b73e:1144"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "25bff5405171e63d5b29b73e:1144"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "25bff5405171e63d5b29b73e:1144"
+    },
+    "M": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "shadow",
+      "columns",
+      "alignment",
+      "padding",
+      "title"
+     ],
+     "sha": "b03596cbb6e8d7c796ffa623:1659"
+    },
+    "N": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "25bff5405171e63d5b29b73e:1144"
+    }
+   },
+   "chart": {
+    "A": "7e5469829163cd3f543ba1b3:795",
+    "C": "7e5469829163cd3f543ba1b3:795",
+    "B": "7e5469829163cd3f543ba1b3:795"
+   },
+   "texts": "80837faf479e33a28f556a34:125",
+   "label": "2b61f072ac9f70291e99a615:1121",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "3a1f676f065fe460c9546975:465",
+   "phoneMirror": "374c4820256ab47ec5589c4d:454",
+   "grid": "ae424121111a3a4b5c895d5b:4072",
+   "pure": true
+  },
+  "hm1/M1-1.json#0/v0": {
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "M": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "shadow",
+      "columns",
+      "alignment",
+      "padding",
+      "title"
+     ],
+     "sha": "df11ffd655074d82f7c9fb38:1584"
+    },
+    "N": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    }
+   },
+   "chart": {
+    "A": "4d2b03a9ba5f75df7d35cf30:720",
+    "C": "4d2b03a9ba5f75df7d35cf30:720",
+    "B": "4d2b03a9ba5f75df7d35cf30:720"
+   },
+   "texts": "80837faf479e33a28f556a34:125",
+   "label": "2034ceade582aaaebe948326:1046",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "cdb6967b03aea7f5372e426b:390",
+   "phoneMirror": "b4a63d2963ba78ad09ff9e09:379",
+   "grid": "01b1bfef9ac6fcb1bb39046b:7027",
+   "pure": true
+  },
+  "hm1/M1-1.json#0/v0Names": {
+   "runs": {
+    "A": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "B": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "C": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "D": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "E": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "K": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "M": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "shadow"
+     ],
+     "sha": "beafca33829fd13d3fad4a7a:402"
+    },
+    "N": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    }
+   },
+   "chart": {
+    "A": "55426e38accddabcb1cd53ec:22",
+    "C": "55426e38accddabcb1cd53ec:22",
+    "B": "55426e38accddabcb1cd53ec:22"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "9b4f750b87f81ce918589204:242",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "91cd64281ea0905347951eeb:468",
+   "pure": true
+  },
+  "hm1/N1-25.json#0/v0": {
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    },
+    "M": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "shadow",
+      "columns",
+      "alignment",
+      "padding",
+      "title"
+     ],
+     "sha": "df11ffd655074d82f7c9fb38:1584"
+    },
+    "N": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "19e16abea83c53d3a598cdd7:1069"
+    }
+   },
+   "chart": {
+    "A": "4d2b03a9ba5f75df7d35cf30:720",
+    "C": "4d2b03a9ba5f75df7d35cf30:720",
+    "B": "4d2b03a9ba5f75df7d35cf30:720"
+   },
+   "texts": "80837faf479e33a28f556a34:125",
+   "label": "2034ceade582aaaebe948326:1046",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "cdb6967b03aea7f5372e426b:390",
+   "phoneMirror": "b4a63d2963ba78ad09ff9e09:379",
+   "grid": "01b1bfef9ac6fcb1bb39046b:7027",
+   "pure": true
+  },
+  "hm1/N1-25.json#0/v0Names": {
+   "runs": {
+    "A": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "B": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "C": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "D": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "E": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "K": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    },
+    "M": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "shadow"
+     ],
+     "sha": "beafca33829fd13d3fad4a7a:402"
+    },
+    "N": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "aea35c30670f7ac8f4ab29c5:279"
+    }
+   },
+   "chart": {
+    "A": "55426e38accddabcb1cd53ec:22",
+    "C": "55426e38accddabcb1cd53ec:22",
+    "B": "55426e38accddabcb1cd53ec:22"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "9b4f750b87f81ce918589204:242",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "91cd64281ea0905347951eeb:468",
+   "pure": true
+  },
+  "hm2/A1-1.json#0/v0": {
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "24831b409c0bd8b8cdbbaa24:1188"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "24831b409c0bd8b8cdbbaa24:1188"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "24831b409c0bd8b8cdbbaa24:1188"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "24831b409c0bd8b8cdbbaa24:1188"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "24831b409c0bd8b8cdbbaa24:1188"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "24831b409c0bd8b8cdbbaa24:1188"
+    },
+    "M": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "shadow",
+      "columns",
+      "alignment",
+      "padding",
+      "title"
+     ],
+     "sha": "df11ffd655074d82f7c9fb38:1584"
+    },
+    "N": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "24831b409c0bd8b8cdbbaa24:1188"
+    }
+   },
+   "chart": {
+    "A": "9e042873bfbb3d1e20acbf41:839",
+    "C": "9e042873bfbb3d1e20acbf41:839",
+    "B": "9e042873bfbb3d1e20acbf41:839"
+   },
+   "texts": "80837faf479e33a28f556a34:125",
+   "label": "bbc1622d7f8649ced337edd2:1165",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "cdb6967b03aea7f5372e426b:390",
+   "phoneMirror": "b4a63d2963ba78ad09ff9e09:379",
+   "grid": "eec48925320e2db21ad68570:7384",
+   "pure": true
+  },
+  "hm2/A1-1.json#0/v1": {
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "2a29266e1005ae5043166ff1:943"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "2a29266e1005ae5043166ff1:943"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "2a29266e1005ae5043166ff1:943"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "2a29266e1005ae5043166ff1:943"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "2a29266e1005ae5043166ff1:943"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "2a29266e1005ae5043166ff1:943"
+    },
+    "M": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "89b5120ae2d7113851b714f9:1039"
+    },
+    "N": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "padding",
+      "title"
+     ],
+     "sha": "2a29266e1005ae5043166ff1:943"
+    }
+   },
+   "chart": {
+    "A": "b40a15574610cb57b0169e13:568",
+    "C": "b40a15574610cb57b0169e13:568",
+    "B": "b40a15574610cb57b0169e13:568"
+   },
+   "texts": "788baf8157d6f80be3f81613:60",
+   "label": "f9cd38e4ea530f6139dfa8a2:589",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "93aba75fa8e60337ed86933a:137",
+   "phoneMirror": "46c9aa1be9f45670597128d6:126",
+   "grid": "58a410105be247da0cad0e70:760",
+   "pure": true
+  },
+  "twin-fuzz/B1-1.json#0/v7": {
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "ce66302237cad33ff63f6aed:520"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "ce66302237cad33ff63f6aed:520"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "ce66302237cad33ff63f6aed:520"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "ce66302237cad33ff63f6aed:520"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "ce66302237cad33ff63f6aed:520"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "ce66302237cad33ff63f6aed:520"
+    },
+    "M": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "title"
+     ],
+     "sha": "1c6930957c1fbe8b9d439509:616"
+    },
+    "N": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "ce66302237cad33ff63f6aed:520"
+    }
+   },
+   "chart": {
+    "A": "71fde8c1068a95c9f669db3c:139",
+    "C": "71fde8c1068a95c9f669db3c:139",
+    "B": "71fde8c1068a95c9f669db3c:139"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "79df5eb4a95dedae337467f5:256",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "c16c636f14347e8c6c22df29:482",
+   "pure": true
+  },
+  "twin-fuzz/B1-1.json#0/v8": {
+   "runs": {
+    "A": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "2676c5d5f12d589c6a8830fa:480"
+    },
+    "B": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "2676c5d5f12d589c6a8830fa:480"
+    },
+    "C": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "2676c5d5f12d589c6a8830fa:480"
+    },
+    "D": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "2676c5d5f12d589c6a8830fa:480"
+    },
+    "E": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "2676c5d5f12d589c6a8830fa:480"
+    },
+    "K": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "2676c5d5f12d589c6a8830fa:480"
+    },
+    "M": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "shadow"
+     ],
+     "sha": "d0c9436ecf9369ed55f0e9ce:603"
+    },
+    "N": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "2676c5d5f12d589c6a8830fa:480"
+    }
+   },
+   "chart": {
+    "A": "c9fcd94360829c6bdb377319:226",
+    "C": "c9fcd94360829c6bdb377319:226",
+    "B": "c9fcd94360829c6bdb377319:226"
+   },
+   "texts": "84d8a20c5564d3a7f415ab14:95",
+   "label": "bfa3e1491094e0932aeb0012:450",
+   "phone": "c0300cf6d38a11285fd41425:101",
+   "phoneLabel": "6b4c311b5b71f27f86cee359:273",
+   "phoneMirror": "f716e7935d119d3782ab3722:256",
+   "grid": "23d19a4c08e232032057857e:670",
+   "pure": true
+  },
+  "twin-fuzz/B1-1.json#0/v9": {
+   "runs": {
+    "A": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "4d6d108dc189589954d15e45:276"
+    },
+    "B": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "4d6d108dc189589954d15e45:276"
+    },
+    "C": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "4d6d108dc189589954d15e45:276"
+    },
+    "D": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "4d6d108dc189589954d15e45:276"
+    },
+    "E": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "4d6d108dc189589954d15e45:276"
+    },
+    "K": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "4d6d108dc189589954d15e45:276"
+    },
+    "M": {
+     "kind": "slicer",
+     "changes": [
+      "position",
+      "shadow"
+     ],
+     "sha": "a791b3de78a7ba37a6918c96:399"
+    },
+    "N": {
+     "kind": "slicer",
+     "changes": [
+      "position"
+     ],
+     "sha": "4d6d108dc189589954d15e45:276"
+    }
+   },
+   "chart": {
+    "A": "5ccaa8e558c26435be104363:23",
+    "C": "5ccaa8e558c26435be104363:23",
+    "B": "5ccaa8e558c26435be104363:23"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "3d237ec4f08b407bb7b8748b:242",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "896aa88b1666d66d0f56c3ea:468",
+   "pure": true
+  },
+  "twin-fuzz/B1-3.json#0/v1": {
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "07a2287aee8692d9e4bbf17a:395"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "07a2287aee8692d9e4bbf17a:395"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "07a2287aee8692d9e4bbf17a:395"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "07a2287aee8692d9e4bbf17a:395"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "07a2287aee8692d9e4bbf17a:395"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "07a2287aee8692d9e4bbf17a:395"
+    },
+    "M": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "shadow",
+      "alignment",
+      "title"
+     ],
+     "sha": "a6aa996396113c779864c6a8:746"
+    },
+    "N": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "07a2287aee8692d9e4bbf17a:395"
+    }
+   },
+   "chart": {
+    "A": "93a9456f148d8a23fec9543c:27",
+    "C": "93a9456f148d8a23fec9543c:27",
+    "B": "93a9456f148d8a23fec9543c:27"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "ed5f93f5f4a2edc24a7b9e92:246",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "31aeeafa7f7c6eec8ae865d2:524",
+   "pure": true
+  },
+  "twin-fuzz/B1-3.json#0/v5": {
+   "runs": {
+    "A": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "c73271e2166304afd729a29e:593"
+    },
+    "B": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "c73271e2166304afd729a29e:593"
+    },
+    "C": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "c73271e2166304afd729a29e:593"
+    },
+    "D": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "c73271e2166304afd729a29e:593"
+    },
+    "E": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "c73271e2166304afd729a29e:593"
+    },
+    "K": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "5293fbddbaca551940563f49:399"
+    },
+    "M": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "shadow",
+      "axes",
+      "title"
+     ],
+     "sha": "efa0ecd17a1dfc3365b3332b:689"
+    },
+    "N": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "c73271e2166304afd729a29e:593"
+    }
+   },
+   "chart": {
+    "A": "bc9e7625bc7d71d29e36d49f:221",
+    "C": "bc9e7625bc7d71d29e36d49f:221",
+    "B": "bc9e7625bc7d71d29e36d49f:221"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "d8910d5c7230f6d7ed26d2ba:253",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "862668c9b7fe7a928c9317d8:479",
+   "pure": true
+  },
+  "twin-fuzz/B2-1.json#0/v12": {
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "671799ce68d378fa869a9094:399"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "671799ce68d378fa869a9094:399"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "671799ce68d378fa869a9094:399"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "671799ce68d378fa869a9094:399"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "671799ce68d378fa869a9094:399"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "671799ce68d378fa869a9094:399"
+    },
+    "M": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "shadow",
+      "alignment",
+      "title"
+     ],
+     "sha": "f5e2fca77b45c871d602ed79:750"
+    },
+    "N": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "671799ce68d378fa869a9094:399"
+    }
+   },
+   "chart": {
+    "A": "93a9456f148d8a23fec9543c:27",
+    "C": "93a9456f148d8a23fec9543c:27",
+    "B": "93a9456f148d8a23fec9543c:27"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "81767b5e75ca04a63e599ea1:248",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "acc277f6f98db9d893e2b819:526",
+   "pure": true
+  },
+  "twin-fuzz/B2-1.json#0/v13": {
+   "runs": {
+    "A": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bdb34cd36ce9fe49e7386c3c:395"
+    },
+    "B": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bdb34cd36ce9fe49e7386c3c:395"
+    },
+    "C": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bdb34cd36ce9fe49e7386c3c:395"
+    },
+    "D": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bdb34cd36ce9fe49e7386c3c:395"
+    },
+    "E": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bdb34cd36ce9fe49e7386c3c:395"
+    },
+    "K": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bdb34cd36ce9fe49e7386c3c:395"
+    },
+    "M": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "shadow",
+      "title"
+     ],
+     "sha": "aaa2cd0fa762228f7fa321c5:491"
+    },
+    "N": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bdb34cd36ce9fe49e7386c3c:395"
+    }
+   },
+   "chart": {
+    "A": "99784eabd7766bce7a4c84a6:24",
+    "C": "99784eabd7766bce7a4c84a6:24",
+    "B": "99784eabd7766bce7a4c84a6:24"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "76f25cd9b0a29071237ece78:245",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "e73dd2a2801641552fdc9622:471",
+   "pure": true
+  },
+  "twin-fuzz/B2new-1.json#0/v8": {
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "082e707ef0758755029bfd0a:734"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "082e707ef0758755029bfd0a:734"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "082e707ef0758755029bfd0a:734"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "082e707ef0758755029bfd0a:734"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "082e707ef0758755029bfd0a:734"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "082e707ef0758755029bfd0a:734"
+    },
+    "M": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "b8568e903dbaf4d0dbff894d:830"
+    },
+    "N": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "082e707ef0758755029bfd0a:734"
+    }
+   },
+   "chart": {
+    "A": "05f52e8095b7666c5998390e:345",
+    "C": "05f52e8095b7666c5998390e:345",
+    "B": "05f52e8095b7666c5998390e:345"
+   },
+   "texts": "f5bfbc742c25cea5ec956c8f:60",
+   "label": "43c39064cad84d79ff43ceaa:428",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "4acbb90d0e2a9c04f5dbd7e7:599",
+   "pure": true
+  },
+  "twin-fuzz/B2new-1.json#0/v15": {
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "b54423ccec277388502a4878:511"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "b54423ccec277388502a4878:511"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "b54423ccec277388502a4878:511"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "b54423ccec277388502a4878:511"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "b54423ccec277388502a4878:511"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "b54423ccec277388502a4878:511"
+    },
+    "M": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "title"
+     ],
+     "sha": "b960c7bd1d44b621e08e30d6:607"
+    },
+    "N": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "b54423ccec277388502a4878:511"
+    }
+   },
+   "chart": {
+    "A": "03fe3210a842c593216f6af8:128",
+    "C": "03fe3210a842c593216f6af8:128",
+    "B": "03fe3210a842c593216f6af8:128"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "ed818aab668e89cf7d5e68fa:245",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "d9b3b2b2c7dde08e96c8c0f2:471",
+   "pure": true
+  },
+  "twin-fuzz/B2new-1.json#0/v21": {
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "d8ebc0ac9dde6fed1502cb22:613"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "d8ebc0ac9dde6fed1502cb22:613"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "d8ebc0ac9dde6fed1502cb22:613"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "d8ebc0ac9dde6fed1502cb22:613"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "d8ebc0ac9dde6fed1502cb22:613"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "d8ebc0ac9dde6fed1502cb22:613"
+    },
+    "M": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "shadow",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "e75b631bb233b9dde26435a7:1062"
+    },
+    "N": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "d8ebc0ac9dde6fed1502cb22:613"
+    }
+   },
+   "chart": {
+    "A": "dfeb844158dcff342c10c660:241",
+    "C": "dfeb844158dcff342c10c660:241",
+    "B": "dfeb844158dcff342c10c660:241"
+   },
+   "texts": "80837faf479e33a28f556a34:125",
+   "label": "18e120c6d2d1c15178f3cd04:572",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "37f0538ae7a14cf9408bc491:2835",
+   "pure": true
+  },
+  "twin-fuzz/B2new-2.json#0/v5": {
+   "runs": {
+    "A": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d4237eb3823d4494cf96971d:274"
+    },
+    "B": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d4237eb3823d4494cf96971d:274"
+    },
+    "C": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d4237eb3823d4494cf96971d:274"
+    },
+    "D": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d4237eb3823d4494cf96971d:274"
+    },
+    "E": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d4237eb3823d4494cf96971d:274"
+    },
+    "K": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d4237eb3823d4494cf96971d:274"
+    },
+    "M": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "shadow"
+     ],
+     "sha": "90b035c5e79b014f0e686cf5:397"
+    },
+    "N": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "d4237eb3823d4494cf96971d:274"
+    }
+   },
+   "chart": {
+    "A": "a6d15a9a81cadc3fda66d576:21",
+    "C": "a6d15a9a81cadc3fda66d576:21",
+    "B": "a6d15a9a81cadc3fda66d576:21"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "28ac376ff6aac684c64a59bb:239",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "6515bed38dc02bc320e08a28:465",
+   "pure": true
+  },
+  "twin-fuzz/B2new-2.json#0/v6": {
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bfcf5c69d166e27c7dd84e09:397"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bfcf5c69d166e27c7dd84e09:397"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bfcf5c69d166e27c7dd84e09:397"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bfcf5c69d166e27c7dd84e09:397"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bfcf5c69d166e27c7dd84e09:397"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bfcf5c69d166e27c7dd84e09:397"
+    },
+    "M": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "shadow",
+      "alignment",
+      "title"
+     ],
+     "sha": "9349c740670171f1a08cc290:748"
+    },
+    "N": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "bfcf5c69d166e27c7dd84e09:397"
+    }
+   },
+   "chart": {
+    "A": "93a9456f148d8a23fec9543c:27",
+    "C": "93a9456f148d8a23fec9543c:27",
+    "B": "93a9456f148d8a23fec9543c:27"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "6ff302933470d23f96ac917f:247",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "3852752e48e318f24d2a4542:525",
+   "pure": true
+  },
+  "twin-fuzz/B2new-2.json#0/v9": {
+   "runs": {
+    "A": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "8db6e7f372abbb2de5cee0c2:478"
+    },
+    "B": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "8db6e7f372abbb2de5cee0c2:478"
+    },
+    "C": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "8db6e7f372abbb2de5cee0c2:478"
+    },
+    "D": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "8db6e7f372abbb2de5cee0c2:478"
+    },
+    "E": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "8db6e7f372abbb2de5cee0c2:478"
+    },
+    "K": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "8db6e7f372abbb2de5cee0c2:478"
+    },
+    "M": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "shadow"
+     ],
+     "sha": "cfd2aad6f28cad47f842d7f1:601"
+    },
+    "N": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "8db6e7f372abbb2de5cee0c2:478"
+    }
+   },
+   "chart": {
+    "A": "14fbcc9f31f4ddba7f24a81d:226",
+    "C": "14fbcc9f31f4ddba7f24a81d:226",
+    "B": "14fbcc9f31f4ddba7f24a81d:226"
+   },
+   "texts": "31dcfd0c78456eeebb8808a6:98",
+   "label": "737dbfb4eaf1c9b2caa048ae:451",
+   "phone": "0c980aa72f281dbe26ea06eb:104",
+   "phoneLabel": "6b4c311b5b71f27f86cee359:273",
+   "phoneMirror": "c76df6a0fab62216fcb2f40c:256",
+   "grid": "a2e1002720766976fa2b0dc8:671",
+   "pure": true
+  },
+  "twin-fuzz/B2new-8.json#0/v5": {
+   "runs": {
+    "A": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5c8f73a350a6727eb55c4284:261"
+    },
+    "B": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5c8f73a350a6727eb55c4284:261"
+    },
+    "C": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5c8f73a350a6727eb55c4284:261"
+    },
+    "D": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5c8f73a350a6727eb55c4284:261"
+    },
+    "E": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5c8f73a350a6727eb55c4284:261"
+    },
+    "K": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5c8f73a350a6727eb55c4284:261"
+    },
+    "M": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5c8f73a350a6727eb55c4284:261"
+    },
+    "N": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "5c8f73a350a6727eb55c4284:261"
+    }
+   },
+   "chart": {
+    "A": "eb045d78d273107348b0300c:9",
+    "C": "eb045d78d273107348b0300c:9",
+    "B": "eb045d78d273107348b0300c:9"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "866d422284d5a2800c0de426:226",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "f13a459c2aa989ac1908a9a9:16",
+   "phoneMirror": "74234e98afe7498fb5daf1f3:4",
+   "grid": "acd16c7b95c8fc2de6f62b0e:452",
+   "pure": true
+  },
+  "twin-fuzz/B2new-8.json#0/v17": {
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "d5095a11d444120341ffd336:736"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "d5095a11d444120341ffd336:736"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "d5095a11d444120341ffd336:736"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "d5095a11d444120341ffd336:736"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "d5095a11d444120341ffd336:736"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "d5095a11d444120341ffd336:736"
+    },
+    "M": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "b53f06c86567ee23071dd905:832"
+    },
+    "N": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "d5095a11d444120341ffd336:736"
+    }
+   },
+   "chart": {
+    "A": "05f52e8095b7666c5998390e:345",
+    "C": "05f52e8095b7666c5998390e:345",
+    "B": "05f52e8095b7666c5998390e:345"
+   },
+   "texts": "f5bfbc742c25cea5ec956c8f:60",
+   "label": "46ea93e8cfb720c5b2c6a25c:433",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "ffc0e960fb71e23e6e8efd3e:604",
+   "pure": true
+  },
+  "twin-fuzz/B2new-8.json#0/v18": {
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "65f1396b5919f5a3448724ad:613"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "65f1396b5919f5a3448724ad:613"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "65f1396b5919f5a3448724ad:613"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "65f1396b5919f5a3448724ad:613"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "65f1396b5919f5a3448724ad:613"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "65f1396b5919f5a3448724ad:613"
+    },
+    "M": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "shadow",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "6ae20c4bcaaf7e2723f6d185:1062"
+    },
+    "N": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "65f1396b5919f5a3448724ad:613"
+    }
+   },
+   "chart": {
+    "A": "dfeb844158dcff342c10c660:241",
+    "C": "dfeb844158dcff342c10c660:241",
+    "B": "dfeb844158dcff342c10c660:241"
+   },
+   "texts": "80837faf479e33a28f556a34:125",
+   "label": "18ba8ac008fd510d0acdad56:573",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "295bdaed5fd32bc7424d8667:2838",
+   "pure": true
+  },
+  "twin-fuzz/B3-1.json#0/v0": {
+   "runs": {
+    "A": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "bcbba8f1a1dd8e0617eb0c02:331"
+    },
+    "B": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "bcbba8f1a1dd8e0617eb0c02:331"
+    },
+    "C": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "bcbba8f1a1dd8e0617eb0c02:331"
+    },
+    "D": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "bcbba8f1a1dd8e0617eb0c02:331"
+    },
+    "E": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "bcbba8f1a1dd8e0617eb0c02:331"
+    },
+    "K": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "bcbba8f1a1dd8e0617eb0c02:331"
+    },
+    "M": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "shadow"
+     ],
+     "sha": "94feac0086bc693f631973f2:454"
+    },
+    "N": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "bcbba8f1a1dd8e0617eb0c02:331"
+    }
+   },
+   "chart": {
+    "A": "64d9c5410764c9a6a0ff5a01:29",
+    "C": "64d9c5410764c9a6a0ff5a01:29",
+    "B": "64d9c5410764c9a6a0ff5a01:29"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "722eb4a0bd1212ed6e70f1d8:289",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "c8bb2446d70101780e29e194:515",
+   "pure": true
+  },
+  "twin-fuzz/M1-1.json#0/v1": {
+   "runs": {
+    "A": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "235daf8bee9834d46bc03f31:479"
+    },
+    "B": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "235daf8bee9834d46bc03f31:479"
+    },
+    "C": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "235daf8bee9834d46bc03f31:479"
+    },
+    "D": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "235daf8bee9834d46bc03f31:479"
+    },
+    "E": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "235daf8bee9834d46bc03f31:479"
+    },
+    "K": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "235daf8bee9834d46bc03f31:479"
+    },
+    "M": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "shadow"
+     ],
+     "sha": "8f765e38aaa5cbeb2542577d:602"
+    },
+    "N": {
+     "kind": "button",
+     "changes": [
+      "position"
+     ],
+     "sha": "235daf8bee9834d46bc03f31:479"
+    }
+   },
+   "chart": {
+    "A": "893de7e8bfafd10439c103d3:226",
+    "C": "893de7e8bfafd10439c103d3:226",
+    "B": "893de7e8bfafd10439c103d3:226"
+   },
+   "texts": "14c43116a4c8400834ce74c1:95",
+   "label": "a646f1ff82c8ebbdfaf8edcb:451",
+   "phone": "b1709455b85bc199c05c9289:101",
+   "phoneLabel": "6b4c311b5b71f27f86cee359:273",
+   "phoneMirror": "e26c359a53b67369e64c5a16:256",
+   "grid": "b885a8c4a734ba1e274cdfed:671",
+   "pure": true
+  },
+  "twin-fuzz/M1-1.json#0/v15": {
+   "runs": {
+    "A": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "659252a796ec531be08ecd9e:262"
+    },
+    "B": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "659252a796ec531be08ecd9e:262"
+    },
+    "C": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "659252a796ec531be08ecd9e:262"
+    },
+    "D": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "659252a796ec531be08ecd9e:262"
+    },
+    "E": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "659252a796ec531be08ecd9e:262"
+    },
+    "K": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "659252a796ec531be08ecd9e:262"
+    },
+    "M": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "659252a796ec531be08ecd9e:262"
+    },
+    "N": {
+     "kind": "group",
+     "changes": [
+      "position"
+     ],
+     "sha": "659252a796ec531be08ecd9e:262"
+    }
+   },
+   "chart": {
+    "A": "eb045d78d273107348b0300c:9",
+    "C": "eb045d78d273107348b0300c:9",
+    "B": "eb045d78d273107348b0300c:9"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "6bdbf483b04704db9146e048:227",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "f13a459c2aa989ac1908a9a9:16",
+   "phoneMirror": "74234e98afe7498fb5daf1f3:4",
+   "grid": "4a4d180742b34de6077500c7:453",
+   "pure": true
+  },
+  "twin-fuzz/M1-1.json#0/v24": {
+   "runs": {
+    "A": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "491e249494fc11d5ff4a7716:279"
+    },
+    "B": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "491e249494fc11d5ff4a7716:279"
+    },
+    "C": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "491e249494fc11d5ff4a7716:279"
+    },
+    "D": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "491e249494fc11d5ff4a7716:279"
+    },
+    "E": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "491e249494fc11d5ff4a7716:279"
+    },
+    "K": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "491e249494fc11d5ff4a7716:279"
+    },
+    "M": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "shadow"
+     ],
+     "sha": "18c58e56df11a9a4362f1bf3:402"
+    },
+    "N": {
+     "kind": "textbox",
+     "changes": [
+      "position"
+     ],
+     "sha": "491e249494fc11d5ff4a7716:279"
+    }
+   },
+   "chart": {
+    "A": "84541594b03cc5c876757006:24",
+    "C": "84541594b03cc5c876757006:24",
+    "B": "84541594b03cc5c876757006:24"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "896018a50abbd5179971bc34:245",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "f5e79d69569868c3cf9bfa07:471",
+   "pure": true
+  },
+  "twin-fuzz/V1-1.json#0/v0": {
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "f1df1e01e6f4bfe60f7285c4:688"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "f1df1e01e6f4bfe60f7285c4:688"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "f1df1e01e6f4bfe60f7285c4:688"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "f1df1e01e6f4bfe60f7285c4:688"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "f1df1e01e6f4bfe60f7285c4:688"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "f1df1e01e6f4bfe60f7285c4:688"
+    },
+    "M": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "shadow",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "3cdd6d2ea8b278d907ca597b:1137"
+    },
+    "N": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "f1df1e01e6f4bfe60f7285c4:688"
+    }
+   },
+   "chart": {
+    "A": "d897d4ecc45a291dbfe03ae3:322",
+    "C": "d897d4ecc45a291dbfe03ae3:322",
+    "B": "d897d4ecc45a291dbfe03ae3:322"
+   },
+   "texts": "80837faf479e33a28f556a34:125",
+   "label": "098d44d46c8ee89739b3eb4a:646",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "638bb68c7dd2e05196d508e3:3202",
+   "pure": true
+  },
+  "made-up/charts/xColumn": {
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "06c3ee1fdbeeb0e231681537:1473"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "legend",
+      "title"
+     ],
+     "sha": "a01ac571be242616ee26bed7:1465"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "06c3ee1fdbeeb0e231681537:1473"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "06c3ee1fdbeeb0e231681537:1473"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "legend",
+      "title"
+     ],
+     "sha": "a01ac571be242616ee26bed7:1465"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "06c3ee1fdbeeb0e231681537:1473"
+    },
+    "M": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "e3f6e9d889d6b1fcc779f9c3:1569"
+    },
+    "N": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "legend",
+      "title"
+     ],
+     "sha": "06c3ee1fdbeeb0e231681537:1473"
+    }
+   },
+   "chart": {
+    "A": "3de9dace7fa970fc2d6a5239:1127",
+    "C": "3de9dace7fa970fc2d6a5239:1127",
+    "B": "e360448396e720b0ed1ef146:1126"
+   },
+   "texts": "f0b726f3349a09a936611cba:349",
+   "label": "d37c4d46c8da68d072596da6:1463",
+   "phone": "57e91b9c0e87335bc049c9c1:190",
+   "phoneLabel": "1816f266906562ecdcac3062:455",
+   "phoneMirror": "9e02c6ea63e823665093cecf:402",
+   "grid": "66550a597ca88dadd0bab4f5:1482",
+   "pure": true
+  },
+  "made-up/charts/xLineDate": {
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "a43724a39b54be113deee7f6:1126"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "title"
+     ],
+     "sha": "70c5750866607c7212490aac:958"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "sort",
+      "time axis",
+      "title"
+     ],
+     "sha": "7a482b306b87b1f97ee415be:1223"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "sort",
+      "time axis",
+      "title"
+     ],
+     "sha": "7a482b306b87b1f97ee415be:1223"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "title"
+     ],
+     "sha": "70c5750866607c7212490aac:958"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "a43724a39b54be113deee7f6:1126"
+    },
+    "M": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "a43724a39b54be113deee7f6:1126"
+    },
+    "N": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "sort",
+      "time axis",
+      "title"
+     ],
+     "sha": "7a482b306b87b1f97ee415be:1223"
+    }
+   },
+   "chart": {
+    "A": "fb9276e130b935eabad54500:752",
+    "C": "75792ec208a5d3101576f026:837",
+    "B": "ed2a9e88d56801439db74b12:591"
+   },
+   "texts": "2df60e39ad1cea30f7c5a265:112",
+   "label": "94907c396904427f834628b5:821",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "68d152972585f968b1bf8100:185",
+   "phoneMirror": "e5b618d9a7f182418d38d28d:173",
+   "grid": "dd886fa95b65180852fa0bc0:937",
+   "pure": true
+  },
+  "made-up/charts/xArea": {
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "0d95ae61d1a746737db1cde1:1168"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "0d95ae61d1a746737db1cde1:1168"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "0d95ae61d1a746737db1cde1:1168"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "0d95ae61d1a746737db1cde1:1168"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "0d95ae61d1a746737db1cde1:1168"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "0d95ae61d1a746737db1cde1:1168"
+    },
+    "M": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "f79435074d8df5d76125d0a3:1264"
+    },
+    "N": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "0d95ae61d1a746737db1cde1:1168"
+    }
+   },
+   "chart": {
+    "A": "06a452bfa7025d6a3a5f52dc:725",
+    "C": "06a452bfa7025d6a3a5f52dc:725",
+    "B": "06a452bfa7025d6a3a5f52dc:725"
+   },
+   "texts": "1dfcf2aaa210597ddcef2263:115",
+   "label": "8f3098dcc7aa66b60bab736d:801",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "d06fe66b6e868ee6e55793c5:165",
+   "phoneMirror": "4c255ae1f1cc43ace66f859d:154",
+   "grid": "4e2fb9ac3021ef5ca7101403:917",
+   "pure": true
+  },
+  "made-up/charts/xCombo": {
+   "runs": {
+    "A": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "b40ba6771e3374e702bb1903:1211"
+    },
+    "B": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "c3f242d1bbf3d6f429941bf4:1043"
+    },
+    "C": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "b40ba6771e3374e702bb1903:1211"
+    },
+    "D": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "b40ba6771e3374e702bb1903:1211"
+    },
+    "E": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "title"
+     ],
+     "sha": "c3f242d1bbf3d6f429941bf4:1043"
+    },
+    "K": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "b40ba6771e3374e702bb1903:1211"
+    },
+    "M": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "shadow",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "cdb6a64f6c4e366ee62624be:1307"
+    },
+    "N": {
+     "kind": "column",
+     "changes": [
+      "position",
+      "value axis",
+      "sort",
+      "title"
+     ],
+     "sha": "b40ba6771e3374e702bb1903:1211"
+    }
+   },
+   "chart": {
+    "A": "49c478dcfb9e1245a31bf09a:820",
+    "C": "49c478dcfb9e1245a31bf09a:820",
+    "B": "ea14966828f84a24e71107f2:659"
+   },
+   "texts": "8561246629d54fe453f4e709:170",
+   "label": "ba7c537bbfa215d98ec5da8a:941",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "31b991bee5ccdf9181c7bb5f:1002",
+   "pure": true
+  },
+  "made-up/charts/xBarLegend": {
+   "runs": {
+    "A": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "legend",
+      "title"
+     ],
+     "sha": "d8fe531d90c6fe222209e65f:1208"
+    },
+    "B": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "legend",
+      "title"
+     ],
+     "sha": "d8fe531d90c6fe222209e65f:1208"
+    },
+    "C": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "legend",
+      "title"
+     ],
+     "sha": "d8fe531d90c6fe222209e65f:1208"
+    },
+    "D": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "legend",
+      "title"
+     ],
+     "sha": "d8fe531d90c6fe222209e65f:1208"
+    },
+    "E": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "legend",
+      "title"
+     ],
+     "sha": "d8fe531d90c6fe222209e65f:1208"
+    },
+    "K": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "d65f0dbedb0e1f971e37daee:1022"
+    },
+    "M": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "shadow",
+      "axes",
+      "legend",
+      "title"
+     ],
+     "sha": "41d8fd72570537c1923a09f6:1304"
+    },
+    "N": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "legend",
+      "title"
+     ],
+     "sha": "d8fe531d90c6fe222209e65f:1208"
+    }
+   },
+   "chart": {
+    "A": "92f60e371a6d853982d28a44:820",
+    "C": "92f60e371a6d853982d28a44:820",
+    "B": "92f60e371a6d853982d28a44:820"
+   },
+   "texts": "48c6933ec88a5f6e9cbf616b:175",
+   "label": "94c4d92d9f50f177d7db3779:1039",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "d990fdcf5c632d83e3405da4:165",
+   "phoneMirror": "975446f0b2b6847017e8f02e:154",
+   "grid": "115154ef575be99761b32d1e:1100",
+   "pure": true
+  },
+  "made-up/charts/xWaterfall": {
+   "runs": {
+    "A": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "4bd4226ce72df1d216cf9486:934"
+    },
+    "B": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "4bd4226ce72df1d216cf9486:934"
+    },
+    "C": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "4bd4226ce72df1d216cf9486:934"
+    },
+    "D": {
+     "kind": "waterfall",
+     "changes": [
+      "position",
+      "waterfall",
+      "value axis",
+      "sort"
+     ],
+     "sha": "f523b8b91fdd8656270b1967:7559"
+    },
+    "E": {
+     "kind": "waterfallTime",
+     "changes": [
+      "position",
+      "value axis"
+     ],
+     "sha": "82160e2c369482b03ccab3be:1004"
+    },
+    "K": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "4bd4226ce72df1d216cf9486:934"
+    },
+    "M": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position",
+      "shadow"
+     ],
+     "sha": "3d0404f96e3f6e42b65e3dad:1057"
+    },
+    "N": {
+     "kind": "waterfallNative",
+     "changes": [
+      "position"
+     ],
+     "sha": "4bd4226ce72df1d216cf9486:934"
+    }
+   },
+   "chart": {
+    "A": "a6cecd511a5b86ef4c18162b:725",
+    "C": "a6cecd511a5b86ef4c18162b:725",
+    "B": "a6cecd511a5b86ef4c18162b:725"
+   },
+   "texts": "3f12ccf320071f77381ab9cf:116",
+   "label": "3aaad40a3d1c179651a7fd97:1000",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "2f8521c45d47602753b4f311:351",
+   "phoneMirror": "6e748a94148e5599ff91e863:340",
+   "grid": "e357ca6e053c1523802ba3de:1116",
+   "pure": true
+  },
+  "made-up/charts/xTableWidths": {
+   "runs": {
+    "A": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "b9dca0442629e8d2f661b742:1577"
+    },
+    "B": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "b9dca0442629e8d2f661b742:1577"
+    },
+    "C": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "b9dca0442629e8d2f661b742:1577"
+    },
+    "D": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "b9dca0442629e8d2f661b742:1577"
+    },
+    "E": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "b9dca0442629e8d2f661b742:1577"
+    },
+    "K": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "b9dca0442629e8d2f661b742:1577"
+    },
+    "M": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "shadow",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "8b4303a1520e5eac7fff6c44:1673"
+    },
+    "N": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "b9dca0442629e8d2f661b742:1577"
+    }
+   },
+   "chart": {
+    "A": "cd1b1db306c5d101ebf2078d:971",
+    "C": "cd1b1db306c5d101ebf2078d:971",
+    "B": "cd1b1db306c5d101ebf2078d:971"
+   },
+   "texts": "8f55785900434d47a52b6277:173",
+   "label": "cc34747303bf4f853abdf054:1361",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "5d2ca8f1a5793822b25457ec:549",
+   "phoneMirror": "8671f8a29365f389887bd97d:538",
+   "grid": "29be0631f6e6181ea09f28a6:1422",
+   "pure": true
+  },
+  "made-up/charts/xTableNoWidths": {
+   "runs": {
+    "A": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "status icons",
+      "columns",
+      "alignment",
+      "padding",
+      "title"
+     ],
+     "sha": "f6e7d63237831f98c1221d91:1285"
+    },
+    "B": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "status icons",
+      "columns",
+      "alignment",
+      "padding",
+      "title"
+     ],
+     "sha": "f6e7d63237831f98c1221d91:1285"
+    },
+    "C": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "status icons",
+      "columns",
+      "alignment",
+      "padding",
+      "title"
+     ],
+     "sha": "f6e7d63237831f98c1221d91:1285"
+    },
+    "D": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "status icons",
+      "columns",
+      "alignment",
+      "padding",
+      "title"
+     ],
+     "sha": "f6e7d63237831f98c1221d91:1285"
+    },
+    "E": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "status icons",
+      "columns",
+      "alignment",
+      "padding",
+      "title"
+     ],
+     "sha": "f6e7d63237831f98c1221d91:1285"
+    },
+    "K": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "status icons",
+      "columns",
+      "alignment",
+      "padding",
+      "title"
+     ],
+     "sha": "f6e7d63237831f98c1221d91:1285"
+    },
+    "M": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "shadow",
+      "status icons",
+      "columns",
+      "alignment",
+      "padding",
+      "title"
+     ],
+     "sha": "776b08602791bf3a8bacba87:1381"
+    },
+    "N": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "status icons",
+      "columns",
+      "alignment",
+      "padding",
+      "title"
+     ],
+     "sha": "f6e7d63237831f98c1221d91:1285"
+    }
+   },
+   "chart": {
+    "A": "40cbaa1d4761a684500110fd:601",
+    "C": "40cbaa1d4761a684500110fd:601",
+    "B": "40cbaa1d4761a684500110fd:601"
+   },
+   "texts": "269431fad35b1226021cf825:119",
+   "label": "8dc4e9f3103db7f11158f74a:939",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "b5fc85eb7c38a0afb1376e23:313",
+   "phoneMirror": "be3690dc226582bd4cefb10c:302",
+   "grid": "84381d604777b5f0e3235867:1055",
+   "pure": true
+  },
+  "made-up/charts/xHeatmap": {
+   "runs": {
+    "A": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "2ea4be5163f25ad5c7af6d3a:1250"
+    },
+    "B": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "2ea4be5163f25ad5c7af6d3a:1250"
+    },
+    "C": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "2ea4be5163f25ad5c7af6d3a:1250"
+    },
+    "D": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "2ea4be5163f25ad5c7af6d3a:1250"
+    },
+    "E": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "2ea4be5163f25ad5c7af6d3a:1250"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "2ea4be5163f25ad5c7af6d3a:1250"
+    },
+    "M": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "shadow",
+      "columns",
+      "alignment",
+      "padding",
+      "title"
+     ],
+     "sha": "8c9cdb3b4079e4e76a83ffad:2099"
+    },
+    "N": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "padding",
+      "title"
+     ],
+     "sha": "2ea4be5163f25ad5c7af6d3a:1250"
+    }
+   },
+   "chart": {
+    "A": "e757b3ac59f0e8ad77070d1f:894",
+    "C": "e757b3ac59f0e8ad77070d1f:894",
+    "B": "e757b3ac59f0e8ad77070d1f:894"
+   },
+   "texts": "d912f23e377f5a1859087149:173",
+   "label": "39c2163865b003bb56778e8e:1280",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "9baf68d6ac3783c4211ab1b1:416",
+   "phoneMirror": "cb4faf2d6962d790aaf8d546:405",
+   "grid": "2397f5b8f6488e7b58cd519a:7652",
+   "pure": true
+  },
+  "made-up/group/gTile": {
+   "runs": {
+    "A": {
+     "kind": "other",
+     "changes": [
+      "position"
+     ],
+     "sha": "c9c7310aa8cbfa8398e5abfb:277"
+    },
+    "B": {
+     "kind": "other",
+     "changes": [
+      "position"
+     ],
+     "sha": "c9c7310aa8cbfa8398e5abfb:277"
+    },
+    "C": {
+     "kind": "other",
+     "changes": [
+      "position"
+     ],
+     "sha": "c9c7310aa8cbfa8398e5abfb:277"
+    },
+    "D": {
+     "kind": "other",
+     "changes": [
+      "position"
+     ],
+     "sha": "c9c7310aa8cbfa8398e5abfb:277"
+    },
+    "E": {
+     "kind": "other",
+     "changes": [
+      "position"
+     ],
+     "sha": "c9c7310aa8cbfa8398e5abfb:277"
+    },
+    "K": {
+     "kind": "other",
+     "changes": [
+      "position"
+     ],
+     "sha": "c9c7310aa8cbfa8398e5abfb:277"
+    },
+    "M": {
+     "kind": "other",
+     "changes": [
+      "position",
+      "shadow"
+     ],
+     "sha": "0d0b156101f4338b7b09a716:400"
+    },
+    "N": {
+     "kind": "other",
+     "changes": [
+      "position"
+     ],
+     "sha": "c9c7310aa8cbfa8398e5abfb:277"
+    }
+   },
+   "chart": {
+    "A": "9eecae620ba7ae0ea3fc3c01:22",
+    "C": "9eecae620ba7ae0ea3fc3c01:22",
+    "B": "9eecae620ba7ae0ea3fc3c01:22"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "6872c4d2f816141d6bfb01be:240",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "2d37bfd3e3768c23fde59aa1:466",
+   "pure": true
+  },
+  "made-up/group/tile": {
+   "runs": {
+    "A": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "image",
+      "margins",
+      "padding",
+      "title"
+     ],
+     "sha": "39e9a4cd0cc6796dc5bc3917:1418"
+    },
+    "B": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "image",
+      "margins",
+      "padding",
+      "title"
+     ],
+     "sha": "39e9a4cd0cc6796dc5bc3917:1418"
+    },
+    "C": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "image",
+      "margins",
+      "padding",
+      "title"
+     ],
+     "sha": "39e9a4cd0cc6796dc5bc3917:1418"
+    },
+    "D": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "image",
+      "margins",
+      "padding",
+      "title"
+     ],
+     "sha": "39e9a4cd0cc6796dc5bc3917:1418"
+    },
+    "E": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "image",
+      "margins",
+      "padding",
+      "title"
+     ],
+     "sha": "39e9a4cd0cc6796dc5bc3917:1418"
+    },
+    "K": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "image",
+      "margins",
+      "padding",
+      "title"
+     ],
+     "sha": "39e9a4cd0cc6796dc5bc3917:1418"
+    },
+    "M": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "shadow",
+      "values",
+      "image",
+      "margins",
+      "padding",
+      "title"
+     ],
+     "sha": "6be14e1f1466e11248feb2e5:1514"
+    },
+    "N": {
+     "kind": "newCard",
+     "changes": [
+      "position",
+      "values",
+      "image",
+      "margins",
+      "padding",
+      "title"
+     ],
+     "sha": "39e9a4cd0cc6796dc5bc3917:1418"
+    }
+   },
+   "chart": {
+    "A": "e22bff30f6171818ce66f3fa:1038",
+    "C": "e22bff30f6171818ce66f3fa:1038",
+    "B": "e22bff30f6171818ce66f3fa:1038"
+   },
+   "texts": "5bcbe90d6179a924ce01aed5:218",
+   "label": "b62b726a5b1b48ffe4685019:1381",
+   "phone": "bfa6511a1a5a9c2da8af3f61:110",
+   "phoneLabel": "b3618ee59f2c32bab8b73721:796",
+   "phoneMirror": "cd9ceb5ea24cc93689fffd54:743",
+   "grid": "d23736e109c072e1f729a7b7:1505",
+   "pure": true
+  },
+  "made-up/group/badgeUp": {
+   "runs": {
+    "A": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "235b9e1759c2982c5a9418ee:467"
+    },
+    "B": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "235b9e1759c2982c5a9418ee:467"
+    },
+    "C": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "235b9e1759c2982c5a9418ee:467"
+    },
+    "D": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "235b9e1759c2982c5a9418ee:467"
+    },
+    "E": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "235b9e1759c2982c5a9418ee:467"
+    },
+    "K": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "235b9e1759c2982c5a9418ee:467"
+    },
+    "M": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "shadow",
+      "text"
+     ],
+     "sha": "3716e99914367f2546edd869:590"
+    },
+    "N": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "235b9e1759c2982c5a9418ee:467"
+    }
+   },
+   "chart": {
+    "A": "43f523be8b88456457a91ae5:144",
+    "C": "43f523be8b88456457a91ae5:144",
+    "B": "43f523be8b88456457a91ae5:144"
+   },
+   "texts": "39cdb419c3174224386a7118:73",
+   "label": "ed710897871143a8beab4546:423",
+   "phone": "d266bb3705e21403fc38a44d:79",
+   "phoneLabel": "1d38f5e8345f3f5948ad522b:223",
+   "phoneMirror": "1b5108d1d4781fdc26d0e79f:213",
+   "grid": "dda617def371c73284c66922:615",
+   "pure": true
+  },
+  "made-up/group/badgeIcon": {
+   "runs": {
+    "A": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "f90ff1afc09a08bd9b3638a8:304"
+    },
+    "B": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "f90ff1afc09a08bd9b3638a8:304"
+    },
+    "C": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "f90ff1afc09a08bd9b3638a8:304"
+    },
+    "D": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "f90ff1afc09a08bd9b3638a8:304"
+    },
+    "E": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "f90ff1afc09a08bd9b3638a8:304"
+    },
+    "K": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "f90ff1afc09a08bd9b3638a8:304"
+    },
+    "M": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "shadow"
+     ],
+     "sha": "544956a871af567f6fbb6b85:427"
+    },
+    "N": {
+     "kind": "plain",
+     "changes": [
+      "position"
+     ],
+     "sha": "f90ff1afc09a08bd9b3638a8:304"
+    }
+   },
+   "chart": {
+    "A": "bfb6f40f926ba6dc436c91c7:22",
+    "C": "bfb6f40f926ba6dc436c91c7:22",
+    "B": "bfb6f40f926ba6dc436c91c7:22"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "d6a8428f671f4dffed5eabee:268",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "708244fd4e62fd12b49104f2:494",
+   "pure": true
+  },
+  "made-up/group/xButton": {
+   "runs": {
+    "A": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon"
+     ],
+     "sha": "3a877dc8a4b1f96d5dddde28:650"
+    },
+    "B": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon"
+     ],
+     "sha": "3a877dc8a4b1f96d5dddde28:650"
+    },
+    "C": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon"
+     ],
+     "sha": "3a877dc8a4b1f96d5dddde28:650"
+    },
+    "D": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon"
+     ],
+     "sha": "3a877dc8a4b1f96d5dddde28:650"
+    },
+    "E": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon"
+     ],
+     "sha": "3a877dc8a4b1f96d5dddde28:650"
+    },
+    "K": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon"
+     ],
+     "sha": "3a877dc8a4b1f96d5dddde28:650"
+    },
+    "M": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "shadow",
+      "text",
+      "icon"
+     ],
+     "sha": "4a975edeb4ca541c0167cca6:746"
+    },
+    "N": {
+     "kind": "button",
+     "changes": [
+      "position",
+      "text",
+      "icon"
+     ],
+     "sha": "3a877dc8a4b1f96d5dddde28:650"
+    }
+   },
+   "chart": {
+    "A": "f16a06b6b540dcc28c9f7b01:378",
+    "C": "f16a06b6b540dcc28c9f7b01:378",
+    "B": "f16a06b6b540dcc28c9f7b01:378"
+   },
+   "texts": "9da5e92328a65542ead0b0fb:170",
+   "label": "349c16d5f0abe4f10eacccc8:648",
+   "phone": "834660e2a5e8c2bf16150007:182",
+   "phoneLabel": "7c0cdfb4d8c1824dc11532b0:469",
+   "phoneMirror": "8a1e11b4147ff74f66cad03c:408",
+   "grid": "f43333a87e9bc0ee5663f235:824",
+   "pure": true
+  },
+  "made-up/group/xText": {
+   "runs": {
+    "A": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "ce62af5a9ae0169faed32c6c:553"
+    },
+    "B": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "ce62af5a9ae0169faed32c6c:553"
+    },
+    "C": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "ce62af5a9ae0169faed32c6c:553"
+    },
+    "D": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "ce62af5a9ae0169faed32c6c:553"
+    },
+    "E": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "ce62af5a9ae0169faed32c6c:553"
+    },
+    "K": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "ce62af5a9ae0169faed32c6c:553"
+    },
+    "M": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "shadow",
+      "text"
+     ],
+     "sha": "1fc416462d19019397c7e92a:676"
+    },
+    "N": {
+     "kind": "textbox",
+     "changes": [
+      "position",
+      "text"
+     ],
+     "sha": "ce62af5a9ae0169faed32c6c:553"
+    }
+   },
+   "chart": {
+    "A": "69f7d4d45f4d313146b856f9:257",
+    "C": "69f7d4d45f4d313146b856f9:257",
+    "B": "69f7d4d45f4d313146b856f9:257"
+   },
+   "texts": "3253581d3ff5057fed880c6b:223",
+   "label": "ddbe6f91c6f1510ef212362e:565",
+   "phone": "64133b4d3d6c5ff324c4ae64:241",
+   "phoneLabel": "d4d1b6485f7761c9c8aa9c40:393",
+   "phoneMirror": "85febac04bcc0b1da6a86095:326",
+   "grid": "110da6eca49158edee251c4b:701",
+   "pure": true
+  },
+  "made-up/bars/xBars": {
+   "runs": {
+    "A": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "600f032f6382369b5278a65b:983"
+    },
+    "B": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "600f032f6382369b5278a65b:983"
+    },
+    "C": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "600f032f6382369b5278a65b:983"
+    },
+    "D": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "600f032f6382369b5278a65b:983"
+    },
+    "E": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "600f032f6382369b5278a65b:983"
+    },
+    "K": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "title"
+     ],
+     "sha": "0b5412684053c0b908f907b3:835"
+    },
+    "M": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "shadow",
+      "axes",
+      "title"
+     ],
+     "sha": "a3a639e66a7084604f2ee3b2:1079"
+    },
+    "N": {
+     "kind": "bar",
+     "changes": [
+      "position",
+      "axes",
+      "title"
+     ],
+     "sha": "600f032f6382369b5278a65b:983"
+    }
+   },
+   "chart": {
+    "A": "7b326854261175f549f525eb:610",
+    "C": "7b326854261175f549f525eb:610",
+    "B": "7b326854261175f549f525eb:610"
+   },
+   "texts": "1dfcf2aaa210597ddcef2263:115",
+   "label": "97a74755ff3c20db5158ed3e:796",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "a5041debe435758ccddb1252:162",
+   "phoneMirror": "f3864f5e8875e54bcd1ecb9a:151",
+   "grid": "7def8686dc4d9a9c0cdbe879:912",
+   "pure": true
+  },
+  "made-up/bars/xBarNames": {
+   "runs": {
+    "A": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "alignment",
+      "title"
+     ],
+     "sha": "505343eacd200ee3a43700ee:895"
+    },
+    "B": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "alignment",
+      "title"
+     ],
+     "sha": "505343eacd200ee3a43700ee:895"
+    },
+    "C": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "alignment",
+      "title"
+     ],
+     "sha": "505343eacd200ee3a43700ee:895"
+    },
+    "D": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "alignment",
+      "title"
+     ],
+     "sha": "505343eacd200ee3a43700ee:895"
+    },
+    "E": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "alignment",
+      "title"
+     ],
+     "sha": "505343eacd200ee3a43700ee:895"
+    },
+    "K": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "alignment",
+      "title"
+     ],
+     "sha": "505343eacd200ee3a43700ee:895"
+    },
+    "M": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "shadow",
+      "alignment",
+      "title"
+     ],
+     "sha": "67b00335fb9d2edeffdb914b:991"
+    },
+    "N": {
+     "kind": "table",
+     "changes": [
+      "position",
+      "alignment",
+      "title"
+     ],
+     "sha": "505343eacd200ee3a43700ee:895"
+    }
+   },
+   "chart": {
+    "A": "10768c672b5b8e28b43d2499:215",
+    "C": "10768c672b5b8e28b43d2499:215",
+    "B": "10768c672b5b8e28b43d2499:215"
+   },
+   "texts": "dab5f5b46f2cc68a82060fe0:59",
+   "label": "006a0daffd11bf39260e2cc5:492",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "28603d72e79b3087ee6cf276:70",
+   "phoneMirror": "e1ac256aaea70a5c744bb31b:59",
+   "grid": "2c37082a61f72b0f9224165b:663",
+   "pure": true
+  },
+  "made-up/bars/xFlatMatrix": {
+   "runs": {
+    "A": {
+     "kind": "matrixAsTable",
+     "changes": [
+      "position",
+      "matrix as table",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "417af7f15955fbcd85bd1ce6:1366"
+    },
+    "B": {
+     "kind": "matrixAsTable",
+     "changes": [
+      "position",
+      "matrix as table",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "417af7f15955fbcd85bd1ce6:1366"
+    },
+    "C": {
+     "kind": "matrixAsTable",
+     "changes": [
+      "position",
+      "matrix as table",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "417af7f15955fbcd85bd1ce6:1366"
+    },
+    "D": {
+     "kind": "matrixAsTable",
+     "changes": [
+      "position",
+      "matrix as table",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "417af7f15955fbcd85bd1ce6:1366"
+    },
+    "E": {
+     "kind": "matrixAsTable",
+     "changes": [
+      "position",
+      "matrix as table",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "417af7f15955fbcd85bd1ce6:1366"
+    },
+    "K": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "values",
+      "title"
+     ],
+     "sha": "5f17967191c555f144e316f7:1110"
+    },
+    "M": {
+     "kind": "matrix",
+     "changes": [
+      "position",
+      "shadow",
+      "values",
+      "alignment",
+      "title"
+     ],
+     "sha": "4ebf91a7c649a87bb9052751:2072"
+    },
+    "N": {
+     "kind": "matrixAsTable",
+     "changes": [
+      "position",
+      "matrix as table",
+      "columns",
+      "alignment",
+      "title"
+     ],
+     "sha": "417af7f15955fbcd85bd1ce6:1366"
+    }
+   },
+   "chart": {
+    "A": "77ae792c66704c5cfbce8486:726",
+    "C": "77ae792c66704c5cfbce8486:726",
+    "B": "77ae792c66704c5cfbce8486:726"
+   },
+   "texts": "75d2a574c6e9d48e33a77463:175",
+   "label": "df1a03ac6e3541e53e78f89e:1116",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "c3d79ff79310245c5517a229:273",
+   "phoneMirror": "69b4bb40729279523e4e5cea:262",
+   "grid": "1da5254d47a1d0d811387bbe:4661",
+   "pure": true
+  },
+  "made-up/bars/xBroken": {
+   "runs": {
+    "A": {
+     "kind": "unreadable",
+     "changes": [
+      "position"
+     ],
+     "sha": "bd08fea3ec56127fb66202b7:276"
+    },
+    "B": {
+     "kind": "unreadable",
+     "changes": [
+      "position"
+     ],
+     "sha": "bd08fea3ec56127fb66202b7:276"
+    },
+    "C": {
+     "kind": "unreadable",
+     "changes": [
+      "position"
+     ],
+     "sha": "bd08fea3ec56127fb66202b7:276"
+    },
+    "D": {
+     "kind": "unreadable",
+     "changes": [
+      "position"
+     ],
+     "sha": "bd08fea3ec56127fb66202b7:276"
+    },
+    "E": {
+     "kind": "unreadable",
+     "changes": [
+      "position"
+     ],
+     "sha": "bd08fea3ec56127fb66202b7:276"
+    },
+    "K": {
+     "kind": "unreadable",
+     "changes": [
+      "position"
+     ],
+     "sha": "bd08fea3ec56127fb66202b7:276"
+    },
+    "M": {
+     "kind": "unreadable",
+     "changes": [
+      "position"
+     ],
+     "sha": "bd08fea3ec56127fb66202b7:276"
+    },
+    "N": {
+     "kind": "unreadable",
+     "changes": [
+      "position"
+     ],
+     "sha": "bd08fea3ec56127fb66202b7:276"
+    }
+   },
+   "chart": {
+    "A": "a4f14cf4b688620f7b1381c1:15",
+    "C": "a4f14cf4b688620f7b1381c1:15",
+    "B": "a4f14cf4b688620f7b1381c1:15"
+   },
+   "texts": "4f53cda18c2baa0c0354bb5f:2",
+   "label": "434170f3ad714e6bc004138d:234",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "f13a459c2aa989ac1908a9a9:16",
+   "phoneMirror": "74234e98afe7498fb5daf1f3:4",
+   "grid": "0f0d1f1a8746c44e2ec817d8:460",
+   "pure": true
+  },
+  "made-up/bars/xDonut": {
+   "runs": {
+    "A": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "legend order"
+     ],
+     "sha": "1b11d13f56c1b42c6f31ee25:1018"
+    },
+    "B": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "legend order"
+     ],
+     "sha": "1b11d13f56c1b42c6f31ee25:1018"
+    },
+    "C": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "legend order"
+     ],
+     "sha": "1b11d13f56c1b42c6f31ee25:1018"
+    },
+    "D": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "legend order"
+     ],
+     "sha": "1b11d13f56c1b42c6f31ee25:1018"
+    },
+    "E": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "legend order"
+     ],
+     "sha": "1b11d13f56c1b42c6f31ee25:1018"
+    },
+    "K": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "legend order"
+     ],
+     "sha": "1b11d13f56c1b42c6f31ee25:1018"
+    },
+    "M": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "shadow",
+      "legend order"
+     ],
+     "sha": "bf2834da21549b96bd537471:1141"
+    },
+    "N": {
+     "kind": "plain",
+     "changes": [
+      "position",
+      "legend order"
+     ],
+     "sha": "1b11d13f56c1b42c6f31ee25:1018"
+    }
+   },
+   "chart": {
+    "A": "11a9d2e683014a119c926fde:457",
+    "C": "11a9d2e683014a119c926fde:457",
+    "B": "11a9d2e683014a119c926fde:457"
+   },
+   "texts": "5a6dec55cfc96b320de6992d:129",
+   "label": "9acbb072ec8539ab25e6f12c:786",
+   "phone": "4f53cda18c2baa0c0354bb5f:2",
+   "phoneLabel": "ff324f4b6bb9cd7fe0fa944b:155",
+   "phoneMirror": "a168cf0dd15a826d9edf67c4:144",
+   "grid": "02f43230bf2b754eccb0d1dd:902",
+   "pure": true
+  }
+ },
+ "pages": {
+  "twin-project/p1overview": {
+   "runs": {
+    "A": {
+     "sha": "8c705fd77e952af3a6899314:8147",
+     "kinds": {
+      "button": 2,
+      "plain": 2,
+      "column": 2,
+      "group": 2,
+      "navigator": 1,
+      "slicer": 1,
+      "textbox": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "8c705fd77e952af3a6899314:8147",
+     "kinds": {
+      "button": 2,
+      "plain": 2,
+      "column": 2,
+      "group": 2,
+      "navigator": 1,
+      "slicer": 1,
+      "textbox": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "8c705fd77e952af3a6899314:8147",
+     "kinds": {
+      "button": 2,
+      "plain": 2,
+      "column": 2,
+      "group": 2,
+      "navigator": 1,
+      "slicer": 1,
+      "textbox": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "twin-project/p2details": {
+   "runs": {
+    "A": {
+     "sha": "fdb808465d45df0cb527be78:4834",
+     "kinds": {
+      "bar": 1,
+      "button": 1,
+      "custom": 1,
+      "textbox": 1,
+      "table": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "fdb808465d45df0cb527be78:4834",
+     "kinds": {
+      "bar": 1,
+      "button": 1,
+      "custom": 1,
+      "textbox": 1,
+      "table": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "fdb808465d45df0cb527be78:4834",
+     "kinds": {
+      "bar": 1,
+      "button": 1,
+      "custom": 1,
+      "textbox": 1,
+      "table": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "twin-project/p3tooltip": {
+   "runs": {
+    "A": {
+     "sha": "1f056f2a1ccea3a057126848:605",
+     "kinds": {
+      "plain": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "1f056f2a1ccea3a057126848:605",
+     "kinds": {
+      "plain": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "1f056f2a1ccea3a057126848:605",
+     "kinds": {
+      "plain": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "health-project/1191ff80f72c1a663a1b": {
+   "runs": {
+    "A": {
+     "sha": "139be6ad97baf38e9b6ba299:1643",
+     "kinds": {
+      "table": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "139be6ad97baf38e9b6ba299:1643",
+     "kinds": {
+      "table": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "139be6ad97baf38e9b6ba299:1643",
+     "kinds": {
+      "table": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[\"health-test-report-background.png\"],\"has\":true,\"blank\":false}",
+   "pure": true
+  },
+  "health-project/b23cd988888cb1c32ad5": {
+   "runs": {
+    "A": {
+     "sha": "560bb261d7fccfd4d56f6011:1139",
+     "kinds": {
+      "textbox": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "560bb261d7fccfd4d56f6011:1139",
+     "kinds": {
+      "textbox": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "560bb261d7fccfd4d56f6011:1139",
+     "kinds": {
+      "textbox": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "hm1/F1-1.json#0": {
+   "runs": {
+    "A": {
+     "sha": "829071f180ca199ecb179f62:1227",
+     "kinds": {
+      "matrix": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "829071f180ca199ecb179f62:1227",
+     "kinds": {
+      "matrix": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "829071f180ca199ecb179f62:1227",
+     "kinds": {
+      "matrix": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "hm1/M1-1.json#0": {
+   "runs": {
+    "A": {
+     "sha": "91127f64e847a6c0a1b33d9c:1395",
+     "kinds": {
+      "matrix": 1,
+      "plain": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "91127f64e847a6c0a1b33d9c:1395",
+     "kinds": {
+      "matrix": 1,
+      "plain": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "91127f64e847a6c0a1b33d9c:1395",
+     "kinds": {
+      "matrix": 1,
+      "plain": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "hm1/N1-25.json#0": {
+   "runs": {
+    "A": {
+     "sha": "91127f64e847a6c0a1b33d9c:1395",
+     "kinds": {
+      "matrix": 1,
+      "plain": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "91127f64e847a6c0a1b33d9c:1395",
+     "kinds": {
+      "matrix": 1,
+      "plain": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "91127f64e847a6c0a1b33d9c:1395",
+     "kinds": {
+      "matrix": 1,
+      "plain": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "hm2/A1-1.json#0": {
+   "runs": {
+    "A": {
+     "sha": "110cebbd0cce508190df04ab:2140",
+     "kinds": {
+      "matrix": 1,
+      "column": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "110cebbd0cce508190df04ab:2140",
+     "kinds": {
+      "matrix": 1,
+      "column": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "110cebbd0cce508190df04ab:2140",
+     "kinds": {
+      "matrix": 1,
+      "column": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "twin-fuzz/B1-1.json#0": {
+   "runs": {
+    "A": {
+     "sha": "44be93c18f5e9a53c72dbec4:1284",
+     "kinds": {
+      "column": 1,
+      "button": 1,
+      "slicer": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "44be93c18f5e9a53c72dbec4:1284",
+     "kinds": {
+      "column": 1,
+      "button": 1,
+      "slicer": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "44be93c18f5e9a53c72dbec4:1284",
+     "kinds": {
+      "column": 1,
+      "button": 1,
+      "slicer": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "twin-fuzz/B1-3.json#0": {
+   "runs": {
+    "A": {
+     "sha": "f343cdaf42f6ca61925ea352:1030",
+     "kinds": {
+      "matrix": 1,
+      "bar": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "f343cdaf42f6ca61925ea352:1030",
+     "kinds": {
+      "matrix": 1,
+      "bar": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "f343cdaf42f6ca61925ea352:1030",
+     "kinds": {
+      "matrix": 1,
+      "bar": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "twin-fuzz/B2-1.json#0": {
+   "runs": {
+    "A": {
+     "sha": "5e308a805eff55d98d25a96f:843",
+     "kinds": {
+      "matrix": 1,
+      "table": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "5e308a805eff55d98d25a96f:843",
+     "kinds": {
+      "matrix": 1,
+      "table": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "5e308a805eff55d98d25a96f:843",
+     "kinds": {
+      "matrix": 1,
+      "table": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "twin-fuzz/B2new-1.json#0": {
+   "runs": {
+    "A": {
+     "sha": "f8c8e3152aba8e15fdd3cce3:1819",
+     "kinds": {
+      "column": 2,
+      "matrix": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "f8c8e3152aba8e15fdd3cce3:1819",
+     "kinds": {
+      "column": 2,
+      "matrix": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "f8c8e3152aba8e15fdd3cce3:1819",
+     "kinds": {
+      "column": 2,
+      "matrix": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "twin-fuzz/B2new-2.json#0": {
+   "runs": {
+    "A": {
+     "sha": "7ae2ca74f3fce42b60e08e16:1170",
+     "kinds": {
+      "plain": 1,
+      "matrix": 1,
+      "button": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "7ae2ca74f3fce42b60e08e16:1170",
+     "kinds": {
+      "plain": 1,
+      "matrix": 1,
+      "button": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "7ae2ca74f3fce42b60e08e16:1170",
+     "kinds": {
+      "plain": 1,
+      "matrix": 1,
+      "button": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "twin-fuzz/B2new-8.json#0": {
+   "runs": {
+    "A": {
+     "sha": "271b99810e5c853d2cdd1e26:1603",
+     "kinds": {
+      "group": 1,
+      "column": 1,
+      "matrix": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "271b99810e5c853d2cdd1e26:1603",
+     "kinds": {
+      "group": 1,
+      "column": 1,
+      "matrix": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "271b99810e5c853d2cdd1e26:1603",
+     "kinds": {
+      "group": 1,
+      "column": 1,
+      "matrix": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "twin-fuzz/B3-1.json#0": {
+   "runs": {
+    "A": {
+     "sha": "476784e4d38ce43b68776c49:432",
+     "kinds": {
+      "button": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "476784e4d38ce43b68776c49:432",
+     "kinds": {
+      "button": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "476784e4d38ce43b68776c49:432",
+     "kinds": {
+      "button": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "twin-fuzz/M1-1.json#0": {
+   "runs": {
+    "A": {
+     "sha": "5f8b5cc51bef3b7cdca447b3:1049",
+     "kinds": {
+      "button": 1,
+      "group": 1,
+      "textbox": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "5f8b5cc51bef3b7cdca447b3:1049",
+     "kinds": {
+      "button": 1,
+      "group": 1,
+      "textbox": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "5f8b5cc51bef3b7cdca447b3:1049",
+     "kinds": {
+      "button": 1,
+      "group": 1,
+      "textbox": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "twin-fuzz/V1-1.json#0": {
+   "runs": {
+    "A": {
+     "sha": "6394da8b009afeab7af46fc3:781",
+     "kinds": {
+      "matrix": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "6394da8b009afeab7af46fc3:781",
+     "kinds": {
+      "matrix": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "6394da8b009afeab7af46fc3:781",
+     "kinds": {
+      "matrix": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "made-up/charts": {
+   "runs": {
+    "A": {
+     "sha": "d4fc8e643129385bec4b67a9:10750",
+     "kinds": {
+      "column": 4,
+      "bar": 1,
+      "waterfallNative": 1,
+      "table": 2,
+      "matrix": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "47e344d4313c04416b279f71:10835",
+     "kinds": {
+      "column": 4,
+      "bar": 1,
+      "waterfallNative": 1,
+      "table": 2,
+      "matrix": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "729d016b016914bf1150964c:17414",
+     "kinds": {
+      "column": 4,
+      "bar": 1,
+      "waterfall": 1,
+      "table": 2,
+      "matrix": 1
+     },
+     "units": {
+      "on": [],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  },
+  "made-up/group": {
+   "runs": {
+    "A": {
+     "sha": "ebcefac2dd0af10c4ddfde41:3575",
+     "kinds": {
+      "other": 1,
+      "newCard": 1,
+      "textbox": 2,
+      "plain": 1,
+      "button": 1
+     },
+     "units": {
+      "on": [
+       {
+        "visual": "badgeUp",
+        "host": "tile"
+       },
+       {
+        "visual": "badgeIcon",
+        "host": "tile"
+       }
+      ],
+      "bars": []
+     }
+    },
+    "C": {
+     "sha": "ebcefac2dd0af10c4ddfde41:3575",
+     "kinds": {
+      "other": 1,
+      "newCard": 1,
+      "textbox": 2,
+      "plain": 1,
+      "button": 1
+     },
+     "units": {
+      "on": [
+       {
+        "visual": "badgeUp",
+        "host": "tile"
+       },
+       {
+        "visual": "badgeIcon",
+        "host": "tile"
+       }
+      ],
+      "bars": []
+     }
+    },
+    "D": {
+     "sha": "ebcefac2dd0af10c4ddfde41:3575",
+     "kinds": {
+      "other": 1,
+      "newCard": 1,
+      "textbox": 2,
+      "plain": 1,
+      "button": 1
+     },
+     "units": {
+      "on": [
+       {
+        "visual": "badgeUp",
+        "host": "tile"
+       },
+       {
+        "visual": "badgeIcon",
+        "host": "tile"
+       }
+      ],
+      "bars": []
+     }
+    }
+   },
+   "units": "{\"on\":[{\"visual\":\"badgeUp\",\"host\":\"tile\"},{\"visual\":\"badgeIcon\",\"host\":\"tile\"}],\"bars\":[]}",
+   "picture": "{\"images\":[\"bg.png\"],\"has\":true,\"blank\":false}",
+   "pure": true
+  },
+  "made-up/bars": {
+   "runs": {
+    "A": {
+     "sha": "7afb4c09174004ca4312cdb9:4315",
+     "kinds": {
+      "bar": 1,
+      "table": 1,
+      "matrixAsTable": 1,
+      "unreadable": 1,
+      "plain": 1
+     },
+     "units": {
+      "on": [],
+      "bars": [
+       {
+        "bars": "xBars",
+        "names": "xBarNames"
+       }
+      ]
+     }
+    },
+    "C": {
+     "sha": "7afb4c09174004ca4312cdb9:4315",
+     "kinds": {
+      "bar": 1,
+      "table": 1,
+      "matrixAsTable": 1,
+      "unreadable": 1,
+      "plain": 1
+     },
+     "units": {
+      "on": [],
+      "bars": [
+       {
+        "bars": "xBars",
+        "names": "xBarNames"
+       }
+      ]
+     }
+    },
+    "D": {
+     "sha": "7afb4c09174004ca4312cdb9:4315",
+     "kinds": {
+      "bar": 1,
+      "table": 1,
+      "matrixAsTable": 1,
+      "unreadable": 1,
+      "plain": 1
+     },
+     "units": {
+      "on": [],
+      "bars": [
+       {
+        "bars": "xBars",
+        "names": "xBarNames"
+       }
+      ]
+     }
+    }
+   },
+   "units": "{\"on\":[],\"bars\":[{\"bars\":\"xBars\",\"names\":\"xBarNames\"}]}",
+   "picture": "{\"images\":[],\"has\":false,\"blank\":false}",
+   "pure": true
+  }
+ }
+}

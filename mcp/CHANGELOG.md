@@ -8,6 +8,9 @@ package's manifest; this file says what is in it.
 - **Inside the MCP, the readers:** finding which model a path or a name means, and working out what a report holds
   (its pages, visuals, fields and texts), each have a file of their own; every path is still checked inside your working
   folder before anything is read, and read_model and read_report answer exactly as before.
+- **Inside the Arabic twin, the charts, the texts and the badges:** the right-to-left rules of the charts, the texts a
+  reader sees with their Arabic, and the visuals mirrored as one (a badge on its tile, a bar list and its names) each
+  have a file of their own; every twin page, phone layout and right-to-left chart is exactly what it was before.
 - **Inside the MCP, the redesign's text and changes:** the consistent copy's text and the changes a redesign makes to its
   copy (places, titles, theme colours, the copy's name) each have a file of their own; every redesign plan, check and
   written file is exactly what it was before.
