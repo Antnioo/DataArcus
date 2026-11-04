@@ -16,15 +16,17 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
 const Rules = require('../../assets/js/report-rules.js');
+// (0.3.2 DD1C) the frame a visual is placed in: mirror-units.js, the one home of that rule
+const { frameWidth, byNameOf } = require('../../assets/js/mirror-units.js');
 
 // A button narrower than its Arabic text (check_report's buttonNeed) is widened: first toward its end (its left in the
 // twin), the visuals beside it in its row moving with it, then toward its start; inside its page or group, never over a
 // visual it did not overlap. A shape just under or over it (the page's underline) follows it. What can't fit is said.
 export function fitButtons(page, visuals, ctx, at) {
-  const out = { buttons: [], buttonsCut: [] }, byName = {};
-  visuals.forEach((v) => { if (isObj(v) && v.name != null) byName[v.name] = v; });
+  const out = { buttons: [], buttonsCut: [] };
   const parentOf = (v) => (v.parentGroupName != null ? String(v.parentGroupName) : '');
-  const widthOf = (v) => { const g = v.parentGroupName != null ? byName[v.parentGroupName] : null; return g ? (posOf(g) || {}).width : isObj(page) ? page.width : NaN; };
+  // (0.3.2 DD1C) the frame: mirror-units.js frameWidth, the one rule (undefined: unknown, the button is left as it is)
+  const byName = byNameOf(visuals), widthOf = (v) => frameWidth(page, byName, v);
   const vOver = (a, b) => a.y < b.y + b.height - 0.5 && b.y < a.y + a.height - 0.5;
   const attachedTo = (v) => { const p = posOf(v); return visuals.filter((s) => s !== v && /^(shape|basicShape)$/.test(typeOf(s)) && parentOf(s) === parentOf(v) && posOf(s)).filter((s) => { const q = posOf(s);
     return !vOver(p, q) && q.x >= p.x - 2 && q.x + q.width <= p.x + p.width + 2 && q.width <= p.width && Math.min(Math.abs(q.y - (p.y + p.height)), Math.abs(p.y - (q.y + q.height))) <= 8; }); };

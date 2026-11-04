@@ -480,7 +480,7 @@
   function mirrorPage(page, visuals, opts) {
     // (mirror-units.js, 0.3.2 SP39) the visuals by name, the width each is placed in, the units and where each member goes
     const list = Array.isArray(visuals) ? visuals : [], byName = Units.byNameOf(list);
-    const widthOf = (v) => Units.widthOf(page, byName, v);
+    const widthOf = (v) => Units.frameWidth(page, byName, v);
     let units; try { units = unitsOf(list); } catch (e) { units = { on: [], bars: [] }; }
     const { at, keepBars } = Units.placesOf(units, byName, page);
     const kinds = {}, custom = [], unreadable = [], measures = [], waterfallsKept = [], kept = [], asTables = [], out = list.map((v) => {
