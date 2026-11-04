@@ -21,6 +21,8 @@ import './test-env.mjs';
 //   N1   nameOf on long names, suffixes and taken names
 //   V1-V3 copies outside the plan refused with the base's message (a text setting removed the plan does not list; a
 //        theme visual style the plan does not set; a removed setting given another value)
+//   T1-T3 (after extraction 1) lib/redesign-text.mjs exports the text restyling, redesign.mjs imports it; it reads and
+//        writes no file; textPlan twice on one inventory gives the same answer and leaves the inventory unchanged
 //   node test-0.3.2-sp38.mjs
 import fs from 'node:fs';
 import os from 'node:os';
@@ -171,6 +173,23 @@ for (const [name] of CASES) {
 chk(() => JSON.stringify(got.N1) === JSON.stringify(gold.N1), () => `N1. nameOf is the base's: ${first(got.N1, gold.N1)}`);
 for (const [name] of VARIANTS) chk(() => /^Nothing was written: the copy check found /.test(refused[name]) && refused[name] === gold.refused[name],
   () => `${name.split(' ')[0]}. "${name.replace(/^V\d+ /, '')}" is refused with the base's message: now "${refused[name]}", recorded "${gold.refused[name]}"`);
+
+// ---------- after extraction 1 (SP38): the text restyling is in lib/redesign-text.mjs ----------
+const TX = await import('./lib/redesign-text.mjs'), RR = await import('./lib/read-report.mjs');
+const srcOf = (f) => fs.readFileSync(path.join(HERE, 'lib', f), 'utf8');
+const fsrc = srcOf('redesign.mjs'), tsrc = srcOf('redesign-text.mjs');
+const TEXT_MOVED = ['function textPlan', 'function textWhy', 'const KEEP =', 'const twiceOf =', 'function reasonOf', 'const schemaOf ='];
+chk(() => ['textPlan', 'textWhy', 'KEEP', 'twiceOf', 'reasonOf', 'schemaOf'].every((k) => TX[k] !== undefined) && !TEXT_MOVED.filter((d) => fsrc.includes(d)).length && /from '\.\/redesign-text\.mjs';/.test(fsrc),
+  () => `T1. lib/redesign-text.mjs exports the text restyling and redesign.mjs imports it (no longer defines it): still defined ${JSON.stringify(TEXT_MOVED.filter((d) => fsrc.includes(d)))}`);
+chk(() => !/from 'node:(fs|path|fs\/promises|child_process)'|writeTree|readFileSync|writeFileSync|readJson|readBytes/.test(tsrc),
+  () => 'T2. lib/redesign-text.mjs reads and writes no file (report.json is read by the facade and handed in)');
+// textPlan on S3's inventory, twice: the same answer, the inventory unchanged (pure)
+const S3d = path.join(ROOT, 's3', 'Twin Sales.Report'), files3 = walk(S3d), inv3 = RR.inventory(RR.diskSource({ reportDir: S3d }, { big: [], deep: 0 }), 'Twin Sales');
+const rep3 = rd(path.join(S3d, 'definition', 'report.json')), th3 = inv3.themeFile, inv3Before = JSON.stringify(inv3);
+const tp = () => { const r = TX.textPlan(inv3, files3, th3, 'report', rep3); return JSON.stringify({ out: r.out, patches: r.patches, problems: r.problems, perVisual: [...r.perVisual].map(([v, l]) => [v.id, l]) }); };
+const tp1 = tp(), tp2 = tp();
+chk(() => tp1 === tp2 && JSON.stringify(inv3) === inv3Before && JSON.parse(tp1).patches.length === got['S3 consistentText report: own fonts, a text box, the theme\'s styles'].plan.patches.filter((x) => x.op === 'remove' || /visualStyles/.test(x.pointer || '')).length,
+  () => `T3. textPlan twice on one inventory: the same answer, the inventory unchanged, its patches the plan's text patches: ${tp1.slice(0, 300)}`);
 
 fs.rmSync(TMP, { recursive: true, force: true });
 if (problems.length) { console.log(`FAIL script=test-0.3.2-sp38.mjs cause=${problems[0].slice(0, 300).replace(/\s+/g, ' ')}`); problems.forEach((x) => console.log('  - ' + x)); console.log(`FAIL  sp38  ${checks - problems.length} of ${checks} checks`); process.exit(1); }
