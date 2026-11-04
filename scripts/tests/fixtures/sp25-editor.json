@@ -1,0 +1,3812 @@
+{
+ "en": {
+  "E1": {
+   "session": "add layers, undo, undo, redo",
+   "steps": [
+    {
+     "step": "start __blank",
+     "layers": [],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "8f191c3b93d17e9c164e7ba7:458",
+     "svg": "0b03c292076d51162251ffb1:120",
+     "dax": "c8e6683512bf6dd0593c89af:530"
+    },
+    {
+     "step": "add rect",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "fc5c0cbbcc24646936923ac9:546",
+     "svg": "16ba77962b500f2fb27cae0f:210",
+     "dax": "05b0ff3d381b9aed87621b44:598"
+    },
+    {
+     "step": "add circle",
+     "layers": [
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 1,
+     "title": "Circle",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"Circle 1\",\"cx\":120,\"cy\":40,\"r\":20,\"fill\":\"#6c5ce7\"}",
+     "saved": "3bcd1944cecf3b9de1b91bcd:623",
+     "svg": "9badbf59250e0b5b8939b48d:284",
+     "dax": "3187ca2877a20d1779fd6ab6:648"
+    },
+    {
+     "step": "add text",
+     "layers": [
+      "2:Text 1",
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 2,
+     "title": "Text",
+     "undo": true,
+     "redo": false,
+     "handles": "fs",
+     "selbox": true,
+     "layer": "{\"type\":\"text\",\"name\":\"Text 1\",\"x\":120,\"y\":45,\"size\":14,\"weight\":600,\"anchor\":\"middle\",\"fill\":\"#f8fafc\",\"text\":\"Text\"}",
+     "saved": "ccfa21dc57611fc142ced75f:742",
+     "svg": "d178f2daef118e2f02b77a45:438",
+     "dax": "9dcdfd653ebcdcfb3392195e:786"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 1,
+     "title": "Circle",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"Circle 1\",\"cx\":120,\"cy\":40,\"r\":20,\"fill\":\"#6c5ce7\"}",
+     "saved": "3bcd1944cecf3b9de1b91bcd:623",
+     "svg": "9badbf59250e0b5b8939b48d:284",
+     "dax": "3187ca2877a20d1779fd6ab6:648"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": true,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "fc5c0cbbcc24646936923ac9:546",
+     "svg": "16ba77962b500f2fb27cae0f:210",
+     "dax": "05b0ff3d381b9aed87621b44:598"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": true,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "3bcd1944cecf3b9de1b91bcd:623",
+     "svg": "9badbf59250e0b5b8939b48d:284",
+     "dax": "3187ca2877a20d1779fd6ab6:648"
+    },
+    {
+     "step": "add ring after a redo (the redo stack is cleared)",
+     "layers": [
+      "2:Progress ring 1",
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 2,
+     "title": "Progress ring",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Progress ring 1\",\"cx\":120,\"cy\":40,\"r\":30,\"sw\":8,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"p\":0.75}",
+     "saved": "6cb14c2c94fe9cfe7df549c7:753",
+     "svg": "f9bfbb56932001b43981e620:562",
+     "dax": "a22b648f9ba05bfb9f1e53da:896"
+    },
+    {
+     "step": "Control+Y with nothing to redo",
+     "layers": [
+      "2:Progress ring 1",
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 2,
+     "title": "Progress ring",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Progress ring 1\",\"cx\":120,\"cy\":40,\"r\":30,\"sw\":8,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"p\":0.75}",
+     "saved": "6cb14c2c94fe9cfe7df549c7:753",
+     "svg": "f9bfbb56932001b43981e620:562",
+     "dax": "a22b648f9ba05bfb9f1e53da:896"
+    }
+   ]
+  },
+  "E2": {
+   "session": "typing: one undo step per field visit",
+   "steps": [
+    {
+     "step": "start ring",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "0d8f6903a0803244039b96df:1072",
+     "svg": "65bc7c32e6f3c8f44ec626ee:728",
+     "dax": "e3b972bff162da7139d9b104:1702"
+    },
+    {
+     "step": "pick the ring",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": 0,
+     "title": "Progress ring",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Ring\",\"cx\":60,\"cy\":60,\"r\":46,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "0d8f6903a0803244039b96df:1072",
+     "svg": "65bc7c32e6f3c8f44ec626ee:728",
+     "dax": "e3b972bff162da7139d9b104:1702"
+    },
+    {
+     "step": "type the X",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": 0,
+     "title": "Progress ring",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Ring\",\"cx\":47,\"cy\":60,\"r\":46,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "119c913732518205c04a4f02:1072",
+     "svg": "a9d1f32f40eeb202988c0623:728",
+     "dax": "4ec6415fb4025192cc8b1044:1702"
+    },
+    {
+     "step": "type the radius",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": 0,
+     "title": "Progress ring",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Ring\",\"cx\":47,\"cy\":60,\"r\":33,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "bfe6aa6bfb89cab6ce4f5748:1072",
+     "svg": "38adf2cc383975b6c33b469a:728",
+     "dax": "22d296799b95aec372307bb8:1702"
+    },
+    {
+     "step": "type the name",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:My ring"
+     ],
+     "sel": 0,
+     "title": "Progress ring",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"My ring\",\"cx\":47,\"cy\":60,\"r\":33,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "84167995aa33acbdfe2cbb44:1075",
+     "svg": "38adf2cc383975b6c33b469a:728",
+     "dax": "0a4ff536ee5dc7584713104f:1705"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": 0,
+     "title": "Progress ring",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Ring\",\"cx\":47,\"cy\":60,\"r\":33,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "bfe6aa6bfb89cab6ce4f5748:1072",
+     "svg": "38adf2cc383975b6c33b469a:728",
+     "dax": "22d296799b95aec372307bb8:1702"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": 0,
+     "title": "Progress ring",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Ring\",\"cx\":47,\"cy\":60,\"r\":46,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "119c913732518205c04a4f02:1072",
+     "svg": "a9d1f32f40eeb202988c0623:728",
+     "dax": "4ec6415fb4025192cc8b1044:1702"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": 0,
+     "title": "Progress ring",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Ring\",\"cx\":47,\"cy\":60,\"r\":33,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "bfe6aa6bfb89cab6ce4f5748:1072",
+     "svg": "38adf2cc383975b6c33b469a:728",
+     "dax": "22d296799b95aec372307bb8:1702"
+    },
+    {
+     "step": "type the radius again",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": 0,
+     "title": "Progress ring",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Ring\",\"cx\":47,\"cy\":60,\"r\":21,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "a1c9409251a39caf33b8cbda:1072",
+     "svg": "9a73da6233431bd869a685f6:728",
+     "dax": "76aa5c9807ce4b46536914b8:1702"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": 0,
+     "title": "Progress ring",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Ring\",\"cx\":47,\"cy\":60,\"r\":33,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "bfe6aa6bfb89cab6ce4f5748:1072",
+     "svg": "38adf2cc383975b6c33b469a:728",
+     "dax": "22d296799b95aec372307bb8:1702"
+    }
+   ]
+  },
+  "E3": {
+   "session": "a grouped drag undoes in one step",
+   "steps": [
+    {
+     "step": "start __blank",
+     "layers": [],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "8f191c3b93d17e9c164e7ba7:458",
+     "svg": "0b03c292076d51162251ffb1:120",
+     "dax": "c8e6683512bf6dd0593c89af:530"
+    },
+    {
+     "step": "add rect",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "fc5c0cbbcc24646936923ac9:546",
+     "svg": "16ba77962b500f2fb27cae0f:210",
+     "dax": "05b0ff3d381b9aed87621b44:598"
+    },
+    {
+     "step": "add circle",
+     "layers": [
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 1,
+     "title": "Circle",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"Circle 1\",\"cx\":120,\"cy\":40,\"r\":20,\"fill\":\"#6c5ce7\"}",
+     "saved": "3bcd1944cecf3b9de1b91bcd:623",
+     "svg": "9badbf59250e0b5b8939b48d:284",
+     "dax": "3187ca2877a20d1779fd6ab6:648"
+    },
+    {
+     "step": "drag the circle in 4 moves",
+     "layers": [
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 1,
+     "title": "Circle",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"Circle 1\",\"cx\":150,\"cy\":28,\"r\":20,\"fill\":\"#6c5ce7\"}",
+     "saved": "a4885a04c816dfaab8163a62:623",
+     "svg": "0a624cf784070c6df3b972df:284",
+     "dax": "8508157f103000445bc1d49e:648"
+    },
+    {
+     "step": "drag the rect in 6 moves",
+     "layers": [
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":40,\"y\":50,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "0616f7041b05051c5a8ec412:623",
+     "svg": "5de70a59e6888d49038745b8:284",
+     "dax": "03c2d2ba7d13f72e0be89237:648"
+    },
+    {
+     "step": "undo (the whole rect drag)",
+     "layers": [
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": true,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "a4885a04c816dfaab8163a62:623",
+     "svg": "0a624cf784070c6df3b972df:284",
+     "dax": "8508157f103000445bc1d49e:648"
+    },
+    {
+     "step": "undo (the whole circle drag)",
+     "layers": [
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": true,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "3bcd1944cecf3b9de1b91bcd:623",
+     "svg": "9badbf59250e0b5b8939b48d:284",
+     "dax": "3187ca2877a20d1779fd6ab6:648"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": true,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "a4885a04c816dfaab8163a62:623",
+     "svg": "0a624cf784070c6df3b972df:284",
+     "dax": "8508157f103000445bc1d49e:648"
+    },
+    {
+     "step": "a click without a move (no step)",
+     "layers": [
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 1,
+     "title": "Circle",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"Circle 1\",\"cx\":150,\"cy\":28,\"r\":20,\"fill\":\"#6c5ce7\"}",
+     "saved": "a4885a04c816dfaab8163a62:623",
+     "svg": "0a624cf784070c6df3b972df:284",
+     "dax": "8508157f103000445bc1d49e:648"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 1,
+     "title": "Circle",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"Circle 1\",\"cx\":120,\"cy\":40,\"r\":20,\"fill\":\"#6c5ce7\"}",
+     "saved": "3bcd1944cecf3b9de1b91bcd:623",
+     "svg": "9badbf59250e0b5b8939b48d:284",
+     "dax": "3187ca2877a20d1779fd6ab6:648"
+    }
+   ]
+  },
+  "E4": {
+   "session": "resize by handles",
+   "steps": [
+    {
+     "step": "start __blank",
+     "layers": [],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "8f191c3b93d17e9c164e7ba7:458",
+     "svg": "0b03c292076d51162251ffb1:120",
+     "dax": "c8e6683512bf6dd0593c89af:530"
+    },
+    {
+     "step": "add rect",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "fc5c0cbbcc24646936923ac9:546",
+     "svg": "16ba77962b500f2fb27cae0f:210",
+     "dax": "05b0ff3d381b9aed87621b44:598"
+    },
+    {
+     "step": "resize se",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":110,\"h\":32,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "c31500263895f26c78b48009:547",
+     "svg": "ba9fa45a02227c23e76fa6d9:211",
+     "dax": "feb8b4fa610a6db176939341:599"
+    },
+    {
+     "step": "resize e",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":90,\"h\":32,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "79a8422f089130be39e8393d:546",
+     "svg": "b08f52a942387f5e6af90109:210",
+     "dax": "ec71fa7fe8f586350896f804:598"
+    },
+    {
+     "step": "add circle",
+     "layers": [
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 1,
+     "title": "Circle",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"Circle 1\",\"cx\":120,\"cy\":40,\"r\":20,\"fill\":\"#6c5ce7\"}",
+     "saved": "91ecf50822919c40ba107803:623",
+     "svg": "572c262af405b65aca5e187a:284",
+     "dax": "ed6b5edad72be260d40f384b:648"
+    },
+    {
+     "step": "resize r",
+     "layers": [
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 1,
+     "title": "Circle",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"Circle 1\",\"cx\":120,\"cy\":40,\"r\":29,\"fill\":\"#6c5ce7\"}",
+     "saved": "5f0b2261a7f0fe5c37a02839:623",
+     "svg": "338af7989677556c32547ff5:284",
+     "dax": "245166ab4942312b257dbbad:648"
+    },
+    {
+     "step": "add line",
+     "layers": [
+      "2:Line 1",
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 2,
+     "title": "Line",
+     "undo": true,
+     "redo": false,
+     "handles": "p1 p2",
+     "selbox": true,
+     "layer": "{\"type\":\"line\",\"name\":\"Line 1\",\"x1\":60,\"y1\":40,\"x2\":180,\"y2\":40,\"stroke\":\"#94a3b8\",\"sw\":2,\"cap\":\"round\"}",
+     "saved": "17f0d31b8ba2ecdc00bb7876:728",
+     "svg": "ea5e359500269a04c2890a4e:405",
+     "dax": "a0a0bc1fdc2c3b6de48c89c3:747"
+    },
+    {
+     "step": "move p2",
+     "layers": [
+      "2:Line 1",
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 2,
+     "title": "Line",
+     "undo": true,
+     "redo": false,
+     "handles": "p1 p2",
+     "selbox": true,
+     "layer": "{\"type\":\"line\",\"name\":\"Line 1\",\"x1\":60,\"y1\":40,\"x2\":195,\"y2\":60,\"stroke\":\"#94a3b8\",\"sw\":2,\"cap\":\"round\"}",
+     "saved": "2a789f3ebb3ab586203e07ff:728",
+     "svg": "e59421b0f7304305d254e239:405",
+     "dax": "14238230a82464eebdf528bc:747"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "2:Line 1",
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 2,
+     "title": "Line",
+     "undo": true,
+     "redo": true,
+     "handles": "p1 p2",
+     "selbox": true,
+     "layer": "{\"type\":\"line\",\"name\":\"Line 1\",\"x1\":60,\"y1\":40,\"x2\":180,\"y2\":40,\"stroke\":\"#94a3b8\",\"sw\":2,\"cap\":\"round\"}",
+     "saved": "17f0d31b8ba2ecdc00bb7876:728",
+     "svg": "ea5e359500269a04c2890a4e:405",
+     "dax": "a0a0bc1fdc2c3b6de48c89c3:747"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 1,
+     "title": "Circle",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"Circle 1\",\"cx\":120,\"cy\":40,\"r\":29,\"fill\":\"#6c5ce7\"}",
+     "saved": "5f0b2261a7f0fe5c37a02839:623",
+     "svg": "338af7989677556c32547ff5:284",
+     "dax": "245166ab4942312b257dbbad:648"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 1,
+     "title": "Circle",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"Circle 1\",\"cx\":120,\"cy\":40,\"r\":20,\"fill\":\"#6c5ce7\"}",
+     "saved": "91ecf50822919c40ba107803:623",
+     "svg": "572c262af405b65aca5e187a:284",
+     "dax": "ed6b5edad72be260d40f384b:648"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "1:Circle 1",
+      "0:Rectangle 1"
+     ],
+     "sel": 1,
+     "title": "Circle",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"Circle 1\",\"cx\":120,\"cy\":40,\"r\":29,\"fill\":\"#6c5ce7\"}",
+     "saved": "5f0b2261a7f0fe5c37a02839:623",
+     "svg": "338af7989677556c32547ff5:284",
+     "dax": "245166ab4942312b257dbbad:648"
+    }
+   ]
+  },
+  "E5": {
+   "session": "delete, by button and by key",
+   "steps": [
+    {
+     "step": "start bar",
+     "layers": [
+      "4:90% marker",
+      "3:Bar",
+      "2:Track",
+      "1:Percent",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "3fda3487dd1388b9e91d21dd:1299",
+     "svg": "af049971e8f4af9845298eee:731",
+     "dax": "d945d5ba4af83a7cc7cd49b8:2158"
+    },
+    {
+     "step": "pick layer 1",
+     "layers": [
+      "4:90% marker",
+      "3:Bar",
+      "2:Track",
+      "1:Percent",
+      "0:Value"
+     ],
+     "sel": 1,
+     "title": "Text",
+     "undo": true,
+     "redo": false,
+     "handles": "fs",
+     "selbox": true,
+     "layer": "{\"type\":\"text\",\"name\":\"Percent\",\"x\":220,\"y\":16,\"size\":12,\"weight\":600,\"anchor\":\"end\",\"fill\":\"#94a3b8\",\"bind\":{\"text\":{\"v\":\"ach\",\"fmt\":\"p0\",\"suffix\":\" of target\"}}}",
+     "saved": "3fda3487dd1388b9e91d21dd:1299",
+     "svg": "af049971e8f4af9845298eee:731",
+     "dax": "d945d5ba4af83a7cc7cd49b8:2158"
+    },
+    {
+     "step": "delete it",
+     "layers": [
+      "3:90% marker",
+      "2:Bar",
+      "1:Track",
+      "0:Value"
+     ],
+     "sel": 1,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Track\",\"x\":0,\"y\":26,\"w\":220,\"h\":12,\"rx\":6,\"fill\":\"#1e293b\"}",
+     "saved": "f77f8aacfc58f3252dc6d584:1135",
+     "svg": "b26882c2d2a313f2610e64be:571",
+     "dax": "3d29910123d0149675585c58:1803"
+    },
+    {
+     "step": "pick layer 0",
+     "layers": [
+      "3:90% marker",
+      "2:Bar",
+      "1:Track",
+      "0:Value"
+     ],
+     "sel": 0,
+     "title": "Text",
+     "undo": true,
+     "redo": false,
+     "handles": "fs",
+     "selbox": true,
+     "layer": "{\"type\":\"text\",\"name\":\"Value\",\"x\":0,\"y\":16,\"size\":14,\"weight\":700,\"anchor\":\"start\",\"fill\":\"#f8fafc\",\"bind\":{\"text\":{\"v\":\"sales\",\"fmt\":\"auto\",\"prefix\":\"AED \"}}}",
+     "saved": "f77f8aacfc58f3252dc6d584:1135",
+     "svg": "b26882c2d2a313f2610e64be:571",
+     "dax": "3d29910123d0149675585c58:1803"
+    },
+    {
+     "step": "the Delete key",
+     "layers": [
+      "2:90% marker",
+      "1:Bar",
+      "0:Track"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Track\",\"x\":0,\"y\":26,\"w\":220,\"h\":12,\"rx\":6,\"fill\":\"#1e293b\"}",
+     "saved": "5340508632044d1e75790168:975",
+     "svg": "f8a78056d10d6f7aa3b0ddce:416",
+     "dax": "827857f1999da11a4d509b67:1117"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "3:90% marker",
+      "2:Bar",
+      "1:Track",
+      "0:Value"
+     ],
+     "sel": 0,
+     "title": "Text",
+     "undo": true,
+     "redo": true,
+     "handles": "fs",
+     "selbox": true,
+     "layer": "{\"type\":\"text\",\"name\":\"Value\",\"x\":0,\"y\":16,\"size\":14,\"weight\":700,\"anchor\":\"start\",\"fill\":\"#f8fafc\",\"bind\":{\"text\":{\"v\":\"sales\",\"fmt\":\"auto\",\"prefix\":\"AED \"}}}",
+     "saved": "f77f8aacfc58f3252dc6d584:1135",
+     "svg": "b26882c2d2a313f2610e64be:571",
+     "dax": "3d29910123d0149675585c58:1803"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "4:90% marker",
+      "3:Bar",
+      "2:Track",
+      "1:Percent",
+      "0:Value"
+     ],
+     "sel": 0,
+     "title": "Text",
+     "undo": true,
+     "redo": true,
+     "handles": "fs",
+     "selbox": true,
+     "layer": "{\"type\":\"text\",\"name\":\"Value\",\"x\":0,\"y\":16,\"size\":14,\"weight\":700,\"anchor\":\"start\",\"fill\":\"#f8fafc\",\"bind\":{\"text\":{\"v\":\"sales\",\"fmt\":\"auto\",\"prefix\":\"AED \"}}}",
+     "saved": "3fda3487dd1388b9e91d21dd:1299",
+     "svg": "af049971e8f4af9845298eee:731",
+     "dax": "d945d5ba4af83a7cc7cd49b8:2158"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "3:90% marker",
+      "2:Bar",
+      "1:Track",
+      "0:Value"
+     ],
+     "sel": 0,
+     "title": "Text",
+     "undo": true,
+     "redo": true,
+     "handles": "fs",
+     "selbox": true,
+     "layer": "{\"type\":\"text\",\"name\":\"Value\",\"x\":0,\"y\":16,\"size\":14,\"weight\":700,\"anchor\":\"start\",\"fill\":\"#f8fafc\",\"bind\":{\"text\":{\"v\":\"sales\",\"fmt\":\"auto\",\"prefix\":\"AED \"}}}",
+     "saved": "f77f8aacfc58f3252dc6d584:1135",
+     "svg": "b26882c2d2a313f2610e64be:571",
+     "dax": "3d29910123d0149675585c58:1803"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "2:90% marker",
+      "1:Bar",
+      "0:Track"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Track\",\"x\":0,\"y\":26,\"w\":220,\"h\":12,\"rx\":6,\"fill\":\"#1e293b\"}",
+     "saved": "5340508632044d1e75790168:975",
+     "svg": "f8a78056d10d6f7aa3b0ddce:416",
+     "dax": "827857f1999da11a4d509b67:1117"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "3:90% marker",
+      "2:Bar",
+      "1:Track",
+      "0:Value"
+     ],
+     "sel": 0,
+     "title": "Text",
+     "undo": true,
+     "redo": true,
+     "handles": "fs",
+     "selbox": true,
+     "layer": "{\"type\":\"text\",\"name\":\"Value\",\"x\":0,\"y\":16,\"size\":14,\"weight\":700,\"anchor\":\"start\",\"fill\":\"#f8fafc\",\"bind\":{\"text\":{\"v\":\"sales\",\"fmt\":\"auto\",\"prefix\":\"AED \"}}}",
+     "saved": "f77f8aacfc58f3252dc6d584:1135",
+     "svg": "b26882c2d2a313f2610e64be:571",
+     "dax": "3d29910123d0149675585c58:1803"
+    }
+   ]
+  },
+  "E6": {
+   "session": "keyboard: arrows, duplicate, Ctrl+Z, Ctrl+Shift+Z, Escape",
+   "steps": [
+    {
+     "step": "start __blank",
+     "layers": [],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "8f191c3b93d17e9c164e7ba7:458",
+     "svg": "0b03c292076d51162251ffb1:120",
+     "dax": "c8e6683512bf6dd0593c89af:530"
+    },
+    {
+     "step": "add rect",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "fc5c0cbbcc24646936923ac9:546",
+     "svg": "16ba77962b500f2fb27cae0f:210",
+     "dax": "05b0ff3d381b9aed87621b44:598"
+    },
+    {
+     "step": "ArrowRight",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":81,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "e4d56658908880aa43044f51:546",
+     "svg": "2926f9f99792fad115984153:210",
+     "dax": "57c6e843922a5337ef27ed69:598"
+    },
+    {
+     "step": "ArrowRight",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":82,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "674624484af45785dfb757ae:546",
+     "svg": "cb31c5329a879167b8432289:210",
+     "dax": "2b77422970b8e361bfaf7b4a:598"
+    },
+    {
+     "step": "Shift+ArrowDown",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":82,\"y\":40,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "579cdea5afd372140f83bc4a:546",
+     "svg": "486a4ae8d6492543ace0bbe9:210",
+     "dax": "49ecfb70369453d0324886cd:598"
+    },
+    {
+     "step": "Control+D",
+     "layers": [
+      "1:Rectangle 1 2",
+      "0:Rectangle 1"
+     ],
+     "sel": 1,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1 2\",\"x\":88,\"y\":46,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "7dbd6cf7c90b194acfc19289:637",
+     "svg": "6a90405434b7f02665d8cc7f:300",
+     "dax": "a8024fd74ac44e1bfdb9a78e:666"
+    },
+    {
+     "step": "Control+Z",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": true,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":82,\"y\":40,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "579cdea5afd372140f83bc4a:546",
+     "svg": "486a4ae8d6492543ace0bbe9:210",
+     "dax": "49ecfb70369453d0324886cd:598"
+    },
+    {
+     "step": "Control+Z",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": true,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":82,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "674624484af45785dfb757ae:546",
+     "svg": "cb31c5329a879167b8432289:210",
+     "dax": "2b77422970b8e361bfaf7b4a:598"
+    },
+    {
+     "step": "Control+Shift+Z",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": true,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":82,\"y\":40,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "579cdea5afd372140f83bc4a:546",
+     "svg": "486a4ae8d6492543ace0bbe9:210",
+     "dax": "49ecfb70369453d0324886cd:598"
+    },
+    {
+     "step": "Control+Y",
+     "layers": [
+      "1:Rectangle 1 2",
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":82,\"y\":40,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "7dbd6cf7c90b194acfc19289:637",
+     "svg": "6a90405434b7f02665d8cc7f:300",
+     "dax": "a8024fd74ac44e1bfdb9a78e:666"
+    },
+    {
+     "step": "Escape",
+     "layers": [
+      "1:Rectangle 1 2",
+      "0:Rectangle 1"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "7dbd6cf7c90b194acfc19289:637",
+     "svg": "6a90405434b7f02665d8cc7f:300",
+     "dax": "a8024fd74ac44e1bfdb9a78e:666"
+    },
+    {
+     "step": "Control+Z",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "579cdea5afd372140f83bc4a:546",
+     "svg": "486a4ae8d6492543ace0bbe9:210",
+     "dax": "49ecfb70369453d0324886cd:598"
+    }
+   ]
+  },
+  "E7": {
+   "session": "import, undo, redo, a bad import",
+   "steps": [
+    {
+     "step": "start pill",
+     "layers": [
+      "3:Target hit",
+      "2:Label",
+      "1:Dot",
+      "0:Pill"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "f51f49e1e6de94ff6c40bb43:1244",
+     "svg": "e2d8f564fa7f183ee397f94d:476",
+     "dax": "e743ea8705f3e391bbb3054c:1613"
+    },
+    {
+     "step": "pick layer 0",
+     "layers": [
+      "3:Target hit",
+      "2:Label",
+      "1:Dot",
+      "0:Pill"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Pill\",\"x\":1,\"y\":1,\"w\":118,\"h\":28,\"rx\":14,\"fill\":\"#22c55e\",\"opacity\":0.18,\"bind\":{\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "f51f49e1e6de94ff6c40bb43:1244",
+     "svg": "e2d8f564fa7f183ee397f94d:476",
+     "dax": "e743ea8705f3e391bbb3054c:1613"
+    },
+    {
+     "step": "import a design",
+     "layers": [
+      "2:Value",
+      "1:Bar",
+      "0:Back"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "2b251e31b85bcea9e1833d06:633",
+     "svg": "8f97f924995b4b48a3c402ac:446",
+     "dax": "b8a0679ec0a5cf288b5272e6:1001"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "3:Target hit",
+      "2:Label",
+      "1:Dot",
+      "0:Pill"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "f51f49e1e6de94ff6c40bb43:1244",
+     "svg": "e2d8f564fa7f183ee397f94d:476",
+     "dax": "e743ea8705f3e391bbb3054c:1613"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "2:Value",
+      "1:Bar",
+      "0:Back"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "2b251e31b85bcea9e1833d06:633",
+     "svg": "8f97f924995b4b48a3c402ac:446",
+     "dax": "b8a0679ec0a5cf288b5272e6:1001"
+    },
+    {
+     "step": "import a file that is not a design",
+     "layers": [
+      "2:Value",
+      "1:Bar",
+      "0:Back"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "2b251e31b85bcea9e1833d06:633",
+     "svg": "8f97f924995b4b48a3c402ac:446",
+     "dax": "b8a0679ec0a5cf288b5272e6:1001"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "3:Target hit",
+      "2:Label",
+      "1:Dot",
+      "0:Pill"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "f51f49e1e6de94ff6c40bb43:1244",
+     "svg": "e2d8f564fa7f183ee397f94d:476",
+     "dax": "e743ea8705f3e391bbb3054c:1613"
+    }
+   ]
+  },
+  "E8": {
+   "session": "export, edit a value, export, undo",
+   "steps": [
+    {
+     "step": "start spark",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "9cc47b65a266bd68936548d4:1180",
+     "svg": "4561bec94058f059d1e4800e:1013",
+     "dax": "2447d9c3c0c5cd0b10876d79:3370"
+    },
+    {
+     "step": "export",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "9cc47b65a266bd68936548d4:1180",
+     "svg": "4561bec94058f059d1e4800e:1013",
+     "dax": "2447d9c3c0c5cd0b10876d79:3370",
+     "export": "sparkline.svgkpi.json",
+     "exportText": "bae584e107a1216fed5f0950:2085",
+     "exportIsSaved": true
+    },
+    {
+     "step": "type a test value",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "c8f560b82374257f06880c5a:1176",
+     "svg": "bb5447819841793b0f36018e:1012",
+     "dax": "2447d9c3c0c5cd0b10876d79:3370"
+    },
+    {
+     "step": "type a measure name",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "c6e184538548be6820e800b3:1177",
+     "svg": "bb5447819841793b0f36018e:1012",
+     "dax": "a809f782b40f0626278e6252:3371"
+    },
+    {
+     "step": "export",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "c6e184538548be6820e800b3:1177",
+     "svg": "bb5447819841793b0f36018e:1012",
+     "dax": "a809f782b40f0626278e6252:3371",
+     "export": "sparkline.svgkpi.json",
+     "exportText": "d9b0342b12b7c9ddac656056:2082",
+     "exportIsSaved": true
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "c8f560b82374257f06880c5a:1176",
+     "svg": "bb5447819841793b0f36018e:1012",
+     "dax": "2447d9c3c0c5cd0b10876d79:3370"
+    },
+    {
+     "step": "export",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "c8f560b82374257f06880c5a:1176",
+     "svg": "bb5447819841793b0f36018e:1012",
+     "dax": "2447d9c3c0c5cd0b10876d79:3370",
+     "export": "sparkline.svgkpi.json",
+     "exportText": "59ce82d7e8288806ce82fb5e:2081",
+     "exportIsSaved": true
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "9cc47b65a266bd68936548d4:1180",
+     "svg": "4561bec94058f059d1e4800e:1013",
+     "dax": "2447d9c3c0c5cd0b10876d79:3370"
+    },
+    {
+     "step": "export",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "9cc47b65a266bd68936548d4:1180",
+     "svg": "4561bec94058f059d1e4800e:1013",
+     "dax": "2447d9c3c0c5cd0b10876d79:3370",
+     "export": "sparkline.svgkpi.json",
+     "exportText": "bae584e107a1216fed5f0950:2085",
+     "exportIsSaved": true
+    }
+   ]
+  },
+  "E9": {
+   "session": "data links and rules",
+   "steps": [
+    {
+     "step": "start __blank",
+     "layers": [],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "8f191c3b93d17e9c164e7ba7:458",
+     "svg": "0b03c292076d51162251ffb1:120",
+     "dax": "c8e6683512bf6dd0593c89af:530"
+    },
+    {
+     "step": "add rect",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "fc5c0cbbcc24646936923ac9:546",
+     "svg": "16ba77962b500f2fb27cae0f:210",
+     "dax": "05b0ff3d381b9aed87621b44:598"
+    },
+    {
+     "step": "link the width",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80}}}",
+     "saved": "2aeb4ae2b69e00da203d7780:600",
+     "svg": "6281ee88527d0a7d0182f568:213",
+     "dax": "45e1b4f5b712fece27e3ea1b:749"
+    },
+    {
+     "step": "link the fill",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#ef4444\"}],\"other\":\"#00d4ff\"}}}",
+     "saved": "81ace3f32e15ebd31759cf31:680",
+     "svg": "c149d7c51e198a82a81f5cf3:213",
+     "dax": "f124bf0b56c4f0532c0de8ba:872"
+    },
+    {
+     "step": "add a rule",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#00d4ff\"}}}",
+     "saved": "7df0810ffe462274ba37d805:723",
+     "svg": "c149d7c51e198a82a81f5cf3:213",
+     "dax": "372a5d778c0587871c871bc3:925"
+    },
+    {
+     "step": "remove rule 0",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#00d4ff\"}}}",
+     "saved": "fa7cc899f66a286b4b20c645:680",
+     "svg": "39166fc97184361d90c99c15:213",
+     "dax": "38bae5e4a670d9ce9fe7252f:872"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": true,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#00d4ff\"}}}",
+     "saved": "7df0810ffe462274ba37d805:723",
+     "svg": "c149d7c51e198a82a81f5cf3:213",
+     "dax": "372a5d778c0587871c871bc3:925"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": true,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#ef4444\"}],\"other\":\"#00d4ff\"}}}",
+     "saved": "81ace3f32e15ebd31759cf31:680",
+     "svg": "c149d7c51e198a82a81f5cf3:213",
+     "dax": "f124bf0b56c4f0532c0de8ba:872"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": true,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80}}}",
+     "saved": "2aeb4ae2b69e00da203d7780:600",
+     "svg": "6281ee88527d0a7d0182f568:213",
+     "dax": "45e1b4f5b712fece27e3ea1b:749"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": true,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#ef4444\"}],\"other\":\"#00d4ff\"}}}",
+     "saved": "81ace3f32e15ebd31759cf31:680",
+     "svg": "c149d7c51e198a82a81f5cf3:213",
+     "dax": "f124bf0b56c4f0532c0de8ba:872"
+    },
+    {
+     "step": "unlink the width",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#ef4444\"}],\"other\":\"#00d4ff\"}}}",
+     "saved": "666812baf66c456146ede92f:635",
+     "svg": "c02a841665419cfa050c4982:210",
+     "dax": "60875c4f4f6abb706f732610:745"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "0:Rectangle 1"
+     ],
+     "sel": 0,
+     "title": "Rectangle",
+     "undo": true,
+     "redo": true,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Rectangle 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#ef4444\"}],\"other\":\"#00d4ff\"}}}",
+     "saved": "81ace3f32e15ebd31759cf31:680",
+     "svg": "c149d7c51e198a82a81f5cf3:213",
+     "dax": "f124bf0b56c4f0532c0de8ba:872"
+    }
+   ]
+  },
+  "E10": {
+   "session": "the card, order buttons, a starter, a value",
+   "steps": [
+    {
+     "step": "start trend",
+     "layers": [
+      "2:Caption",
+      "1:Growth",
+      "0:Arrow"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "efa19b0ae85341dec0cc3983:1040",
+     "svg": "8ea2177cc0a4c7b915e68d14:502",
+     "dax": "16b30ae9f2e9231f9e45612e:1610"
+    },
+    {
+     "step": "the card (Escape)",
+     "layers": [
+      "2:Caption",
+      "1:Growth",
+      "0:Arrow"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "efa19b0ae85341dec0cc3983:1040",
+     "svg": "8ea2177cc0a4c7b915e68d14:502",
+     "dax": "16b30ae9f2e9231f9e45612e:1610"
+    },
+    {
+     "step": "background on",
+     "layers": [
+      "2:Caption",
+      "1:Growth",
+      "0:Arrow"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "473989b33afe030598b30925:1067",
+     "svg": "84281aaf930b166ccd267144:562",
+     "dax": "f888c423807f3556581cc5ee:1666"
+    },
+    {
+     "step": "type the card name",
+     "layers": [
+      "2:Caption",
+      "1:Growth",
+      "0:Arrow"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "579b726403710be7b5cdd137:1062",
+     "svg": "84281aaf930b166ccd267144:562",
+     "dax": "c4d6642b48ff46c430aa182f:1661"
+    },
+    {
+     "step": "type the width",
+     "layers": [
+      "2:Caption",
+      "1:Growth",
+      "0:Arrow"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "9a5abe305a1580078b42f9d3:1062",
+     "svg": "5399c2f3e3f74072526a769e:562",
+     "dax": "de46ad3150ba315d9f5a1b0f:1661"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "2:Caption",
+      "1:Growth",
+      "0:Arrow"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "579b726403710be7b5cdd137:1062",
+     "svg": "84281aaf930b166ccd267144:562",
+     "dax": "c4d6642b48ff46c430aa182f:1661"
+    },
+    {
+     "step": "pick layer 0",
+     "layers": [
+      "2:Caption",
+      "1:Growth",
+      "0:Arrow"
+     ],
+     "sel": 0,
+     "title": "Trend arrow",
+     "undo": true,
+     "redo": true,
+     "handles": "size",
+     "selbox": true,
+     "layer": "{\"type\":\"arrow\",\"name\":\"Arrow\",\"x\":4,\"y\":8,\"size\":16,\"goodWhen\":\"up\",\"good\":\"#22c55e\",\"bad\":\"#ef4444\",\"neutral\":\"#94a3b8\",\"bind\":{\"dir\":{\"v\":\"growth\"}}}",
+     "saved": "579b726403710be7b5cdd137:1062",
+     "svg": "84281aaf930b166ccd267144:562",
+     "dax": "c4d6642b48ff46c430aa182f:1661"
+    },
+    {
+     "step": "bring it forward",
+     "layers": [
+      "2:Caption",
+      "1:Arrow",
+      "0:Growth"
+     ],
+     "sel": 1,
+     "title": "Trend arrow",
+     "undo": true,
+     "redo": false,
+     "handles": "size",
+     "selbox": true,
+     "layer": "{\"type\":\"arrow\",\"name\":\"Arrow\",\"x\":4,\"y\":8,\"size\":16,\"goodWhen\":\"up\",\"good\":\"#22c55e\",\"bad\":\"#ef4444\",\"neutral\":\"#94a3b8\",\"bind\":{\"dir\":{\"v\":\"growth\"}}}",
+     "saved": "d97ac6480be4cee3edf96a6c:1062",
+     "svg": "555dcbd3dc33000b859a044c:562",
+     "dax": "ecbc4041a47f448a7966f825:1661"
+    },
+    {
+     "step": "duplicate it",
+     "layers": [
+      "3:Caption",
+      "2:Arrow 2",
+      "1:Arrow",
+      "0:Growth"
+     ],
+     "sel": 2,
+     "title": "Trend arrow",
+     "undo": true,
+     "redo": false,
+     "handles": "size",
+     "selbox": true,
+     "layer": "{\"type\":\"arrow\",\"name\":\"Arrow 2\",\"x\":10,\"y\":14,\"size\":16,\"goodWhen\":\"up\",\"good\":\"#22c55e\",\"bad\":\"#ef4444\",\"neutral\":\"#94a3b8\",\"bind\":{\"dir\":{\"v\":\"growth\"}}}",
+     "saved": "0667b099593298f7a0974582:1219",
+     "svg": "5426db3a6bd184893b7109f3:639",
+     "dax": "49f8e12e8624e3b9a6e9fde4:2046"
+    },
+    {
+     "step": "add a measure",
+     "layers": [
+      "3:Caption",
+      "2:Arrow 2",
+      "1:Arrow",
+      "0:Growth"
+     ],
+     "sel": 2,
+     "title": "Trend arrow",
+     "undo": true,
+     "redo": false,
+     "handles": "size",
+     "selbox": true,
+     "layer": "{\"type\":\"arrow\",\"name\":\"Arrow 2\",\"x\":10,\"y\":14,\"size\":16,\"goodWhen\":\"up\",\"good\":\"#22c55e\",\"bad\":\"#ef4444\",\"neutral\":\"#94a3b8\",\"bind\":{\"dir\":{\"v\":\"growth\"}}}",
+     "saved": "7b973a1b6ce3db0f4cfaae8b:1303",
+     "svg": "5426db3a6bd184893b7109f3:639",
+     "dax": "fc79c96a7d46cd57c1725773:2075"
+    },
+    {
+     "step": "the bar starter",
+     "layers": [
+      "4:90% marker",
+      "3:Bar",
+      "2:Track",
+      "1:Percent",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "3fda3487dd1388b9e91d21dd:1299",
+     "svg": "af049971e8f4af9845298eee:731",
+     "dax": "d945d5ba4af83a7cc7cd49b8:2158"
+    },
+    {
+     "step": "undo (back to the edited trend)",
+     "layers": [
+      "3:Caption",
+      "2:Arrow 2",
+      "1:Arrow",
+      "0:Growth"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "7b973a1b6ce3db0f4cfaae8b:1303",
+     "svg": "5426db3a6bd184893b7109f3:639",
+     "dax": "fc79c96a7d46cd57c1725773:2075"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "3:Caption",
+      "2:Arrow 2",
+      "1:Arrow",
+      "0:Growth"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "0667b099593298f7a0974582:1219",
+     "svg": "5426db3a6bd184893b7109f3:639",
+     "dax": "49f8e12e8624e3b9a6e9fde4:2046"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "2:Caption",
+      "1:Arrow",
+      "0:Growth"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "d97ac6480be4cee3edf96a6c:1062",
+     "svg": "555dcbd3dc33000b859a044c:562",
+     "dax": "ecbc4041a47f448a7966f825:1661"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "3:Caption",
+      "2:Arrow 2",
+      "1:Arrow",
+      "0:Growth"
+     ],
+     "sel": -1,
+     "title": "Card",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "0667b099593298f7a0974582:1219",
+     "svg": "5426db3a6bd184893b7109f3:639",
+     "dax": "49f8e12e8624e3b9a6e9fde4:2046"
+    }
+   ]
+  }
+ },
+ "ar": {
+  "A1": {
+   "session": "add layers, undo, undo, redo",
+   "steps": [
+    {
+     "step": "start __blank",
+     "layers": [],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "8f191c3b93d17e9c164e7ba7:458",
+     "svg": "53663f898e0904c0fcffdf93:130",
+     "dax": "c8e6683512bf6dd0593c89af:530"
+    },
+    {
+     "step": "add rect",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "ce169e56cf76a128277001f4:549",
+     "svg": "8686c77b6b2d899b73ae729b:220",
+     "dax": "05b0ff3d381b9aed87621b44:598"
+    },
+    {
+     "step": "add circle",
+     "layers": [
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 1,
+     "title": "دائرة",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"دائرة 1\",\"cx\":120,\"cy\":40,\"r\":20,\"fill\":\"#6c5ce7\"}",
+     "saved": "bbbce1bc0146478d1918d52c:630",
+     "svg": "898ad87cd20c7b2021caa78c:294",
+     "dax": "3187ca2877a20d1779fd6ab6:648"
+    },
+    {
+     "step": "add text",
+     "layers": [
+      "2:نص 1",
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 2,
+     "title": "نص",
+     "undo": true,
+     "redo": false,
+     "handles": "fs",
+     "selbox": true,
+     "layer": "{\"type\":\"text\",\"name\":\"نص 1\",\"x\":120,\"y\":45,\"size\":14,\"weight\":600,\"anchor\":\"middle\",\"fill\":\"#f8fafc\",\"text\":\"نص\"}",
+     "saved": "cb02493b73ec4a71ed4b42f2:749",
+     "svg": "5549e013162257c75a83f277:448",
+     "dax": "4d67e60bcec4b461667e8c4b:786"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 1,
+     "title": "دائرة",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"دائرة 1\",\"cx\":120,\"cy\":40,\"r\":20,\"fill\":\"#6c5ce7\"}",
+     "saved": "bbbce1bc0146478d1918d52c:630",
+     "svg": "898ad87cd20c7b2021caa78c:294",
+     "dax": "3187ca2877a20d1779fd6ab6:648"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": true,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "ce169e56cf76a128277001f4:549",
+     "svg": "8686c77b6b2d899b73ae729b:220",
+     "dax": "05b0ff3d381b9aed87621b44:598"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": true,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "bbbce1bc0146478d1918d52c:630",
+     "svg": "898ad87cd20c7b2021caa78c:294",
+     "dax": "3187ca2877a20d1779fd6ab6:648"
+    },
+    {
+     "step": "add ring after a redo (the redo stack is cleared)",
+     "layers": [
+      "2:حلقة تقدم 1",
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 2,
+     "title": "حلقة تقدم",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"حلقة تقدم 1\",\"cx\":120,\"cy\":40,\"r\":30,\"sw\":8,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"p\":0.75}",
+     "saved": "94ee6d4a639f961bc00f547b:764",
+     "svg": "e226d22b2bc6745694e77382:572",
+     "dax": "a22b648f9ba05bfb9f1e53da:896"
+    },
+    {
+     "step": "Control+Y with nothing to redo",
+     "layers": [
+      "2:حلقة تقدم 1",
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 2,
+     "title": "حلقة تقدم",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"حلقة تقدم 1\",\"cx\":120,\"cy\":40,\"r\":30,\"sw\":8,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"p\":0.75}",
+     "saved": "94ee6d4a639f961bc00f547b:764",
+     "svg": "e226d22b2bc6745694e77382:572",
+     "dax": "a22b648f9ba05bfb9f1e53da:896"
+    }
+   ]
+  },
+  "A2": {
+   "session": "typing: one undo step per field visit",
+   "steps": [
+    {
+     "step": "start ring",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "0d8f6903a0803244039b96df:1072",
+     "svg": "bde165943e13a95961226f9e:738",
+     "dax": "e3b972bff162da7139d9b104:1702"
+    },
+    {
+     "step": "pick the ring",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": 0,
+     "title": "حلقة تقدم",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Ring\",\"cx\":60,\"cy\":60,\"r\":46,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "0d8f6903a0803244039b96df:1072",
+     "svg": "bde165943e13a95961226f9e:738",
+     "dax": "e3b972bff162da7139d9b104:1702"
+    },
+    {
+     "step": "type the X",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": 0,
+     "title": "حلقة تقدم",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Ring\",\"cx\":47,\"cy\":60,\"r\":46,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "119c913732518205c04a4f02:1072",
+     "svg": "4bca0d100f6a2eff569ebc55:738",
+     "dax": "4ec6415fb4025192cc8b1044:1702"
+    },
+    {
+     "step": "type the radius",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": 0,
+     "title": "حلقة تقدم",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Ring\",\"cx\":47,\"cy\":60,\"r\":33,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "bfe6aa6bfb89cab6ce4f5748:1072",
+     "svg": "6f8861e38c4687197acf9da5:738",
+     "dax": "22d296799b95aec372307bb8:1702"
+    },
+    {
+     "step": "type the name",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:My ring"
+     ],
+     "sel": 0,
+     "title": "حلقة تقدم",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"My ring\",\"cx\":47,\"cy\":60,\"r\":33,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "84167995aa33acbdfe2cbb44:1075",
+     "svg": "6f8861e38c4687197acf9da5:738",
+     "dax": "0a4ff536ee5dc7584713104f:1705"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": 0,
+     "title": "حلقة تقدم",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Ring\",\"cx\":47,\"cy\":60,\"r\":33,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "bfe6aa6bfb89cab6ce4f5748:1072",
+     "svg": "6f8861e38c4687197acf9da5:738",
+     "dax": "22d296799b95aec372307bb8:1702"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": 0,
+     "title": "حلقة تقدم",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Ring\",\"cx\":47,\"cy\":60,\"r\":46,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "119c913732518205c04a4f02:1072",
+     "svg": "4bca0d100f6a2eff569ebc55:738",
+     "dax": "4ec6415fb4025192cc8b1044:1702"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": 0,
+     "title": "حلقة تقدم",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Ring\",\"cx\":47,\"cy\":60,\"r\":33,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "bfe6aa6bfb89cab6ce4f5748:1072",
+     "svg": "6f8861e38c4687197acf9da5:738",
+     "dax": "22d296799b95aec372307bb8:1702"
+    },
+    {
+     "step": "type the radius again",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": 0,
+     "title": "حلقة تقدم",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Ring\",\"cx\":47,\"cy\":60,\"r\":21,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "a1c9409251a39caf33b8cbda:1072",
+     "svg": "57d804b43490137cb9a35b98:738",
+     "dax": "76aa5c9807ce4b46536914b8:1702"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "2:Caption",
+      "1:Percent",
+      "0:Ring"
+     ],
+     "sel": 0,
+     "title": "حلقة تقدم",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"ring\",\"name\":\"Ring\",\"cx\":47,\"cy\":60,\"r\":33,\"sw\":12,\"track\":\"#1e293b\",\"fill\":\"#00d4ff\",\"cap\":\"round\",\"bind\":{\"p\":{\"v\":\"ach\",\"d0\":0,\"d1\":1},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "bfe6aa6bfb89cab6ce4f5748:1072",
+     "svg": "6f8861e38c4687197acf9da5:738",
+     "dax": "22d296799b95aec372307bb8:1702"
+    }
+   ]
+  },
+  "A3": {
+   "session": "a grouped drag undoes in one step",
+   "steps": [
+    {
+     "step": "start __blank",
+     "layers": [],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "8f191c3b93d17e9c164e7ba7:458",
+     "svg": "53663f898e0904c0fcffdf93:130",
+     "dax": "c8e6683512bf6dd0593c89af:530"
+    },
+    {
+     "step": "add rect",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "ce169e56cf76a128277001f4:549",
+     "svg": "8686c77b6b2d899b73ae729b:220",
+     "dax": "05b0ff3d381b9aed87621b44:598"
+    },
+    {
+     "step": "add circle",
+     "layers": [
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 1,
+     "title": "دائرة",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"دائرة 1\",\"cx\":120,\"cy\":40,\"r\":20,\"fill\":\"#6c5ce7\"}",
+     "saved": "bbbce1bc0146478d1918d52c:630",
+     "svg": "898ad87cd20c7b2021caa78c:294",
+     "dax": "3187ca2877a20d1779fd6ab6:648"
+    },
+    {
+     "step": "drag the circle in 4 moves",
+     "layers": [
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 1,
+     "title": "دائرة",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"دائرة 1\",\"cx\":150,\"cy\":28,\"r\":20,\"fill\":\"#6c5ce7\"}",
+     "saved": "28c65940a8e9651415d383ad:630",
+     "svg": "fcc89ed08bbb17c191a493f2:294",
+     "dax": "8508157f103000445bc1d49e:648"
+    },
+    {
+     "step": "drag the rect in 6 moves",
+     "layers": [
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":40,\"y\":50,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "5161465344c69e814739c19f:630",
+     "svg": "eb210b6f4a1370828d091f6c:294",
+     "dax": "03c2d2ba7d13f72e0be89237:648"
+    },
+    {
+     "step": "undo (the whole rect drag)",
+     "layers": [
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": true,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "28c65940a8e9651415d383ad:630",
+     "svg": "fcc89ed08bbb17c191a493f2:294",
+     "dax": "8508157f103000445bc1d49e:648"
+    },
+    {
+     "step": "undo (the whole circle drag)",
+     "layers": [
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": true,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "bbbce1bc0146478d1918d52c:630",
+     "svg": "898ad87cd20c7b2021caa78c:294",
+     "dax": "3187ca2877a20d1779fd6ab6:648"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": true,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "28c65940a8e9651415d383ad:630",
+     "svg": "fcc89ed08bbb17c191a493f2:294",
+     "dax": "8508157f103000445bc1d49e:648"
+    },
+    {
+     "step": "a click without a move (no step)",
+     "layers": [
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 1,
+     "title": "دائرة",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"دائرة 1\",\"cx\":150,\"cy\":28,\"r\":20,\"fill\":\"#6c5ce7\"}",
+     "saved": "28c65940a8e9651415d383ad:630",
+     "svg": "fcc89ed08bbb17c191a493f2:294",
+     "dax": "8508157f103000445bc1d49e:648"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 1,
+     "title": "دائرة",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"دائرة 1\",\"cx\":120,\"cy\":40,\"r\":20,\"fill\":\"#6c5ce7\"}",
+     "saved": "bbbce1bc0146478d1918d52c:630",
+     "svg": "898ad87cd20c7b2021caa78c:294",
+     "dax": "3187ca2877a20d1779fd6ab6:648"
+    }
+   ]
+  },
+  "A4": {
+   "session": "resize by handles",
+   "steps": [
+    {
+     "step": "start __blank",
+     "layers": [],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "8f191c3b93d17e9c164e7ba7:458",
+     "svg": "53663f898e0904c0fcffdf93:130",
+     "dax": "c8e6683512bf6dd0593c89af:530"
+    },
+    {
+     "step": "add rect",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "ce169e56cf76a128277001f4:549",
+     "svg": "8686c77b6b2d899b73ae729b:220",
+     "dax": "05b0ff3d381b9aed87621b44:598"
+    },
+    {
+     "step": "resize se",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":110,\"h\":32,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "1647fd2ff14e5efeff9184f2:550",
+     "svg": "d80cd4bfa3644067c186494f:221",
+     "dax": "feb8b4fa610a6db176939341:599"
+    },
+    {
+     "step": "resize e",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":90,\"h\":32,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "50ca0346cf2c2236cb9e15fa:549",
+     "svg": "ca423b4ecb8f3c3bb687ad0e:220",
+     "dax": "ec71fa7fe8f586350896f804:598"
+    },
+    {
+     "step": "add circle",
+     "layers": [
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 1,
+     "title": "دائرة",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"دائرة 1\",\"cx\":120,\"cy\":40,\"r\":20,\"fill\":\"#6c5ce7\"}",
+     "saved": "e0efde9f13ed691017f75b69:630",
+     "svg": "b76ce8c04411e8dc725e436b:294",
+     "dax": "ed6b5edad72be260d40f384b:648"
+    },
+    {
+     "step": "resize r",
+     "layers": [
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 1,
+     "title": "دائرة",
+     "undo": true,
+     "redo": false,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"دائرة 1\",\"cx\":120,\"cy\":40,\"r\":29,\"fill\":\"#6c5ce7\"}",
+     "saved": "67d0a637f3c373abc45468c1:630",
+     "svg": "dfdf07047488cc6aa782de1e:294",
+     "dax": "245166ab4942312b257dbbad:648"
+    },
+    {
+     "step": "add line",
+     "layers": [
+      "2:خط 1",
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 2,
+     "title": "خط",
+     "undo": true,
+     "redo": false,
+     "handles": "p1 p2",
+     "selbox": true,
+     "layer": "{\"type\":\"line\",\"name\":\"خط 1\",\"x1\":60,\"y1\":40,\"x2\":180,\"y2\":40,\"stroke\":\"#94a3b8\",\"sw\":2,\"cap\":\"round\"}",
+     "saved": "af8104d4b7508faa2ad7a2ce:735",
+     "svg": "8040352c32909ad30147541e:415",
+     "dax": "a0a0bc1fdc2c3b6de48c89c3:747"
+    },
+    {
+     "step": "move p2",
+     "layers": [
+      "2:خط 1",
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 2,
+     "title": "خط",
+     "undo": true,
+     "redo": false,
+     "handles": "p1 p2",
+     "selbox": true,
+     "layer": "{\"type\":\"line\",\"name\":\"خط 1\",\"x1\":60,\"y1\":40,\"x2\":195,\"y2\":60,\"stroke\":\"#94a3b8\",\"sw\":2,\"cap\":\"round\"}",
+     "saved": "f346d965bcf585384b25e658:735",
+     "svg": "84f382239116d51a3c354280:415",
+     "dax": "14238230a82464eebdf528bc:747"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "2:خط 1",
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 2,
+     "title": "خط",
+     "undo": true,
+     "redo": true,
+     "handles": "p1 p2",
+     "selbox": true,
+     "layer": "{\"type\":\"line\",\"name\":\"خط 1\",\"x1\":60,\"y1\":40,\"x2\":180,\"y2\":40,\"stroke\":\"#94a3b8\",\"sw\":2,\"cap\":\"round\"}",
+     "saved": "af8104d4b7508faa2ad7a2ce:735",
+     "svg": "8040352c32909ad30147541e:415",
+     "dax": "a0a0bc1fdc2c3b6de48c89c3:747"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 1,
+     "title": "دائرة",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"دائرة 1\",\"cx\":120,\"cy\":40,\"r\":29,\"fill\":\"#6c5ce7\"}",
+     "saved": "67d0a637f3c373abc45468c1:630",
+     "svg": "dfdf07047488cc6aa782de1e:294",
+     "dax": "245166ab4942312b257dbbad:648"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 1,
+     "title": "دائرة",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"دائرة 1\",\"cx\":120,\"cy\":40,\"r\":20,\"fill\":\"#6c5ce7\"}",
+     "saved": "e0efde9f13ed691017f75b69:630",
+     "svg": "b76ce8c04411e8dc725e436b:294",
+     "dax": "ed6b5edad72be260d40f384b:648"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "1:دائرة 1",
+      "0:مستطيل 1"
+     ],
+     "sel": 1,
+     "title": "دائرة",
+     "undo": true,
+     "redo": true,
+     "handles": "r",
+     "selbox": true,
+     "layer": "{\"type\":\"circle\",\"name\":\"دائرة 1\",\"cx\":120,\"cy\":40,\"r\":29,\"fill\":\"#6c5ce7\"}",
+     "saved": "67d0a637f3c373abc45468c1:630",
+     "svg": "dfdf07047488cc6aa782de1e:294",
+     "dax": "245166ab4942312b257dbbad:648"
+    }
+   ]
+  },
+  "A5": {
+   "session": "delete, by button and by key",
+   "steps": [
+    {
+     "step": "start bar",
+     "layers": [
+      "4:90% marker",
+      "3:Bar",
+      "2:Track",
+      "1:Percent",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "3fda3487dd1388b9e91d21dd:1299",
+     "svg": "1c1cf63a7449467b06c6e54b:741",
+     "dax": "d945d5ba4af83a7cc7cd49b8:2158"
+    },
+    {
+     "step": "pick layer 1",
+     "layers": [
+      "4:90% marker",
+      "3:Bar",
+      "2:Track",
+      "1:Percent",
+      "0:Value"
+     ],
+     "sel": 1,
+     "title": "نص",
+     "undo": true,
+     "redo": false,
+     "handles": "fs",
+     "selbox": true,
+     "layer": "{\"type\":\"text\",\"name\":\"Percent\",\"x\":220,\"y\":16,\"size\":12,\"weight\":600,\"anchor\":\"end\",\"fill\":\"#94a3b8\",\"bind\":{\"text\":{\"v\":\"ach\",\"fmt\":\"p0\",\"suffix\":\" of target\"}}}",
+     "saved": "3fda3487dd1388b9e91d21dd:1299",
+     "svg": "1c1cf63a7449467b06c6e54b:741",
+     "dax": "d945d5ba4af83a7cc7cd49b8:2158"
+    },
+    {
+     "step": "delete it",
+     "layers": [
+      "3:90% marker",
+      "2:Bar",
+      "1:Track",
+      "0:Value"
+     ],
+     "sel": 1,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Track\",\"x\":0,\"y\":26,\"w\":220,\"h\":12,\"rx\":6,\"fill\":\"#1e293b\"}",
+     "saved": "f77f8aacfc58f3252dc6d584:1135",
+     "svg": "f0dc09c1014ccca9e961cc5a:581",
+     "dax": "3d29910123d0149675585c58:1803"
+    },
+    {
+     "step": "pick layer 0",
+     "layers": [
+      "3:90% marker",
+      "2:Bar",
+      "1:Track",
+      "0:Value"
+     ],
+     "sel": 0,
+     "title": "نص",
+     "undo": true,
+     "redo": false,
+     "handles": "fs",
+     "selbox": true,
+     "layer": "{\"type\":\"text\",\"name\":\"Value\",\"x\":0,\"y\":16,\"size\":14,\"weight\":700,\"anchor\":\"start\",\"fill\":\"#f8fafc\",\"bind\":{\"text\":{\"v\":\"sales\",\"fmt\":\"auto\",\"prefix\":\"AED \"}}}",
+     "saved": "f77f8aacfc58f3252dc6d584:1135",
+     "svg": "f0dc09c1014ccca9e961cc5a:581",
+     "dax": "3d29910123d0149675585c58:1803"
+    },
+    {
+     "step": "the Delete key",
+     "layers": [
+      "2:90% marker",
+      "1:Bar",
+      "0:Track"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Track\",\"x\":0,\"y\":26,\"w\":220,\"h\":12,\"rx\":6,\"fill\":\"#1e293b\"}",
+     "saved": "5340508632044d1e75790168:975",
+     "svg": "686a6cee268696ecdc8b18dc:426",
+     "dax": "827857f1999da11a4d509b67:1117"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "3:90% marker",
+      "2:Bar",
+      "1:Track",
+      "0:Value"
+     ],
+     "sel": 0,
+     "title": "نص",
+     "undo": true,
+     "redo": true,
+     "handles": "fs",
+     "selbox": true,
+     "layer": "{\"type\":\"text\",\"name\":\"Value\",\"x\":0,\"y\":16,\"size\":14,\"weight\":700,\"anchor\":\"start\",\"fill\":\"#f8fafc\",\"bind\":{\"text\":{\"v\":\"sales\",\"fmt\":\"auto\",\"prefix\":\"AED \"}}}",
+     "saved": "f77f8aacfc58f3252dc6d584:1135",
+     "svg": "f0dc09c1014ccca9e961cc5a:581",
+     "dax": "3d29910123d0149675585c58:1803"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "4:90% marker",
+      "3:Bar",
+      "2:Track",
+      "1:Percent",
+      "0:Value"
+     ],
+     "sel": 0,
+     "title": "نص",
+     "undo": true,
+     "redo": true,
+     "handles": "fs",
+     "selbox": true,
+     "layer": "{\"type\":\"text\",\"name\":\"Value\",\"x\":0,\"y\":16,\"size\":14,\"weight\":700,\"anchor\":\"start\",\"fill\":\"#f8fafc\",\"bind\":{\"text\":{\"v\":\"sales\",\"fmt\":\"auto\",\"prefix\":\"AED \"}}}",
+     "saved": "3fda3487dd1388b9e91d21dd:1299",
+     "svg": "1c1cf63a7449467b06c6e54b:741",
+     "dax": "d945d5ba4af83a7cc7cd49b8:2158"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "3:90% marker",
+      "2:Bar",
+      "1:Track",
+      "0:Value"
+     ],
+     "sel": 0,
+     "title": "نص",
+     "undo": true,
+     "redo": true,
+     "handles": "fs",
+     "selbox": true,
+     "layer": "{\"type\":\"text\",\"name\":\"Value\",\"x\":0,\"y\":16,\"size\":14,\"weight\":700,\"anchor\":\"start\",\"fill\":\"#f8fafc\",\"bind\":{\"text\":{\"v\":\"sales\",\"fmt\":\"auto\",\"prefix\":\"AED \"}}}",
+     "saved": "f77f8aacfc58f3252dc6d584:1135",
+     "svg": "f0dc09c1014ccca9e961cc5a:581",
+     "dax": "3d29910123d0149675585c58:1803"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "2:90% marker",
+      "1:Bar",
+      "0:Track"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Track\",\"x\":0,\"y\":26,\"w\":220,\"h\":12,\"rx\":6,\"fill\":\"#1e293b\"}",
+     "saved": "5340508632044d1e75790168:975",
+     "svg": "686a6cee268696ecdc8b18dc:426",
+     "dax": "827857f1999da11a4d509b67:1117"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "3:90% marker",
+      "2:Bar",
+      "1:Track",
+      "0:Value"
+     ],
+     "sel": 0,
+     "title": "نص",
+     "undo": true,
+     "redo": true,
+     "handles": "fs",
+     "selbox": true,
+     "layer": "{\"type\":\"text\",\"name\":\"Value\",\"x\":0,\"y\":16,\"size\":14,\"weight\":700,\"anchor\":\"start\",\"fill\":\"#f8fafc\",\"bind\":{\"text\":{\"v\":\"sales\",\"fmt\":\"auto\",\"prefix\":\"AED \"}}}",
+     "saved": "f77f8aacfc58f3252dc6d584:1135",
+     "svg": "f0dc09c1014ccca9e961cc5a:581",
+     "dax": "3d29910123d0149675585c58:1803"
+    }
+   ]
+  },
+  "A6": {
+   "session": "keyboard: arrows, duplicate, Ctrl+Z, Ctrl+Shift+Z, Escape",
+   "steps": [
+    {
+     "step": "start __blank",
+     "layers": [],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "8f191c3b93d17e9c164e7ba7:458",
+     "svg": "53663f898e0904c0fcffdf93:130",
+     "dax": "c8e6683512bf6dd0593c89af:530"
+    },
+    {
+     "step": "add rect",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "ce169e56cf76a128277001f4:549",
+     "svg": "8686c77b6b2d899b73ae729b:220",
+     "dax": "05b0ff3d381b9aed87621b44:598"
+    },
+    {
+     "step": "ArrowRight",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":81,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "2a185647b56e1f88647948b2:549",
+     "svg": "2708a2b987baaa02964bbef5:220",
+     "dax": "57c6e843922a5337ef27ed69:598"
+    },
+    {
+     "step": "ArrowRight",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":82,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "92f25b6ccee4997b52c433ef:549",
+     "svg": "8f7f5411120c2b9bb66308e8:220",
+     "dax": "2b77422970b8e361bfaf7b4a:598"
+    },
+    {
+     "step": "Shift+ArrowDown",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":82,\"y\":40,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "bd80c4e4e7c64be081186ff9:549",
+     "svg": "90ab4929b576302ffdca5fca:220",
+     "dax": "49ecfb70369453d0324886cd:598"
+    },
+    {
+     "step": "Control+D",
+     "layers": [
+      "1:مستطيل 1 2",
+      "0:مستطيل 1"
+     ],
+     "sel": 1,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1 2\",\"x\":88,\"y\":46,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "554b9ef0f24aa685ecf1c7e7:643",
+     "svg": "dd78c965cfe29b514e74855b:310",
+     "dax": "a8024fd74ac44e1bfdb9a78e:666"
+    },
+    {
+     "step": "Control+Z",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": true,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":82,\"y\":40,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "bd80c4e4e7c64be081186ff9:549",
+     "svg": "90ab4929b576302ffdca5fca:220",
+     "dax": "49ecfb70369453d0324886cd:598"
+    },
+    {
+     "step": "Control+Z",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": true,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":82,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "92f25b6ccee4997b52c433ef:549",
+     "svg": "8f7f5411120c2b9bb66308e8:220",
+     "dax": "2b77422970b8e361bfaf7b4a:598"
+    },
+    {
+     "step": "Control+Shift+Z",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": true,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":82,\"y\":40,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "bd80c4e4e7c64be081186ff9:549",
+     "svg": "90ab4929b576302ffdca5fca:220",
+     "dax": "49ecfb70369453d0324886cd:598"
+    },
+    {
+     "step": "Control+Y",
+     "layers": [
+      "1:مستطيل 1 2",
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":82,\"y\":40,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "554b9ef0f24aa685ecf1c7e7:643",
+     "svg": "dd78c965cfe29b514e74855b:310",
+     "dax": "a8024fd74ac44e1bfdb9a78e:666"
+    },
+    {
+     "step": "Escape",
+     "layers": [
+      "1:مستطيل 1 2",
+      "0:مستطيل 1"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "554b9ef0f24aa685ecf1c7e7:643",
+     "svg": "dd78c965cfe29b514e74855b:310",
+     "dax": "a8024fd74ac44e1bfdb9a78e:666"
+    },
+    {
+     "step": "Control+Z",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "bd80c4e4e7c64be081186ff9:549",
+     "svg": "90ab4929b576302ffdca5fca:220",
+     "dax": "49ecfb70369453d0324886cd:598"
+    }
+   ]
+  },
+  "A7": {
+   "session": "import, undo, redo, a bad import",
+   "steps": [
+    {
+     "step": "start pill",
+     "layers": [
+      "3:Target hit",
+      "2:Label",
+      "1:Dot",
+      "0:Pill"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "f51f49e1e6de94ff6c40bb43:1244",
+     "svg": "54dcbac15e0680453b2c6931:486",
+     "dax": "e743ea8705f3e391bbb3054c:1613"
+    },
+    {
+     "step": "pick layer 0",
+     "layers": [
+      "3:Target hit",
+      "2:Label",
+      "1:Dot",
+      "0:Pill"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"Pill\",\"x\":1,\"y\":1,\"w\":118,\"h\":28,\"rx\":14,\"fill\":\"#22c55e\",\"opacity\":0.18,\"bind\":{\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.7,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#22c55e\"}}}",
+     "saved": "f51f49e1e6de94ff6c40bb43:1244",
+     "svg": "54dcbac15e0680453b2c6931:486",
+     "dax": "e743ea8705f3e391bbb3054c:1613"
+    },
+    {
+     "step": "import a design",
+     "layers": [
+      "2:Value",
+      "1:Bar",
+      "0:Back"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "2b251e31b85bcea9e1833d06:633",
+     "svg": "7540e99d7f70c15d98d2001d:456",
+     "dax": "b8a0679ec0a5cf288b5272e6:1001"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "3:Target hit",
+      "2:Label",
+      "1:Dot",
+      "0:Pill"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "f51f49e1e6de94ff6c40bb43:1244",
+     "svg": "54dcbac15e0680453b2c6931:486",
+     "dax": "e743ea8705f3e391bbb3054c:1613"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "2:Value",
+      "1:Bar",
+      "0:Back"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "2b251e31b85bcea9e1833d06:633",
+     "svg": "7540e99d7f70c15d98d2001d:456",
+     "dax": "b8a0679ec0a5cf288b5272e6:1001"
+    },
+    {
+     "step": "import a file that is not a design",
+     "layers": [
+      "2:Value",
+      "1:Bar",
+      "0:Back"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "2b251e31b85bcea9e1833d06:633",
+     "svg": "7540e99d7f70c15d98d2001d:456",
+     "dax": "b8a0679ec0a5cf288b5272e6:1001"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "3:Target hit",
+      "2:Label",
+      "1:Dot",
+      "0:Pill"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "f51f49e1e6de94ff6c40bb43:1244",
+     "svg": "54dcbac15e0680453b2c6931:486",
+     "dax": "e743ea8705f3e391bbb3054c:1613"
+    }
+   ]
+  },
+  "A8": {
+   "session": "export, edit a value, export, undo",
+   "steps": [
+    {
+     "step": "start spark",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "9cc47b65a266bd68936548d4:1180",
+     "svg": "ad542987e4d3ff1d41dd3426:1023",
+     "dax": "2447d9c3c0c5cd0b10876d79:3370"
+    },
+    {
+     "step": "export",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "9cc47b65a266bd68936548d4:1180",
+     "svg": "ad542987e4d3ff1d41dd3426:1023",
+     "dax": "2447d9c3c0c5cd0b10876d79:3370",
+     "export": "sparkline.svgkpi.json",
+     "exportText": "bae584e107a1216fed5f0950:2085",
+     "exportIsSaved": true
+    },
+    {
+     "step": "type a test value",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "c8f560b82374257f06880c5a:1176",
+     "svg": "0a04b57a841b92c109edafe8:1022",
+     "dax": "2447d9c3c0c5cd0b10876d79:3370"
+    },
+    {
+     "step": "type a measure name",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "c6e184538548be6820e800b3:1177",
+     "svg": "0a04b57a841b92c109edafe8:1022",
+     "dax": "a809f782b40f0626278e6252:3371"
+    },
+    {
+     "step": "export",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "c6e184538548be6820e800b3:1177",
+     "svg": "0a04b57a841b92c109edafe8:1022",
+     "dax": "a809f782b40f0626278e6252:3371",
+     "export": "sparkline.svgkpi.json",
+     "exportText": "d9b0342b12b7c9ddac656056:2082",
+     "exportIsSaved": true
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "c8f560b82374257f06880c5a:1176",
+     "svg": "0a04b57a841b92c109edafe8:1022",
+     "dax": "2447d9c3c0c5cd0b10876d79:3370"
+    },
+    {
+     "step": "export",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "c8f560b82374257f06880c5a:1176",
+     "svg": "0a04b57a841b92c109edafe8:1022",
+     "dax": "2447d9c3c0c5cd0b10876d79:3370",
+     "export": "sparkline.svgkpi.json",
+     "exportText": "59ce82d7e8288806ce82fb5e:2081",
+     "exportIsSaved": true
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "9cc47b65a266bd68936548d4:1180",
+     "svg": "ad542987e4d3ff1d41dd3426:1023",
+     "dax": "2447d9c3c0c5cd0b10876d79:3370"
+    },
+    {
+     "step": "export",
+     "layers": [
+      "2:Trend",
+      "1:Growth",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "9cc47b65a266bd68936548d4:1180",
+     "svg": "ad542987e4d3ff1d41dd3426:1023",
+     "dax": "2447d9c3c0c5cd0b10876d79:3370",
+     "export": "sparkline.svgkpi.json",
+     "exportText": "bae584e107a1216fed5f0950:2085",
+     "exportIsSaved": true
+    }
+   ]
+  },
+  "A9": {
+   "session": "data links and rules",
+   "steps": [
+    {
+     "step": "start __blank",
+     "layers": [],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "8f191c3b93d17e9c164e7ba7:458",
+     "svg": "53663f898e0904c0fcffdf93:130",
+     "dax": "c8e6683512bf6dd0593c89af:530"
+    },
+    {
+     "step": "add rect",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\"}",
+     "saved": "ce169e56cf76a128277001f4:549",
+     "svg": "8686c77b6b2d899b73ae729b:220",
+     "dax": "05b0ff3d381b9aed87621b44:598"
+    },
+    {
+     "step": "link the width",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80}}}",
+     "saved": "bd7c1f37b4f6ba6f7b608ec1:603",
+     "svg": "67b16b1499bdf2eadfcf01ce:223",
+     "dax": "8b6f297e6221dbeaccefba71:752"
+    },
+    {
+     "step": "link the fill",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#ef4444\"}],\"other\":\"#00d4ff\"}}}",
+     "saved": "f5157f641edbbbdd2e7e42e1:683",
+     "svg": "7f35e3c7b1593bb52203bb5a:223",
+     "dax": "9cffc7eb679b5b1bc70c49f1:875"
+    },
+    {
+     "step": "add a rule",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#00d4ff\"}}}",
+     "saved": "79e1ab78a2a90fb89673fa02:726",
+     "svg": "7f35e3c7b1593bb52203bb5a:223",
+     "dax": "17d490888f993a8bab96c5d8:928"
+    },
+    {
+     "step": "remove rule 0",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#00d4ff\"}}}",
+     "saved": "b97ba0b90324809d868958a4:683",
+     "svg": "5943137929aad7ffda0811c3:223",
+     "dax": "72deee64bc776f74116eccde:875"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": true,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#ef4444\"},{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#f59e0b\"}],\"other\":\"#00d4ff\"}}}",
+     "saved": "79e1ab78a2a90fb89673fa02:726",
+     "svg": "7f35e3c7b1593bb52203bb5a:223",
+     "dax": "17d490888f993a8bab96c5d8:928"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": true,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#ef4444\"}],\"other\":\"#00d4ff\"}}}",
+     "saved": "f5157f641edbbbdd2e7e42e1:683",
+     "svg": "7f35e3c7b1593bb52203bb5a:223",
+     "dax": "9cffc7eb679b5b1bc70c49f1:875"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": true,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80}}}",
+     "saved": "bd7c1f37b4f6ba6f7b608ec1:603",
+     "svg": "67b16b1499bdf2eadfcf01ce:223",
+     "dax": "8b6f297e6221dbeaccefba71:752"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": true,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#ef4444\"}],\"other\":\"#00d4ff\"}}}",
+     "saved": "f5157f641edbbbdd2e7e42e1:683",
+     "svg": "7f35e3c7b1593bb52203bb5a:223",
+     "dax": "9cffc7eb679b5b1bc70c49f1:875"
+    },
+    {
+     "step": "unlink the width",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": false,
+     "handles": "se e s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#ef4444\"}],\"other\":\"#00d4ff\"}}}",
+     "saved": "daca50676628fb7330c67a82:638",
+     "svg": "c9608b7beecb9400df82078f:220",
+     "dax": "a48a7118e86c34bade85bb8a:748"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "0:مستطيل 1"
+     ],
+     "sel": 0,
+     "title": "مستطيل",
+     "undo": true,
+     "redo": true,
+     "handles": "s",
+     "selbox": true,
+     "layer": "{\"type\":\"rect\",\"name\":\"مستطيل 1\",\"x\":80,\"y\":30,\"w\":80,\"h\":20,\"rx\":4,\"fill\":\"#00d4ff\",\"bind\":{\"w\":{\"v\":\"ach\",\"d0\":0,\"d1\":1,\"r0\":0,\"r1\":80},\"fill\":{\"rules\":[{\"v\":\"ach\",\"op\":\"<\",\"t\":0.9,\"c\":\"#ef4444\"}],\"other\":\"#00d4ff\"}}}",
+     "saved": "f5157f641edbbbdd2e7e42e1:683",
+     "svg": "7f35e3c7b1593bb52203bb5a:223",
+     "dax": "9cffc7eb679b5b1bc70c49f1:875"
+    }
+   ]
+  },
+  "A10": {
+   "session": "the card, order buttons, a starter, a value",
+   "steps": [
+    {
+     "step": "start trend",
+     "layers": [
+      "2:Caption",
+      "1:Growth",
+      "0:Arrow"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "efa19b0ae85341dec0cc3983:1040",
+     "svg": "b87113fbeb44323579fa61f9:512",
+     "dax": "16b30ae9f2e9231f9e45612e:1610"
+    },
+    {
+     "step": "the card (Escape)",
+     "layers": [
+      "2:Caption",
+      "1:Growth",
+      "0:Arrow"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "efa19b0ae85341dec0cc3983:1040",
+     "svg": "b87113fbeb44323579fa61f9:512",
+     "dax": "16b30ae9f2e9231f9e45612e:1610"
+    },
+    {
+     "step": "background on",
+     "layers": [
+      "2:Caption",
+      "1:Growth",
+      "0:Arrow"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "473989b33afe030598b30925:1067",
+     "svg": "5d9d79478d875bd89747ebbd:572",
+     "dax": "f888c423807f3556581cc5ee:1666"
+    },
+    {
+     "step": "type the card name",
+     "layers": [
+      "2:Caption",
+      "1:Growth",
+      "0:Arrow"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "579b726403710be7b5cdd137:1062",
+     "svg": "5d9d79478d875bd89747ebbd:572",
+     "dax": "c4d6642b48ff46c430aa182f:1661"
+    },
+    {
+     "step": "type the width",
+     "layers": [
+      "2:Caption",
+      "1:Growth",
+      "0:Arrow"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "9a5abe305a1580078b42f9d3:1062",
+     "svg": "9dc1bd8f2b25e124c73e717e:572",
+     "dax": "de46ad3150ba315d9f5a1b0f:1661"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "2:Caption",
+      "1:Growth",
+      "0:Arrow"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "579b726403710be7b5cdd137:1062",
+     "svg": "5d9d79478d875bd89747ebbd:572",
+     "dax": "c4d6642b48ff46c430aa182f:1661"
+    },
+    {
+     "step": "pick layer 0",
+     "layers": [
+      "2:Caption",
+      "1:Growth",
+      "0:Arrow"
+     ],
+     "sel": 0,
+     "title": "سهم اتجاه",
+     "undo": true,
+     "redo": true,
+     "handles": "size",
+     "selbox": true,
+     "layer": "{\"type\":\"arrow\",\"name\":\"Arrow\",\"x\":4,\"y\":8,\"size\":16,\"goodWhen\":\"up\",\"good\":\"#22c55e\",\"bad\":\"#ef4444\",\"neutral\":\"#94a3b8\",\"bind\":{\"dir\":{\"v\":\"growth\"}}}",
+     "saved": "579b726403710be7b5cdd137:1062",
+     "svg": "5d9d79478d875bd89747ebbd:572",
+     "dax": "c4d6642b48ff46c430aa182f:1661"
+    },
+    {
+     "step": "bring it forward",
+     "layers": [
+      "2:Caption",
+      "1:Arrow",
+      "0:Growth"
+     ],
+     "sel": 1,
+     "title": "سهم اتجاه",
+     "undo": true,
+     "redo": false,
+     "handles": "size",
+     "selbox": true,
+     "layer": "{\"type\":\"arrow\",\"name\":\"Arrow\",\"x\":4,\"y\":8,\"size\":16,\"goodWhen\":\"up\",\"good\":\"#22c55e\",\"bad\":\"#ef4444\",\"neutral\":\"#94a3b8\",\"bind\":{\"dir\":{\"v\":\"growth\"}}}",
+     "saved": "d97ac6480be4cee3edf96a6c:1062",
+     "svg": "07e495a79dac2df20d3d4904:572",
+     "dax": "ecbc4041a47f448a7966f825:1661"
+    },
+    {
+     "step": "duplicate it",
+     "layers": [
+      "3:Caption",
+      "2:Arrow 2",
+      "1:Arrow",
+      "0:Growth"
+     ],
+     "sel": 2,
+     "title": "سهم اتجاه",
+     "undo": true,
+     "redo": false,
+     "handles": "size",
+     "selbox": true,
+     "layer": "{\"type\":\"arrow\",\"name\":\"Arrow 2\",\"x\":10,\"y\":14,\"size\":16,\"goodWhen\":\"up\",\"good\":\"#22c55e\",\"bad\":\"#ef4444\",\"neutral\":\"#94a3b8\",\"bind\":{\"dir\":{\"v\":\"growth\"}}}",
+     "saved": "0667b099593298f7a0974582:1219",
+     "svg": "fca9f5e18170dc79105c89b8:649",
+     "dax": "49f8e12e8624e3b9a6e9fde4:2046"
+    },
+    {
+     "step": "add a measure",
+     "layers": [
+      "3:Caption",
+      "2:Arrow 2",
+      "1:Arrow",
+      "0:Growth"
+     ],
+     "sel": 2,
+     "title": "سهم اتجاه",
+     "undo": true,
+     "redo": false,
+     "handles": "size",
+     "selbox": true,
+     "layer": "{\"type\":\"arrow\",\"name\":\"Arrow 2\",\"x\":10,\"y\":14,\"size\":16,\"goodWhen\":\"up\",\"good\":\"#22c55e\",\"bad\":\"#ef4444\",\"neutral\":\"#94a3b8\",\"bind\":{\"dir\":{\"v\":\"growth\"}}}",
+     "saved": "82cf1cea76edce32fc23c060:1306",
+     "svg": "fca9f5e18170dc79105c89b8:649",
+     "dax": "f1fcc8687405818170ab8cb1:2068"
+    },
+    {
+     "step": "the bar starter",
+     "layers": [
+      "4:90% marker",
+      "3:Bar",
+      "2:Track",
+      "1:Percent",
+      "0:Value"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": false,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "3fda3487dd1388b9e91d21dd:1299",
+     "svg": "1c1cf63a7449467b06c6e54b:741",
+     "dax": "d945d5ba4af83a7cc7cd49b8:2158"
+    },
+    {
+     "step": "undo (back to the edited trend)",
+     "layers": [
+      "3:Caption",
+      "2:Arrow 2",
+      "1:Arrow",
+      "0:Growth"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "82cf1cea76edce32fc23c060:1306",
+     "svg": "fca9f5e18170dc79105c89b8:649",
+     "dax": "f1fcc8687405818170ab8cb1:2068"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "3:Caption",
+      "2:Arrow 2",
+      "1:Arrow",
+      "0:Growth"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "0667b099593298f7a0974582:1219",
+     "svg": "fca9f5e18170dc79105c89b8:649",
+     "dax": "49f8e12e8624e3b9a6e9fde4:2046"
+    },
+    {
+     "step": "undo",
+     "layers": [
+      "2:Caption",
+      "1:Arrow",
+      "0:Growth"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "d97ac6480be4cee3edf96a6c:1062",
+     "svg": "07e495a79dac2df20d3d4904:572",
+     "dax": "ecbc4041a47f448a7966f825:1661"
+    },
+    {
+     "step": "redo",
+     "layers": [
+      "3:Caption",
+      "2:Arrow 2",
+      "1:Arrow",
+      "0:Growth"
+     ],
+     "sel": -1,
+     "title": "البطاقة",
+     "undo": true,
+     "redo": true,
+     "handles": "",
+     "selbox": false,
+     "layer": null,
+     "saved": "0667b099593298f7a0974582:1219",
+     "svg": "fca9f5e18170dc79105c89b8:649",
+     "dax": "49f8e12e8624e3b9a6e9fde4:2046"
+    }
+   ]
+  }
+ }
+}
