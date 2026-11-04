@@ -1,8 +1,16 @@
-// lang-manager.js - Enhanced Language Management System
+// lang-manager.js - the language manager (window.langManager): the orchestration. It detects the visitor's language
+// (an Arabic copy's address, then ?lang=, then the saved choice, then the browser's), saves an explicit choice
+// (storage, ?lang= and history), builds the switcher, switches (to the other language's own address when the page has
+// one, in place otherwise) and puts the pieces together, each loaded before it (0.3.2 SP36):
+//   locale-routes.js   the locales, the Arabic copy's paths, the page-route table, the other language's address
+//   locale-catalog.js  the dictionaries loaded and merged, a key looked up
+//   locale-dom.js      the translated elements, the Arabic copy's links, the direction and the meta tags
+// Its methods keep their names (scripts/ar-pages.mjs calls applyLanguage, switcherAria, switcherLabel); the ones above
+// are one-line calls into those modules.
 class LanguageManager {
   constructor() {
     this.currentLang = this.detectLanguage();
-    this.rtlLanguages = ['ar', 'he', 'fa'];
+    this.rtlLanguages = [...window.LocaleRoutes.RTL];
     this.translations = {};
     this.initialized = false;
     this.breakpoint = 992; // Bootstrap's lg breakpoint
@@ -12,7 +20,7 @@ class LanguageManager {
   detectLanguage() {
     // An Arabic copy (/ar/...) is Arabic whatever was saved before: its address is its language. Saved, like ?lang=ar,
     // so the English-only pages it links to open in Arabic too
-    if (/^\/ar\//.test(window.location.pathname)) {
+    if (window.LocaleRoutes.isArPath(window.location.pathname)) {
       try { localStorage.setItem('dataarcus-lang', 'ar'); } catch (e) {}
       return 'ar';
     }
@@ -20,7 +28,7 @@ class LanguageManager {
     // Check URL parameter first
     const urlParams = new URLSearchParams(window.location.search);
     const langParam = urlParams.get('lang');
-    if (langParam && ['en', 'ar'].includes(langParam)) {
+    if (langParam && window.LocaleRoutes.LANGS.includes(langParam)) {
       // Save it, so the next page opens in the language this page shows
       try { localStorage.setItem('dataarcus-lang', langParam); } catch (e) {}
       return langParam;
@@ -29,7 +37,7 @@ class LanguageManager {
     // Check localStorage
     let stored = null;
     try { stored = localStorage.getItem('dataarcus-lang'); } catch (e) { /* storage blocked: fall back to the browser language */ }
-    if (stored && ['en', 'ar'].includes(stored)) {
+    if (stored && window.LocaleRoutes.LANGS.includes(stored)) {
       return stored;
     }
     
@@ -43,164 +51,43 @@ class LanguageManager {
     return 'en';
   }
   
-  // Load and merge translation files
+  // Load and merge translation files: the common dictionary, then the page's own over it (locale-catalog.js)
   loadTranslations() {
-    // Merge common translations
-    if (window.commonTranslations) {
-      this.translations = { ...window.commonTranslations };
-    }
-    
-    // Merge page-specific translations
-    const pageTranslations = this.getPageTranslations();
-    if (pageTranslations) {
-      this.mergeTranslations(pageTranslations);
-    }
+    this.translations = window.LocaleCatalog.load(window.commonTranslations, this.getPageTranslations(), this.translations);
   }
-  
-  // The page's own path: an Arabic copy (/ar/...) is the page at the same path without /ar
+
+  // The page's own path, whether a path has an Arabic copy (locale-routes.js)
   pagePath() {
-    return window.location.pathname.replace(/^\/ar(?=\/)/, '');
+    return window.LocaleRoutes.pagePath(window.location.pathname);
   }
 
-  // Whether a page path has an Arabic copy: every public page has one (scripts/ar-pages.mjs, PAIRS = the sitemap);
-  // not files, the go/ short links, the 404 page or a lab page
   hasArCopy(p) {
-    return /(\.html|\/)$/.test(p) && !/^\/(ar|go|assets)\//.test(p) && !/^\/404\.html$|-lab\.html$/.test(p);
+    return window.LocaleRoutes.hasArCopy(p);
   }
 
-  // Links in translated HTML on an Arabic copy: a relative address is read from the English page's folder, and a link
-  // to a page that has an Arabic copy goes to the copy (as the generator writes the page's own links)
+  // Links in translated HTML on an Arabic copy: each address as locale-routes.js's arAddress gives it
   arLinks(root) {
-    const site = 'https://dataarcus.com', base = window.location.origin + this.pagePath();
-    root.querySelectorAll('[href], [src]').forEach((e) => ['href', 'src'].forEach((a) => {
-      const v = e.getAttribute(a), abs = !!v && v.startsWith(site + '/');
-      if (v === null || (!abs && /^(#|[a-z][a-z0-9+.-]*:|\/\/)/i.test(v))) return;
-      const u = new URL(abs ? v.slice(site.length) : v, base);
-      const p = a === 'href' && e.tagName === 'A' && this.hasArCopy(u.pathname) ? '/ar' + u.pathname : u.pathname;
-      e.setAttribute(a, (abs ? site : '') + p + u.search + u.hash);
-    }));
+    window.LocaleDom.arLinks(root, window.location.origin + this.pagePath());
   }
 
-  // Get page-specific translations based on current page
+  // The page's own translations: the window global its route names (locale-routes.js)
   getPageTranslations() {
-    const path = this.pagePath();
-    
-    // Free tools pages (checked first: /tools/index.html also contains "index")
-    if (path.includes('power-bi-theme-generator')) {
-      return window.themeGeneratorTranslations;
-    } else if (path.includes('dax-calendar-table-generator')) {
-      return window.calendarGeneratorTranslations;
-    } else if (path.includes('dax-measure-builder')) {
-      return window.measureBuilderTranslations;
-    } else if (path.includes('/tools/power-bi-model-health-check')) {
-      return window.modelHealthTranslations;
-    } else if (path.includes('dp-600-practice-exam')) {
-      return window.dp600Translations;
-    } else if (path.includes('pl-300-practice-exam')) {
-      return window.pl300Translations;
-    } else if (path.includes('svg-kpi-designer')) {
-      return window.svgKpiTranslations;
-    } else if (path.includes('power-bi-licensing-cost-calculator')) {
-      return window.licensingCalculatorTranslations;
-    } else if (path.includes('/tools/')) {
-      return window.toolsHubTranslations;
-    }
-    // the beta page lives in a folder (/power-bi-mcp/, also as /power-bi-mcp/index.html): before the home page's "index"
-    if (path.includes('/power-bi-mcp/')) return window.betaPageTranslations;
+    const key = window.LocaleRoutes.pageKey(this.pagePath());
+    return key ? window[key] : null;
+  }
 
-    if (path.includes('adventureworks-dashboard')) {
-      return window.adventureworksTranslations;
-    } else if (path.includes('call-center-dashboard')) {
-      return window.callcenterTranslations;
-    } else if (path.includes('maven-market-dashboard')) {
-      return window.mavenmarketTranslations;
-    } else if (path.includes('portfolio')) {
-      return window.portfolioTranslations;
-    } else if (path.includes('index') || path === '/' || path === '') {
-      return window.homepageTranslations;
-    } else if (path.includes('article-clv')) {
-      return window.clvTranslations;
-    } else if (path.includes('er-health-dashboard')) {
-     return window.erHealthTranslations;
-    } else if (path.includes('blog')) {
-     return window.blogTranslations;
-    } else if (path.includes('article-etl-vs-power-query')) {
-     return window.etlpqTranslations;
-    } else if (path.includes('article-kpi')) {
-     return window.kpiTranslations;
-    } else if (path.includes('article-shopify')) {
-     return window.shopifyTranslations;
-    } else if (path.includes('consumer-financial-complaints')) {
-     return window.cfpbComplaintsTranslations;
-    } else if (path.includes('repeatiq-dashboard')) {
-     return window.repeatiqCommerceTranslations;
-    } else if (path.includes('fintech-dashboard')) {
-     return window.fintechRiskTranslations;
-    } else if (path.includes('article-evm')) {
-     return window.evmTranslations;
-    } else if (path.includes('dataarcus-pulse')) {
-     return window.dataarcusPulseTranslations;
-    } else if (path.includes('article-journey-attribution')) {
-     return window.journeyAttributionTranslations;
-    } else if (path.includes('article-gulf-calendar-power-bi')) {
-     return window.gulfCalendarArticleTranslations;
-    } else if (path.includes('article-ramadan-sales-power-bi')) {
-     return window.ramadanSalesTranslations;
-    } else if (path.includes('article-power-bi-model-health-check')) {
-     return window.modelHealthArticleTranslations;
-    } else if (path.includes('article-power-bi-report-ready-for-arabic')) {
-     return window.reportReadyArabicTranslations;
-    } else if (path.includes('article-power-bi-custom-visual-ai-checks')) {
-     return window.customVisualChecksTranslations;
-    } else if (path.includes('article-power-bi-best-practice-exceptions')) {
-     return window.bestPracticeExceptionsTranslations;
-    } else if (path.includes('article-power-bi-report-redesign')) {
-     return window.reportRedesignArticleTranslations;
-    } else if (path.includes('article-power-bi-model-ai-ready')) {
-     return window.aiReadyArticleTranslations;
-    } else if (path.includes('article-power-bi-report-styles')) {
-     return window.reportStylesArticleTranslations;
-    } else if (path.includes('article-power-bi-licensing-guide')) {
-     return window.licensingGuideTranslations;
-    } else if (path.includes('copilot-readiness-audit')) {
-     return window.copilotAuditTranslations;
-    } else if (path.includes('privacy')) {
-     return window.privacyTranslations;
-    }
-    return null;
-  }
-  
-  // Deep merge translations
+  // Deep merge translations (locale-catalog.js)
   mergeTranslations(pageTranslations) {
-    for (const lang in pageTranslations) {
-      if (!this.translations[lang]) {
-        this.translations[lang] = {};
-      }
-      this.translations[lang] = this.deepMerge(
-        this.translations[lang], 
-        pageTranslations[lang]
-      );
-    }
+    this.translations = window.LocaleCatalog.merge(this.translations, pageTranslations);
   }
-  
-  // Deep merge utility function
+
   deepMerge(target, source) {
-    const output = { ...target };
-    
-    for (const key in source) {
-      if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
-        output[key] = this.deepMerge(target[key] || {}, source[key]);
-      } else {
-        output[key] = source[key];
-      }
-    }
-    
-    return output;
+    return window.LocaleCatalog.deepMerge(target, source);
   }
-  
+
   // Set language and persist
   setLanguage(lang) {
-    if (!['en', 'ar'].includes(lang)) return false;
+    if (!window.LocaleRoutes.LANGS.includes(lang)) return false;
     
     this.currentLang = lang;
     try { localStorage.setItem('dataarcus-lang', lang); } catch (e) { /* storage blocked: the ?lang= in the URL still carries it */ }
@@ -218,174 +105,24 @@ class LanguageManager {
   
   // Update text direction and HTML attributes
   updateDirection() {
-    const isRTL = this.rtlLanguages.includes(this.currentLang);
-    document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
-    document.documentElement.lang = this.currentLang;
-    
-    // Arabic font: Inter has no Arabic letters, so load IBM Plex Sans Arabic on demand
-    if (isRTL && !document.getElementById('ar-font')) {
-      const font = document.createElement('link');
-      font.id = 'ar-font';
-      font.rel = 'stylesheet';
-      font.href = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap';
-      document.head.appendChild(font);
-    }
-    // English pages still show Arabic words: the switcher's label. Without the Arabic font the phone draws them
-    // in its own system font, which sits lower than the icon. Load only the letters of those words (a few KB).
-    if (!isRTL && !document.getElementById('ar-font-label')) {
-      const label = document.createElement('link');
-      label.id = 'ar-font-label';
-      label.rel = 'stylesheet';
-      label.href = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500;600&display=swap&text=' + encodeURIComponent('عربي العربية');
-      document.head.appendChild(label);
-    }
-
-    // Add/remove RTL class
-    if (isRTL) {
-      document.body.classList.add('rtl');
-    } else {
-      document.body.classList.remove('rtl');
-    }
+    window.LocaleDom.direction(this.currentLang, this.rtlLanguages);
   }
   
-  // Get translation text by key path
+  // Get translation text by key path (locale-catalog.js; a path through a text warns in the console)
   getText(path) {
-    const keys = path.split('.');
-    let value = this.translations[this.currentLang];
-    
-    for (const key of keys) {
-      if (value && typeof value === 'object') {
-        value = value[key];
-      } else {
-        console.warn(`Translation missing: ${path} for language: ${this.currentLang}`);
-        return `[Missing: ${path}]`;
-      }
-    }
-    
-    return value || `[Missing: ${path}]`;
+    return window.LocaleCatalog.text(this.translations, this.currentLang, path, (m) => console.warn(m));
   }
-  
+
   // Apply translations to DOM elements (of this page, or of another document: scripts/ar-pages.mjs translates the page's
   // own HTML with it to write the /ar/ copy)
   // (arCopy: the document is an Arabic copy; the generator passes it, as it translates from the English address)
-  applyLanguage(doc = document, arCopy = /^\/ar\//.test(window.location.pathname)) {
-    // Update all elements with data-i18n attribute
-    doc.querySelectorAll('[data-i18n]').forEach(element => {
-      const key = element.getAttribute('data-i18n');
-      const text = this.getText(key);
-      
-      if (typeof text === 'string') {
-        if (element.tagName === 'INPUT' && element.type === 'submit') {
-          element.value = text;
-        } else if (element.hasAttribute('placeholder')) {
-          element.placeholder = text;
-        } else {
-          element.textContent = text;
-        }
-      }
-    });
-    
-    // Update elements with data-i18n-html for HTML content
-    doc.querySelectorAll('[data-i18n-html]').forEach(element => {
-      const key = element.getAttribute('data-i18n-html');
-      const html = this.getText(key);
-      if (typeof html === 'string') {
-        element.innerHTML = html;
-        if (arCopy) this.arLinks(element);
-      }
-    });
-    
-    // Translate attributes: data-i18n-placeholder, data-i18n-alt, data-i18n-aria-label and data-i18n-title
-    // each name the key for that attribute, so inputs, images and buttons read in the page's language too
-    ['placeholder', 'alt', 'aria-label', 'title'].forEach((attr) => {
-      doc.querySelectorAll(`[data-i18n-${attr}]`).forEach((element) => {
-        const text = this.getText(element.getAttribute(`data-i18n-${attr}`));
-        if (typeof text === 'string') element.setAttribute(attr, text);
-      });
-    });
-
-    // Update meta tags
-    this.updateMetaTags(doc);
+  applyLanguage(doc = document, arCopy = window.LocaleRoutes.isArPath(window.location.pathname)) {
+    window.LocaleDom.translate(doc, { text: (k) => this.getText(k), lang: this.currentLang, arCopy, base: window.location.origin + this.pagePath() });
   }
   
   // Update meta tags for SEO
   updateMetaTags(doc = document) {
-    // pages without their own translation file (404) name their meta key on <html data-i18n-meta="...">
-    const found = this.getText(doc.documentElement.getAttribute('data-i18n-meta') || 'meta');
-    if (typeof found === 'object') {
-      // Share previews follow the page: og:/twitter: title and description default to the page's own, and
-      // og:locale to its language, so a page only needs a title and a description in each language
-      const metaData = Object.assign({}, found);
-      const has = (sel) => !!doc.querySelector(sel);
-      [['title', 'og:title', 'twitter:title'], ['description', 'og:description', 'twitter:description']].forEach(([base, og, tw]) => {
-        if (!metaData[base]) return;
-        if (!metaData[og] && has(`meta[property="${og}"]`)) metaData[og] = metaData[base];
-        if (!metaData[tw] && has(`meta[name="${tw}"]`)) metaData[tw] = metaData[og] || metaData[base];
-      });
-      if (has('meta[property="og:locale"]')) metaData['og:locale'] = this.currentLang === 'ar' ? 'ar_AE' : 'en_US';
-      // Update <title>
-      if (metaData.title) {
-        doc.title = metaData.title;
-      }
-      // a page with its own Arabic copy (hreflang links) has its canonical in its file: each copy names itself
-      if (doc.querySelector('link[rel="alternate"][hreflang]')) delete metaData.canonical;
-
-      // Loop through all meta properties
-      Object.entries(metaData).forEach(([key, value]) => {
-        if (!value) return;
-        if (key === 'title') return; // Already handled
-
-        // Handle standard meta tags
-        let selector, attr;
-        if (key === 'description' || key === 'keywords' || key === 'author') {
-          selector = `meta[name="${key}"]`;
-          attr = 'content';
-        }
-        // Handle Open Graph tags
-        else if (key.startsWith('og:')) {
-          selector = `meta[property="${key}"]`;
-          attr = 'content';
-        }
-        // Handle Twitter tags
-        else if (key.startsWith('twitter:')) {
-          selector = `meta[name="${key}"]`;
-          attr = 'content';
-        }
-        // Handle canonical link
-        else if (key === 'canonical') {
-          selector = 'link[rel="canonical"]';
-          attr = 'href';
-        }
-        // Handle favicon
-        else if (key === 'icon') {
-          selector = 'link[rel="icon"]';
-          attr = 'href';
-        }
-        // Add more custom cases as needed
-
-        if (selector) {
-          let tag = doc.querySelector(selector);
-          if (!tag) {
-            // Create tag if it doesn't exist
-            if (selector.startsWith('meta')) {
-              tag = doc.createElement('meta');
-              if (selector.includes('property')) {
-                tag.setAttribute('property', key);
-              } else if (selector.includes('name')) {
-                tag.setAttribute('name', key);
-              }
-              doc.head.appendChild(tag);
-            } else if (selector.startsWith('link')) {
-              tag = doc.createElement('link');
-              if (key === 'canonical') tag.setAttribute('rel', 'canonical');
-              if (key === 'icon') tag.setAttribute('rel', 'icon');
-              doc.head.appendChild(tag);
-            }
-          }
-          tag.setAttribute(attr, value);
-        }
-      });
-    }
+    window.LocaleDom.meta(doc, (k) => this.getText(k), this.currentLang);
   }
   
   // Check if current screen size is mobile (below breakpoint)
@@ -601,11 +338,9 @@ class LanguageManager {
   // naming another path on this site (null for the page itself, so an English page shown in Arabic switches in place)
   pairUrl(lang) {
     const link = document.querySelector(`link[rel="alternate"][hreflang="${lang}"]`);
-    if (!link) return null;
-    const to = new URL(link.getAttribute('href'), window.location.href), bare = (p) => p.replace(/\/index\.html$/, '/');
-    return bare(to.pathname) === bare(window.location.pathname) ? null : window.location.origin + to.pathname;
+    return link ? window.LocaleRoutes.pairUrl(link.getAttribute('href'), window.location.href) : null;
   }
-  
+
   // Initialize the language manager
   init() {
     this.loadTranslations();
