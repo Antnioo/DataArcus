@@ -24,9 +24,11 @@
 - **Got:** `an1` 25 checks, red on 1e5e3b3 first (22 of 25; T1, T13, T15 are guards, green there; commit 89bc050);
   after: 25 of 25. tmdl-model 70 -> 72 (both new red there). Measured: 12 captions a culture, 72 in all, 6 cultures,
   15 rows English, the script 200 lines, 4,522 bytes. Plan answer: off 19,368 -> 19,368 (+0), on 22,957 (+3,589),
-  never `truncated`. fx1 22 / 22 / 22. Areas twin 40, arabic 15, model 19, safety 18 suites pass; lint 0.
-- **CI:** (pending)
-- **Resume:** CI on the merged head; then only this note.
+  never `truncated`. fx1 22 / 22 / 22. On the merged head (integration at 39c46bb, PK1, merged once): twin 40,
+  arabic 15, model 19, safety 18 suites pass; the website's 34 of 34; lint 0.
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41784584962 on 7f7bb32** (Linux and Windows, every job
+  green; macOS skipped on a builder branch, as CI1 set). **State: DONE.**
+- **Resume:** none; the reviewer's merge. The owner: the table names item (For the owner) and the laptop steps.
 
 ## The plan
 1. Red first: `test-0.3.2-an1.mjs` and the 2 tmdl-model checks, run on the base (red), committed.
