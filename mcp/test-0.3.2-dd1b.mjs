@@ -139,11 +139,8 @@ const src = (f) => fs.readFileSync(path.join(ROOT, ...f.split('/')), 'utf8').rep
 GONE.forEach(([f, n]) => chk(() => definitions(src(f), n).length === 0, () => `S1 ${f} defines ${n} again: its calls read assets/js/pbir-values.js`));
 // S2 every place still named is the module's reader (or a call of it): no literal parse of its own
 const OWN = /\.Literal\b|parseFloat|\.replace\(|=== 'true'|=== 'false'|\+String\(/;
-// the one kept: mirror-policy.js strOf (sp10 P10 pins mirror-policy.js to require visual-types.js alone; P above pins it to
-// litText's answer on all 15 literals; the reviewer's call: mcp/work/DD1B.md)
-const KEPT = new Set(['assets/js/mirror-policy.js strOf']);
+// (DD1A: mirror-policy.js strOf, the one DD1B kept, is PV.litText now: sp10 P10 admits the pure shared files)
 for (const id of Object.keys(RULES)) for (const p of (FAMILIES.find((x) => x.id === id) || { places: [] }).places) {
-  if (KEPT.has(placeName(p))) continue;
   const s = src(p.file), defs = definitions(s, p.fn);
   chk(() => defs.length > 0 && defs.every((d) => !OWN.test(d.text)) && /pbir-values\.js|\bPV\b/.test(s), () => `S2 ${placeName(p)} reads a literal itself: ${defs.map((d) => d.text.slice(0, 120)).join(' / ')}`);
 }

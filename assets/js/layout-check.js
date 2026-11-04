@@ -46,10 +46,11 @@
   const BARS = /^(barChart|clusteredBarChart|stackedBarChart|hundredPercentStackedBarChart)$/;
   const DATA = /Chart$|^tableEx$|^pivotTable$|^treemap$|^funnel$|^gauge$|^map$|^filledMap$|^azureMap$/;
   // (A4-9, audit 4: a time-like name by its whole words, never inside another word: "Candidate" and "Update Status" are
-  // not dates; "OrderDate", "Month-Year", "fiscal_period", «الشهر» are) a name's words: split on spaces, marks and camel case
-  const wordsOf = (name) => String(name || '').replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().split(/[^a-z0-9\u0600-\u06ff]+/).filter(Boolean).map((w) => w.replace(/^ال(?=..)/, ''));
-  const TIME_WORDS = new Set(['month', 'months', 'year', 'years', 'date', 'dates', 'week', 'weeks', 'quarter', 'quarters', 'qtr', 'period', 'periods', 'day', 'days', 'شهر', 'سنة', 'تاريخ', 'أسبوع', 'ربع', 'يوم']);
-  const TIMEY = { test: (name) => wordsOf(name).some((w) => TIME_WORDS.has(w)) };
+  // not dates; "OrderDate", "Month-Year", "fiscal_period", «الشهر» are. 0.3.2 DD1A: the words and the one list are
+  // time-names.js's, as the twin, the preview and the writer read them)
+  const TN = node ? require('./time-names.js') : root.DATimeNames;
+  const wordsOf = TN.wordsOf;
+  const TIMEY = { test: TN.isTimeName };
   const many = (name) => { const w = wordsOf(name); return (w.some((x) => /^months?$/.test(x)) && w.some((x) => /^years?$/.test(x))) || w.some((x) => /^dates?$|^تاريخ$/.test(x)); };
   // (A4-8) the reading layer's titleOff; a visual JSON when given (the reading branch's inventory keeps it, a test's too)
   const titleOff = (x) => { if (x.titleOff) return true; const t = (((((x.json || {}).visual || {}).visualContainerObjects || {}).title) || []).find((e) => e && !e.selector && e.properties && e.properties.show); const v = t && t.properties.show.expr && t.properties.show.expr.Literal && t.properties.show.expr.Literal.Value; return String(v) === 'false'; };
