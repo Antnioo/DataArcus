@@ -8,6 +8,11 @@ task routes. [Every module](#every-module) (0.3.2 MD1): one row per file, kept t
 
 - **The website** (dataarcus.com, GitHub Pages): the HTML pages at the root, `tools/`, `articles/`, and their Arabic
   copies in `ar/`. Its Power BI tools run in the browser; nothing a visitor opens is uploaded.
+  Every page loads the site-wide scripts in this order: `site-navigation.js` (navigation and effects, the WhatsApp
+  button, the live report facades; it sends `dataarcus:embed`), `site-forms.js` (the contact and beta forms, tracking-free;
+  it sends `dataarcus:lead`), `site-analytics.js` (the analytics adapter and the cookie banner: the only site file that
+  calls gtag or Clarity or touches consent; it hears both events and the clicks), then `main.js` (the bootstrap: it
+  calls the three in order).
   Its practice exams (DP-600 and PL-300, `tools/*-practice-exam.html`): `dp600-sim.js` (the exam's settings, the bank's
   index and the wiring: it gives each module its storage, clock and random source); `exam-grade.js` (grading, pure: a
   question and an answer in, a credit out; a submitted mock's score and tallies; a practice session's summary);
@@ -69,6 +74,7 @@ task routes. [Every module](#every-module) (0.3.2 MD1): one row per file, kept t
 | Change | Start with |
 |---|---|
 | A website page or tool | the page's HTML and its `assets/js/` engine; `node scripts/test-site-config.mjs`; `scripts/tests/run-all.mjs` |
+| Site-wide behaviour (navigation, effects, forms, analytics, consent) | `assets/js/site-navigation.js`, `site-forms.js`, `site-analytics.js` (consent), `main.js` (the bootstrap); `scripts/tests/run-all.mjs sp35 consent site anchors` |
 | The practice exams | `assets/js/dp600-sim.js` (settings, wiring), `exam-grade.js` (scores), `exam-session.js` (the timed mock), `exam-progress.js` (saved progress, study plan), `exam-view.js` (screens); `scripts/tests/sp34.mjs`, `tools.mjs` |
 | What a report looks like (layout, sizes, visuals) | `assets/js/pbip-export.js` (it puts the writer together: [the writer's rows](#the-website-engines)), `design-engine.js`; `report-rules.js` for measured limits |
 | Themes, page layout and saved designs | `assets/js/design-engine.js` (DAEngine, the facade the generator page, `mcp/lib/design.mjs` and the writer call; its colours, glass, metrics and saved designs: [the design rows](#the-website-engines)) |
@@ -193,7 +199,10 @@ In `assets/js/`. Each draws one page (or every page) and holds no engine logic t
 
 | file | job | in -> out | used by | pure |
 |---|---|---|---|---|
-| `main.js` | every page's shared behaviour: the navbar, smooth scrolling, counters, the contact form (English and Arabic), the cookie consent, analytics events | the page's DOM | every page (`index.html`, `tools/index.html`, ...) | no: DOM, storage, network, the global dataArcusTrack |
+| `main.js` | every page's bootstrap (0.3.2 SP35): calls the three modules below in the order the one file ran them | none -> `SiteAnalytics.init()`, `SiteNavigation.whatsapp()`, `SiteAnalytics.banner()` at script time; `SiteNavigation.init()`, `SiteForms.init()` on DOMContentLoaded | every page (78 pages: `index.html`, `tools/index.html`, ...) | no: DOM |
+| `site-navigation.js` | every page's navigation and effects: particles, AOS, the year, the navbar, the top offsets, a #section arrival, counters, the phone menu, the ripple, Escape, the blog's search and filters, the WhatsApp button, the live report facades (0.3.2 SP35) | the page's DOM, AOS and bootstrap -> DOM changes, and `dataarcus:embed` `{ dashboard }` per live report opened | every page (78 pages) | no: DOM |
+| `site-forms.js` | every page's forms, tracking-free: the contact and beta forms sent to Web3Forms, messages in English and Arabic, the validation UX (0.3.2 SP35) | a form and its result box -> a JSON POST, DOM changes, and `dataarcus:lead` `{ formId }` after a sent form | every page (78 pages) | no: DOM, network |
+| `site-analytics.js` | the analytics adapter and the cookie banner, the only site file that calls gtag or Clarity or touches `daConsent`; the tools send their events through its `window.dataArcusTrack` (0.3.2 SP35) | clicks, the page's events, `dataarcus:lead` `{ formId }` and `dataarcus:embed` `{ dashboard }` -> GA4 and Clarity events (each only when present), the consent choice | every page (78 pages) | no: DOM, storage, the global dataArcusTrack |
 | `lang-manager.js` | the English and Arabic switch: the language from the address (`/ar/`), the saved choice or the browser; right to left and the Arabic font | the page's DOM and the translations | every page (`index.html`, `tools/index.html`, ...) | no: DOM, storage, the global langManager |
 | `theme-generator.js` | the Theme & Layout Generator page's orchestration: the preview cards, contrast, the theme JSON and the glass gate, a theme from a logo, the sample thumbnail, the steps bar, folds and the example; mounts the three modules below; every script it loads on demand, each with its ?v= stamp (the writer, the model reader, the names, the check, the preview, the worker) | the page's DOM -> the page drawn; the store, `L` and the loaders handed to its modules | `tools/power-bi-theme-generator.html`, `tools/power-bi-theme-generator-lab.html` | no: DOM, storage, network, browser files, the global __tgFoldSums |
 | `theme-state-ui.js` | the generator's saved design: read back and repaired (the migration, the first visit's look), a store with get, update, replace, subscribe and save, and the page's other saved keys | `createStore({ storage, engine, key })` -> the store | `tools/power-bi-theme-generator.html`, `tools/power-bi-theme-generator-lab.html`, `ar/tools/power-bi-theme-generator.html` | yes |
