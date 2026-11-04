@@ -527,9 +527,8 @@ export const FAMILIES = [
     inputs: BYTES, places: [
       P('assets/js/design-engine.js', 'crc32', 'inner', crc),
       P('assets/js/pbip-zip.js', 'crc32', 'export', crc),
-      P('mcp/lib/glass-picture.mjs', 'crc32', 'source', crc),
-      P('mcp/lib/page-picture.mjs', 'crc32', 'source', crc),
       P('assets/js/theme-download-ui.js', 'crc32', 'source', crc),
+      P('assets/js/png-bytes.js', 'crc32', 'export', crc),
     ] },
   { id: 'overlap', title: 'Do these two boxes overlap?', question: 'two boxes on a page: do they overlap by more than a rounding (half a pixel each way)?',
     inputs: BOXES, places: [
@@ -592,19 +591,16 @@ export const FAMILIES = [
     ] },
   { id: 'u32', title: 'What number do four bytes hold?', question: 'bytes and an offset: the big-endian unsigned 32-bit number there (a PNG read)',
     inputs: U32, places: [
-      P('mcp/lib/glass-picture.mjs', 'u32', 'source', async (x, get) => (await get())(Uint8Array.from(x.b), x.i)),
-      P('mcp/lib/page-picture.mjs', 'u32', 'source', async (x, get) => (await get())(Uint8Array.from(x.b), x.i)),
+      P('assets/js/png-bytes.js', 'u32', 'export', async (x, get) => (await get())(Uint8Array.from(x.b), x.i)),
     ] },
   { id: 'lru', title: 'What does a small cache keep?', question: 'a cache of N entries: what its gets answer after these sets (the least recently used goes first)',
     inputs: LRUS, places: [
-      P('mcp/lib/glass-picture.mjs', 'lru', 'source', lruRun),
-      P('mcp/lib/page-picture.mjs', 'lru', 'source', lruRun),
+      P('mcp/lib/small-cache.mjs', 'lru', 'export', lruRun),
     ] },
   { id: 'png-chunk', title: 'What bytes make a PNG chunk?', question: "a chunk's type and body: its bytes (length, type, body, CRC-32)",
     inputs: CHUNKS, places: [
       P('assets/js/design-engine.js', 'chunk', 'source', chunkHex, { within: 'pngOf' }),
-      P('mcp/lib/glass-picture.mjs', 'chunk', 'source', chunkHex, { within: 'encode' }),
-      P('mcp/lib/page-picture.mjs', 'chunk', 'source', chunkHex),
+      P('assets/js/png-bytes.js', 'pngChunk', 'export', chunkHex),
     ] },
   { id: 'limits', title: 'How large may a model file be?', question: 'a kind of model file or entry: the size (or count) over which it is refused before it is read',
     inputs: LIMIT_KEYS, places: [

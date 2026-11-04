@@ -41,10 +41,10 @@ How it is kept true:
 | [vt-slicer Is this visual a slicer?](#vt-slicer-is-this-visual-a-slicer) | 5 | 1 of 18 | read_report, check_report, the twin, the preview | (not in the audit) |
 | [vt-bar Is this visual a bar chart?](#vt-bar-is-this-visual-a-bar-chart) | 4 | 1 of 18 | the twin, the preview, check_report | (not in the audit) |
 | [canon What is the canonical text of a plan?](#canon-what-is-the-canonical-text-of-a-plan) | 2 | 0 of 10 | every write (the approval's digest) | equal |
-| [crc What is the CRC-32 of these bytes?](#crc-what-is-the-crc-32-of-these-bytes) | 5 | 0 of 8 | every PNG and ZIP written | equal |
-| [png-chunk What bytes make a PNG chunk?](#png-chunk-what-bytes-make-a-png-chunk) | 3 | 0 of 8 | every PNG written | equal |
-| [u32 What number do four bytes hold?](#u32-what-number-do-four-bytes-hold) | 2 | 0 of 8 | the twin's and the glass's PNG reads | equal |
-| [lru What does a small cache keep?](#lru-what-does-a-small-cache-keep) | 2 | 0 of 8 | the twin's pictures, the glass | equal |
+| [crc What is the CRC-32 of these bytes?](#crc-what-is-the-crc-32-of-these-bytes) | 4 | 0 of 8 | every PNG and ZIP written | equal |
+| [png-chunk What bytes make a PNG chunk?](#png-chunk-what-bytes-make-a-png-chunk) | 2 | 0 of 8 | every PNG written | equal |
+| [u32 What number do four bytes hold?](#u32-what-number-do-four-bytes-hold) | 1 | 0 of 8 | the twin's and the glass's PNG reads | equal |
+| [lru What does a small cache keep?](#lru-what-does-a-small-cache-keep) | 1 | 0 of 8 | the twin's pictures, the glass | equal |
 | [overlap Do these two boxes overlap?](#overlap-do-these-two-boxes-overlap) | 2 | 0 of 9 | the twin, the redesign | equal |
 | [overlap-area How much do two boxes overlap?](#overlap-area-how-much-do-two-boxes-overlap) | 2 | 0 of 9 | the twin | equal |
 | [contrast What is the contrast of two colours?](#contrast-what-is-the-contrast-of-two-colours) | 3 | 0 of 9 | generate_theme, the writer, the SVG KPIs | equal |
@@ -438,9 +438,8 @@ hundredPercentStackedBarChart) in one list; the same for `stackedColumnChart`. T
 |---|---|---|
 | `assets/js/design-engine.js` `crc32` | [engines](MODULES.md#the-website-engines) | generate_theme and the theme generator page (the background PNG) |
 | `assets/js/pbip-zip.js` `crc32` | [engines](MODULES.md#the-website-engines) | the website's .pbip download (the ZIP) |
-| `mcp/lib/glass-picture.mjs` `crc32` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | the glass background (create_report, the twin's flipped picture) |
-| `mcp/lib/page-picture.mjs` `crc32` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's page pictures |
 | `assets/js/theme-download-ui.js` `crc32` | [pages](MODULES.md#the-browser-pages-own-scripts) | the theme generator page (its PNG's text chunks) |
+| `assets/js/png-bytes.js` `crc32` | [engines](MODULES.md#the-website-engines) | the one place (DD2P): glass-picture.mjs (the glass background, create_report, the twin's flipped picture) and page-picture.mjs (the twin's page pictures) read it |
 
 **Today:** all 5 answer the same on all 8 inputs (the check value 0xCBF43926 for '123456789' included).
 
@@ -632,8 +631,7 @@ gives every column a type and no suffix, so it passes while they differ.
 | place | MODULES.md | who sees it |
 |---|---|---|
 | `assets/js/design-engine.js` `chunk` (in `pngOf`) | [engines](MODULES.md#the-website-engines) | generate_theme and the theme generator page (the background PNG) |
-| `mcp/lib/glass-picture.mjs` `chunk` (in `encode`) | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | the glass background |
-| `mcp/lib/page-picture.mjs` `chunk` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's page pictures |
+| `assets/js/png-bytes.js` `pngChunk` | [engines](MODULES.md#the-website-engines) | the one place (DD2P): glass-picture.mjs `encode` (the glass background) and page-picture.mjs `writePng` (the twin's page pictures) read it |
 
 **Today:** all 3 answer the same bytes on all 8 chunks.
 
@@ -649,8 +647,7 @@ gives every column a type and no suffix, so it passes while they differ.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `mcp/lib/glass-picture.mjs` `u32` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | the glass picture read back (the twin flips it) |
-| `mcp/lib/page-picture.mjs` `u32` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's page pictures read |
+| `assets/js/png-bytes.js` `u32` | [engines](MODULES.md#the-website-engines) | the one place (DD2P): glass-picture.mjs (the glass picture read back, the twin flips it) and page-picture.mjs (the twin's page pictures read) read it |
 
 **Today:** both answer the same on all 8 reads (past the end too: 16908288 for `01 02`, both).
 
@@ -666,8 +663,7 @@ gives every column a type and no suffix, so it passes while they differ.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `mcp/lib/glass-picture.mjs` `lru` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | the glass pictures kept between calls |
-| `mcp/lib/page-picture.mjs` `lru` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's pictures kept between calls |
+| `mcp/lib/small-cache.mjs` `lru` | [helpers](MODULES.md#the-mcp-what-leaves-the-server-and-the-tools-helpers) | the one place (DD2P): glass-picture.mjs (the glass pictures kept between calls) and page-picture.mjs (the twin's pictures kept between calls) read it |
 
 **Today:** both answer the same on all 8 step lists.
 
@@ -807,7 +803,8 @@ ledger does not add it again.
   first probe had them as one family ("order", 5 of 8 inputs apart): two questions (the audit).
 - `mcp/lib/twin-geometry.mjs` `overlapOf` and `mcp/lib/twin-visuals.mjs` `overlaps`: an area and a tolerant yes or no,
   two questions (`overlap-area`, `overlap`) (the audit).
-- `mcp/lib/glass-picture.mjs` `u32` and `mcp/lib/page-picture.mjs` `be`: reading four bytes and writing them (the audit).
+- `assets/js/png-bytes.js` `u32` and `assets/js/png-bytes.js` `be32`: reading four bytes and writing them (the audit; one
+  file since DD2P, two functions).
 - `assets/js/pbip-export.js` `PBI_LITERAL`: a quoted token kept as written, like terminology.mjs's and text-format.mjs's
   `lit` below; a keeper, not a decoder (the audit).
 - B-326 (the audit): one resolver with a path check that depends on the system; one question, one place.
