@@ -72,7 +72,7 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
     () => `T3a. themeScaleOf gives the theme's page and its text factor: 720 ${JSON.stringify(sc)}, 1080 ${JSON.stringify(sc1)}`);
   const up = get(() => E.scaleTheme(t720, E.textScale(1080) / sc.f));
   chk(() => same(sizesOf(up), sizesOf(t1080)), () => `T3b. a 720 theme rescaled to 1080 by the text factors is the 1080 theme: ${JSON.stringify(get(() => sizesOf(up)))}`);
-  const rr = src('lib/report-run.mjs');
+  const rr = src('lib/report-run.mjs') + '\n' + src('lib/report-build.mjs');   // (0.3.2 SP43: the hand-placed pages' theme is scaled in report-build.mjs)
   chk(() => /textScale\(hs\[0\]\) \/ sc\.f/.test(rr) && !/hs\[0\] \/ themeH/.test(rr), () => 'T3c. create_report rescales one of our themes by the text factors, never by the page heights');
 }
 

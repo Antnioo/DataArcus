@@ -32,7 +32,7 @@ function scriptName(dir, base, text) {
 }
 /** (0.3.1 K2, an outside architecture review of 25 Oct: the write built the twin again and wrote that rebuild, with a
  *  .platform logical id of its own) the exact files the twin writes, built once from a plan's P, as create_report's plan
- *  keeps its own (tools/plan_layout.mjs: exactArtifact): the copied report's files (the original's unchanged files read
+ *  keeps its own (lib/plan-artifact.mjs: exactArtifact): the copied report's files (the original's unchanged files read
  *  now), its own reportExtensions.json when the original has none, .platform with the logical id the plan chose
  *  (P.logicalId), the month script when offered and not already there, and the .pbip last; paths from the project
  *  folder. Returns { files, digest (lib/artifact.mjs: digestOf), logicalId, applied, month }. */

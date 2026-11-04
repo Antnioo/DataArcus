@@ -14,6 +14,9 @@ package's manifest; this file says what is in it.
 - **Inside the MCP, the approval window:** the approval page's HTML and the window's web side (its one-time link, the
   checks that a click comes from the page itself) each have a file of their own; every page, every answer of the window
   and every check is exactly what it was before, and only the person's click in DataArcus's own window approves a plan.
+- **Inside the report writer and the MCP's report build:** the Arabic text isolation (website and MCP), one report's
+  build from its fields and design, and the plan's exact report and its check each have a file of their own; every
+  report, website download, plan and written file is exactly what it was before.
 - **Inside the MCP, the redesign's text and changes:** the consistent copy's text and the changes a redesign makes to its
   copy (places, titles, theme colours, the copy's name) each have a file of their own; every redesign plan, check and
   written file is exactly what it was before.
