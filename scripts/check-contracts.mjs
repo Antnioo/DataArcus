@@ -6,12 +6,14 @@
 //   - its MODULES.md link is the part whose table holds the file's row;
 //   - the ledger's families are the probe's, each with the same places, and each family has at least 8 inputs there;
 //   - the top table's "places" and "of M inputs" match the probe;
-//   - every `file` `function` in the "Not one question" list exists.
+//   - every `file` `function` in the "Not one question" list exists;
+//   - every copy in "Equal copies, not probed" exists, and a row that says "same text: yes" has the same definition text
+//     in every place (spaces aside): a copy that drifts from its twin fails here.
 //   node scripts/check-contracts.mjs [--root <dir>]   one result line: PASS  contracts  <N> checks (or one FAIL line a miss)
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { FAMILIES } from './contracts-probe.mjs';
+import { FAMILIES, definitions } from './contracts-probe.mjs';
 
 export const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const DOC = 'mcp/docs/CONTRACTS.md';
@@ -32,12 +34,17 @@ export const slug = (h) => h.trim().toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu,
 
 // the ledger: { families: [{ id, line, places: [{ file, fn, within, link, line }] }], top: [{ id, places, of, line }], not: [...] }
 export function ledgerOf(md) {
-  const lines = md.split('\n'), out = { families: [], top: [], not: [] };
-  let fam = null, inNot = false, inTop = false;
+  const lines = md.split('\n'), out = { families: [], top: [], not: [], equal: [] };
+  let fam = null, inNot = false, inTop = false, inEqual = false;
   lines.forEach((l, i) => {
     const h = /^## (\S+) (.+)$/.exec(l);
-    if (/^## /.test(l)) { inNot = /^## Not one question/.test(l); inTop = /^## The families/.test(l); fam = null; }
-    if (h && !inNot && !inTop) { fam = { id: h[1], line: i + 1, places: [] }; out.families.push(fam); return; }
+    if (/^## /.test(l)) { inNot = /^## Not one question/.test(l); inTop = /^## The families/.test(l); inEqual = /^## Equal copies/.test(l); fam = null; }
+    if (h && !inNot && !inTop && !inEqual) { fam = { id: h[1], line: i + 1, places: [] }; out.families.push(fam); return; }
+    if (inEqual && /^\|/.test(l) && !/^\|\s*(copy|-)/.test(l)) {
+      const c = cells(l), places = [...(c[1] || '').matchAll(/`([^`]+\/[^`]+)` `([^`]+)`/g)].map((m) => ({ file: m[1], fn: m[2], line: i + 1 }));
+      out.equal.push({ copy: c[0], places, same: /^yes\b/.test(c[2] || ''), line: i + 1 });
+      return;
+    }
     if (inTop && /^\|\s*\[/.test(l)) { const c = cells(l), id = /^\[(\S+)/.exec(c[0]), of = /(\d+) of (\d+)/.exec(c[2] || ''); out.top.push({ id: id && id[1], places: +c[1], of: of ? +of[2] : NaN, line: i + 1 }); return; }
     if (inNot && /^- /.test(l)) { for (const m of l.matchAll(/`([^`]+\/[^`]+)` `([^`]+)`/g)) out.not.push({ file: m[1], fn: m[2], line: i + 1 }); return; }
     if (fam && /^\|/.test(l)) {
@@ -92,6 +99,16 @@ export function checkContracts(root = ROOT, families = FAMILIES) {
     else if (part !== p.link) problems.push(`FAIL ${where(p)}: ${p.file}'s MODULES.md link is #${p.link}, its row is ${part ? 'under #' + part : 'in no table'}: link #${part || '<its part>'}`);
   }
   for (const x of L.not) exists(x, '"Not one question":');
+  for (const e of L.equal) {
+    checks++;
+    if (e.places.length < 2) { problems.push(`FAIL ${DOC}:${e.line}: the copy "${e.copy}" names ${e.places.length} place: a copy has two or more`); continue; }
+    e.places.forEach((x) => exists(x, `"${e.copy}":`));
+    if (!e.same) continue;
+    const texts = e.places.map((x) => { if (!has(x.file)) return null; const d = definitions(read(root, x.file), x.fn).sort((a, b) => a.indent - b.indent)[0]; return d ? d.text.replace(/\s+/g, ' ').trim() : null; });
+    checks++;
+    if (texts.some((t) => t == null)) problems.push(`FAIL ${DOC}:${e.line}: "${e.copy}": a definition could not be read (named above)`);
+    else if (new Set(texts).size > 1) problems.push(`FAIL ${DOC}:${e.line}: "${e.copy}" says the same text, and ${e.places.filter((x, k) => texts[k] !== texts[0]).map((x) => x.file + ' ' + x.fn).join(', ')} now differ from ${e.places[0].file}: make them the same again, or say "no: <how>" and probe it`);
+  }
   // the ledger and the probe: the same families, the same places, the inputs
   const byId = new Map(families.map((f) => [f.id, f])), ledgerIds = new Set(L.families.map((f) => f.id));
   for (const f of families) {

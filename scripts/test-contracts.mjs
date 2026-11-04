@@ -25,12 +25,13 @@ const ROWS = {
   alpha: '| `assets/js/alpha.js` `isUp` | [engines](MODULES.md#the-engines) | the made-up page |',
   beta: '| `mcp/lib/beta.mjs` `inner` (in `outer`) | [lib](MODULES.md#the-mcp-lib) | the made-up tool |',
 };
-const ledger = ({ rows = [ROWS.alpha, ROWS.beta], top = '| [x1 Is it made up?](#x1) | 2 | 1 of 8 | a page | (to come) |', not = '- `mcp/lib/beta.mjs` `outer`: a shape, not a question.' } = {}) =>
+const EQUAL = '| twin | `assets/js/alpha.js` `twin`; `mcp/lib/beta.mjs` `twin` | yes | equal |';
+const ledger = ({ rows = [ROWS.alpha, ROWS.beta], top = '| [x1 Is it made up?](#x1) | 2 | 1 of 8 | a page | (to come) |', not = '- `mcp/lib/beta.mjs` `outer`: a shape, not a question.', equal = EQUAL } = {}) =>
   '# Ledger\n\n## The families\n\n| family | places | disagree on N of M inputs | who sees it | newest copy |\n|---|---|---|---|---|\n' + top
-  + '\n\n## x1 Is it made up?\n\n| place | MODULES.md | who sees it |\n|---|---|---|\n' + rows.join('\n') + '\n\n## Not one question\n\n' + not + '\n';
+  + '\n\n## x1 Is it made up?\n\n| place | MODULES.md | who sees it |\n|---|---|---|\n' + rows.join('\n') + '\n\n## Equal copies, not probed\n\n| copy | places | same text | newest copy |\n|---|---|---|---|\n' + equal + '\n\n## Not one question\n\n' + not + '\n';
 const BASE = {
-  'assets/js/alpha.js': "(function (root) { const isUp = (x) => !!x; const api = { isUp }; if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.A = api; })(this);\n",
-  'mcp/lib/beta.mjs': 'export function outer(a) {\n  const inner = (b) => a + b;\n  return inner(1);\n}\n',
+  'assets/js/alpha.js': "(function (root) { const isUp = (x) => !!x; const twin = (s) => String(s).trim(); const api = { isUp }; if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.A = api; })(this);\n",
+  'mcp/lib/beta.mjs': 'export function outer(a) {\n  const inner = (b) => a + b;\n  return inner(1);\n}\nconst twin = (s) =>  String(s).trim();\n',
   'mcp/docs/MODULES.md': '# M\n\n## Every module\n\n### The engines\n\nIn `assets/js/`.\n\n| file | job | in -> out | used by | pure |\n|---|---|---|---|---|\n| `alpha.js` | up | x -> y | `beta.mjs` | yes |\n\n### The MCP: lib\n\nIn `mcp/lib/`.\n\n| file | job | in -> out | used by | pure |\n|---|---|---|---|---|\n| `beta.mjs` | b | a -> b | `server.mjs` | yes |\n',
 };
 function repo(over = {}, fams = FAMS) {
@@ -53,7 +54,7 @@ t('red: a place whose file is gone', () => some(repo({ 'assets/js/alpha.js': nul
 t('red: a place whose function is gone (renamed)', () => one(repo({ 'assets/js/alpha.js': BASE['assets/js/alpha.js'].replace(/isUp/g, 'isUpNow') }), /assets\/js\/alpha\.js has no isUp: the function was renamed or moved/));
 t('red: a nested place whose outer function is gone, or that is no longer inside it', () => {
   one(repo({ 'mcp/lib/beta.mjs': BASE['mcp/lib/beta.mjs'].replace(/outer/g, 'other') + 'export const outer2 = 1;\n', 'mcp/docs/CONTRACTS.md': ledger({ not: '' }) }), /has no outer \(the function inner sits in\)/);
-  one(repo({ 'mcp/lib/beta.mjs': 'const inner = (b) => b;\nexport function outer(a) { return inner(a); }\n' }), /beta\.mjs's inner is not inside outer/);
+  one(repo({ 'mcp/lib/beta.mjs': 'const inner = (b) => b;\nexport function outer(a) { return inner(a); }\nconst twin = (s) => String(s).trim();\n' }), /beta\.mjs's inner is not inside outer/);
 });
 t('red: a MODULES.md link to a part that does not hold the row', () => one(repo({ 'mcp/docs/CONTRACTS.md': ledger({ rows: [ROWS.alpha.replace('#the-engines', '#the-mcp-lib'), ROWS.beta] }) }), /MODULES\.md link is #the-mcp-lib, its row is under #the-engines/));
 t('red: a family with fewer than 8 inputs (and the top table that still says 8)', () => {
@@ -76,6 +77,12 @@ t('red: a top table that counts the places or the inputs wrong, a family with no
   one(repo({ 'mcp/docs/CONTRACTS.md': ledger({ top: '' }) }), /family x1 has no row in the top table/);
 });
 t('red: a "Not one question" name that is gone', () => one(repo({ 'mcp/docs/CONTRACTS.md': ledger({ not: '- `mcp/lib/beta.mjs` `gone`: a shape.' }) }), /"Not one question": mcp\/lib\/beta\.mjs has no gone/));
+t('red: an equal copy that drifts from its twin, and a copy of one place; a row that says "no" is not compared', () => {
+  one(repo({ 'mcp/lib/beta.mjs': BASE['mcp/lib/beta.mjs'].replace('String(s).trim()', 'String(s)') }), /"twin" says the same text, and mcp\/lib\/beta\.mjs twin now differ from assets\/js\/alpha\.js/);
+  one(repo({ 'mcp/docs/CONTRACTS.md': ledger({ equal: '| twin | `assets/js/alpha.js` `twin` | yes | equal |' }) }), /the copy "twin" names 1 place/);
+  assert.deepEqual(repo({ 'mcp/lib/beta.mjs': BASE['mcp/lib/beta.mjs'].replace('String(s).trim()', 'String(s)'), 'mcp/docs/CONTRACTS.md': ledger({ equal: EQUAL.replace('| yes |', '| no: one trims |') }) }).problems, []);
+  some(repo({ 'mcp/lib/beta.mjs': BASE['mcp/lib/beta.mjs'].replace(/const twin[^\n]*\n/, '') }), /"twin": mcp\/lib\/beta\.mjs has no twin/);
+});
 t('red: no ledger at all', () => one(repo({ 'mcp/docs/CONTRACTS.md': null }), /mcp\/docs\/CONTRACTS\.md is not there/));
 t('the repo passes: every place of every family is there, the ledger and the probe agree', () => {
   const r = checkContracts();
