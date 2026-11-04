@@ -23,6 +23,10 @@
  * Names, ids, navigation targets and bookmark references are never changed. Texts are replaced only by the labels
  * the caller passes (the user's approved Arabic), keyed by the ids textsOf gives. A report's text is untrusted input:
  * it is only copied or replaced, never interpreted.
+ * Its parts (0.3.2 SP10 and SP39, the Codex split map): the named rules in mirror-policy.js, the chart transforms in
+ * mirror-charts.js, the text runs and literals in mirror-text.js, the group and badge geometry in mirror-units.js; this
+ * file is the page orchestration: each visual's transforms in their order (mirrorVisual), each page (mirrorPage), the
+ * tables and matrices it writes, the phone layout's boxes, the page pictures, and the one api the MCP and the website read.
  * Browser and Node (module.exports / window.DAMirror). */
 (function (root) {
   'use strict';
@@ -36,6 +40,9 @@
   // the text runs and literals (what a reader sees, its ids and the approved Arabic): mirror-text.js (0.3.2 SP39)
   const Text = typeof module !== 'undefined' && module.exports ? require('./mirror-text.js') : root.DAMirrorText;
   const { paragraphsOf, textsOfVisual, labelVisual, textsOfMobile, labelMobile } = Text;
+  // the group and badge geometry (the units mirrored as one, the width a visual is placed in): mirror-units.js (0.3.2 SP39)
+  const Units = typeof module !== 'undefined' && module.exports ? require('./mirror-units.js') : root.DAMirrorUnits;
+  const { unitsOf, nameOf, round } = Units;
   const KIND_WHAT = {
     column: 'column, line, area and combo charts: value axis at the right, categories right to left by the sort',
     waterfall: 'waterfall charts: no Total column in Arabic: the last step on the left ends at the total, with no total label either (Power BI 2.159 does not draw it); every step\'s tooltip gives the running total. Power BI draws a waterfall left to right only and its axis holds only the model\'s members, so each is written as a stacked column chart drawn as a waterfall (an invisible base under each step, from the twin\'s own report measures): the running total in the original\'s order, the first period at the right and each step rising or falling from the one at its right, the value axis at the right, labels on the steps (a fall shown negative), the original waterfall\'s increase and decrease colours, no legend (a stacked column chart\'s legend would list the invisible base); hovering the empty space under a step shows its base in the tooltip. The series are named in Arabic: القاعدة، ارتفاع، انخفاض، ارتفاع تحت الصفر، انخفاض تحت الصفر، الإجمالي الجاري، الإجمالي',
@@ -64,10 +71,6 @@
     other: 'other visuals (scatter...): moved only; no right-to-left setting is proven for them',
     unreadable: 'visuals whose file has an unexpected shape: copied as they are, not mirrored'
   };
-
-  // ---- small helpers ----
-  const round = (v) => { const r = Math.round(v * 100) / 100; return r === 0 ? 0 : r; };
-
 
   // ---- one visual ----
   // json: visual.json of the original; W: the width it is placed in (the page's, or its parent group's)
@@ -474,77 +477,12 @@
 
   // ---- one page: every visual mirrored, W from its parent group ----
   // visuals: [visual.json]; opts as mirrorVisual's. Returns { visuals: [json] in the same order, kinds: { kind: n }, custom: [names] }
-  // ---- visuals mirrored as one (the laptop's rc.5 twins, T-3 and T-6) ----
-  // Mirroring every box on its own broke two kinds of pair:
-  //  - on: a small visual drawn ON a bigger one (a growth badge on a tile, an icon at the end of a card's title). What
-  //    the bigger one draws inside (a picture, a text) does not flip with it, so the reflected badge landed on the
-  //    tile's icon and the icon on the title's last letters. It now moves WITH its host: same offset from the host's
-  //    left edge. On: at least 3/4 of its area inside the host, above it (a higher z), at most a third of the host's
-  //    width, 0.6 of its height and a tenth of its area, a badge's kind (a card, a text box, an image or shape, a new
-  //    card, a button), and the host carries at most 3 such (more: the host is a panel, its visuals mirror one by one);
-  //  - bars: a bar list with its names hidden and the names in the visual beside it (a table, a text box, a slicer, a
-  //    card; never a shape or an image), side by side (a gap of at most 24, half their heights shared). The two are mirrored as one block and keep
-  //    their order inside it; the bars keep growing toward their names (no axis is switched or inverted).
-  // Same parent only (positions in a group are relative to it). Returns { on: [{ visual, host }], bars: [{ bars, names }] }.
-  const BADGE = ['plain', 'textbox', 'newCard', 'button'];
-  // (the names: a visual that shows text; a shape or an image beside the bars is not their names)
-  const showsNames = (v) => ['table', 'matrix', 'textbox', 'slicer', 'newCard'].includes(kindOf(v)) || ['card', 'multiRowCard'].includes(v.visual.visualType);
-  const nameOf = (v) => (isObj(v) && (typeof v.name === 'string' || typeof v.name === 'number') ? String(v.name) : null);
-  const boxOf = (v) => { const p = isObj(v) && isObj(v.position) ? v.position : null; return p && [p.x, p.y, p.width, p.height].every(Number.isFinite) && p.width > 0 && p.height > 0 ? { x: p.x, y: p.y, w: p.width, h: p.height, z: Number.isFinite(p.z) ? p.z : null } : null; };
-  // a field's key (Table.Field) for a column, a measure or a hierarchy level, or null
-  const fieldKey = (f) => { const c = isObj(f) ? (f.Column || f.Measure || f.HierarchyLevel) : null, src = isObj(c) && isObj(c.Expression) && isObj(c.Expression.SourceRef) ? c.Expression.SourceRef.Entity : null;
-    return c && typeof c.Property === 'string' ? (src == null ? '' : String(src)) + '.' + c.Property : c && typeof c.Level === 'string' ? 'level.' + c.Level : null; };
-  const parentOf = (v) => (isObj(v) && v.parentGroupName != null ? String(v.parentGroupName) : '');
-  const axisHidden = (v) => (entries(isObj(v.visual) ? v.visual.objects : null, 'categoryAxis') || []).some((e) => !e.selector && isObj(e.properties) && lit(e.properties.show) === 'false');
-  function unitsOf(visuals) {
-    const list = (Array.isArray(visuals) ? visuals : []).filter((v) => nameOf(v) != null && boxOf(v) && kindOf(v) !== 'group' && kindOf(v) !== 'unreadable');
-    const inside = (a, b) => { const w = Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)), h = Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y)); return (w * h) / (a.w * a.h); };
-    const on = [];
-    list.forEach((v) => {
-      if (!BADGE.includes(kindOf(v))) return;
-      const a = boxOf(v);
-      const hosts = list.filter((h) => h !== v && parentOf(h) === parentOf(v)).map((h) => [h, boxOf(h)]).filter(([, b]) => inside(a, b) >= 0.75 && a.w <= b.w / 3 && a.h <= b.h * 0.6 && a.w * a.h <= b.w * b.h / 10 && a.z != null && b.z != null && a.z > b.z);
-      if (hosts.length) { hosts.sort((x, y) => x[1].w * x[1].h - y[1].w * y[1].h); on.push({ visual: nameOf(v), host: nameOf(hosts[0][0]) }); }
-    });
-    const count = {}; on.forEach((o) => { count[o.host] = (count[o.host] || 0) + 1; });
-    const onKept = on.filter((o) => count[o.host] <= 3 && !on.some((x) => x.visual === o.host));
-    const taken = new Set(onKept.map((o) => o.visual)), bars = [];
-    list.forEach((v) => {
-      if (kindOf(v) !== 'bar' || !axisHidden(v) || taken.has(nameOf(v))) return;
-      const a = boxOf(v);
-      // (0.3.1 MP1b, laptop part 6: "Calls by Department" beside a ratings table of other fields was kept as one block in
-      // its English order, the two then lying on each other's place) a visual of fields is the bars' names only when it
-      // shows the bars' own category field; a text box (no fields) still can be
-      const cat = fieldKey((first(projections(v.visual.query, 'Category')) || {}).field);
-      const namesOf = (n) => { const qs = isObj(n.visual.query) && isObj(n.visual.query.queryState) ? n.visual.query.queryState : {}, keys = [];
-        Object.keys(qs).forEach((r) => (projections(n.visual.query, r) || []).forEach((x) => { if (isObj(x)) keys.push(fieldKey(x.field)); })); return keys; };
-      const sameField = (n) => { const ks = namesOf(n); return !ks.length || (cat != null && ks.includes(cat)); };
-      const near = list.filter((n) => n !== v && parentOf(n) === parentOf(v) && showsNames(n) && !taken.has(nameOf(n)) && sameField(n)).map((n) => {
-        const b = boxOf(n), gap = Math.max(b.x - (a.x + a.w), a.x - (b.x + b.w)), shared = Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
-        return { n, gap, ok: gap >= -2 && gap <= 24 && shared >= Math.min(a.h, b.h) / 2 };
-      }).filter((c) => c.ok).sort((x, y) => x.gap - y.gap);
-      if (near.length) { bars.push({ bars: nameOf(v), names: nameOf(near[0].n) }); taken.add(nameOf(v)); taken.add(nameOf(near[0].n)); }
-    });
-    return { on: onKept, bars };
-  }
-
   function mirrorPage(page, visuals, opts) {
-    const list = Array.isArray(visuals) ? visuals : [], byName = {};
-    list.forEach((v) => { if (isObj(v) && (typeof v.name === 'string' || typeof v.name === 'number')) byName[v.name] = v; });
-    const widthOf = (v) => { const parent = isObj(v) && (typeof v.parentGroupName === 'string' || typeof v.parentGroupName === 'number') ? byName[v.parentGroupName] : null; return parent && isObj(parent.position) ? parent.position.width : isObj(page) ? page.width : undefined; };
+    // (mirror-units.js, 0.3.2 SP39) the visuals by name, the width each is placed in, the units and where each member goes
+    const list = Array.isArray(visuals) ? visuals : [], byName = Units.byNameOf(list);
+    const widthOf = (v) => Units.widthOf(page, byName, v);
     let units; try { units = unitsOf(list); } catch (e) { units = { on: [], bars: [] }; }
-    // where each member of a unit goes (its x in the twin), and the bars that keep their direction
-    const at = {}, keepBars = new Set();
-    units.bars.forEach((u) => {
-      const a = boxOf(byName[u.bars]), b = boxOf(byName[u.names]), W = widthOf(byName[u.bars]); if (!Number.isFinite(W)) return;
-      const left = Math.min(a.x, b.x), right = Math.max(a.x + a.w, b.x + b.w), left2 = W - right;
-      at[u.bars] = round(left2 + a.x - left); at[u.names] = round(left2 + b.x - left); keepBars.add(u.bars);
-    });
-    units.on.forEach((u) => {
-      const a = boxOf(byName[u.visual]), h = boxOf(byName[u.host]), W = widthOf(byName[u.host]); if (!Number.isFinite(W)) return;
-      const hx = at[u.host] != null ? at[u.host] : W - h.x - h.w;
-      at[u.visual] = round(hx + a.x - h.x);
-    });
+    const { at, keepBars } = Units.placesOf(units, byName, page);
     const kinds = {}, custom = [], unreadable = [], measures = [], waterfallsKept = [], kept = [], asTables = [], out = list.map((v) => {
       const W = widthOf(v), n = nameOf(v);
       // (the backstop: whatever the file holds, a visual that can't be mirrored is copied as it is and listed)

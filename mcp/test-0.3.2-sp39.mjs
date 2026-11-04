@@ -183,12 +183,12 @@ MODS.forEach((m, i) => { const s = SRC(m.file); if (s == null) return;
 const moved = MODS.filter((m) => SRC(m.file) != null).length;
 if (moved) chk(() => lines(RM) < (moved === 3 ? 600 : 885) && /require\('\.\/mirror-policy\.js'\)/.test(RM), () => `M4 report-mirror.js must shrink (${lines(RM)} lines; under 600 once all three moved) and keep reading mirror-policy.js`);
 if (moved === 3) {
-  // the one home: each shared PBIR writer defined once (mirror-charts.js), the others read it
-  chk(() => { const defs = ['report-mirror.js', 'mirror-charts.js', 'mirror-text.js', 'mirror-units.js'].map((f) => SRC(f)).map((s) => (s.match(/const (mk|str|clone|plainEntry|listIn|sameField) = \(/g) || []).length);
+  // the one home: each shared PBIR writer defined once at the top level (mirror-charts.js), the others read it
+  chk(() => { const defs = ['report-mirror.js', 'mirror-charts.js', 'mirror-text.js', 'mirror-units.js'].map((f) => SRC(f)).map((s) => (s.match(/^  const (mk|str|clone|plainEntry|listIn|sameField) = \(/gm) || []).length);
     return defs[1] === 6 && defs[0] === 0 && defs[2] === 0 && defs[3] === 0; }, () => 'M5 mk, str, clone, plainEntry, listIn and sameField must be defined once, in mirror-charts.js');
   // the orchestration order in mirrorVisual: charts (donut, waterfall, axes) before pills, tables, matrix, cards, text, padding, titles
   chk(() => { const body = RM.slice(RM.indexOf('function mirrorVisual('), RM.indexOf('function mirrorVisual(') + 12000); const at = (re) => body.search(re);
-    const seq = [/Charts\.chartsOf\(/, /P\.oneRowButtons\(/, /kind === 'table' \|\| kind === 'matrixAsTable'/, /Charts\.matrixRtl\(/, /kind === 'newCard'/, /kind === 'textbox'/, /kind === 'button'/, /'padding'\)/, /P\.titled\(kind\)/].map(at);
+    const seq = [/Charts\.chartsOf\(/, /P\.oneRowButtons\(/, /kind === 'table' \|\| kind === 'matrixAsTable'/, /Charts\.matrixRtl\(/, /kind === 'newCard'/, /kind === 'textbox'/, /kind === 'button'/, /entries\(v\.visualContainerObjects, 'padding'\)/, /P\.titled\(kind\)/].map(at);
     return seq.every((x) => x > 0) && seq.every((x, k) => k === 0 || x > seq[k - 1]); }, () => 'M6 mirrorVisual must keep its order: the charts, the pills, the tables, the matrix, the new cards, the text, the padding, the titles');
 }
 
