@@ -18,6 +18,9 @@ How it is kept true:
   function in it, inside the function named after "in"), its MODULES.md link is the part that holds its row, every
   family has the same places here as in the probe and at least 8 inputs there, and the top table's counts match.
 - No line numbers, no counts that go stale by themselves (D-1016-01): a place is its file and its function's name.
+- **Newest copy** (the top table's last column and each family's line): from the reviewer's Codex history audit
+  (stale-twins, on 3a9ad5e8, 4 Nov), checked against the code and the probe here; where the probe disagrees with the
+  audit, the family says so. "merge": no copy holds every fix; "equal": no answer differs today.
 - **Nothing moved in CL1**: today's answers are what the code answers now. "Decided answer" is a proposal until the
   reviewer and the owner decide; the shared module comes after.
 
@@ -25,32 +28,43 @@ How it is kept true:
 
 | family | places | disagree on N of M inputs | who sees it | newest copy |
 |---|---|---|---|---|
-| [1a Is this column time?](#1a-is-this-column-time) | 4 | 12 of 24 | the twin, the preview, the writer, check_report | (to come: the reviewer's stale-twins history) |
-| [1b-text What text does a literal hold?](#1b-text-what-text-does-a-literal-hold) | 18 | 11 of 15 | check_report, read_report, the writer, the twin, the preview, the redesign | (to come) |
-| [1b-number What number does a literal hold?](#1b-number-what-number-does-a-literal-hold) | 8 | 12 of 15 | check_report, read_report, the twin, the preview | (to come) |
-| [1b-bool What true or false does a literal hold?](#1b-bool-what-true-or-false-does-a-literal-hold) | 6 | 13 of 15 | check_report, read_report, the twin, the preview, the native copy | (to come) |
-| [1c How wide is the frame a visual is mirrored inside?](#1c-how-wide-is-the-frame-a-visual-is-mirrored-inside) | 3 | 4 of 9 | the twin | (to come) |
-| [1d What width did the report set for this table column?](#1d-what-width-did-the-report-set-for-this-table-column) | 5 | 3 of 12 | check_report, the twin, create_report | (to come) |
-| [1f Is this text Arabic?](#1f-is-this-text-arabic) | 7 | 4 of 11 | every measured text, check_report, create_report, the twin | (to come) |
-| [vt-table Is this visual a table or a matrix?](#vt-table-is-this-visual-a-table-or-a-matrix) | 3 | 0 of 18 | the twin, the preview | (to come) |
-| [vt-slicer Is this visual a slicer?](#vt-slicer-is-this-visual-a-slicer) | 5 | 1 of 18 | read_report, check_report, the twin, the preview | (to come) |
-| [vt-bar Is this visual a bar chart?](#vt-bar-is-this-visual-a-bar-chart) | 4 | 1 of 18 | the twin, the preview, check_report | (to come) |
-| [order In what order is a page read?](#order-in-what-order-is-a-page-read) | 2 | 5 of 8 | check_report, the writer, the twin's texts | (to come) |
-| [canon What is the canonical text of a plan?](#canon-what-is-the-canonical-text-of-a-plan) | 2 | 0 of 10 | every write (the approval's digest) | (to come) |
-| [crc What is the CRC-32 of these bytes?](#crc-what-is-the-crc-32-of-these-bytes) | 5 | 0 of 8 | every PNG and ZIP written | (to come) |
-| [overlap Do these two boxes overlap?](#overlap-do-these-two-boxes-overlap) | 4 | 3 of 9 | the twin, the redesign | (to come) |
-| [contrast What is the contrast of two colours?](#contrast-what-is-the-contrast-of-two-colours) | 3 | 0 of 9 | generate_theme, the writer, the SVG KPIs | (to come) |
-| [xml How is a text escaped for XML (SVG)?](#xml-how-is-a-text-escaped-for-xml-svg) | 2 | 0 of 10 | the SVG KPIs, the flip cards | (to come) |
-| [html How is a text escaped for HTML?](#html-how-is-a-text-escaped-for-html) | 9 | 3 of 10 | the website's pages, the approval window | (to come) |
-| [decode What text do the bytes of a Power BI file hold?](#decode-what-text-do-the-bytes-of-a-power-bi-file-hold) | 3 | 0 of 10 | every model read (the MCP and the website) | (to come) |
+| [1a Is this column time?](#1a-is-this-column-time) | 4 | 12 of 24 | the twin, the preview, the writer, check_report | merge (pbip-query.js splits camel case, layout-check.js takes the Arabic article off, page-preview.js has the most words) |
+| [1b-text What text does a literal hold?](#1b-text-what-text-does-a-literal-hold) | 18 | 11 of 15 | check_report, read_report, the writer, the twin, the preview, the redesign | merge (tagged decoder) |
+| [1b-number What number does a literal hold?](#1b-number-what-number-does-a-literal-hold) | 8 | 12 of 15 | check_report, read_report, the twin, the preview | merge (tagged decoder) |
+| [1b-bool What true or false does a literal hold?](#1b-bool-what-true-or-false-does-a-literal-hold) | 6 | 13 of 15 | check_report, read_report, the twin, the preview, the native copy | merge (tagged decoder) |
+| [1c How wide is the frame a visual is mirrored inside?](#1c-how-wide-is-the-frame-a-visual-is-mirrored-inside) | 4 | 5 of 10 | the twin | `twin-geometry.mjs` `widthOf` (in `aroundTables`) |
+| [1d What width did the report set for this table column?](#1d-what-width-did-the-report-set-for-this-table-column) | 5 | 3 of 12 | check_report, the twin, create_report | merge (tagged decoder) |
+| [1f Is this text Arabic?](#1f-is-this-text-arabic) | 7 | 4 of 11 | every measured text, check_report, create_report, the twin | `text-measure.js` / `field-catalog.js` (the broad test) |
+| [1g Which model folder is read?](#1g-which-model-folder-is-read) | 2 | 4 of 8 | the website's model import, every MCP tool that reads a model | `model-discovery.mjs` (the browser's is stale) |
+| [1h Which column sorts this one?](#1h-which-column-sorts-this-one) | 2 | 3 of 11 | the website's field picker, check_model_health's fix script | `field-catalog.js` (the health check's is stale; keep its null-list adapter) |
+| [grid Does this visual keep its grid left to right?](#grid-does-this-visual-keep-its-grid-left-to-right) | 2 | 0 of 18 | the twin | equal |
+| [vt-slicer Is this visual a slicer?](#vt-slicer-is-this-visual-a-slicer) | 5 | 1 of 18 | read_report, check_report, the twin, the preview | (not in the audit) |
+| [vt-bar Is this visual a bar chart?](#vt-bar-is-this-visual-a-bar-chart) | 4 | 1 of 18 | the twin, the preview, check_report | (not in the audit) |
+| [canon What is the canonical text of a plan?](#canon-what-is-the-canonical-text-of-a-plan) | 2 | 0 of 10 | every write (the approval's digest) | equal |
+| [crc What is the CRC-32 of these bytes?](#crc-what-is-the-crc-32-of-these-bytes) | 5 | 0 of 8 | every PNG and ZIP written | equal |
+| [png-chunk What bytes make a PNG chunk?](#png-chunk-what-bytes-make-a-png-chunk) | 3 | 0 of 8 | every PNG written | equal |
+| [u32 What number do four bytes hold?](#u32-what-number-do-four-bytes-hold) | 2 | 0 of 8 | the twin's and the glass's PNG reads | equal |
+| [lru What does a small cache keep?](#lru-what-does-a-small-cache-keep) | 2 | 0 of 8 | the twin's pictures, the glass | equal |
+| [overlap Do these two boxes overlap?](#overlap-do-these-two-boxes-overlap) | 2 | 0 of 9 | the twin, the redesign | equal |
+| [overlap-area How much do two boxes overlap?](#overlap-area-how-much-do-two-boxes-overlap) | 2 | 0 of 9 | the twin | equal |
+| [contrast What is the contrast of two colours?](#contrast-what-is-the-contrast-of-two-colours) | 3 | 0 of 9 | generate_theme, the writer, the SVG KPIs | equal |
+| [xml How is a text escaped for XML (SVG)?](#xml-how-is-a-text-escaped-for-xml-svg) | 2 | 0 of 10 | the SVG KPIs, the flip cards | equal |
+| [html How is a text escaped for HTML?](#html-how-is-a-text-escaped-for-html) | 9 | 3 of 10 | the website's pages, the approval window | equal by the audit; the probe differs (null, `'`) |
+| [tmdl-name How is a name written in TMDL?](#tmdl-name-how-is-a-name-written-in-tmdl) | 6 | 1 of 9 | check_model_health's fix scripts, the measure builder page, the twin's model, create_report's sample | equal by the audit; the probe differs (`Sales-2024`) |
+| [decode What text do the bytes of a Power BI file hold?](#decode-what-text-do-the-bytes-of-a-power-bi-file-hold) | 3 | 0 of 10 | every model read (the MCP and the website) | equal |
+| [limits How large may a model file be?](#limits-how-large-may-a-model-file-be) | 3 | 1 of 8 | every model read (the MCP and the website) | equal by the audit; the import has no `entries` limit |
+| [text-runs What text does a text box hold?](#text-runs-what-text-does-a-text-box-hold) | 4 | 4 of 9 | check_report, read_report, the preview | equal by the audit for two; the probe splits them in two pairs |
+| [blank What is BLANK minus or divided by a number?](#blank-what-is-blank-minus-or-divided-by-a-number) | 2 | 3 of 10 | the SVG KPI designer page, create_report's SVG KPIs | equal by the audit; the probe differs (a division by BLANK or 0) |
 
-"places" counts a function once for each family it answers (`mirror-policy.js` `kindOf` answers three). Who sees it:
+"places" counts a function once for each family it answers (`mirror-policy.js` `kindOf` answers two). Who sees it:
 the MCP tool whose answer or written file carries the place's answer, or the website page. Golden tests that pin a
 place are not mapped yet (see the note's "Lessons").
 
 ## 1a Is this column time?
 
 **Question:** a column named like this: is it a date part (a day, month, quarter, year, a date)?
+
+**Newest copy:** merge (the audit: diverged both ways, no winner). Verified: pbip-query.js `wordsOf` splits camel case, layout-check.js `wordsOf` takes «ال» off, page-preview.js `TIME_NAME` has qtr, yr, fy, عام, فترة.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
@@ -90,6 +104,8 @@ question for mirror-policy).
 
 **Question:** a property's Literal (`{ expr: { Literal: { Value } } }`): the text it holds (`'Sales'` -> Sales, `''`
 undone to `'`), or nothing.
+
+**Newest copy:** merge (tagged decoder). Verified: twin-geometry.mjs `litOf` lacks the `''` undo the older readers have (1b-text, group E).
 
 | place | MODULES.md | who sees it |
 |---|---|---|
@@ -144,6 +160,8 @@ reader over the same parse, and `""` where a caller wants it is the caller's `||
 
 **Question:** a property's Literal: the number it holds (`12D` -> 12, `12L` -> 12), or nothing.
 
+**Newest copy:** merge (tagged decoder). Verified: twin-geometry.mjs `litOf` lacks the `''` undo the older readers have (1b-text, group E).
+
 | place | MODULES.md | who sees it |
 |---|---|---|
 | `assets/js/page-preview.js` `numOf` | [engines](MODULES.md#the-website-engines) | the preview (sizes, widths) |
@@ -182,6 +200,8 @@ answer for a real literal. The reviewer and the owner decide.
 ## 1b-bool What true or false does a literal hold?
 
 **Question:** a property's Literal: true, false, or nothing.
+
+**Newest copy:** merge (tagged decoder). Verified: twin-geometry.mjs `litOf` lacks the `''` undo the older readers have (1b-text, group E).
 
 | place | MODULES.md | who sees it |
 |---|---|---|
@@ -223,33 +243,39 @@ false), C asks "is it shown" (anything but false -> shown, as Desktop shows a pa
 
 **Question:** the width a visual's x is mirrored in: its parent group's, else the page's.
 
+**Newest copy:** `twin-geometry.mjs` `widthOf` (in `aroundTables`: the validated-group fallback, fe62655b, 29 Oct). Verified, with one more: the audit's malformed width (`'400'`) gives a text in the mirror, the page's width in `aroundTables`, undefined in the fitting **and in `underGrids` `widthIn`** (the same file, B).
+
 | place | MODULES.md | who sees it |
 |---|---|---|
 | `assets/js/mirror-units.js` `widthOf` | [engines](MODULES.md#the-website-engines) | the twin (every visual's mirrored x, through report-mirror.js) |
 | `mcp/lib/twin-geometry.mjs` `widthIn` (in `underGrids`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a chart kept under a heatmap's grid) |
 | `mcp/lib/twin-text-fit.mjs` `widthOf` (in `fitButtons`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a button widened for its Arabic text) |
+| `mcp/lib/twin-geometry.mjs` `widthOf` (in `aroundTables`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a visual kept off a table's or matrix's grid) |
 
-**Today** (A: mirror-units widthOf, B: twin-geometry widthIn, C: twin-text-fit widthOf):
+**Today** (A: mirror-units widthOf, B: twin-geometry widthIn, C: twin-text-fit widthOf, D: twin-geometry widthOf):
 
-| input | A | B | C |
-|---|---|---|---|
-| in a group with no box | 1280 | undefined | undefined |
-| in a group whose box has no height | 400 | undefined | undefined |
-| no page at all | undefined | undefined | NaN |
-| a group named an empty text | 400 | 1280 | 400 |
+| input | A | B | C | D |
+|---|---|---|---|---|
+| in a group with no box | 1280 | undefined | undefined | 1280 |
+| in a group whose box has no height | 400 | undefined | undefined | 1280 |
+| no page at all | undefined | undefined | NaN | undefined |
+| a group whose width is a text ('400') | "400" | undefined | undefined | 1280 |
+| a group named an empty text | 400 | 1280 | 400 | 400 |
 
 A grouped visual is mirrored in one width and fitted in another when its group has no full box: the twin's x and
-its button fitting disagree on the same visual.
+its button fitting disagree on the same visual. twin-geometry.mjs holds two readers that differ (B and D).
 
-**Decided answer:** proposed: the parent group's width when the group is on the page and its width is a finite number
-(its height does not matter), else the page's width, else `null`; a group's name is any string, `''` included
-(mirror-units's answer, with `null` for no width). The reviewer and the owner decide.
+**Decided answer:** proposed: D's (the audit's newest copy): the parent group's width when the group is on the page
+and its box is whole (four finite numbers), else the page's width, else `null`; a group's name is any string, `''`
+included. The reviewer and the owner decide.
 
-**The test that will pin it:** the probe's 9 frames (family `1c`).
+**The test that will pin it:** the probe's 10 frames (family `1c`).
 
 ## 1d What width did the report set for this table column?
 
 **Question:** a table's `columnWidth` entry for a column (by its queryRef): its width, or none.
+
+**Newest copy:** merge (tagged decoder). Verified: dax-functions.mjs `widthOf` reads `120L` as NaN, the others 120.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
@@ -276,6 +302,8 @@ reader), else `null`. The reviewer and the owner decide.
 ## 1f Is this text Arabic?
 
 **Question:** a text: does it hold an Arabic letter (the test that sends it the Arabic way)?
+
+**Newest copy:** the broad test (text-measure.js `ARABIC`, field-catalog.js `AR_SCRIPT`); dax-functions.mjs `storyLang` is a later, narrower copy. Verified: a presentation form (U+FEFB, U+FDF2; the audit's U+FE8E is the same block) reads English there.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
@@ -304,26 +332,29 @@ Whether digits and punctuation alone make a text Arabic is a second question the
 
 **The test that will pin it:** the probe's 11 texts (family `1f`).
 
-## vt-table Is this visual a table or a matrix?
+## grid Does this visual keep its grid left to right?
 
-**Question:** a visual type: a table, a matrix, or neither (each place in its own words).
+**Question:** a visual type: a table or a matrix, whose columns Desktop keeps left to right in the twin.
+
+**Newest copy:** equal (the audit and the probe).
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/mirror-policy.js` `kindOf` | [engines](MODULES.md#the-website-engines) | the twin (every rule is keyed by the kind) |
-| `assets/js/page-preview.js` `kindOf` | [engines](MODULES.md#the-website-engines) | the preview (one shape for both) |
-| `mcp/lib/page-picture.mjs` `TABLES` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (new overlaps beside a table or matrix) |
+| `assets/js/mirror-policy.js` `keepsGridLtr` | [engines](MODULES.md#the-website-engines) | the twin (the one home of the rule, twin-geometry.mjs says) |
+| `mcp/lib/page-picture.mjs` `TABLES` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's answer (new overlaps beside a table or a matrix) |
 
-**Today:** all 3 answer the same on all 18 types (tableEx a table, pivotTable a matrix; the catalog's `table`,
-`matrix` and `accessibleTable` are neither in all three).
+**Today:** both answer the same on all 18 types (tableEx and pivotTable; the catalog's `table`, `matrix` and
+`accessibleTable` neither).
 
-**Decided answer:** today's (they agree); one list in `visual-types.js` when the library is built.
+**Decided answer:** today's; one list (mirror-policy.js `keepsGridLtr`).
 
-**The test that will pin it:** the probe's 18 types (family `vt-table`; the same 18 pin vt-slicer and vt-bar).
+**The test that will pin it:** the probe's 18 types (family `grid`; the same 18 pin vt-slicer and vt-bar).
 
 ## vt-slicer Is this visual a slicer?
 
 **Question:** a visual type: is it a slicer (a visual that filters the page by its field)?
+
+**Newest copy:** not in the audit.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
@@ -349,6 +380,8 @@ The reviewer and the owner decide (a filterSlicer would then be mirrored as a sl
 
 **Question:** a visual type: a chart of horizontal bars?
 
+**Newest copy:** not in the audit.
+
 | place | MODULES.md | who sees it |
 |---|---|---|
 | `assets/js/mirror-policy.js` `kindOf` | [engines](MODULES.md#the-website-engines) | the twin |
@@ -370,38 +403,11 @@ hundredPercentStackedBarChart) in one list; the same for `stackedColumnChart`. T
 
 **The test that will pin it:** the probe's 18 types (family `vt-bar`).
 
-## order In what order is a page read?
-
-**Question:** a page's boxes: the order a person reads them (rows top to bottom; across, left to right, or right to
-left in a right-to-left report).
-
-| place | MODULES.md | who sees it |
-|---|---|---|
-| `assets/js/report-a11y.js` `readingOrder` | [engines](MODULES.md#the-website-engines) | check_report (the Tab order rule), the writer (the tab order it gives) |
-| `mcp/lib/twin-texts.mjs` `readingOrder` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's answer and bilingual.texts (the order the texts are listed in) |
-
-**Today** (A: report-a11y readingOrder, with the input's direction; B: twin-texts readingOrder, which takes none):
-
-| input | A | B |
-|---|---|---|
-| one row, right to left | "C B A" | "A B C" |
-| a row, one box 5 px lower (ltr) | "B A" | "A B" |
-| two rows (rtl) | "B A D C" | "A B C D" |
-| a tall box beside two (rtl) | "U T V" | "T U V" |
-| the same place (ltr) | "B A" | "A B" |
-
-A sorts into rows (a box joins a row while its top is above the row's shortest bottom); B sorts by y, then x, with
-ties broken by what the visual shows. B lists the English report's texts, so it never asks right to left.
-
-**Decided answer:** proposed: A's rows for both (B with `ltr`, its ties kept for boxes in the same place), so the
-texts are listed in the order check_report calls reading order. The reviewer and the owner decide (it changes the
-order of bilingual.texts: DT1's order, its goldens re-read, never re-recorded to pass).
-
-**The test that will pin it:** the probe's 8 pages (family `order`).
-
 ## canon What is the canonical text of a plan?
 
 **Question:** a value: its JSON with keys sorted and undefined left out (the text a plan's digest is taken of).
+
+**Newest copy:** equal (the audit and the probe).
 
 | place | MODULES.md | who sees it |
 |---|---|---|
@@ -417,6 +423,8 @@ order of bilingual.texts: DT1's order, its goldens re-read, never re-recorded to
 ## crc What is the CRC-32 of these bytes?
 
 **Question:** bytes: their CRC-32 (the PNG chunk and ZIP entry checksum).
+
+**Newest copy:** equal (the audit and the probe).
 
 | place | MODULES.md | who sees it |
 |---|---|---|
@@ -435,32 +443,45 @@ and page-picture `chunk`, theme-download-ui `textChunk`) are the same job and mo
 
 ## overlap Do these two boxes overlap?
 
-**Question:** two boxes on a page: do they overlap (more than a rounding)?
+**Question:** two boxes on a page: do they overlap by more than a rounding (half a pixel each way)?
+
+**Newest copy:** equal (the audit and the probe).
 
 | place | MODULES.md | who sees it |
 |---|---|---|
 | `mcp/lib/twin-visuals.mjs` `overlaps` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a button widened over no visual) |
 | `mcp/lib/redesign-grid.mjs` `overlap` | [redesign](MODULES.md#the-mcp-the-redesign) | create_report's redesign (the grid) |
+
+**Today:** both answer the same on all 9 pairs.
+
+**Decided answer:** today's; one copy.
+
+**The test that will pin it:** the probe's 9 pairs (family `overlap`; the same 9 pin `overlap-area`).
+
+## overlap-area How much do two boxes overlap?
+
+**Question:** two boxes on a page: the area they share. Each caller reads it its own way: twin-geometry.mjs as more
+than 0 (or half the box), page-picture.mjs `newOverlaps` as more than 4 px².
+
+**Newest copy:** equal (the audit and the probe).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
 | `mcp/lib/twin-geometry.mjs` `overlapOf` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a small visual kept on its host) |
-| `mcp/lib/page-picture.mjs` `meets` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's answer (new overlaps, counted over 4 px²) |
+| `mcp/lib/page-picture.mjs` `meets` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's answer (new overlaps) |
 
-**Today** (A: twin-visuals overlaps, redesign-grid overlap; B: twin-geometry overlapOf, an area, read as > 0; C:
-page-picture meets, an area, read as > 4 as newOverlaps does):
+**Today:** both answer the same on all 9 pairs. A 0.4 px overlap 100 px high is 40 px² here and no overlap for
+`overlap`; a zero-width box is 0 here and an overlap there: the two are different questions (see "Not one question").
 
-| input | A | B | C |
-|---|---|---|---|
-| 0.4 px overlap | false | true (area 40) | true (area 40, newOverlaps counts over 4) |
-| 1 px overlap, 3 px high (area 3) | true | true (area 3) | false (area 3, newOverlaps counts over 4) |
-| a zero-width box inside | true | false (area 0) | false (area 0, newOverlaps counts over 4) |
+**Decided answer:** today's; one copy, each caller's threshold a named constant.
 
-**Decided answer:** proposed: two helpers: `overlaps` (A's: more than 0.5 px each way, a rounding) and `overlapArea`
-(B and C's area), each caller's threshold its own named constant. The reviewer and the owner decide.
-
-**The test that will pin it:** the probe's 9 pairs (family `overlap`).
+**The test that will pin it:** the probe's 9 pairs (family `overlap-area`).
 
 ## contrast What is the contrast of two colours?
 
 **Question:** two colours: their WCAG contrast ratio (1 to 21).
+
+**Newest copy:** equal (the audit and the probe).
 
 | place | MODULES.md | who sees it |
 |---|---|---|
@@ -478,6 +499,8 @@ page-picture meets, an area, read as > 4 as newOverlaps does):
 
 **Question:** a text: the same text safe inside an XML attribute or element (`&`, `<`, `>`, `'`, `"`).
 
+**Newest copy:** equal (the audit and the probe).
+
 | place | MODULES.md | who sees it |
 |---|---|---|
 | `assets/js/svg-escape.js` `xmlEsc` | [engines](MODULES.md#the-website-engines) | the SVG KPIs (the designer page, create_report) |
@@ -492,6 +515,8 @@ page-picture meets, an area, read as > 4 as newOverlaps does):
 ## html How is a text escaped for HTML?
 
 **Question:** a text: the same text safe inside an HTML page (`&`, `<`, `>`, `"`, `'`).
+
+**Newest copy:** equal by the audit; **the probe disagrees**: null and undefined give `""` in six copies and their words in three, and measure-builder.js leaves `'`.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
@@ -524,6 +549,8 @@ The reviewer and the owner decide.
 
 **Question:** a file's bytes: its text (UTF-16LE or UTF-8, with a BOM or none).
 
+**Newest copy:** equal (the audit and the probe).
+
 | place | MODULES.md | who sees it |
 |---|---|---|
 | `assets/js/model-health-worker.js` `decodeText` | [pages](MODULES.md#the-browser-pages-own-scripts) | the model health check page (its worker) |
@@ -536,12 +563,248 @@ The reviewer and the owner decide.
 
 **The test that will pin it:** the probe's 10 byte strings (family `decode`).
 
+## 1g Which model folder is read?
+
+**Question:** a chosen folder holding model folders: the one read, or a refusal.
+
+**Newest copy:** `model-discovery.mjs` (MANY_MODELS since 41bd0daa, 26 Oct); the browser's is stale. Verified.
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `assets/js/model-import-browser.js` `fromFolder` | [engines](MODULES.md#the-website-engines) | the website's model import (the field picker on the pages) |
+| `mcp/lib/model-discovery.mjs` `nearestModel` | [reading](MODULES.md#the-mcp-reading) | every MCP tool that reads a model (read_model first) |
+
+**Today** (A: model-import-browser fromFolder, stopped at its first read: no file is read; B: model-discovery
+nearestModel, on made-up paths):
+
+| input | A | B |
+|---|---|---|
+| two side by side | "uses A.SemanticModel" | "refuses MANY_MODELS" |
+| two side by side in a project folder | "uses p/A.SemanticModel" | "refuses MANY_MODELS" |
+| names that differ by letter case | "uses A.SemanticModel" | "refuses MANY_MODELS" |
+| three at the top | "uses A.SemanticModel" | "refuses MANY_MODELS" |
+
+The website reads the first of two equally near models by name and says only how many others there are; the MCP
+names both and asks.
+
+**Decided answer:** proposed: B's (two at the nearest depth: both named, none read). The reviewer and the owner decide
+(the website's page then needs a message for it).
+
+**The test that will pin it:** the probe's 8 folders (family `1g`).
+
+## 1h Which column sorts this one?
+
+**Question:** a month or day name column: the number column of its table that sorts it, or none.
+
+**Newest copy:** `field-catalog.js` (the Arabic suffix, 873a7a00, 6 Oct; a missing dataType read as unknown,
+1ebff206, 26 Oct); the health check's is stale, keep its null-list adapter. Verified. mcp/test.mjs's parity test
+gives every column a type and no suffix, so it passes while they differ.
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `assets/js/field-catalog.js` `sortColumnFor` | [engines](MODULES.md#the-website-engines) | the field picker (the website, suggest_fields, create_report's sort) |
+| `assets/js/model-health-tmdl.js` `sortColumnFor` | [engines](MODULES.md#the-website-engines) | check_model_health's fix script, the health check page |
+
+**Today** (A: field-catalog sortColumnFor, B: model-health-tmdl sortColumnFor):
+
+| input | A | B |
+|---|---|---|
+| Month Name, Month Number with no dataType | "Month Number" | null |
+| Day Name (Arabic), Day of Week Number int64 | "Day of Week Number" | null |
+| Month Name, no column list at all | throws TypeError | null |
+
+**Decided answer:** proposed: A's rule with B's `(columns \|\| [])`. The reviewer and the owner decide.
+
+**The test that will pin it:** the probe's 11 tables (family `1h`).
+
+## png-chunk What bytes make a PNG chunk?
+
+**Question:** a chunk's type and body: its bytes (length, type, body, CRC-32).
+
+**Newest copy:** equal (the audit and the probe).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `assets/js/design-engine.js` `chunk` (in `pngOf`) | [engines](MODULES.md#the-website-engines) | generate_theme and the theme generator page (the background PNG) |
+| `mcp/lib/glass-picture.mjs` `chunk` (in `encode`) | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | the glass background |
+| `mcp/lib/page-picture.mjs` `chunk` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's page pictures |
+
+**Today:** all 3 answer the same bytes on all 8 chunks.
+
+**Decided answer:** today's; one copy, with `crc` and the PNG writers' big-endian `be` / `u32` (a write).
+
+**The test that will pin it:** the probe's 8 chunks (family `png-chunk`).
+
+## u32 What number do four bytes hold?
+
+**Question:** bytes and an offset: the big-endian unsigned 32-bit number there (a PNG read).
+
+**Newest copy:** equal (the audit and the probe).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `mcp/lib/glass-picture.mjs` `u32` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | the glass picture read back (the twin flips it) |
+| `mcp/lib/page-picture.mjs` `u32` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's page pictures read |
+
+**Today:** both answer the same on all 8 reads (past the end too: 16908288 for `01 02`, both).
+
+**Decided answer:** today's; one copy.
+
+**The test that will pin it:** the probe's 8 reads (family `u32`).
+
+## lru What does a small cache keep?
+
+**Question:** a cache of N entries: what its gets answer after these sets (the least recently used goes first).
+
+**Newest copy:** equal (the audit and the probe).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `mcp/lib/glass-picture.mjs` `lru` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | the glass pictures kept between calls |
+| `mcp/lib/page-picture.mjs` `lru` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's pictures kept between calls |
+
+**Today:** both answer the same on all 8 step lists.
+
+**Decided answer:** today's; one copy.
+
+**The test that will pin it:** the probe's 8 step lists (family `lru`).
+
+## tmdl-name How is a name written in TMDL?
+
+**Question:** a table or column name: as TMDL writes it (bare, or in single quotes with `'` doubled).
+
+**Newest copy:** equal by the audit; **the probe disagrees** on a name with a hyphen.
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `assets/js/model-health-tmdl.js` `name` | [engines](MODULES.md#the-website-engines) | check_model_health's fix scripts, the health check page |
+| `assets/js/measure-builder.js` `tName` | [pages](MODULES.md#the-browser-pages-own-scripts) | the DAX measure builder page |
+| `mcp/lib/model-culture.mjs` `q` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's Arabic names in the model (create_arabic_twin) |
+| `mcp/lib/sample-project.mjs` `name` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | create_report's sample project |
+| `mcp/lib/shadow-model.mjs` `q` | [helpers](MODULES.md#the-mcp-what-leaves-the-server-and-the-tools-helpers) | a test only (MODULES.md: used by none) |
+| `mcp/lib/twin-model.mjs` `tmdlName` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's measures |
+
+**Today** (A: model-health-tmdl name, measure-builder tName; B: model-culture q, sample-project name, shadow-model q,
+twin-model tmdlName):
+
+| input | A | B |
+|---|---|---|
+| Sales-2024 | "Sales-2024" | "'Sales-2024'" |
+
+**Decided answer:** proposed: B's (a hyphen is quoted; quoting a name that needs none is always read the same), unless a
+Desktop look shows TMDL takes `Sales-2024` bare. The reviewer and the owner decide.
+
+**The test that will pin it:** the probe's 9 names (family `tmdl-name`).
+
+## limits How large may a model file be?
+
+**Question:** a kind of model file or entry: the size (or count) over which it is refused before it is read.
+
+**Newest copy:** equal by the audit; the probe: the same four sizes, and the website's import has no `entries` count
+(it never opens a ZIP itself: the .pbit goes to the worker, which has it).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `assets/js/model-health-worker.js` `LIMITS` | [pages](MODULES.md#the-browser-pages-own-scripts) | the health check page and the website's .pbit import (the worker) |
+| `assets/js/model-import-browser.js` `LIMITS` | [engines](MODULES.md#the-website-engines) | the website's model import |
+| `mcp/lib/model.mjs` `PBIT_LIMITS` | [reading](MODULES.md#the-mcp-reading) | every MCP tool that reads a model |
+
+**Today** (A: model-health-worker LIMITS, model PBIT_LIMITS; B: model-import-browser LIMITS):
+
+| input | A | B |
+|---|---|---|
+| entries | 20000 | undefined |
+
+**Decided answer:** today's numbers, one object (B never needs `entries`, so the difference changes no answer).
+
+**The test that will pin it:** the probe's 8 kinds (family `limits`).
+
+## text-runs What text does a text box hold?
+
+**Question:** a text box's paragraphs: their runs' text, as one line.
+
+**Newest copy:** equal by the audit; the probe: two pairs (layout-check and report-inventory; report-a11y and
+page-preview), each pair equal.
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `assets/js/layout-check.js` `textOf` | [engines](MODULES.md#the-website-engines) | check_report and plan lint (placeholder text, empty boxes) |
+| `mcp/lib/report-inventory.mjs` `textOf` | [reading](MODULES.md#the-mcp-reading) | read_report's answer (a text box's text) |
+| `assets/js/report-a11y.js` `textOf` | [engines](MODULES.md#the-website-engines) | check_report (an empty text box is no Tab stop), the writer |
+| `assets/js/page-preview.js` `textOf` | [engines](MODULES.md#the-website-engines) | the preview (the text drawn in a box) |
+
+**Today** (A: layout-check textOf, report-inventory textOf; B: report-a11y textOf, page-preview textOf):
+
+| input | A | B |
+|---|---|---|
+| two paragraphs | "Top / Bottom" | "Top Bottom" |
+| a run with a number value | "0" | "" |
+| an empty paragraph between two | "A /  / B" | "A  B" |
+| spaces around | "Sales" | "  Sales  " |
+
+**Decided answer:** proposed: one reader of the runs, `0` kept (a run's value as written), and the join each caller's
+own (" / " to show a box's lines on one line, " " to test for text). The reviewer and the owner decide.
+
+**The test that will pin it:** the probe's 9 text boxes (family `text-runs`).
+
+## blank What is BLANK minus or divided by a number?
+
+**Question:** a - b and a / b with BLANK (null), as DAX answers them.
+
+**Newest copy:** equal by the audit; **the probe disagrees** on a division by BLANK or by 0.
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `assets/js/svg-expressions.js` `evalNode` | [engines](MODULES.md#the-website-engines) | the SVG KPI's preview values (the designer page, create_report's SVG KPIs) |
+| `assets/js/svg-editor-panels.js` `evalValues` | [engines](MODULES.md#the-website-engines) | the SVG KPI designer page (the results beside the inputs) |
+
+**Today** (A: svg-expressions evalNode, B: svg-editor-panels evalValues):
+
+| input | A | B |
+|---|---|---|
+| 5 / BLANK | throws Error | null |
+| BLANK / BLANK | throws Error | null |
+| 5 / 0 | throws Error | null |
+
+A throws DIV0 for its caller to show; B shows nothing. DAX's `/` gives an error for 5 / 0 and BLANK for BLANK / BLANK
+and 5 / BLANK; `DIVIDE` gives BLANK for all three.
+
+**Decided answer:** proposed: which DAX each one mirrors (the compiled measure's `/` or `DIVIDE`) decides it; then one
+evaluator. The reviewer and the owner decide.
+
+**The test that will pin it:** the probe's 10 sums (family `blank`).
+
+## Equal copies, not probed (the audit's Phase 2 list)
+
+Page code that needs a page to run (a toast, a copy, a worker's address) or a table of labels: not probed. "same
+text: yes" is pinned by the check: the definitions must stay the same text (spaces aside), or it fails.
+
+| copy | places | same text | newest copy |
+|---|---|---|---|
+| toast (the page's `#toast`) | `assets/js/calendar-generator.js` `toast`; `assets/js/measure-builder.js` `toast`; `assets/js/theme-generator.js` `toast` | yes | equal |
+| toast (the page's `#toast`, longer) | `assets/js/svg-kpi-designer.js` `toast`; `assets/js/calendar-generator.js` `toast` | no: 2200 ms against the others' 1800 ms (found by this check) | equal by the audit; the time differs |
+| toast (a box it makes) | `assets/js/exam-view.js` `toast`; `assets/js/health-view.js` `toast` | no: 2200 ms and 1800 ms, each its own id | equal by the audit; the times differ |
+| copy fallback (select the text) | `assets/js/calendar-generator.js` `fallback`; `assets/js/measure-builder.js` `fallback`; `assets/js/svg-kpi-designer.js` `fallback`; `assets/js/theme-download-ui.js` `fallback`; `assets/js/health-view.js` `fallback` | no: each selects its own element; health-view copies through a textarea | equal by the audit (the four that select) |
+| the health worker's address | `assets/js/health-worker-client.js` `WORKER_URL`; `assets/js/theme-generator.js` `MODEL_WORKER` | yes | equal |
+| the health check's area labels | `assets/js/health-downloads.js` `AREA`; `assets/js/health-view.js` `CAT` | no: CAT holds the Arabic and the icons too; the English words are the same | equal |
+
 ## Not one question
 
 A shape two places share is not a family when they answer different questions. Each is named here so the next
 ledger does not add it again.
 
 - `mcp/lib/model.mjs` `isDir`: isDir and `isLink` share a shape (a stat and one test), not a question (Codex, 4 Nov).
+- `assets/js/page-preview.js` `kindOf`: one shape drawn for a table and a matrix (the preview), not which one it is or
+  whether its grid stays left to right (`grid`; mirror-policy.js `kindOf` names them apart) (the audit).
+- `assets/js/report-a11y.js` `readingOrder` and `mcp/lib/twin-texts.mjs` `readingOrder`: the Tab order a reader meets
+  (rows, right to left in a right-to-left report) and the order the twin lists the English report's texts in; CL1's
+  first probe had them as one family ("order", 5 of 8 inputs apart): two questions (the audit).
+- `mcp/lib/twin-geometry.mjs` `overlapOf` and `mcp/lib/twin-visuals.mjs` `overlaps`: an area and a tolerant yes or no,
+  two questions (`overlap-area`, `overlap`) (the audit).
+- `mcp/lib/glass-picture.mjs` `u32` and `mcp/lib/page-picture.mjs` `be`: reading four bytes and writing them (the audit).
+- `assets/js/pbip-export.js` `PBI_LITERAL`: a quoted token kept as written, like terminology.mjs's and text-format.mjs's
+  `lit` below; a keeper, not a decoder (the audit).
+- B-326 (the audit): one resolver with a path check that depends on the system; one question, one place.
 - `mcp/lib/twin-texts.mjs` `ARABIC_END`: whether a text's last character is Arabic (where a neutral end goes), not
   whether the text is Arabic (1f).
 - `mcp/lib/plan-disclosure.mjs` `isEn`: "English and no Arabic", for the approval page's wording, not 1f's opposite.
