@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **Arabic twin tables reach the right edge:** a table whose column widths Power BI works out itself now has its
+  columns fill its box on the Arabic pages, so its first English column ends at the box's right edge, as a matrix's
+  does; a table with a width for every column, or with its own column sizing setting, is left exactly as it was.
 - **The macOS tests run where changes are merged:** the full test run on macOS now runs on the main and release
   branches, on pull requests to main and on the check before each merge, no longer on every work branch; Linux and
   Windows still run everywhere, as before.
