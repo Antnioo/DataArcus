@@ -22,7 +22,8 @@ export default async function ({ browser, url }) {
     // (no smooth scroll, no animation: a screenshot taken while the page still moves differs at its edges by a pixel)
     const v = await visitor(browser, { downloads: true, plainDesign, motion: 'reduce' });
     if (base) {
-      await v.ctx.route(/\/assets\/js\/design-(colours|glass)\.min\.js/, (rt) => rt.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
+      // (0.3.2 SP29) every file split from the engine since is served empty too: the base engine is the whole engine
+      await v.ctx.route(/\/assets\/js\/design-(colours|glass|metrics|state)\.min\.js/, (rt) => rt.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
       await v.ctx.route(/\/assets\/js\/design-engine\.min\.js/, (rt) => rt.fulfill({ status: 200, contentType: 'text/javascript', body: baseEngine }));
     }
     try {
