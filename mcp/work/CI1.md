@@ -18,7 +18,8 @@
   only, 2 with a real FAIL line, neither a macOS defect (the table below; For the owner). The YAML parses (actionlint
   could not be fetched here), the check script 11 of 11, 8 cases read dry. Builder run 41766393116: macOS skipped.
   results-adapter 42 checks before and after; agent-memory 226; changelog-words 89; lint 0.
-- **State:** the work done; the CI lines below.
+- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41767708806 on a537f14 (macOS
+  skipped; Linux, Windows, website green). check/0.3.2-ci1: run 41766395768 green, 5 macOS shards and the summary ran.
 - **Resume:** the reviewer: read the two runs, then the merge.
 
 ## The plan
@@ -69,7 +70,10 @@ job's `if` unchanged, the summary's expression is `always() && (` the shards' `)
   https://github.com/Antnioo/DataArcus/actions/runs/41766393116: `mcp-macos-parts` and `mcp-macos` skipped.
 - The reviewer's kind: `check/0.3.2-ci1` pushed at ff8dce0, `gh workflow run tests.yml --ref check/0.3.2-ci1`:
   https://github.com/Antnioo/DataArcus/actions/runs/41766395768: the 5 macOS shards and the summary run.
-  The reviewer's own check/* runs after this keep macOS the same way (the `check/` prefix).
+  The reviewer's own check/* runs after this keep macOS the same way (the `check/` prefix). Green: every job,
+  mcp-macos-parts 0-4 and mcp-macos success.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41767708806 on a537f14 (the last code commit
+  ff8dce0, then the note, CHANGELOG and WORK.md; integration/0.3.2 did not move: 1691046).
 
 ## CHANGELOG line
 - **The macOS tests run where changes are merged:** the full test run on macOS now runs on the main and release
