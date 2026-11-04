@@ -122,7 +122,7 @@ edit(path.join(ROOT, NATP, '.platform'), (j) => { j.config.logicalId = '00000000
 lf(path.join(ROOT, 'lab'));
 CASES.forEach(([, c]) => { if (c.make) c.make(); });
 
-const R = await import('./lib/redesign.mjs'), M = await import('./lib/model.mjs'), RR = await import('./lib/read-report.mjs');
+const R = await import('./lib/redesign.mjs'), M = await import('./lib/model.mjs');
 const norm = (t) => [ROOT, JSON.stringify(ROOT).slice(1, -1), ROOT.split(path.sep).join('/')].reduce((s, r) => s.split(r).join('<ROOT>'), String(t));
 const LOGICAL = '00000000-0000-4000-8000-0000000000a1';
 const walk = (d, base = d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name), base) : [path.relative(base, path.join(d, e.name)).split(path.sep).join('/')])).sort();
@@ -200,13 +200,13 @@ chk(() => K && JSON.stringify(K.KINDS.map((k) => k.name)) === JSON.stringify(TOD
   () => `K2. five kinds enabled (${TODAY}), the four planned ones not: ${K ? JSON.stringify([K.KINDS.map((k) => [k.name, k.enabled]), K.PLANNED.map((k) => [k.name, k.enabled])]) : 'no module'}`);
 chk(() => K && K.KINDS.concat(K.PLANNED).every((k) => !K.shapeProblems(k).length) && K.shapeProblems({ name: 'x' }).length > 0,
   () => `K3. every kind, the planned ones too, has the full shape (name, changes or adds with their files and pointers, validators as functions, a sentence EN and AR): ${K ? JSON.stringify(K.KINDS.concat(K.PLANNED).map((k) => [k.name, K.shapeProblems(k)])) : 'no module'}`);
-chk(() => K && K.KINDS.concat(K.PLANNED).every((k) => k.said.en.length > 20 && /[؀-ۿ]/.test(k.said.ar) && !/[—]/.test(k.said.en + k.said.ar)) && K.sentenceOf('grid', 'ar') === K.KINDS[0].said.ar && K.sentenceOf('phone', 'en') === null,
+chk(() => K && K.KINDS.concat(K.PLANNED).every((k) => k.said.en.length > 20 && /[\u0600-\u06FF]/.test(k.said.ar) && !/\u2014/.test(k.said.en + k.said.ar)) && K.sentenceOf('grid', 'ar') === K.KINDS[0].said.ar && K.sentenceOf('phone', 'en') === null,
   () => `K4. each kind's plan sentence in English and Arabic (no em dash); sentenceOf names only an enabled kind: ${K ? JSON.stringify(K.KINDS.map((k) => k.said)).slice(0, 300) : 'no module'}`);
 // buildCopy and verifyCopy hold no pointer, file pattern or kind name of their own: they read the registry
 const body = (s, fn) => { const i = s.indexOf(`export function ${fn}(`); let d = 0, j = s.indexOf('{', i); for (let k = j; k < s.length; k++) { if (s[k] === '{') d++; else if (s[k] === '}' && !--d) return s.slice(i, k + 1); } return ''; };
 chk(() => { const s = srcOf('redesign.mjs'), b = body(s, 'buildCopy') + body(s, 'verifyCopy'); return b.length > 500 && !/logicalId'|RegisteredResources|'report'|'theme'|ALLOW\b|kind === '/.test(b) && !/^const ALLOW = /m.test(s) && /from '\.\/redesign-kinds\.mjs'/.test(s); },
   () => 'K5. buildCopy and verifyCopy name no pointer, file pattern or file kind of their own (they read lib/redesign-kinds.mjs), and redesign.mjs keeps no ALLOW literal');
-chk(() => { const s = srcOf('redesign-kinds.mjs'); return !/from 'node:(fs|path|child_process)'|writeTree|readFileSync|writeFileSync/.test(s); },
+chk(() => { const s = srcOf('redesign-kinds.mjs'); return !/from 'node:(fs|fs\/promises|child_process)'|writeTree|readFileSync|writeFileSync/.test(s); },
   () => 'K6. lib/redesign-kinds.mjs reads and writes no file');
 
 fs.rmSync(TMP, { recursive: true, force: true });

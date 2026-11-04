@@ -32,8 +32,12 @@ import { buildTheme, themeDesign } from './design.mjs';
 import { writeTree } from './files.mjs';
 import { digestOf } from './artifact.mjs';
 import { newPlatform } from './twin-copy.mjs';
-import { ROLES, CLASSES, KNOWN_TYPES, TEXT_POINTER, THEME_STYLE_AT, visualText, countsOf, mixedOf, textSetOf, facesOf, boldItalicOf, shownValue, themeValue, rolesOf } from './text-format.mjs';
+import { ROLES, CLASSES, KNOWN_TYPES, THEME_STYLE_AT, visualText, countsOf, mixedOf, textSetOf, facesOf, boldItalicOf, shownValue, themeValue, rolesOf } from './text-format.mjs';
 import { box, shownBox, unitsOf, gridPage } from './redesign-grid.mjs';
+// (0.3.2 PK1) the patch kinds (the allowlist, the file kinds, the added files, the values the write chooses) are in
+// lib/redesign-kinds.mjs; buildCopy and verifyCopy read it
+import * as Kinds from './redesign-kinds.mjs';
+import { TITLE_AT, TOKENS, ADDED_THEME } from './redesign-kinds.mjs';
 // (0.3.2 SP19) the geometry, the D4 units and the grid are in lib/redesign-grid.mjs; unitsOf is exported here as before
 export { unitsOf };
 
@@ -112,22 +116,8 @@ function schemaProblems(dir, files, notes) {
   return out;
 }
 
-// ---- 3. the allowlist: the only JSON pointers a redesign may change, by kind of file ----
-const TITLE_AT = (i) => `/visual/visualContainerObjects/title/${i}/properties/text/expr/Literal/Value`;
-export const TOKENS = ['dataColors', 'foreground', 'background', 'tableAccent', 'good', 'neutral', 'bad'];
-// (0.3.1 CS1) a visual's own text settings (removed: TEXT_POINTER, text-format.mjs's roles only), and report.json's custom
-// theme and its resource item (additions only: verifyCopy); (CS2) the text set in the theme's visual styles, a role's font
-// and size per known type (THEME_STYLE_AT), no longer its text classes (Desktop 2.159 did not draw them: mcp/work/CS2.md)
-const ALLOW = {
-  visual: [/^\/position\/(x|y|width|height)$/, /^\/visual\/visualContainerObjects\/title\/\d+\/properties\/text\/expr\/Literal\/Value$/, TEXT_POINTER],
-  platform: [/^\/metadata\/displayName$/, /^\/config\/logicalId$/],
-  theme: [new RegExp(`^/(${TOKENS.join('|')})(/\\d+)?$`), THEME_STYLE_AT],
-  report: [/^\/themeCollection\/customTheme\/(name|reportVersionAtImport|type)$/, /^\/resourcePackages\/\d+\/(name|type)$/, /^\/resourcePackages\/\d+\/items\/\d+\/(name|path|type)$/]
-};
-const kindOf = (rel, themeRel) => (/^definition\/pages\/[^/]+\/visuals\/[^/]+\/visual\.json$/.test(rel) ? 'visual' : rel === '.platform' ? 'platform' : themeRel && rel === themeRel ? 'theme' : rel === 'definition/report.json' ? 'report' : null);
-// (CS1) the theme file a consistent copy adds when the report has none, in the report's registered resources
-export const ADDED_THEME = 'DataArcusText.json';
-const allowed = (kind, ptr) => !!kind && ALLOW[kind].some((re) => re.test(ptr));
+// ---- 3. the allowlist: the only JSON pointers a redesign may change, by kind of change (lib/redesign-kinds.mjs) ----
+export { TOKENS, ADDED_THEME };
 const obj = (x) => (x && typeof x === 'object' && !Array.isArray(x) ? x : null);
 export { THEME_STYLE_AT };
 
@@ -408,7 +398,7 @@ export function buildCopy(src, patches, logicalId) {
   byFile.forEach((list, rel) => {
     if (!(rel in src)) throw new Error(`Nothing was written: the patched file ${safeName(rel)} is not in the original`);
     const j = parse(src[rel]);
-    list.forEach((x) => setAt(j, x.pointer, x.pointer === '/config/logicalId' ? logicalId : x.to, !!x.create, x.op === 'remove'));
+    list.forEach((x) => setAt(j, x.pointer, Kinds.chosenAtWrite(x.pointer) ? logicalId : x.to, !!x.create, x.op === 'remove'));
     out[rel] = json2(j);
   });
   return out;
@@ -474,28 +464,30 @@ export function verifyCopy(src, out, patches, themeRel) {
   const lost = a.filter((r) => !(r in out)), added = b.filter((r) => !(r in src));
   if (lost.length) fail(`${lost.length} file(s) of the original missing (e.g. ${safeName(lost[0])}${lost.some((r) => /page\.json$/.test(r)) ? ': a page lost' : ''})`);
   const adds = new Map(patches.filter((x) => x.op === 'add').map((x) => [x.file, x]));
-  const extra = added.filter((r) => !adds.has(r) || !/^StaticResources\/RegisteredResources\/[^/]+\.json$/.test(r) || !Buffer.from(out[r]).equals(json2(adds.get(r).to)));
+  const extra = added.filter((r) => !adds.has(r) || !Kinds.addRuleOf(r) || !Buffer.from(out[r]).equals(json2(adds.get(r).to)));
   if (extra.length) fail(`${extra.length} file(s) not in the original (e.g. ${safeName(extra[0])})`);
-  // (CS2) an added theme holds its name and allowlisted theme pointers only (the text set's visual styles)
-  adds.forEach((x, r) => { const off = diffs(undefined, x.to).filter((p) => p !== '/name' && !allowed('theme', p)); if (off.length) fail(`${safeName(r)} adds ${safeName(off[0])}, outside the allowlist`); });
-  const tr = themeRel || [...adds.keys()][0] || (() => { try { const ct = (parse(src['definition/report.json']).themeCollection || {}).customTheme; return ct && ct.name ? `StaticResources/RegisteredResources/${path.basename(String(ct.name))}` : null; } catch (e) { return null; } })();
+  // each added file by its kind's rule (CS2: an added theme holds its name and allowlisted theme pointers only)
+  adds.forEach((x, r) => { const why = Kinds.addRefused(r, x.to, { src, out }); if (why) fail(`${safeName(r)} ${why}`); });
+  const ctx = { themeRel: Kinds.themeFileOf(src, [...adds.keys()], themeRel) };
   const want = new Map(); patches.filter((x) => x.op !== 'add').forEach((x) => want.set(x.file + '#' + x.pointer, x));
   let changedFiles = 0;
   for (const r of a) {
     if (Buffer.from(src[r]).equals(Buffer.from(out[r]))) continue;
     changedFiles++;
-    const kind = kindOf(r, tr);
+    const kind = Kinds.fileKindOf(r, ctx);
     if (!kind) fail(`${safeName(r)} changed, a file the allowlist never changes`);
     let x, y; try { x = parse(src[r]); y = parse(out[r]); } catch (e) { fail(`${safeName(r)} changed and is not JSON`); }
     for (const p of diffs(x, y)) {
-      if (!allowed(kind, p)) fail(`${safeName(r)} changed at ${safeName(p)}, outside the allowlist`);
-      // (CS1) report.json only gains (the custom theme and its resource item): nothing of the original changes
-      if (kind === 'report' && p.split('/').slice(1).reduce((o, k) => (o == null ? o : o[k]), x) !== undefined) fail(`${safeName(r)} changed at ${safeName(p)}, which was already in the original`);
+      if (!Kinds.allowed(kind, p)) fail(`${safeName(r)} changed at ${safeName(p)}, outside the allowlist`);
+      // the kind's own rule (CS1: report.json only gains, the custom theme and its resource item)
+      const at = (j) => p.split('/').slice(1).reduce((o, k) => (o == null ? o : o[k]), j);
+      const why = Kinds.changeRefused(kind, { rel: r, pointer: p, before: at(x), after: at(y), json: y, src, out });
+      if (why) fail(`${safeName(r)} changed at ${safeName(p)}, ${why}`);
       // (a patch of a whole token, dataColors, covers the pointers inside it)
       const w = want.get(r + '#' + p) || [...want.values()].find((x) => x.file === r && x.pointer && p.startsWith(x.pointer + '/'));
       if (!w) fail(`${safeName(r)} changed at ${safeName(p)}, which is not one of the plan's patches`);
       const got = w.pointer.split('/').slice(1).reduce((o, k) => (o == null ? o : o[k]), y);
-      if (w.pointer !== '/config/logicalId' && (w.op === 'remove' ? got !== undefined : JSON.stringify(got) !== JSON.stringify(w.to))) fail(`${safeName(r)} at ${safeName(p)} is not the plan's value`);
+      if (!Kinds.chosenAtWrite(w.pointer) && (w.op === 'remove' ? got !== undefined : JSON.stringify(got) !== JSON.stringify(w.to))) fail(`${safeName(r)} at ${safeName(p)} is not the plan's value`);
     }
   }
   const before = danglingOf(src), after = danglingOf(out), fresh = after.filter((x) => !before.includes(x));
