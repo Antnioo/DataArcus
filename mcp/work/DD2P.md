@@ -17,7 +17,8 @@
   "Numbers"); mutation 76/76; `npm run lint` 0; check-min, stamps, check-contracts, check-modules --strict,
   check-agent-memory, check-result-lines green; the probe: crc 6 places, png-chunk 4, u32 3, lru 3 (the new place
   added beside the old ones until they go, then the module and its callers), one answer per input.
-- **State:** step 0 (this plan). **Resume:** step 1.
+- **State:** step 1 (the modules, their test, the hashes pinned).
+- **Resume:** step 2 (the MCP places read them).
 
 ## Plan (one commit each, every suite green between them)
 1. The two modules, their .min.js (png-bytes only: a browser file), the test dd2p (units: 8 byte strings, 8 chunks,
