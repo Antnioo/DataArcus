@@ -85,6 +85,40 @@ function keepView(page, visuals, at) {
   });
   return out;
 }
+// (0.3.2 TR1, B-275: the owner, 1 Nov, "in matrices we could switch columns but in tables it's not yet done why?") Power BI
+// lays a table from its left edge: a reversed table narrower than its box kept its blank at the right, so its first
+// English column (now the last) did not reach the box's right edge. keepView lays out a table that has a width for
+// every column; a table Power BI sizes itself (English gives no width, or some only) and that has no auto-size behaviour of its own
+// gets "grow to fit" (columnHeaders.columnAdjustment, Microsoft: "Columns automatically expand to fill the visual
+// container"), in its unselected columnHeaders entry, every other property kept. Only a table English drew as a table
+// (a matrix written as one keeps its own route). No width is computed and no data read (RD1 b275, choice A).
+// Returns [{ page, visual }] for the plan
+const GROW = { expr: { Literal: { Value: "'growToFit'" } } };
+function growTables(visuals, origByName, at) {
+  const out = [];
+  visuals.forEach((v) => {
+    const o = isObj(v) ? origByName[v.name] : null;
+    if (typeOf(v) !== 'tableEx' || !o || typeOf(o) !== 'tableEx') return;
+    const qs = isObj(v.visual.query) && isObj(v.visual.query.queryState) && isObj(v.visual.query.queryState.Values) ? v.visual.query.queryState.Values : null, ps = qs && Array.isArray(qs.projections) ? qs.projections : null;
+    if (!ps || ps.length < 2 || !ps.every((x) => isObj(x) && typeof x.queryRef === 'string')) return;
+    // (sized column by column: keepView's. Read on English's table: the twin's own row label route gives English's text
+    // column a width of 0, hidden, which is not the person's sizing)
+    const oq = isObj(o.visual.query) && isObj(o.visual.query.queryState) && isObj(o.visual.query.queryState.Values) && Array.isArray(o.visual.query.queryState.Values.projections) ? o.visual.query.queryState.Values.projections : [];
+    const ocw = isObj(o.visual.objects) && Array.isArray(o.visual.objects.columnWidth) ? o.visual.objects.columnWidth : [];
+    const hasW = (x) => ocw.some((y) => isObj(y) && isObj(y.selector) && isObj(x) && y.selector.metadata === x.queryRef && isObj(y.properties) && Number.isFinite(num(y.properties.value)));
+    if (!oq.length || oq.every(hasW)) return;
+    const obj = isObj(v.visual.objects) ? v.visual.objects : null;
+    const ch = obj && Array.isArray(obj.columnHeaders) ? obj.columnHeaders : null;
+    if (ch && ch.some((e) => isObj(e) && isObj(e.properties) && e.properties.columnAdjustment !== undefined)) return;   // (its own adjustment: kept)
+    if (obj && obj.columnHeaders !== undefined && !ch) return;   // (a shape not expected: left as it is)
+    const objects = v.visual.objects = obj || {}, list = objects.columnHeaders = ch || [];
+    let e = list.find((x) => isObj(x) && !x.selector && isObj(x.properties));
+    if (!e) { e = { properties: {} }; list.push(e); }
+    e.properties.columnAdjustment = GROW;
+    out.push({ page: safeName(at), visual: safeName(String(v.name)) });
+  });
+  return out;
+}
 // (0.3.0 D3, the laptop's proof of rc.2: «التفاصيل» kept the English tab's 55 wide on the phone and wrapped, "التفاصيـ / ل")
 // The page tabs of a phone row (page buttons with the same phone top), already mirrored: each as wide as its Arabic name
 // by the writer's phone rule (pbip-sizing.js phoneTabWidth: one line, bold, at the phone's 10pt), laid from the row's
@@ -258,7 +292,7 @@ export function buildTwin(P, labels) {
     const had = rlWritten.find((x) => x.t === t && x.expression === expression); if (had) return had.m;
     const names = takenAnywhere(); let m = want; for (let k = 2; names.has(m.toLowerCase()); k++) m = want + ' (' + k + ')';
     e.measures.push({ name: m, dataType: 'Text', expression }); rlWritten.push({ t, m, expression }); return m; };
-  const keptInView = [], laidOut = [], fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [], textboxes: [], textboxesCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 }, sizeKept = [], ruleMoves = [];
+  const keptInView = [], laidOut = [], grown = [], fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [], textboxes: [], textboxesCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 }, sizeKept = [], ruleMoves = [];
   const pages = R.pages.map((pg) => {
     let page = pg.page;
     if (isObj(pg.page)) { page = JSON.parse(JSON.stringify(pg.page)); if (labels['page:' + pg.id] != null) { page.displayName = labels['page:' + pg.id]; applied++; } }
@@ -304,6 +338,8 @@ export function buildTwin(P, labels) {
       try { const h = fitHeaders(page, r.visuals, origByName, c, pg.id); fitted.headers.push(...h.headers); fitted.headersCut.push(...h.headersCut); } catch (e) { /* a shape not expected: left as it is */ }
       // (0.3.1 MX2) after the headers' widths: a wide table keeps the English view
       if (c.rtl) { try { keepView(page, r.visuals, pg.id).forEach((k) => { laidOut.push(k.page + '/' + k.visual); if (k.behind) keptInView.push(k); }); } catch (e) { /* a shape not expected: left as it is */ } }
+      // (0.3.2 TR1) a table Power BI sizes itself: its columns fill its box
+      if (c.rtl) { try { grown.push(...growTables(r.visuals, origByName, pg.id)); } catch (e) { /* a shape not expected: left as it is */ } }
       // (0.3.1 R1) the text boxes; in one report with both languages, the box the language button will take is kept free
       try { const lb = P.same && !c.noButton(pg) ? langButton(page, r.visuals, [], 'ar', '', 'reserved', R.theme) : null, keep = lb && lb.json ? [absBox(r.visuals.concat([lb.json]), lb.json)] : [];
         const u = r.units || { on: [], bars: [] }, kept = new Set(u.on.map((x) => String(x.visual)).concat(u.bars.map((x) => String(x.names))));
@@ -339,5 +375,5 @@ export function buildTwin(P, labels) {
   // (0.3.0 D3) the original's own title measures the twin's charts no longer use: left in the twin's file as they are
   // (X1: in one report the English pages still show them)
   const notShown = P.same ? [] : [...rename.keys()].map((k) => { const [entity, name] = k.split('\u0000'); return { measure: safeName(entity + '[' + name + ']'), now: safeName(entity + '[' + rename.get(k) + ']'), why: 'the original\'s title measure: the twin\'s charts use their own Arabic one instead; left in the twin\'s reportExtensions.json as it is, and no visual of the twin shows it' }; });
-  return { pages, applied, phone, notShown, sizeKept, ruleMoves, keptInView, laidOut, ext: written.length || rewritten || wfWritten.length || rlWritten.length ? ext : null, tables, fitted, titleMeasures: tms.length ? Object.assign({ measures: tms.length, translated: written.length, written, notTranslated }, fixedTitles.length ? { fixed: fixedTitles } : {}) : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
+  return { pages, applied, phone, notShown, sizeKept, ruleMoves, keptInView, laidOut, grown, ext: written.length || rewritten || wfWritten.length || rlWritten.length ? ext : null, tables, fitted, titleMeasures: tms.length ? Object.assign({ measures: tms.length, translated: written.length, written, notTranslated }, fixedTitles.length ? { fixed: fixedTitles } : {}) : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
 }

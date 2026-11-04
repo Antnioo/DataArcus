@@ -10,6 +10,9 @@ package's manifest; this file says what is in it.
   the same fields, totals, filters, sort, Top N and visual calculations, the same display units and decimals, or only
   another order. It reads the files only and changes nothing; filter values and slicer selections are compared, never
   shown; it does not run the queries, so it never says the numbers themselves are the same.
+- **Arabic twin tables reach the right edge:** a table whose column widths Power BI works out itself now has its
+  columns fill its box on the Arabic pages, so its first English column ends at the box's right edge, as a matrix's
+  does; a table with a width for every column, or with its own column sizing setting, is left exactly as it was.
 - **The macOS tests run where changes are merged:** the full test run on macOS now runs on the main and release
   branches, on pull requests to main and on the check before each merge, no longer on every work branch; Linux and
   Windows still run everywhere, as before.
