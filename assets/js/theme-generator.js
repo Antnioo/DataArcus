@@ -264,9 +264,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // twin's chart transforms, mirror-charts.js, after mirror-policy.js, then its text runs and literals, mirror-text.js,
   // which reads both, and its group and badge geometry, mirror-units.js, before report-mirror.js, which calls them; 0.3.2 SP43: the
   // writer's bidi isolation, pbip-bidi.js, after text-measure.js, which it reads, before the writer, which calls it)
-  const BUILDER = ['/assets/js/text-measure.min.js?v=20261102op1', '/assets/js/story-titles.min.js?v=20261027tt2', '/assets/js/visual-types.min.js?v=20261019u1', '/assets/js/mirror-policy.min.js?v=20261103sp10', '/assets/js/mirror-charts.min.js?v=20261104sp39', '/assets/js/mirror-text.min.js?v=20261104sp39', '/assets/js/mirror-units.min.js?v=20261104sp39', '/assets/js/report-mirror.min.js?v=20261104sp39', '/assets/js/pbip-query.min.js?v=20261026lr1', '/assets/js/pbip-sizing.min.js?v=20261102op1', '/assets/js/pbip-notes.min.js?v=20261028fx5b',
-    '/assets/js/label-limits.min.js?v=20261027r4a', '/assets/js/pbip-visuals-charts.min.js?v=20261104sp28', '/assets/js/pbip-visuals-tables.min.js?v=20261104sp28', '/assets/js/pbip-visuals.min.js?v=20261104sp28b', '/assets/js/pbip-tooltip.min.js?v=20261103sp7', '/assets/js/pbip-navigation.min.js?v=20261103sp13', '/assets/js/pbip-page.min.js?v=20261104sp28', '/assets/js/report-a11y.min.js?v=20261025sq5',
-    '/assets/js/pbip-zip.min.js?v=20261102sp5', '/assets/js/pbip-sample.min.js?v=20261102sp5', '/assets/js/pbip-bidi.min.js?v=20261104sp43', '/assets/js/pbip-export.min.js?v=20261104sp43'];
+  const BUILDER = ['/assets/js/text-measure.min.js?v=d2d8d06bb406', '/assets/js/story-titles.min.js?v=596a8e4e04fa', '/assets/js/visual-types.min.js?v=9fe419144b32', '/assets/js/mirror-policy.min.js?v=c96caa190b2d', '/assets/js/mirror-charts.min.js?v=ea242c6dc3ce', '/assets/js/mirror-text.min.js?v=f1bf57acb463', '/assets/js/mirror-units.min.js?v=d09e6f682908', '/assets/js/report-mirror.min.js?v=967289a23aec', '/assets/js/pbip-query.min.js?v=2be9a985ac50', '/assets/js/pbip-sizing.min.js?v=14c9a147b14e', '/assets/js/pbip-notes.min.js?v=38120f9ce6fd',
+    '/assets/js/label-limits.min.js?v=28489c70397d', '/assets/js/pbip-visuals-charts.min.js?v=7d1bb8b90fa6', '/assets/js/pbip-visuals-tables.min.js?v=ad2b43d89afd', '/assets/js/pbip-visuals.min.js?v=c11b6d4eb806', '/assets/js/pbip-tooltip.min.js?v=f840b971a8b9', '/assets/js/pbip-navigation.min.js?v=30ed39d92fb2', '/assets/js/pbip-page.min.js?v=04628e53532a', '/assets/js/report-a11y.min.js?v=c16c13805665',
+    '/assets/js/pbip-zip.min.js?v=0518dee1a93d', '/assets/js/pbip-sample.min.js?v=c2586f4ca3c2', '/assets/js/pbip-bidi.min.js?v=7bfb226aefb3', '/assets/js/pbip-export.min.js?v=71b3b1f69a2f'];
   // (0.3.1 FX5: the page loads the sizes and what they read, for the canvas's bars; a script already on the page is not
   // loaded again)
   const onPage = (src) => [...document.scripts].some((x) => x.src === new URL(src, location.href).href);
@@ -281,24 +281,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // model read by one copy was picked by the other, whose own field notes (a WeakMap) knew none of it: one KPI card)
   let binding = null;
   const loadBind = () => binding || (binding = (window.DABind ? Promise.resolve(window.DABind)
-    : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('/assets/js/field-meaning.min.js?v=20261011t'))
-      .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=20261104an1')))
+    : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('/assets/js/field-meaning.min.js?v=07343b7cf536'))
+      .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=f4832d0d3ac0')))
       // (SP8: the picker's drawing is field-picker-ui.js's, which pbip-bind.js calls: loaded first)
-      .then(() => (window.DAFieldPicker ? null : loadScript('/assets/js/field-picker-ui.min.js?v=20261103sp8')))
+      .then(() => (window.DAFieldPicker ? null : loadScript('/assets/js/field-picker-ui.min.js?v=f4b057b17d4c')))
       // (SP14: reading the chosen folder or file is model-import-browser.js's, which pbip-bind.js forwards to: loaded first)
-      .then(() => (window.DAModelImport ? null : loadScript('/assets/js/model-import-browser.min.js?v=20261103sp14')))
+      .then(() => (window.DAModelImport ? null : loadScript('/assets/js/model-import-browser.min.js?v=5dd9fcea5cf7')))
       // (SP30: the model's metadata, normalised, is field-catalog.js's, which pbip-bind.js reads when it loads: loaded first)
-      .then(() => (window.DAFieldCatalog ? null : loadScript('/assets/js/field-catalog.min.js?v=20261104sp30a')))
+      .then(() => (window.DAFieldCatalog ? null : loadScript('/assets/js/field-catalog.min.js?v=b4ddf4d0f03a')))
       // (SP30: the ranking is field-suggest.js's, which reads field-catalog.js and which pbip-bind.js reads: loaded between)
-      .then(() => (window.DAFieldSuggest ? null : loadScript('/assets/js/field-suggest.min.js?v=20261104sp30b')))
-      .then(() => loadScript('/assets/js/pbip-bind.min.js?v=20261104sp30b')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
+      .then(() => (window.DAFieldSuggest ? null : loadScript('/assets/js/field-suggest.min.js?v=748e6d5f87c5')))
+      .then(() => loadScript('/assets/js/pbip-bind.min.js?v=600d69b2b551')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
   let words = null;
-  const loadNames = () => Promise.all([window.DAArabicNames ? window.DAArabicNames : loadScript('/assets/js/arabic-names.min.js?v=20261027tt2n').then(() => window.DAArabicNames),
+  const loadNames = () => Promise.all([window.DAArabicNames ? window.DAArabicNames : loadScript('/assets/js/arabic-names.min.js?v=637dc63aff40').then(() => window.DAArabicNames),
     words || (words = fetch('/assets/data/arabic-report-words.json').then((r) => (r.ok ? r.json() : Promise.reject(new Error('words')))).catch((e) => { words = null; throw e; }))]);
-  const CHECK = ['../assets/js/visual-types.min.js?v=20261019u1', '../assets/js/report-rules.min.js?v=20261102op1', '../assets/js/layout-check.min.js?v=20261027r4a'];
+  const CHECK = ['../assets/js/visual-types.min.js?v=9fe419144b32', '../assets/js/report-rules.min.js?v=0bcd683a0668', '../assets/js/layout-check.min.js?v=250e29fcfa5b'];
   const loadCheck = () => (window.DALayoutCheck ? Promise.resolve(window.DALayoutCheck) : loadBuilder().then(() => CHECK.reduce((q, src) => q.then(() => loadScript(src)), Promise.resolve())).then(() => window.DALayoutCheck));
-  const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=20261028fx5').then(() => window.DAPagePreview));
-  const MODEL_WORKER = '/assets/js/model-health-worker.min.js?v=20261103sp15';
+  const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=e34cc70d8338').then(() => window.DAPagePreview));
+  const MODEL_WORKER = '/assets/js/model-health-worker.min.js?v=d8390a780e6b';
 
   // ---------- the downloads, the visual backgrounds and the reminder (theme-download-ui.js, 0.3.2 SP31) ----------
   const Dl = window.DAThemeDownloadUI.mount({ store: S, engine: E, $, L, isAr, track, toast, layout: Lay,

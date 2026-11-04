@@ -66,6 +66,53 @@ export function scan(root, files = holders(root)) {
   return out;
 }
 
+// the stale references: each with its fix
+export function check(root, files) {
+  const refs = scan(root, files), stale = [];
+  for (const r of refs) {
+    if (!r.exists) stale.push(Object.assign({ why: `points at ${r.target}, which is not there` }, r));
+    else { const want = stampOf(path.join(root, r.target)); if (r.stamp !== want) stale.push(Object.assign({ why: `?v=${r.stamp || '(empty)'} is not ${r.target}'s stamp ${want}`, want }, r)); }
+  }
+  return { refs, stale };
+}
+
+// the build: the holders in dependency order (a file after every file it loads, and a .min.js rebuilt from its source
+// right after the source's stamps change), each reference given its target's stamp. A second run changes nothing.
+export async function build(root, files = holders(root), { minify } = {}) {
+  const minOf = minify || (await import('./check-min.mjs')).minOf;
+  const refs = scan(root, files), byFile = new Map(files.map((f) => [f, []]));
+  refs.forEach((r) => byFile.get(r.file).push(r));
+  // a target's node: a .min.js built from a source is its source, any other holder itself
+  const srcOf = (t) => (/\.min\.js$/i.test(t) && byFile.has(t.replace(/\.min\.js$/i, '.js')) ? t.replace(/\.min\.js$/i, '.js') : byFile.has(t) ? t : null);
+  const order = [], state = new Map();
+  const visit = (f, trail) => {
+    if (state.get(f) === 'done') return;
+    if (state.get(f) === 'open') throw new Error(`stamps: a loop of references, ${[...trail, f].join(' -> ')}: no stamp can be built`);
+    state.set(f, 'open');
+    for (const r of byFile.get(f)) { const s = srcOf(r.target); if (s && s !== f) visit(s, [...trail, f]); }
+    state.set(f, 'done'); order.push(f);
+  };
+  files.forEach((f) => visit(f, []));
+  const changed = [], missing = [];
+  const fromSource = (f) => /\.min\.js$/i.test(f) && byFile.has(f.replace(/\.min\.js$/i, '.js'));
+  for (const f of order.filter((x) => !fromSource(x))) {
+    const abs = path.join(root, f), text = fs.readFileSync(abs, 'utf8');
+    const next = text.replace(REF, (all, ref, stamp) => {
+      if (EXTERNAL.test(local(ref))) return all;
+      const t = targetOf(root, f, local(ref));
+      if (!fs.existsSync(path.join(root, t))) { missing.push(`${f}: ${ref} (${t} is not there)`); return all; }
+      return `${ref}?v=${stampOf(path.join(root, t))}`;
+    });
+    if (next !== text) { fs.writeFileSync(abs, next); changed.push(f); }
+    const min = f.replace(/\.js$/i, '.min.js');
+    if (/\.js$/i.test(f) && !/\.min\.js$/i.test(f) && fs.existsSync(path.join(root, min))) {
+      const built = await minOf(next.replace(/\r\n/g, '\n')), cur = fs.readFileSync(path.join(root, min), 'utf8').replace(/\r\n/g, '\n');
+      if (built !== cur && built + '\n' !== cur) { fs.writeFileSync(path.join(root, min), built); changed.push(min); }
+    }
+  }
+  return { order, changed, missing };
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const arg = process.argv[2] || '';
   if (arg === '--list') {
@@ -74,5 +121,18 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     console.log(`\n${refs.length} references in ${new Set(refs.map((r) => r.file)).size} files: ${Object.entries(kinds).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${n} .${k}`).join(', ')}; `
       + `${refs.filter((r) => !r.exists).length} missing targets; ${hand} not a content stamp (typed by hand), ${refs.length - hand} content stamps`);
     console.log(`PASS  stamps-list  ${refs.length} checks`);
-  } else { console.error(`stamps: unknown option ${arg} (--list)`); process.exit(2); }
+  } else if (arg === '--write') {
+    const r = await build(ROOT);
+    if (r.missing.length) { console.error(`FAIL  stamps  ${r.missing.length} references point at no file:\n  ${r.missing.join('\n  ')}`); process.exit(1); }
+    console.log(r.changed.length ? `stamps: ${r.changed.length} files written:\n  ${r.changed.join('\n  ')}` : 'stamps: nothing to change.');
+    console.log(`PASS  stamps-write  ${r.order.length} checks`);
+  } else if (!arg) {
+    const { refs, stale } = check(ROOT);
+    if (stale.length) {
+      for (const s of stale) console.error(`FAIL  ${s.file}: ${s.ref}: ${s.why} (fix: npm run build:min)`);
+      console.error(`FAIL  stamps  ${stale.length} of ${refs.length} references stale (fix: npm run build:min; never type a stamp)`);
+      process.exit(1);
+    }
+    console.log(`PASS  stamps  ${refs.length} checks`);
+  } else { console.error(`stamps: unknown option ${arg} (none, --list or --write)`); process.exit(2); }
 }

@@ -9,15 +9,19 @@ import { fileURLToPath } from 'node:url';
 import { minify } from 'terser';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const write = process.argv.includes('--write');
 const lf = (s) => s.replace(/\r\n/g, '\n');
+// the one minifier (scripts/stamps.mjs rebuilds a loader's .min.js with it after writing the loader's stamps)
+export const minOf = async (text) => (await minify(lf(text), { compress: true, mangle: true })).code;
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+const write = process.argv.includes('--write');
 const files = execSync('git ls-files "*.min.js"', { cwd: ROOT, encoding: 'utf8' }).trim().split('\n').filter(Boolean);
 let checked = 0;
 const stale = [];
 for (const min of files) {
   const src = path.join(ROOT, min.replace(/\.min\.js$/, '.js'));
   if (!fs.existsSync(src)) continue;
-  const out = (await minify(lf(fs.readFileSync(src, 'utf8')), { compress: true, mangle: true })).code;
+  const out = await minOf(fs.readFileSync(src, 'utf8'));
   const cur = lf(fs.readFileSync(path.join(ROOT, min), 'utf8'));
   checked++;
   if (out === cur || out + '\n' === cur) continue;
@@ -54,4 +58,5 @@ else { console.error(`${stale.length} of ${checked} .min.js files differ from wh
     if (unbumped.length) { console.error(`${unbumped.length} changed .min.js file${unbumped.length === 1 ? ' is' : 's are'} still loaded with main's ?v= stamp or none (give it a new one on every page that loads it):\n  ${unbumped.map((m) => `${m} (${[...now[m]].join(', ')})`).join('\n  ')}`); if (!write) process.exit(1); }
     else console.log('?v= stamps: every .min.js changed since main has a new stamp.');
   }
+}
 }

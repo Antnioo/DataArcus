@@ -20,7 +20,7 @@
 (function (root) {
   'use strict';
   // the worker's ?v= stamp: one place in the page's code (theme-generator.js starts the same worker with the same stamp)
-  const WORKER_URL = '/assets/js/model-health-worker.min.js?v=20261103sp15';
+  const WORKER_URL = '/assets/js/model-health-worker.min.js?v=d8390a780e6b';
 
   function create(opts) {
     const W = (opts && opts.Worker) || root.Worker;
