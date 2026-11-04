@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **Inside the Model Health Check, the rules and the questions:** the checks that find problems and the "Please
+  confirm" questions each have a file of their own; every check, on the website and from the MCP, gives the same
+  findings, score, skipped checks and questions as before.
 - **The macOS tests run where changes are merged:** the full test run on macOS now runs on the main and release
   branches, on pull requests to main and on the check before each merge, no longer on every work branch; Linux and
   Windows still run everywhere, as before.
