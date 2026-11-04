@@ -28,6 +28,11 @@ export const TWIN_STEPS = ['lib/twin-read.mjs', 'lib/twin-visuals.mjs', 'lib/twi
 export const twinFiles = () => ['lib/arabic-twin.mjs'].concat(TWIN_STEPS.filter(there));
 export const twinSource = () => twinFiles().map(read).join('\n');
 
+// (0.3.2 SP28) the report writer's page: assets/js/pbip-page.js (the page assembly), then the visuals' builders it calls
+export const WRITER_PAGE = ['../assets/js/pbip-page.js', '../assets/js/pbip-visuals.js', '../assets/js/pbip-visuals-charts.js', '../assets/js/pbip-visuals-tables.js'];
+export const writerPageFiles = () => WRITER_PAGE.filter(there);
+export const writerPageSource = () => writerPageFiles().map(read).join('\n');
+
 // the website's Theme Generator (0.3.2 SP31, the split of theme-generator.js): the page's orchestration and every script
 // loader with its ?v= stamp, then its saved design, its controls and layout step, its downloads
 export const GENERATOR_FILES = ['../assets/js/theme-generator.js', '../assets/js/theme-state-ui.js', '../assets/js/theme-layout-ui.js', '../assets/js/theme-download-ui.js'];

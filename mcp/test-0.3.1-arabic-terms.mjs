@@ -14,6 +14,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
+import { writerPageSource } from './test-source.mjs';
 import { CONCEPTS, ALLOW, termHits, fileHits, repoHits, repoFiles, englishOnceProblem, keywordsProblem, fold } from './lib/arabic-terms.mjs';
 import { CONCEPTS as SHEET } from './lib/terminology.mjs';
 
@@ -64,7 +65,7 @@ chk(() => !Object.values(AR).flatMap((t) => termHits(t)).length, () => `AT-4. th
 chk(() => !Object.values(PH).flatMap((t) => termHits(t)).length, () => `AT-4. the fixed list's phrases use the sheet's terms: ${JSON.stringify(Object.values(PH).flatMap((t) => termHits(t)))}`);
 chk(() => PH.Slicer === AR.slicer && PH.Tooltip === AR.tooltipPage && fold(AR.slicer) === 'مقسم' && fold(AR.tooltipPage) === 'تلميح',
   () => `AT-4. Slicer and Tooltip are the sheet's terms in the writer and the list (${AR.slicer} / ${AR.tooltipPage}; list ${PH.Slicer} / ${PH.Tooltip})`);
-const reset = CONCEPTS.find((c) => c.id === 'reset'), page = fs.readFileSync(path.join(ROOT, 'assets/js/pbip-page.js'), 'utf8');
+const reset = CONCEPTS.find((c) => c.id === 'reset'), page = writerPageSource();   // (0.3.2 SP28: pbip-page.js and the visuals' builders)
 const tip = (/o\.lang === 'ar' \? '([^']+)' : 'Clear the filters on this page'/.exec(page) || [])[1];
 chk(() => reset.phrases.every((en) => PH[en] === reset.ar) && AR.reset === reset.ar && tip === reset.ar,
   () => `AT-4. "Reset filters" and "Clear the filters on this page" are one Arabic text «${reset.ar}» (list: ${reset.phrases.map((en) => PH[en]).join(' / ')}; writer ${AR.reset}; tooltip ${tip})`);
