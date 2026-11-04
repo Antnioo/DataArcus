@@ -13,7 +13,7 @@ task routes.
   (`pbip-bind.js`, `tmdl-model.js`; the picker's drawing `field-picker-ui.js`; a chosen folder or file read in the
   browser `model-import-browser.js`), the report writer (`pbip-export.js`, `pbip-page.js`, `pbip-query.js`; its ZIP `pbip-zip.js` and sample model
   `pbip-sample.js`; its tooltip pages `pbip-tooltip.js`; its page buttons and filter panels `pbip-navigation.js`), the design
-  engine (`design-engine.js`), the health check (`model-health-engine.js`; its DAX tokens and report references `dax-reference-parser.js`; its model index `model-index.js`;
+  engine (`design-engine.js`), the health check (`model-health-engine.js`; its DAX tokens and report references `dax-reference-parser.js`; its model index `model-index.js`; the page `model-health.js`, its text downloads `health-downloads.js`;
   `model-health-tmdl.js`, `gulf-health.js`),
   the calendar generator (`calendar-generator.js`, `gulf-dates.js`), the measured rules (`report-rules.js`,
   `label-limits.js`, `layout-check.js`, `report-a11y.js`), the mirror engine for right to left (`report-mirror.js`; its named rules `mirror-policy.js`),
@@ -86,7 +86,7 @@ task routes.
 | What a report looks like (layout, sizes, visuals) | `assets/js/pbip-export.js`, `pbip-page.js` (tooltip pages: `pbip-tooltip.js`; page buttons and filter panels: `pbip-navigation.js`), `design-engine.js`; `report-rules.js` for measured limits |
 | Right to left and Arabic | `assets/js/report-mirror.js` (which family, which axis is time, what keeps left to right: `mirror-policy.js`); `mcp/lib/twin-*.mjs` (by step), `terminology.mjs`; `assets/data/arabic-report-words.json` |
 | Reading models | `assets/js/pbip-bind.js`, `tmdl-model.js` (the website's folder or file: `model-import-browser.js`); `mcp/lib/model.mjs`, `scope.mjs` |
-| Model health | `assets/js/model-health-engine.js` (DAX tokens and report references: `dax-reference-parser.js`; the normalised model, its index and dependency references: `model-index.js`), `model-health-tmdl.js`, `gulf-health.js` |
+| Model health | `assets/js/model-health-engine.js` (DAX tokens and report references: `dax-reference-parser.js`; the normalised model, its index and dependency references: `model-index.js`), the page `model-health.js` (its text downloads: `health-downloads.js`), `model-health-tmdl.js`, `gulf-health.js` |
 | A tool's inputs or answer | `mcp/tools/<tool_name>.mjs`, `mcp/lib/agent-text.mjs`, `mcp/TOOLS.md` |
 | Approval or writing | `mcp/lib/plans.mjs`, `approval-window.mjs`, `artifact.mjs`, `files.mjs`, `write-io.mjs` |
 | Checking reports | `mcp/lib/check-report.mjs`, `check-language.mjs`, `arabic-lens.mjs`, `design-lint.mjs`; `assets/js/layout-check.js` |

@@ -1,0 +1,476 @@
+{
+ "en": {
+  "sample": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 18399,
+    "sha256": "98b6f01caaf7cce8ea39db556ebb2ca1d3ff83640901e3d61577bdbe5cbee77f",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"high\",\"Performance\",\"Auto date/time is on"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "Contoso-Sales-Demo - documentation.html",
+    "length": 32804,
+    "sha256": "88492f9a20bfd6849ed79364b76d8ee2821df13b7a90f345391876154b494c58",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "Contoso-Sales-Demo - documentation.md",
+    "length": 19464,
+    "sha256": "b5db59327d3b23e6cb139cf8fd7b178910b30b4104200a6c76f64930e6015436",
+    "start": "# Contoso-Sales-Demo.pbit\n\nModel documentation and health check, <DATE>\n\n**Health score: 56/100** (P"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "Contoso-Sales-Demo - measures.csv",
+    "length": 3385,
+    "sha256": "58337fc3532985c7641e2114bd0ba1efdbbfd51856e576031891e5112b41d7b3",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\"\r\n\"Total Sa"
+   }
+  },
+  "tricky.bim": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 3618,
+    "sha256": "2587035bbc90999d10d95e8f18bed08275595c669103d2dd4654e2a16c8e87c5",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"medium\",\"Performance\",\"Relationships that"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "tricky - documentation.html",
+    "length": 12283,
+    "sha256": "3dcfd8db6a4036cec0ca3a589220f8426eeea19bbd11553f699d628c07bb3111",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "tricky - documentation.md",
+    "length": 6597,
+    "sha256": "82110906e33fb56c188ee7fcb61ba53cd3fa1eac7e5a7a894c820408850530d8",
+    "start": "# tricky.bim\n\nModel documentation and health check, <DATE>\n\n**Health score: 85/100** (Performance 78"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "tricky - measures.csv",
+    "length": 1500,
+    "sha256": "c78071c0ac558ee9488065db610a35934975d5597d3f145c66006faf0e55ad31",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\"\r\n\"Total\",\""
+   }
+  },
+  "arabic.pbit": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 1225,
+    "sha256": "a480bd93773dc9256736d95cc28cb0726080439ef5dfc967cb95a2d7835ff7ff",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"low\",\"Maintainability\",\"Measures not used"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "arabic - documentation.html",
+    "length": 7770,
+    "sha256": "a257cbcfbae831a7e12a3fb215e9399b0810749544fcbb8378a25e4d3f56f5d7",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "arabic - documentation.md",
+    "length": 3382,
+    "sha256": "3461b3d9906afb72cdc1db37d228c59e7a5b8b9625c5a4948cb0462fd192e4a8",
+    "start": "# arabic.pbit\n\nModel documentation and health check, <DATE>\n\n**Health score: 93/100** (Performance 1"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "arabic - measures.csv",
+    "length": 417,
+    "sha256": "d73d3e2d70e3ba69d329f889efb68fd40327b410eedb34af20a86ccc6734f647",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\"\r\n\"إجمالي ا"
+   }
+  },
+  "dax-tables.bim": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 718,
+    "sha256": "fef25bc340afe60f66b27ee25ba9235843d90d8c4baa27c5ae5f4ce4919f6496",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"low\",\"Maintainability\",\"Column references"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "dax-tables - documentation.html",
+    "length": 5267,
+    "sha256": "cf1e69d43977795726a68830c0d177fff681a1ece54da779feb2495fac8fdb0d",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "dax-tables - documentation.md",
+    "length": 2017,
+    "sha256": "59a0302c3fce6568fd35477fc273452abacff8eb04792866f57380fcca824a9a",
+    "start": "# dax-tables.bim\n\nModel documentation and health check, <DATE>\n\n**Health score: 97/100** (Performanc"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "dax-tables - measures.csv",
+    "length": 341,
+    "sha256": "dc2d7b4f67706257fdc2f8c9d514905f57562da030dc65f6c2680130053a642e",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\"\r\n\"Double I"
+   }
+  },
+  "no-measures.bim": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 699,
+    "sha256": "ecdfb56572b7ed94adc3dfbff881d646dd876978c0db95f4875d327d2052fe12",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"low\",\"Best practice\",\"ID, year or code co"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "no-measures - documentation.html",
+    "length": 5115,
+    "sha256": "d9aac270871b281ad6dc7314e038fc7971c80783b57cd8b64a437071167f37d3",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "no-measures - documentation.md",
+    "length": 1915,
+    "sha256": "e4c0cdc3c7f088a4be33d4029fcec576f4f3e37c6d6ba4282b9ec88713e04c54",
+    "start": "# no-measures.bim\n\nModel documentation and health check, <DATE>\n\n**Health score: 95/100** (Performan"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "no-measures - measures.csv",
+    "length": 89,
+    "sha256": "e103a8078e8c135002047a096f8061b47d08734382bd6e74d00a4488f7f0722a",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\""
+   }
+  },
+  "legacy.pbit": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 1620,
+    "sha256": "427b054f60b504d6f9008bbf292461695f9118eef9a98f8d4087c505abd82b56",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"medium\",\"Best practice\",\"Month or day nam"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "legacy - documentation.html",
+    "length": 8978,
+    "sha256": "a1b736db5600bdf2099edad2195f68c565e3ab85d07a80e1012438eb75135003",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "legacy - documentation.md",
+    "length": 4317,
+    "sha256": "677dfea8d58e47309773c3c213df0db7b26412e940df20062791430582a5a67a",
+    "start": "# legacy.pbit\n\nModel documentation and health check, <DATE>\n\n**Health score: 84/100** (Performance 9"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "legacy - measures.csv",
+    "length": 258,
+    "sha256": "ff7c8cf63c71f619b53301c2a3b16f7c3cefa030274c6f1f5a3860c9283e2d6f",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\"\r\n\"Total\",\""
+   }
+  },
+  "Health Test.pbit": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 1301,
+    "sha256": "38ab8da8b0c66f83299dc57b3165318eeec9e81732f10bf5cbb37759952bbf90",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"medium\",\"Performance\",\"Tables not used at"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "Health Test - documentation.html",
+    "length": 7473,
+    "sha256": "7f5d592a8ecebbd0a29368d849bf055a366593b71763349cf500b59d5dccb7a8",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "Health Test - documentation.md",
+    "length": 3298,
+    "sha256": "abd6e6a0037d7a7760f0144f6d70a0c7476f6ac1c5082bdd722e490daae55e72",
+    "start": "# Health Test.pbit\n\nModel documentation and health check, <DATE>\n\n**Health score: 92/100** (Performa"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "Health Test - measures.csv",
+    "length": 260,
+    "sha256": "c5ab590e88362f2e640ee01a6a620bc8d6f9e571386470a0ce0e14815f18f9b4",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\"\r\n\"Total\",\""
+   }
+  },
+  "ramadan.zip": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 1608,
+    "sha256": "0390b1d927252d3944910d6af9cde633921c1c19fc8746516250a33dff1fa977",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"low\",\"Maintainability\",\"Visible key colum"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "ramadan - documentation.html",
+    "length": 19026,
+    "sha256": "da582fd94f04b29a9af687de51fcf04a5c9783dd086e8a697c8e1b4c99b654ad",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "ramadan - documentation.md",
+    "length": 12201,
+    "sha256": "52b1208236871e10dad749376246a574a714e7d0adf9b64a3ffa7d80529be12e",
+    "start": "# ramadan.zip\n\nModel documentation and health check, <DATE>\n\n**Health score: 99/100** (Performance 1"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "ramadan - measures.csv",
+    "length": 1574,
+    "sha256": "6d97d738c11f648798aa18e1128495149824daa28f808ce643731571669a0b7a",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\"\r\n\"Total Sa"
+   }
+  },
+  "health-project.zip": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 2577,
+    "sha256": "fd393b4957be8543e0607cef8d69d32d206db44703771cd0d79e35c96851fc12",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"medium\",\"Performance\",\"Tables not used at"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "health-project - documentation.html",
+    "length": 9210,
+    "sha256": "1dabd53ebddf6c8a04c377fc79653aeb0eabb3b512d95c6206857f6f8dfc6936",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "health-project - documentation.md",
+    "length": 4364,
+    "sha256": "fe3c2d665feb670d75b6e46c7de8654348937e57cdcec7809a91c604c46ed51b",
+    "start": "# health-project.zip\n\nModel documentation and health check, <DATE>\n\n**Health score: 87/100** (Perfor"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "health-project - measures.csv",
+    "length": 244,
+    "sha256": "622719588d6ec5c0e5c78b61cc2033fff391ce0b49c6d256289f6485527e365e",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\"\r\n\"Total\",\""
+   }
+  },
+  "broken.zip": {}
+ },
+ "ar": {
+  "sample": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 18399,
+    "sha256": "98b6f01caaf7cce8ea39db556ebb2ca1d3ff83640901e3d61577bdbe5cbee77f",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"high\",\"Performance\",\"Auto date/time is on"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "Contoso-Sales-Demo - documentation.html",
+    "length": 32804,
+    "sha256": "88492f9a20bfd6849ed79364b76d8ee2821df13b7a90f345391876154b494c58",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "Contoso-Sales-Demo - documentation.md",
+    "length": 19464,
+    "sha256": "b5db59327d3b23e6cb139cf8fd7b178910b30b4104200a6c76f64930e6015436",
+    "start": "# Contoso-Sales-Demo.pbit\n\nModel documentation and health check, <DATE>\n\n**Health score: 56/100** (P"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "Contoso-Sales-Demo - measures.csv",
+    "length": 3385,
+    "sha256": "58337fc3532985c7641e2114bd0ba1efdbbfd51856e576031891e5112b41d7b3",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\"\r\n\"Total Sa"
+   }
+  },
+  "tricky.bim": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 3618,
+    "sha256": "2587035bbc90999d10d95e8f18bed08275595c669103d2dd4654e2a16c8e87c5",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"medium\",\"Performance\",\"Relationships that"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "tricky - documentation.html",
+    "length": 12283,
+    "sha256": "3dcfd8db6a4036cec0ca3a589220f8426eeea19bbd11553f699d628c07bb3111",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "tricky - documentation.md",
+    "length": 6597,
+    "sha256": "82110906e33fb56c188ee7fcb61ba53cd3fa1eac7e5a7a894c820408850530d8",
+    "start": "# tricky.bim\n\nModel documentation and health check, <DATE>\n\n**Health score: 85/100** (Performance 78"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "tricky - measures.csv",
+    "length": 1500,
+    "sha256": "c78071c0ac558ee9488065db610a35934975d5597d3f145c66006faf0e55ad31",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\"\r\n\"Total\",\""
+   }
+  },
+  "arabic.pbit": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 1225,
+    "sha256": "a480bd93773dc9256736d95cc28cb0726080439ef5dfc967cb95a2d7835ff7ff",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"low\",\"Maintainability\",\"Measures not used"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "arabic - documentation.html",
+    "length": 7770,
+    "sha256": "a257cbcfbae831a7e12a3fb215e9399b0810749544fcbb8378a25e4d3f56f5d7",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "arabic - documentation.md",
+    "length": 3382,
+    "sha256": "3461b3d9906afb72cdc1db37d228c59e7a5b8b9625c5a4948cb0462fd192e4a8",
+    "start": "# arabic.pbit\n\nModel documentation and health check, <DATE>\n\n**Health score: 93/100** (Performance 1"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "arabic - measures.csv",
+    "length": 417,
+    "sha256": "d73d3e2d70e3ba69d329f889efb68fd40327b410eedb34af20a86ccc6734f647",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\"\r\n\"إجمالي ا"
+   }
+  },
+  "dax-tables.bim": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 718,
+    "sha256": "fef25bc340afe60f66b27ee25ba9235843d90d8c4baa27c5ae5f4ce4919f6496",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"low\",\"Maintainability\",\"Column references"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "dax-tables - documentation.html",
+    "length": 5267,
+    "sha256": "cf1e69d43977795726a68830c0d177fff681a1ece54da779feb2495fac8fdb0d",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "dax-tables - documentation.md",
+    "length": 2017,
+    "sha256": "59a0302c3fce6568fd35477fc273452abacff8eb04792866f57380fcca824a9a",
+    "start": "# dax-tables.bim\n\nModel documentation and health check, <DATE>\n\n**Health score: 97/100** (Performanc"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "dax-tables - measures.csv",
+    "length": 341,
+    "sha256": "dc2d7b4f67706257fdc2f8c9d514905f57562da030dc65f6c2680130053a642e",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\"\r\n\"Double I"
+   }
+  },
+  "no-measures.bim": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 699,
+    "sha256": "ecdfb56572b7ed94adc3dfbff881d646dd876978c0db95f4875d327d2052fe12",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"low\",\"Best practice\",\"ID, year or code co"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "no-measures - documentation.html",
+    "length": 5115,
+    "sha256": "d9aac270871b281ad6dc7314e038fc7971c80783b57cd8b64a437071167f37d3",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "no-measures - documentation.md",
+    "length": 1915,
+    "sha256": "e4c0cdc3c7f088a4be33d4029fcec576f4f3e37c6d6ba4282b9ec88713e04c54",
+    "start": "# no-measures.bim\n\nModel documentation and health check, <DATE>\n\n**Health score: 95/100** (Performan"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "no-measures - measures.csv",
+    "length": 89,
+    "sha256": "e103a8078e8c135002047a096f8061b47d08734382bd6e74d00a4488f7f0722a",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\""
+   }
+  },
+  "legacy.pbit": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 1620,
+    "sha256": "427b054f60b504d6f9008bbf292461695f9118eef9a98f8d4087c505abd82b56",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"medium\",\"Best practice\",\"Month or day nam"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "legacy - documentation.html",
+    "length": 8978,
+    "sha256": "a1b736db5600bdf2099edad2195f68c565e3ab85d07a80e1012438eb75135003",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "legacy - documentation.md",
+    "length": 4317,
+    "sha256": "677dfea8d58e47309773c3c213df0db7b26412e940df20062791430582a5a67a",
+    "start": "# legacy.pbit\n\nModel documentation and health check, <DATE>\n\n**Health score: 84/100** (Performance 9"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "legacy - measures.csv",
+    "length": 258,
+    "sha256": "ff7c8cf63c71f619b53301c2a3b16f7c3cefa030274c6f1f5a3860c9283e2d6f",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\"\r\n\"Total\",\""
+   }
+  },
+  "Health Test.pbit": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 1301,
+    "sha256": "38ab8da8b0c66f83299dc57b3165318eeec9e81732f10bf5cbb37759952bbf90",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"medium\",\"Performance\",\"Tables not used at"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "Health Test - documentation.html",
+    "length": 7473,
+    "sha256": "7f5d592a8ecebbd0a29368d849bf055a366593b71763349cf500b59d5dccb7a8",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "Health Test - documentation.md",
+    "length": 3298,
+    "sha256": "abd6e6a0037d7a7760f0144f6d70a0c7476f6ac1c5082bdd722e490daae55e72",
+    "start": "# Health Test.pbit\n\nModel documentation and health check, <DATE>\n\n**Health score: 92/100** (Performa"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "Health Test - measures.csv",
+    "length": 260,
+    "sha256": "c5ab590e88362f2e640ee01a6a620bc8d6f9e571386470a0ce0e14815f18f9b4",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\"\r\n\"Total\",\""
+   }
+  },
+  "ramadan.zip": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 1608,
+    "sha256": "0390b1d927252d3944910d6af9cde633921c1c19fc8746516250a33dff1fa977",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"low\",\"Maintainability\",\"Visible key colum"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "ramadan - documentation.html",
+    "length": 19026,
+    "sha256": "da582fd94f04b29a9af687de51fcf04a5c9783dd086e8a697c8e1b4c99b654ad",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "ramadan - documentation.md",
+    "length": 12201,
+    "sha256": "52b1208236871e10dad749376246a574a714e7d0adf9b64a3ffa7d80529be12e",
+    "start": "# ramadan.zip\n\nModel documentation and health check, <DATE>\n\n**Health score: 99/100** (Performance 1"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "ramadan - measures.csv",
+    "length": 1574,
+    "sha256": "6d97d738c11f648798aa18e1128495149824daa28f808ce643731571669a0b7a",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\"\r\n\"Total Sa"
+   }
+  },
+  "health-project.zip": {
+   "#mhCsv": {
+    "name": "model-health-findings.csv",
+    "length": 2577,
+    "sha256": "fd393b4957be8543e0607cef8d69d32d206db44703771cd0d79e35c96851fc12",
+    "start": "﻿\"Severity\",\"Category\",\"Rule\",\"Object\",\"Detail\",\"Source\"\r\n\"medium\",\"Performance\",\"Tables not used at"
+   },
+   "[data-doc=\"html\"]": {
+    "name": "health-project - documentation.html",
+    "length": 9210,
+    "sha256": "1dabd53ebddf6c8a04c377fc79653aeb0eabb3b512d95c6206857f6f8dfc6936",
+    "start": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=devi"
+   },
+   "[data-doc=\"md\"]": {
+    "name": "health-project - documentation.md",
+    "length": 4364,
+    "sha256": "fe3c2d665feb670d75b6e46c7de8654348937e57cdcec7809a91c604c46ed51b",
+    "start": "# health-project.zip\n\nModel documentation and health check, <DATE>\n\n**Health score: 87/100** (Perfor"
+   },
+   "[data-doc=\"csv\"]": {
+    "name": "health-project - measures.csv",
+    "length": 244,
+    "sha256": "622719588d6ec5c0e5c78b61cc2033fff391ce0b49c6d256289f6485527e365e",
+    "start": "﻿\"Measure\",\"Table\",\"Folder\",\"Format\",\"Used\",\"Visuals\",\"Pages\",\"Depth\",\"Description\",\"DAX\"\r\n\"Total\",\""
+   }
+  },
+  "broken.zip": {}
+ }
+}
