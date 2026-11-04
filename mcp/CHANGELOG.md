@@ -5,6 +5,11 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **Check that a copy asks the same questions:** `check_report` takes the original report as `against` and says, visual
+  by visual, whether the copy (an Arabic twin, a native copy, a redesign or your own) asks the model the same question:
+  the same fields, totals, filters, sort, Top N and visual calculations, the same display units and decimals, or only
+  another order. It reads the files only and changes nothing; filter values and slicer selections are compared, never
+  shown; it does not run the queries, so it never says the numbers themselves are the same.
 - **The macOS tests run where changes are merged:** the full test run on macOS now runs on the main and release
   branches, on pull requests to main and on the check before each merge, no longer on every work branch; Linux and
   Windows still run everywhere, as before.
