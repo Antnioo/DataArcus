@@ -25,6 +25,7 @@
   inputs and a missing row, a "Not one" name gone, no ledger; green on the repo; the command's PASS and FAIL lines).
   modules 1033 (`--strict` the same), test-modules 11, agent-memory green, result-lines 192, lint 0.
 - **Commits:** f22d80a (plan), ff1ab81 (probe), 401936a (ledger), b5729f7 (check, CI step), then the pointers.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41851946104 on 893565f3. **State: DONE.**
 - **Resume:** the reviewer's read of the proposals; "newest copy" from the stale-twins history job.
 
 ## Decisions I made
