@@ -126,7 +126,8 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   // TMDL view: createOrReplace under "ref table" adds or updates only these measures, the rest of the table is kept.
   // Names follow the TMDL quoting rule; expressions are fenced with ``` so the DAX is kept exactly.
-  const tName = (n) => (/^[A-Za-z_][A-Za-z0-9_-]*$/.test(n) ? n : "'" + String(n).replace(/'/g, "''") + "'");
+  // a TMDL name: the one rule, tmdl-name.js (0.3.2 DD2N; the page loads it before this file)
+  const tName = window.DATmdlName.tmdlName;
   const tmdlScript = (ms) => ['createOrReplace', '', `\tref table ${tName(home())}`, ''].concat(...ms.map((m) => [
     ...(m.desc ? [`\t\t/// ${m.desc}`] : []),
     `\t\tmeasure ${tName(m.name)} = \`\`\``,
