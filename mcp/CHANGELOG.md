@@ -114,6 +114,9 @@ package's manifest; this file says what is in it.
 - **Inside the MCP, the redesign's allowed changes:** each kind of change a redesign may make to its copy (the grid,
   titles, theme colours, the copy's name, consistent text) is one entry in a file of its own, which the copy's check
   reads; nothing new is allowed, and every redesign plan, check and written file is exactly what it was before.
+- **Inside the Theme Generator page:** the saved design, the colour and layout controls, and the downloads (with the
+  reminder when a downloaded file is out of date) each have a file of their own; the page shows, saves and downloads
+  exactly what it did before.
 
 ## [0.3.1]: 2026-11-03 (the version for testers)
 Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports

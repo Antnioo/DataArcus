@@ -13,7 +13,8 @@ task routes.
   (`pbip-bind.js`, `tmdl-model.js`; the picker's drawing `field-picker-ui.js`; a chosen folder or file read in the
   browser `model-import-browser.js`), the report writer (`pbip-export.js`, `pbip-page.js`, `pbip-query.js`; its ZIP `pbip-zip.js` and sample model
   `pbip-sample.js`; its tooltip pages `pbip-tooltip.js`; its page buttons and filter panels `pbip-navigation.js`), the design
-  engine (`design-engine.js`), the health check (`model-health-engine.js`; its DAX tokens and report references `dax-reference-parser.js`; its model index `model-index.js`; the page `model-health.js`, its text downloads `health-downloads.js`;
+  engine (`design-engine.js`; the Theme Generator page over it, `theme-generator.js`: its saved design `theme-state-ui.js`,
+  its controls and layout step `theme-layout-ui.js`, its downloads `theme-download-ui.js`), the health check (`model-health-engine.js`; its DAX tokens and report references `dax-reference-parser.js`; its model index `model-index.js`; the page `model-health.js`, its text downloads `health-downloads.js`;
   `model-health-tmdl.js`, `gulf-health.js`),
   the calendar generator (`calendar-generator.js`, `gulf-dates.js`), the measured rules (`report-rules.js`,
   `label-limits.js`, `layout-check.js`, `report-a11y.js`), the mirror engine for right to left (`report-mirror.js`; its named rules `mirror-policy.js`),

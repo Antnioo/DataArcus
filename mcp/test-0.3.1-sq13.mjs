@@ -17,6 +17,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { generatorSource } from './test-source.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -96,7 +97,7 @@ try {
   chk(() => built && Array.isArray(built.files) && built.files.length > 10, () => `R1-S3a. a model with no measure gets create_report's counts report built: ${JSON.stringify(built && built.threw)}`);
   const pv = built && built.files ? get(() => PL.planPreview({ m, tables: m.tables, design, lang: 'en', second: true, files: built.files })) : null;
   chk(() => pv && pv.from !== 'slots' && pv.pages && pv.pages.length === 2, () => `R1-S3b. its picture is the written pages: ${JSON.stringify(pv && { from: pv.from, n: (pv.pages || []).length })}`);
-  const pl = fs.readFileSync(path.join(HERE, 'tools/plan_layout.mjs'), 'utf8'), tg = fs.readFileSync(path.join(HERE, '../assets/js/theme-generator.js'), 'utf8');
+  const pl = fs.readFileSync(path.join(HERE, 'tools/plan_layout.mjs'), 'utf8'), tg = generatorSource();   // (0.3.2 SP31: the page and its modules)
   chk(() => /previewOf\(exact \? exact\.files : null\)/.test(pl) && /PV\.fromFiles\(files,/.test(tg) && !/fromSlots/.test(tg), () => 'R1-S3c. plan_layout draws the exact artifact\'s files; the website\'s Preview draws the download\'s files (no fromSlots on the website)');
 }
 
