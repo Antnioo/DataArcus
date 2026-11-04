@@ -8,6 +8,12 @@ package's manifest; this file says what is in it.
 - **Inside the design engine, the layout and the saved designs:** the page layout and text sizes, and the reading and
   repair of saved designs, each have a file of their own, shared by the website and the MCP; every theme, layout and
   saved design is exactly what it was before.
+- **Inside the report writer:** each visual of a report page (the title and logo, the cards, the charts, the tables
+  and the slicers, and their phone layout) is made in files of their own; every report, on the website and from the MCP,
+  is byte for byte what it was before.
+- **Inside the Model Health Check, the rules and the questions:** the checks that find problems and the "Please
+  confirm" questions each have a file of their own; every check, on the website and from the MCP, gives the same
+  findings, score, skipped checks and questions as before.
 - **Check that a copy asks the same questions:** `check_report` takes the original report as `against` and says, visual
   by visual, whether the copy (an Arabic twin, a native copy, a redesign or your own) asks the model the same question:
   the same fields, totals, filters, sort, Top N and visual calculations, the same display units and decimals, or only
@@ -16,6 +22,10 @@ package's manifest; this file says what is in it.
 - **Arabic twin tables reach the right edge:** a table whose column widths Power BI works out itself now has its
   columns fill its box on the Arabic pages, so its first English column ends at the box's right edge, as a matrix's
   does; a table with a width for every column, or with its own column sizing setting, is left exactly as it was.
+- **Arabic names in the model, as an option of the Arabic twin:** ask for it and the twin also writes a script you
+  apply in TMDL view that gives the model's fields the Arabic names you approved, for each Gulf culture; nothing else
+  is written, every name left in English is listed with why, and the names show in the Power BI service (Desktop keeps
+  the model's own names).
 - **The macOS tests run where changes are merged:** the full test run on macOS now runs on the main and release
   branches, on pull requests to main and on the check before each merge, no longer on every work branch; Linux and
   Windows still run everywhere, as before.

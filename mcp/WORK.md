@@ -8,7 +8,7 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 - 0.3.1 shipped: on main at b79a7ed6 (#104, #114, "## [0.3.1]: 2026-11-03"); each job's note in `mcp/work/<ID>.md`.
 - `integration/0.3.2`: builders branch from it, push only their branch; the reviewer merges; the owner merges to main.
 - 0.3.2: TK1, DP1, OP1, HR1-HR2 (answers fit uncut), HM1-HM2, R032 (main in, version 0.3.2, its own
-  CHANGELOG section), DT1 (one texts order), ED1 (site: em dashes, phone shift), LV1 (label and value isolated), VC1-VC2 (a turned visual calculation said, on the page too), TT1 (twin tables), SP1-16, SP18-26, SP29 (the split), CI1 (macOS only where the reviewer merges), PK1 (redesign patch kinds), GM1 (Gulf measures), NC1 (the number check, layer 1), TR1 (tables to the right edge). Running: AN1, SP27.
+  CHANGELOG section), DT1 (one texts order), ED1 (site: em dashes, phone shift), LV1 (label and value isolated), VC1-VC2 (a turned visual calculation said, on the page too), TT1 (twin tables), SP1-16, SP18-26, SP29 (the split), CI1 (macOS only where the reviewer merges), PK1 (redesign patch kinds), GM1 (Gulf measures), NC1 (the number check, layer 1), TR1 (tables to the right edge), AN1 (Arabic names in the model), SP28 (pbip-page split), SP27 (health engine split). Running: SP30, SP31.
 
 ## Next step
 1. The reviewer: R032 into integration/0.3.2. 2. 0.3.2's other jobs; the release day flips the download lines.
