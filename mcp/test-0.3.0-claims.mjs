@@ -131,7 +131,7 @@ for (const f of SPEAK) {
 // validator offline, the schemas and DataArcus's measured rules. No answer it builds says the report opens in Desktop or
 // is not broken as the result of a check (a measured Desktop fact, like a kind's own sentence, is not such a claim).
 {
-  const CHECK_SAID = ['./lib/check-report.mjs', './lib/arabic-lens.mjs', './lib/agent-text.mjs', './tools/check_report.mjs', './TOOLS.md'];
+  const CHECK_SAID = ['./lib/check-report.mjs', './lib/check-impact.mjs', './lib/check-schema.mjs', './lib/arabic-lens.mjs', './lib/agent-text.mjs', './tools/check_report.mjs', './TOOLS.md'];
   const OLD = [/the report opens in Power BI Desktop/i, /it is not broken/i, /passes the checks that ran/i, /; Desktop opens the report with/i, /a report Desktop opens is not broken/i, /Nothing found that breaks the report/i];
   for (const f of CHECK_SAID) { const t = flat(f); for (const re of OLD) { const m = re.exec(t); check(!m, `RB-5. ${f} says, as a check's result, what only Power BI Desktop can show: "${m ? t.slice(Math.max(0, m.index - 40), m.index + 80) : ''}"`); } }
 }

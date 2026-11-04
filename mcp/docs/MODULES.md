@@ -35,7 +35,8 @@ task routes. [Every module](#every-module) (0.3.2 MD1): one row per file, kept t
   [**the write path**](#the-mcp-the-write-path) (`artifact.mjs`, `files.mjs`, `write-io.mjs`),
   [create_report and its options](#the-mcp-create_report-and-its-options) (one report's whole build: `report-run.mjs`),
   [the redesign](#the-mcp-the-redesign) (copy-and-patch: `redesign.mjs`),
-  [**the checkers**](#the-mcp-the-checkers) (`check-report.mjs`),
+  [**the checkers**](#the-mcp-the-checkers) (`check-report.mjs`, its parts `check-schema.mjs`, `check-impact.mjs`,
+  `check-redact.mjs`, `check-language.mjs`),
   [**the Arabic twin**](#the-mcp-the-arabic-twin) (by step, `twin-*.mjs`, through `arabic-twin.mjs`; every Arabic path
   mirrors through `report-mirror.js`), and
   [what leaves the server and the tools' helpers](#the-mcp-what-leaves-the-server-and-the-tools-helpers)
@@ -83,7 +84,7 @@ task routes. [Every module](#every-module) (0.3.2 MD1): one row per file, kept t
 | Model health | `assets/js/model-health-engine.js` ([its modules' rows](#the-website-engines)), the page `model-health.js` |
 | A tool's inputs or answer | `mcp/tools/<tool_name>.mjs`, `mcp/lib/agent-text.mjs`, `mcp/TOOLS.md` |
 | Approval or writing | `mcp/lib/plans.mjs`, `approval-window.mjs`, `artifact.mjs`, `files.mjs`, `write-io.mjs` |
-| Checking reports | `mcp/lib/check-report.mjs`, `check-language.mjs`, `arabic-lens.mjs`, `design-lint.mjs`; `assets/js/layout-check.js` |
+| Checking reports | `mcp/lib/check-report.mjs`, `check-schema.mjs`, `check-impact.mjs`, `check-redact.mjs`, `check-language.mjs`, `arabic-lens.mjs`, `design-lint.mjs`; `assets/js/layout-check.js` |
 | Tests and CI | `mcp/tests.json`, `mcp/run-tests.mjs`, `mcp/test.mjs` (`SHARDS`), `.github/workflows/tests.yml`, `scripts/ci-sum.mjs` |
 | Public claims (README, PRIVACY, the MCP page) | `mcp/test-0.3.0-claims.mjs`, `mcp/test-release-text.mjs` |
 | A new module (a split's new file) | its row in its part's table, [Every module](#every-module); `node scripts/check-modules.mjs` |
@@ -317,7 +318,10 @@ In `mcp/lib/`. They read a report and never change it.
 
 | file | job | in -> out | used by | pure |
 |---|---|---|---|---|
-| `check-report.mjs` | check_report: Microsoft's validator offline (schemas bundled in `mcp/schemas/`) and the measured rules on any PBIR report | a report's path -> the findings and their fixes | `check_report.mjs`, `create_report.mjs`, `artifact.mjs`, `arabic-lens.mjs` | no: fs |
+| `check-report.mjs` | check_report's orchestration: Microsoft's validator offline, the schemas, the measured rules, the tool's own notes, the fix routes, the answer (capped); re-exports its parts' names | a report's path (and against, the original) -> `{ findings, notChecked, ... }` with each kind's counts | `check_report.mjs`, `create_report.mjs`, `plan_layout.mjs`, `artifact.mjs`, `arabic-lens.mjs`, `native-copy.mjs` | no: fs |
+| `check-schema.mjs` | the bundled schemas (`mcp/schemas/`, offline): each JSON file checked against the schema it names; the validator's installed version | `{ reportDir, files, big }` -> `{ checked, errors, findings, notChecked, big }` | `check-report.mjs`, `check-impact.mjs` | no: fs |
+| `check-impact.mjs` | each finding's kind (can break, Desktop opens, opened in Desktop, may look, a DataArcus rule) from the measured codes, the validator's known gaps, and the summary sentence; never a pass for what did not run | a finding -> its kind; the counts and what ran -> one sentence | `check-report.mjs`, `check-language.mjs` | yes |
+| `check-redact.mjs` | check_report's one redaction boundary: a validator's or a schema's message without the report's names or values, paths and names cleaned | a finding or a message -> what the answer may carry | `check-report.mjs`, `check-schema.mjs` | yes |
 | `check-language.mjs` | each page's language (Arabic or English), from its texts counted, never returned | the inventory and the rules' input -> `{ pages: { id: lang } }` | `check-report.mjs` | yes |
 | `design-lint.mjs` | the design lint's adapter for the MCP (the lint itself is `layout-check.js`) | the inventory and the model's tables -> lint findings | `check-report.mjs`, `artifact.mjs`, `plan-lint.mjs` | yes |
 | `arabic-lens.mjs` | check_report's Arabic lens: is this report ready for Arabic, per page, each finding with its fix in DataArcus's words | a report and its model -> the Arabic findings | `check_report.mjs` | yes |

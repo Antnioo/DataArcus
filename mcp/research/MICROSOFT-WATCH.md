@@ -32,7 +32,7 @@ owner), so a change is never lost silently.
 2. It feeds the next "Power BI update" job, like U1 (`mcp/work/U1.md`, `mcp/research/POWERBI-2026-10.md`): research
    from Microsoft's sources, then the owner decides what changes. Typical answers:
    - a newer report schema: copy the folders into `mcp/schemas` (`mcp/schemas/SOURCE.md`, `SCHEMA_COMMIT` in
-     `mcp/lib/check-report.mjs`); the writer's own versions change only if Desktop needs it (measured, not guessed);
+     `mcp/lib/check-schema.mjs`); the writer's own versions change only if Desktop needs it (measured, not guessed);
    - a newer theme schema: check DataArcus's written themes against it, then set `themeSchema` in
      `mcp/research/microsoft-watch.json`;
    - a newer validator or catalog: bump the pin in `mcp/package.json` (`npm install`), rerun `npm test`, review
