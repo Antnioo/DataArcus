@@ -32,10 +32,10 @@ How it is kept true:
 | [1b-text What text does a literal hold?](#1b-text-what-text-does-a-literal-hold) | 18 | 11 of 15 | check_report, read_report, the writer, the twin, the preview, the redesign | merge (tagged decoder) |
 | [1b-number What number does a literal hold?](#1b-number-what-number-does-a-literal-hold) | 8 | 12 of 15 | check_report, read_report, the twin, the preview | merge (tagged decoder) |
 | [1b-bool What true or false does a literal hold?](#1b-bool-what-true-or-false-does-a-literal-hold) | 6 | 13 of 15 | check_report, read_report, the twin, the preview, the native copy | merge (tagged decoder) |
-| [1c How wide is the frame a visual is mirrored inside?](#1c-how-wide-is-the-frame-a-visual-is-mirrored-inside) | 4 | 5 of 10 | the twin | `twin-geometry.mjs` `widthOf` (in `aroundTables`) |
+| [1c How wide is the frame a visual is mirrored inside?](#1c-how-wide-is-the-frame-a-visual-is-mirrored-inside) | 4 | 0 of 10 | the twin | one place since DD1C2: `assets/js/mirror-units.js` `frameWidth` |
 | [1d What width did the report set for this table column?](#1d-what-width-did-the-report-set-for-this-table-column) | 5 | 3 of 12 | check_report, the twin, create_report | merge (tagged decoder) |
 | [1f Is this text Arabic?](#1f-is-this-text-arabic) | 7 | 4 of 11 | every measured text, check_report, create_report, the twin | `text-measure.js` / `field-catalog.js` (the broad test) |
-| [1g Which model folder is read?](#1g-which-model-folder-is-read) | 2 | 4 of 8 | the website's model import, every MCP tool that reads a model | `model-discovery.mjs` (the browser's is stale) |
+| [1g Which model folder is read?](#1g-which-model-folder-is-read) | 3 | 0 of 8 | the website's model import, every MCP tool that reads a model | equal (one place: `model-nearest.js`) |
 | [1h Which column sorts this one?](#1h-which-column-sorts-this-one) | 2 | 3 of 11 | the website's field picker, check_model_health's fix script | `field-catalog.js` (the health check's is stale; keep its null-list adapter) |
 | [grid Does this visual keep its grid left to right?](#grid-does-this-visual-keep-its-grid-left-to-right) | 2 | 0 of 18 | the twin | equal |
 | [vt-slicer Is this visual a slicer?](#vt-slicer-is-this-visual-a-slicer) | 5 | 1 of 18 | read_report, check_report, the twin, the preview | (not in the audit) |
@@ -241,14 +241,16 @@ false), C asks "is it shown" (anything but false -> shown, as Desktop shows a pa
 
 ## 1c How wide is the frame a visual is mirrored inside?
 
+**One place:** assets/js/mirror-units.js frameWidth (test mcp/test-0.3.2-dd1c.mjs).
+
 **Question:** the width a visual's x is mirrored in: its parent group's, else the page's.
 
 **Newest copy:** `twin-geometry.mjs` `widthOf` (in `aroundTables`: the validated-group fallback, fe62655b, 29 Oct). Verified, with one more: the audit's malformed width (`'400'`) gives a text in the mirror, the page's width in `aroundTables`, undefined in the fitting **and in `underGrids` `widthIn`** (the same file, B).
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/mirror-units.js` `widthOf` | [engines](MODULES.md#the-website-engines) | the twin (every visual's mirrored x, through report-mirror.js) |
-| `mcp/lib/twin-geometry.mjs` `widthIn` (in `underGrids`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a chart kept under a heatmap's grid) |
+| `assets/js/mirror-units.js` `frameWidth` | [engines](MODULES.md#the-website-engines) | the twin (every visual's mirrored x, through report-mirror.js) |
+| `mcp/lib/twin-geometry.mjs` `widthOf` (in `underGrids`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a chart kept under a heatmap's grid) |
 | `mcp/lib/twin-text-fit.mjs` `widthOf` (in `fitButtons`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a button widened for its Arabic text) |
 | `mcp/lib/twin-geometry.mjs` `widthOf` (in `aroundTables`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a visual kept off a table's or matrix's grid) |
 
@@ -271,9 +273,11 @@ included. The reviewer and the owner decide.
 
 **The test that will pin it:** the probe's 10 frames (family `1c`).
 
-**Since DD1C (4 Nov):** three of the four read `assets/js/mirror-units.js` `frameWidth` (test `mcp/test-0.3.2-dd1c.mjs`):
-mirror-units, twin-text-fit `fitButtons`, twin-geometry `aroundTables`. Still its own rule: twin-geometry `underGrids`
-`widthIn` (DD1C2, next). The family counts as one place when it reads `frameWidth` too.
+**Since DD1C (4 Nov) and DD1C2 (4 Nov):** all four read `assets/js/mirror-units.js` `frameWidth` (test
+`mcp/test-0.3.2-dd1c.mjs`): mirror-units, twin-text-fit `fitButtons`, twin-geometry `aroundTables` (DD1C) and
+twin-geometry `underGrids` (DD1C2, its own `widthIn` gone). The owner's answer (D-1104-15): a group with a broken box
+gives the page's width, else unknown. The probe: one answer on all 10 inputs. The "Today" table above is the ledger's
+snapshot before DD1C.
 
 ## 1d What width did the report set for this table column?
 
@@ -569,32 +573,30 @@ The reviewer and the owner decide.
 
 ## 1g Which model folder is read?
 
+**One place:** assets/js/model-nearest.js (test mcp/test-0.3.2-dd1g.mjs).
+
 **Question:** a chosen folder holding model folders: the one read, or a refusal.
 
-**Newest copy:** `model-discovery.mjs` (MANY_MODELS since 41bd0daa, 26 Oct); the browser's is stale. Verified.
+**Newest copy:** equal since DD1G (4 Nov): the rule is `model-nearest.js` `nearest` (MANY_MODELS since 41bd0daa, 26 Oct,
+built from `model-discovery.mjs`); the browser's own sort is gone.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/model-import-browser.js` `fromFolder` | [engines](MODULES.md#the-website-engines) | the website's model import (the field picker on the pages) |
-| `mcp/lib/model-discovery.mjs` `nearestModel` | [reading](MODULES.md#the-mcp-reading) | every MCP tool that reads a model (read_model first) |
+| `assets/js/model-nearest.js` `nearest` | [engines](MODULES.md#the-website-engines) | the rule itself: both callers below read it |
+| `assets/js/model-import-browser.js` `fromFolder` | [engines](MODULES.md#the-website-engines) | the website's model import (the field picker on the pages); it refuses two tied models before any file is read, and the page names both |
+| `mcp/lib/model-discovery.mjs` `nearestModel` | [reading](MODULES.md#the-mcp-reading) | every MCP tool that reads a model (read_model first); it keeps its ReadError and message |
 
-**Today** (A: model-import-browser fromFolder, stopped at its first read: no file is read; B: model-discovery
-nearestModel, on made-up paths):
+**Today** (the probe: the rule, model-import-browser fromFolder stopped at its first read, model-discovery nearestModel
+on made-up paths): all three answer the same on all 8 inputs. Before DD1G the browser took the alphabetically first of
+two side by side ("uses A.SemanticModel") where the MCP refused (MANY_MODELS): 4 of 8 inputs.
 
-| input | A | B |
-|---|---|---|
-| two side by side | "uses A.SemanticModel" | "refuses MANY_MODELS" |
-| two side by side in a project folder | "uses p/A.SemanticModel" | "refuses MANY_MODELS" |
-| names that differ by letter case | "uses A.SemanticModel" | "refuses MANY_MODELS" |
-| three at the top | "uses A.SemanticModel" | "refuses MANY_MODELS" |
+| input | all three |
+|---|---|
+| two side by side; two in a project folder; names that differ by letter case; three at the top | "refuses MANY_MODELS" |
+| one at the top, one deeper; a backup of the same name deeper | "uses" the top one |
 
-The website reads the first of two equally near models by name and says only how many others there are; the MCP
-names both and asks.
-
-**Decided answer:** proposed: B's (two at the nearest depth: both named, none read). The reviewer and the owner decide
-(the website's page then needs a message for it).
-
-**The test that will pin it:** the probe's 8 folders (family `1g`).
+**The test that pins it:** `mcp/test-0.3.2-dd1g.mjs` (12 made-up folder lists; the MCP and the website give one answer)
+and the probe's 8 folders (family `1g`).
 
 ## 1h Which column sorts this one?
 
