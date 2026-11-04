@@ -1,8 +1,10 @@
-// lang-manager.js - Enhanced Language Management System
+// lang-manager.js - the language manager: it detects the visitor's language (an Arabic copy's address, then ?lang=,
+// then the saved choice, then the browser's), saves an explicit choice, builds the switcher and puts the pieces
+// together: the locales and page routes (locale-routes.js, loaded before it)
 class LanguageManager {
   constructor() {
     this.currentLang = this.detectLanguage();
-    this.rtlLanguages = ['ar', 'he', 'fa'];
+    this.rtlLanguages = [...window.LocaleRoutes.RTL];
     this.translations = {};
     this.initialized = false;
     this.breakpoint = 992; // Bootstrap's lg breakpoint
@@ -12,7 +14,7 @@ class LanguageManager {
   detectLanguage() {
     // An Arabic copy (/ar/...) is Arabic whatever was saved before: its address is its language. Saved, like ?lang=ar,
     // so the English-only pages it links to open in Arabic too
-    if (/^\/ar\//.test(window.location.pathname)) {
+    if (window.LocaleRoutes.isArPath(window.location.pathname)) {
       try { localStorage.setItem('dataarcus-lang', 'ar'); } catch (e) {}
       return 'ar';
     }
@@ -20,7 +22,7 @@ class LanguageManager {
     // Check URL parameter first
     const urlParams = new URLSearchParams(window.location.search);
     const langParam = urlParams.get('lang');
-    if (langParam && ['en', 'ar'].includes(langParam)) {
+    if (langParam && window.LocaleRoutes.LANGS.includes(langParam)) {
       // Save it, so the next page opens in the language this page shows
       try { localStorage.setItem('dataarcus-lang', langParam); } catch (e) {}
       return langParam;
@@ -29,7 +31,7 @@ class LanguageManager {
     // Check localStorage
     let stored = null;
     try { stored = localStorage.getItem('dataarcus-lang'); } catch (e) { /* storage blocked: fall back to the browser language */ }
-    if (stored && ['en', 'ar'].includes(stored)) {
+    if (stored && window.LocaleRoutes.LANGS.includes(stored)) {
       return stored;
     }
     
@@ -57,119 +59,32 @@ class LanguageManager {
     }
   }
   
-  // The page's own path: an Arabic copy (/ar/...) is the page at the same path without /ar
+  // The page's own path, whether a path has an Arabic copy (locale-routes.js)
   pagePath() {
-    return window.location.pathname.replace(/^\/ar(?=\/)/, '');
+    return window.LocaleRoutes.pagePath(window.location.pathname);
   }
 
-  // Whether a page path has an Arabic copy: every public page has one (scripts/ar-pages.mjs, PAIRS = the sitemap);
-  // not files, the go/ short links, the 404 page or a lab page
   hasArCopy(p) {
-    return /(\.html|\/)$/.test(p) && !/^\/(ar|go|assets)\//.test(p) && !/^\/404\.html$|-lab\.html$/.test(p);
+    return window.LocaleRoutes.hasArCopy(p);
   }
 
-  // Links in translated HTML on an Arabic copy: a relative address is read from the English page's folder, and a link
-  // to a page that has an Arabic copy goes to the copy (as the generator writes the page's own links)
+  // Links in translated HTML on an Arabic copy: each address as locale-routes.js's arAddress gives it
   arLinks(root) {
-    const site = 'https://dataarcus.com', base = window.location.origin + this.pagePath();
+    const base = window.location.origin + this.pagePath();
     root.querySelectorAll('[href], [src]').forEach((e) => ['href', 'src'].forEach((a) => {
-      const v = e.getAttribute(a), abs = !!v && v.startsWith(site + '/');
-      if (v === null || (!abs && /^(#|[a-z][a-z0-9+.-]*:|\/\/)/i.test(v))) return;
-      const u = new URL(abs ? v.slice(site.length) : v, base);
-      const p = a === 'href' && e.tagName === 'A' && this.hasArCopy(u.pathname) ? '/ar' + u.pathname : u.pathname;
-      e.setAttribute(a, (abs ? site : '') + p + u.search + u.hash);
+      const v = e.getAttribute(a);
+      if (v === null) return;
+      const to = window.LocaleRoutes.arAddress(v, a === 'href' && e.tagName === 'A', base);
+      if (to !== null) e.setAttribute(a, to);
     }));
   }
 
-  // Get page-specific translations based on current page
+  // The page's own translations: the window global its route names (locale-routes.js)
   getPageTranslations() {
-    const path = this.pagePath();
-    
-    // Free tools pages (checked first: /tools/index.html also contains "index")
-    if (path.includes('power-bi-theme-generator')) {
-      return window.themeGeneratorTranslations;
-    } else if (path.includes('dax-calendar-table-generator')) {
-      return window.calendarGeneratorTranslations;
-    } else if (path.includes('dax-measure-builder')) {
-      return window.measureBuilderTranslations;
-    } else if (path.includes('/tools/power-bi-model-health-check')) {
-      return window.modelHealthTranslations;
-    } else if (path.includes('dp-600-practice-exam')) {
-      return window.dp600Translations;
-    } else if (path.includes('pl-300-practice-exam')) {
-      return window.pl300Translations;
-    } else if (path.includes('svg-kpi-designer')) {
-      return window.svgKpiTranslations;
-    } else if (path.includes('power-bi-licensing-cost-calculator')) {
-      return window.licensingCalculatorTranslations;
-    } else if (path.includes('/tools/')) {
-      return window.toolsHubTranslations;
-    }
-    // the beta page lives in a folder (/power-bi-mcp/, also as /power-bi-mcp/index.html): before the home page's "index"
-    if (path.includes('/power-bi-mcp/')) return window.betaPageTranslations;
-
-    if (path.includes('adventureworks-dashboard')) {
-      return window.adventureworksTranslations;
-    } else if (path.includes('call-center-dashboard')) {
-      return window.callcenterTranslations;
-    } else if (path.includes('maven-market-dashboard')) {
-      return window.mavenmarketTranslations;
-    } else if (path.includes('portfolio')) {
-      return window.portfolioTranslations;
-    } else if (path.includes('index') || path === '/' || path === '') {
-      return window.homepageTranslations;
-    } else if (path.includes('article-clv')) {
-      return window.clvTranslations;
-    } else if (path.includes('er-health-dashboard')) {
-     return window.erHealthTranslations;
-    } else if (path.includes('blog')) {
-     return window.blogTranslations;
-    } else if (path.includes('article-etl-vs-power-query')) {
-     return window.etlpqTranslations;
-    } else if (path.includes('article-kpi')) {
-     return window.kpiTranslations;
-    } else if (path.includes('article-shopify')) {
-     return window.shopifyTranslations;
-    } else if (path.includes('consumer-financial-complaints')) {
-     return window.cfpbComplaintsTranslations;
-    } else if (path.includes('repeatiq-dashboard')) {
-     return window.repeatiqCommerceTranslations;
-    } else if (path.includes('fintech-dashboard')) {
-     return window.fintechRiskTranslations;
-    } else if (path.includes('article-evm')) {
-     return window.evmTranslations;
-    } else if (path.includes('dataarcus-pulse')) {
-     return window.dataarcusPulseTranslations;
-    } else if (path.includes('article-journey-attribution')) {
-     return window.journeyAttributionTranslations;
-    } else if (path.includes('article-gulf-calendar-power-bi')) {
-     return window.gulfCalendarArticleTranslations;
-    } else if (path.includes('article-ramadan-sales-power-bi')) {
-     return window.ramadanSalesTranslations;
-    } else if (path.includes('article-power-bi-model-health-check')) {
-     return window.modelHealthArticleTranslations;
-    } else if (path.includes('article-power-bi-report-ready-for-arabic')) {
-     return window.reportReadyArabicTranslations;
-    } else if (path.includes('article-power-bi-custom-visual-ai-checks')) {
-     return window.customVisualChecksTranslations;
-    } else if (path.includes('article-power-bi-best-practice-exceptions')) {
-     return window.bestPracticeExceptionsTranslations;
-    } else if (path.includes('article-power-bi-report-redesign')) {
-     return window.reportRedesignArticleTranslations;
-    } else if (path.includes('article-power-bi-model-ai-ready')) {
-     return window.aiReadyArticleTranslations;
-    } else if (path.includes('article-power-bi-report-styles')) {
-     return window.reportStylesArticleTranslations;
-    } else if (path.includes('article-power-bi-licensing-guide')) {
-     return window.licensingGuideTranslations;
-    } else if (path.includes('copilot-readiness-audit')) {
-     return window.copilotAuditTranslations;
-    } else if (path.includes('privacy')) {
-     return window.privacyTranslations;
-    }
-    return null;
+    const key = window.LocaleRoutes.pageKey(this.pagePath());
+    return key ? window[key] : null;
   }
-  
+
   // Deep merge translations
   mergeTranslations(pageTranslations) {
     for (const lang in pageTranslations) {
@@ -200,7 +115,7 @@ class LanguageManager {
   
   // Set language and persist
   setLanguage(lang) {
-    if (!['en', 'ar'].includes(lang)) return false;
+    if (!window.LocaleRoutes.LANGS.includes(lang)) return false;
     
     this.currentLang = lang;
     try { localStorage.setItem('dataarcus-lang', lang); } catch (e) { /* storage blocked: the ?lang= in the URL still carries it */ }
@@ -268,7 +183,7 @@ class LanguageManager {
   // Apply translations to DOM elements (of this page, or of another document: scripts/ar-pages.mjs translates the page's
   // own HTML with it to write the /ar/ copy)
   // (arCopy: the document is an Arabic copy; the generator passes it, as it translates from the English address)
-  applyLanguage(doc = document, arCopy = /^\/ar\//.test(window.location.pathname)) {
+  applyLanguage(doc = document, arCopy = window.LocaleRoutes.isArPath(window.location.pathname)) {
     // Update all elements with data-i18n attribute
     doc.querySelectorAll('[data-i18n]').forEach(element => {
       const key = element.getAttribute('data-i18n');
@@ -601,11 +516,9 @@ class LanguageManager {
   // naming another path on this site (null for the page itself, so an English page shown in Arabic switches in place)
   pairUrl(lang) {
     const link = document.querySelector(`link[rel="alternate"][hreflang="${lang}"]`);
-    if (!link) return null;
-    const to = new URL(link.getAttribute('href'), window.location.href), bare = (p) => p.replace(/\/index\.html$/, '/');
-    return bare(to.pathname) === bare(window.location.pathname) ? null : window.location.origin + to.pathname;
+    return link ? window.LocaleRoutes.pairUrl(link.getAttribute('href'), window.location.href) : null;
   }
-  
+
   // Initialize the language manager
   init() {
     this.loadTranslations();
