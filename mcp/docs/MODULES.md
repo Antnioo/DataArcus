@@ -8,6 +8,14 @@ task routes. [Every module](#every-module) (0.3.2 MD1): one row per file, kept t
 
 - **The website** (dataarcus.com, GitHub Pages): the HTML pages at the root, `tools/`, `articles/`, and their Arabic
   copies in `ar/`. Its Power BI tools run in the browser; nothing a visitor opens is uploaded.
+  Its practice exams (DP-600 and PL-300, `tools/*-practice-exam.html`): `dp600-sim.js` (the exam's settings, the bank's
+  index and the wiring: it gives each module its storage, clock and random source); `exam-grade.js` (grading, pure: a
+  question and an answer in, a credit out; a submitted mock's score and tallies; a practice session's summary);
+  `exam-session.js` (the timed mock's state machine: question ids, choices and clock events in, the saved mock through a
+  storage adapter out; its draw of questions by area weight); `exam-progress.js` (the saved progress: answers,
+  bookmarks, results, study days, readiness; the study plan, weakest skill first); `exam-view.js` (every screen's HTML,
+  its clicks and keys, the routing; the only one that touches the DOM). Each loaded before `dp600-sim.js`, which
+  calls them all; `exam-view.js` calls the other three through what `dp600-sim.js` hands it.
 - **The engines** (`assets/js/*.js`, each with its `.min.js`): plain JavaScript that runs in the browser and in Node,
   **shared by the website and the MCP on purpose**, so both give the same answers: the model reader and field picker,
   the report writer, the design engine, the model health check, the calendar and the Gulf, the measured rules and the
@@ -61,6 +69,7 @@ task routes. [Every module](#every-module) (0.3.2 MD1): one row per file, kept t
 | Change | Start with |
 |---|---|
 | A website page or tool | the page's HTML and its `assets/js/` engine; `node scripts/test-site-config.mjs`; `scripts/tests/run-all.mjs` |
+| The practice exams | `assets/js/dp600-sim.js` (settings, wiring), `exam-grade.js` (scores), `exam-session.js` (the timed mock), `exam-progress.js` (saved progress, study plan), `exam-view.js` (screens); `scripts/tests/sp34.mjs`, `tools.mjs` |
 | What a report looks like (layout, sizes, visuals) | `assets/js/pbip-export.js` (it puts the writer together: [the writer's rows](#the-website-engines)), `design-engine.js`; `report-rules.js` for measured limits |
 | Themes, page layout and saved designs | `assets/js/design-engine.js` (DAEngine, the facade the generator page, `mcp/lib/design.mjs` and the writer call; its colours, glass, metrics and saved designs: [the design rows](#the-website-engines)) |
 | Right to left and Arabic | `assets/js/report-mirror.js`, `mirror-policy.js`; [the twin by step](#the-mcp-the-arabic-twin), `terminology.mjs`; `assets/data/arabic-report-words.json` |
@@ -191,7 +200,11 @@ In `assets/js/`. Each draws one page (or every page) and holds no engine logic t
 | `model-health-worker.js` | the health check's worker: unzips the file in memory within limits, finds the model and report, runs the engine | a file's bytes (a message) -> the analysis (a message) | `health-worker-client.js`, `theme-generator.js` | no: worker, browser files |
 | `measure-builder.js` | the DAX Measure Builder page: time intelligence measures (MTD, YTD, prior year, rolling, Ramadan vs last Ramadan, Eid) as one DAX script, one TMDL script or each measure | the page's DOM | `tools/dax-measure-builder.html` | no: DOM, storage, browser files |
 | `licensing-calculator.js` | the licensing cost calculator: Pro, Premium Per User and Fabric for a number of creators and viewers, in USD, AED and SAR | the page's DOM | `tools/power-bi-licensing-cost-calculator.html` | no: DOM, storage, network |
-| `dp600-sim.js` | the exam practice simulator (DP-600, or PL-300 by `window.EXAM`); progress stays in the browser | the page's DOM | `tools/dp-600-practice-exam.html`, `tools/pl-300-practice-exam.html` | no: DOM, storage, network |
+| `dp600-sim.js` | the exam practice page's wiring (DP-600, or PL-300 by `window.EXAM`): the settings, the bank's index, the browser's storage, clock and random source handed to the four exam modules below, then the start by `?mode=` | the page's DOM | `tools/dp-600-practice-exam.html`, `tools/pl-300-practice-exam.html` | no: DOM, storage, network |
+| `exam-grade.js` | the exam's grading (0.3.2 SP34) | a question and an answer, a mock's items -> a score 0..1, answered or not, a mock's score by domain, skill and renewal topic, a session's tally | `tools/dp-600-practice-exam.html`, `tools/pl-300-practice-exam.html` | yes |
+| `exam-session.js` | the timed mock's state machine and the draw of a mock or a renewal (0.3.2 SP34) | question ids, choices and clock events, a random source and a storage adapter `{ load, store }` -> the session (current, flagged, the clock left, ended); each event saves through the adapter | `tools/dp-600-practice-exam.html`, `tools/pl-300-practice-exam.html` | yes |
+| `exam-progress.js` | the saved progress and the study plan: streak, bookmarks, readiness, mistakes, skill accuracy (0.3.2 SP34) | a storage adapter `{ read, write }`, a clock and the bank's questions, domains and skills -> the progress state and the plan's rows (status keys; the words stay in the view) | `tools/dp-600-practice-exam.html`, `tools/pl-300-practice-exam.html` | yes |
+| `exam-view.js` | the exam page's drawing and routing: every screen, the practice and mock choices, the timer (0.3.2 SP34) | the root element, the bank and the four modules -> the page's DOM | `tools/dp-600-practice-exam.html`, `tools/pl-300-practice-exam.html` | no: DOM |
 | `svg-kpi-designer.js` | the SVG KPI Designer's editor: draw a KPI, bind its parts to measures, copy the DAX | the page's DOM | `tools/svg-kpi-designer.html` | no: DOM, storage, browser files |
 
 ### The MCP: reading

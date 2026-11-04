@@ -11,6 +11,8 @@ package's manifest; this file says what is in it.
 - **Inside the Model Health Check page:** the worker that reads your file, the Fix plan's scripts and the page's views
   each have a file of their own; the page shows, counts and copies exactly what it did before, and a file dropped while
   another is still being checked stops that check, as before.
+- **Inside the practice exams (DP-600 and PL-300):** the grading, the timed mock exam, the saved progress and study
+  plan, and the screens each have a file of their own; every screen, score, timer and saved answer is what it was before.
 - **Inside the report writer:** each visual of a report page (the title and logo, the cards, the charts, the tables
   and the slicers, and their phone layout) is made in files of their own; every report, on the website and from the MCP,
   is byte for byte what it was before.
