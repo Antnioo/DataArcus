@@ -39,6 +39,7 @@ export function moduleFiles(root = ROOT) {
 
 const SKIP_DIRS = new Set(['node_modules', '.git', 'lab', 'coverage']);
 function walk(root, dir, pred, out = []) {
+  if (!fs.existsSync(path.join(root, dir))) return out;
   for (const e of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
     if (SKIP_DIRS.has(e.name) || e.name.startsWith('.')) continue;
     const rel = dir ? dir + '/' + e.name : e.name;
@@ -127,7 +128,7 @@ function objectKeys(text, at) {
   return keys.map((k) => (/^\s*(?:\.\.\.)?\s*([A-Za-z_$][\w$]*)/.exec(k) || [])[1]).filter(Boolean);
 }
 
-function exportsOf(file, code, raw) {
+function exportsOf(root, file, code, raw) {
   const names = [];
   if (file.endsWith('.mjs')) {
     for (const m of code.matchAll(/\bexport\s+(?:async\s+)?(?:function\s*\*?|class)\s*([A-Za-z_$][\w$]*)/g)) names.push(m[1]);
@@ -143,7 +144,7 @@ function exportsOf(file, code, raw) {
     // an engine that exports for Node is loaded (they are the MCP's own, side-effect free in Node) and its keys read;
     // one that does not is read from its text
     if (/module\.exports/.test(code)) {
-      try { const api = createRequire(path.join(ROOT, file))(path.join(ROOT, file)); if (api && typeof api === 'object') return Object.keys(api); } catch { /* read from the text below */ }
+      try { const api = createRequire(path.join(root, file))(path.join(root, file)); if (api && typeof api === 'object') return Object.keys(api); } catch { /* read from the text below */ }
     }
     for (const m of code.matchAll(/\b(?:root|window|self)\.[A-Z][\w$]*\s*=\s*(?:Object\.freeze\(\s*)?\{/g)) names.push(...objectKeys(code, m.index + m[0].length - 1));
     const me = /module\.exports\s*=\s*(\{|[A-Za-z_$][\w$]*)/.exec(code);
@@ -242,7 +243,7 @@ export function facts(root = ROOT) {
       else if (r.pkg && into) into.packages.push(r.pkg);
     }
     if (into) {
-      into.exports = exportsOf(file, code, raw);
+      into.exports = exportsOf(root, file, code, raw);
       const g = globalsOf(file, code);
       const exp = g.filter((x) => /^(DA|DataArcus|MH|Tmdl)|^[A-Z]/.test(x) && (/root\.|window\.|self\./.test(code)));
       into.global = exp;
