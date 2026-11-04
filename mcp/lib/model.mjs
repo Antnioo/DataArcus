@@ -2,8 +2,12 @@
 // Same engines as the website (assets/js), so the MCP and the tools on dataarcus.com give the same answers.
 // (0.3.2 SP22) the output-name policy (the untrusted-text screen, shown names) and the metadata adaptation (column
 // types, KPIs) are pure and live in model-names.mjs and model-metadata.mjs; this module keeps the disk and re-exports them.
+// (0.3.2 SP42) which model a path or a name means is found in model-discovery.mjs, by listing folders only; every path
+// it gives comes back here and goes through the containment (realIn) before any stat or read. The containment and the
+// capped byte reads stay together in this module.
 import { visible, screenWhy, LONG_NAME, nameWhy, readsLikeInstruction, WITHHELD, shownPath, shownName, NAME_OUT, nameOut, NAMES_NOTE, marked, withNamesNote } from './model-names.mjs';
 import { modelOf, applyColumnTypes, kpiTarget, KPI_LIST, kpisOf } from './model-metadata.mjs';
+import { ReadError, walk, byName, noModelAt, modelFolders, nearestModel } from './model-discovery.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
@@ -11,6 +15,7 @@ import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 export { visible, screenWhy, LONG_NAME, nameWhy, readsLikeInstruction, WITHHELD, shownPath, shownName, NAME_OUT, nameOut, NAMES_NOTE, marked, withNamesNote };
 export { modelOf, applyColumnTypes, kpiTarget, KPI_LIST, kpisOf };
+export { ReadError };
 
 const require = createRequire(import.meta.url);
 // (A1-10, the audit of the reading block: this module exports reading only; each consumer requires its own engines.
@@ -249,62 +254,9 @@ function zipDirectoryCheck(full, size) {
   } finally { fs.closeSync(fd); }
 }
 
-// Links (symbolic links, junctions) are never followed: they are left out, and listed in `links` when given
-const walk = (dir, depth = 0, links = null) => (depth > 4 ? [] : fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-  const full = path.join(dir, e.name);
-  if (e.name === 'node_modules' || e.name === '.git') return [];
-  if (e.isSymbolicLink()) { if (links) links.push(full); return []; }
-  return e.isDirectory() ? [full, ...walk(full, depth + 1, links)] : [full];
-}));
-
 // The model a path points at: a project folder (nearest .SemanticModel or older .Dataset), a model folder,
 // a model.bim or a .pbit. Returns { source, folder, tables (field-picker shape), tmsl (full model JSON, built from the TMDL files when there is no model.bim),
-// report (for the health check, when the file has one) }.
-// A model asked for by its plain name ("Ramadan Test", "Ramadan Test.pbip"), when no file or folder of that path
-// exists: the one model folder, .pbip or project folder of that name inside the working folder (any letter case;
-// links are not followed). None, or more than one: an error that says what is there, never a guess.
-// A reading error: a code and its data, for the tool layer to word (A1-9, the audit of the reading block: the reader
-// spoke as the MCP tool). Its message is a plain fallback that names no tool.
-export class ReadError extends Error { constructor(code, data, message) { super(message); this.code = code; this.data = data || {}; } }
-
-function byName(p, root, prefer) {
-  const strip = (n) => String(n).replace(/\.(pbip|SemanticModel|Dataset)$/i, ''), want = strip(p).trim().toLowerCase(), isModel = (n) => /\.(SemanticModel|Dataset)$/i.test(n);
-  const hits = new Set(), models = [];
-  // (the audit's "seen": one folder that cannot be read never fails the whole search)
-  const readdirSafe = (d, opts) => { try { return fs.readdirSync(d, opts); } catch (e) { return []; } };
-  const visit = (dir, depth) => { const list = readdirSafe(dir, { withFileTypes: true });
-    for (const e of list) {
-      if (e.isSymbolicLink() || e.name === 'node_modules' || e.name === '.git') continue;
-      const full = path.join(dir, e.name), same = strip(e.name).toLowerCase() === want;
-      if (e.isDirectory() && isModel(e.name)) { models.push(full); if (same) hits.add(full); continue; }
-      if (e.isDirectory() && /\.Report$/i.test(e.name)) continue;
-      // a .pbip: the model folder of the same name beside it, else its folder (the nearest model in it)
-      if (!e.isDirectory() && /\.pbip$/i.test(e.name) && same) { const m = list.find((x) => x.isDirectory() && isModel(x.name) && strip(x.name).toLowerCase() === want); hits.add(m ? path.join(dir, m.name) : dir); }
-      if (e.isDirectory()) { if (same && readdirSafe(full).some((n) => isModel(n))) hits.add(full); if (depth < 3) visit(full, depth + 1); }
-    } };
-  visit(root, 0);
-  // (A1-12, the audit of the reading block: folder names from disk are screened before they reach a message)
-  const rel = (f) => shownPath(path.relative(root, f)) || '.';
-  if (hits.size === 1) return [...hits][0];
-  // (0.3.1 MX3, laptop part 9: a mistyped path listed the whole folder's models first) the named folder's models first
-  const all = models.map(rel).sort((x, y) => (prefer && !x.startsWith(prefer + '/') ? 1 : 0) - (prefer && !y.startsWith(prefer + '/') ? 1 : 0));
-  if (hits.size > 1) throw new ReadError('MANY_MODELS_NAMED', { name: p, hits: [...hits].map(rel) }, `More than one model in the working folder is named "${p}": ${[...hits].map(rel).join('; ')}.`);
-  throw new ReadError('NO_MODEL_NAMED', { name: p, root, models: all.slice(0, 12), more: Math.max(0, all.length - 12) }, `No model named "${p}" in the working folder ${root}.${modelsThere(all)}`);
-}
-const modelsThere = (all) => (all.length ? ' Models there: ' + all.slice(0, 12).join('; ') + (all.length > 12 ? '; and ' + (all.length - 12) + ' more' : '') + '.' : '');
-// (0.3.1 MR1, B-271: the MCP review) a path with a folder part that does not exist ("twin-project/Twin Sale.SemanticModel"):
-// the models in the working folder listed as for a bare wrong name (byName's search: relative, screened, capped at 12),
-// never an internal error, and never a guess at the model meant
-function noModelAt(p, root) {
-  let models = [], more = 0;
-  // the nearest folder of the path that is there (relative to the working folder): its models are listed first
-  let near = path.dirname(String(p)); while (near && near !== '.' && near !== path.dirname(near) && !fs.existsSync(path.resolve(root, near))) near = path.dirname(near);
-  const prefer = near && near !== '.' ? shownPath(path.relative(root, path.resolve(root, near))) : null;
-  try { byName('\u0000', root, prefer); } catch (e) { if (e && e.code === 'NO_MODEL_NAMED') { models = e.data.models; more = e.data.more; } else throw e; }
-  const shown = shownPath(String(p));
-  return new ReadError('NO_MODEL_AT', { path: shown, models, more }, `Nothing at "${shown}" in the working folder ${root}.${modelsThere(models.concat(Array(more).fill('')))}`);
-}
-
+// report (for the health check, when the file has one) }. Which model a name or a folder means: model-discovery.mjs.
 /**
  * What loadModel reads: one shape for every route (A1-5, the audit of the reading block).
  * @typedef {Object} ModelRead
@@ -397,7 +349,7 @@ export function loadModel(p, opts) {
   }
   // a folder: the model folder nearest to the top wins (a backup copy deeper down never does)
   const links = [];
-  const dirs = [full, ...walk(full, 0, links).filter((f) => fs.statSync(f).isDirectory())].filter((d) => /\.(SemanticModel|Dataset)$/i.test(d));
+  const dirs = modelFolders(full, links);
   if (!dirs.length) {
     // a model folder that is a link is not followed: say so when it leads outside the working folder
     const linked = links.find((l) => /\.(SemanticModel|Dataset)$/i.test(l));
@@ -405,13 +357,7 @@ export function loadModel(p, opts) {
     if (path.resolve(full) === root && !fs.readdirSync(root).length) throw new Notice('empty', `Your working folder ${root} is empty: put a Power BI project (a .pbip file with its folders, saved from Power BI Desktop) in it. No project yet? DataArcus can write a made-up sample to try: plan_layout with sample true.`);
     throw new ReadError('NO_MODEL_FOLDER', { path: p }, `No .SemanticModel folder in ${p}. Point at a Power BI project folder saved from Desktop.`);
   }
-  const depth = (d) => d.split(path.sep).length;
-  dirs.sort((a, b) => depth(a) - depth(b));
-  // (SQ6, 0.2.9-checks-S4; SQ15a, the owner's yes) two model folders at the nearest depth (two projects side by side):
-  // never the first one the folder lists, silently; both named, as for two models of one name
-  const tied = dirs.filter((d) => depth(d) === depth(dirs[0]));
-  if (tied.length > 1) { const rel = (d) => shownPath(path.relative(root, d)); throw new ReadError('MANY_MODELS', { path: p, models: tied.map(rel) }, `"${p}" holds ${tied.length} models at the same level: ${tied.map(rel).join('; ')}.`); }
-  const folder = dirs[0], bim = path.join(folder, 'model.bim');
+  const folder = realIn(nearestModel(dirs, root, p)), bim = path.join(folder, 'model.bim');
   if (isLink(bim)) realIn(bim);
   let tmsl = null, print = null, skipped = [];
   if (fs.existsSync(bim)) { const b = readCapped(bim, PBIT_LIMITS.model, 'model.bim'); print = sha(b); tmsl = partJson(b, 'model.bim'); }
