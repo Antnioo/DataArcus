@@ -54,7 +54,7 @@ const openMenu = async (pg) => { await pg.click('.navbar-toggler'); await wait(5
 const SESSIONS = [
   ['home: navbar, offsets, counters, particles, ripple', 'index.html', {}, [
     ['scroll 400', (pg) => scrollTo(pg, 400)], ['the counters in view', async (pg) => { await pg.evaluate(() => document.querySelector('#about [data-count]').scrollIntoView({ block: 'center', behavior: 'instant' })); await wait(2600); }],
-    ['back to the top', (pg) => scrollTo(pg, 0)], ['the toggler click (blurred)', async (pg) => { await pg.evaluate(() => document.querySelector('.navbar-toggler').click()); await wait(50); }],
+    ['back to the top', (pg) => scrollTo(pg, 0)], ['the toggler clicked twice (blurred; the menu opened and closed again)', async (pg) => { for (let i = 0; i < 2; i++) { await pg.evaluate(() => document.querySelector('.navbar-toggler').click()); await wait(700); } }],
     ['a ripple on the submit button', async (pg) => { await pg.evaluate(() => document.querySelector('#contact-form button[type=submit]').scrollIntoView({ block: 'center', behavior: 'instant' })); await pg.click('#contact-form button[type=submit]'); }],
     ['the ripple gone', () => wait(700)]]],
   ['home: the clicks the adapter counts', 'index.html', { consent: 'granted' }, [
@@ -201,7 +201,7 @@ export default async function ({ browser, url }) {
     const leaks = [...MODS.filter((n) => n !== 'site-analytics' && have.includes(n)), ...(have.length === MODS.length ? ['main'] : [])].flatMap((n) => TRACKERS.filter((w) => code(JS(n)).includes(w)).map((w) => `${n}: ${w}`));
     check(!leaks.length, `M2 only site-analytics.js may call a tracker or touch consent: ${leaks.join(', ')}`);
     // M3: the interface at the top of each new module
-    const API = { 'site-navigation': ['SiteNavigation', 'init(', 'whatsapp(', 'dataarcus:embed'], 'site-forms': ['SiteForms', 'init(', 'attach(', 'dataarcus:lead'], 'site-analytics': ['SiteAnalytics', 'init(', 'banner(', 'track(', 'dataarcus:lead', 'dataarcus:embed'] };
+    const API = { 'site-navigation': ['SiteNavigation', 'init(', 'whatsapp(', 'dataarcus:embed'], 'site-forms': ['SiteForms', 'init(', 'attach(', 'dataarcus:lead'], 'site-analytics': ['SiteAnalytics', 'init(', 'banner(', 'dataArcusTrack(', 'dataarcus:lead', 'dataarcus:embed'] };
     for (const n of have) {
       const top = (/^\/\*[\s\S]*?\*\//.exec(fs.readFileSync(JS(n), 'utf8')) || [''])[0];
       check(API[n].every((w) => top.includes(w)), `M3 ${n}.js must state its interface at its top (${API[n].join(', ')})`);
