@@ -6,6 +6,7 @@ checklist: [mcp/docs/MODULES.md](mcp/docs/MODULES.md). Rules: `CLAUDE.md`, `mcp/
 ## Boundaries
 - **The website** (GitHub Pages): HTML at the root, `tools/`, `articles/`, Arabic copies in `ar/`. Its tools run in
   the browser; nothing a visitor opens is uploaded.
+  Never type a `?v=` stamp: run `npm run build:min` (it rebuilds each `.min.js`, then `scripts/stamps.mjs` stamps).
 - **The engines** (`assets/js/*.js`, each with its `.min.js`): plain JavaScript for the browser and Node, **shared by
   the website and the MCP on purpose**: reader and picker, report writer, design engine, health check, calendar,
   measured rules (`report-rules.js`), the mirror engine (`report-mirror.js`), the preview (`page-preview.js`).
