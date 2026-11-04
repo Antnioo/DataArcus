@@ -27,7 +27,7 @@ const GUARD_TIMEOUT = process.env.DA_MUTATION_GUARD_TIMEOUT ? +process.env.DA_MU
 // equivalent: a mutant no test can kill without a hook in product code, with why; listed, not run (T1.md)
 // guards: the existing suites (mcp/), the first expected to kill first. only: the platforms where the mutant means
 // something (NFC/NFD: macOS keeps one folder for both forms, so normalising changes nothing there).
-const PL = 'mcp/lib/plans.mjs', MO = 'mcp/lib/model.mjs', WI = 'mcp/lib/write-io.mjs', FI = 'mcp/lib/files.mjs', CR = 'mcp/lib/check-report.mjs', CI = 'mcp/lib/check-impact.mjs', AW = 'mcp/lib/approval-window.mjs', AD = 'mcp/lib/approval-disclosure.mjs', MDI = 'mcp/lib/model-discovery.mjs', RI = 'mcp/lib/report-inventory.mjs';   // (0.3.2 SP23: what each approval page says moved to AD; SP41: each finding's kind moved to CI; SP42: discovery to MDI, the report inventory to RI)
+const PL = 'mcp/lib/plans.mjs', MO = 'mcp/lib/model.mjs', WI = 'mcp/lib/write-io.mjs', FI = 'mcp/lib/files.mjs', CR = 'mcp/lib/check-report.mjs', CI = 'mcp/lib/check-impact.mjs', AD = 'mcp/lib/approval-disclosure.mjs', AV = 'mcp/lib/approval-view.mjs', MDI = 'mcp/lib/model-discovery.mjs', RI = 'mcp/lib/report-inventory.mjs';   // (0.3.2 SP23: what each approval page says moved to AD; SP41: each finding's kind moved to CI; SP42: discovery to MDI, the report inventory to RI; SP44: the approval page's HTML to AV)
 // (0.3.2 SP22) the untrusted-text screen and the shown names moved to model-names.mjs, the KPI list to model-metadata.mjs
 const MN = 'mcp/lib/model-names.mjs', MM = 'mcp/lib/model-metadata.mjs';
 const MUTANTS = [
@@ -129,10 +129,10 @@ const MUTANTS = [
   { id: 'C-validator-sev', file: CR, edits: [["severity: known ? 'note' : d.severity === 'error' ? 'error' :", "severity: known ? 'note' : d.severity === 'error' ? 'warning' :"]], guards: ['test-0.2.9-checks.mjs', 'test-0.3.0-check.mjs', 'test-0.2.9-a4.mjs'] },
   // 6. the approval page says what the click writes (SQ3): the writes in Arabic line for line and escaped, what was not
   // checked in the app's prompt, a pair's English page drawn in English
-  { id: 'A-writesAr-match', file: AW, edits: [['Array.isArray(s.writesAr) && s.writesAr.length === w.plan.writes.length ?', 'Array.isArray(s.writesAr) ?']], guards: ['test-0.3.1-sq3.mjs'] },
-  { id: 'A-writesAr-esc', file: AW, edits: [['<li dir="auto">${isoText(named(WA[i]), true)}</li>', '<li dir="auto">${named(WA[i])}</li>']], guards: ['test-0.3.1-sq3.mjs'] },
+  { id: 'A-writesAr-match', file: AV, edits: [['Array.isArray(s.writesAr) && s.writesAr.length === w.plan.writes.length ?', 'Array.isArray(s.writesAr) ?']], guards: ['test-0.3.1-sq3.mjs'] },
+  { id: 'A-writesAr-esc', file: AV, edits: [['<li dir="auto">${isoText(named(WA[i]), true)}</li>', '<li dir="auto">${named(WA[i])}</li>']], guards: ['test-0.3.1-sq3.mjs'] },
   { id: 'A-prompt-notChecked', file: AD, edits: [['  if (nc.length) lines.push(cut(`Not checked before writing:', '  if (false) lines.push(cut(`Not checked before writing:']], guards: ['test-0.3.1-sq3.mjs'] },
-  { id: 'A-pair-lang', file: AW, edits: [["fig(PP[e], `${W.enPage} ${i + 1}`, 'en')", 'fig(PP[e], `${W.enPage} ${i + 1}`)']], guards: ['test-0.3.1-sq3.mjs'] },
+  { id: 'A-pair-lang', file: AV, edits: [["fig(PP[e], `${W.enPage} ${i + 1}`, 'en')", 'fig(PP[e], `${W.enPage} ${i + 1}`)']], guards: ['test-0.3.1-sq3.mjs'] },
   { id: 'C-fieldparam', file: CR, edits: [["rule: 'FIELD_PARAMETER_TITLE', severity: 'warning'", "rule: 'FIELD_PARAMETER_TITLE', severity: 'error'"]], guards: ['test-0.3.0-metric-switcher.mjs', 'test-0.3.0-check.mjs', 'test-0.3.1-checker.mjs'] }
 ];
 
