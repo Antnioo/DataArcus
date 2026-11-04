@@ -596,7 +596,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let binding = null;
     const loadBind = () => binding || (binding = (window.DABind ? Promise.resolve(window.DABind)
       : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('/assets/js/field-meaning.min.js?v=20261011t'))
-        .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=20261026a')))
+        .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=20261104an1')))
         // (SP8: the picker's drawing is field-picker-ui.js's, which pbip-bind.js calls: loaded first)
         .then(() => (window.DAFieldPicker ? null : loadScript('/assets/js/field-picker-ui.min.js?v=20261103sp8')))
         // (SP14: reading the chosen folder or file is model-import-browser.js's, which pbip-bind.js forwards to: loaded first)
