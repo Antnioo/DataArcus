@@ -348,6 +348,14 @@ jobs:
   # /private/var) shows here; test-platform-paths.mjs is the test written for those. Not a required check until the
   # owner makes it one; the .mcpb keeps "win32" until one real Mac run by a person (the engine's PACKAGING.md).
   mcp-macos-parts:
+    # (CI1, D-1104-02) macOS runs only where the reviewer merges: a push to main or integration/*, a pull request to
+    # main, a manual run on main, integration/* or check/*; a manual run on a builder branch (fix/*, rd/* ...) skips
+    # it and runs Linux and Windows only (L-1103-13: macOS shards dropped unqueued). The same expression on mcp-macos.
+    if: >-
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/integration/')))
+      || (github.event_name == 'pull_request' && github.base_ref == 'main')
+      || (github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main'
+      || startsWith(github.ref, 'refs/heads/integration/') || startsWith(github.ref, 'refs/heads/check/')))
     runs-on: macos-latest
     timeout-minutes: 40
     strategy:
@@ -393,7 +401,13 @@ jobs:
 
   mcp-macos:
     needs: [mcp-macos-parts]
-    if: always()
+    # (CI1) always() as before where macOS runs (a failed, cancelled or skipped shard fails this check); on a builder
+    # branch the same expression is false, so this check is skipped with its shards, never failed: not required there
+    if: >-
+      always() && ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/integration/')))
+      || (github.event_name == 'pull_request' && github.base_ref == 'main')
+      || (github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main'
+      || startsWith(github.ref, 'refs/heads/integration/') || startsWith(github.ref, 'refs/heads/check/'))))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **The macOS tests run where changes are merged:** the full test run on macOS now runs on the main and release
+  branches, on pull requests to main and on the check before each merge, no longer on every work branch; Linux and
+  Windows still run everywhere, as before.
 - **Three small Arabic twin fixes:** a table header grows into its table's free room even when the table keeps widths
   for fields it no longer shows (those settings stay as they are); a column the English hides stays hidden at the
   table's left end, never as a thin strip after the names; a chart kept where the plain mirror puts it under a heatmap
