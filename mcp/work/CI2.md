@@ -12,10 +12,11 @@
   4/4). The plan itself (planShards, mcp/test-times.json, test.mjs's 4 parts) and ci-sum are unchanged: the same
   mcp-shard-<k>.log and manifest per plan shard, so ci-sum checks every shard against the same plan and counts each
   suite once. Label `macos-latest` (macOS 26 arm64, 3 M1 CPU) -> `macos-15-intel` (Intel, 4 CPU, a standard runner).
-- **Expected:** macOS jobs 5 -> 2 on macos-15-intel; two check/ runs green with both macOS jobs acquired
+- **Expected checks:** macOS jobs 5 -> 2 on macos-15-intel; two check/ runs green with both macOS jobs acquired
   (runner_name set); ci-sum's macOS total the same as before (each suite once); fix/ run green (Linux, Windows);
   `npm run lint` 0; test-results-adapter, check-agent-memory, test-stamps green.
-- **State:** planned. **Resume:** step 1 (measure).
+- **State:** planned.
+- **Resume:** step 1 (measure).
 
 ## The plan
 1. Measure: the last 3 green macOS runs' shard times; the docs' lines on the labels.
