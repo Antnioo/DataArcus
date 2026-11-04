@@ -59,9 +59,9 @@ export default [
     files: UMD,
     languageOptions: { globals: { module: 'readonly', require: 'readonly' } },
   },
-  // the libraries every page loads from jsDelivr before main.js (package.json pins them; scripts/cdn.mjs writes the tags)
+  // the libraries every page loads from jsDelivr before site-navigation.js (package.json pins them; scripts/cdn.mjs writes the tags)
   {
-    files: ['assets/js/main.js'],
+    files: ['assets/js/site-navigation.js'],
     languageOptions: { globals: { AOS: 'readonly', bootstrap: 'readonly' } },
   },
   // (SQ11, Q1-S2) the inline scripts of every site page (eslint-plugin-html; JSON-LD and other non-script types are
