@@ -21,7 +21,7 @@
   (red-first: two mutations of stamps.mjs fail it, 4 and 7 checks). Pinned tests: sp32 and test.mjs round 10 item 4
   were red on the built tree before step 4 (sp32 P1 "worker now ...?v=d8390a780e6b"), green after; sp14 20, sp31 17,
   sp32 39 (numbers unchanged). Lint 0; agent-memory, check-modules --strict, result-lines, site-config, csp, ar-pages,
-  literal-requires PASS. Full runs: below (Results).
+  literal-requires PASS. Full runs: MCP 192 of 192, website 42 of 42 (Results).
 - **State:** the work done; the full runs and CI below.
 - **Resume:** the reviewer's merge, then the gate's stamp tools (Lessons for the reviewer).
 
@@ -59,7 +59,9 @@
   behaviour too: a stamp only decides which URL the browser cache keys on, for at most the 10 minutes of max-age.
 
 ## Results
-- (the full runs and the CI line are written here)
+- MCP `npm test -- --keep-going`: 192 of 192 (on the first run glass-tables and sp6 failed only on the shallow
+  clone's `git show <base sha>`; after `git fetch --unshallow`: glass-tables 113, sp6 13, sitemap-lastmod 40/40 PASS).
+- Website `scripts/tests/run-all.mjs`: all 42 passed. Lint 0; every repo check above PASS.
 
 ## For the owner
 none
