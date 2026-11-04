@@ -19,8 +19,10 @@
   from the script itself (379 / 383, 4 day-30s, 0 / 383, +4.2 / 0.0, +28.2 / +24.7; VAT day counts and 10 edges).
   model 20 suites, every other suite's number unchanged. Website: gulf-calendar 907 -> 913 (+6, the page's 6
   captures), dax 51, tools 399 unchanged. fx1 22 x 3. Plan answer 3,778 -> 3,778 (+0); with all three options 5,436.
-  Lint 0; site config, check-min (stamps), csp, agent-memory, changelog-words pass. Full MCP run: (below).
-- **Resume:** the CI run, then DONE.
+  Lint 0; site config, check-min (stamps), csp, agent-memory, changelog-words pass. integration/0.3.2 did not move
+  (1691046): no merge. **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41768316430 on 09fa81a** (first
+  run, every job green on Linux, macOS and Windows). **State: DONE.**
+- **Resume:** none; the reviewer's review and merge.
 
 ## The plan
 1. This note; the base capture of the page's 8 Ramadan and Eid measures (`scripts/tests/capture-gm1-baseline.mjs`,
@@ -29,7 +31,7 @@
    S script, K pegs, R refusals, A the tool's answer and plan line EN and AR. (done: ce9b1da)
 3. The engines; measure-builder.js calling the shared one; build:min; new ?v= stamps; csp. (done: b7a4d8a)
 4. gulf-calendar.mjs (lib) and the tool: the 3 inputs, the plan line, the description; TOOLS.md. (done: b7a4d8a, then)
-5. Answer sizes, fx1 x3, CHANGELOG, WORK.md, areas, lint, sitemap, merge in once if moved, CI.
+5. Answer sizes, fx1 x3, CHANGELOG, WORK.md, areas, lint, sitemap, merge in once if moved, CI. (done: CI green)
 
 ## CHANGELOG line
 "**Ramadan and Eid measures with the Gulf calendar:** add_gulf_calendar can add, for up to 5 of your measures, the same
@@ -76,6 +78,8 @@ tax advice, and your amounts are never read."
 - The approval page's "Inputs" table has no plain-words row for `measures`, `vat`, `pegs` (approval-disclosure.mjs's
   INPUT_WORDS; out of scope): they show in the raw fold, and the plan's line says them in plain words, EN and AR.
 - `npm test -- --affected` fails in this cloud checkout (git: "Use '--' to separate paths from revisions").
+- The local `npm test -- --keep-going` was stopped part way once CI was green (CI runs every suite on 3 systems;
+  no FAIL line in the part that ran).
 - `npm run build:min` rebuilds tracked .min.js files only: a new engine's .min.js must be `git add`-ed first.
 
 ## For the laptop
