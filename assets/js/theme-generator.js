@@ -260,8 +260,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // 0.3.2 SP7: the tooltip pages' builder, pbip-tooltip.js (after pbip-query, pbip-sizing and story-titles, which it
   // reads), before pbip-page.js, which calls it; 0.3.2 SP13: the page buttons' and filter panels' builder,
   // pbip-navigation.js, right after it, before pbip-page.js, which calls it; 0.3.2 SP10: the twin's named rules,
-  // mirror-policy.js, after the visual catalog it reads, before report-mirror.js, which reads them)
-  const BUILDER = ['/assets/js/text-measure.min.js?v=20261102op1', '/assets/js/story-titles.min.js?v=20261027tt2', '/assets/js/visual-types.min.js?v=20261019u1', '/assets/js/mirror-policy.min.js?v=20261103sp10', '/assets/js/report-mirror.min.js?v=20261103sp10', '/assets/js/pbip-query.min.js?v=20261026lr1', '/assets/js/pbip-sizing.min.js?v=20261102op1', '/assets/js/pbip-notes.min.js?v=20261028fx5b',
+  // mirror-policy.js, after the visual catalog it reads, before report-mirror.js, which reads them; 0.3.2 SP39: the
+  // twin's chart transforms, mirror-charts.js, after mirror-policy.js, before report-mirror.js, which calls them)
+  const BUILDER = ['/assets/js/text-measure.min.js?v=20261102op1', '/assets/js/story-titles.min.js?v=20261027tt2', '/assets/js/visual-types.min.js?v=20261019u1', '/assets/js/mirror-policy.min.js?v=20261103sp10', '/assets/js/mirror-charts.min.js?v=20261104sp39', '/assets/js/report-mirror.min.js?v=20261104sp39', '/assets/js/pbip-query.min.js?v=20261026lr1', '/assets/js/pbip-sizing.min.js?v=20261102op1', '/assets/js/pbip-notes.min.js?v=20261028fx5b',
     '/assets/js/label-limits.min.js?v=20261027r4a', '/assets/js/pbip-visuals-charts.min.js?v=20261104sp28', '/assets/js/pbip-visuals-tables.min.js?v=20261104sp28', '/assets/js/pbip-visuals.min.js?v=20261104sp28b', '/assets/js/pbip-tooltip.min.js?v=20261103sp7', '/assets/js/pbip-navigation.min.js?v=20261103sp13', '/assets/js/pbip-page.min.js?v=20261104sp28', '/assets/js/report-a11y.min.js?v=20261025sq5',
     '/assets/js/pbip-zip.min.js?v=20261102sp5', '/assets/js/pbip-sample.min.js?v=20261102sp5', '/assets/js/pbip-export.min.js?v=20261102sp5'];
   // (0.3.1 FX5: the page loads the sizes and what they read, for the canvas's bars; a script already on the page is not
