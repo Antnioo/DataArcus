@@ -17,8 +17,11 @@
   "Numbers"); mutation 76/76; `npm run lint` 0; check-min, stamps, check-contracts, check-modules --strict,
   check-agent-memory, check-result-lines green; the probe: crc 6 places, png-chunk 4, u32 3, lru 3 (the new place
   added beside the old ones until they go, then the module and its callers), one answer per input.
-- **State:** step 5 (the ledger and the map); then the merge check, the full run and CI (the line below).
-- **Resume:** the CI line; then the reviewer reads and merges.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41932524291 on b1a8f5e77d88e18f86a6c63e2dd75142c2a51563
+- **State:** DONE (Linux and Windows; macOS runs where the reviewer merges).
+- **Resume:** the reviewer reads and merges.
+- **Merge:** origin/integration/0.3.2 merged once (089c901c: DD1H, CI2; tests.json and WORK.md kept both lines), then
+  `npm run build:min` and the theme generator pages' sitemap dates (b1a8f5e7).
 
 ## Plan (one commit each, every suite green between them)
 1. The two modules, their .min.js (png-bytes only: a browser file), the test dd2p (units: 8 byte strings, 8 chunks,
@@ -81,12 +84,12 @@ samejob.py is not in the repository: not run (as DD1C said); these greps stand i
 ## Numbers (filled as measured)
 | check | base deff19e | after |
 |---|---|---|
-| MCP suites (`npm test -- --keep-going`) | 194 suites; 193 passed, glass-tables failed only because this clone was shallow (cba24a5 missing); after `git fetch --unshallow`: glass-tables 113 checks | (the final run, below) |
-| mutation | 198 checks (76 mutants, all killed) | (below) |
-| website suites (`node scripts/tests/run-all.mjs`) | (base run) | 42 of 42 at step 3 |
+| MCP suites (`npm test -- --keep-going`) | 194 suites; 193 passed, glass-tables failed only because this clone was shallow (cba24a5 missing); after `git fetch --unshallow`: glass-tables 113 checks | 196 suites passed (the base's 194 with the same numbers, glass-tables 113; dd1h 35 from the merge; dd2p 112) |
+| mutation | 198 checks (76 mutants, all killed) | 198 checks (76/76 killed) |
+| website suites (`node scripts/tests/run-all.mjs`) | (base run stopped to free the machine) | 42 of 42 at step 3 and on the merged head |
 | dd2p | (new) | 112 checks |
-| contracts / probe | 808 checks, 27 families, 118 places | 771 checks, 27 families, 111 places (7 places gone: the copies); the four families one answer on every input |
-| modules --strict | 1042 checks, 199 files | 1053 checks, 201 files (the two new rows) |
+| contracts / probe | 808 checks, 27 families, 118 places | 771 checks, 111 places before the merge (7 places gone: the copies); 776 checks, 112 places after it (DD1H's third 1h place); the four families one answer on every input |
+| modules --strict | 1042 checks, 199 files | 1053 checks, 201 files (the two new rows); 1058, 202 after the merge |
 | lint, check-min, stamps, result-lines, agent-memory, site config | green | green |
 
 ## Decisions I made
