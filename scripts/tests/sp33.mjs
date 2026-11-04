@@ -99,7 +99,7 @@ const more = (pg) => pg.evaluate(() => {
 });
 
 // M3: the pointer in Node, with a made-up stage, store and viewport (no browser)
-function pointerInNode() {
+export function pointerInNode() {
   const bad = [], listeners = new Map();
   const stage = {
     addEventListener: (k, fn) => listeners.set(k, (listeners.get(k) || []).concat(fn)),
