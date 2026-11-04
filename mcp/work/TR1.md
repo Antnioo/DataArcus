@@ -28,7 +28,10 @@
 - **Answer size (L-1102-06):** create_arabic_twin's plan +138 characters per grown table (T1 12739 -> 12877, the
   largest T16 26067 -> 26205; cap 40000). fx1 3 of 3 before (22) and 3 of 3 after (22).
 - **Areas:** twin 39 suites on the base, 40 after (tr1 added); safety 18, arabic 15, checker 8 pass. Lint 0.
-- **CI:** (after the last code commit)
+- **Merge:** integration/0.3.2 (PK1) merged in once after the last code commit (WORK.md: both lines kept); after it
+  twin 40 and report 58 pass (glass-tables needed the base commit cba24a5: a deeper fetch here), lint 0.
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41783106048 on abffaf03** (17 jobs green, 2 skipped:
+  macOS, CI1's rule). After abffaf03 only this note changed. **State: DONE.**
 - **Resume:** the laptop's check (below), then the reviewer.
 
 ## CHANGELOG line
