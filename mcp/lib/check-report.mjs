@@ -9,15 +9,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
 import { getCapabilities } from '@microsoft/powerbi-core-visual-schema';
 // (Microsoft's report CLI, which needs Node 20 or later, is loaded when the validator runs, never at the server's start:
 // one tool's dependency cannot stop the others; round 22b, the review of round 22, item 5)
 import { loadModel, ROOT, visible, readCapped } from './model.mjs';
 import { DAX_MEASURE, SCRIPT_SUFFIX } from './dax-functions.mjs';   // (0.3.1 L6: the names the DAX function library gives its measures, its script's name)
 import { AIM } from './scope.mjs';
-import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, TooBig, readJson, isFile, isDir, walk, locate, inventory, diskSource, isCustom } from './read-report.mjs';
+import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, isFile, isDir, walk, locate, inventory, diskSource, isCustom } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
 import { fieldParametersOf, titleProblems } from './metric-switcher.mjs';
 import { NO_DIRECT_EDITS } from './agent-text.mjs';
@@ -26,17 +24,14 @@ import { KNOWN_TYPES, countsOf, mixedOf, boldItalicOf } from './text-format.mjs'
 import { langOfTexts, pageLanguages } from './check-language.mjs';   // (0.3.2 SP20: each page's language)
 import { sameQuestion } from './same-question.mjs';   // (0.3.2 NC1: the number check, layer 1, option against)
 import { scrub, rel, relOut, cleanPath, tidy } from './check-redact.mjs';   // (0.3.2 SP41: the one redaction boundary)
+import { schemaCheck } from './check-schema.mjs';   // (0.3.2 SP41: the bundled schemas)
 export { pageLanguages, filledLanguages } from './check-language.mjs';
+export { pointer } from './check-schema.mjs';
 
 const require = createRequire(import.meta.url);
-const HERE = path.dirname(fileURLToPath(import.meta.url));
 const Rules = require('../../assets/js/report-rules.js');
 const LC = require('../../assets/js/layout-check.js');
 const Tmdl = require('../../assets/js/tmdl-model.js');
-const SCHEMAS = path.join(HERE, '..', 'schemas');
-const SCHEMA_ROOT = 'https://developer.microsoft.com/json-schemas/';
-const SCHEMA_COMMIT = 'af7b264';
-const SCHEMA_FILE = /^https:\/\/developer\.microsoft\.com\/json-schemas\/[A-Za-z0-9_./-]+\/\d+\.\d+\.\d+\/schema(?:[.-]embedded)?\.json$/;
 export const VALIDATOR_VERSION = (() => { try { return JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.resolve('@microsoft/powerbi-report-authoring-cli'))), '..', 'package.json'), 'utf8')).version; } catch (e) { return 'unknown'; } })();
 export const CHECKS = ['validator', 'schemas', 'sizes', 'selectors', 'phone', 'tooltips', 'theme', 'navigation', 'sort', 'rtl', 'a11y', 'lint'];
 
@@ -47,9 +42,6 @@ export const CHECKS = ['validator', 'schemas', 'sizes', 'selectors', 'phone', 't
 // before it is read, folders walked to a depth; the outside review's B-01) ----
 const MB = 1024 * 1024;
 const mbOf = (n) => (n >= 10 * MB ? Math.round(n / MB) : Math.round(n / MB * 10) / 10) + ' MB';
-
-const ver = (u) => { const m = /\/(\d+\.\d+\.\d+)\/schema(?:[.-]embedded)?\.json$/.exec(String(u || '')); return m ? m[1] : null; };
-const family = (u) => { const m = /\/([A-Za-z]+)\/\d+\.\d+\.\d+\/schema/.exec(String(u || '')); return m ? m[1] : null; };
 
 // (R1, the cross-review: check_report had a reader of its own beside the reading block's, and read every file twice
 // with the lint on. Its measured rules now take their input from the reading block's inventory(): the same files,
@@ -73,53 +65,6 @@ function daxScriptMeasures(loc) {
     visit(tree, null);
   }
   return out;
-}
-
-// ---- the bundled schemas ----
-let AJV = null;
-function ajv() {
-  if (AJV) return AJV;
-  const a = new Ajv({ strict: false, allErrors: true, validateSchema: false }); addFormats(a);
-  const files = walk(SCHEMAS, [], 2000).filter((f) => f.endsWith('.json'));
-  for (const f of files) { const url = SCHEMA_ROOT + path.relative(SCHEMAS, f).split(path.sep).join('/'); try { a.addSchema(Object.assign({}, readJson(f), { $id: url }), url); } catch (e) { /* a file that is not a schema */ } }
-  AJV = a; return a;
-}
-// a JSON pointer with only the words the bundled schemas name as properties, and list positions (any other segment is
-// left out: a key the report chose, as a bookmark's page and visual ids, is a name; 0.3.1 SQ14, S1-S8)
-let WORDS = null;
-function schemaWords() {
-  if (WORDS) return WORDS;
-  const w = new Set(), seen = new Set();
-  const visit = (o) => { if (!o || typeof o !== 'object' || seen.has(o)) return; seen.add(o); if (o.properties && typeof o.properties === 'object' && !Array.isArray(o.properties)) Object.keys(o.properties).forEach((k) => w.add(k)); Object.values(o).forEach(visit); };
-  for (const f of walk(SCHEMAS, [], 2000).filter((x) => x.endsWith('.json'))) { try { visit(readJson(f)); } catch (e) { /* a file that is not a schema */ } }
-  WORDS = w; return w;
-}
-export const pointer = (p) => String(p || '').split('/').slice(1).map((s) => { const k = s.replace(/~1/g, '/').replace(/~0/g, '~'); return /^\d{1,6}$/.test(k) || schemaWords().has(k) ? k : '…'; }).join('.') || '(the file)';
-function schemaCheck(loc, out, notChecked, all, sk) {
-  const files = all.filter((f) => /\.(json|pbir)$/i.test(f) || path.basename(f) === '.platform');
-  let checked = 0, errors = 0; const missing = new Map();
-  for (const f of files) {
-    let j; try { j = readJson(f); } catch (e) { if (e instanceof TooBig && !sk.big.some((b) => b.file === rel(loc.reportDir, f))) sk.big.push({ file: rel(loc.reportDir, f), size: e.size }); continue; }
-    const s = j && typeof j.$schema === 'string' ? j.$schema : null;
-    if (!s) continue;
-    // (A4-14, audit 4: only a whole bundled schema file, never a fragment or a query the report chose: a fragment
-    // compiles a sub-schema the file picked, and the file would count as checked with 0 errors)
-    const whole = SCHEMA_FILE.test(s);
-    const validate = whole ? ajv().getSchema(s) : null;
-    const key = !whole && /[#?]/.test(s) ? 'a schema address with a fragment or a query (only whole schema files are used)' : s.startsWith(SCHEMA_ROOT) && family(s) && ver(s) ? `${family(s)} ${ver(s)}` : /reportThemeSchema/.test(s) ? 'the report theme schema' : 'a schema from another address';
-    if (!validate) { missing.set(key, (missing.get(key) || 0) + 1); continue; }
-    checked++;
-    if (!validate(j)) {
-      errors++;
-      const es = validate.errors || [], first = es[0] || {};
-      out({ origin: 'schema', rule: 'SCHEMA', severity: 'error', file: rel(loc.reportDir, f), page: null, visual: null,
-        what: `${es.length} schema error${es.length === 1 ? '' : 's'}; the first at ${pointer(first.instancePath)}: ${String(first.message || '').replace(/['"][^'"]*['"]/g, '<value>').slice(0, 120)}`,
-        fix: 'Correct the file to the schema it names (in Power BI Desktop: open and save the report, which writes valid files), or name the schema version the file is written for.',
-        source: `Microsoft's JSON schema ${family(s)}/${ver(s)} (bundled: microsoft/json-schemas ${SCHEMA_COMMIT})` });
-    }
-  }
-  for (const [k, n] of missing) notChecked.push({ rule: 'SCHEMA', why: `${n} file${n === 1 ? '' : 's'} name ${k}, which is not bundled (newer than the copy of ${SCHEMA_COMMIT}, or not one of Microsoft's report schemas); the validator's own checks still ran on them` });
-  return { checked, errors };
 }
 
 // ---- what each finding means for the user (0.2.9 item 12, the owner's O-16) ----
@@ -369,7 +314,11 @@ export async function checkReport(p, opts) {
     } catch (e) { Object.assign(validator, { ran: false, mode: 'not available', why: scrub(e && e.message, loc.reportDir) }); }
   }
   // 2. the bundled schemas
-  const schemas = checks.includes('schemas') || checks.includes('validator') ? schemaCheck(loc, add, notChecked, reportFiles, sk) : { checked: 0, errors: 0 };
+  // (lib/check-schema.mjs: its findings and notChecked lines in the order it made them; the files it found too large join
+  // the reading layer's)
+  let schemas = { checked: 0, errors: 0 };
+  if (checks.includes('schemas') || checks.includes('validator')) { const S = schemaCheck({ reportDir: loc.reportDir, files: reportFiles, big: sk.big });
+    S.findings.forEach(add); notChecked.push(...S.notChecked); sk.big.push(...S.big); schemas = { checked: S.checked, errors: S.errors }; }
   // 3. our measured rules
   // (A4-1: sizes and positions as numbers before anything prints them, the page sizes line below included)
   Rules.normalize(R);

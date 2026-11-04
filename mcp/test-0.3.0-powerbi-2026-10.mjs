@@ -84,7 +84,7 @@ try {
     // the same structure as the versions before them, identity aside (Microsoft's CHANGELOG: "retaining the schema structure")
     chk(() => JSON.stringify(J(path.join(S, 'visualContainer/2.13.0/schema.json'))).split('visualContainer/2.13.0').join('visualContainer/2.12.0').split('visualConfiguration/2.8.0').join('visualConfiguration/2.7.0') === JSON.stringify(J(path.join(S, 'visualContainer/2.12.0/schema.json'))),
       () => 'U1-6. visualContainer 2.13.0 is 2.12.0 with its identity and visualConfiguration 2.8.0 (Microsoft\'s copy, unchanged)');
-    const src = fs.readFileSync(path.join(HERE, 'schemas/SOURCE.md'), 'utf8'), cr = fs.readFileSync(path.join(HERE, 'lib/check-report.mjs'), 'utf8');
+    const src = fs.readFileSync(path.join(HERE, 'schemas/SOURCE.md'), 'utf8'), cr = fs.readFileSync(path.join(HERE, 'lib/check-schema.mjs'), 'utf8');   // (0.3.2 SP41: the bundled schemas' module)
     chk(() => src.includes(SU09) && new RegExp(`SCHEMA_COMMIT = '${SU09}'`).test(cr), () => `U1-6. SOURCE.md and check_report name the copied commit ${SU09}`);
   }
 

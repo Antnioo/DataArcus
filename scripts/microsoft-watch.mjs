@@ -33,7 +33,7 @@ const DOC = 'mcp/research/MICROSOFT-WATCH.md';
 
 // what a change may touch in DataArcus
 const TOUCH = {
-  bundled: "the bundled schemas check_report reads (`mcp/schemas`, `mcp/schemas/SOURCE.md`, `SCHEMA_COMMIT` in `mcp/lib/check-report.mjs`): until they are copied, check_report lists files with this version under notChecked",
+  bundled: "the bundled schemas check_report reads (`mcp/schemas`, `mcp/schemas/SOURCE.md`, `SCHEMA_COMMIT` in `mcp/lib/check-schema.mjs`): until they are copied, check_report lists files with this version under notChecked",
   writer: (v) => `the writer's schema versions (\`assets/js/pbip-query.js\` SCHEMA, \`assets/js/pbip-export.js\`): DataArcus writes ${v}, an older version on purpose so reports open in older Desktop builds; change it only if Desktop needs the newer one`,
   unbundled: (why) => `\`${STATE}\` (the version seen); not bundled on purpose: ${why}`,
   theme: "the theme generator (`assets/js/design-engine.js`: the theme JSON the website and `generate_theme` write), and check_report's theme note (the theme schema is not bundled: listed under notChecked)",
