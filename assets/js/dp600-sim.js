@@ -149,24 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   const mistakes = () => ALL.filter((q) => P.ans[q.id] && !P.ans[q.id].last);
 
-  // ---------- grading ----------
-  // Returns a value between 0 and 1. Multi and yes/no give partial credit, order is all or nothing.
-  const grade = (q, r) => {
-    if (r == null) return 0;
-    if (q.type === 'single') return r === q.ans ? 1 : 0;
-    if (q.type === 'multi') { if (!r.length) return 0; const hit = r.filter((i) => q.ans.includes(i)).length, miss = r.length - hit; return Math.max(0, (hit - miss) / q.n); }
-    if (q.type === 'yesno') { let k = 0; q.ans.forEach((v, i) => { if (r[i] === v) k++; }); return k / q.ans.length; }
-    if (q.type === 'order') return r.length === q.ans.length && r.every((v, i) => v === q.ans[i]) ? 1 : 0;
-    return 0;
-  };
-  const answered = (q, r) => {
-    if (r == null) return false;
-    if (q.type === 'single') return typeof r === 'number';
-    if (q.type === 'multi') return r.length === q.n;
-    if (q.type === 'yesno') return r.every((v) => v === true || v === false);
-    if (q.type === 'order') return r.length > 0;
-    return false;
-  };
+  // ---------- grading (exam-grade.js: pure, answers in, score out) ----------
+  const { grade, answered, scoreMock, tallySession } = window.DAExamGrade;
   const newInst = (q) => ({ id: q.id, perm: q.type === 'yesno' ? range(q.opts.length) : shuffle(range(q.opts.length)), r: q.type === 'yesno' ? q.opts.map(() => null) : q.type === 'single' ? null : [] });
 
   // ---------- question renderer ----------
@@ -444,10 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const e = root.querySelector('.dp-exp'); if (e && e.getBoundingClientRect().top > window.innerHeight - 120) e.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
   function sessionEnd() {
-    const c = ctx, n = Object.keys(c.checked).length, right = Object.values(c.checked).filter((g) => g === 1).length;
-    const bySkill = {}, byDom = {};
-    c.items.forEach((inst, i) => { if (c.checked[i] == null) return; const q = byId[inst.id], s = q.s; bySkill[s] = bySkill[s] || [0, 0]; bySkill[s][1]++; if (c.checked[i] === 1) bySkill[s][0]++;
-      byDom[q.d] = byDom[q.d] || [0, 0]; byDom[q.d][1]++; if (c.checked[i] === 1) byDom[q.d][0]++; });
+    const c = ctx, { n, right, bySkill, byDom } = tallySession(c.items, c.checked, byId);
     root.innerHTML = back() + '<div class="dp-panel text-center dp-end"><div class="dp-ringwrap">' + ring(n ? right / n : 0, '<b>' + num(right) + '/' + num(n) + '</b><span>' + L('correct', 'صحيحة') + '</span>') + '</div>' +
       '<h2 class="h4 fw-bold mt-3">' + (n && right / n >= 0.8 ? L('Strong session', 'جلسة قوية') : L('Session complete', 'انتهت الجلسة')) + '</h2>' +
       (Object.keys(byDom).length ? '<div class="dp-enddoms text-start"><span class="tg-label">' + L('By exam area', 'حسب محور الاختبار') + '</span>' + Object.keys(DOM).filter((d) => byDom[d]).map((d) => domRow(d, byDom[d][0], byDom[d][1])).join('') + '</div>' : '') +
@@ -642,17 +623,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function submitMock(timeUp) {
     const M = P.mock; if (!M) return;
     if (timer) { clearInterval(timer); timer = null; }
-    const dom = {}, sk = {}, ren = {}; Object.keys(DOM).forEach((d) => { dom[d] = [0, 0]; });
-    let pts = 0;
-    const res = M.items.map((it) => {
-      const q = byId[it.id], g = answered(q, it.r) || q.type === 'multi' || q.type === 'yesno' ? grade(q, it.r) : 0;
-      pts += g; dom[q.d][0] += g; dom[q.d][1]++;
-      sk[q.s] = sk[q.s] || [0, 0]; sk[q.s][0] += g; sk[q.s][1]++;
-      if (M.kind === 'renewal' && renTopic[q.tag]) { const k = renTopic[q.tag]; ren[k] = ren[k] || [0, 0]; ren[k][0] += g; ren[k][1]++; }
+    const { res, score, dom, sk, ren } = scoreMock(M.items, byId, { domains: Object.keys(DOM), renTopic, renewal: M.kind === 'renewal' });
+    M.items.forEach((it, i) => {
+      const q = byId[it.id], g = res[i];
       if (answered(q, it.r)) P.ans[q.id] = Object.assign(P.ans[q.id] || { n: 0, c: 0 }, { n: ((P.ans[q.id] || {}).n || 0) + 1, c: ((P.ans[q.id] || {}).c || 0) + (g === 1 ? 1 : 0), last: g === 1 ? 1 : 0, t: Date.now() });
-      return g;
     });
-    const score = Math.round((pts / M.items.length) * 1000);
     const used = Math.min(M.min * 60, Math.round((Date.now() - M.start) / 1000));
     const rec = Object.assign({ t: Date.now(), kind: M.kind, score, pass: score >= 700, n: M.items.length, used, dom, sk }, M.kind === 'renewal' ? { ren } : {});
     P.mocks.push(rec); P.mocks = P.mocks.slice(-30);
