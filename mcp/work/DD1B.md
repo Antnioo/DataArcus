@@ -18,7 +18,8 @@
 - **Expected checks:** dd1b 545; every other suite's number as before; mutation 76/76; lint 0; check-contracts,
   check-modules --strict green. **Got:** exactly that (Results).
 - **Merge:** integration/0.3.2 moved to 59877edb (DD1G, CI2): merged once (82e6edc7), `npm run build:min`.
-- **State:** the full runs green after the merge; CI on the branch (its line below).
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/41926467794 on 4c53153d
+- **State:** DONE (Linux and Windows; macOS runs where the reviewer merges).
 - **Resume:** none once CI is green; the reviewer reads and merges.
 
 ## Readers before -> after (each place)
