@@ -17,8 +17,9 @@
 - **Expected checks:** dd2d passes (48 checks: planned about 75; parity is one check an input, not a place); sp9 16,
   sp14 20, sp15 19, sp27 25, sp30 21, sp42 22, dd1g 35 as on the base; contracts check and probe: decode and limits one answer per input; check-modules --strict green
   (one row more); literal requires green; lint 0; mutation 76/76; every other suite as on the base.
-- **State:** steps 1-5 committed; the final gate and CI below.
-- **Resume:** the CI line; then the reviewer reads and merges.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41929485457 on 4f526309eeef51531ed579f378dc6fcd2a4db168
+- **State:** DONE. integration/0.3.2 merged in once (DD1H, d667a6c5); local gate 196 suites, mutation 76/76.
+- **Resume:** none; the reviewer reads and merges.
 
 ## Plan (one commit each, every suite green between them)
 1. model-file.js + .min.js (`npm run build:min`) + test dd2d (unit: pinned answers) in tests.json.
@@ -76,6 +77,8 @@ Restored with `git checkout mcp/lib/model.mjs`: `PASS  dd2d  48 checks`.
 none
 
 ## Risky changes
+- mcp/test.mjs part pbit-limits read the four numbers in the worker's source; it now reads them in model-file.js and
+  requires the worker's `const LIMITS = self.DAModelFile.LIMITS;` (same check, same count: 1594).
 - LIMITS is frozen now and PBIT_LIMITS is that object: a test that wrote into PBIT_LIMITS would throw (none does;
   tests pass their own smaller limits as an argument).
 - The import's LIMITS gains `entries` (20000), never read there.
