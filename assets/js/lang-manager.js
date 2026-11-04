@@ -1,6 +1,12 @@
-// lang-manager.js - the language manager: it detects the visitor's language (an Arabic copy's address, then ?lang=,
-// then the saved choice, then the browser's), saves an explicit choice, builds the switcher and puts the pieces
-// together: the locales and page routes (locale-routes.js) and the dictionaries (locale-catalog.js), loaded before it
+// lang-manager.js - the language manager (window.langManager): the orchestration. It detects the visitor's language
+// (an Arabic copy's address, then ?lang=, then the saved choice, then the browser's), saves an explicit choice
+// (storage, ?lang= and history), builds the switcher, switches (to the other language's own address when the page has
+// one, in place otherwise) and puts the pieces together, each loaded before it (0.3.2 SP36):
+//   locale-routes.js   the locales, the Arabic copy's paths, the page-route table, the other language's address
+//   locale-catalog.js  the dictionaries loaded and merged, a key looked up
+//   locale-dom.js      the translated elements, the Arabic copy's links, the direction and the meta tags
+// Its methods keep their names (scripts/ar-pages.mjs calls applyLanguage, switcherAria, switcherLabel); the ones above
+// are one-line calls into those modules.
 class LanguageManager {
   constructor() {
     this.currentLang = this.detectLanguage();
@@ -61,13 +67,7 @@ class LanguageManager {
 
   // Links in translated HTML on an Arabic copy: each address as locale-routes.js's arAddress gives it
   arLinks(root) {
-    const base = window.location.origin + this.pagePath();
-    root.querySelectorAll('[href], [src]').forEach((e) => ['href', 'src'].forEach((a) => {
-      const v = e.getAttribute(a);
-      if (v === null) return;
-      const to = window.LocaleRoutes.arAddress(v, a === 'href' && e.tagName === 'A', base);
-      if (to !== null) e.setAttribute(a, to);
-    }));
+    window.LocaleDom.arLinks(root, window.location.origin + this.pagePath());
   }
 
   // The page's own translations: the window global its route names (locale-routes.js)
@@ -105,34 +105,7 @@ class LanguageManager {
   
   // Update text direction and HTML attributes
   updateDirection() {
-    const isRTL = this.rtlLanguages.includes(this.currentLang);
-    document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
-    document.documentElement.lang = this.currentLang;
-    
-    // Arabic font: Inter has no Arabic letters, so load IBM Plex Sans Arabic on demand
-    if (isRTL && !document.getElementById('ar-font')) {
-      const font = document.createElement('link');
-      font.id = 'ar-font';
-      font.rel = 'stylesheet';
-      font.href = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap';
-      document.head.appendChild(font);
-    }
-    // English pages still show Arabic words: the switcher's label. Without the Arabic font the phone draws them
-    // in its own system font, which sits lower than the icon. Load only the letters of those words (a few KB).
-    if (!isRTL && !document.getElementById('ar-font-label')) {
-      const label = document.createElement('link');
-      label.id = 'ar-font-label';
-      label.rel = 'stylesheet';
-      label.href = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500;600&display=swap&text=' + encodeURIComponent('عربي العربية');
-      document.head.appendChild(label);
-    }
-
-    // Add/remove RTL class
-    if (isRTL) {
-      document.body.classList.add('rtl');
-    } else {
-      document.body.classList.remove('rtl');
-    }
+    window.LocaleDom.direction(this.currentLang, this.rtlLanguages);
   }
   
   // Get translation text by key path (locale-catalog.js; a path through a text warns in the console)
@@ -144,123 +117,12 @@ class LanguageManager {
   // own HTML with it to write the /ar/ copy)
   // (arCopy: the document is an Arabic copy; the generator passes it, as it translates from the English address)
   applyLanguage(doc = document, arCopy = window.LocaleRoutes.isArPath(window.location.pathname)) {
-    // Update all elements with data-i18n attribute
-    doc.querySelectorAll('[data-i18n]').forEach(element => {
-      const key = element.getAttribute('data-i18n');
-      const text = this.getText(key);
-      
-      if (typeof text === 'string') {
-        if (element.tagName === 'INPUT' && element.type === 'submit') {
-          element.value = text;
-        } else if (element.hasAttribute('placeholder')) {
-          element.placeholder = text;
-        } else {
-          element.textContent = text;
-        }
-      }
-    });
-    
-    // Update elements with data-i18n-html for HTML content
-    doc.querySelectorAll('[data-i18n-html]').forEach(element => {
-      const key = element.getAttribute('data-i18n-html');
-      const html = this.getText(key);
-      if (typeof html === 'string') {
-        element.innerHTML = html;
-        if (arCopy) this.arLinks(element);
-      }
-    });
-    
-    // Translate attributes: data-i18n-placeholder, data-i18n-alt, data-i18n-aria-label and data-i18n-title
-    // each name the key for that attribute, so inputs, images and buttons read in the page's language too
-    ['placeholder', 'alt', 'aria-label', 'title'].forEach((attr) => {
-      doc.querySelectorAll(`[data-i18n-${attr}]`).forEach((element) => {
-        const text = this.getText(element.getAttribute(`data-i18n-${attr}`));
-        if (typeof text === 'string') element.setAttribute(attr, text);
-      });
-    });
-
-    // Update meta tags
-    this.updateMetaTags(doc);
+    window.LocaleDom.translate(doc, { text: (k) => this.getText(k), lang: this.currentLang, arCopy, base: window.location.origin + this.pagePath() });
   }
   
   // Update meta tags for SEO
   updateMetaTags(doc = document) {
-    // pages without their own translation file (404) name their meta key on <html data-i18n-meta="...">
-    const found = this.getText(doc.documentElement.getAttribute('data-i18n-meta') || 'meta');
-    if (typeof found === 'object') {
-      // Share previews follow the page: og:/twitter: title and description default to the page's own, and
-      // og:locale to its language, so a page only needs a title and a description in each language
-      const metaData = Object.assign({}, found);
-      const has = (sel) => !!doc.querySelector(sel);
-      [['title', 'og:title', 'twitter:title'], ['description', 'og:description', 'twitter:description']].forEach(([base, og, tw]) => {
-        if (!metaData[base]) return;
-        if (!metaData[og] && has(`meta[property="${og}"]`)) metaData[og] = metaData[base];
-        if (!metaData[tw] && has(`meta[name="${tw}"]`)) metaData[tw] = metaData[og] || metaData[base];
-      });
-      if (has('meta[property="og:locale"]')) metaData['og:locale'] = this.currentLang === 'ar' ? 'ar_AE' : 'en_US';
-      // Update <title>
-      if (metaData.title) {
-        doc.title = metaData.title;
-      }
-      // a page with its own Arabic copy (hreflang links) has its canonical in its file: each copy names itself
-      if (doc.querySelector('link[rel="alternate"][hreflang]')) delete metaData.canonical;
-
-      // Loop through all meta properties
-      Object.entries(metaData).forEach(([key, value]) => {
-        if (!value) return;
-        if (key === 'title') return; // Already handled
-
-        // Handle standard meta tags
-        let selector, attr;
-        if (key === 'description' || key === 'keywords' || key === 'author') {
-          selector = `meta[name="${key}"]`;
-          attr = 'content';
-        }
-        // Handle Open Graph tags
-        else if (key.startsWith('og:')) {
-          selector = `meta[property="${key}"]`;
-          attr = 'content';
-        }
-        // Handle Twitter tags
-        else if (key.startsWith('twitter:')) {
-          selector = `meta[name="${key}"]`;
-          attr = 'content';
-        }
-        // Handle canonical link
-        else if (key === 'canonical') {
-          selector = 'link[rel="canonical"]';
-          attr = 'href';
-        }
-        // Handle favicon
-        else if (key === 'icon') {
-          selector = 'link[rel="icon"]';
-          attr = 'href';
-        }
-        // Add more custom cases as needed
-
-        if (selector) {
-          let tag = doc.querySelector(selector);
-          if (!tag) {
-            // Create tag if it doesn't exist
-            if (selector.startsWith('meta')) {
-              tag = doc.createElement('meta');
-              if (selector.includes('property')) {
-                tag.setAttribute('property', key);
-              } else if (selector.includes('name')) {
-                tag.setAttribute('name', key);
-              }
-              doc.head.appendChild(tag);
-            } else if (selector.startsWith('link')) {
-              tag = doc.createElement('link');
-              if (key === 'canonical') tag.setAttribute('rel', 'canonical');
-              if (key === 'icon') tag.setAttribute('rel', 'icon');
-              doc.head.appendChild(tag);
-            }
-          }
-          tag.setAttribute(attr, value);
-        }
-      });
-    }
+    window.LocaleDom.meta(doc, (k) => this.getText(k), this.currentLang);
   }
   
   // Check if current screen size is mobile (below breakpoint)
