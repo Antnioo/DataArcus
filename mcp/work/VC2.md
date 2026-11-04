@@ -27,8 +27,9 @@
   vc1 23,041.
 - **sp23's records:** none changes. The brief expected one fixture with the calculations, but none of sp23's 12
   plans has one (its twin and copy are `fixtures/twin-project` as it is).
-- **State:** code done, CI next.
-- **Resume:** the CI run on this branch (`gh workflow run tests.yml --ref fix/0.3.2-vc2`), then the reviewer's merge.
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41744080953 on d7235d4** (first run, every job green
+  on Linux, macOS and Windows). integration/0.3.2 did not move (82c11e1): no merge. **State: DONE.**
+- **Resume:** none; the reviewer's merge.
 
 ## The plan
 1. The test first (`vc2`), red on the base.
