@@ -32,6 +32,7 @@
   **Named 161 of 161:** `PASS  modules  852 checks (161 module files, 161 rows)`, the same with `--strict`;
   test-modules 11, agent-memory 256, result-lines 183, lint 0. The first CI run (41802878066) was cancelled by the
   reviewer (pre-merge head).
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41806022338 on 28d484e9. **State: DONE.**
 - **Resume:** none; the reviewer's merge.
 
 ## The table's shape and why
