@@ -85,7 +85,8 @@ export function underGrids(pg, r, pageW, extra) {
   const strip = (v) => { const rq = qs(v).Rows.projections[0] && qs(v).Rows.projections[0].queryRef, cw = isObj(v.visual.objects) && Array.isArray(v.visual.objects.columnWidth) ? v.visual.objects.columnWidth : [];
     const e = cw.find((x) => isObj(x) && isObj(x.selector) && x.selector.metadata === rq && isObj(x.properties)); const n = e ? lit0(e.properties.value) : NaN; return Number.isFinite(n) ? n : null; };
   const parent = (v) => (v.parentGroupName != null ? String(v.parentGroupName) : '');
-  const widthIn = (v) => { const g = parent(v) ? r.visuals.find((x) => isObj(x) && String(x.name) === parent(v)) : null; return g ? (posOf(g) || {}).width : pageW; };
+  // (0.3.2 DD1C2) the frame: mirror-units.js frameWidth, the one rule (unknown: the chart keeps its wanted x, unclamped)
+  const byName = Units.byNameOf(r.visuals), widthOf = (v) => Units.frameWidth({ width: pageW }, byName, v);
   pg.visuals.forEach((m, i) => {
     const en = m.json, tw = r.visuals[i];
     if (!isObj(en) || !isObj(tw) || Mirror.kindOf(en) !== 'matrix' || !has(en, 'Rows') || !has(en, 'Columns') || !posOf(en) || !posOf(tw)) return;
@@ -98,7 +99,7 @@ export function underGrids(pg, r, pageW, extra) {
       if (share < 0.8 * Math.min(cb.width, hb.width)) return;
       const under = cb.y >= hb.y + hb.height / 2 && cb.y <= hb.y + hb.height + 24, over = cb.y + cb.height <= hb.y + hb.height / 2 && cb.y + cb.height >= hb.y - 24;
       if (!under && !over) return;
-      const W = widthIn(ct), want = leftTw + (cb.x - leftEn), x = Mirror.round(Number.isFinite(W) ? Math.max(0, Math.min(W - q.width, want)) : want);
+      const W = widthOf(ct), want = leftTw + (cb.x - leftEn), x = Mirror.round(Number.isFinite(W) ? Math.max(0, Math.min(W - q.width, want)) : want);
       // (0.3.1 MX8, the night lab's B2new-1..12 on a6000a27: the chart moved with its grid landed on a visual it did not
       // overlap in English) moved there it must cover nothing it did not cover in English (a heatmap's names table
       // counts as its matrix); else it keeps its plain mirror, said

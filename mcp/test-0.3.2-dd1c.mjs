@@ -2,13 +2,15 @@
 // something we fix it at the source"; D-1104-11; D-1016-01): one answer to "how wide is the frame a visual is mirrored
 // inside?". The rule lives in assets/js/mirror-units.js frameWidth only: the parent group's width when the group's box
 // is valid (finite x, y, width > 0, height > 0), else the page's width when finite and > 0, else undefined (unknown).
-// Its three callers, each read from what it does (never from its source):
+// Its four callers, each read from what it does (never from its source):
 //   mirror    report-mirror.js mirrorPage (a text box's x' = W - x - width; unknown: x left as it is)
 //   geometry  twin-geometry.mjs aroundTables (a bar kept on a table, clamped to W - width; unknown: not kept)
 //   fitting   twin-text-fit.mjs fitButtons (a button widened up to its frame; unknown: left as it is)
-//   F1-F13   13 made-up frames: the three callers give one answer, the rule's (39 checks)
+//   grid      twin-geometry.mjs underGrids (DD1C2: a chart kept under its heatmap's grid, clamped to W - width; unknown:
+//             left at its wanted x)
+//   F1-F13   13 made-up frames: the four callers give one answer, the rule's (52 checks)
 //   R1       frameWidth itself on the 13 (13 checks)
-//   S1-S3    no caller computes a frame itself; each calls mirror-units.js frameWidth (3 checks)
+//   S1-S4    no caller computes a frame itself; each calls mirror-units.js frameWidth, underGrids too (4 checks)
 //   E1-E2    a made-up two-visual report in a group (valid; broken): the mirrored x and the widened button stay
 //            inside the same frame (6 checks)
 // Made-up data only, no IO but reading the three sources.   node test-0.3.2-dd1c.mjs
@@ -16,7 +18,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { aroundTables } from './lib/twin-geometry.mjs';
+import { aroundTables, underGrids } from './lib/twin-geometry.mjs';
 import { fitButtons } from './lib/twin-text-fit.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -66,6 +68,19 @@ function geometryFrame(c) {
   if (!r.moved.some((m) => m.visual === 'bar')) return undefined;
   const k = r.visuals.find((v) => v.name === 'bar').position; return k.x + k.width;
 }
+// grid (DD1C2): a column chart under a matrix (a heatmap's grid), both in the frame; the matrix's twin pushed far right
+// so the chart, kept at its English offset from the grid, is clamped to W - 150; unknown: left at its wanted x (100010)
+function gridFrame(c) {
+  const qs = (a, b) => ({ [a]: { projections: [{ queryRef: 'T.' + a }] }, [b]: { projections: [{ queryRef: 'T.' + b }] } });
+  const mx = inGroup({ name: 'mx', position: { x: 0, y: 0, z: 1, width: 200, height: 100 }, visual: { visualType: 'pivotTable', query: { queryState: qs('Rows', 'Columns') } } }, c.parent);
+  const ch = inGroup({ name: 'ch', position: { x: 10, y: 110, z: 2, width: 150, height: 50 }, visual: { visualType: 'columnChart', query: { queryState: qs('Category', 'Y') } } }, c.parent);
+  const en = copy(c.groups).concat([mx, ch]), ar = copy(en); ar.find((v) => v.name === 'mx').position.x = 100000;
+  const r = { visuals: ar, moved: [] }, page = copy(c.page);
+  underGrids({ page, visuals: en.map((json) => ({ json })) }, r, page.width, []);
+  const said = r.moved.find((m) => m.visual === 'ch'), k = r.visuals.find((v) => v.name === 'ch').position;
+  if (!said || !/^kept lined up/.test(said.rule)) return 'not lined up: ' + JSON.stringify(said);
+  return near(k.x, 100010) ? undefined : k.x + k.width;
+}
 // fitting: a button 20 wide at x 10 whose Arabic text needs far more than any frame; widened up to its frame's edges
 function fittingFrame(c) {
   const but = inGroup({ name: 'btn', position: { x: 10, y: 10, z: 1, width: 20, height: 40 }, visual: { visualType: 'actionButton', objects: { text: [{ properties: { show: { expr: { Literal: { Value: 'true' } } }, text: lit('ب'.repeat(400)), fontSize: { expr: { Literal: { Value: '10D' } } } } }] } } }, c.parent);
@@ -76,10 +91,11 @@ function fittingFrame(c) {
 }
 
 for (const c of CASES) {
-  const m = mirrorFrame(c), g = geometryFrame(c), f = fittingFrame(c);
+  const m = mirrorFrame(c), g = geometryFrame(c), f = fittingFrame(c), u = gridFrame(c);
   chk(() => near(m, c.want), () => `${c.id} (${c.what}): the mirror's frame is ${m}, the rule's ${c.want}`);
   chk(() => near(g, c.want), () => `${c.id} (${c.what}): the geometry's frame is ${g}, the rule's ${c.want}`);
   chk(() => near(f, c.want), () => `${c.id} (${c.what}): the fitting's frame is ${f}, the rule's ${c.want}`);
+  chk(() => near(u, c.want), () => `${c.id} (${c.what}): the grid chart's frame (underGrids) is ${u}, the rule's ${c.want}`);
 }
 // R1: the rule itself
 for (const c of CASES) {
@@ -93,6 +109,12 @@ for (const [name, rel] of SRC) {
   const s = fs.readFileSync(path.join(HERE, rel), 'utf8');
   const own = s.split('\n').filter((l) => /parentGroupName/.test(l) && /\.width\b/.test(l) && /byName/.test(l));
   chk(() => /(Units\.|[^.\w])frameWidth\(/.test(s) && /mirror-units\.js|Units\./.test(s) && !own.length, () => `S ${name}: ${own.length ? 'computes a frame itself: ' + own[0].trim().slice(0, 160) : 'does not call mirror-units.js frameWidth'}`);
+}
+
+// S4 (DD1C2): underGrids, the fourth reader, calls frameWidth and keeps no frame of its own
+{
+  const s = fs.readFileSync(path.join(HERE, 'lib/twin-geometry.mjs'), 'utf8').replace(/\r\n/g, '\n'), at = s.indexOf('export function underGrids('), body = at < 0 ? '' : s.slice(at, s.indexOf('\n}', at));
+  chk(() => /Units\.frameWidth\(/.test(body) && !/\.width\s*:\s*pageW/.test(body), () => 'S4 twin-geometry.mjs underGrids: ' + (body ? 'computes its frame itself, not through mirror-units.js frameWidth' : 'not found'));
 }
 
 // E1-E2: a made-up two-visual report in a group: a text box and a button with a long Arabic text, mirrored, then fitted

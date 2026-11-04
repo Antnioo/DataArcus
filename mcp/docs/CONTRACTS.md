@@ -32,7 +32,7 @@ How it is kept true:
 | [1b-text What text does a literal hold?](#1b-text-what-text-does-a-literal-hold) | 18 | 11 of 15 | check_report, read_report, the writer, the twin, the preview, the redesign | merge (tagged decoder) |
 | [1b-number What number does a literal hold?](#1b-number-what-number-does-a-literal-hold) | 8 | 12 of 15 | check_report, read_report, the twin, the preview | merge (tagged decoder) |
 | [1b-bool What true or false does a literal hold?](#1b-bool-what-true-or-false-does-a-literal-hold) | 6 | 13 of 15 | check_report, read_report, the twin, the preview, the native copy | merge (tagged decoder) |
-| [1c How wide is the frame a visual is mirrored inside?](#1c-how-wide-is-the-frame-a-visual-is-mirrored-inside) | 4 | 5 of 10 | the twin | `twin-geometry.mjs` `widthOf` (in `aroundTables`) |
+| [1c How wide is the frame a visual is mirrored inside?](#1c-how-wide-is-the-frame-a-visual-is-mirrored-inside) | 4 | 0 of 10 | the twin | one place since DD1C2: `assets/js/mirror-units.js` `frameWidth` |
 | [1d What width did the report set for this table column?](#1d-what-width-did-the-report-set-for-this-table-column) | 5 | 3 of 12 | check_report, the twin, create_report | merge (tagged decoder) |
 | [1f Is this text Arabic?](#1f-is-this-text-arabic) | 7 | 4 of 11 | every measured text, check_report, create_report, the twin | `text-measure.js` / `field-catalog.js` (the broad test) |
 | [1g Which model folder is read?](#1g-which-model-folder-is-read) | 2 | 4 of 8 | the website's model import, every MCP tool that reads a model | `model-discovery.mjs` (the browser's is stale) |
@@ -241,14 +241,16 @@ false), C asks "is it shown" (anything but false -> shown, as Desktop shows a pa
 
 ## 1c How wide is the frame a visual is mirrored inside?
 
+**One place:** assets/js/mirror-units.js frameWidth (test mcp/test-0.3.2-dd1c.mjs).
+
 **Question:** the width a visual's x is mirrored in: its parent group's, else the page's.
 
 **Newest copy:** `twin-geometry.mjs` `widthOf` (in `aroundTables`: the validated-group fallback, fe62655b, 29 Oct). Verified, with one more: the audit's malformed width (`'400'`) gives a text in the mirror, the page's width in `aroundTables`, undefined in the fitting **and in `underGrids` `widthIn`** (the same file, B).
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/mirror-units.js` `widthOf` | [engines](MODULES.md#the-website-engines) | the twin (every visual's mirrored x, through report-mirror.js) |
-| `mcp/lib/twin-geometry.mjs` `widthIn` (in `underGrids`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a chart kept under a heatmap's grid) |
+| `assets/js/mirror-units.js` `frameWidth` | [engines](MODULES.md#the-website-engines) | the twin (every visual's mirrored x, through report-mirror.js) |
+| `mcp/lib/twin-geometry.mjs` `widthOf` (in `underGrids`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a chart kept under a heatmap's grid) |
 | `mcp/lib/twin-text-fit.mjs` `widthOf` (in `fitButtons`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a button widened for its Arabic text) |
 | `mcp/lib/twin-geometry.mjs` `widthOf` (in `aroundTables`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a visual kept off a table's or matrix's grid) |
 
@@ -271,9 +273,11 @@ included. The reviewer and the owner decide.
 
 **The test that will pin it:** the probe's 10 frames (family `1c`).
 
-**Since DD1C (4 Nov):** three of the four read `assets/js/mirror-units.js` `frameWidth` (test `mcp/test-0.3.2-dd1c.mjs`):
-mirror-units, twin-text-fit `fitButtons`, twin-geometry `aroundTables`. Still its own rule: twin-geometry `underGrids`
-`widthIn` (DD1C2, next). The family counts as one place when it reads `frameWidth` too.
+**Since DD1C (4 Nov) and DD1C2 (4 Nov):** all four read `assets/js/mirror-units.js` `frameWidth` (test
+`mcp/test-0.3.2-dd1c.mjs`): mirror-units, twin-text-fit `fitButtons`, twin-geometry `aroundTables` (DD1C) and
+twin-geometry `underGrids` (DD1C2, its own `widthIn` gone). The owner's answer (D-1104-15): a group with a broken box
+gives the page's width, else unknown. The probe: one answer on all 10 inputs. The "Today" table above is the ledger's
+snapshot before DD1C.
 
 ## 1d What width did the report set for this table column?
 
