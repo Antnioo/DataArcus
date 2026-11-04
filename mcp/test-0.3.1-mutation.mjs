@@ -27,7 +27,7 @@ const GUARD_TIMEOUT = process.env.DA_MUTATION_GUARD_TIMEOUT ? +process.env.DA_MU
 // equivalent: a mutant no test can kill without a hook in product code, with why; listed, not run (T1.md)
 // guards: the existing suites (mcp/), the first expected to kill first. only: the platforms where the mutant means
 // something (NFC/NFD: macOS keeps one folder for both forms, so normalising changes nothing there).
-const PL = 'mcp/lib/plans.mjs', MO = 'mcp/lib/model.mjs', WI = 'mcp/lib/write-io.mjs', FI = 'mcp/lib/files.mjs', CR = 'mcp/lib/check-report.mjs', AW = 'mcp/lib/approval-window.mjs', AD = 'mcp/lib/approval-disclosure.mjs', MDI = 'mcp/lib/model-discovery.mjs';   // (0.3.2 SP23: what each approval page says moved to AD; SP42: discovery to MDI)
+const PL = 'mcp/lib/plans.mjs', MO = 'mcp/lib/model.mjs', WI = 'mcp/lib/write-io.mjs', FI = 'mcp/lib/files.mjs', CR = 'mcp/lib/check-report.mjs', AW = 'mcp/lib/approval-window.mjs', AD = 'mcp/lib/approval-disclosure.mjs', MDI = 'mcp/lib/model-discovery.mjs', RI = 'mcp/lib/report-inventory.mjs';   // (0.3.2 SP23: what each approval page says moved to AD; SP42: discovery to MDI, the report inventory to RI)
 // (0.3.2 SP22) the untrusted-text screen and the shown names moved to model-names.mjs, the KPI list to model-metadata.mjs
 const MN = 'mcp/lib/model-names.mjs', MM = 'mcp/lib/model-metadata.mjs';
 const MUTANTS = [
@@ -75,7 +75,7 @@ const MUTANTS = [
   // (SQ6) the reader: two models at one depth read silently as the first (SQ15a: the owner's yes); a .pbit link followed; a .pbit that changed while read used
   // (SQ15a) a KPI's target expression returned as text; an image file name returned unscreened
   { id: 'R-kpi-quoted', file: MM, edits: [["target: !k ? 'none' : k.expression ? 'an expression' :", "target: !k ? 'none' : k.expression ? String(x.kpi.targetExpression) :"]], guards: ['test-0.3.1-sq15a.mjs'] },
-  { id: 'R-image-screen', file: 'mcp/lib/read-report.mjs', edits: [['x.images = imgs.map(safeName);', 'x.images = imgs;']], guards: ['test-0.3.1-sq15a.mjs'] },
+  { id: 'R-image-screen', file: RI, edits: [['x.images = imgs.map(safeName);', 'x.images = imgs;']], guards: ['test-0.3.1-sq15a.mjs'] },
   { id: 'R-model-tie', file: MDI, edits: [['  if (tied.length > 1) {', '  if (false) {']], guards: ['test-0.3.1-reader-seen.mjs'] },
   { id: 'R-pbit-link', file: MO, edits: [["  if (isLink(f)) throw linkRefused('file');\n  let fd;\n  try { fd = fs.openSync(f, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0)); } catch (e) { if (e.code === 'ELOOP') throw linkRefused('file'); throw e; }", "  let fd = fs.openSync(f, 'r');"]], guards: ['test-0.3.1-reader-seen.mjs'], only: ['linux', 'darwin'] },
   { id: 'R-pbit-changed', file: MO, edits: [['if (n !== size0 || st.size !== size0 || after.size !== st.size || after.mtimeMs !== st.mtimeMs) throw changedWhileRead();', 'if (false) throw changedWhileRead();']], guards: ['test-0.3.1-reader-seen.mjs'] },
