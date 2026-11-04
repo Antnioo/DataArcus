@@ -18,8 +18,10 @@
 - **Expected checks:** dd1h passes; the probe's 1h table: one answer per input (11 of 11); sp30 every number as on
   the base (its K2 allows the one pure require); model-health and test.mjs as on the base; contracts check green;
   check-modules --strict green; lint 0; every other suite as on the base.
-- **State:** code done; the full checks and CI next.
-- **Resume:** run the checks, merge integration once if it moved, CI, the CI line here.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41917280970 on c23b2040cab034eba9c184815393d72715649e92
+- **State:** DONE (Linux and Windows; macOS runs where the reviewer merges). integration/0.3.2 moved to 59877edb (CI2):
+  merged in once (WORK.md conflict, both lines kept). Local: every suite passed (195 of 195; glass-tables needed full history).
+- **Resume:** none; the reviewer reads and merges.
 
 ## Two answers -> one (made-up column sets; before: the writer / the health check; after: both)
 | input | writer before | health before | after (both) |
@@ -67,6 +69,8 @@ No new Arabic sentence.
 - assets/js/pbip-query.js and field-suggest.js test month or day names with their own small regexes (not this rule).
 
 ## Lessons for the reviewer
+- A new script tag in a page is a content change for sitemap-lastmod.mjs: the first CI run (41915762953) failed there
+  until `node scripts/sitemap-lastmod.mjs --write` moved the two health pages' dates (commit 7f44bec).
 - sp30 K2 pinned field-catalog.js's requires, as sp42 P2 did in DD1G: a brief that adds a shared file should name
   the tests that pin a caller's imports.
 - The brief's "Arabic suffix" gap lives in the health engine's finding too, not only the fix script's rule: a
