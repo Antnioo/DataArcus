@@ -1,0 +1,405 @@
+{
+ "about": "test-0.3.2-sp40.mjs: create_arabic_twin's plan and write answers and every file of each folder after the write, recorded on the base (normalised: the plan id, the working folder and the path separator)",
+ "runs": {
+  "T1 the twin-project fixture, its own report": {
+   "plan": {
+    "err": false,
+    "length": 12877,
+    "sha256": "484c6f243ee69183cb30ae995385247eba2610ecfd2874e35471bf7820c0cdd0"
+   },
+   "write": {
+    "err": false,
+    "length": 3703,
+    "sha256": "77e101ce62f989bbbd229911a34dda9c247a7b44c46e2df2016ec5ed9c1938ea"
+   },
+   "files": {
+    "count": 65,
+    "sha256": "fa0af57999386fb27447763e9d103f3b7f5a28d39dd335edfed62b8da0ec8b04"
+   }
+  },
+  "T2 the twin-project fixture, both languages in one report": {
+   "plan": {
+    "err": false,
+    "length": 16368,
+    "sha256": "d3f1a1a70489ca9a297985876c5087ea1906105ecace30b068aad7e627806f86"
+   },
+   "write": {
+    "err": false,
+    "length": 6970,
+    "sha256": "bebdbe655026fd4861d16faf8e8281e3c311a9e126a15ee0fa36626ced1c66ee"
+   },
+   "files": {
+    "count": 92,
+    "sha256": "4b36467d6d9455634ee368491f0452efa3945c17a0c342f2867b54985cead4a2"
+   }
+  },
+  "T3 the sample project": {
+   "plan": {
+    "err": false,
+    "length": 5683,
+    "sha256": "ded722eb77b04188d73630bacd4b8cd41aa5d4ba343efb8ff9796ef8f16971e4"
+   },
+   "write": {
+    "err": false,
+    "length": 1179,
+    "sha256": "2eb78342881deee3e423edb83fb7eb3ac4207e8e77fa43e790daa06eb7cc4547"
+   },
+   "files": {
+    "count": 23,
+    "sha256": "600c422e224814b446d91ad5ab395d5b2da7fc5f00113aec83659a63f83491ed"
+   }
+  },
+  "T4 twin-fuzz B1-1": {
+   "plan": {
+    "err": false,
+    "length": 7281,
+    "sha256": "5a9350646f5768243e2068a2213a65da9de4419c2fac473f83c03e3ec9eb9319"
+   },
+   "write": {
+    "err": false,
+    "length": 2680,
+    "sha256": "82eac501caae6925606674e4eb3f07a4639e8178d42c57ece4a6c7578830bc58"
+   },
+   "files": {
+    "count": 22,
+    "sha256": "4c8792c790f5c0e76583d940f4dbe1655cffcaabe713f285d7ce7218025e35f0"
+   }
+  },
+  "T5 twin-fuzz B1-3": {
+   "plan": {
+    "err": false,
+    "length": 6851,
+    "sha256": "e042e12f67095a29afabf6c441b8f6d6b91ea56d9fdae177c514c7e235fbd31f"
+   },
+   "write": {
+    "err": false,
+    "length": 2206,
+    "sha256": "021f202571a0400d83d41ead7f051f18e5246f04c288d6179efe8307a14275b7"
+   },
+   "files": {
+    "count": 20,
+    "sha256": "5e5b25f6f982b5d1228fe9d4ff961ef491aa9210e8d5de1d5ad76f356a1f8acc"
+   }
+  },
+  "T6 twin-fuzz B2-1": {
+   "plan": {
+    "err": false,
+    "length": 6910,
+    "sha256": "abea8b227d177107d4a0cc8f9e833e052ae5eac1b0c05dd8ec02f78d9036c5bc"
+   },
+   "write": {
+    "err": false,
+    "length": 2340,
+    "sha256": "9a3e70f1c5831c75bc0775b6cd3ae067e00bc8a02ce9ee88cf7c3050bd98aa97"
+   },
+   "files": {
+    "count": 20,
+    "sha256": "37b9b65275576f7de75b73cad78b2115374a02d62021fef5ad45b846c91cb5b1"
+   }
+  },
+  "T7 twin-fuzz B2new-1": {
+   "plan": {
+    "err": false,
+    "length": 8292,
+    "sha256": "98f2f05195e4caad03ee94550faefd54f33ae48be3b94a2ee35339e1c1a0cf1a"
+   },
+   "write": {
+    "err": false,
+    "length": 2324,
+    "sha256": "882f0319f842e2ebcbea102030ca6196dba656b980c0c5794bb6f155189f9eeb"
+   },
+   "files": {
+    "count": 22,
+    "sha256": "428ee19908866fda7ef901ee5c66791d8dc72d80d0865ef37ab3941ff3675965"
+   }
+  },
+  "T8 twin-fuzz B2new-2": {
+   "plan": {
+    "err": false,
+    "length": 8537,
+    "sha256": "4a77a75c76ed4903bca7e1854a1ace7b2226976259b70d68e3c12fa04e6e9d73"
+   },
+   "write": {
+    "err": false,
+    "length": 3253,
+    "sha256": "cc19d2655bbe1bc19b5d3c78fe1a3eec1c4bf38ba7ad7b28853580e23eeefe97"
+   },
+   "files": {
+    "count": 22,
+    "sha256": "a3b98c071d3094df3f74b0a9cbf9050431cdd16a715013165724f5e2c4ce69f3"
+   }
+  },
+  "T9 twin-fuzz B2new-8": {
+   "plan": {
+    "err": false,
+    "length": 7723,
+    "sha256": "af4b23fd9f36e71cb8e87808085721256198a2e518b7f9e0f6d4e2c5940f1fe4"
+   },
+   "write": {
+    "err": false,
+    "length": 2403,
+    "sha256": "8b8989b1683e5ebf5787131822bb1f4dddf67f9855f92ec3ecf75f2d467e86f2"
+   },
+   "files": {
+    "count": 22,
+    "sha256": "c336d3d1119270a40f3f62b1296cc4cab6979c86bd92f057d9e5d2c1a851f656"
+   }
+  },
+  "T10 twin-fuzz B3-1": {
+   "plan": {
+    "err": false,
+    "length": 5751,
+    "sha256": "8cd3853f99e197946bd512836c5629ea869186cb635a22a50d0300ca3b4cfa7c"
+   },
+   "write": {
+    "err": false,
+    "length": 1280,
+    "sha256": "2835909afc14bff1aad5e14c525d2e4ea7cb9daa8a30a063920038a92a16f0f5"
+   },
+   "files": {
+    "count": 18,
+    "sha256": "3d7bb0bbc2011715b6c2d88ad2d8e683c7ebd88412bd000ab3b3fc3ea02d5d70"
+   }
+  },
+  "T11 twin-fuzz M1-1": {
+   "plan": {
+    "err": false,
+    "length": 6991,
+    "sha256": "86a2be6cd33d2e16ee4d526a2916687fa561aa9bc7878fe291ef72a5bd28eee4"
+   },
+   "write": {
+    "err": false,
+    "length": 2328,
+    "sha256": "303fb1864a69a11773790f3eab998590a87065ee2f863d7d70710834ffc1d608"
+   },
+   "files": {
+    "count": 22,
+    "sha256": "19b88f41be405aadab5b2a5aa7c6c3c891dfeb16400fee5340b39ae937457122"
+   }
+  },
+  "T12 twin-fuzz V1-1": {
+   "plan": {
+    "err": false,
+    "length": 7302,
+    "sha256": "0971121cc5bda908e79e0614b1825dc1b15875b96e21f79ff33c20ddb3a75fe3"
+   },
+   "write": {
+    "err": false,
+    "length": 2439,
+    "sha256": "ab81ebcb4186eeddf24a195638342e251cd75e266127c1f566d6ed5cfcfaca3c"
+   },
+   "files": {
+    "count": 18,
+    "sha256": "72bb21b9878e500dd439262611eab11cd944f9f203dfd4b7d0bc68819ccfe51d"
+   }
+  },
+  "T13 twin-fuzz's button with its underline": {
+   "plan": {
+    "err": false,
+    "length": 6893,
+    "sha256": "77299524ab8d1d4c7a4d1af7d1c4a49f173642fa434b8f4610899186609685ad"
+   },
+   "write": {
+    "err": false,
+    "length": 2319,
+    "sha256": "bf2db962e2c845d6773bd38409e8fae848cac818a60908124b91bd31be309e65"
+   },
+   "files": {
+    "count": 20,
+    "sha256": "5868ab33cfe105482bd7253895076d8ce7b66418ca442b6020117985eab8c00a"
+   }
+  },
+  "T14 hm2's A1-1": {
+   "plan": {
+    "err": false,
+    "length": 7427,
+    "sha256": "21ef303c49d1c7c066e5f9407ca67f22f25d4aa68fe28bda9d7ef480f9715192"
+   },
+   "write": {
+    "err": false,
+    "length": 2225,
+    "sha256": "c68540c4e1ac13ffaca21d038bebc6afaef51dd70c01f21316846af24e55a951"
+   },
+   "files": {
+    "count": 21,
+    "sha256": "50b91918064a2dcfcaef1d72e54f7afb2694976416b5c16db1e025f0984ac064"
+   }
+  },
+  "T15 the fitting shapes, their own report": {
+   "plan": {
+    "err": false,
+    "length": 21507,
+    "sha256": "835884de729e1735f1043424265af07272c43bf69f048cb88bcab58a6bfcab2d"
+   },
+   "write": {
+    "err": false,
+    "length": 8162,
+    "sha256": "00c008075114aad6ffe8bc6e2fe9eebb90c73bfc0f4796e985a0212d1f1276cf"
+   },
+   "files": {
+    "count": 110,
+    "sha256": "58f638a46e7569476fcc4aedfae7d4f0daf71fc4b73c89f28f05aa6074f5e9d4"
+   }
+  },
+  "T16 the fitting shapes, both languages in one report": {
+   "plan": {
+    "err": false,
+    "length": 26205,
+    "sha256": "888a10b5cf4df7096f5102a049885ded470c49c6da711a908e0559a4bab463f9"
+   },
+   "write": {
+    "err": false,
+    "length": 12638,
+    "sha256": "2e04811b0fbebb59ba42cf3700a368862606699643d45563b57fe4b02203bc30"
+   },
+   "files": {
+    "count": 163,
+    "sha256": "94aa43e31e54c0f667a125edf65c3a6f104da98fbdd8f92e6ea0fa86115ebd59"
+   }
+  },
+  "T17 twin-fuzz seed 20261102": {
+   "plan": {
+    "err": false,
+    "length": 11229,
+    "sha256": "777a3e71548ca4b5c0f69ccfb069f8c4c6595ce6a4ef3e112a615d9cac9aa15c"
+   },
+   "write": {
+    "err": false,
+    "length": 4467,
+    "sha256": "b8fbaa9091541110f2d954c5d736d10993feeef24c26480c60bc7e3a19520920"
+   },
+   "files": {
+    "count": 37,
+    "sha256": "bc9691f5866eb7408b052a384a49be6a5e9f95d5ab95cc3cbd12f3c7a5ffca6f"
+   }
+  },
+  "T18 twin-fuzz seed 20261109": {
+   "plan": {
+    "err": false,
+    "length": 15310,
+    "sha256": "1e865298685b1785c07a959c8c01beb64a460382314aa9f3445c26f173e89ec2"
+   },
+   "write": {
+    "err": false,
+    "length": 5213,
+    "sha256": "f7d55d94e6e4d9195e8cd0c652cf6cd43c78d93aaa3b57ee7955a02b5c790cfc"
+   },
+   "files": {
+    "count": 85,
+    "sha256": "8ecc24696c0ab774a3c779535fa85ab3f87b9f0b0632a1454501020d91e0ea5e"
+   }
+  },
+  "T19 hm1's N1-25": {
+   "plan": {
+    "err": false,
+    "length": 7274,
+    "sha256": "477983805d7749fd6011be835101f1dda24e413502441f5dccd8c406075bdcfe"
+   },
+   "write": {
+    "err": false,
+    "length": 2239,
+    "sha256": "8b88f7435a59a3aba174d14cdae052027cba745273d6d07e5bfd464e8607ca10"
+   },
+   "files": {
+    "count": 21,
+    "sha256": "fdff879b559f8a95ae7bf2306ce5cf1433466d2132aa7ff4d6ba862b2f151661"
+   }
+  },
+  "T20 hm1's M1-1": {
+   "plan": {
+    "err": false,
+    "length": 7270,
+    "sha256": "3fb23fa2855db79891d04fcea1d30b10f9862f21699dc1edb666c3bae950c93e"
+   },
+   "write": {
+    "err": false,
+    "length": 2237,
+    "sha256": "fefd61672d58784f32071b7761a4232bc22dae5c35d617bb7b3833a431dea082"
+   },
+   "files": {
+    "count": 21,
+    "sha256": "240655b788d8dda0206f0c4baf46a001929f8f6fa5065e2c725c2af4670776b9"
+   }
+  },
+  "T21 hm1's F1-1": {
+   "plan": {
+    "err": false,
+    "length": 7437,
+    "sha256": "f88aa960411abb8a68801448544924c35757bc37736f540c73746ee019577d5b"
+   },
+   "write": {
+    "err": false,
+    "length": 2404,
+    "sha256": "7604999288d4fdb1b3c4f955f1eef75f85466cede043c5a504fcf5fbdc82e758"
+   },
+   "files": {
+    "count": 18,
+    "sha256": "24304606a9ed10406c4e322b3f36daf7221abb65550824471d1901ae04d7423d"
+   }
+  },
+  "T22 the geometry project, its own report": {
+   "plan": {
+    "err": false,
+    "length": 12500,
+    "sha256": "edbb5bb5654b3f9615101abbfa503ee3d5c923e6877eed95ffb596e6418fecbc"
+   },
+   "write": {
+    "err": false,
+    "length": 3116,
+    "sha256": "7e3efc1890a2de191ecb251bb2cffe5b19f9d9244cb4aff7feb6acdbafa33340"
+   },
+   "files": {
+    "count": 51,
+    "sha256": "6c625a18dc502ecb53a52473dacc0d2a3b503f55c8240ebb764302d22df9cc7e"
+   }
+  },
+  "T23 the geometry project, both languages in one report": {
+   "plan": {
+    "err": false,
+    "length": 14867,
+    "sha256": "2eb34eb8e4e266027fb1612336206c19eb3b30f2cee47237e962499d084b0e44"
+   },
+   "write": {
+    "err": false,
+    "length": 5259,
+    "sha256": "81ae4bf0302acbff82d4324a6aea2b45bdb951cbb4c8567f49989fd17f6e898a"
+   },
+   "files": {
+    "count": 71,
+    "sha256": "eb00b4c6f8922b3f0b9dbd37de4f7fcfe621b35a843732b9c3a5b292d1016304"
+   }
+  },
+  "T24 the measures project, its own report": {
+   "plan": {
+    "err": false,
+    "length": 22797,
+    "sha256": "1947628980e4e3b1f9b0264fef3dc1e7284a51a8885c6698255aeff40d4f2ffe"
+   },
+   "write": {
+    "err": false,
+    "length": 7346,
+    "sha256": "0ce6c7b743646b940403d1349bffd994cca743d5465344ed85ff424d0ac485d7"
+   },
+   "files": {
+    "count": 106,
+    "sha256": "efa0f04b44acd92dcbe8dfac820438947bbc4dd983690955fb101ed2b07c758b"
+   }
+  },
+  "T25 the measures project, both languages in one report": {
+   "plan": {
+    "err": false,
+    "length": 26393,
+    "sha256": "b6e9869c38de715e7b10391740e979f1288616109d23b64787e9b22be4c653b6"
+   },
+   "write": {
+    "err": false,
+    "length": 11242,
+    "sha256": "ff84d0639ad9c6ef175d420bbc8e738dbc83083159afe98ce92bbf008b3ab420"
+   },
+   "files": {
+    "count": 157,
+    "sha256": "0e4335fe8b1eda50e20d587150aa94f1a032f4743f54a0b0f42a91c71a633b05"
+   }
+  }
+ }
+}
