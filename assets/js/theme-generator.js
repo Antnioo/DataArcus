@@ -601,7 +601,9 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(() => (window.DAFieldPicker ? null : loadScript('/assets/js/field-picker-ui.min.js?v=20261103sp8')))
         // (SP14: reading the chosen folder or file is model-import-browser.js's, which pbip-bind.js forwards to: loaded first)
         .then(() => (window.DAModelImport ? null : loadScript('/assets/js/model-import-browser.min.js?v=20261103sp14')))
-        .then(() => loadScript('/assets/js/pbip-bind.min.js?v=20261103sp14')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
+        // (SP30: the model's metadata, normalised, is field-catalog.js's, which pbip-bind.js reads when it loads: loaded first)
+        .then(() => (window.DAFieldCatalog ? null : loadScript('/assets/js/field-catalog.min.js?v=20261104sp30a')))
+        .then(() => loadScript('/assets/js/pbip-bind.min.js?v=20261104sp30a')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
     // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)

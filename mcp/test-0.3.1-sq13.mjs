@@ -172,8 +172,8 @@ try {
   chk(() => fo.type === 'unknown', () => `R-S13a. a column given with no type is unknown in fieldOf: ${JSON.stringify(fo)}`);
   const sb = Bind.sortColumnFor(T.columns, 'Month Name');
   chk(() => sb && sb.name === 'Month Number', () => `R-S13b. "Month Number" with no type is read by its name (a number), so it sorts "Month Name", as a DAX table's: ${JSON.stringify(sb)}`);
-  const src = fs.readFileSync(path.join(HERE, '../assets/js/pbip-bind.js'), 'utf8');
-  chk(() => !/dataType \|\| 'string'|type \|\| 'string'/.test(src), () => 'R-S13c. pbip-bind.js has no "|| \'string\'" type fallback left');
+  const src = ['pbip-bind.js', 'field-catalog.js', 'field-suggest.js'].map((f) => path.join(HERE, '../assets/js', f)).filter((f) => fs.existsSync(f)).map((f) => fs.readFileSync(f, 'utf8')).join('\n');   // (0.3.2 SP30: split in three files)
+  chk(() => !/dataType \|\| 'string'|type \|\| 'string'/.test(src), () => 'R-S13c. pbip-bind.js (and its field-catalog.js and field-suggest.js) has no "|| \'string\'" type fallback left');
 }
 
 // ---------- 0.2.9-design-S2: the plan's lint, with the plan's table fields ----------
