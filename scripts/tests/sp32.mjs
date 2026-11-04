@@ -28,6 +28,7 @@ import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { visitor } from './lib.mjs';
+import { stampOf } from '../stamps.mjs';
 import { trickyModel, arabicModel, legacy, daxTables, mp, col } from '../../mcp/fixtures/health-models.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), ROOT = path.join(HERE, '..', '..');
@@ -257,7 +258,9 @@ export default async function ({ browser, url }) {
   const problems = []; let checks = 0;
   const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
   const record = process.env.SP32_RECORD === '1';
-  const gold = record ? {} : JSON.parse(fs.readFileSync(GOLD, 'utf8')), got = {};
+  // (ST1) the worker's URL was recorded with the stamp typed then; the page now holds the file's content stamp (the one helper)
+  const worker = 'model-health-worker.min.js?v=' + stampOf(path.join(ROOT, 'assets/js/model-health-worker.min.js'));
+  const gold = record ? {} : JSON.parse(fs.readFileSync(GOLD, 'utf8').replace(/model-health-worker\.min\.js\?v=[\w.-]+/g, worker)), got = {};
   const EN = '/tools/power-bi-model-health-check.html', AR = '/ar/tools/power-bi-model-health-check.html';
   const compare = (id, key, res) => {
     got[key] = res.out;

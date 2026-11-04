@@ -339,7 +339,7 @@ export default async function ({ browser, url }) {
     mods.forEach((s, i) => {
       const head = s.slice(0, 3000), n = MODULES[i];
       if (!/Interface|interface/.test(head) || !/\bIn:/.test(head) || !/\bOut:/.test(head)) bad.push(n + ': no interface header');
-      if (/\?v=\d/.test(s)) bad.push(n + ': a ?v= stamp');
+      if (/\?v=\w/.test(s)) bad.push(n + ': a ?v= stamp');   // (ST1: any stamp; a content stamp may start with a letter)
       if (/document\.createElement\('script'\)|loadScript\s*=/.test(s)) bad.push(n + ': loads a script');
       if (/window\.__|localStorage/.test(s) && n !== 'theme-state-ui') bad.push(n + ': page-wide state or storage');
       if (s.split('\n').length >= 600) bad.push(n + ': ' + s.split('\n').length + ' lines');
