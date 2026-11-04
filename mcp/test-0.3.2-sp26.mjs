@@ -24,48 +24,8 @@ const problems = []; let checks = 0;
 const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } catch (e) { err = ' (threw: ' + String(e && e.message || e).slice(0, 200) + ')'; } checks++; if (!ok) { let m = ''; try { m = msg(); } catch (e) { m = 'unexpected shape'; } problems.push(m + err); } };
 const GOLD = path.join(HERE, 'fixtures', 'sp26-twins.json');
 const H = await import('./fixtures/twin-runs.mjs');
-const { ROOT, VS, L, Q, obj, fcol, fmea, query, materialize, rd } = H;
-
-// ---- the geometry project (made up, 1280 x 720, twin-fuzz's model) ----
-// kpiT: a KPI text box, its title indented with tabs, its icon kpiI on its left end (Call Center's KPI shape: the
-// indentation goes to the end, the icon to the text's other end, the box ends before it); kpiT2: the same with a second
-// paragraph (the box keeps its width, the icon's room goes to the title as no-break spaces); cardK: a card with its own
-// title and a small icon on it (to the card's other end); tbl: a table with a bar chart drawn over it (kept on it, its
-// direction kept); mx: a matrix with a card in its right margin (narrowed off its row headers) and a column chart under
-// it lined up with its grid (heatmap rows and columns: its names table, the chart kept lined up); noteI: an icon on a
-// panel, lying on a text box over that panel (to the text box's other end with its text); cardPI: an icon on a card
-// with no title, kept on it it would lie on mark, which it does not touch in English (mirrored on its own)
-const pos = (x, y, width, height, z) => ({ x, y, width, height, z, tabOrder: z });
-const run = (value, pt) => ({ value, textStyle: { fontFamily: 'Segoe UI', fontSize: (pt || 14) + 'pt' } });
-const tb = (name, p, paragraphs) => ({ $schema: VS, name, position: p, visual: { visualType: 'textbox', objects: { general: obj({ paragraphs }) } } });
-const img = (name, p) => ({ $schema: VS, name, position: p, visual: { visualType: 'image', objects: { general: obj({ imageUrl: Q('synthetic.svg') }) } } });
-const titled = (text) => ({ title: obj({ show: L('true'), text: Q(text) }) });
-const GEO = { pages: [{ id: 'p0', width: 1280, height: 720, visuals: [
-  tb('kpiT', pos(40, 40, 300, 60, 1000), [{ textRuns: [run('\t\t\t\t'), run('Calls answered')], horizontalTextAlignment: 'left' }]),
-  img('kpiI', pos(46, 48, 40, 40, 2000)),
-  tb('kpiT2', pos(40, 120, 300, 90, 3000), [{ textRuns: [run('\t\t\t\t'), run('Talk time')], horizontalTextAlignment: 'left' }, { textRuns: [run('Average per call', 10)], horizontalTextAlignment: 'left' }]),
-  img('kpiI2', pos(46, 128, 40, 40, 4000)),
-  { $schema: VS, name: 'cardK', position: pos(400, 40, 300, 120, 5000), visual: { visualType: 'card', query: query({ Values: [fmea()] }), visualContainerObjects: titled('Revenue this year') } },
-  img('cardI', pos(410, 46, 28, 28, 6000)),
-  { $schema: VS, name: 'cardP', position: pos(740, 40, 300, 100, 12000), visual: { visualType: 'card', query: query({ Values: [fmea('Third')] }) } },
-  img('cardPI', pos(750, 50, 40, 40, 13000)), img('mark', pos(1020, 55, 60, 30, 14000)),
-  { $schema: VS, name: 'tbl', position: pos(40, 260, 520, 300, 7000), visual: { visualType: 'tableEx', query: query({ Values: [fcol('Category'), fmea()] }), visualContainerObjects: titled('Categories') } },
-  { $schema: VS, name: 'barOn', position: pos(300, 300, 200, 160, 8000), visual: { visualType: 'clusteredBarChart', query: query({ Category: [fcol('Category')], Y: [fmea()] }) } },
-  { $schema: VS, name: 'mx', position: pos(700, 260, 400, 260, 9000), visual: { visualType: 'pivotTable', query: query({ Rows: [fcol('Weekday')], Columns: [fcol('Hour')], Values: [fmea()] }),
-    objects: { subTotals: obj({ rowSubtotals: L('false'), columnSubtotals: L('false') }), grid: obj({ textSize: L('10D') }) } } },
-  { $schema: VS, name: 'side', position: pos(1080, 300, 120, 200, 10000), visual: { visualType: 'card', query: query({ Values: [fmea('Other')] }) } },
-  { $schema: VS, name: 'panel', position: pos(40, 580, 560, 130, 100), visual: { visualType: 'shape', objects: { shape: obj({ tileShape: Q('rectangle') }) } } },
-  tb('note', pos(50, 590, 300, 40, 200), [{ textRuns: [run('Read me first')], horizontalTextAlignment: 'left' }]),
-  img('noteI', pos(60, 592, 30, 30, 300)),
-  { $schema: VS, name: 'hrs', position: pos(712, 530, 380, 120, 11000), visual: { visualType: 'clusteredColumnChart', query: query({ Category: [fcol('Hour')], Y: [fmea()] }) } }
-] }] };
-
-const hm1 = (n) => JSON.parse(fs.readFileSync(path.join(HERE, 'fixtures/hm1', n + '.json'), 'utf8'));
-const CASES = H.SP11_CASES.concat([
-  ...['N1-25', 'M1-1', 'F1-1'].map((n, i) => [`T${19 + i} hm1's ${n}`, 'h' + n, () => materialize(hm1(n), path.join(ROOT, 'h' + n)), { path: 'h' + n + '/Synthetic.pbip', arabicMonth: false }]),
-  ['T22 the geometry project, its own report', 'g1', () => materialize(GEO, path.join(ROOT, 'g1')), { path: 'g1/Synthetic.pbip', arabicMonth: false }],
-  ['T23 the geometry project, both languages in one report', 'g2', () => materialize(GEO, path.join(ROOT, 'g2')), { path: 'g2/Synthetic.pbip', arabicMonth: false, into: 'same' }]
-]);
+const { ROOT, rd } = H;
+const CASES = H.SP26_CASES;   // (the geometry project and the 23 runs: fixtures/twin-runs.mjs, SP40)
 
 const { got, plans } = await H.runCases(CASES, problems);
 if (process.env.SP26_DUMP) fs.writeFileSync(process.env.SP26_DUMP, JSON.stringify({ got, plans }, null, 1));
