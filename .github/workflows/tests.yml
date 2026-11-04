@@ -377,16 +377,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # (CI2) 2 jobs, not 5 (each job a chance to wait for a runner): each runs its plan shards in turn, the same plan
+        # (CI2) 3 jobs, not 5 (each job a chance to wait for a runner): each runs its plan shards in turn, the same plan
         # shards k 0-4 as Linux and Windows (test.mjs's part k, a SKIP in shard 0, and the mcp/tests.json suites
         # planShards deals to k on macOS by mcp/test-times.json), each with its own log and manifest, so ci-sum checks
-        # every shard against the same plan and counts each suite once. Measured on arm64 (CI2 note): about 21 and
-        # 15 min. --keep-going, and a failed shard does not stop the next one; the job fails at its end.
+        # every shard against the same plan and counts each suite once. Grouped by the seconds measured on this Intel
+        # runner (run 41891982211: shards 0-4 928, 585, 860, 545, 566 s; 2 jobs of 0-2 and 3-4 hit the 40 minutes):
+        # 928, 1405 and 1151 s. --keep-going, and a failed shard does not stop the next one; the job fails at its end.
         include:
           - job: 0
-            shards: 0 1 2
+            shards: 0
           - job: 1
-            shards: 3 4
+            shards: 2 3
+          - job: 2
+            shards: 1 4
     defaults:
       run:
         shell: bash
