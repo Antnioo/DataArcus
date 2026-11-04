@@ -12,7 +12,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
 import { withPlans } from './test-plan.mjs';
-import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
+import { serverSource, generatorSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const req = createRequire(import.meta.url);
@@ -67,7 +67,7 @@ export async function v029designEngine({ check }) {
     chk(() => pages.length === 2 && pages.every((p) => p.slots.filter((s) => s.kind === 'kpi').length === 2), () => `A2-4: maxKpis (the report's measures) caps every page: ${JSON.stringify(pages.map && pages.map((p) => p.slots.filter((s) => s.kind === 'kpi').length))}`);
     const two = get(() => E.projectPages(design({ preset: 'exec', kpis: 2 }).layout, 'en', { second: true }));
     chk(() => two.map((p) => p.slots.filter((s) => s.kind === 'kpi').length).join() === '2,2', () => `A2-4: a page with fewer cards than its layout plans keeps the second page at that count: ${JSON.stringify(two.map && two.map((p) => p.slots.filter((s) => s.kind === 'kpi').length))}`);
-    chk(() => !/c\.kpiCards/.test(src('assets/js/design-engine.js')) && !/kpiCards/.test(src('assets/js/theme-generator.js').replace(/\/\/[^\n]*/g, '')) && !/kpiCards/.test(src('mcp/lib/design.mjs').replace(/\/\/[^\n]*/g, '')),
+    chk(() => !/c\.kpiCards/.test(src('assets/js/design-engine.js')) && !/kpiCards/.test(generatorSource().replace(/\/\/[^\n]*/g, '')) && !/kpiCards/.test(src('mcp/lib/design.mjs').replace(/\/\/[^\n]*/g, '')),
       () => 'A2-4: no kpiCards in the engine (but the older-design repair), the website or design.mjs');
   }
 
@@ -131,7 +131,7 @@ export async function v029designEngine({ check }) {
     const u = E.PRESETS.Midnight.ui, ro = get(() => E.roles(u));
     chk(() => ro.secondary === E.mix(u.text, u.card, 0.35) && ro.tertiary === E.mix(u.text, u.card, 0.6) && ro.grid === E.mix(u.text, u.card, 0.85) && ro.gridline === E.mix(u.text, u.card, 0.8)
       && E.buildTheme(Object.assign(base(), { ui: u, layout: design({}).layout }), 'en').foregroundNeutralSecondary === ro.secondary, () => `A2-10: E.roles: ${JSON.stringify(ro)}`);
-    const tg = src('assets/js/theme-generator.js'), en = src('assets/js/design-engine.js');
+    const tg = generatorSource(), en = src('assets/js/design-engine.js');   // (0.3.2 SP31: the page and its modules)
     chk(() => !/mix\(u\.text, u\.card, 0\.(35|85|8)\)/.test(tg) && (en.match(/mix\(u\.text, u\.card, 0\.35\)/g) || []).length === 1, () => 'A2-10: the derived colours are computed once (E.roles), not in the website page');
   }
 
@@ -171,7 +171,7 @@ export async function v029designEngine({ check }) {
   {
     const r = get(() => D.planLayout({ dir: 'up', lang: 'en' })), d2 = get(() => D.planLayout({ design: Object.assign(base(), { layout: { dir: 'sideways' } }), lang: 'en' }));
     chk(() => (r.repaired || []).some((x) => x.field === 'layout.dir') && (d2.repaired || []).some((x) => x.field === 'layout.dir'), () => `seen: a bad dir is reported, not reset without a word: ${JSON.stringify(r.repaired)} ${JSON.stringify(d2.repaired)}`);
-    chk(() => !/rx="18"/.test(src('assets/js/theme-generator.js')), () => 'seen: the layout thumbnails use the design\'s radius, not a fixed rx="18"');
+    chk(() => !/rx="18"/.test(generatorSource()), () => 'seen: the layout thumbnails use the design\'s radius, not a fixed rx="18"');
   }
 }
 

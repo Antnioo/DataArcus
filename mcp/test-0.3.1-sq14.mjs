@@ -35,7 +35,7 @@ const SRC = (f) => fs.readFileSync(path.join(REPO, f), 'utf8');
   chk(() => MONTHS_AR === AC.MONTHS, () => 'M5. the shadow model\'s Arabic months are arabic-calendar\'s MONTHS');
   // no other list left in the sources (a month name that is a word of a sentence is not a list: two or more in a row)
   const LIST = new RegExp(AC.MONTHS.slice(0, 2).map((m) => `['"]${m}['"]`).join('\\s*,\\s*'));
-  const own = ['assets/js/pbip-query.js', 'assets/js/calendar-generator.js', 'assets/js/label-limits.js', 'assets/js/theme-generator.js', 'mcp/lib/shadow-model.mjs'].filter((f) => LIST.test(SRC(f)));
+  const own = ['assets/js/pbip-query.js', 'assets/js/calendar-generator.js', 'assets/js/label-limits.js', 'assets/js/theme-generator.js', 'assets/js/theme-state-ui.js', 'assets/js/theme-layout-ui.js', 'assets/js/theme-download-ui.js', 'mcp/lib/shadow-model.mjs'].filter((f) => LIST.test(SRC(f)));
   chk(() => !own.length, () => `M6. no Arabic month list of their own: ${own.join(', ')}`);
   // the website: a page that loads a reader loads arabic-calendar.min.js before it (both copies)
   const READERS = ['theme-generator.min.js', 'calendar-generator.min.js'];

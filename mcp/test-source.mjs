@@ -4,6 +4,7 @@
 //   serverSource()  mcp/server.mjs, then each tool's module in the order server.mjs registers them (tools/list's order),
 //                   then the lib/ modules made of what server.mjs shared between its tools
 //   twinSource()    mcp/lib/arabic-twin.mjs (what others import), then its steps in the order they run
+//   generatorSource()  assets/js/theme-generator.js, then the modules it mounts (the website's Theme Generator)
 // A file that is not there yet is left out (the lists hold the files the split makes).
 import fs from 'node:fs';
 import path from 'node:path';
@@ -31,3 +32,8 @@ export const twinSource = () => twinFiles().map(read).join('\n');
 export const WRITER_PAGE = ['../assets/js/pbip-page.js', '../assets/js/pbip-visuals.js', '../assets/js/pbip-visuals-charts.js', '../assets/js/pbip-visuals-tables.js'];
 export const writerPageFiles = () => WRITER_PAGE.filter(there);
 export const writerPageSource = () => writerPageFiles().map(read).join('\n');
+
+// the website's Theme Generator (0.3.2 SP31, the split of theme-generator.js): the page's orchestration and every script
+// loader with its ?v= stamp, then its saved design, its controls and layout step, its downloads
+export const GENERATOR_FILES = ['../assets/js/theme-generator.js', '../assets/js/theme-state-ui.js', '../assets/js/theme-layout-ui.js', '../assets/js/theme-download-ui.js'];
+export const generatorSource = () => GENERATOR_FILES.filter(there).map(read).join('\n');

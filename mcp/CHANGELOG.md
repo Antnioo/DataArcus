@@ -140,6 +140,9 @@ package's manifest; this file says what is in it.
   the native visuals that could replace a custom one, and what the plan says about the one chosen each have a file of
   their own; every custom visual gets the same native choice, confidence, losses and plan line as before, and nothing is
   replaced until you approve it.
+- **Inside the Theme Generator page:** the saved design, the colour and layout controls, and the downloads (with the
+  reminder when a downloaded file is out of date) each have a file of their own; the page shows, saves and downloads
+  exactly what it did before.
 
 ## [0.3.1]: 2026-11-03 (the version for testers)
 Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports
