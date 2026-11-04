@@ -125,6 +125,10 @@ package's manifest; this file says what is in it.
 - **Inside the SVG KPI Designer, dragging and the panels:** moving and resizing on the canvas, and the layer list,
   the properties and the data panels each have a file of their own; every click, drag, edit, undo and redo works
   exactly as before.
+- **Inside the MCP, custom visuals, the native choice:** checking a native visual against Microsoft's rules, ranking
+  the native visuals that could replace a custom one, and what the plan says about the one chosen each have a file of
+  their own; every custom visual gets the same native choice, confidence, losses and plan line as before, and nothing is
+  replaced until you approve it.
 
 ## [0.3.1]: 2026-11-03 (the version for testers)
 Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports
