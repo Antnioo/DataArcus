@@ -19,7 +19,7 @@
 //       is not an object                                            R6  a planned page from memory (order kept as given)
 //   C1  every case was reached
 //   after step 1: P1 model-discovery.mjs exports the moved names, model.mjs re-exports the same ReadError and defines
-//   none of them; P2 discovery lists folders only (imports node:fs, node:path, ./model-names.mjs; no open, read or
+//   none of them; P2 discovery lists folders only (imports node:fs, node:path, ./model-names.mjs, and since DD1G the pure ../../assets/js/model-nearest.js; no open, read or
 //   realpath) and the containment and capped reads stay in model.mjs
 //   after step 2: P3 report-inventory.mjs exports the moved names, read-report.mjs re-exports the same functions and
 //   defines none of them; P4 report-inventory.mjs has no fs (imports only ./read-report.mjs, ./visual-meaning.mjs,
@@ -321,7 +321,7 @@ if (fs.existsSync(path.join(HERE, 'lib', 'model-discovery.mjs'))) {
   const D = await import('./lib/model-discovery.mjs'), ms = srcOf('model.mjs'), ds = srcOf('model-discovery.mjs');
   chk(() => DISCOVERY.every((k) => typeof D[k] === 'function') && M.ReadError === D.ReadError && !DISCOVERY.some((k) => defines(ms, k)) && /from '\.\/model-discovery\.mjs'/.test(ms),
     () => `P1: model-discovery.mjs exports ${DISCOVERY.filter((k) => typeof D[k] !== 'function')} missing; model.mjs re-exports its ReadError (${M.ReadError === D.ReadError}) and defines none of them (${DISCOVERY.filter((k) => defines(ms, k))})`);
-  chk(() => JSON.stringify(importsOf(ds).sort()) === JSON.stringify(['./model-names.mjs', 'node:fs', 'node:path']) && !/\b(openSync|readSync|readFileSync|createReadStream|realpathSync|writeFileSync|mkdirSync|rmSync|renameSync|unlinkSync|symlinkSync|process\.env)\b/.test(code(ds))
+  chk(() => JSON.stringify(importsOf(ds).sort()) === JSON.stringify(['../../assets/js/model-nearest.js', './model-names.mjs', 'node:fs', 'node:path']) && !/\b(openSync|readSync|readFileSync|createReadStream|realpathSync|writeFileSync|mkdirSync|rmSync|renameSync|unlinkSync|symlinkSync|process\.env)\b/.test(code(ds))
     && !CONTAINMENT.some((k) => defines(ds, k)) && CONTAINMENT.every((k) => defines(ms, k)) && /Interface:/.test(ds),
     () => `P2: model-discovery.mjs lists folders only (imports ${importsOf(ds)}), says its Interface, and the containment and capped reads stay in model.mjs (there: ${CONTAINMENT.filter((k) => defines(ds, k))}; missing from model.mjs: ${CONTAINMENT.filter((k) => !defines(ms, k))})`);
 }

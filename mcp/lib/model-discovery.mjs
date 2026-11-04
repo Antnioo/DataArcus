@@ -14,10 +14,10 @@
 // No state: every answer comes from its arguments and the folders listed at the call.
 import fs from 'node:fs';
 import path from 'node:path';
-import { createRequire } from 'node:module';
 import { shownPath } from './model-names.mjs';
-// the nearest-model rule is the site's and the MCP's one file (DD1G)
-const { nearest } = createRequire(import.meta.url)('../../assets/js/model-nearest.js');
+// the nearest-model rule is the site's and the MCP's one file (DD1G): a pure module, no folder is read by it
+import Nearest from '../../assets/js/model-nearest.js';
+const { nearest } = Nearest;
 
 // A reading error: a code and its data, for the tool layer to word (A1-9, the audit of the reading block: the reader
 // spoke as the MCP tool). Its message is a plain fallback that names no tool.
