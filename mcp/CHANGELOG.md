@@ -125,6 +125,9 @@ package's manifest; this file says what is in it.
 - **Inside the SVG KPI Designer, dragging and the panels:** moving and resizing on the canvas, and the layer list,
   the properties and the data panels each have a file of their own; every click, drag, edit, undo and redo works
   exactly as before.
+- **Inside the website's language switch:** which pages have an Arabic copy and which translations each page uses,
+  loading the translations, and putting them on the page (its text, direction and share previews) each have a file of
+  their own; every page opens in the same language, reads and switches exactly as before.
 
 ## [0.3.1]: 2026-11-03 (the version for testers)
 Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports

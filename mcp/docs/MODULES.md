@@ -21,7 +21,9 @@ task routes.
   the preview renderer (`page-preview.js`) and the SVG KPI compiler (`svg-kpi-compiler.js`; its expression tree and
   preview evaluator `svg-expressions.js`, its SVG text safety `svg-escape.js`, its DAX code generation `svg-codegen.js`;
   the designer's state, selection and undo history `svg-editor-store.js`, its canvas pointer `svg-editor-pointer.js`,
-  its panels `svg-editor-panels.js`).
+  its panels `svg-editor-panels.js`), and the website's language (`lang-manager.js`, the orchestration: detection, the
+  explicit choice and its storage, the switcher; its locales and page routes `locale-routes.js`, its dictionaries
+  `locale-catalog.js`, the page's text, direction and meta tags `locale-dom.js`; every page loads the three before it).
 - **The MCP server** (`mcp/server.mjs`, stdio): 11 tools, from `read_model` to `check_report` (every tool and option:
   `mcp/TOOLS.md`). Its modules are in `mcp/lib/`:
   - reading: `model.mjs` (models from disk, every path kept inside the working folder), `model-names.mjs` (the
