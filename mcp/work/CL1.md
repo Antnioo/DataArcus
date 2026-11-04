@@ -13,20 +13,45 @@
   by one line added in memory, the file never changed; a name nested in another function, page-only, or a lib's
   unexported one read from its source and said so), run on the same made-up inputs (8 or more a family), one table a
   family, disagreements marked. (2) the ledger. (3) the check, its red proofs, one CI step. (4) the two pointers.
-- **Expected checks:** 18 families (12-20), about 80 places, 8 or more inputs each; `PASS  contracts-probe`,
+- **Expected checks:** (first round) 18 families (12-20), about 80 places, 8 or more inputs each; `PASS  contracts-probe`,
   `PASS  contracts`, `PASS  test-contracts` (red: a file gone, a function gone, too few inputs, a place on one side
   only); unchanged: modules (`--strict` too), agent-memory, result-lines, lint 0.
-- **Got:** families **18**, places **93** (a function once for each family it answers; 48 files), disagreeing
-  families **12** (1a, 1b-text, 1b-number, 1b-bool, 1c, 1d, 1f, vt-slicer, vt-bar, order, overlap, html); agreeing 6
-  (vt-table, canon, crc, contrast, xml, decode). `PASS  contracts-probe  1235 checks (18 families, 93 places, 12
-  families disagree)`; `PASS  contracts  590 checks (18 families, 93 places)`; `PASS  test-contracts  13 checks`
-  (red: a file gone, a function renamed, an outer function gone, a name no longer inside it, a wrong MODULES.md link,
-  7 inputs, a place on one side only (both ways), a family on one side only (both ways), the top table's places,
-  inputs and a missing row, a "Not one" name gone, no ledger; green on the repo; the command's PASS and FAIL lines).
-  modules 1033 (`--strict` the same), test-modules 11, agent-memory green, result-lines 192, lint 0.
-- **Commits:** f22d80a (plan), ff1ab81 (probe), 401936a (ledger), b5729f7 (check, CI step), then the pointers.
-- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41851946104 on 893565f3. **State: DONE.**
-- **Resume:** the reviewer's read of the proposals; "newest copy" from the stale-twins history job.
+- **Got (first round):** 18 families, 93 places, 12 disagreeing; CI green on 893565f3 (run 41851946104).
+- **The reviewer's input (the Codex history audit, 3a9ad5e8, a scheduled message, 14:34):** the "newest copy" column
+  filled and checked against the code and the probe; 1g and 1h added; the audit's Phase 2 copies added (u32, lru,
+  png-chunk, limits, text-runs, blank, tmdl-name probed; toast, the copy fallback, the worker's address, the area labels
+  in an "Equal copies" table the check pins by text); grid replaces vt-table; overlap split (overlap, overlap-area);
+  order out (two questions); the audit's "Not one question" added. Where the probe disagrees: "## Where I disagree".
+- **Got:** families **27**, places **117** (56 files), disagreeing families **16** (1a, 1b-text, 1b-number, 1b-bool,
+  1c, 1d, 1f, 1g, 1h, vt-slicer, vt-bar, html, tmdl-name, limits, text-runs, blank); 11 agree. `PASS  contracts-probe
+  1442 checks (27 families, 117 places, 16 families disagree)`; `PASS  contracts  803 checks (27 families, 117
+  places)`; `PASS  test-contracts  14 checks` (the 13 before, and an equal copy that drifts, a copy of one place, a "no"
+  row not compared). modules 1033 (`--strict` too), agent-memory 419, result-lines 192, lint 0.
+- **Commits:** f22d80a (plan), ff1ab81 (probe), 401936a (ledger), b5729f7 (check, CI step), 893565f (pointers),
+  a53742d (CI line), 9c3039c (probe: the audit), 207b2df (ledger: the audit), a95e816 (check: equal copies).
+- **Resume:** the reviewer's read of the proposals and of "Where I disagree".
+
+## Where I disagree with the audit (the probe and the code, 4 Nov)
+- **1c:** the audit's newest copy is right (`aroundTables` `widthOf`, fe62655b), but twin-geometry.mjs holds a second
+  reader, `underGrids` `widthIn`, that answers undefined where `aroundTables` gives the page's width (no box, a box with
+  no height, a text width). One file, two answers.
+- **html** ("XML/HTML escapes equal"): XML is equal; HTML is not: null and undefined give `""` in six copies and
+  "null" / "undefined" in three, and measure-builder.js `escapeHtml` leaves `'`.
+- **TMDL names** ("equal"): model-health-tmdl.js and measure-builder.js write `Sales-2024` bare, the four MCP copies
+  quote it.
+- **import limits** ("equal"): the four sizes are equal; model-import-browser.js has no `entries` (it never opens a ZIP:
+  no answer changes).
+- **paragraph text runs** ("equal"): two pairs, each equal (layout-check and report-inventory: " / " joined, trimmed,
+  0 kept; report-a11y and page-preview: " " joined, untrimmed, 0 dropped).
+- **BLANK arithmetic** ("equal"): equal for minus; for a division by BLANK or by 0 svg-expressions.js throws DIV0 and
+  svg-editor-panels.js gives BLANK.
+- **toast** ("equal"): svg-kpi-designer.js's lasts 2200 ms, the other three 1800 ms (found by the check's text pin);
+  exam-view.js 2200 and health-view.js 1800. **Copy fallback:** four select their own element; health-view.js copies
+  through a textarea. **Area labels:** the English words are equal.
+- **B-326:** named in the "Not one" list as the audit gives it; no file or note in the repo names B-326, so no place.
+- Agreed after checking: 1a (merge), 1b and 1d (merge, tagged decoder; dax-functions 24L NaN), 1f, 1g, 1h (and
+  mcp/test.mjs's parity test gives types and no suffix), canon, crc, png-chunk, u32, lru, contrast, xml, decode, grid,
+  overlap; the not-one list.
 
 ## Decisions I made
 - 1b as three families (text, number, true/false): each reader answers one type, and the proposals differ.
@@ -51,7 +76,10 @@ The decided answers that need him (each proposal in CONTRACTS.md; the reviewer f
 - 1c frame: a group without a full box: the page's width, or nothing (the twin mirrors and fits in different widths).
 - vt-slicer: filterSlicer a slicer in the twin and the preview too (a Desktop check first).
 - order: the twin's text list in check_report's reading order (bilingual.texts' order changes).
-- 1b, 1d, 1f, vt-bar, overlap, html: one reader each, as proposed (no answer for a real literal changes but `12L`).
+- 1g: the website refuses two equally near models, as the MCP does (a message on the page).
+- 1h: the health check's fix script finds a sort column for an untyped "Month Number" and "Day Name (Arabic)".
+- blank: which DAX the SVG KPI's division mirrors (`/` or DIVIDE).
+- 1b, 1d, 1f, vt-bar, html, tmdl-name, text-runs: one reader each, as proposed.
 
 ## Risky changes
 none (no code moved; one CI step added).
@@ -67,6 +95,8 @@ none (no code moved; one CI step added).
 ## Lessons for the reviewer
 - The probe needs `cd mcp && npm ci` (the twin's modules load through the MCP's packages); `--md` gives the ledger's
   "Today" blocks, `--json` every answer. Not in CI: a snapshot, re-run when a family's code changes.
+- The text pin of "Equal copies" found a drift the audit called equal (a toast's time): a copy that cannot be probed
+  can still be pinned by its text.
 - The brief's "about 31 readers": 32 named readers (18 text, 8 number, 6 true/false), plus inline reads not named.
 - Golden tests that pin a place are not mapped yet (the "who sees it" cells name tools and pages); "newest copy" is
   left "(to come)" for the stale-twins history.
