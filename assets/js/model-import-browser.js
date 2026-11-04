@@ -4,6 +4,7 @@
  * Inputs: a project's .SemanticModel (or older .Dataset) folder (TMDL or model.bim), a model.bim, or a .pbit (unzipped
  * by the Model Health Check's worker). A .pbix is refused, and so is a file over the limits, before it is read.
  * (0.3.2 SP14: moved from pbip-bind.js, which keeps fromFolder and fromFile by forwarding to this file.)
+ * which model folder a chosen folder means: model-nearest.js's (the MCP's rule; two at the nearest depth are refused).
  * readers: pbip-bind.js's own { fromTmsl, relsOfTmsl, clean, tmdl } (tmdl: tmdl-model.js), handed over, never copied.
  * (c) DataArcus. All rights reserved.
  */
@@ -18,6 +19,7 @@
   // The MCP reader's limits (mcp/lib/model.mjs PBIT_LIMITS, the Health Check worker's too): a file over them is refused
   // before it is read (the audit of the reading block, "seen": the website read a model.bim of any size)
   const MB = 1024 * 1024, LIMITS = { model: 64 * MB, entry: 32 * MB, total: 128 * MB, file: 300 * MB };
+  const Nearest = () => (typeof module !== 'undefined' && module.exports ? require('./model-nearest.js') : root.DAModelNearest);
   const tooBig = () => new Error('TOO_BIG');
   // A folder from <input webkitdirectory>: the .SemanticModel folder itself, or a project folder holding one.
   // A model is known by its whole path, not its name: a copy with the same name in a subfolder (a backup) is another
@@ -27,10 +29,13 @@
     const files = Array.from(fileList || []), rel = (f) => f.webkitRelativePath || f.name;
     // .Dataset is the older name of the model folder, still in Microsoft's own definition.pbir example
     const modelOf = (f) => { const m = rel(f).match(/^((?:[^/]+\/)*?[^/]+\.(?:SemanticModel|Dataset))\//i); return m ? m[1] : null; };
-    const depth = (p) => p.split('/').length;
-    const models = [...new Set(files.map(modelOf).filter(Boolean))].sort((a, b) => depth(a) - depth(b) || (a < b ? -1 : a > b ? 1 : 0));
+    const models = [...new Set(files.map(modelOf).filter(Boolean))];
     if (!models.length) throw new Error('NO_SEMANTIC_MODEL');
-    const path = models[0], folder = path.replace(/^.*\//, ''), inside = files.filter((f) => modelOf(f) === path);
+    // (0.3.2 DD1G) which model is model-nearest.js's, the MCP's rule too: two at the nearest depth (two projects side by
+    // side) are refused with both named, before any file is read; a deeper copy (a backup) never wins
+    const near = Nearest().nearest(models, '/');
+    if (near.tied.length > 1) throw Object.assign(new Error('MANY_MODELS'), { models: near.tied });
+    const path = near.path, folder = path.replace(/^.*\//, ''), inside = files.filter((f) => modelOf(f) === path);
     const bim = inside.find((f) => /\/model\.bim$/i.test(f.webkitRelativePath || f.name));
     let tables, relationships = [];
     if (bim && (bim.size || 0) > LIMITS.model) throw tooBig();

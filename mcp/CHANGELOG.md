@@ -5,6 +5,8 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **The site now asks which model, as the MCP does:** choose a folder with two models side by side and the page names both
+  and asks you to choose the model's own folder, instead of quietly using the first one by name.
 - **The Arabic twin, a visual in a broken group:** a visual inside a group whose size is not a usable number (a width
   of 0, below 0, or text) is now mirrored, kept on its table and given room for its button inside its page, the same
   frame every step uses; before, one step could place it in the broken group and another in the page.
