@@ -55,6 +55,10 @@ jobs:
       - name: The agent's startup pack within its caps; every link and task route resolves
         run: node scripts/test-agent-memory.mjs && node scripts/check-agent-memory.mjs
 
+      # (MD1, 0.3.2) mcp/docs/MODULES.md "## Every module": one row per module file, every row's file and caller real
+      - name: Every module has its one row in MODULES.md
+        run: node scripts/test-modules.mjs && node scripts/check-modules.mjs
+
       - name: The MCP CHANGELOG's [Unreleased] section is in plain words (no internal codes; users read it)
         run: node scripts/test-changelog-words.mjs && node scripts/changelog-words.mjs
 
