@@ -3,7 +3,7 @@
 // its sample through its worker and shows a score. The rendered text of every tab, EN and AR, is sp9's suite (its
 // records unchanged).
 //   W1, W2  EN and AR: the sample is checked through the worker; a score shows, no error
-//   W3      (after a move) the page asked for dax-reference-parser, model-index, health-rules, health-confirm (the ones
+//   W3      (after a move) the page asked for dax-reference-parser, model-index, health-texts, health-rules, health-confirm (the ones
 //           that exist), then model-health-engine
 import fs from 'node:fs';
 import path from 'node:path';
@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { visitor } from './lib.mjs';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const NAMES = ['dax-reference-parser', 'model-index', 'health-rules', 'health-confirm', 'model-health-engine'];
+const NAMES = ['dax-reference-parser', 'model-index', 'health-texts', 'health-rules', 'health-confirm', 'model-health-engine'];
 
 export default async function ({ browser, url }) {
   const problems = []; let checks = 0;
@@ -22,7 +22,7 @@ export default async function ({ browser, url }) {
   for (const lang of ['en', 'ar']) {
     const v = await visitor(browser, { viewport: [1440, 900] });
     const asked = [];
-    v.ctx.on('request', (r) => { const m = /\/(dax-reference-parser|model-index|health-rules|health-confirm|model-health-engine)\.min\.js/.exec(r.url()); if (m) asked.push(m[1]); });
+    v.ctx.on('request', (r) => { const m = /\/(dax-reference-parser|model-index|health-texts|health-rules|health-confirm|model-health-engine)\.min\.js/.exec(r.url()); if (m) asked.push(m[1]); });
     await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=${lang}`, { waitUntil: 'networkidle' });
     await v.pg.click('#mhSample');
     await v.pg.waitForSelector('#mhTab, .mh-error', { timeout: 30000 });

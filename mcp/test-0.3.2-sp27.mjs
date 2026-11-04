@@ -12,7 +12,7 @@ import './test-env.mjs';
 //   C1      the cases raise every rule, ask every question, skip a check, keep the incomplete model's warning
 //   after the rules move: H1 health-rules.js holds the catalogue and the rules (no score), the engine requires it and
 //   exports the same RULES;  H2 runRules is pure (its input unchanged, twice the same, findings without score fields);
-//   H3 the load order (the worker, both tool pages)
+//   H3 the load order (the worker, both tool pages);  T1 (follow-up) health-texts.js holds the catalogue, data only
 //   after the questions move: F1 health-confirm.js holds pleaseConfirm (no score, no require);  F2 pure (a frozen
 //   model, twice the same, no score fields);  F3 the load order
 //   node test-0.3.2-sp27.mjs
@@ -33,6 +33,7 @@ const sha = (t) => crypto.createHash('sha256').update(t).digest('hex');
 const GOLD = path.join(HERE, 'fixtures', 'sp27-health.json');
 const SRC = (f) => fs.readFileSync(path.join(REPO, f), 'utf8');
 const Health = require('../assets/js/model-health-engine.js');
+const TEXTS_AFTER = fs.existsSync(path.join(JS, 'health-texts.js'));
 const RULES_AFTER = fs.existsSync(path.join(JS, 'health-rules.js')), CONFIRM_AFTER = fs.existsSync(path.join(JS, 'health-confirm.js'));
 
 const ROOT = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-sp27-')));
@@ -130,7 +131,7 @@ if (RULES_AFTER || CONFIRM_AFTER) {
 if (RULES_AFTER) {
   const R = require('../assets/js/health-rules.js'), rsrc = SRC('assets/js/health-rules.js');
   chk(() => typeof R.runRules === 'function' && R.RULES === Health.RULES && R.BPA_URL === Health.BPA_URL && Object.keys(R.RULES).length === 37
-    && JSON.stringify(requiresOf(rsrc)) === JSON.stringify(['./dax-reference-parser.js', './model-index.js'])
+    && JSON.stringify(requiresOf(rsrc)) === JSON.stringify(['./dax-reference-parser.js', './model-index.js'].concat(TEXTS_AFTER ? ['./health-texts.js'] : []))
     && !/penalty|scoreFrom|\bSCOPE\b|\bCAP\b|\bSEV\b|pleaseConfirm|function analyze/.test(rsrc) && /Input:/.test(rsrc) && /Output:/.test(rsrc)
     && !/\bconst RULES = |\bconst SOURCES = |function runRules/.test(esrc) && requiresOf(esrc).includes('./health-rules.js'),
   () => 'H1 health-rules.js holds the catalogue and the rules (no score; it requires the parser and the index only; its interface written at its top); the engine requires it and exports the same RULES and BPA_URL');
@@ -140,10 +141,19 @@ if (RULES_AFTER) {
       && out.findings.every((f) => Object.keys(f).join() === 'id,items' && f.items.every((it) => !SCORE_KEYS.some((k) => k in it)));
   }) && !/\bIX\.\w+\.(set|delete|clear)\(|\bIX\.\w+\s*=[^=]|\bIX\[/.test(rsrc),
   () => `H2 runRules is pure: the engine's output unchanged through it (${sameOut}), its input unchanged, twice the same, { findings, skipped } out with no score fields (${watched.rules.length} calls)`);
-  chk(() => order(imp, ['dax-reference-parser', 'model-index', 'health-rules', 'model-health-engine']) && pages.every((h) => order(h, ['dax-reference-parser', 'model-index', 'health-rules', 'model-health-engine'])),
-    () => `H3 the worker and both tool pages load dax-reference-parser, model-index, health-rules (once), then model-health-engine: worker ${imp}`);
+  const H3 = ['dax-reference-parser', 'model-index'].concat(TEXTS_AFTER ? ['health-texts'] : [], ['health-rules', 'model-health-engine']);
+  chk(() => order(imp, H3) && pages.every((h) => order(h, H3)),
+    () => `H3 the worker and both tool pages load ${H3.join(', ')} (each once) in that order: worker ${imp}`);
 }
 
+if (TEXTS_AFTER) {
+  const T = require('../assets/js/health-texts.js'), tsrc = SRC('assets/js/health-texts.js'), R = require('../assets/js/health-rules.js');
+  // data only: no require, no rule check, no score; its one statement after the data joins each rule to its source
+  chk(() => T.RULES === R.RULES && T.RULES === Health.RULES && T.BPA_URL === Health.BPA_URL && Object.keys(T.RULES).length === 37
+    && !requiresOf(tsrc).length && !/tokenizeDax|daxCode|\bIX\b|\bK\.|runRules|penalty|scoreFrom|pleaseConfirm|\bfunction \w+\s*\(/.test(tsrc)
+    && Object.values(T.RULES).every((r) => r.source && r.en.length === 3 && r.ar.length === 3) && /Interface:/.test(tsrc),
+  () => 'T1 health-texts.js holds the catalogue, data only (no require, no check, no score; its interface written at its top); the rules and the engine export its RULES and BPA_URL');
+}
 if (CONFIRM_AFTER) {
   const C = require('../assets/js/health-confirm.js'), csrc = SRC('assets/js/health-confirm.js');
   chk(() => typeof C.pleaseConfirm === 'function' && !requiresOf(csrc).length && !/penalty|scoreFrom|\bRULES\b|runRules|function analyze/.test(csrc) && /Input:/.test(csrc) && /Output:/.test(csrc)
