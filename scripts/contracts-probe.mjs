@@ -570,6 +570,7 @@ export const FAMILIES = [
     ] },
   { id: 'decode', title: 'What text do the bytes of a Power BI file hold?', question: "a file's bytes: its text (UTF-16LE or UTF-8, a BOM or none)",
     inputs: FILES, places: [
+      P('assets/js/model-file.js', 'decodeText', 'export', decode),
       P('assets/js/model-health-worker.js', 'decodeText', 'source', decodeInWorker),
       P('assets/js/model-import-browser.js', 'decodeText', 'source', decode),
       P('mcp/lib/model.mjs', 'decode', 'export', decode),
@@ -612,6 +613,7 @@ export const FAMILIES = [
     ] },
   { id: 'limits', title: 'How large may a model file be?', question: 'a kind of model file or entry: the size (or count) over which it is refused before it is read',
     inputs: LIMIT_KEYS, places: [
+      P('assets/js/model-file.js', 'LIMITS', 'export', limitOf),
       P('assets/js/model-health-worker.js', 'LIMITS', 'source', limitInWorker),
       P('assets/js/model-import-browser.js', 'LIMITS', 'export', limitOf),
       P('mcp/lib/model.mjs', 'PBIT_LIMITS', 'export', limitOf),

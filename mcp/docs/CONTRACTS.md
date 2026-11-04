@@ -51,8 +51,8 @@ How it is kept true:
 | [xml How is a text escaped for XML (SVG)?](#xml-how-is-a-text-escaped-for-xml-svg) | 2 | 0 of 10 | the SVG KPIs, the flip cards | equal |
 | [html How is a text escaped for HTML?](#html-how-is-a-text-escaped-for-html) | 9 | 3 of 10 | the website's pages, the approval window | equal by the audit; the probe differs (null, `'`) |
 | [tmdl-name How is a name written in TMDL?](#tmdl-name-how-is-a-name-written-in-tmdl) | 6 | 1 of 9 | check_model_health's fix scripts, the measure builder page, the twin's model, create_report's sample | equal by the audit; the probe differs (`Sales-2024`) |
-| [decode What text do the bytes of a Power BI file hold?](#decode-what-text-do-the-bytes-of-a-power-bi-file-hold) | 3 | 0 of 10 | every model read (the MCP and the website) | equal |
-| [limits How large may a model file be?](#limits-how-large-may-a-model-file-be) | 3 | 1 of 8 | every model read (the MCP and the website) | equal by the audit; the import has no `entries` limit |
+| [decode What text do the bytes of a Power BI file hold?](#decode-what-text-do-the-bytes-of-a-power-bi-file-hold) | 4 | 0 of 10 | every model read (the MCP and the website) | one place since DD2D: `assets/js/model-file.js` `decodeText` |
+| [limits How large may a model file be?](#limits-how-large-may-a-model-file-be) | 4 | 0 of 8 | every model read (the MCP and the website) | one place since DD2D: `assets/js/model-file.js` `LIMITS` |
 | [text-runs What text does a text box hold?](#text-runs-what-text-does-a-text-box-hold) | 4 | 4 of 9 | check_report, read_report, the preview | equal by the audit for two; the probe splits them in two pairs |
 | [blank What is BLANK minus or divided by a number?](#blank-what-is-blank-minus-or-divided-by-a-number) | 2 | 3 of 10 | the SVG KPI designer page, create_report's SVG KPIs | equal by the audit; the probe differs (a division by BLANK or 0) |
 
@@ -555,21 +555,29 @@ The reviewer and the owner decide.
 
 ## decode What text do the bytes of a Power BI file hold?
 
+**One place:** assets/js/model-file.js decodeText (test mcp/test-0.3.2-dd2d.mjs).
+
 **Question:** a file's bytes: its text (UTF-16LE or UTF-8, with a BOM or none).
 
 **Newest copy:** equal (the audit and the probe).
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/model-health-worker.js` `decodeText` | [pages](MODULES.md#the-browser-pages-own-scripts) | the model health check page (its worker) |
-| `assets/js/model-import-browser.js` `decodeText` | [engines](MODULES.md#the-website-engines) | the website's model import (the field picker) |
-| `mcp/lib/model.mjs` `decode` | [reading](MODULES.md#the-mcp-reading) | every MCP tool that reads a model or a report |
+| `assets/js/model-file.js` `decodeText` | [engines](MODULES.md#the-website-engines) | the one place (DD2D): every reader below reads it |
+| `assets/js/model-health-worker.js` `decodeText` | [pages](MODULES.md#the-browser-pages-own-scripts) | the model health check page (its worker; reads model-file.js through importScripts, first) |
+| `assets/js/model-import-browser.js` `decodeText` | [engines](MODULES.md#the-website-engines) | the website's model import (the field picker; reads model-file.js) |
+| `mcp/lib/model.mjs` `decode` | [reading](MODULES.md#the-mcp-reading) | every MCP tool that reads a model or a report (reads model-file.js) |
 
 **Today:** all 3 answer the same on all 10 byte strings.
 
 **Decided answer:** today's; one copy for the website (the worker and the import), the MCP's own (self-contained).
 
 **The test that will pin it:** the probe's 10 byte strings (family `decode`).
+
+**Since DD2D (4 Nov):** one copy everywhere, the MCP too (the reviewer's call, D-1104-15: since DD1C the MCP requires
+assets/js modules and packaging stages every literal require): `assets/js/model-file.js` `decodeText` (test
+`mcp/test-0.3.2-dd2d.mjs`: the probe's 10 byte strings and 3 more, every caller as source and .min.js). No answer
+changed. The probe: one answer on all 10 inputs.
 
 ## 1g Which model folder is read?
 
@@ -704,6 +712,8 @@ Desktop look shows TMDL takes `Sales-2024` bare. The reviewer and the owner deci
 
 ## limits How large may a model file be?
 
+**One place:** assets/js/model-file.js LIMITS (test mcp/test-0.3.2-dd2d.mjs).
+
 **Question:** a kind of model file or entry: the size (or count) over which it is refused before it is read.
 
 **Newest copy:** equal by the audit; the probe: the same four sizes, and the website's import has no `entries` count
@@ -711,9 +721,10 @@ Desktop look shows TMDL takes `Sales-2024` bare. The reviewer and the owner deci
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/model-health-worker.js` `LIMITS` | [pages](MODULES.md#the-browser-pages-own-scripts) | the health check page and the website's .pbit import (the worker) |
-| `assets/js/model-import-browser.js` `LIMITS` | [engines](MODULES.md#the-website-engines) | the website's model import |
-| `mcp/lib/model.mjs` `PBIT_LIMITS` | [reading](MODULES.md#the-mcp-reading) | every MCP tool that reads a model |
+| `assets/js/model-file.js` `LIMITS` | [engines](MODULES.md#the-website-engines) | the one place (DD2D): every reader below reads it |
+| `assets/js/model-health-worker.js` `LIMITS` | [pages](MODULES.md#the-browser-pages-own-scripts) | the health check page and the website's .pbit import (the worker; reads model-file.js) |
+| `assets/js/model-import-browser.js` `LIMITS` | [engines](MODULES.md#the-website-engines) | the website's model import (reads model-file.js) |
+| `mcp/lib/model.mjs` `PBIT_LIMITS` | [reading](MODULES.md#the-mcp-reading) | every MCP tool that reads a model (the same object as model-file.js LIMITS) |
 
 **Today** (A: model-health-worker LIMITS, model PBIT_LIMITS; B: model-import-browser LIMITS):
 
@@ -724,6 +735,10 @@ Desktop look shows TMDL takes `Sales-2024` bare. The reviewer and the owner deci
 **Decided answer:** today's numbers, one object (B never needs `entries`, so the difference changes no answer).
 
 **The test that will pin it:** the probe's 8 kinds (family `limits`).
+
+**Since DD2D (4 Nov):** one frozen object, `assets/js/model-file.js` `LIMITS` (test `mcp/test-0.3.2-dd2d.mjs`); model.mjs
+`PBIT_LIMITS` is that same object. The import's object now has `entries` too (it never reads it: no answer changed). The
+probe: one answer on all 8 kinds. The "Today" table above is the ledger's snapshot before DD2D.
 
 ## text-runs What text does a text box hold?
 
