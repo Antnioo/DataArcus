@@ -6,7 +6,7 @@ import './test-env.mjs';
 // assets/js/model-index.js). On the base the engine's private functions are read by loading its file with them added
 // to its API (the file on disk is never changed). Recorded in fixtures/sp15-index.json; SP15_RECORD=1 records them again
 // (only on the base, never to make a run pass). Made-up models only: sp9's 11 (fixtures/health-models.mjs) and three
-// written here.
+// more (B1-B3, kept there too since SP27).
 //   N1-N14  each model: normalizeModel, the index (every key and the object it names), daxRefs, aggBase; for B1-B3
 //           analyze()'s whole output too (the unused fields above all)
 //   Q1      check_model_health's answer on B3 (the incomplete model: its warning first)
@@ -21,7 +21,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
-import { copyFixtures, CASES as SP9_CASES, mp, col, ms, ent } from './fixtures/health-models.mjs';
+import { copyFixtures, CASES as SP9_CASES, calcGroups, calcGroupsReport, crossTable, crossTableReport } from './fixtures/health-models.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..'), JS = path.join(REPO, 'assets/js');
 const require = createRequire(import.meta.url);
@@ -45,43 +45,7 @@ const { loadModel, unreadableOf } = await import(new URL('./lib/model.mjs', impo
 copyFixtures(ROOT);
 const viaLoader = (p) => { const m = loadModel(p, { root: ROOT }); return { model: m.tmsl, report: m.report, extra: unreadableOf(m) }; };
 
-// ---------- the three new models ----------
-// B1 calculation groups: two groups with precedence, items using measures, SELECTEDMEASURE, a format string expression
-// using a measure of another table, a group column used by a report, a group nobody uses
-const calcGroups = () => ({ compatibilityLevel: 1601, model: { culture: 'en-US', tables: [
-  { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Date', 'dateTime'), col('Unused', 'string')],
-    measures: [ms('Total', 'SUM ( Sales[Amount] )'), ms('Target', '1000'), ms('Ratio', 'DIVIDE ( [Total], [Target] )', { formatString: '0%' }), ms('Old Total', '[Total] * 2')] },
-  { name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime', { isKey: true }), col('Year', 'int64')] },
-  { name: 'Time Intelligence', partitions: [{ name: 'Time Intelligence', source: { type: 'calculationGroup' } }], calculationGroup: { precedence: 20, calculationItems: [
-    { name: 'Current', expression: 'SELECTEDMEASURE ()' },
-    { name: 'YTD', expression: "CALCULATE ( SELECTEDMEASURE (), DATESYTD ( 'Calendar'[Date] ) )", formatStringDefinition: { expression: 'IF ( ISSELECTEDMEASURE ( [Ratio] ), "0.0%", SELECTEDMEASUREFORMATSTRING () )' } },
-    { name: 'vs Target', expression: 'SELECTEDMEASURE () - [Target]' }] },
-    columns: [col('Period', 'string', { sourceColumn: 'Name' }), col('Ordinal', 'int64')] },
-  { name: 'Currency', partitions: [{ name: 'Currency', source: { type: 'calculationGroup' } }], calculationGroup: { calculationItems: [
-    { name: 'USD', expression: 'SELECTEDMEASURE () * 1', formatStringDefinition: { expression: '"$#,0"' } },
-    { name: 'Local', expression: "SELECTEDMEASURE () * MAX ( 'Rates'[Rate] )" }] },
-    columns: [col('Currency', 'string', { sourceColumn: 'Name' })] },
-  { name: 'Rates', partitions: mp('Rates'), columns: [col('Rate', 'double'), col('Code', 'string')] }],
-relationships: [{ name: 'r1', fromTable: 'Sales', fromColumn: 'Date', toTable: 'Calendar', toColumn: 'Date' }] } });
-const calcGroupsReport = () => ({ format: 'pbir', files: [
-  { path: 'definition/pages/p1/page.json', json: { name: 'p1', displayName: 'Page 1' } },
-  { path: 'definition/pages/p1/visuals/v1/visual.json', json: { visual: { visualType: 'matrix', query: { queryState: {
-    Rows: { projections: [{ field: ent('Time Intelligence', 'Period') }] }, Values: { projections: [{ field: ent('Sales', 'Ratio', 'Measure') }] } } } } } }] });
-// B2 a measure using measures of another table: a measures-only table, qualified and unqualified, a column in the
-// measure table named like another table's measure, a calculated column using a measure, a chain three deep, a virtual
-// column named like a measure (it is the virtual column, not the measure)
-const crossTable = () => ({ compatibilityLevel: 1567, model: { culture: 'en-US', tables: [
-  { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Cost', 'double'), col('Region', 'string'), col('Spare', 'string')],
-    measures: [ms('Total', 'SUM ( Sales[Amount] )'), ms('Cost Sum', 'SUM ( Sales[Cost] )')] },
-  { name: 'Metrics', partitions: mp('Metrics'), columns: [col('Total', 'double'), Object.assign(col('Flag', 'string'), { type: 'calculated', expression: 'IF ( [Total] > 0, "yes", "no" )' })],
-    measures: [ms('Margin', '[Total] - [Cost Sum]'), ms('Qualified', "Sales[Total] + 'Sales'[Cost Sum]"), ms('Margin %', 'DIVIDE ( [Margin], [Total] )', { formatString: '0%' }),
-      ms('Chain', '[Margin %] * 2'), ms('Lonely', "COUNTROWS ( 'Metrics' )"),
-      ms('Virtual Total', 'SUMX ( ADDCOLUMNS ( Sales, "Total", Sales[Amount] ), [Total] )')] },
-  { name: '_Measures', partitions: mp('_Measures'), columns: [col('Value', 'int64', { isHidden: true })], measures: [ms('Headline', 'Metrics[Chain] + [Qualified]')] }] } });
-const crossTableReport = () => ({ format: 'pbir', files: [
-  { path: 'definition/pages/p1/page.json', json: { name: 'p1', displayName: 'Page 1' } },
-  { path: 'definition/pages/p1/visuals/v1/visual.json', json: { visual: { visualType: 'card', query: { queryState: { Values: { projections: [{ field: ent('_Measures', 'Headline', 'Measure') }, { field: ent('Sales', 'Region') }] } } } } } }] });
-
+// the three new models (B1-B3): fixtures/health-models.mjs (one place for sp15 and sp27)
 const CASES = SP9_CASES(viaLoader).concat([
   ['B1 calculation groups with a PBIR report', () => ({ model: calcGroups(), report: calcGroupsReport() }), true],
   ['B2 measures using another table\'s measures, with a PBIR report', () => ({ model: crossTable(), report: crossTableReport() }), true],

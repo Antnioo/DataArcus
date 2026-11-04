@@ -14,6 +14,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { writerPageSource } from './test-source.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..'), require = createRequire(import.meta.url);
 const problems = []; let checks = 0;
@@ -90,7 +91,7 @@ const r720 = get(() => build('en', 1280, 720, s720)), r1080 = get(() => build('e
 {
   const caps = JSON.parse(fs.readFileSync(path.join(HERE, 'node_modules/@microsoft/powerbi-core-visual-schema/data/capabilities.json'), 'utf8'));
   const types = ['clusteredBarChart', 'barChart', 'hundredPercentStackedBarChart', 'clusteredColumnChart', 'columnChart', 'hundredPercentStackedColumnChart', 'lineClusteredColumnComboChart', 'lineStackedColumnComboChart'];
-  chk(() => types.every((t) => { const p = caps[t].objects.categoryAxis.properties; return p.innerPadding.type.integer && p.outerPadding.type.integer; }) && /BAND_TYPES = \/\^\(clusteredBarChart\|barChart\|hundredPercentStackedBarChart\|clusteredColumnChart\|columnChart\|hundredPercentStackedColumnChart\|lineClusteredColumnComboChart\|lineStackedColumnComboChart\)\$\//.test(src('assets/js/pbip-page.js')),
+  chk(() => types.every((t) => { const p = caps[t].objects.categoryAxis.properties; return p.innerPadding.type.integer && p.outerPadding.type.integer; }) && /BAND_TYPES = \/\^\(clusteredBarChart\|barChart\|hundredPercentStackedBarChart\|clusteredColumnChart\|columnChart\|hundredPercentStackedColumnChart\|lineClusteredColumnComboChart\|lineStackedColumnComboChart\)\$\//.test(writerPageSource()),
     () => 'V1. every kind the writer pads has categoryAxis innerPadding and outerPadding (integers) in Microsoft\'s catalog');
   const { runReportValidation, getMetadataProvider } = await import('@microsoft/powerbi-report-authoring-cli');
   for (const [name, r] of [['1280 x 720', r720], ['1920 x 1080', r1080]]) {

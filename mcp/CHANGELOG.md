@@ -5,6 +5,12 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **Inside the report writer:** each visual of a report page (the title and logo, the cards, the charts, the tables
+  and the slicers, and their phone layout) is made in files of their own; every report, on the website and from the MCP,
+  is byte for byte what it was before.
+- **Inside the Model Health Check, the rules and the questions:** the checks that find problems and the "Please
+  confirm" questions each have a file of their own; every check, on the website and from the MCP, gives the same
+  findings, score, skipped checks and questions as before.
 - **Check that a copy asks the same questions:** `check_report` takes the original report as `against` and says, visual
   by visual, whether the copy (an Arabic twin, a native copy, a redesign or your own) asks the model the same question:
   the same fields, totals, filters, sort, Top N and visual calculations, the same display units and decimals, or only
