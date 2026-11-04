@@ -18,6 +18,7 @@ import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { PBIT_LIMITS } from './lib/model.mjs';
+import { stampOf } from '../scripts/stamps.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.join(HERE, '..');
@@ -91,7 +92,8 @@ class VmWorker {
   terminate() { this.done = true; }
 }
 globalThis.Worker = VmWorker;
-const WORKER_URL = '/assets/js/model-health-worker.min.js?v=20261026a';
+// (ST1) the worker's URL as the page writes it: its stamp is the file's content stamp, from the one helper
+const WORKER_URL = '/assets/js/model-health-worker.min.js?v=' + stampOf(path.join(REPO, 'assets/js/model-health-worker.min.js'));
 
 // the answer as recorded: its shape in plain sight, the rest as hashes
 const shapeOf = (res) => ({

@@ -5,7 +5,7 @@
   "scripts": {
     "test": "node scripts/tests/run-all.mjs",
     "test:full": "node scripts/tests/run-all.mjs --full",
-    "build:min": "node scripts/check-min.mjs --write",
+    "build:min": "node scripts/check-min.mjs --write && node scripts/stamps.mjs --write",
     "check:min": "node scripts/check-min.mjs",
     "pages:deps": "node scripts/cdn.mjs --write",
     "lint": "eslint mcp assets/js \"**/*.html\"",

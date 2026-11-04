@@ -6,7 +6,7 @@
  */
 /* global MHEngine, TmdlModel */
 // the DAX tokens and report references (0.3.2 SP9), the model index (SP15), the rule texts, the rules and the questions (SP27), all before the engine; the engine, and the TMDL reader the MCP uses for projects saved as TMDL (Power BI Desktop's default)
-importScripts('dax-reference-parser.min.js?v=20261103sp9', 'model-index.min.js?v=20261103sp15', 'health-texts.min.js?v=20261104sp27b', 'health-rules.min.js?v=20261104sp27b', 'health-confirm.min.js?v=20261104sp27', 'model-health-engine.min.js?v=20261104sp27', 'tmdl-model.min.js?v=20261104an1');
+importScripts('dax-reference-parser.min.js?v=cb66f18e1f1c', 'model-index.min.js?v=fb68d432364d', 'health-texts.min.js?v=dc21adf6917d', 'health-rules.min.js?v=5b6523e0326b', 'health-confirm.min.js?v=371ebcff7491', 'model-health-engine.min.js?v=b02e54950bfb', 'tmdl-model.min.js?v=f4832d0d3ac0');
 
 const post = (type, data) => self.postMessage(Object.assign({ type }, data || {}));
 

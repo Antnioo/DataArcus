@@ -6,6 +6,7 @@ checklist: [mcp/docs/MODULES.md](mcp/docs/MODULES.md). Rules: `CLAUDE.md`, `mcp/
 ## Boundaries
 - **The website** (GitHub Pages): HTML at the root, `tools/`, `articles/`, Arabic copies in `ar/`. Its tools run in
   the browser; nothing a visitor opens is uploaded.
+  Never type a `?v=`: `npm run build:min` writes it.
 - **The engines** (`assets/js/*.js`, each with its `.min.js`): plain JavaScript for the browser and Node, **shared by
   the website and the MCP on purpose**: reader and picker, report writer, design engine, health check, calendar,
   measured rules (`report-rules.js`), the mirror engine (`report-mirror.js`), the preview (`page-preview.js`).
@@ -48,4 +49,4 @@ Open these, in order; run these tests. Paths and symbols are checked in CI (`scr
 | (d) EN and AR page text | the English HTML, then `assets/js/translations/common.js: commonTranslations` or the page's own file there (`npm run build:min`), then `node scripts/ar-pages.mjs --write` | `node scripts/ar-pages.mjs`, `node scripts/test-site-config.mjs`, `scripts/tests/run-all.mjs` |
 | (e) a Windows-only CI failure | the `::error` annotation from `scripts/ci-sum.mjs` (OS job, shard, script, check), then the named test, then the path helpers `mcp/lib/model.mjs: real, inside` | the named test alone, then `mcp/test-platform-paths.mjs` |
 | (f) a new module (a split's new file) | its row (`file`, job, in -> out, used by, pure) in its part's table of `mcp/docs/MODULES.md`, [Every module](mcp/docs/MODULES.md#every-module) | `node scripts/check-modules.mjs` (`scripts/modules-facts.mjs` gives the facts) |
-| (g) a new helper | `mcp/docs/CONTRACTS.md`, then MODULES.md: one job lives in one place (D-1104-12) | `node scripts/check-contracts.mjs` |
+| (g) a new helper | `mcp/docs/CONTRACTS.md`, then MODULES.md (one place, D-1104-12) | `node scripts/check-contracts.mjs` |

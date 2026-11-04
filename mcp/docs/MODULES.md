@@ -48,6 +48,12 @@ task routes. [Every module](#every-module) (0.3.2 MD1): one row per file, kept t
   suites: `scripts/tests/run-all.mjs`. Repo checks (site config, result lines, CHANGELOG words, ...): `scripts/*.mjs`.
   `.github/workflows/tests.yml` runs them on Linux, Windows and macOS and adds the shards up (`scripts/ci-sum.mjs`).
   What only Power BI Desktop can prove: `scripts/tests/DESKTOP-TESTS.md`.
+- **The site's build** (0.3.2 ST1; `npm run build:min`: each `.min.js` from its source, then the stamps):
+  - `scripts/stamps.mjs`: the `?v=` stamps, never typed: `--list` measures every reference, `--write` gives each its
+    target's content stamp (sha256 of the LF bytes, 12 hex; `stampOf`, the one hash helper) in dependency order, no
+    flag checks them (run by `scripts/check-min.mjs`, so by CI); reads and writes the pages and engines.
+  - `scripts/test-stamps.mjs`: stamps.mjs red on made-up trees (an old stamp, a typed one, a missing or changed
+    target, a loop), green on the real tree, a second build a no-op; made-up files in the temp folder.
 - **Packaging**: the one-click extension (`.mcpb`) and its release notes are made by a separate build step from
   `mcp/` as it is here; `mcp/skills-packaging/` is the plugin folder next to Microsoft's.
 
