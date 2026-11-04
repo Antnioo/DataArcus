@@ -263,9 +263,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // mirror-policy.js, after the visual catalog it reads, before report-mirror.js, which reads them; 0.3.2 SP39: the
   // twin's chart transforms, mirror-charts.js, after mirror-policy.js, then its text runs and literals, mirror-text.js,
   // which reads both, and its group and badge geometry, mirror-units.js, before report-mirror.js, which calls them; 0.3.2 SP43: the
-  // writer's bidi isolation, pbip-bidi.js, after text-measure.js, which it reads, before the writer, which calls it)
-  const BUILDER = ['/assets/js/text-measure.min.js?v=d2d8d06bb406', '/assets/js/story-titles.min.js?v=596a8e4e04fa', '/assets/js/visual-types.min.js?v=9fe419144b32', '/assets/js/mirror-policy.min.js?v=c96caa190b2d', '/assets/js/mirror-charts.min.js?v=ea242c6dc3ce', '/assets/js/mirror-text.min.js?v=f1bf57acb463', '/assets/js/mirror-units.min.js?v=91337fe5c334', '/assets/js/report-mirror.min.js?v=6df65257122c', '/assets/js/pbip-query.min.js?v=2be9a985ac50', '/assets/js/pbip-sizing.min.js?v=14c9a147b14e', '/assets/js/pbip-notes.min.js?v=38120f9ce6fd',
-    '/assets/js/label-limits.min.js?v=28489c70397d', '/assets/js/pbip-visuals-charts.min.js?v=7d1bb8b90fa6', '/assets/js/pbip-visuals-tables.min.js?v=ad2b43d89afd', '/assets/js/pbip-visuals.min.js?v=c11b6d4eb806', '/assets/js/pbip-tooltip.min.js?v=f840b971a8b9', '/assets/js/pbip-navigation.min.js?v=30ed39d92fb2', '/assets/js/pbip-page.min.js?v=04628e53532a', '/assets/js/report-a11y.min.js?v=c16c13805665',
+  // writer's bidi isolation, pbip-bidi.js, after text-measure.js, which it reads, before the writer, which calls it; 0.3.2
+  // DD1B: a literal's text, number and true or false, pbir-values.js, first: the writer, the a11y rules and the check
+  // read it)
+  const BUILDER = ['/assets/js/pbir-values.min.js?v=57e0aebe7cdf', '/assets/js/text-measure.min.js?v=d2d8d06bb406', '/assets/js/story-titles.min.js?v=596a8e4e04fa', '/assets/js/visual-types.min.js?v=9fe419144b32', '/assets/js/mirror-policy.min.js?v=c96caa190b2d', '/assets/js/mirror-charts.min.js?v=ea242c6dc3ce', '/assets/js/mirror-text.min.js?v=f1bf57acb463', '/assets/js/mirror-units.min.js?v=91337fe5c334', '/assets/js/report-mirror.min.js?v=6df65257122c', '/assets/js/pbip-query.min.js?v=e24f1a99fc1b', '/assets/js/pbip-sizing.min.js?v=14c9a147b14e', '/assets/js/pbip-notes.min.js?v=38120f9ce6fd',
+    '/assets/js/label-limits.min.js?v=28489c70397d', '/assets/js/pbip-visuals-charts.min.js?v=7d1bb8b90fa6', '/assets/js/pbip-visuals-tables.min.js?v=ad2b43d89afd', '/assets/js/pbip-visuals.min.js?v=458cf51d0bf1', '/assets/js/pbip-tooltip.min.js?v=f840b971a8b9', '/assets/js/pbip-navigation.min.js?v=30ed39d92fb2', '/assets/js/pbip-page.min.js?v=04628e53532a', '/assets/js/report-a11y.min.js?v=130e640a3ff9',
     '/assets/js/pbip-zip.min.js?v=0518dee1a93d', '/assets/js/pbip-sample.min.js?v=c2586f4ca3c2', '/assets/js/pbip-bidi.min.js?v=7bfb226aefb3', '/assets/js/pbip-export.min.js?v=71b3b1f69a2f'];
   // (0.3.1 FX5: the page loads the sizes and what they read, for the canvas's bars; a script already on the page is not
   // loaded again)
@@ -295,9 +297,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let words = null;
   const loadNames = () => Promise.all([window.DAArabicNames ? window.DAArabicNames : loadScript('/assets/js/arabic-names.min.js?v=637dc63aff40').then(() => window.DAArabicNames),
     words || (words = fetch('/assets/data/arabic-report-words.json').then((r) => (r.ok ? r.json() : Promise.reject(new Error('words')))).catch((e) => { words = null; throw e; }))]);
-  const CHECK = ['../assets/js/visual-types.min.js?v=9fe419144b32', '../assets/js/report-rules.min.js?v=0bcd683a0668', '../assets/js/layout-check.min.js?v=250e29fcfa5b'];
+  const CHECK = ['../assets/js/visual-types.min.js?v=9fe419144b32', '../assets/js/report-rules.min.js?v=074ffc4af72b', '../assets/js/layout-check.min.js?v=2b109538638f'];
   const loadCheck = () => (window.DALayoutCheck ? Promise.resolve(window.DALayoutCheck) : loadBuilder().then(() => CHECK.reduce((q, src) => q.then(() => loadScript(src)), Promise.resolve())).then(() => window.DALayoutCheck));
-  const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=e34cc70d8338').then(() => window.DAPagePreview));
+  // (0.3.2 DD1B: the preview reads its literals with pbir-values.js, loaded first unless the builder already did)
+  const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : (window.DAPbirValues ? Promise.resolve() : loadScript('../assets/js/pbir-values.min.js?v=57e0aebe7cdf')).then(() => loadScript('../assets/js/page-preview.min.js?v=eeab036d9a4e')).then(() => window.DAPagePreview));
   const MODEL_WORKER = '/assets/js/model-health-worker.min.js?v=d8390a780e6b';
 
   // ---------- the downloads, the visual backgrounds and the reminder (theme-download-ui.js, 0.3.2 SP31) ----------

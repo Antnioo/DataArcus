@@ -36,7 +36,9 @@
 
   // ---- reading a visual.json ----
   const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
-  const strOf = (p) => { const v = lit(p); return v == null ? '' : String(v).replace(/^'|'$/g, '').replace(/''/g, "'"); };
+  // a literal's text, number and true or false, a column's set width: pbir-values.js, their one home (0.3.2 DD1B)
+  const PV = node ? require('./pbir-values.js') : root.DAPbirValues;
+  const strOf = PV.litText;
   const entries = (l) => (Array.isArray(l) ? l : []);
   const plain = (l) => entries(l).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e && e.properties && typeof e.properties === 'object' ? e.properties : {}), {});
   const shown = (x) => String(x).replace(/(?![‌‍])\p{Cf}/gu, '').replace(/\s+/g, ' ').trim();
@@ -223,7 +225,7 @@
         if (DECORATIVE.test(type) && type !== 'actionButton' && !strOf(altOf(vis))) { delete pos.tabOrder; x.changed = true; done.untabbed++; return; }
         // (a visual's alt text is its full title where the writer gave one: "Total Sales by Region", made from its
         // fields, and the reference the writer's own title fit and the tests read; the sentence fills only a missing one)
-        const alt = strOf(altOf(vis)).trim() ? null : describe(vis, lang);
+        const alt = (strOf(altOf(vis)) ?? '').trim() ? null : describe(vis, lang);
         if (alt) { setAlt(vis, alt); x.changed = true; done.alt++; }
       });
       // the tab stops of each group (and of the page) in reading order, keeping the numbers they had
@@ -249,7 +251,7 @@
   const tabStop = (x) => x.json && x.json.position && x.json.position.tabOrder != null;
   const shows = (x) => !!(x.json && x.json.visual) && Object.keys(roles(x.json.visual)).length > 0;
   const mainPages = (R) => (R.pages || []).filter((p) => !p.tooltip);
-  const altText = (x) => { const a = altOf(x.json.visual || x.json.visualGroup); return a && a.expr && !a.expr.Literal ? 'conditional' : strOf(a).trim(); };
+  const altText = (x) => { const a = altOf(x.json.visual || x.json.visualGroup); return a && a.expr && !a.expr.Literal ? 'conditional' : (strOf(a) ?? '').trim(); };
   // a visual laid over another one that is a Tab stop, at least 80% of its box on the other's (the writer's "No data"
   // message over its chart, whose slot is taller than a table cut to its rows): its information is the other's, so it
   // need not be a stop of its own
@@ -259,15 +261,15 @@
   // the theme's own setting for a visual type: visualStyles[type]['*'][card], else visualStyles['*']['*'][card]
   const themeCard = (R, type, card) => { const vs = ((R.theme || {}).json || {}).visualStyles || {}; const one = (t) => (((vs[t] || {})['*'] || {})[card] || [])[0]; return one(type) || one('*') || null; };
   const solidColour = (c) => { if (!c) return null; if (typeof c === 'string') return hex6(c); const s = c.solid ? c.solid.color : c.color; return typeof s === 'string' ? hex6(s) : hex6(lit(s)); };
-  const show = (props) => { const s = props ? (props.show && typeof props.show === 'object' ? lit(props.show) : props.show) : undefined; return s === undefined ? undefined : String(s) !== 'false'; };
+  // ("shown": anything but false, as Desktop shows a part unless told not to; undefined when the card does not say)
+  const show = (props) => { const s = props ? props.show : undefined; return s === undefined ? undefined : PV.litBool(s) !== false; };
   // the colour a visual's data is drawn on: its own background, else the theme's for visuals, else (switched off or
   // more than half transparent) the page's; null when that is a picture (not judged)
   function backgroundOf(R, x, pg) {
     const own = plain(((x.json.visual || {}).visualContainerObjects || {}).background), th = themeCard(R, x.type, 'background') || {};
-    const tr = (p) => { const t = p && typeof p === 'object' && p.expr ? +String(lit(p)).replace(/D$/, '') : +p; return Number.isFinite(t) ? t : 0; };
     const on = show(own) !== undefined ? show(own) : show(th) !== undefined ? show(th) : true;
     const col = solidColour(own.color) || solidColour(th.color) || hex6(((R.theme || {}).json || {}).background) || (R.theme ? null : '#ffffff');
-    const transparency = own.transparency !== undefined ? tr(own.transparency) : tr(th.transparency);
+    const transparency = (own.transparency !== undefined ? PV.litNumber(own.transparency) : PV.litNumber(th.transparency)) ?? 0;
     if (on && col && transparency < 50) return col;
     const pj = (pg && pg.json) || {}, pb = plain(((pj.objects) || {}).background), tp = (((((R.theme || {}).json || {}).visualStyles || {}).page || {})['*'] || {}).background;
     const tpb = (tp || [])[0] || {};
