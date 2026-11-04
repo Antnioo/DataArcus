@@ -253,7 +253,7 @@ In `mcp/lib/`. One report's build, the same for the plan and the write.
 | `report-fields.mjs` | a report's fields resolved against the model: fields, page filters, SVG columns, cards, chart axes, relationships | the requested fields and the model -> the resolved fields and the problems | `report-run.mjs`, `create_report.mjs`, `plan_layout.mjs`, `suggest_fields.mjs` | yes |
 | `report-result.mjs` | create_report's answer and its notes from the build | the build's metadata, the theme, the format script's answer -> the answer | `report-run.mjs` | yes |
 | `report-said.mjs` | the sentences the run and plan_layout both answer with (flip cards, top N, card values, phone layout, the Arabic calendar) | the build's facts -> sentences | `report-run.mjs`, `report-result.mjs`, `plan_layout.mjs` | yes |
-| `design.mjs` | the design tools' logic: a design from the tools' inputs, with every value not used said | the tools' inputs -> a design, the theme JSON, the slots | `generate_theme.mjs`, `plan_layout.mjs`, `report-run.mjs`, `redesign.mjs` | yes |
+| `design.mjs` | the design tools' logic: a design from the tools' inputs, with every value not used said | the tools' inputs -> a design, the theme JSON, the slots | `generate_theme.mjs`, `plan_layout.mjs`, `report-run.mjs`, `redesign-patches.mjs` | yes |
 | `plan-lint.mjs` | the planned page linted before the plan is shown: built by the shared writer in memory, read back and checked | a design and fields -> the lint, the preview, the checks | `plan_layout.mjs`, `report-run.mjs` | yes |
 | `plan-disclosure.mjs` | the plan's words: its look, the bilingual report's answer, an Arabic plan's title-language lines, the page size | a built plan -> what plan_layout's answer says | `plan_layout.mjs` | yes |
 | `plan-headroom.mjs` | the plan answer's headroom: what it repeats said once before the cap must cut | a plan's answer -> the fitted answer | `plan_layout.mjs` | yes |
@@ -276,10 +276,12 @@ In `mcp/lib/`. A lossless copy with allowlisted patches, never a rebuild.
 
 | file | job | in -> out | used by | pure |
 |---|---|---|---|---|
-| `redesign.mjs` | the redesign: the plan, the copy, its check and the write | a report, the design, the patches asked -> the plan; the copy written | `create_report.mjs`, `plan-variants.mjs` | no: fs |
+| `redesign.mjs` | the redesign's facade: the name, the schema and model checks, the plan put together, the copy, its check (independent of the patch records) and the write with its source-hash checks | a report, the design, the patches asked -> the plan; the copy written | `create_report.mjs`, `plan-variants.mjs` | no: fs |
 | `redesign-grid.mjs` | the redesign's geometry: the units of visuals laid over others and the grid | a page and its top-level visuals -> the units and their fitted boxes | `redesign.mjs` | yes |
-| `redesign-kinds.mjs` | the patch kinds, one entry each: the allowlist the copy and its check read (the planned ones off) | none -> the kinds, their checks and refusals | `redesign.mjs` | yes |
-| `text-format.mjs` | each visual's own text formatting (font, size, bold, italic) by the theme's text class it overrides | an inventory and its theme -> the formats and the mixed ones | `check-report.mjs`, `redesign.mjs`, `redesign-kinds.mjs`, `approval-disclosure.mjs` | yes |
+| `redesign-kinds.mjs` | the patch kinds, one entry each: the allowlist the copy and its check read (the planned ones off) | none -> the kinds, their checks and refusals | `redesign.mjs`, `redesign-patches.mjs`, `redesign-text.mjs` | yes |
+| `redesign-patches.mjs` | the allowlisted patch records (place and size, static titles, theme tokens, the copy's name and id), each with its pointer, from and to and its kind's reason; why a visual is kept | a page's visual and what is asked -> the patch records, or the refusal | `redesign.mjs`, `redesign-text.mjs` | yes |
+| `redesign-text.mjs` | the consistent copy's text: the text set, each visual's own settings removed, the theme's visual styles, the added theme file | the inventory, its theme and report.json, consistentText -> the text block, its patch records, each visual's removals | `redesign.mjs` | yes |
+| `text-format.mjs` | each visual's own text formatting (font, size, bold, italic) by the theme's text class it overrides | an inventory and its theme -> the formats and the mixed ones | `check-report.mjs`, `redesign.mjs`, `redesign-text.mjs`, `redesign-kinds.mjs`, `approval-disclosure.mjs` | yes |
 
 ### The MCP: the checkers
 
