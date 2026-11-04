@@ -58,7 +58,38 @@
       shj: [{ from: null, days: [6, 7] }, { from: '2022-01-01', days: [6, 7, 1] }]
     },
     // the day the UAE's federal government moved to the Saturday-Sunday weekend
-    uaeWeekendChange: '2022-01-01'
+    uaeWeekendChange: '2022-01-01',
+    // (0.3.2 GM1, RD5) the standard VAT rate in force on each date, in percent, by country: each rule holds from its date
+    // until the next one (the weekends' shape); the first rule, from null, is the time before VAT. The standard rate only:
+    // zero-rated and exempt supplies and the transitional contracts (Saudi Arabia to 30 Jun 2021, Bahrain to 31 Dec 2022)
+    // are not in a date column. Qatar and Kuwait have no VAT in force (checked below): add their rule when a date is set.
+    // Every rule and its source: scripts/gulf-calendar/DATES-SOURCES.md, "VAT standard rate by date".
+    vat: {
+      checked: '2026-11-04',
+      rates: {
+        uae: [{ from: null, rate: 0 }, { from: '2018-01-01', rate: 5 }],
+        ksa: [{ from: null, rate: 0 }, { from: '2018-01-01', rate: 5 }, { from: '2020-07-01', rate: 15 }],
+        bhr: [{ from: null, rate: 0 }, { from: '2019-01-01', rate: 5 }, { from: '2022-01-01', rate: 10 }],
+        omn: [{ from: null, rate: 0 }, { from: '2021-04-16', rate: 5 }],
+        qat: [{ from: null, rate: 0 }],
+        kwt: [{ from: null, rate: 0 }]
+      }
+    },
+    // (0.3.2 GM1, RD5) units of each Gulf currency per 1 US dollar, each its central bank's figure; the Kuwaiti dinar is
+    // pegged to an undisclosed basket since 20 May 2007, so it has no rate here and is never written as a number.
+    // Sources: scripts/gulf-calendar/DATES-SOURCES.md, "Currency pegs".
+    pegs: {
+      checked: '2026-11-04',
+      rows: [
+        { currency: 'AED', perUsd: 3.6725, bank: 'Central Bank of the UAE', site: 'centralbank.ae' },
+        { currency: 'SAR', perUsd: 3.75, bank: 'Saudi Central Bank (SAMA)', site: 'sama.gov.sa' },
+        { currency: 'QAR', perUsd: 3.64, bank: 'Qatar Central Bank', site: 'qcb.gov.qa' },
+        { currency: 'BHD', perUsd: 0.376, bank: 'Central Bank of Bahrain', site: 'cbb.gov.bh' },
+        // the bank states 2.6008 US dollars per rial (since 1986): 1 / 2.6008 = 0.384497
+        { currency: 'OMR', perUsd: 0.3845, bank: 'Central Bank of Oman', site: 'cbo.gov.om' },
+        { currency: 'KWD', perUsd: null, bank: 'Central Bank of Kuwait', site: 'cbk.gov.kw', basket: 'an undisclosed weighted basket of currencies since 20 May 2007 (Decree No. 147/2007); no fixed rate' }
+      ]
+    }
   };
   if (typeof module === 'object' && module.exports) module.exports = GULF_DATES;
   else root.DataArcusGulfDates = GULF_DATES;

@@ -24,6 +24,7 @@ import { NO_DIRECT_EDITS } from './agent-text.mjs';
 import { COPY_TAG } from './arabic-twin.mjs';
 import { KNOWN_TYPES, countsOf, mixedOf, boldItalicOf } from './text-format.mjs';   // (0.3.1 CS1: FORMAT_MIXED)
 import { langOfTexts, pageLanguages } from './check-language.mjs';   // (0.3.2 SP20: each page's language)
+import { sameQuestion } from './same-question.mjs';   // (0.3.2 NC1: the number check, layer 1, option against)
 export { pageLanguages, filledLanguages } from './check-language.mjs';
 
 const require = createRequire(import.meta.url);
@@ -323,6 +324,9 @@ const fixWithOf = (B, PL, f) => (B.kind === 'copy' ? (f.page && PL.pages[f.page.
 export async function checkReport(p, opts) {
   const o = opts || {}, checks = (o.checks && o.checks.length ? o.checks : CHECKS), cap = Math.max(1, Math.min(200, o.maxFindings || 60));
   const loc = locate(p, 'check_report');
+  // (0.3.2 NC1, RD2's brief g) against: the original; the copy (p) compared with it visual by visual, first, so a
+  // refusal (another model, outside the folder, a link, PBIR-Legacy) comes before any other work
+  const same = o.against != null ? sameQuestion(p, o.against) : null;
   const sk = { big: [], deep: 0 };
   // the report's files, walked once (round 22b, item 6: three walks counted a folder past the depth three times)
   const reportFiles = walk(loc.reportDir, [], 20000, 0, sk);
@@ -530,6 +534,7 @@ export async function checkReport(p, opts) {
     lang, ...(mixed ? { pageLanguages: pageLanguagesOut(PLg) } : {}), validator, schemas, rulesRun: ruled.ran,
     impact: { summary: impactSummary(byImpact, { validator, unread: sk.big.length + sk.deep + unreadable + (sk.links || []).length, desktopOpensErrors: all.filter((f) => f.impact === 'desktopOpens' && f.severity === 'error').length, known: all.filter((f) => f.known).length, checks }), kinds: Object.fromEntries(Object.entries(IMPACT).map(([k, means]) => [k, Object.assign({ count: byImpact[k], means }, k === 'desktopOpens' ? { measured: `measured: ${DESKTOP_OPENS_SOURCE.file}, ${DESKTOP_OPENS_SOURCE.date}, Desktop ${DESKTOP_OPENS_SOURCE.desktop}, "${DESKTOP_OPENS_SOURCE.section}"` } : k === 'mayLook' ? { measured: Object.fromEntries(Object.entries(DESKTOP_DRAWS).map(([c, x]) => [c, x.evidence])) } : k === 'openedInDesktop' ? { measured: Object.fromEntries(Object.entries(DESKTOP_OPENED).map(([c, x]) => [c, x.evidence])) } : {})])),
       tellUser: 'Tell the user the summary and, for each kind with findings, its sentence: what only strict validation or Fabric would refuse does not break a report in Desktop, nor does a mayLook warning (Desktop was measured to draw it), nor an openedInDesktop finding (Desktop was measured to open reports with it); check_report never opens Desktop, so say what ran, not that the report opens. Each finding\'s "impact" is its kind; its code is Microsoft\'s or DataArcus\'s, unchanged.' },
+    ...(same ? { sameQuestion: same } : {}),
     findings, notChecked,
     ...(fieldParameters ? { fieldParameters } : {}),
     ...(lintSection ? { lint: lintSection } : {}),
