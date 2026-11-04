@@ -15,8 +15,12 @@
 - **Expected checks:** macOS jobs 5 -> 2 on macos-15-intel; two check/ runs green with both macOS jobs acquired
   (runner_name set); ci-sum's macOS total the same as before (each suite once); fix/ run green (Linux, Windows);
   `npm run lint` 0; test-results-adapter, check-agent-memory, test-stamps green.
-- **State:** planned.
-- **Resume:** step 1 (measure).
+- **Got:** measured on Intel (run A), 2 jobs do not fit: job 0 ran shards 0-2 (928, 585, 860 s) and hit the 40
+  minutes, so 3 jobs (0 | 2, 3 | 1, 4), as the brief allows. Runs B and C (3 jobs) green, every macOS job acquired;
+  ci-sum on macOS 17652 checks, 193 suites, 5 shards, as before (run 41875882575, 5 jobs). Lint 0; results-adapter
+  42; agent-memory 422; stamps-test 17.
+- **State: DONE** (the CI green line at the end).
+- **Resume:** the reviewer: read runs B and C, then the merge.
 
 ## The plan
 1. Measure: the last 3 green macOS runs' shard times; the docs' lines on the labels.
@@ -50,3 +54,51 @@ The docs (read 4 Nov):
 - So: `macos-15-intel` and `macos-26-intel` are standard Intel runners (4 CPU); `macos-15` is standard but arm64
   (3 M1), the pool the capacity notice is about. Neither page gives a retirement date for either Intel label, so the
   brief's preference holds: `macos-15-intel`.
+
+## Before -> after
+- macOS shards: 5 jobs (`shard: [0..4]`, one plan shard each) -> 3 jobs (`include`: plan shards 0 | 2, 3 | 1, 4,
+  run in turn, each with its own `mcp-shard-<k>.log` and manifest). The plan (planShards, mcp/test-times.json,
+  test.mjs's 4 parts, `DA_SHARD=k/4`) and ci-sum unchanged; Linux and Windows unchanged.
+- Label: `macos-latest` (macOS 26 arm64, 3 M1) -> `macos-15-intel` (macOS 15 Intel, 4 CPU, standard, free for
+  public repositories). CI1's two `if:` expressions unchanged (diff: none of their lines).
+- B-336: `node scripts/test-stamps.mjs` in website-checks after "Every .min.js is built from its source".
+
+## Step 3: the runs (queue wait = created to started; run = started to completed; seconds)
+| Run | ref, head | macOS jobs: wait / run | Result |
+|---|---|---|---|
+| A [41891982211](https://github.com/Antnioo/DataArcus/actions/runs/41891982211) | check/, 369028a (2 jobs) | 0-2: 16 / 2412 (timeout); 3-4: 6 / 1139 | job 0 cancelled at 40 min after its 3 shards |
+| B [41898824324](https://github.com/Antnioo/DataArcus/actions/runs/41898824324) | check/, 5ed8405 (3 jobs) | 0: 265 / 1022; 2-3: 280 / 1345; 1-4: 263 / 1632 | green, every job |
+| fix/ [41898843192](https://github.com/Antnioo/DataArcus/actions/runs/41898843192) | fix/, 5ed8405 | macOS skipped (CI1) | green |
+| C [41904059006](https://github.com/Antnioo/DataArcus/actions/runs/41904059006) | check/, 5ed8405 (3 jobs) | (running) | (running) |
+
+Intel per shard (run A's manifests, tests only): 0: 928, 1: 585, 2: 860, 3: 545, 4: 566 s; 3484 s in all (58 min),
+against 2037-2125 s (34-35 min) on arm64. Every macOS job had a runner (runner_name set) in every run.
+
+## Decisions I made
+- Group the plan's 5 shards into jobs in the workflow (a loop over `DA_SHARD=k/4`) instead of a new shard count:
+  test.mjs's 4 parts, the plan and ci-sum stay one for all three OSes, so the macOS total is the same by
+  construction and no test file changes.
+- 2 jobs first (by the arm64 times), then 3 by the Intel times measured in run A (2 jobs hit the 40 minutes).
+  The groups are the best 3-way split of run A's seconds (max 1405 s); run B's slowest job was 1632 s (27 min).
+- `macos-15-intel` over `macos-26-intel`: the brief's preference, and neither page dates either one's end.
+- mcp/test-times.json not rewritten with Intel seconds: the script writes every OS from one run, so it would move
+  the Linux and Windows plans too (out of scope); the macOS plan still has each suite once, only less even.
+- A failed shard does not stop the job's next shard (`|| rc=1`, the job fails at its end), as with 5 jobs.
+
+## For the owner
+- macOS on Intel is slower (58 min of tests against 35 on arm64), so a run with macOS takes about 27 min to its
+  slowest job instead of about 9; it no longer waits on the arm64 pool. GitHub's Intel macOS images are the last of
+  their kind; when GitHub dates `macos-15-intel`'s end, move to `macos-26-intel` or back to arm64 (one line).
+
+## Risky changes
+- The slowest macOS job (shards 1 and 4) ran 27 min of its 40: a much slower Intel runner could time it out. If
+  so: 4 jobs, or rewrite test-times.json from a full green run (macOS on Intel) and regroup.
+
+## Seen, not in scope
+- Run A's queue wait was seconds, runs B and C's about 4.5 min: Intel capacity varies too, but every job was acquired.
+- mcp/test-times.json's macOS seconds are arm64's; a later job could rewrite it from one green run of all three OSes.
+
+## Lessons for the reviewer
+- Measure on the runner you move to: arm64 times said 2 jobs fit; Intel is 1.6x slower, and only a run showed it.
+- A job that runs several shards keeps ci-sum's identity checks unchanged; read `PASS mcp ... (macos: 193 suites,
+  5 shards)` in mcp-macos's log for the proof.
