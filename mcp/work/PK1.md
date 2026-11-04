@@ -19,14 +19,15 @@
   result) and the files writeRedesign writes (each sha256, read back from disk). 12 made-up copies outside every kind
   (a visual's type, a page.json, report.json's existing theme, a theme text class, .platform's type, an added file
   elsewhere, an added theme with a colour class, an allowlisted pointer not in the plan, and the planned kinds' own
-  shapes: a mobile.json added, a page added, a page background in the theme, a group moved) refused with the exact
+  shapes: a mobile.json added, a page added, a page background in the theme, the page order alone) refused with the exact
   message the base gives. After: 6 registry checks (ALLOW is the base's literal regex for regex; the enabled kinds are
   the five; the planned four have the full shape and none enabled; each kind's sentence EN and AR; buildCopy and
   verifyCopy hold no pointer of their own; the module reads and writes no file).
 - **Expected checks:** pk1 44 of 50 on the base (the 6 registry checks red: no module), 50 after, records unchanged;
   sp19 13, redesign 50, rd1 14, cs1 45, cs2 29, sp2 10 unchanged; mutation 76 of 76 killed before and after (its
   CS-allow anchor names the new file: the same mutation, widening the visual pointers by /visual/objects/).
-- **Resume:** step 2 (the suite on the base).
+- **Got on the base:** pk1 44 of 50 (the 6 registry checks red), 3 runs identical; recorded.
+- **Resume:** step 3 (the registry).
 
 ## Plan
 1. This note (commit, push). 2. pk1 on the base, recorded, 3 runs identical; mutation suite before.
