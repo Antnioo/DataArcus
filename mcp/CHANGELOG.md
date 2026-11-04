@@ -8,6 +8,9 @@ package's manifest; this file says what is in it.
 - **Inside the MCP, the readers:** finding which model a path or a name means, and working out what a report holds
   (its pages, visuals, fields and texts), each have a file of their own; every path is still checked inside your working
   folder before anything is read, and read_model and read_report answer exactly as before.
+- **Inside the MCP, the redesign's text and changes:** the consistent copy's text and the changes a redesign makes to its
+  copy (places, titles, theme colours, the copy's name) each have a file of their own; every redesign plan, check and
+  written file is exactly what it was before.
 - **Inside the design engine, the layout and the saved designs:** the page layout and text sizes, and the reading and
   repair of saved designs, each have a file of their own, shared by the website and the MCP; every theme, layout and
   saved design is exactly what it was before.
@@ -122,6 +125,9 @@ package's manifest; this file says what is in it.
   its own; every twin and its plan are byte for byte what they were before.
 - **Inside the Arabic twin, its layout:** keeping a small icon with its text, a chart on a table or under a heatmap's
   grid, a text box's indentation and the room beside its icon have a file of their own; every twin and its plan are
+  byte for byte what they were before.
+- **Inside the Arabic twin, its measures:** the twin's own Arabic title and "No data" measures, its waterfall and
+  table row label measures, and moving each visual to them have a file of their own; every twin and its plan are
   byte for byte what they were before.
 - **Inside the MCP, the model reader:** the screen that marks names reading like instructions, how a name is shown,
   the column types and the KPI list each have a file of their own; read_model answers exactly as before.
