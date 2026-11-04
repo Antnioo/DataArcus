@@ -5,6 +5,10 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **One answer to "is this column a date part?":** the Arabic twin, the approval preview, the report writer and the
+  report check now read a column's name the same way (OrderDate, FiscalYear, Qtr, FY, a bare «شهر» or «هجري» are time
+  in all four), so a twin chart by fiscal year now keeps its time axis as a time axis, and the preview's time arrow and
+  the check's time-axis notes agree with it.
 - **The health check now finds the sort column the report writer finds:** a month or day name whose number column has
   no type in the model files is now sorted by that number column in the fix script, as the report writer sorts it,
   instead of the script adding a second number column of its own.
