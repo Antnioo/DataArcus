@@ -171,7 +171,7 @@ In `assets/js/`. Shared by the website and the MCP on purpose: one engine per jo
 | `layout-check.js` | the check of a project before it is written or downloaded: the measured rules and the design lint on the files in memory | a project's files -> the lint and rule findings | `check-report.mjs`, `design-lint.mjs`, `plan-lint.mjs`, `theme-generator.js` | yes |
 | `report-a11y.js` | Power BI's accessibility basics: alt text, tab order in reading order (right to left in an Arabic report), titles, data colours at 3:1 | a page's visuals and theme -> the visuals with them applied; what is missing | `pbip-export.js`, `report-rules.js`, `twin-copy.mjs` | yes |
 | `visual-types.js` | which visual types are Power BI's own and which are custom (one list) | a visual type -> native, custom, slicer | `report-rules.js`, `layout-check.js`, `mirror-policy.js`, `visual-meaning.mjs` | yes |
-| `page-preview.js` | a picture of a planned page, drawn from the plan only (never data) for the approval window and the lab page | a page's slots or files -> its SVG picture and the notes | `approval-window.mjs`, `plan-lint.mjs`, `twin-preview.mjs`, `theme-generator.js` | yes |
+| `page-preview.js` | a picture of a planned page, drawn from the plan only (never data) for the approval window and the lab page | a page's slots or files -> its SVG picture and the notes | `approval-view.mjs`, `plan-lint.mjs`, `twin-preview.mjs`, `theme-generator.js` | yes |
 | **Right to left (the Arabic twin's engine)** | | | | |
 | `report-mirror.js` | the right-to-left twin of a PBIR report's pages and visuals, as Desktop was seen to honour it; the phone layout mirrored | a page's and visuals' JSON -> the mirrored JSON (never a file) | `twin-pages.mjs`, `twin-copy.mjs`, `twin-text-fit.mjs`, `arabic-lens.mjs`, `pbip-query.js` | yes |
 | `mirror-policy.js` | the twin's named rules: which family a visual is, which axis is time, what keeps left to right in a mirrored box | a visual's JSON and the model's facts -> a named answer | `report-mirror.js`, `twin-geometry.mjs` | yes |
@@ -243,9 +243,10 @@ In `mcp/lib/`. Nothing is written before the person's click.
 | `plans.mjs` | the gate: plan ids, what each plan pins, the approval and the refusal | a proposal -> a plan id; an approval -> recorded; a write -> allowed or refused | every writing tool, `approve_plan.mjs`, `files.mjs`, `plan-keys.mjs` | no: env |
 | `plan-keys.mjs` | what a plan is pinned to: the model's key and print, the inputs, the check right before a write | a model, the inputs -> the keys; a plan id -> same model or refused | `create_report.mjs`, `plan_layout.mjs`, `generate_theme.mjs`, `report-run.mjs` | no: fs |
 | `approval-window.mjs` | DataArcus's own approval window on 127.0.0.1, with a one-time link the AI never receives | a plan -> the page served, the person's click | `approve_plan.mjs` | no: network, process, env |
-| `approval-disclosure.mjs` | what each approval page says: the disclosure summaries in words (no HTML, no HTTP) | a plan's kind and data -> the disclosure model | `approval-window.mjs` | yes |
-| `approval-ar.mjs` | the approval page's own words in Arabic, for an Arabic plan's page | an English label -> its Arabic | `approval-window.mjs`, `approval-disclosure.mjs` | yes |
-| `answers.mjs` | the "Please confirm" answers file next to the model (`confirm-memory.js`'s records), written only through the gate | a model's path, the answers -> the records read; the file written | `check_model_health.mjs`, `approval-window.mjs` | no: fs |
+| `approval-disclosure.mjs` | what each approval page says: the disclosure summaries in words (no HTML, no HTTP) | a plan's kind and data -> the disclosure model | `approval-window.mjs`, `approval-view.mjs` | yes |
+| `approval-view.mjs` | the approval page's HTML: before the click, after it, and a link no longer valid (no secret, no request, no decision) | a plan's id and writes, the disclosure model (and the decision) -> the page's HTML | `approval-window.mjs` | yes |
+| `approval-ar.mjs` | the approval page's own words in Arabic, for an Arabic plan's page | an English label -> its Arabic | `approval-view.mjs`, `approval-disclosure.mjs` | yes |
+| `answers.mjs` | the "Please confirm" answers file next to the model (`confirm-memory.js`'s records), written only through the gate | a model's path, the answers -> the records read; the file written | `check_model_health.mjs`, `approval-disclosure.mjs`, `approval-view.mjs` | no: fs |
 
 ### The MCP: the write path
 
@@ -258,7 +259,7 @@ In `mcp/lib/`. One write, all or nothing, never over anything.
 | `write-io.mjs` | one new file, never half-written; a failed write removes only what that call created | a path and bytes -> the file, or nothing | `files.mjs`, `model.mjs`, `answers.mjs`, `twin-write.mjs` | no: fs, env |
 | `fix-scripts.mjs` | the TMDL fix scripts next to the model: their names, the write, the formats answer | the fixes, the folder -> the script written and what it says | `check_model_health.mjs`, `add_gulf_calendar.mjs`, `plan_layout.mjs`, `report-run.mjs` | no: fs |
 | `model-script.mjs` | one helper for the model additions written as TMDL scripts (names that are free, the script file) | the model's names, the lines -> a free name, the script | `flip-cards.mjs`, `metric-switcher.mjs`, `status-icons.mjs`, `dax-functions.mjs`, `gulf-calendar.mjs` | yes |
-| `plain-words.mjs` | the words a person reads where they decide: what a script is, the 3 steps to apply it, where a file goes (English and Arabic) | a folder, a script -> the sentence | `approval-window.mjs`, `fix-scripts.mjs`, `plans.mjs`, `plan_layout.mjs` | no: fs |
+| `plain-words.mjs` | the words a person reads where they decide: what a script is, the 3 steps to apply it, where a file goes (English and Arabic) | a folder, a script -> the sentence | `approval-view.mjs`, `approval-disclosure.mjs`, `fix-scripts.mjs`, `plans.mjs`, `plan_layout.mjs` | no: fs |
 
 ### The MCP: create_report and its options
 

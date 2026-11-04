@@ -216,7 +216,7 @@ const defined = (t, n) => new RegExp(`(?:function|const|let)\\s+${n}\\b`).test(t
 if (viewOut) {
   const V = await import('./lib/approval-view.mjs'), v = codeOf(src('approval-view.mjs')), win = src('approval-window.mjs');
   const VIEW = ['STYLE', 'page', 'swatches', 'ISO_AR', 'isoText', 'cell', 'rows', 'WORDS', 'kindLabel', 'mainFiles', 'filesHtml', 'scriptHtml', 'HEAD_AR', 'COUNT_AR', 'headingOf', 'askPage', 'donePage', 'gonePage'];
-  chk(() => !/node:(?:http|crypto|child_process|fs)|approval-window|approval-http/.test(v) && !topState(v) && !/\bsecret|bySecret|\.headers|origin|sec-fetch|decide|onDecide|waiters|req\b|res\b/i.test(v)
+  chk(() => !/node:(?:http|crypto|child_process|fs)|approval-window|approval-http/.test(v) && !topState(v) && !/\bsecret|bySecret|\.headers\b|\.origin\b|sec-fetch|\bdecide\b|onDecide|waiters|\breq\.|\bres\.|writeHead|randomBytes/i.test(v)
     && VIEW.every((n) => defined(v, n) && !defined(win, n)) && Approval.approvalHtml === V.approvalHtml && Approval.PREVIEW_PAGES_MAX === V.PREVIEW_PAGES_MAX,
     () => `V1. approval-view.mjs is pure (no http, crypto, child process, fs, state, secret, request or decision) and approval-window.mjs defines none of ${VIEW.filter((n) => !defined(v, n) || defined(win, n)).join(', ')}`);
 }
