@@ -7,16 +7,11 @@
 //   look({ theme: { o, u, font, edge, W }, direction: { align, rtl } })
 //                        the visuals' look and sizes (the kit): frame, textbox, the cards', the buttons' and the Reset's
 //                        look, the page filters, the sizes that follow the font; LOOK_KEYS names them
-//   slotKind({ look: { LABEL }, theme: { font, base }, binding: { B, own }, page: { pg }, slot })
-//                        -> { slot, notes }: the kind a slot is written as (a column chart as a bar chart, a donut)
-//   kpiRow({ look, theme: { o, W, font }, binding: { B }, page: { pg }, slots })
-//                        -> { kpiTitle, kpiFits, rowValue, rowWraps }: one title size and one value size for a row of cards
-//   slicers({ look, theme: { o, u, font, edge, base }, metrics: { k }, direction: { rtl }, page: { pg } })
-//                        -> { slicerVisual(f, title, w, h) -> { visual, notes }, stackHeights(fields, h, room) }
-//   categoryPlan({ binding: { B }, slots }) -> Map(slot -> category): a page's categories, given out once
+//   slotKind, categoryPlan (pbip-visuals-charts.js); kpiRow, slicers (pbip-visuals-tables.js): given here as they are
 //   visual({ theme, look, metrics, binding, slot, plan, kpiIndex, page, direction, known, measures })
 //                        -> { skip, visual, box, tableH, filters, hov, fitted, bands, colourKey, svg, rings, noData, panel,
-//                        notes, counts }: one slot's visual (title, logo, text, cards, charts, tables)
+//                        notes, counts }: one slot's visual (title, logo, text, cards, charts, tables); the charts' steps
+//                        are pbip-visuals-charts.js's, the cards' and tables' pbip-visuals-tables.js's
 //   noDataCard({ look: { LABEL }, theme: { u }, ent, nm, tableH }), emptyPanel(): the "No data" card and the theme's panel
 //   phoneLook({ look, theme: { u, font }, known: { rowLabels }, kind, band }, v, p): a visual's own sizes on the phone
 // notes: [list, entry] pairs, in order, for the report's lists ('titles.wrapped': c.titles.wrapped); counts: { 'n.blankFiltered': 1 }.
@@ -27,59 +22,24 @@
   const node = typeof module !== 'undefined' && module.exports;
   const Q = (node ? require('./pbip-query.js') : root.DAPbipQuery), Z = (node ? require('./pbip-sizing.js') : root.DAPbipSizing);
   const {
-    AR_LETTERS, CAT_KINDS, CHARTS, ROW_LABEL, S0, TYPES, bindQuery, bindStory, bool, catKind, kpiLabel, lineStyle,
-    color, contrast, daxNames, gradientFill, hasControl, isTextField, isTime, isValue, label, lit,
-    mirrorChart, mixHex, namesOf, num, obj, orderHelper, orderedBy, pageFilterOf, proj, q, resource,
-    rowLabelDax, rowLabelOf, shown, str, tableFields, timeAxisPlan
+    AR_LETTERS, CHARTS, S0, TYPES, bindQuery, bindStory, bool, kpiLabel,
+    color, daxNames, hasControl, lit,
+    mixHex, num, obj, pageFilterOf, proj, q, resource,
+    shown, str
   } = Q;
   // (0.3, J4: the story titles' rules, story-titles.js, loaded before pbip-query.js on the website's pages)
   const ST = (node ? require('./story-titles.js') : root.DAStoryTitles);
-  const { barBand, barNameShare, barSpan, cellRoom, columnRoom, fieldRoom, rowPitch, tableFit, tableHeight, textWidth } = Z;
+  // the families' steps (0.3.2 SP28: pbip-visuals-charts.js and pbip-visuals-tables.js, loaded before this file)
+  const Ch = (node ? require('./pbip-visuals-charts.js') : root.DAPbipVisualCharts), Tb = (node ? require('./pbip-visuals-tables.js') : root.DAPbipVisualTables);
+  const { barBand, barSpan, columnRoom, textWidth } = Z;
   // the visual gallery (0.3, J8; visual-gallery.js): optional in the browser. A gallery slot reaches here only when the
   // design's flag is on and its fields fit (pbip-export.js resolves the others to their plain kind first)
   const G = (node ? require('./visual-gallery.js') : root.DAGallery || null);
   const isGallery = (kind) => !!(G && G.isKind(kind));
-  // (0.3, J11: B-140 option B) a column chart's labels by the measured limits (label-limits.js): optional in the browser;
-  // without it, and outside the measured table, the writer's own rule below
-  const LL = (node ? require('./label-limits.js') : root.DALabelLimits || null);
 
   // the theme's text sizes the writer reads (the kit's, and fitOptions')
   const themeSizes = (o) => { const TH = (o.theme && o.theme.textClasses) || {}, LABEL = +(TH.label || {}).fontSize || 10;
     return { TH, TITLE: +(TH.title || {}).fontSize || 12, CALLOUT: +(TH.callout || {}).fontSize || 28, LABEL, SLICER_TEXT: +((((((o.theme || {}).visualStyles || {}).slicer || {})['*'] || {}).header || [{}])[0].textSize) || LABEL }; };
-
-  // 0.2.9 rc1 (the laptop's PERF-COMPARE S5, D15, D19 and Task 1: a column chart of products or cities drew dozens of
-  // vertical labels, cut, with a scrollbar; on a page narrowed by the filter rail the department labels were slanted and
-  // cut): a bar or column chart by a text category (not a time category, nor one whose values the writer knows: days,
-  // months, quarters) shows its top N by its measure, N the categories its slot holds, said in its title. A bar chart: its
-  // rows, 22.2 a row with 45 above, 8 under and 38 for the value axis (measured at 10pt, 1280 x 720, scaled with the page);
-  // a column chart: a column for a 12-character label at the label size (a GUESS, to be measured), so the names stay level
-  // (integration round 7: on a designed page N is the design engine's, s.topN from its categoryFit, the design block's
-  // S5; the writer's rc1 conditions stay: the sample's categories are never cut, nor a time or known category)
-  // (c: { own, LABEL, font })
-  const topCount = (c, s, pg, f) => {
-    if (!c.own || !f || !isTextField(f) || isTime(f) || catKind(f) || f.sortBy || f.ordered || f.dateOf || (s.kind !== 'bar' && s.kind !== 'column')) return 0;
-    if (s.topN) return s.topN;   // a designed page: the design engine's N
-    // a hand-placed page (no design computed one): the writer's measured count. A bar chart: its rows, 22.2 a row with 45
-    // above, 8 under and 38 for the value axis (measured at 10pt, 1280 x 720, scaled with the page); a column chart: a
-    // column for a 12-character label at the label size (a GUESS, to be measured)
-    if (s.kind === 'bar') return Math.max(3, Math.floor((s.h * 720 / pg.page.h - 45 - 8 - 38) / 22.2));
-    const plot = s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40, need = textWidth('n'.repeat(12), c.LABEL, false, c.font) + 6;
-    return Math.max(3, Math.floor(plot / need));
-  };
-  // the category field a chart's query shows (after the page's own choice of categories)
-  // 0.3.1 FX5: the bar and column kinds the writer writes with a category axis (Microsoft's catalog gives each
-  // categoryAxis innerPadding and outerPadding), the horizontal ones, and the count of categories a field is known to have
-  // from the model's metadata alone (a day, month or quarter axis; two values; a few known texts; a calendar's rows)
-  const BAND_TYPES = /^(clusteredBarChart|barChart|hundredPercentStackedBarChart|clusteredColumnChart|columnChart|hundredPercentStackedColumnChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/;
-  const BAR_TYPES = /^(clusteredBarChart|barChart|hundredPercentStackedBarChart)$/;
-  // (0.3.1 FX5b) and the model's own count where the caller has it: o.model.counts(t, c), create_report's columnStats
-  // (Cardinality read in Desktop, counts only) or the sample project's own made-up rows; the fewest of what is known
-  const knownCount = (f, o) => { if (!f) return 0; const k = isTextField(f) && catKind(f), m = (o && o.model) || {};
-    const given = typeof m.counts === 'function' && f.c != null ? +m.counts(f.t, f.c) : 0;
-    const ns = [(k && k.rows) || (f.two ? 2 : 0) || (f.cal && +f.cal.rows) || +f.few || 0, given].filter((x) => x > 0);
-    return ns.length ? Math.min(...ns) : 0; };
-  const catOf = (Bt, query) => { const p = ((query.queryState.Category || {}).projections || [])[0], col = p && p.field.Column;
-    return col ? Object.values(Bt.cats || {}).find((x) => x && x.t === col.Expression.SourceRef.Entity && x.c === col.Property) || null : null; };
 
   // The visuals' look and sizes shared by a report's pages and its tooltip pages (frames, cards, buttons), made once per
   // report (pbip-page.js kit)
@@ -222,301 +182,17 @@
   // the look a page is written with, from the report's context (the kit's keys only)
   const lookOf = (c) => Object.fromEntries(LOOK_KEYS.map((k) => [k, c[k]]));
 
-  // The fixes on a data visual, after its fields and objects are written (Bt: its binding, tt: its table's text size;
-  // x: { o, base, font, LABEL, own, rowLabels, plan, measures, note, count, out }): its filters; the notes go to note
-const fixVisual = (visual, s, pg, Bt, tt, x) => {
-  const { o, base, font, LABEL, own, rowLabels, plan, measures: { notBlank, topSet, topN, lastMonths, byMonthStart }, note, count, out } = x, c = { own, LABEL, font };
-    const st = visual.query.queryState, cat = st.Category && st.Category.projections[0], col = cat && cat.field.Column, filters = [];
-    const put = (object, props) => { visual.objects = visual.objects || {}; const e = visual.objects[object] || (visual.objects[object] = [{ properties: {} }]); Object.assign(e[0].properties, props); };
-    if (col && CHARTS.includes(s.kind)) { filters.push(notBlank(col)); count('n.blankFiltered'); }
-    // (the design block's S5/D19, from the laptop's sweep of rc.1: a category with dozens of values gave cut vertical
-    // labels and a scrollbar) a bar or column chart keeps the Top N categories its slot can show (s.topN, the design
-    // engine's categoryFit), by its measure; never on a time axis or an ordered category, whose order would be lost;
-    // said in its title (the writer's rc1 rule, topCount, with the design's N)
-    const top = col && st.Y && st.Y.projections[0] ? topCount(c, s, pg, catOf(Bt, visual.query)) : 0;
-    // (design round 10, N14: kept by a report measure, every category where they are at most 2 more than its rows, the
-    // fixed Top N filter only where the DAX can't name the fields)
-    // (0.2.9.1, B-174: the plan said "Top 5" over a chart that showed its 6 categories) allUpTo: the most categories it
-    // still shows all of (top + 2 with the Keep: measure, top with the fixed Top N filter), so the plan says what is kept
-    const keep = top ? topSet(catOf(Bt, visual.query), st.Y.projections[0].field, top, 2) : null;
-    if (top) { filters.push(keep ? keep.keep() : topN(col, st.Y.projections[0].field, top)); note('topCharts', Object.assign({ page: pg.name || base, kind: s.kind, field: col.Expression.SourceRef.Entity + '[' + col.Property + ']', top, allUpTo: keep ? top + 2 : top }, plan || {})); }
-    // O-4: a bar chart's names get 40% of its width, 50% on a narrow chart (under 560 on the 720-high page); the default 25 cut them at about 10 characters
-    // (design round 9, D19: a many-valued category's names, product names, get room for 25 characters where 40% of the
-    // chart holds them, else 50%: measured, REPORT-FIXES-LAB B1/B2, 40% of 508 held about 20 characters, 50% about 25,
-    // 10.2 page units a character on a 1080-high page)
-    if (visual.visualType === 'clusteredBarChart') { const cf = catOf(Bt, visual.query), need = 25 * 10.2 * pg.page.h / 1080;
-      // (design round 10, D19 on one more chart: names a chart is cut to the Top N of are names it has many of)
-      put('categoryAxis', { maxMarginFactor: lit(Math.max(barNameShare(s.w, pg.page.h), cf && (cf.wide || top) && 0.4 * s.w < need ? 50 : 0) + 'L') }); }
-    // 0.3.1 FX5 (the owner, 28 Oct, D-1028-06: three bars drawn about 70 thick, a few columns each very wide): where the
-    // count of categories is known (the chart's Top N, a day, month or quarter axis, a field of two or a few known texts,
-    // a calendar's rows; the fewer of the two), a bar or column is never thicker than the measured maximum (pbip-sizing.js barBand): the gaps
-    // grow, inner and outer padding alike, so the bars stay centred; the value axis is never touched (equal values stay
-    // equal). Count not known: nothing written, Desktop's default as before. (small multiples share the width by panel;
-    // the gallery's waterfall, a column chart of steps, keeps its own look)
-    const nCat = col && BAND_TYPES.test(visual.visualType) && s.kind !== 'multiples' && s.kind !== 'waterfall' ? Math.min(top || Infinity, knownCount(catOf(Bt, visual.query), o) || Infinity) : 0;
-    const box = visual.position || {}, horizontal = BAR_TYPES.test(visual.visualType);
-    const band = nCat < Infinity ? barBand(nCat, barSpan(horizontal, +box.width || s.w, +box.height || s.h, pg.page.h), pg.page.h) : null;
-    if (band) { put('categoryAxis', { innerPadding: lit(band.pct + 'L'), outerPadding: lit(band.pct + 'L') }); out.bands = nCat;
-      // (FX5b) said in the plan: where, which kind, how many categories, the padding and the thickness (never a name)
-      note('barBands', { page: pg.name || base, kind: s.kind, visualType: visual.visualType, categories: nCat, padding: band.pct, thickness: Math.round(band.bar * 10) / 10, max: Math.round(band.max * 10) / 10 }); }
-    // O-13: the line chart's month label
-    if (s.kind === 'line' && col && Bt.date && ['monthStart', 'monthLabel'].includes((timeAxisPlan(Bt.date) || {}).order) && col.Property === Bt.date.c) {
-      byMonthStart(visual.query, Bt.date, 'Ascending');   // (a mirrored report's: turned round by the engine, after this)
-      const lf = st.Y && lastMonths(Bt.date, st.Y.projections[0].field, 12); if (lf) filters.push(lf);
-      note('timeAxes', { page: pg.name || base, field: Bt.date.t + '[' + Bt.date.c + ']', by: Bt.date.dateOf ? Bt.date.dateOf.t + '[' + Bt.date.dateOf.c + ']' : 'the label read as a date', last: lf ? 12 : null });
-    }
-    // O-14: a table's columns get set widths (auto-size off: grow-to-fit let a long text push the numbers out of view):
-    // numbers 90 to 130 by their header, the text columns share the rest (160 at least), all within the width less 36
-    // (padding and the scrollbar); values wrap. The order's helper (1) and the hidden name column (0) keep theirs.
-    if (s.kind === 'table') {
-      const ps = st.Values.projections, sc = pg.page.h / 1080, T = tt || +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
-      const cw = (visual.objects.columnWidth = visual.objects.columnWidth || []), fixed = new Set(cw.map((e) => e.selector.metadata));
-      const fieldOf = (p) => (Bt.table || []).filter(Boolean).find((f) => proj(f).queryRef === p.queryRef);
-      const isNum = (p) => (p.field.Measure && !p.field.Measure.Expression.SourceRef.Schema) || !!p.field.Aggregation || !!((fieldOf(p) || {}).num);
-      const isPic = (p) => p.field.Measure && p.field.Measure.Expression.SourceRef.Schema && !(rowLabels || []).some((r) => p.queryRef === r.t + '.' + r.m) && !/^Row label: /.test(p.field.Measure.Property);
-      const free = ps.filter((p) => !fixed.has(p.queryRef)), usable = s.w - 36 - cw.reduce((a, e) => a + parseFloat(e.properties.value.expr.Literal.Value), 0);
-      const pic = (((visual.objects.grid || [])[0] || { properties: {} }).properties.imageWidth || null), picW = pic ? parseFloat(pic.expr.Literal.Value) + 10 : 0;
-      const w = new Map();
-      // (0.2.9 rc1, S1/S2: each column at least its cellRoom, the room the table's fields were kept by: a number as wide as
-      // its widest value, so it never wraps, and every header whole; the text columns share what is left, and give up
-      // width only down to their own room; no number is narrowed)
-      const room = (p) => { const f = fieldOf(p); return f ? cellRoom(f, T, font, sc) : Math.ceil(textWidth(p.displayName || p.nativeQueryRef || '', T, true, font) + 24 * sc); };
-      free.filter(isNum).forEach((p) => w.set(p, room(p)));
-      free.filter(isPic).forEach((p) => w.set(p, picW || 90 * sc));
-      const texts = free.filter((p) => !w.has(p)), used = [...w.values()].reduce((a, x) => a + x, 0), mins = texts.map(room);
-      const spare = usable - used - mins.reduce((a, x) => a + x, 0);
-      texts.forEach((p, i) => w.set(p, mins[i] + Math.max(0, spare) / texts.length));
-      // no text column: the numbers share the whole width
-      if (!texts.length && w.size) { const k = usable / [...w.values()].reduce((a, x) => a + x, 0); if (k > 1) w.forEach((x, p) => w.set(p, x * k)); }
-      free.forEach((p) => cw.push({ properties: { value: num(Math.floor(w.get(p))) }, selector: { metadata: p.queryRef } }));
-      const ch = visual.objects.columnHeaders[0].properties; delete ch.columnAdjustment; ch.autoSizeColumnWidth = bool(false);
-      put('values', { wordWrap: bool(true) });
-    }
-    return filters;
-  };
-
-  // The kind a slot is written as: a column chart by names its columns can't hold is a bar chart (asBar), a chart by a
-  // two-valued category a donut, a column chart by many names a bar chart (byField). -> { slot, notes }
-  function slotKind(x) {
-    const { look: { LABEL }, theme: { font, base }, binding: { B, own }, page: { pg }, slot } = x, notes = [], note = (key, e) => notes.push([key, e]);
-    // Round 19 (seen in Desktop, golden tasks 1 and 4:3: day names slant on the column charts of models without a short
-    // day column): a column chart by day or month names whose widest name, at the label size, is wider than its share
-    // of the plot (as S3 works it out) is written as a bar chart, whose names are level, where the slot holds one bar
-    // per name (22 each + 46, measured in round 0 at 1280 x 720, scaled with the page). A model's "Day Short"
-    // (round 18) is used first, so such a chart stays a column chart.
-    // (0.2.9, A3-7: the names are measured in their own family, NAMES and namesOf: an Arabic month name by the Arabic
-    // names, a Hijri one by the Hijri names; a category the picker gives a kind is taken by that kind)
-    const asBar = (s) => {
-      const f = B && s.kind === 'column' && (B.cats || {}).column;
-      if (!f || f.short || f.c == null) return s;
-      const kind = f.kind ? (['day', 'month'].includes(String(f.kind)) ? String(f.kind) : null) : /(^|\s)(day|weekday)\s*name|اسم اليوم/i.test(f.c) ? 'day' : /(^|\s)month\s*name|اسم الشهر/i.test(f.c) ? 'month' : null;
-      const list = kind && namesOf(f, kind);
-      // writer round 9 (RESCORE-2 D15: bank's "Debtconsolidation" slanted and cut, 6 columns on a designed page): a text
-      // category whose names the writer can't measure (no values read) takes the writer's stand-in for a name, 12 letters at
-      // the label size, as its tables do; where its columns (the design's N, else as many as hold that name) can't each
-      // hold it, it is written as a bar chart, names level (the share of barNameShare), where the slot holds 3 rows (22.2 a
-      // row + 45 + 8 + 38, measured); in a slot too low for that it keeps its columns, as many as hold the name
-      // (0.3, J11) first the limits measured in Desktop 2.159 (label-limits.js: names that may wrap to 2 lines, never cut
-      // or slanted); a kept column chart or a bar chart says why (kindWhy, in the plan); outside the measured table the
-      // writer's rule as before
-      const limits = (o) => (LL ? LL.decide(Object.assign({ width: s.w, pageWidth: pg.page.w, labelPt: LABEL }, o)) : { kind: null });
-      // (0.3.1 R4A) the person's words beside the measured why (kindSaid, kindSaidAr: no pixels or letter widths)
-      const barSaid = (d, n, noun, nounAr) => (d.kind ? { kindSaid: d.said, kindSaidAr: d.saidAr } : { kindSaid: `A bar chart, not columns: ${n} ${noun} would be cut or slanted under columns.`, kindSaidAr: `مخطط شريطي أفقي لا أعمدة: أسماء ${nounAr} (${n}) ستُقص أو تميل تحت الأعمدة.` });
-      if (!list) {
-        if (!own || !isTextField(f) || isTime(f) || catKind(f) || f.sortBy || f.ordered || f.dateOf) return s;
-        const plot = s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40, need = textWidth('n'.repeat(12), LABEL, false, font) + 6, fit = Math.max(3, Math.floor(plot / need));
-        const n = s.topN || fit, d = limits({ count: n, lang: null });
-        if (d.kind === 'column' || (!d.kind && plot / n >= need)) return s;
-        const rows = Math.floor((s.h * 720 / pg.page.h - 45 - 8 - 38) / 22.2);
-        if (rows < 3) return Object.assign({}, s, { topN: fit });
-        note('barCharts', { page: pg.name || base, field: label(f) });
-        return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows, topN: rows, kindWhy: d.kind ? d.why : `bar: ${n} categories at ${Math.round(s.w * 1920 / pg.page.w)} px, a 12-letter name wider than a column (outside the measured limits: the writer's own widths)` }, barSaid(d, n, 'names', 'الفئات'));
-      }
-      const k = pg.page.h / 720, room = (s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40) / list.length, widest = Math.max(...list.map((d) => textWidth(d, LABEL, false, font)));
-      // (a month column the model names short, "Month Short", shows Jan to Dec; Arabic and Hijri names have no short form)
-      const names = kind === 'month' && LL && list[0] === 'January' && /short|abbr|mmm/i.test(String(f.c)) ? LL.NAMES.monthShort.en : list;
-      const d = limits({ names, count: names.length, noun: kind === 'day' ? 'weekdays' : 'months' });
-      // (night sitting 6-7 Oct, measured in Desktop 2.158 on a 221-high slot at 1280 x 720, names at the theme's 10pt: a
-      // row is 22.2, the first starts 45 under the box's top and 8 stay under the last; the value axis and its room
-      // take 38 more, and with it Saturday went behind a scrollbar. So: 23 a row + 54, and where the axis's 38 do not
-      // fit as well the chart is written without its value axis, each bar's value beside it (rows, below).)
-      if (d.kind === 'column' || (!d.kind && widest + 6 <= room) || s.h < (list.length * 23 + 54) * k) return s;
-      note('barCharts', { page: pg.name || base, field: label(f) });
-      return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows: list.length, kindWhy: d.kind ? d.why : `bar: ${list.length} ${kind === 'day' ? 'weekdays' : 'months'} at ${Math.round(s.w * 1920 / pg.page.w)} px, the widest name wider than a column (outside the measured limits: the writer's own widths)` }, barSaid(d, list.length, kind === 'day' ? 'weekdays' : 'months', kind === 'day' ? 'الأيام' : 'الأشهر'));
-    };
-    // (design round 9, the re-score's D11: two bars across a wide slot on four reports) a bar or column chart by a
-    // category the picker marks two-valued (true/false, an IF of two words) is a donut: two shares read at a glance.
-    // (D19: product names cut on a column chart, 6 of 8) a column chart by a many-valued category (a lookup table's name,
-    // a city) is a bar chart, its names level; its rows are the bar rows its slot holds (the measured 22.2 a row).
-    // A slot keeps the kind it was planned as (was): its category and its title are that kind's.
-    const byField = (s) => {
-      const f = B && (s.kind === 'bar' || s.kind === 'column') && (B.cats || {})[s.kind];
-      if (!f || f.c == null) return s;
-      if (f.two) return Object.assign({}, s, { kind: 'donut', was: s.kind, topN: null, kindWhy: 'donut: a category with two values', kindSaid: 'A donut chart: the category has two values.', kindSaidAr: 'مخطط حلقي: للفئة قيمتان.' });
-      if (s.kind === 'column' && f.wide && !s.wasColumn) { const rows = Math.max(1, Math.floor((s.h * 720 / pg.page.h - 45 - 8 - 38) / 22.2));
-        note('barCharts', { page: pg.name || base, field: label(f) }); return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows, topN: s.topN ? rows : s.topN, kindWhy: 'bar: a category with many values (a lookup table\'s names), names level', kindSaid: 'A bar chart, not columns: a category with many names reads with its names level.', kindSaidAr: 'مخطط شريطي أفقي لا أعمدة: فئة بأسماء كثيرة تُقرأ وأسماؤها مستقيمة.' }); }
-      return s;
-    };
-    return { slot: byField(asBar(slot)), notes };
-  }
-
-  // A page's row of KPI cards: one title size and one value size for the row (and whether a title wraps)
-  function kpiRow(x) {
-    const { look: { TITLE, CALLOUT, SOLID, AUTO_EM, valueEm, cardFit, kpiTitleFit }, theme: { o, W, font }, binding: { B }, page: { pg }, slots: sorted } = x;
-    // The KPI titles of a page share one size (seen in Desktop on 2026-10-05: 12pt beside 8pt in one row looked
-    // wrong): the largest, down to 8pt, at which the longest title of the row fits its card.
-    let kpiTitle = TITLE;
-    sorted.filter((s) => s.kind === 'kpi').forEach((s, i) => {
-      const f = B && B.kpis ? B.kpis[i] : null, text = f ? kpiLabel(f, W.by) : s.title;
-      const c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: pg.kpiInset || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) }, valueEm(f));
-      while (kpiTitle > 8 && text != null && textWidth(text, kpiTitle, true, font) > s.w - c.S - c.P) kpiTitle--;
-    });
-    // An SVG design on a card's image (o.svgCards): the image area is a percent of the card's inner width, which was
-    // 0.8 of the card's width on the two cards measured (163 and 165 wide, 1280 x 720). The design is shown at its own
-    // width where that is 10 to 25 percent, and the value is fitted to the width left (take: the area and a gap of 8).
-    // Round 12 (the owner's go on round 11's recommendation 3, and #8): the image area is a percent of the card's width
-    // less its padding, measured in Desktop 2.158 (round 11) as 25 a side at 1920 x 1080 and 17 at 1280 x 720 (25 x the
-    // page's scale), not of 0.8 x the card; and one percent for the row, from its narrowest card, so the images are equal.
-    const kpiSlots = sorted.filter((s) => s.kind === 'kpi'), rowMinW = kpiSlots.length ? Math.min(...kpiSlots.map((s) => s.w)) : 0, imgPad = 50 * pg.page.h / 1080;
-    const imgOf = (s, i) => { const sc = (o.svgCards || []).find((x) => x.card === i); if (!sc) return null;
-      // Round 13 (seen in Desktop 2.158, 6 Oct 2026, "SC EN light 720": a 64 x 64 ring on a 96-high card, sized by the
-      // width alone, was drawn 54.6 high and its top was cut by the card): the picture is never taller than the
-      // room under the card's title (the card less its top and bottom padding, the title's lines, the value's own
-      // padding and the 2 between them: imgRoom), on the row's widest card; 5 percent at least.
-      const byWidth = Math.max(10, Math.min(25, Math.round(100 * (+sc.w || 48) / Math.max(1, rowMinW - imgPad))));
-      const byHeight = Math.floor(100 * imgRoom(s) * ((+sc.w || 48) / (+sc.h || 48)) / Math.max(1, rowMaxW - imgPad));
-      const pct = Math.max(5, Math.min(byWidth, byHeight)); return { sc, pct, take: Math.ceil((s.w - imgPad) * pct / 100) + 8 }; };
-    // (the title takes one line at the theme's size or two at 8pt, whichever is higher, so the room holds in both)
-    const rowMaxW = kpiSlots.length ? Math.max(...kpiSlots.map((s) => s.w)) : 0;
-    const imgRoom = (s) => { const c0 = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, KPI_M, AUTO_EM); return s.h - c0.T - c0.P - 2 * c0.I - Math.max(Math.ceil(TITLE * 1.5), 2 * Math.ceil(8 * 1.5)) - 2; };
-    const KPI_M = { top: Math.round(12 * pg.page.h / 1080), side: pg.kpiInset || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) };
-    // one KPI card's fit: on one title line (c), on two (two), its image, and how its title is shown (fit)
-    const kpiFits = (s, i, text, f) => { const im = imgOf(s, i), take = im ? im.take : 0, c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, KPI_M, valueEm(f), 1, take), two = cardFit(s.w, s.h, pg.page.h / 720, kpiTitle, CALLOUT, KPI_M, valueEm(f), 2, take);
-      return { c, two, im, fit: kpiTitleFit(text, kpiTitle, s.w - c.S - c.P, c, two) }; };
-    // #9 (seen in Desktop 2.158, round 11: one 15pt value among 14pt ones): one value size for the row, the smallest
-    // that fits every card
-    let rowV = null;
-    const rowValue = () => (rowV == null ? (rowV = Math.min(...kpiSlots.map((s, i) => { const f = B && B.kpis ? B.kpis[i] : null; return kpiFits(s, i, f ? kpiLabel(f, W.by) : s.title, f).c.V; }))) : rowV);
-    let rowWrap = null;
-    const rowWraps = () => (rowWrap == null ? (rowWrap = sorted.filter((s) => s.kind === 'kpi').some((s, i) => { const f = B && B.kpis ? B.kpis[i] : null; return kpiFits(s, i, f ? kpiLabel(f, W.by) : s.title, f).fit.mode === 'wrapped'; })) : rowWrap);
-    return { kpiTitle, kpiFits, rowValue, rowWraps };
-  }
-
-  // A page's slicers: each slicer's visual (a rounded dropdown, or pills) with its notes, and the heights of stacked slicers
-  function slicers(x) {
-    const { look: { frame, DEF, SLICER_TEXT, pillH, pillFits, pillW, pillRoom, PILL_PAD, slicerH, oneLine }, theme: { o, u, font, edge, base }, metrics: { k }, direction: { rtl }, page: { pg } } = x;
-    // a slicer's header, shortened to the slicer's width: the header's own text (header.text, in Microsoft's theme
-    // schema), so the field keeps its name everywhere else; the full name stays the slicer's alt text
-    // (rc1, PERF-COMPARE D3: "Enforcement_History..." cut where a smaller text held it whole: the header takes the largest
-    // size, down to 8pt, at which the name is whole, as a KPI card's title; it is shortened only where even 8pt doesn't hold it)
-    // (polish round P2, the owner's rounded slicer boxes; seen in Desktop 2.158, DESKTOP-TESTS.md 2026-10-12) a dropdown
-    // slicer's box rounded at 8, the cards' corners, with the design's edge colour as its border. Exactly these three
-    // properties: Microsoft's validator 0.4.0 does not know the "dropdown" object, and check_report shows exactly this
-    // shape as a known note (mcp/lib/check-report.mjs VALIDATOR_GAPS); any other property in it would stay an error.
-    const slicerBox = () => obj({ borderRadius: num(8), borderIndividualCorners: bool(false), borderColor: color(edge) });
-    // (0.3.0 L2, the polish lab of 12-13 Oct, Desktop 2.158: "pills") with o.slicerStyle 'pills', a slicer whose field has
-    // 2-6 values known from the model's metadata alone (two values: true/false or an IF/SWITCH of two texts; a quarter; a
-    // calculated column of 3-6 texts, the picker's few) is Power BI's button slicer: rounded buttons on one row, a calm fill,
-    // the selected one in the accent; every other slicer stays the rounded dropdown. Each is told with why (slicerStyles).
-    // Names and values from Microsoft's catalog (powerbi-core-visual-schema): the state-keyed cards as a button's (each
-    // card's show with no selector, its look in "default", the selected look in "selected"); shape and layout have no states.
-    // Right to left: sorted descending by the field on its one row, so the first value is at the right.
-    const PILLS = o.slicerStyle === 'pills', int = (x) => lit(Math.round(x) + 'L');
-    const valuesKnown = (f) => (!f ? null : f.two ? { n: 2, why: 'two values (true/false, or a formula of two texts)' } : f.cal && f.cal.rows ? { n: f.cal.rows, why: f.cal.rows + ' values (a ' + f.cal.kind + ')' } : f.few ? { n: f.few, why: f.few + ' values (a formula of ' + f.few + ' texts)' } : null);
-    const slicerVisual = (f, ttl, w, h) => {
-      const notes = [], note = (key, e) => notes.push([key, e]);
-      const kv = valuesKnown(f);
-      // (0.3.0 F1) the pills' text size: the slicer text, a size smaller at a time (to 8) until the header and one row of
-      // tiles fit the visual's height (pillH); a slot too low even at 8 keeps the dropdown, said with why
-      let pt0 = SLICER_TEXT; while (h && pt0 > 8 && pillH(pt0) > h) pt0 = Math.max(8, Math.ceil(pt0) - 1);
-      // (0.3.0 C1 add-on, the laptop's PILLS-F6: "Medium" drawn "Mediu…" in a rail's 86 px pill) and the width: the widest
-      // value known from the model (true/false, a formula's texts; a calendar's quarter by the longest way it is written)
-      // at the text size, plus its room, in one pill (pillFits), a size smaller at a time to 8; else the dropdown, said
-      const texts = kv ? (f.texts || (f.cal && f.cal.kind === 'quarter' ? ['Quarter 4', 'الربع 4'] : null)) : null;
-      // (a smaller text needs a little more height, pillRoom: the first size where both the height and the width hold)
-      if (kv && texts && w && !pillFits(texts, kv.n, w, pt0)) { let p = pt0; while (p > 8 && !(pillFits(texts, kv.n, w, p) && !(h && pillH(p) > h))) p = Math.max(8, Math.ceil(p) - 1); if (pillFits(texts, kv.n, w, p) && !(h && pillH(p) > h)) pt0 = p; }
-      const narrow = !!(kv && w && (!texts || !pillFits(texts, kv.n, w, pt0))), widest = texts ? texts.slice().sort((x, y) => y.length - x.length)[0] : null;
-      const low = !narrow && !!(h && pillH(pt0) > h), pill = PILLS && kv && kv.n >= 2 && kv.n <= 6 && !low && !narrow;
-      if (PILLS && f) note('slicerStyles', { page: pg.name || base, field: f.t + '[' + f.c + ']', written: pill ? 'pills' : 'dropdown',
-        why: pill ? kv.why + ', known from the model' + (pt0 < SLICER_TEXT ? '; text ' + pt0 + 'pt so the header and the pills fit the slicer\'s height and every value fits its pill' : '') : kv && kv.n >= 2 && kv.n <= 6 && narrow && !low ? (texts ? 'the pills would cut «' + widest + '» (' + Math.floor(pillW(kv.n, w)) + ' a pill; no smaller text fits both its width and the slicer\'s height): a dropdown' : 'its values\' texts are not known from the model, so their width can\'t be checked: a dropdown') : kv && kv.n >= 2 && kv.n <= 6 ? 'the slicer is ' + Math.round(h) + ' high, the pills need ' + pillH(8) + ' at their smallest text (8pt): a dropdown' : kv ? kv.why + ': more than pills hold (2-6)' : 'its number of values is not known from the model\'s metadata' });
-      if (!pill) return { visual: { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
-        objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, w, note), dropdown: slicerBox() }, visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true }, notes };
-      const query = q({ Values: [proj(f)] }), acc = u.accent || u.text, calm = mixHex(acc, u.card, 0.9), onAcc = contrast(u.text, acc) >= contrast(u.card, acc) ? u.text : u.card, SEL = { id: 'selected' };
-      if (rtl) query.sortDefinition = { sort: [{ field: query.queryState.Values.projections[0].field, direction: 'Descending' }] };
-      // (0.3.0 F1, the laptop proof on Desktop 2.159: every pill drawn with no text) the button slicer's item text is its
-      // "Values" card (value); written as the new card's value is measured to need (round 0, mcp/docs/RULES-POWERBI.md): everything
-      // under the default selector, show included, never an entry without one; the outline likewise. The fill's show
-      // stays without a selector (the card's fillCustom.show: measured). Other shapes for the laptop: mcp/lab/pills-variants.mjs
-      const states = (show, look, picked) => [{ properties: show }, { properties: look, selector: DEF }, { properties: picked, selector: SEL }];
-      const keyed = (look, picked) => [{ properties: look, selector: DEF }, { properties: picked, selector: SEL }];
-      const full = label(f), shownT = oneLine(full, pt0, w - 2 * Math.round(8 * k));
-      if (shownT !== full) note('titles.slicers', { page: pg.name || base, field: full, shown: shownT });
-      return { visual: { visualType: 'advancedSlicerVisual', query,
-        // (0.3.0 F4, the owner: "remove the margins in the pills, that will give you more room") every margin the button
-        // slicer has, by Microsoft's capabilities (advancedSlicerVisual; vco-capabilities for the container), written 0:
-        // the layout's cell, row and column padding and outer margins (no states), the tiles' padding and the space
-        // between value and label (state-keyed: default), the container's padding and the space below its title
-        // (F5, the owner: "nothing touches or breaks") except the gap between two pills, columnPadding 6: across, no height
-        objects: { shapeCustomRectangle: obj({ tileShape: str('pill') }), layout: obj({ rowCount: int(1), columnCount: int(kv.n), customizePadding: bool(true), cellPadding: int(0), rowPadding: int(0), columnPadding: int(6),
-            topOuterMargin: int(0), bottomOuterMargin: int(0), leftOuterMargin: int(0), rightOuterMargin: int(0) }),
-          fillCustom: states({ show: bool(true) }, { fillColor: color(calm) }, { fillColor: color(acc) }),
-          // (0.3.0 P7, the owner: "if English then the value in the pill LTR, if Arabic then RTL") each value centred in its
-          // pill, in both languages (value.horizontalAlignment, Microsoft's capabilities), text wrap off (a wrapped value
-          // needs a second line the measured height has no room for); the tiles' order is the sort's (no direction setting)
-          value: keyed({ show: bool(true), fontFamily: str(font), fontSize: num(pt0), fontColor: color(u.text), horizontalAlignment: str('center'), textWrap: bool(false) }, { fontColor: color(onAcc) }),
-          outline: keyed({ show: bool(true), lineColor: color(edge) }, { lineColor: color(acc) }),
-          padding: obj({ paddingSelection: str('Custom'), topMargin: int(PILL_PAD), bottomMargin: int(PILL_PAD), leftMargin: int(PILL_PAD), rightMargin: int(PILL_PAD) }, DEF),
-          spacing: obj({ verticalSpacing: int(0) }, DEF) },
-        // (F1) the header written at the tiles' size, as the dropdown's is (Power BI's own title size took the tiles' room)
-        visualContainerObjects: (() => { const fr = frame(shownT, full); Object.assign(fr.title[0].properties, { fontSize: num(pt0), fontFamily: str(font) });
-          return Object.assign(fr, { padding: obj({ top: num(0), bottom: num(0), left: num(0), right: num(0) }), spacing: obj({ customizeSpacing: bool(true), spaceBelowTitle: num(pillRoom(pt0)), spaceBelowTitleArea: num(0) }) }); })(), drillFilterOtherVisuals: true }, notes };
-    };
-    // (0.3.0 F2) the heights of stacked slicers: each pill slicer pillH (the measured need) when all fit the room, else the
-    // room left after the dropdowns, shared by the pills (never less than the dropdown's height)
-    const isPill = (f) => { const kv = PILLS && valuesKnown(f); return !!(kv && kv.n >= 2 && kv.n <= 6); };
-    const stackHeights = (fields, sh, room) => {
-      const want = fields.map((f) => (isPill(f) ? Math.max(sh, pillH(SLICER_TEXT)) : sh)), np = fields.filter(isPill).length;
-      if (!np || want.reduce((a, b) => a + b, 0) <= room) return want;
-      // (0.3.0 F3, the rail on 2.159: 76 at 8pt cut the pills' text) short of room, a dropdown gives up its extra height
-      // first, down to its own measured need (slicerH), so the pills keep theirs; then the pills share what is left
-      const nd = fields.length - np, dmin = Math.min(sh, slicerH(SLICER_TEXT));
-      const pe = Math.max(dmin, Math.min(pillH(SLICER_TEXT), (room - nd * dmin) / np)), de = nd ? Math.max(dmin, Math.min(sh, (room - np * pe) / nd)) : 0;
-      return fields.map((f) => (isPill(f) ? pe : de));
-    };
-    const slicerHeader = (f, w, note) => { const out = { show: bool(true), fontFamily: str(font) }; if (!f) return obj(out); const full = label(f), room = w - 2 * Math.round(8 * k);
-      let size = SLICER_TEXT; while (size > 8 && oneLine(full, size, room) !== full) size = Math.ceil(size) - 1;
-      if (size < SLICER_TEXT) out.textSize = num(size);
-      const shown = oneLine(full, size, room);
-      if (shown !== full) { note('titles.slicers', { page: pg.name || base, field: full, shown }); out.text = str(shown); } return obj(out); };
-    return { slicerVisual, stackHeights };
-  }
-
-  // Round 16 (design finding #18) and round 18: each chart of a page by a category not used on the page yet, from the
-  // picker's pool (B.catPool), given out once for the page: the bar charts and the donut first in reading order, then the
-  // column chart and the map; a chart repeats a category only when the pool has no unused one (see visual)
-  function categoryPlan(x) {
-    const { binding: { B }, slots: sorted } = x, catPlan = new Map(), pageCats = new Set();
-    if (!B) return catPlan;
-    const kindOf = (s) => s.was || (s.wasColumn ? 'column' : s.kind), k0 = (f) => f.t + '\u0001' + f.c;
-    const last = (x) => kindOf(x) === 'column' || x.kind === 'map', all = sorted.filter((x) => CAT_KINDS.includes(x.kind) && (B.cats || {})[kindOf(x)]);
-    all.filter((x) => !last(x)).concat(all.filter(last)).forEach((x) => { let c = B.cats[kindOf(x)]; if (pageCats.has(k0(c))) { const alt = (B.catPool || []).find((f) => !pageCats.has(k0(f))); if (alt) c = alt; } pageCats.add(k0(c)); catPlan.set(x, c); });
-    return catPlan;
-  }
-
   // One slot's visual: the header's title and logo, a text box, a card, a chart or a table, with its fixes; the assembly
   // gives it its name and z, the "No data" card's measure its name, and adds the panel behind a table on its rows
   function visual(x) {
-    const { theme: { o, u, W, font, base, lang, logoFile, GRAD, GRAD2, GRID, NODATA }, look: L, metrics: { kpiTitle, kpiFits, rowValue, rowWraps },
-      binding: { B, own, planned, chartTitles }, slot: s, plan, kpiIndex, page: { pg, pageIndex }, direction: { rtl, align, MIRROR, CONTINUOUS }, known, measures } = x;
-    const { rowLabels, rowLabelSkipped, noDataSkipped, colourKeys } = known, { extMeasure, freeExt } = measures;
-    const { CALLOUT, DEF, FULL, LABEL, SOLID, TITLE, boxFit, cardCode, cardFit, cardFrame, cardObjects, centred, frame, pt, textbox, titleFit, valueEm } = L;
+    const { theme: { o, u, W, font, base, lang, logoFile, NODATA }, look: L,
+      binding: { B, own, chartTitles }, slot: s, kpiIndex, page: { pg }, direction: { rtl, align }, known } = x;
+    const { rowLabels, noDataSkipped } = known;
+    const { LABEL, SOLID, TITLE, boxFit, centred, frame, pt, textbox, titleFit } = L;
     const out = { notes: [], counts: {}, rings: [] }, note = (key, e) => out.notes.push([key, e]), count = (key) => { out.counts[key] = (out.counts[key] || 0) + 1; };
+    const sink = { out, note, count };   // (the builder's output: the family steps add their notes and counts to it)
     const tc = { own, LABEL, font }, type = TYPES[s.kind] || (isGallery(s.kind) ? G.typeOf(s.kind) : 'cardVisual');
-    // (P3, N27) a bar or column chart's colour index, keyed to its category field (else its measure) across the report:
-    // the report's keys read here, the new key returned (colourKey) for the assembly to keep
-    const colourOf = (query) => { const st = query.queryState, p = ((st.Category || st.Y || {}).projections || [])[0], k = JSON.stringify(p ? p.field : null), K = colourKeys;
-      out.colourKey = k; return k in K ? K[k] : Object.keys(K).length % 2; };
-    let pending = null;   // (this table's row label, for its own column widths: fixVisual reads it with the report's)
+    let pending = null;   // (this table's row label, for its own column widths: Tb.fix reads it with the report's)
     let visual, box = s, vFilters = null, tableH = null;   // (tableH: a table's whole-row height inside its panel, S3 with the design's N6)   // (vFilters: the visual's own filters, from fixVisual; the cross-review's G12)
     let hov = null;   // a chart's own measure and category, for its tooltip page (the second sweep's T4 and T5)
     if (s.kind === 'title') {
@@ -548,60 +224,12 @@ const fixVisual = (visual, s, pg, Bt, tt, x) => {
       // template download only: create_report leaves the box out when it has no text for it)
       visual = { visualType: 'textbox', objects: textbox(s.text != null ? String(s.text) : W.textHere || 'Explain what the main chart shows and what to do about it.', s.text != null ? Math.max(11, LABEL) : 11, false, u.text), visualContainerObjects: frame(s.title, s.title, null, true) };
     } else {
-      // a table keeps only the fields its width has room for (tableFit); Bt is the bind this table is written from
-      let Bt = B, tableText = null, smallEntry = null;
-      if (B && (s.kind === 'table' || s.kind === 'matrix')) {   // (a matrix too: round 16, #15)
-        // Round 12 (the owner's go on round 11's recommendation 5): a table too narrow for its fields first takes a
-        // smaller text, down to 8pt: the largest size that keeps the most fields; a field is left out only where even
-        // that doesn't hold it. The size is written on the table (values, headers, total) and told.
-        const T0 = +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
-        // (rc1, S1/S2: a table's fields are kept by cellRoom, the room its column widths are written by, within its width
-        // less 36 (padding and scrollbar); a matrix keeps the earlier rule)
-        const tsc = s.kind === 'table' ? pg.page.h / 1080 : null, tw = tsc ? s.w - 36 : s.w, roomOf = (f, t2) => (tsc ? cellRoom(f, t2, font, tsc) : fieldRoom(f, t2, font));
-        let tf = tableFit(B.table, tw, T0, font, tsc);
-        if (tf.leftOut.length) { for (let t2 = Math.ceil(T0) - 1; t2 >= 8; t2--) { const f2 = tableFit(B.table, tw, t2, font, tsc); if (f2.kept.length > tf.kept.length) { tf = f2; tableText = t2; } if (!f2.leftOut.length) break; } }
-        // Round 22 (golden task 6 in English, in Desktop since the night of 6-7 Oct: two long names at the theme's 15pt
-        // were wider than the table, a horizontal scrollbar): the fields a table keeps must fit its box too. The text
-        // was only made smaller to keep more fields; the two that are always kept were never measured. It now goes
-        // down, to 8pt at most, until the kept fields fit (told like every smaller table text)
-        // Round 22b (the review of round 22, item 8): two fields wider than the box even at 8pt are told. (The fit is
-        // not redone at this size: the loop above already tried every size down to 8 and kept the most fields, so
-        // this only runs where the two alone are kept, and no third fits at any size: checked on 30,000 tables)
-        { const need = (t2) => tf.kept.reduce((a2, f) => a2 + roomOf(f, t2), 0); let t3 = tableText || T0;
-          while (t3 > 8 && need(t3) > tw) t3 = Math.ceil(t3) - 1;
-          if (t3 < (tableText || T0)) tableText = t3;
-          if (need(t3) > tw) note('tableWide', { page: pg.name || base, width: s.w, need: Math.ceil(need(t3)) }); }
-        if (tableText) note('tableSmaller', smallEntry = { page: pg.name || base, size: tableText, from: T0 });
-        if (tf.leftOut.length) { Bt = Object.assign({}, B, { table: tf.kept }); note('tableColumns', { page: pg.name || base, pageIndex, x: s.x, y: s.y, kept: tf.kept, leftOut: tf.leftOut }); }
-      }
-      // Round 16 (design finding #18): each chart of a page by a category not used on the page yet, from the picker's
-      // pool (B.catPool), where the model has more than one; the same category only when it has no other
-      // Round 18 (seen in Desktop, 6 Oct 2026: on a model with three text columns the operations layout's two bar
-      // charts were both by the first one, because the column chart, earlier in the reading order, had taken the
-      // third): the page's categories are given out once, the bar charts and the donut first in reading order,
-      // then the column chart and the map; a chart repeats a category only when the pool has no unused one.
-      // (night sitting 6-7 Oct, seen in Desktop: a column chart written as a bar chart, round 19, took the bar chart's
-      // category: the page showed the same chart twice. It keeps the column chart's own: kindOf.)
-      const kindOf = (x) => x.was || (x.wasColumn ? 'column' : x.kind);
-      if (B && CAT_KINDS.includes(s.kind) && (B.cats || {})[kindOf(s)]) {
-        const c = planned; if (c && c !== B.cats[s.kind]) Bt = Object.assign({}, Bt, { cats: Object.assign({}, Bt.cats, { [s.kind]: c }) });
-      }
-      // (writer round 9: a column chart written as a bar chart keeps the column chart's own measure, as it keeps its
-      // category and title; it took the bar chart's, so a page could show one measure twice)
-      if (B && s.wasColumn) Bt = Object.assign({}, Bt, { y: Object.assign({}, Bt.y, { bar: (Bt.y || {}).column }) });
-      // Round 18, S3 (the owner's yes, 6 Oct 2026; seen in Desktop: the day names slant on the 1920 x 1080 column
-      // charts): a column chart by Day Name takes the calendar's Day Short where the model has it (c.short) and the
-      // full names, at the label size, are wider than a seventh of the chart's plot (the value axis about 40)
-      if (B && s.kind === 'column' && ((Bt.cats || {}).column || {}).short) {
-        const c0 = Bt.cats.column, room = (s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40) / 7;
-        const widest = Math.max(...namesOf(c0, 'day').map((d) => textWidth(d, LABEL, false, font)));   // (A3-7: the day names of its own family)
-        if (widest + 6 > room) { Bt = Object.assign({}, Bt, { cats: Object.assign({}, Bt.cats, { column: Object.assign({}, c0.short, { name: label(c0) }) }) }); note('shortDays', { page: pg.name || base }); }
-      }
-      // (0.3.0 D2) a combo in two units is two panels: each line chart carries its own measure and axis (visual-gallery.js split)
-      if (B && s.bind) Bt = Object.assign({}, Bt, s.bind.measure ? { measure: s.bind.measure } : {}, s.bind.date ? { date: s.bind.date } : {});
+      // a table keeps only the fields its width has room for (pbip-visuals-tables.js prepare); Bt is the bind this visual is
+      // written from, and each chart's category, measure and axis (pbip-visuals-charts.js prepare)
+      let { Bt, tableText, smallEntry } = Tb.prepare(x, { Bt: B }, sink);
+      Bt = Ch.prepare(x, { Bt }, sink);
       const query = B ? (isGallery(s.kind) ? G.bindQuery(s.kind, Bt) : bindQuery(s.kind, Bt, kpiIndex, rtl)) : null;
-      if (B && CHARTS.includes(s.kind)) { const k = s.kind;
-        hov = { m: k === 'line' ? Bt.measure : k === 'funnel' && Bt.y && 'funnel' in Bt.y ? Bt.y.funnel : (Bt.y || {})[k] || Bt.measure, cat: k === 'line' ? Bt.date : (Bt.cats || {})[k] }; }
+      hov = Ch.hover(s.kind, B, Bt);
       let ttl = s.title;
       const extra = {};
       // (round 10: the sample download names its charts by their fields too, "Total Revenue by Month", as a report on a
@@ -616,7 +244,7 @@ const fixVisual = (visual, s, pg, Bt, tt, x) => {
       // (0.3.1 TT1, the owner, 27 Oct: a title is wholly Arabic or wholly English) its «أعلى» / "Top" and its «التفاصيل» /
       // "detail" are in the title's language, not the report's: "Top 6: Total Sales by Region" in an Arabic report too
       const arT = AR_LETTERS.test(ttl || '');
-      { const top = B && query ? topCount(tc, s, pg, catOf(Bt, query)) : 0; if (top && ttl) { topLead = (arT ? 'أعلى ' : 'Top ') + top + ': '; topOf = { n: top, cat: catOf(Bt, query), y: query.queryState.Y.projections[0].field }; } }
+      { const top = B && query ? Ch.topCount(tc, s, pg, Ch.catOf(Bt, query)) : 0; if (top && ttl) { topLead = (arT ? 'أعلى ' : 'Top ') + top + ': '; topOf = { n: top, cat: Ch.catOf(Bt, query), y: query.queryState.Y.projections[0].field }; } }
       if ((s.kind === 'table' || s.kind === 'matrix') && ttl && chartTitles.has(ttl)) tail = ': ' + (arT ? (W.detail && AR_LETTERS.test(W.detail) ? W.detail : 'التفاصيل') : (W.detail && !AR_LETTERS.test(W.detail) ? W.detail : 'detail'));   // (round 14: in the title's own script)
       // (0.3, J4, B-131: a long title was cut at a word, "...حسب قناة البيع المستخدمة في…") the first form whose title
       // fits its box on two lines, with its "Top 999 of 999: " (the report measure's longest lead) and its ": detail";
@@ -638,71 +266,8 @@ const fixVisual = (visual, s, pg, Bt, tt, x) => {
       if (B && own && !query && (CHARTS.includes(s.kind) || isGallery(s.kind) || ['table', 'matrix', 'gauge', 'card'].includes(s.kind))) { note('leftOut', { page: pg.name || base, kind: s.kind, title: s.title || null }); return Object.assign(out, { skip: true }); }
       visual = { visualType: type, visualContainerObjects: frame(ttl, altFull || ttl, extra, true), drillFilterOtherVisuals: true };
       if (query) visual.query = query;
-      // bars that fade by value (gradientFill above): the report's own bar and column charts, never the tooltip pages';
-      // the second of a page fades from a chosen second colour (polish round P1, B-71: colour 2 was never used; P1+: secondColour);
-      // P3 (RESCORE-6 N27: the same chart swapped colours between pages 1 and 2): a chart's colour is keyed to its category
-      // field, report-wide (chartColors.keys): the first field met takes colour 1, the next colour 2, and so on in turn
-      if (GRAD && query && (s.kind === 'bar' || s.kind === 'column')) { const g2 = colourOf(query) && GRAD2; visual.objects = { dataPoint: gradientFill(query.queryState.Y.projections[0].field, g2 || GRAD) }; count('chartColors.charts'); if (g2) count('chartColors.second'); }
-      // Round 21 (the capabilities lab's #6, Desktop 2.158, 7 Oct 2026: "77.7K" above the columns, kept on Save): a column
-      // chart with few columns shows its values above them: labels at 'OutsideEnd', automatic units (0, K or M by the
-      // values' size, as the KPI cards) with one decimal (a percent measure keeps its own format). Only where the
-      // number of columns is known from the model's names: a quarter (4); other columns could have any number.
-      // (0.3.1 SQ1, 0.2.9-writer-S14: "8.0Kkg") a measure the cards show whole (wholeFormat: a unit, a count) keeps its own
-      // format there, display units None and no decimal added, as on its card and its tooltip's bars (T10, tipLook)
-      if (query && s.kind === 'column') { const cf = query.queryState.Category.projections[0], cn = String(cf.nativeQueryRef || cf.queryRef || '');
-        // (round 22, the code review's f: "Year Quarter" and "Fiscal Year Quarter" end the same way and hold 8 to 40 values:
-        // a name with a year in it is never taken for four columns)
-        const four = (n) => /(^|\s|\.)quarter$|الربع/i.test(n) && !/year|سنة|السنة|عام/i.test(n);
-        const cf0 = (Bt.cats || {}).column || {};   // (A3-7: the picker's kind and count first, where it gives them)
-        if (cf0.kind ? String(cf0.kind) === 'quarter' && (catKind(cf0) || {}).rows === 4 : four(cn) || four(String(cf0.c || ''))) {
-          const yf = ((Bt.y || {}).column || Bt.measure || {}), pct = !!yf.pct;
-          visual.objects = visual.objects || {};
-          const whole = !pct && !!yf.wholeFormat;
-          visual.objects.labels = obj(Object.assign({ show: bool(true), labelPosition: str('OutsideEnd'), labelDisplayUnits: num(whole ? 1 : 0) }, pct || whole ? {} : { labelPrecision: lit('1L') }));
-        } }
-      // P2, the owner's polish (LAB-POLISH, measured in Desktop 2.158): a line chart's line 3 wide (1 px was the weakest mark
-      // on every page); L1: smooth with a dot on each point unless the design's smoothLines is false (pbip-query.js lineStyle)
-      const SMOOTH = o.smoothLines !== false;
-      if (query && s.kind === 'line') { visual.objects = visual.objects || {}; visual.objects.lineStyles = [{ properties: lineStyle(SMOOTH) }]; }
-      // P2: every donut's ring at 68 (65 to 70 looked right; 60 too heavy, 80 too thin)
-      // (0.3, J8) a gallery visual's own formatting: the combo's secondary axis only when its units differ, its line 3
-      // wide; the quiet gridlines and a right-to-left report's mirrored axes as the other charts (visual-gallery.js)
-      // (D1, the owner's must-fix 2: R3's Descending waterfall was seen in Desktop 2.159 to reverse time, not the
-      // direction: Power BI accumulates a waterfall left to right) a mirrored right-to-left report's waterfall is a
-      // stacked column chart drawn as a waterfall from the report's own measures, read from the right
-      // (visual-gallery.js rtlWaterfall); one the measures can't order stays a waterfall, left to right, and is told
-      // (D7) o.waterfallRtl "native" (the default, G.WATERFALL_RTL_DEFAULT): Power BI's own waterfall, left to right, written
-      // exactly as in English; "mirror": the stacked column chart above
-      const WF_NATIVE = MIRROR && s.kind === 'waterfall' && G.waterfallRtlOf(o.waterfallRtl) === 'native';
-      const wf = query && MIRROR && s.kind === 'waterfall' && !WF_NATIVE ? G.rtlWaterfall(query, { extMeasure, lang, grid: GRID, azText: !!G.fieldsOf('waterfall', Bt).cat && isTime(G.fieldsOf('waterfall', Bt).cat), formatString: (G.fieldsOf('waterfall', Bt).y || {}).tableFormat || null,
-        // (the model's sort-by column and type, o.model.columns from the MCP; else the bound field's own type)
-        sortByOf: (t, cn) => ((((o.model || {}).columns || {})[t] || {})[cn] || {}).sortBy || null,
-        typeOf: (t, cn) => { const f = G.fieldsOf('waterfall', Bt).cat, m = ((((o.model || {}).columns || {})[t] || {})[cn] || {}).type; return m || (f && f.t === t && f.c === cn ? (f.num ? 'double' : f.type || null) : null); }, colours: { rise: G.fillOf(G.sentimentOf(o.theme, 'good', u)), fall: G.fillOf(G.sentimentOf(o.theme, 'bad', u)) } }) : null;   // (D7: the written theme's, as the English waterfall's)
-      if (wf && wf.ok) { visual.visualType = wf.visualType; visual.query = wf.query; visual.objects = Object.assign(visual.objects || {}, wf.objects); count('chartAxes.charts');
-        note('waterfallRtl', { page: pg.name || base, title: ttl || null, written: 'columnChart', what: G.WF_WHAT.columnChart, measures: wf.measures.map((x) => x.m) }); }
-      else if (query && isGallery(s.kind)) { const go = G.objects(s.kind, Bt, { grid: GRID, smooth: SMOOTH, lang }); if (Object.keys(go).length) visual.objects = Object.assign(visual.objects || {}, go);
-        if (WF_NATIVE) note('waterfallRtl', { page: pg.name || base, title: ttl || null, written: 'waterfallChart', what: G.WF_WHAT.native, native: true });
-        else if (MIRROR && s.kind === 'waterfall') note('waterfallRtl', { page: pg.name || base, title: ttl || null, written: 'waterfallChart', what: G.WF_WHAT.waterfallChart, why: wf ? wf.why : null }); }
-      // (0.3.1 M1) the charts a mirrored report turns: by the twin's rules (report-mirror.js), once the chart's own sort and
-      // fixes are written (below, after fixVisual); a waterfall kept a waterfall gets its value axis at the right; Power
-      // BI's own waterfall (WF_NATIVE) and the drawn one (wf.ok) are as written
-      const toMirror = MIRROR && query && (['bar', 'column', 'line'].includes(s.kind) || (isGallery(s.kind) && !WF_NATIVE && !(wf && wf.ok)));
-      // (0.3.0 J19) a panel split from a combo shows its unit as its value axis's title (AED, %; isolated in Arabic)
-      if (query && s.unitLabel && s.kind === 'line') { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]);
-        Object.assign(va[0].properties, { showAxisTitle: bool(true), titleText: str(lang === 'ar' ? s.unitLabel.ar : s.unitLabel.en) }); }
-      if (query && s.kind === 'donut') { visual.objects = visual.objects || {}; visual.objects.slices = [{ properties: { innerRadiusRatio: lit('68L') } }]; }
-      if (GRID && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.gridlineColor = color(GRID); }
-      // (0.3.0 L2, the lab's "keep as option") o.grid 'dotted': the value axis's gridlines dotted, in the quiet grey (also
-      // where the theme sets its own); 'none': no gridlines; 'solid' (the default) writes nothing more
-      if (query && (o.grid === 'dotted' || o.grid === 'none') && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line' || isGallery(s.kind))) {
-        visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]);
-        if (o.grid === 'none') va[0].properties.gridlineShow = bool(false);
-        else Object.assign(va[0].properties, { gridlineShow: bool(true), gridlineStyle: str('dotted'), gridlineColor: color(GRID || mixHex(u.text, u.card, 0.85)) });
-        count('gridCharts.n'); }
-      // a column chart written as a bar chart (asBar) in a slot too low for its rows and a value axis: no value axis,
-      // each bar's value beside it (the tooltip pages' bar chart, measured in round 0). (0.2.9.1, from draft #69: only a bar:
-      // a two-valued category makes it a donut after, which has no value axis; Microsoft's validator refused the object)
-      if (s.wasColumn && s.kind === 'bar' && query && s.h < (s.rows * 23 + 92) * (pg.page.h / 720)) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.show = bool(false); visual.objects.labels = obj({ show: bool(true) }); }
+      // the charts' own formatting (pbip-visuals-charts.js format)
+      const toMirror = Ch.format(x, { visual, query, Bt, ttl }, sink);
       // Round 21 (the capabilities lab's #2, Desktop 2.158, 7 Oct 2026: one small line under the title, shaped right in
       // Arabic, kept on Save): a subtitle from the approved plan only (o.subtitles: a slot's plan role, English or
       // Arabic, or a hand-placed slot's title -> its text); the writer never makes one up
@@ -725,179 +290,14 @@ const fixVisual = (visual, s, pg, Bt, tt, x) => {
           : gs ? { m: gs.m, c: gs.c, ranked: false, full: { m: gs.m, c: gs.c }, alt: ttl, tail: gs.tail } : null };
         if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); note('titles.' + tf.mode, out.fitted.entry = { page: pg.name || base, title: ttl, shown: tf.shown }); }
       }
-      // the title already names the KPI, so the card's own label under the number is not repeated
-      if (type === 'cardVisual') {
-        const cf0 = query && B ? (s.kind === 'kpi' ? B.kpis[kpiIndex] : B.measure) : null;
-        const kf = s.kind === 'kpi' ? kpiFits(s, kpiIndex, ttl, cf0) : null;
-        const c = kf ? kf.c : cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: SOLID ? Math.round(16 * pg.page.h / 1080) : 0 }, valueEm(cf0));
-        let cc = c;
-        if (s.kind === 'kpi') {
-          const fit = kf.fit;
-          const tp = visual.visualContainerObjects.title[0].properties;
-          if (fit.mode === 'wrapped') { cc = fit.c; tp.titleWrap = bool(true); note('kpiTitles.wrapped', { page: pg.name || base, title: ttl }); }
-          // a one-line title in a row where another title wraps: the second line's height stays free above it, so
-          // every value of the row sits at the same height (seen in Desktop 2.158, 2026-10-05: 6 apart without it)
-          else if (rowWraps() && kf.two.V >= c.V) cc = Object.assign({}, kf.two, { V: c.V, T: kf.two.T + Math.ceil(kpiTitle * 1.5) });
-          if (fit.mode === 'shortened') { tp.text = str(fit.shown); note('kpiTitles.shortened', { page: pg.name || base, title: ttl, shown: fit.shown }); }
-        }
-        if (s.kind === 'kpi') cc = Object.assign({}, cc, { V: Math.min(cc.V, rowValue()) });
-        visual.objects = cardObjects(cc, s.kind === 'kpi' ? align : null, cf0); cardFrame(visual.visualContainerObjects, cc, s.kind === 'kpi' ? kpiTitle : TITLE);
-        // Round 21 (the capabilities lab's #1, measured in Desktop 2.158 on 7 Oct 2026; the owner's go): with the "No data"
-        // option a card says "No data" (Arabic: لا توجد بيانات) instead of "--": value.showBlankAs in the default entry.
-        // The owner (7 Oct, "Keep numbers big"): the value keeps its size. The blank text is drawn at the value's size, so
-        // it is written only where it fits there: the lab's anchor (the Arabic text whole on a card 300 wide at 30pt, cut
-        // at 240) scaled by our letter widths; a narrower card keeps "--" (told: blankKept).
-        if (NODATA && (s.kind === 'kpi' || s.kind === 'card')) {
-          const ve = visual.objects.value.find((e) => e.selector && e.selector.id === 'default'), bt = lang === 'ar' ? 'لا توجد بيانات' : 'No data';
-          const need = 300 * textWidth(bt, cc.V, false, font) / textWidth('لا توجد بيانات', 30, false, 'Segoe UI');
-          if (ve && s.w >= need) ve.properties.showBlankAs = str(bt);
-          else if (ve) note('blankKept', { page: pg.name || base, title: ttl || null, w: s.w, need: Math.ceil(need) });
-        }
-        // #7 (seen in Desktop 2.158, round 11: the value 9 to the right of its title's first letter): a KPI card's inner
-        // padding is 0 at the reading start, so the value starts at its title's edge (paddingIndividual and the
-        // margins, in Microsoft's theme schema for the card visual)
-        if (s.kind === 'kpi') visual.objects.padding = obj({ paddingUniform: num(cc.I), paddingIndividual: bool(true), topMargin: num(cc.I), bottomMargin: num(cc.I), leftMargin: num(rtl ? cc.I : 0), rightMargin: num(rtl ? 0 : cc.I) }, DEF);
-        // an SVG design on the card's image (o.svgCards; the JSON Desktop writes for "Select from data", measured in
-        // Desktop 2.158, third sitting of 2026-10-04): the nth KPI card of every page
-        // Its size (Desktop 2.158, 2026-10-05): without one the image was drawn 65 wide on a 163-wide card and the value
-        // was cut; "Image area size" with fixedSize false sizes it (25 drew 32 wide, 30 drew 40): see imgOf.
-        // Its side (Desktop 2.158, round 11, 2026-10-05): the card draws the image at the right by default, which in a
-        // right-to-left report is the reading start, between the card's edge and the value (a 42pt value touched it);
-        // position 'Left' puts it at the far end, and the value sits at the right under its title.
-        const sc = kf && kf.im ? kf.im.sc : null;
-        if (sc) visual.objects.image = [{ properties: Object.assign({ show: bool(true), imageType: str('imageData'), fixedSize: bool(false), imageAreaSize: num(kf.im.pct) }, rtl ? { position: str('Left') } : {}, { imageData: { expr: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: sc.t } }, Property: sc.m } } } }), selector: { id: 'default' } }];
-        // A number format on the report side (measured in Desktop 2.158, D8, 2026-10-04): where the bound measure
-        // carries cardFormat (the server sets it for a measure whose model format has no thousand separator),
-        // the card gets the entry Desktop itself writes for Display units "Custom" with a format code: a second
-        // entry of "value", selected by the field's query reference. Only cards: tables and tooltips not measured.
-        const cf = query && B ? (s.kind === 'kpi' ? B.kpis[kpiIndex] : B.measure) : null;
-        if (FULL && cf && cf.m != null && cf.cardFormat && !cardCode(cf)) visual.objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(cf.cardFormat) }, selector: { metadata: cf.t + '.' + cf.m } });
-      }
-      // tables fill their visual (grow to fit), instead of shrinking to their content and leaving the rest empty
-      // (on a right-to-left page the title sat on the right and the table on the left)
-      if (s.kind === 'table') visual.objects = { columnHeaders: obj(Object.assign({ columnAdjustment: str('growToFit'), autoSizeColumnWidth: bool(true) }, tableText ? { fontSize: num(tableText) } : {})) };
-      if (s.kind === 'table' && tableText) Object.assign(visual.objects, { values: obj({ fontSize: num(tableText) }), total: obj({ fontSize: num(tableText) }) });
-      // Round 18 (seen in Desktop, 6 Oct 2026, "P7 hand EN": a 420 x 220 matrix of Day Name and four long measures had
-      // a horizontal scrollbar and showed three of seven days): the fit had chosen a smaller text and counted the rows
-      // at it, but only a table was given that size, so the matrix drew at the theme's. A matrix gets it on its values,
-      // headers, row headers and total.
-      if (s.kind === 'matrix' && tableText) visual.objects = Object.assign(visual.objects || {}, { values: obj({ fontSize: num(tableText) }), columnHeaders: obj({ fontSize: num(tableText) }), rowHeaders: obj({ fontSize: num(tableText) }), total: obj({ fontSize: num(tableText) }) });
-      // each column's header sits over its own values: text on the reading-start side, numbers (measures, and columns
-      // the model types as numbers) right-aligned in both directions; "Apply to header" (styleHeader) makes the header
-      // follow. (Round 12, #12; seen in Desktop 2.158, 5 Oct 2026: in a right-to-left table with left-aligned numbers,
-      // "Friday", right-aligned at the left end, and its first number were 9 apart and read as one text, while 430
-      // separated the two measures. Right-aligned, a number ends at its column's far edge, as in English.)
-      // (round 23: the row-label measure, text, right-aligned as the name column it stands for)
-      const rowLabel = s.kind === 'table' && query ? rowLabelOf(tableFields(Bt, rtl), rtl) : null;
-      // (part 5: its DAX names this table's numbers, so a second table by the same column with other numbers gets a
-      // label of its own, "(2)"; the same numbers share one)
-      const rlExpr = rowLabel ? rowLabelDax(rowLabel, lang === 'ar' ? 'الإجمالي' : 'Total', query.queryState.Values.projections.filter((p) => (p.field.Measure && !p.field.Measure.Expression.SourceRef.Schema) || (p.field.Aggregation && p.displayName !== ' '))) : null;
-      let rlName = rowLabel ? freeExt(rowLabel.t, ROW_LABEL + shown(rowLabel.c)) : null;
-      if (rowLabel) { const same = (n) => rowLabels.find((x) => x.t === rowLabel.t && x.m === n); for (let k = 2; same(rlName) && same(rlName).expression !== rlExpr; k++) rlName = freeExt(rowLabel.t, ROW_LABEL + shown(rowLabel.c) + ' (' + k + ')'); }
-      if (rowLabel && rlName !== ROW_LABEL + shown(rowLabel.c)) { const ps0 = query.queryState.Values.projections, lp = ps0[ps0.length - 1]; lp.field.Measure.Property = rlName; lp.queryRef = rowLabel.t + '.' + rlName; lp.nativeQueryRef = rlName; }
-      if (s.kind === 'table' && query) visual.objects.columnFormatting = tableFields(Bt, rtl).map((f) => ({
-        properties: { alignment: str(isValue(f) || f.num ? 'Right' : (rtl ? 'Right' : 'Left')), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) },
-        selector: { metadata: proj(f).queryRef } })).concat(rowLabel ? [{ properties: { alignment: str('Right'), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) }, selector: { metadata: rowLabel.t + '.' + rlName } }] : []);
-      // Round 12 (#23, #32; seen in Desktop 2.158, round 11: six of seven days and a scrollbar): a table whose rows are
-      // known (a day, month or quarter name: 7, 12 or 4 rows, a header and a total) gets its rows tighter where they
-      // would not fit (grid.rowPadding 0); one that still does not fit is told. Measured (round 11): a row's pitch is
-      // 1.415 x the text's height + 2 x rowPadding (1 when none is written), the header 7 more; the title 1.5 x its
-      // size; 16 for the visual's own padding.
-      if ((s.kind === 'table' || s.kind === 'matrix') && query) {   // (a matrix too: round 16, #15)
-        const tf = tableFields(Bt, rtl).find(isTextField), n = ((tf && catKind(tf)) || {}).rows || 0;   // (A3-7: the picker's count, else the kind's)
-        if (n) {
-          let T = tableText || +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
-          // (P3-3 N21: by the font the report writes, the theme's, Semibold's rows apart; N21-LAB)
-          const need = (pad, t = T) => tableHeight(n, t, TITLE, pad, t, (((o.theme || {}).textClasses || {}).label || {}).fontFace || font);   // (writer round 8: the one rule, pbip-sizing.js TABLE_ROWS)
-          // Round 18 (FAIL 12: a 420 x 220 matrix at 1920 x 1080 showed three of seven days): a matrix whose rows do not
-          // fit even tight takes the largest smaller text, down to Power BI's 8pt, that holds them (and told,
-          // tableSmaller); only where even 8pt does not is it told that its last rows scroll (tableRows)
-          // (round 19, item 10: a table too, with the same limits; its header keeps its grow-to-fit, the size is merged in)
-          if (need(0) > s.h) {
-            let t2 = Math.ceil(T) - 1; while (t2 > 8 && need(0, t2) > s.h) t2--;
-            if (t2 >= 8 && need(0, t2) <= s.h) { const from = T; T = t2; (s.kind === 'matrix' ? ['values', 'columnHeaders', 'rowHeaders', 'total'] : ['values', 'columnHeaders', 'total']).forEach((k) => { visual.objects = visual.objects || {}; const e = (visual.objects[k] || [])[0]; if (e && e.properties) e.properties.fontSize = num(t2); else visual.objects[k] = obj({ fontSize: num(t2) }); });
-              if (smallEntry) Object.assign(smallEntry, { size: t2, rows: true }); else note('tableSmaller', { page: pg.name || base, size: t2, from, rows: true }); }
-          }
-          if (need(1) > s.h) { visual.objects = visual.objects || {}; visual.objects.grid = [{ properties: Object.assign(((visual.objects.grid || [])[0] || {}).properties || {}, { rowPadding: num(0) }) }]; if (need(0) > s.h) note('tableRows', { page: pg.name || base, field: label(tf), rows: n, need: Math.ceil(need(0)), h: s.h }); }
-        }
-      }
-      // the calendar order's helper column (see inOrder): its text in the card colour and as narrow as Desktop allows
-      const oh = (s.kind === 'table' || s.kind === 'matrix') && query ? orderedBy(s.kind === 'matrix' ? (Bt.table || []).filter(Boolean) : tableFields(Bt, rtl)) : null;
-      if (oh && oh.sortBy && s.kind === 'matrix') { visual.objects = visual.objects || {}; visual.objects.columnFormatting = visual.objects.columnFormatting || []; }
-      if (oh && oh.sortBy) { const helperRef = orderHelper(oh).queryRef;
-        visual.objects.columnFormatting.push({ properties: { fontColor: color(u.card), alignment: str('Right'), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) }, selector: { metadata: helperRef } });
-        (visual.objects.columnWidth = visual.objects.columnWidth || []).push({ properties: { value: num(1) }, selector: { metadata: helperRef } });
-        note('tableOrder', { page: pg.name || base, field: oh.t + '[' + oh.c + ']', by: oh.sortBy.t + '[' + oh.sortBy.c + ']' }); }
-      // round 23: the name column at width 0 (hidden; the automatic widths stay on), its measure into the extensions
-      if (rowLabel) {
-        (visual.objects.columnWidth = visual.objects.columnWidth || []).push({ properties: { value: num(0) }, selector: { metadata: proj(rowLabel).queryRef } });
-        const m = rlName;
-        if (!rowLabels.some((x) => x.t === rowLabel.t && x.m === m)) note('rowLabels', pending = { page: pg.name || base, t: rowLabel.t, c: rowLabel.c, m, expression: rlExpr });
-      } else if (s.kind === 'table' && query && rtl) {
-        const tf = tableFields(Bt, rtl), f = tf.find(isTextField);
-        if (f && tf.some(isValue) && !rowLabelSkipped.some((x) => x.t === f.t && x.c === f.c)) note('rowLabelSkipped', { page: pg.name || base, t: f.t, c: f.c });
-      }
-      // SVG columns (experimental; measured in Desktop 2.158, D-P1, 2026-10-04): report-level measures of
-      // reportExtensions.json, shown as the last columns of the page's first table (the reading end: on a
-      // right-to-left page that is the left, where the table's first projection sits)
-      // Round 10 (measured in Desktop 2.158, third sitting of 2026-10-04): a picture is never the first projection.
-      // Power BI writes the total row's "Total" in the first projection's column, and only when that is a column of
-      // text, so in a right-to-left table with pictures the text column comes first, then the pictures, then the
-      // measures. The picture's size is the table's grid.imageHeight and imageWidth (75 x 75 by default, which made
-      // a 160 x 24 bar 11 tall in a row 77 tall): the tallest and the widest design, within Power BI's 8 to 512.
-      if ((s.kind === 'table' || s.kind === 'matrix') && query && !known.svgDone) {
-        const mine = (o.svgColumns || []).filter((c) => c.page === pageIndex);
-        const cols = mine.map((c) => ({ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: c.t } }, Property: c.m } }, queryRef: c.t + '.' + c.m, nativeQueryRef: c.m }));
-        if (cols.length) {
-          const ps = query.queryState.Values.projections;
-          // (round 14: a right-to-left table ends with its text column, so the pictures, the reading end, go at the
-          // left, after the order's helper column where there is one)
-          // (round 23: and after the hidden name column, which stays first)
-          if (rtl && s.kind === 'table') { let lead = rowLabel ? 1 : 0; if (ps.length > lead && /^Min\(/.test(ps[lead].queryRef) && ps[lead].displayName === ' ') lead++; query.queryState.Values.projections = ps.slice(0, lead).concat(cols.slice().reverse(), ps.slice(lead)); }
-          else query.queryState.Values.projections = ps.concat(cols);
-          // The pictures never push the table past its box (Desktop showed a scrollbar and a cut header with three
-          // fields and pictures of 160 and 180 in a 553-wide table, 5 Oct 2026): every other column keeps its room
-          // (columnRoom) and the pictures share what is left, each with + 10 like a column; their width is capped by
-          // that, 8 at least, and the height follows the designs' ratio. With room, the designs' own size is kept.
-          const wide = Math.max(...mine.map((c) => +c.w || 0)) || 75, tt = +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
-          // (rc1, S1/S2: a table's other columns take the room its fit and its column widths give them, cellRoom at the
-          // table's own text, within its width less 36; the pictures had kept the earlier rule and could push it past)
-          const tsc = s.kind === 'table' ? pg.page.h / 1080 : null, fOf = (p) => ((Bt || {}).table || []).filter(Boolean).find((f) => proj(f).queryRef === p.queryRef);
-          const others = query.queryState.Values.projections.filter((p) => !(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema) && p.displayName !== ' ').reduce((a, p) => a + (tsc && fOf(p) ? cellRoom(fOf(p), tableText || tt, font, tsc) : columnRoom(p, tt, font)), 0);
-          const W = Math.max(8, Math.min(512, wide, Math.floor(((tsc ? s.w - 36 : s.w) - others) / cols.length) - 10));
-          const H0 = Math.max(8, Math.min(512, Math.round(Math.max(...mine.map((c) => (+c.h || 75) * Math.min(1, W / (+c.w || 75)))))));
-          // Round 18 (measured in Desktop 2.158, 6 Oct 2026, "P4 ring EN": a 64-high picture in a 221-high table at
-          // 1280 x 720: the rows 66 apart (the picture + 2), the first 68 under the table's top; one and a half rows
-          // showed): a table picture is no taller than lets four rows and the total show, 24 at least.
-          const H = Math.min(H0, Math.max(24, Math.floor((s.h - 68 * pg.page.h / 720) / 5) - 2));
-          // (0.2.9, audit 3's seen B-23: into the table's one grid entry, which may hold the tight rows already)
-          visual.objects = visual.objects || {}; visual.objects.grid = [{ properties: Object.assign(((visual.objects.grid || [])[0] || {}).properties || {}, { imageHeight: num(H), imageWidth: num(W) }) }];
-          out.svg = { w: W, h: H, design: wide, capped: W < wide };
-          // Round 18 (the owner's answer, 6 Oct 2026: "yes drop the number under 40"; a 28-high ring's number could not
-          // be read in Desktop): a ring drawn under 40 high takes its version without the number inside (the server's
-          // expressionNoNumber); the table's value column carries the number
-          // (the report's reportExtensions.json is the assembly's: it gives each such ring its version, and tells it, ringsSmall)
-          if (H < 40 && known.extFile) mine.forEach((c) => { if (c.expressionNoNumber) out.rings.push({ t: c.t, m: c.m, expressionNoNumber: c.expressionNoNumber, h: H }); });
-        }
-      }
-      // rc1 (PERF-COMPARE S3, 6 models: the last row a table showed was cut in half by its total line): a table whose rows
-      // don't all show ends on a whole row. Its height is the title, the header, the whole rows that fit and the total, by
-      // the measured rule (pbip-sizing.js TABLE_ROWS, MEASURE-TABLE-ROWS.md); the top stays. Not a table with pictures (their rows are taller).
-      // (writer round 8, with the design block's N6, 3453718, the reviewer's resolution: the PANEL keeps the slot's height, so
-      // its bottom lines up with the row's other panels; the TABLE inside it ends on its whole rows, tableH, and the rest
-      // of the panel stays under it. Not by row padding: a table's height that isn't whole rows shows a part row over its
-      // total, whatever the padding, as Desktop pins the total to the bottom.)
-      if (s.kind === 'table' && visual && visual.query) {
-        const gp = (((visual.objects || {}).grid || [])[0] || {}).properties || {}, padOf = gp.rowPadding ? +String(gp.rowPadding.expr.Literal.Value).replace(/D$/, '') : 1;
-        const tv = (((visual.objects || {}).values || [])[0] || {}).properties || {}, t = tv.fontSize ? +String(tv.fontSize.expr.Literal.Value).replace(/D$/, '') : (+((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10);
-        const tf = tableFields(Bt, rtl).find(isTextField), n = ((tf && catKind(tf)) || {}).rows || 0;
-        // (writer round 8: the one rule, pbip-sizing.js TABLE_ROWS, with the laptop's measure)
-        const hp = (((visual.objects || {}).columnHeaders || [])[0] || {}).properties || {}, ht = hp.fontSize ? +String(hp.fontSize.expr.Literal.Value).replace(/D$/, '') : t;
-        const pitch = rowPitch(t, padOf), fixed = tableHeight(0, t, TITLE, padOf, ht, (((o.theme || {}).textClasses || {}).label || {}).fontFace || font), k0 = Math.floor((box.h - fixed) / pitch);
-        if (!gp.imageHeight && k0 >= 1 && !(n && n <= k0)) { const h1 = Math.ceil(fixed + k0 * pitch); if (h1 < box.h) tableH = h1; }
-      }
-      if (B && visual && visual.query) vFilters = fixVisual(visual, s, pg, Bt, tableText, { o, base, font, LABEL, own, rowLabels: pending ? rowLabels.concat(pending) : rowLabels, plan, measures, note, count, out });
-      if (toMirror && visual && visual.query) { mirrorChart(visual, s.kind, { dateColumns: CONTINUOUS }); count('chartAxes.charts'); }
+      // the cards' formatting (pbip-visuals-tables.js card)
+      Tb.card(x, { visual, query, ttl, type }, sink);
+      // the tables' formatting, their row labels, pictures and whole rows (pbip-visuals-tables.js format)
+      ({ tableH, pending } = Tb.format(x, { visual, query, Bt, tableText, smallEntry, box }, sink));
+      // the fixes once the fields are written: the charts' filters, bars and axes, the tables' column widths (with this
+      // table's own row label: pending), then a mirrored report's charts turned
+      if (B && visual && visual.query) { vFilters = Ch.fix(x, { visual, Bt }, sink); Tb.fix(x, { visual, Bt, tt: tableText, rowLabels: pending ? rowLabels.concat(pending) : rowLabels }, sink); }
+      if (toMirror && visual && visual.query) Ch.mirror(x, { visual }, sink);
     }
     // Round 19 (the owner's idea, 6 Oct 2026): "No data for this selection" where the visual's measure is blank. A
     // report-level measure (reportExtensions.json, the model untouched) gives the text only when the measure is blank,
@@ -990,7 +390,7 @@ const fixVisual = (visual, s, pg, Bt, tt, x) => {
     else if (t === 'actionButton') objects.text = obj({ fontSize: num(PHONE.button) }, DEF);
     else if (t === 'lineChart' || t === 'clusteredBarChart' || t === 'clusteredColumnChart') { objects.categoryAxis = obj({ fontSize: num(PHONE.axis) }); objects.valueAxis = obj({ fontSize: num(PHONE.axis) });
       // (0.3.1 FX5) the thickness rule on the phone's box, in its own 720-high units (a count the page's chart was set by)
-      const pb = band !== undefined ? barBand(band, barSpan(BAR_TYPES.test(t), p.w, p.h, 720), 720) : null;
+      const pb = band !== undefined ? barBand(band, barSpan(Ch.BAR_TYPES.test(t), p.w, p.h, 720), 720) : null;
       if (pb) Object.assign(objects.categoryAxis[0].properties, { innerPadding: lit(pb.pct + 'L'), outerPadding: lit(pb.pct + 'L') }); }
     else if (t === 'tableEx') { objects.columnHeaders = obj({ fontSize: num(PHONE.table) }); objects.values = obj({ fontSize: num(PHONE.table) }); objects.total = obj({ fontSize: num(PHONE.table) });
       // Round 12 (#29; seen in Desktop 2.158, round 11: the phone table with pictures was wider than the canvas): the
@@ -1009,8 +409,8 @@ const fixVisual = (visual, s, pg, Bt, tt, x) => {
   }
 
   const api = {
-    themeSizes, look, LOOK_KEYS, lookOf, slotKind, kpiRow, slicers, categoryPlan, visual, noDataCard, emptyPanel, phoneLook,
-    topCount, knownCount, catOf, BAND_TYPES, BAR_TYPES
+    themeSizes, look, LOOK_KEYS, lookOf, slotKind: Ch.slotKind, kpiRow: Tb.kpiRow, slicers: Tb.slicers, categoryPlan: Ch.categoryPlan, visual, noDataCard,
+    emptyPanel, phoneLook
   };
   if (node) module.exports = api; else root.DAPbipVisuals = api;
 })(typeof self !== 'undefined' ? self : this);
