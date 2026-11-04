@@ -74,8 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const track = (name, params) => { if (typeof window.dataArcusTrack === 'function') window.dataArcusTrack(name, params || {}); };
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const num = (n) => new Intl.NumberFormat(isAr() ? 'ar-u-nu-latn' : 'en-US').format(n);
-  const shuffle = (a) => { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; };
-  const range = (n) => Array.from({ length: n }, (_, i) => i);
+  const SES = window.DAExamSession;
+  const shuffle = (a) => SES.shuffle(a, Math.random);
   const LET = 'ABCDEFGH';
   const fmtTime = (s) => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };
   const today = () => new Date().toISOString().slice(0, 10);
@@ -132,6 +132,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   const isBm = (id) => P.bm.includes(id);
   const toggleBm = (id) => { P.bm = isBm(id) ? P.bm.filter((x) => x !== id) : P.bm.concat(id); save(); };
+  const rank = (id) => (P.ans[id] ? (P.ans[id].last ? 2 : 1) : 0);
+  // the mock in progress: exam-session.js's state machine, saved in the progress through this adapter
+  const MK = SES.create({ storage: { load: () => P.mock, store: (m) => { P.mock = m; save(); } }, now: () => Date.now() });
 
   const stats = (list) => {
     let seen = 0, right = 0;
@@ -151,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- grading (exam-grade.js: pure, answers in, score out) ----------
   const { grade, answered, scoreMock, tallySession } = window.DAExamGrade;
-  const newInst = (q) => ({ id: q.id, perm: q.type === 'yesno' ? range(q.opts.length) : shuffle(range(q.opts.length)), r: q.type === 'yesno' ? q.opts.map(() => null) : q.type === 'single' ? null : [] });
+  const newInst = (q) => SES.newInst(q, Math.random);
 
   // ---------- question renderer ----------
   const diffDots = (d) => '<span class="dp-diff" title="' + L('Difficulty', 'الصعوبة') + '">' + [1, 2, 3].map((i) => '<i class="' + (i <= d ? 'on' : '') + '"></i>').join('') + '</span>';
@@ -305,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- HOME ----------
   function home() {
     const rd = readiness(), st = stats(ALL), mk = mistakes().length, best = P.mocks.reduce((m, x) => Math.max(m, x.score), 0);
-    const inProg = !!P.mock;
+    const inProg = !!MK.current();
     const domRows = Object.keys(DOM).map((d) => {
       const s = stats(ALL.filter((q) => q.d === d));
       return '<div class="dp-domrow"><div class="dp-domtop"><span>' + domName(d) + ' <small><bdi dir="ltr">' + DOM[d].w + '</bdi></small></span><b>' + (s.seen ? Math.round(s.acc * 100) + '%' : '·') + '</b></div>' + bar(s.acc * Math.min(1, s.seen / s.total * 1.6)) + '<div class="dp-domsub">' + L(num(s.seen) + ' of ' + num(s.total) + ' answered', 'أجبت ' + num(s.seen) + ' من ' + num(s.total)) + '</div></div>';
@@ -475,12 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ---------- MOCK EXAM ----------
-  const MOCKS = {
-    full: { n: 44, cs: 1, min: 100 },
-    half: { n: 25, cs: 0, min: 50 },
-    quick: { n: 10, cs: 0, min: 15 }
-  };
-  if (REN) MOCKS.renewal = { n: REN.n, cs: 0, min: REN.min };
+  const MOCKS = SES.lengths(REN);
   let mset = 'full';
   function mockSetup() {
     const card = (k, t, d) => '<button type="button" class="dp-mode' + (mset === k ? ' primary' : '') + '" data-len="' + k + '"><i class="bi ' + (k === 'full' ? 'bi-trophy' : k === 'half' ? 'bi-hourglass-split' : 'bi-lightning') + '"></i><span><b>' + t + '</b><small>' + d + '</small></span></button>';
@@ -500,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
     root.querySelectorAll('[data-len]').forEach((b) => b.addEventListener('click', () => { mset = b.dataset.len; mockSetup(); }));
     root.querySelector('#dpGo').addEventListener('click', () => {
       const go2 = () => { buildMock(mset); go('mock'); };
-      if (P.mock && P.mock.endAt > Date.now()) modal(L('Replace the exam in progress?', 'استبدال الاختبار الحالي؟'), L('Your unfinished mock exam will be discarded.', 'سيتم حذف الاختبار غير المكتمل.'), L('Start new exam', 'ابدأ اختبارًا جديدًا'), go2);
+      if (MK.running()) modal(L('Replace the exam in progress?', 'استبدال الاختبار الحالي؟'), L('Your unfinished mock exam will be discarded.', 'سيتم حذف الاختبار غير المكتمل.'), L('Start new exam', 'ابدأ اختبارًا جديدًا'), go2);
       else go2();
     });
   }
@@ -527,54 +525,23 @@ document.addEventListener('DOMContentLoaded', () => {
     root.querySelectorAll('[data-learn]').forEach((a) => a.addEventListener('click', () => track(EX.ev + '_learn_click', { from: 'renewal' })));
     root.querySelector('#dpGo').addEventListener('click', () => {
       const go2 = () => { buildMock('renewal'); go('mock'); };
-      if (P.mock && P.mock.endAt > Date.now()) modal(L('Replace the exam in progress?', 'استبدال الاختبار الحالي؟'), L('Your unfinished mock exam will be discarded.', 'سيتم حذف الاختبار غير المكتمل.'), L('Start new', 'ابدأ جديدًا'), go2);
+      if (MK.running()) modal(L('Replace the exam in progress?', 'استبدال الاختبار الحالي؟'), L('Your unfinished mock exam will be discarded.', 'سيتم حذف الاختبار غير المكتمل.'), L('Start new', 'ابدأ جديدًا'), go2);
       else go2();
     });
   }
-  // the renewal check's questions: about the same number from each renewal skill (the leftover ones to random skills),
-  // unseen questions first, then ones answered wrongly
-  function renewalIds(n) {
-    const pri = (q) => (P.ans[q.id] ? (P.ans[q.id].last ? 2 : 1) : 0) + Math.random();
-    const base = Math.floor(n / REN.topics.length), extra = shuffle(REN.topics.map((t) => t.k)).slice(0, n - base * REN.topics.length);
-    return shuffle(REN.topics.flatMap((t) => QS.filter((q) => t.tags.includes(q.tag)).sort((a, b) => pri(a) - pri(b)).slice(0, base + (extra.includes(t.k) ? 1 : 0)).map((q) => q.id)));
-  }
   function buildMock(kind) {
     const cfg = MOCKS[kind];
-    if (kind === 'renewal') {
-      const ids = renewalIds(cfg.n);
-      P.mock = { kind, caseId: null, items: ids.map((id) => newInst(byId[id])), flags: [], i: 0, start: Date.now(), endAt: Date.now() + cfg.min * 60000, min: cfg.min };
-      save();
-      track(EX.ev + '_mock_start', { length: kind, questions: ids.length });
-      return;
-    }
-    const pool = QS.slice();
-    // questions per exam area: fixed shares when given, otherwise by the official weights; the last area takes the rest
-    const doms = Object.keys(DOM), wsum = doms.reduce((a, d) => a + DOM[d].wt, 0), want = {};
-    doms.slice(0, -1).forEach((d) => { want[d] = Math.round(cfg.n * (EX.mix ? EX.mix[d] : DOM[d].wt / wsum)); });
-    want[doms[doms.length - 1]] = cfg.n - doms.slice(0, -1).reduce((a, d) => a + want[d], 0);
-    // prefer questions the learner has not seen, then ones they got wrong
-    const pri = (q) => (P.ans[q.id] ? (P.ans[q.id].last ? 2 : 1) : 0) + Math.random();
-    let ids = [];
-    Object.keys(want).forEach((d) => {
-      const skills = Object.keys(SKILL).filter((s) => SKILL[s].d === d);
-      const bySk = {}; skills.forEach((s) => { bySk[s] = pool.filter((q) => q.s === s).sort((a, b) => pri(a) - pri(b)); });
-      let k = 0; const picked = [];
-      while (picked.length < want[d]) { const s = skills[k++ % skills.length]; if (bySk[s].length) picked.push(bySk[s].shift().id); else if (skills.every((x) => !bySk[x].length)) break; }
-      ids = ids.concat(picked);
-    });
-    ids = shuffle(ids);
-    let caseId = null;
-    if (cfg.cs) { const c = CASES[Math.floor(Math.random() * CASES.length)]; caseId = c.id; ids = ids.concat(c.questions.map((q) => q.id)); }
-    P.mock = { kind, caseId, items: ids.map((id) => newInst(byId[id])), flags: [], i: 0, start: Date.now(), endAt: Date.now() + cfg.min * 60000, min: cfg.min };
-    save();
+    const { ids, caseId } = kind === 'renewal' ? { ids: SES.pickRenewal(cfg.n, { topics: REN.topics, questions: QS, rank, rand: Math.random }), caseId: null }
+      : SES.pickMock(cfg, { questions: QS, cases: CASES, domains: DOM, skills: SKILL, mix: EX.mix, rank, rand: Math.random });
+    MK.start({ kind, ids, caseId, min: cfg.min }, (id) => newInst(byId[id]));
     track(EX.ev + '_mock_start', { length: kind, questions: ids.length });
   }
   function mock() {
-    const M = P.mock;
+    const M = MK.current();
     if (!M) return go('home');
-    if (Date.now() >= M.endAt) return submitMock(true);
+    if (MK.expired()) return submitMock(true);
     if (ctx.review) return mockReview();
-    const inst = M.items[M.i], q = byId[inst.id], cs = caseOf(q), flagged = M.flags.includes(M.i);
+    const inst = M.items[M.i], q = byId[inst.id], cs = caseOf(q), flagged = MK.flagged();
     root.innerHTML =
       '<div class="dp-exambar"><span class="dp-ex-title">' + EX.code + ' ' + (M.kind === 'renewal' ? L('renewal check', 'اختبار التجديد') : L('mock exam', 'اختبار تجريبي')) + '</span><span class="dp-ex-count">' + (M.i + 1) + ' / ' + M.items.length + '</span><span class="dp-timer" id="dpTimer"><i class="bi bi-clock"></i> <b></b></span></div>' +
       bar(M.items.filter((it) => answered(byId[it.id], it.r)).length / M.items.length, 'thin') +
@@ -585,26 +552,26 @@ document.addEventListener('DOMContentLoaded', () => {
       '<button type="button" class="tg-btn2" id="dpRev"><i class="bi bi-grid-3x3-gap"></i> ' + L('Review', 'مراجعة') + '</button>' +
       (M.i + 1 < M.items.length ? '<button type="button" class="btn btn-accent" id="dpNext">' + L('Next', 'التالي') + ' <i class="bi bi-arrow-right"></i></button>' : '<button type="button" class="btn btn-accent" id="dpRev2">' + L('Review and submit', 'مراجعة وتسليم') + '</button>') +
       '</div></div></div>';
-    bindQ(root.querySelector('#dpQ'), q, inst, () => { save(); const y = window.scrollY; mock(); window.scrollTo(0, y); });
-    root.querySelector('#dpFlag').addEventListener('click', () => { M.flags = flagged ? M.flags.filter((x) => x !== M.i) : M.flags.concat(M.i); save(); mock(); });
-    root.querySelector('#dpPrev').addEventListener('click', () => { M.i--; save(); mock(); top(); });
-    const nx = root.querySelector('#dpNext'); if (nx) nx.addEventListener('click', () => { M.i++; save(); mock(); top(); });
+    bindQ(root.querySelector('#dpQ'), q, inst, () => { MK.changed(); const y = window.scrollY; mock(); window.scrollTo(0, y); });
+    root.querySelector('#dpFlag').addEventListener('click', () => { MK.flag(); mock(); });
+    root.querySelector('#dpPrev').addEventListener('click', () => { MK.prev(); mock(); top(); });
+    const nx = root.querySelector('#dpNext'); if (nx) nx.addEventListener('click', () => { MK.next(); mock(); top(); });
     root.querySelector('#dpRev').addEventListener('click', () => { ctx.review = true; mock(); top(); });
     const r2 = root.querySelector('#dpRev2'); if (r2) r2.addEventListener('click', () => { ctx.review = true; mock(); top(); });
     startTimer();
   }
   function startTimer() {
     const tick = () => {
-      const M = P.mock; if (!M) return;
-      const left = (M.endAt - Date.now()) / 1000;
-      const t = document.querySelector('#dpTimer b'); if (t) { t.textContent = fmtTime(left); t.parentElement.classList.toggle('low', left < 300); }
-      if (left <= 0) { clearInterval(timer); timer = null; submitMock(true); }
+      if (!MK.current()) return;
+      const { left, low, up } = MK.clock();
+      const t = document.querySelector('#dpTimer b'); if (t) { t.textContent = fmtTime(left); t.parentElement.classList.toggle('low', low); }
+      if (up) { clearInterval(timer); timer = null; submitMock(true); }
     };
     if (!timer) timer = setInterval(tick, 1000);
     tick();
   }
   function mockReview() {
-    const M = P.mock;
+    const M = MK.current();
     const un = M.items.filter((it) => !answered(byId[it.id], it.r)).length;
     root.innerHTML = '<div class="dp-exambar"><span class="dp-ex-title">' + L('Review your answers', 'راجع إجاباتك') + '</span><span></span><span class="dp-timer" id="dpTimer"><i class="bi bi-clock"></i> <b></b></span></div>' +
       '<div class="dp-panel"><div class="dp-legend"><span><i class="dp-sq done"></i>' + L('Answered', 'مُجاب') + '</span><span><i class="dp-sq"></i>' + L('Not answered', 'غير مُجاب') + '</span><span><i class="bi bi-flag-fill text-warning"></i> ' + L('Flagged', 'معلّم') + '</span></div>' +
@@ -614,25 +581,25 @@ document.addEventListener('DOMContentLoaded', () => {
       }).join('') + '</div>' +
       '<div class="dp-actions"><button type="button" class="tg-btn2" id="dpBackQ"><i class="bi bi-arrow-left"></i> ' + L('Back to questions', 'رجوع للأسئلة') + '</button>' + (M.flags.length ? '<button type="button" class="tg-btn2" id="dpFlagged"><i class="bi bi-flag"></i> ' + L('Review flagged', 'راجع المعلّمة') + '</button>' : '') + '<button type="button" class="btn btn-accent" id="dpSubmit">' + L('Submit exam', 'سلّم الاختبار') + '</button></div>' +
       (un ? '<p class="dp-note mt-2 text-warning">' + L(un + ' question(s) not answered. Unanswered questions score zero.', 'يوجد ' + un + ' سؤال بلا إجابة، وسيُحسب صفرًا.') + '</p>' : '') + '</div>';
-    root.querySelectorAll('[data-j]').forEach((b) => b.addEventListener('click', () => { M.i = +b.dataset.j; ctx.review = false; save(); mock(); top(); }));
+    root.querySelectorAll('[data-j]').forEach((b) => b.addEventListener('click', () => { MK.move(+b.dataset.j); ctx.review = false; mock(); top(); }));
     root.querySelector('#dpBackQ').addEventListener('click', () => { ctx.review = false; mock(); });
-    const fl = root.querySelector('#dpFlagged'); if (fl) fl.addEventListener('click', () => { M.i = M.flags.slice().sort((a, b) => a - b)[0]; ctx.review = false; save(); mock(); top(); });
+    const fl = root.querySelector('#dpFlagged'); if (fl) fl.addEventListener('click', () => { MK.firstFlagged(); ctx.review = false; mock(); top(); });
     root.querySelector('#dpSubmit').addEventListener('click', () => modal(L('Submit your exam?', 'تسليم الاختبار؟'), un ? L('You still have ' + un + ' unanswered question(s).', 'لا يزال لديك ' + un + ' سؤال بلا إجابة.') : L('You can review every answer and explanation after submitting.', 'ستتمكن من مراجعة كل إجابة وشرحها بعد التسليم.'), L('Submit', 'تسليم'), () => submitMock(false)));
     startTimer();
   }
   function submitMock(timeUp) {
-    const M = P.mock; if (!M) return;
+    const M = MK.current(); if (!M) return;
     if (timer) { clearInterval(timer); timer = null; }
     const { res, score, dom, sk, ren } = scoreMock(M.items, byId, { domains: Object.keys(DOM), renTopic, renewal: M.kind === 'renewal' });
     M.items.forEach((it, i) => {
       const q = byId[it.id], g = res[i];
       if (answered(q, it.r)) P.ans[q.id] = Object.assign(P.ans[q.id] || { n: 0, c: 0 }, { n: ((P.ans[q.id] || {}).n || 0) + 1, c: ((P.ans[q.id] || {}).c || 0) + (g === 1 ? 1 : 0), last: g === 1 ? 1 : 0, t: Date.now() });
     });
-    const used = Math.min(M.min * 60, Math.round((Date.now() - M.start) / 1000));
+    const used = MK.used();
     const rec = Object.assign({ t: Date.now(), kind: M.kind, score, pass: score >= 700, n: M.items.length, used, dom, sk }, M.kind === 'renewal' ? { ren } : {});
     P.mocks.push(rec); P.mocks = P.mocks.slice(-30);
     const last = { rec, items: M.items, flags: M.flags, res, timeUp };
-    P.mock = null; markDay(); save();
+    markDay(); MK.end();
     track(EX.ev + '_mock_finish', { length: rec.kind, score, passed: rec.pass, questions: rec.n, time_used_min: Math.round(used / 60) });
     go('results', { last, filter: 'all' });
   }
