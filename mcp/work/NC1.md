@@ -26,9 +26,11 @@
 - **Got:** `same-question` 41 checks, red on 1e5e3b3: 34 of 41 failed (7 guards green there: the copies written, no
   section without against, S2, S3, R3, W1, C1). After: 41 of 41. Twin 6 / 2 / 1 / 0 / 8 / 0, native 8 / 0 / 1 / 0 /
   8 / 0, redesign 9 / 0 / 0 / 0 / 8 / 0 (RD2's numbers); 10 planted changes found once each; 1,017 visuals in about
-  800 ms. checker 9 of 9 suites, release 5 of 5, lint 0; the full run: below.
-- **State:** CI: below.
-- **Resume:** CI on the branch, then the reviewer.
+  800 ms. checker 9 of 9 suites, release 5 of 5, lint 0 (again after the merge). Merged origin/integration/0.3.2
+  (39c46bb, PK1) once after the last code commit: WORK.md's line, both sides kept.
+- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41781527910 on 9ae0227 (Linux 5 of 5,
+  Windows 5 of 5, website green; macOS skipped on a work branch, CI1).
+- **Resume:** the reviewer: review and merge; way 2 (the step in each copy's plan) is its own brief.
 
 ## The plan
 1. Red first: `test-0.3.2-same-question.mjs` on the base (the twin, native copy and redesign made through the real
