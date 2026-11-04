@@ -15,6 +15,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { shownPath } from './model-names.mjs';
+// the nearest-model rule is the site's and the MCP's one file (DD1G): a pure module, no folder is read by it
+import Nearest from '../../assets/js/model-nearest.js';
+const { nearest } = Nearest;
 
 // A reading error: a code and its data, for the tool layer to word (A1-9, the audit of the reading block: the reader
 // spoke as the MCP tool). Its message is a plain fallback that names no tool.
@@ -32,15 +35,13 @@ export const walk = (dir, depth = 0, links = null) => (depth > 4 ? [] : fs.readd
 // pushed to links when given (the caller says why a linked model folder is not read)
 export const modelFolders = (full, links) => [full, ...walk(full, 0, links).filter((f) => fs.statSync(f).isDirectory())].filter((d) => /\.(SemanticModel|Dataset)$/i.test(d));
 // The model folder nearest to the top wins (a backup copy deeper down never does)
-export function nearestModel(dirs0, root, p) {
-  const dirs = dirs0.slice();
-  const depth = (d) => d.split(path.sep).length;
-  dirs.sort((a, b) => depth(a) - depth(b));
+export function nearestModel(dirs, root, p) {
   // (SQ6, 0.2.9-checks-S4; SQ15a, the owner's yes) two model folders at the nearest depth (two projects side by side):
-  // never the first one the folder lists, silently; both named, as for two models of one name
-  const tied = dirs.filter((d) => depth(d) === depth(dirs[0]));
+  // never the first one the folder lists, silently; both named, as for two models of one name. The rule is
+  // model-nearest.js's; this keeps the ReadError and its message
+  const { tied } = nearest(dirs, path.sep);
   if (tied.length > 1) { const rel = (d) => shownPath(path.relative(root, d)); throw new ReadError('MANY_MODELS', { path: p, models: tied.map(rel) }, `"${p}" holds ${tied.length} models at the same level: ${tied.map(rel).join('; ')}.`); }
-  return dirs[0];
+  return tied[0];
 }
 
 // A model asked for by its plain name ("Ramadan Test", "Ramadan Test.pbip"), when no file or folder of that path

@@ -358,6 +358,7 @@ const pickedInBrowser = async (x, get) => {
   const files = x.m.map((m) => ({ name: 'T.tmdl', webkitRelativePath: 'Pick/' + m + '/definition/tables/T.tmdl', size: 10, arrayBuffer: () => { throw Object.assign(new Error('READ'), { at: m }); } }));
   try { await (await get())(files, { fromTmsl: () => [], relsOfTmsl: () => [], clean: (t) => t, tmdl: () => ({ fromFiles: () => ({}) }) }); return 'read nothing'; } catch (e) { return e.at ? 'uses ' + e.at : 'refuses ' + e.message; }
 };
+const pickedByRule = async (x, get) => { const r = (await get())(x.m, '/'); return r.path ? 'uses ' + r.path : 'refuses MANY_MODELS'; };
 const pickedOnDisk = async (x, get) => {
   const root = path.join(path.sep, 'w');
   try { const d = (await get())(x.m.map((m) => path.join(root, ...m.split('/'))), root, 'w'); return 'uses ' + path.relative(root, d).split(path.sep).join('/'); } catch (e) { return 'refuses ' + (e.code || e.message); }
@@ -574,6 +575,7 @@ export const FAMILIES = [
     ] },
   { id: '1g', title: 'Which model folder is read?', question: 'a chosen folder holding model folders: the one read, or a refusal',
     inputs: MODELS, places: [
+      P('assets/js/model-nearest.js', 'nearest', 'export', pickedByRule),
       P('assets/js/model-import-browser.js', 'fromFolder', 'export', pickedInBrowser),
       P('mcp/lib/model-discovery.mjs', 'nearestModel', 'export', pickedOnDisk),
     ] },
