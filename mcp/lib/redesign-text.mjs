@@ -10,33 +10,13 @@
 //          theme's visual styles; the added theme file: op "add"; report.json's additions), perVisual each visual's
 //          removals (Map visual -> rows), problems the text's refusals
 //   textWhy(page, visual, twice) -> why the visual's text is kept as it is (null: it is made consistent)
-//   KEEP, twiceOf(page), reasonOf(visual, twice), schemaOf(json): why a visual is left as it is (the grid and the text
-//     both read them; lib/redesign.mjs imports them from here)
+//   (why a visual is left as it is, KEEP, twiceOf and reasonOf, is the patch policy: lib/redesign-patches.mjs)
 import { safeName, isCustom } from './read-report.mjs';
 import { CLASSES, KNOWN_TYPES, visualText, countsOf, mixedOf, textSetOf, facesOf, boldItalicOf, shownValue, themeValue, rolesOf } from './text-format.mjs';
 import { ADDED_THEME } from './redesign-kinds.mjs';
-export const schemaOf = (j) => { const m = /\/([A-Za-z]+)\/(\d+)\.\d+\.\d+\/schema(?:[.-]embedded)?\.json$/.exec(String((j && j.$schema) || '')); return m ? { family: m[1], major: +m[2] } : null; };
+import { twiceOf, reasonOf } from './redesign-patches.mjs';
 const obj = (x) => (x && typeof x === 'object' && !Array.isArray(x) ? x : null);
 
-// what a redesign never moves, with why
-export const KEEP = {
-  textbox: 'a text box: kept where it is (the header and the lines drawn around it belong together)',
-  shape: 'a shape: kept where it is (it frames or underlines other visuals)', basicShape: 'a shape: kept where it is (it frames or underlines other visuals)',
-  image: 'an image: kept where it is', actionButton: 'a button: kept where it is, with its action (page or bookmark)',
-  pageNavigator: 'the page navigator: kept where it is', bookmarkNavigator: 'a bookmark navigator: kept where it is'
-};
-
-export const twiceOf = (p) => { const names = p.visuals.map((v) => v.id); return new Set(names.filter((n, i) => names.indexOf(n) !== i)); };
-export function reasonOf(v, twice) {
-  if (twice.has(v.id)) return 'its name is used twice on the page, so a patch could not name it';
-  if (v.type === 'group') return 'a group: it and its visuals keep their places (the group places them)';
-  if (v.group) return `inside the group ${safeName(v.groupName || v.group)}: the group places it`;
-  if (isCustom(v.type)) return 'a custom visual: copied as it is, never moved or changed';
-  if (KEEP[v.type]) return KEEP[v.type];
-  if (v.hidden) return 'hidden in the original (shown by a bookmark or a button): kept where it is';
-  if (!schemaOf(v.json) || schemaOf(v.json).family !== 'visualContainer') return 'its file names no visual schema';
-  return null;
-}
 // (0.3.1 CS1) why a visual's text is not made consistent (null: it is): the visuals the grid would place (its own
 // reasons), on a page that is not a tooltip page, of a type whose text roles are known
 export function textWhy(p, v, twice) {

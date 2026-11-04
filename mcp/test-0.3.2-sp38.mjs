@@ -23,6 +23,9 @@ import './test-env.mjs';
 //        theme visual style the plan does not set; a removed setting given another value)
 //   T1-T3 (after extraction 1) lib/redesign-text.mjs exports the text restyling, redesign.mjs imports it; it reads and
 //        writes no file; textPlan twice on one inventory gives the same answer and leaves the inventory unchanged
+//   K1-K4 (after extraction 2) lib/redesign-patches.mjs makes the patch records and holds why a visual is kept; it reads
+//        and writes no file and reads the registry; each record's reason is the enabled kind that allows it; the copy
+//        and its check name nothing of it; the write and its source-hash checks stay in redesign.mjs
 //   node test-0.3.2-sp38.mjs
 import fs from 'node:fs';
 import os from 'node:os';
@@ -117,10 +120,11 @@ for (const [, c] of CASES) await c.make();
 const R = await import('./lib/redesign.mjs'), M = await import('./lib/model.mjs');
 const norm = (t) => [ROOT, JSON.stringify(ROOT).slice(1, -1), ROOT.split(path.sep).join('/')].reduce((s, r) => s.split(r).join('<ROOT>'), String(t));
 const LOGICAL = '00000000-0000-4000-8000-000000000038';
-const got = {}, untouched = {};
+const got = {}, untouched = {}, plans = {};
 for (const [name, c] of CASES) {
   const model = M.loadModel(c.model), p = R.planRedesign(c.report, model, Object.assign({ logicalId: LOGICAL }, c.opts));
   const plan = { problems: p.problems, patches: p.patches, answer: p.answer, digest: p.digest, added: p.added, name: p.name };
+  plans[name] = { patches: p.patches, themeRel: p.themeRel };
   // U: every file of the original no patch names is the original's bytes, in the plan's tree and as written
   const top = path.basename(p.loc.outDir), dir = p.loc.dir, named = new Set(p.patches.map((x) => x.file)), off = [];
   const orig = walk(dir).filter((r) => !named.has(r) && r !== '.platform');
@@ -178,8 +182,9 @@ for (const [name] of VARIANTS) chk(() => /^Nothing was written: the copy check f
 const TX = await import('./lib/redesign-text.mjs'), RR = await import('./lib/read-report.mjs');
 const srcOf = (f) => fs.readFileSync(path.join(HERE, 'lib', f), 'utf8');
 const fsrc = srcOf('redesign.mjs'), tsrc = srcOf('redesign-text.mjs');
+// (after extraction 2, KEEP, twiceOf, reasonOf and schemaOf are the patch policy: K1)
 const TEXT_MOVED = ['function textPlan', 'function textWhy', 'const KEEP =', 'const twiceOf =', 'function reasonOf', 'const schemaOf ='];
-chk(() => ['textPlan', 'textWhy', 'KEEP', 'twiceOf', 'reasonOf', 'schemaOf'].every((k) => TX[k] !== undefined) && !TEXT_MOVED.filter((d) => fsrc.includes(d)).length && /from '\.\/redesign-text\.mjs';/.test(fsrc),
+chk(() => ['textPlan', 'textWhy'].every((k) => typeof TX[k] === 'function') && !TEXT_MOVED.filter((d) => fsrc.includes(d)).length && /from '\.\/redesign-text\.mjs';/.test(fsrc),
   () => `T1. lib/redesign-text.mjs exports the text restyling and redesign.mjs imports it (no longer defines it): still defined ${JSON.stringify(TEXT_MOVED.filter((d) => fsrc.includes(d)))}`);
 chk(() => !/from 'node:(fs|path|fs\/promises|child_process)'|writeTree|readFileSync|writeFileSync|readJson|readBytes/.test(tsrc),
   () => 'T2. lib/redesign-text.mjs reads and writes no file (report.json is read by the facade and handed in)');
@@ -190,6 +195,29 @@ const tp = () => { const r = TX.textPlan(inv3, files3, th3, 'report', rep3); ret
 const tp1 = tp(), tp2 = tp();
 chk(() => tp1 === tp2 && JSON.stringify(inv3) === inv3Before && JSON.parse(tp1).patches.length === got['S3 consistentText report: own fonts, a text box, the theme\'s styles'].plan.patches.filter((x) => x.op === 'remove' || /visualStyles/.test(x.pointer || '')).length,
   () => `T3. textPlan twice on one inventory: the same answer, the inventory unchanged, its patches the plan's text patches: ${tp1.slice(0, 300)}`);
+
+// ---------- after extraction 2 (SP38): the allowlisted patches are in lib/redesign-patches.mjs ----------
+const PT = await import('./lib/redesign-patches.mjs'), K = await import('./lib/redesign-kinds.mjs');
+const psrc = srcOf('redesign-patches.mjs');
+const PATCH_MOVED = ['const KEEP =', 'const twiceOf =', 'function reasonOf', 'const schemaOf =', 'TOKENS.forEach', "pointer: '/position/' + f", 'TITLE_AT(i)', "'/metadata/displayName'", 'themeDesign('];
+const stillIn = PATCH_MOVED.filter((d) => fsrc.includes(d) || tsrc.includes(d));
+chk(() => ['placePatches', 'titlePatch', 'tokenPatches', 'namePatches', 'kindOfPatch', 'KEEP', 'twiceOf', 'reasonOf', 'schemaOf'].every((k) => PT[k] !== undefined) && !stillIn.length
+  && /from '\.\/redesign-patches\.mjs';/.test(fsrc) && /import \{ twiceOf, reasonOf \} from '\.\/redesign-patches\.mjs';/.test(tsrc),
+  () => `K1. lib/redesign-patches.mjs makes the allowlisted patch records and holds why a visual is kept; redesign.mjs and redesign-text.mjs import them (no longer define them): still defined ${JSON.stringify(stillIn)}`);
+chk(() => !/from 'node:(fs|path|fs\/promises|child_process)'|writeTree|readFileSync|writeFileSync|readJson|readBytes/.test(psrc) && /from '\.\/redesign-kinds\.mjs';/.test(psrc),
+  () => 'K2. lib/redesign-patches.mjs reads and writes no file, and reads lib/redesign-kinds.mjs (the allowlist)');
+// every record of every plan: the enabled kind that allows it (its reason, the kind's sentence); a record outside: none
+const kinds = []; const unkinded = [];
+for (const [name] of CASES) plans[name].patches.forEach((x) => { const k = PT.kindOfPatch(x, plans[name].themeRel); if (!k || k.reason !== K.sentenceOf(k.kind, 'en')) unkinded.push(`${name.split(' ')[0]} ${x.file} ${x.pointer || x.op}`); else if (!kinds.includes(k.kind)) kinds.push(k.kind); });
+const outside = [{ file: VCOL, pointer: '/visual/visualType', to: 'lineChart' }, { file: 'definition/pages/p1overview/page.json', pointer: '/displayName', to: 'x' }, { op: 'add', file: 'definition/extra.json', to: {} }].map((x) => PT.kindOfPatch(x, THEMEF));
+chk(() => !unkinded.length && JSON.stringify(kinds.slice().sort()) === JSON.stringify(['consistentText', 'copyName', 'grid', 'themeTokens', 'titles']) && outside.every((k) => k === null),
+  () => `K3. each patch record (pointer, from, to) has its reason from the registry, the enabled kind that allows it: ${JSON.stringify({ unkinded: unkinded.slice(0, 5), kinds, outside })}`);
+// the copy and its check are independent of the patch generator; the write and its source-hash checks stay in the facade
+const body = (src, fn) => { const i = src.indexOf(`export function ${fn}(`); let d = 0; for (let k = src.indexOf('{', i); k < src.length; k++) { if (src[k] === '{') d++; else if (src[k] === '}' && !--d) return src.slice(i, k + 1); } return ''; };
+const cv = body(fsrc, 'buildCopy') + body(fsrc, 'verifyCopy'), wrt = body(fsrc, 'writeRedesign');
+chk(() => cv.length > 500 && !Object.keys(PT).some((k) => new RegExp(`\\b${k}\\b`).test(cv)) && !/from '\.\/redesign\.mjs'|\b(buildCopy|verifyCopy|writeRedesign)\(/.test(psrc)
+  && /reportPrint\(reportPath\) !== approved/.test(wrt) && (wrt.match(/changedSince\(\)/g) || []).length === 2 && /writeTree\(/.test(wrt) && /digestOf\(art\.files\) !== art\.digest/.test(wrt),
+  () => 'K4. buildCopy and verifyCopy name nothing of lib/redesign-patches.mjs (the check is independent of the patches), which loads neither; writeRedesign stays in redesign.mjs with its source-hash checks (before and after reading) and the kept files\' digest');
 
 fs.rmSync(TMP, { recursive: true, force: true });
 if (problems.length) { console.log(`FAIL script=test-0.3.2-sp38.mjs cause=${problems[0].slice(0, 300).replace(/\s+/g, ' ')}`); problems.forEach((x) => console.log('  - ' + x)); console.log(`FAIL  sp38  ${checks - problems.length} of ${checks} checks`); process.exit(1); }

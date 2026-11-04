@@ -27,19 +27,21 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { real, nothingAt, visible } from './model.mjs';
-import { safeName, safeText, readJson, readBytes, isFile, locate as readerLocate, strictFiles, inventory, diskSource, isCustom, INSTRUCTION, LONG_TEXT, reportPrint, refOf } from './read-report.mjs';
-import { buildTheme, themeDesign } from './design.mjs';
+import { safeName, safeText, readJson, readBytes, isFile, locate as readerLocate, strictFiles, inventory, diskSource, isCustom, reportPrint, refOf } from './read-report.mjs';
 import { writeTree } from './files.mjs';
 import { digestOf } from './artifact.mjs';
 import { newPlatform } from './twin-copy.mjs';
 import { ROLES, THEME_STYLE_AT } from './text-format.mjs';
 import { box, shownBox, unitsOf, gridPage } from './redesign-grid.mjs';
-// (0.3.2 SP38) the text restyling (the consistent copy's text) is in lib/redesign-text.mjs, with why a visual is kept
-import { textPlan, KEEP, twiceOf, reasonOf, schemaOf } from './redesign-text.mjs';
+// (0.3.2 SP38) the text restyling (the consistent copy's text) is in lib/redesign-text.mjs
+import { textPlan } from './redesign-text.mjs';
+// (0.3.2 SP38) the allowlisted patch records (place and size, titles, theme tokens, the copy's name) and why a visual is
+// kept are in lib/redesign-patches.mjs; the copy and its check below never call it
+import { placePatches, titlePatch, tokenPatches, namePatches, twiceOf, reasonOf, schemaOf } from './redesign-patches.mjs';
 // (0.3.2 PK1) the patch kinds (the allowlist, the file kinds, the added files, the values the write chooses) are in
 // lib/redesign-kinds.mjs; buildCopy and verifyCopy read it
 import * as Kinds from './redesign-kinds.mjs';
-import { TITLE_AT, TOKENS, ADDED_THEME } from './redesign-kinds.mjs';
+import { TOKENS, ADDED_THEME } from './redesign-kinds.mjs';
 // (0.3.2 SP19) the geometry, the D4 units and the grid are in lib/redesign-grid.mjs; unitsOf is exported here as before
 export { unitsOf };
 
@@ -174,24 +176,15 @@ export function planRedesign(reportPath, model, opts) {
       const shown = { visual: safeName(v.id), type: isCustom(v.type) ? 'custom ' + safeName(v.type) : safeName(v.type),
         fields: Object.values(v.fields || {}).flat().map((f) => (f.kind === 'other' ? '(an expression)' : refOf(f))), place: `${Math.round(v.x)},${Math.round(v.y)} ${Math.round(v.w)}x${Math.round(v.h)}` };
       if (b && ['x', 'y', 'w', 'h'].some((k) => Math.abs(b[k] - it.b[k]) >= 0.5)) {
-        // the patch is on the visual's own position: a top-level visual's place is on the page
-        const pos = v.json.position || {};
-        [['x', 'x'], ['y', 'y'], ['w', 'width'], ['h', 'height']].forEach(([k, f]) => { if (Math.abs(b[k] - it.b[k]) >= 0.5) patches.push({ page: p.id, visual: v.id, file: v.file, pointer: '/position/' + f, from: pos[f], to: b[k] }); });
+        placePatches(p, v, it.b, b).forEach((x) => patches.push(x));
         Object.assign(change, { from: shownBox(it.b), to: shownBox(b) });
         if (b.w < it.b.w - 0.5) change.narrower = `${Math.round(it.b.w - b.w)} narrower: its row is placed on the grid, with margins and gaps of ${grid.gap}`;
       }
       if (titleKeys.has(key)) {
         titleSeen.add(key);
-        const t = String(titles[key]), arr = ((v.json.visual || {}).visualContainerObjects || {}).title, i = Array.isArray(arr) ? arr.findIndex((e) => e && e.properties && e.properties.text && e.properties.text.expr && e.properties.text.expr.Literal && !e.selector) : -1;
-        const r = reason(v);
-        if (r && !KEEP[v.type]) problems.push(`titles: ${safeName(key)} is not changed (${r}); leave it out of titles.`);
-        else if (i < 0) problems.push(`titles: ${safeName(key)} has no static title of its own (a title from a measure, or none): only a static title is changed; leave it out of titles.`);
-        else if (INSTRUCTION.test(t)) problems.push(`titles: the text for ${safeName(key)} reads like an instruction to an AI assistant: not written.`);
-        else if (!t.trim() || t.length > LONG_TEXT || /[\p{Cc}\p{Cf}]/u.test(t)) problems.push(`titles: the text for ${safeName(key)} must be 1 to ${LONG_TEXT} characters, with no control characters.`);
-        else {
-          const old = String(arr[i].properties.text.expr.Literal.Value), to = `'${t.replace(/'/g, "''")}'`;
-          if (old !== to) { patches.push({ page: p.id, visual: v.id, file: v.file, pointer: TITLE_AT(i), from: old, to }); change.title = { to: t }; }
-        }
+        const tp = titlePatch(p, v, key, titles[key], reason(v));
+        if (tp.problem) problems.push(tp.problem);
+        if (tp.patch) { patches.push(tp.patch); change.title = { to: tp.title }; }
       }
       if (TX.perVisual.has(v)) change.text = TX.perVisual.get(v);
       records.set(v, { it, shown, change, why: (p.kind === 'Tooltip' ? 'on a tooltip page: kept as it is' : null) || (it && (grid.why.get(it) || unitWhy.get(it))) || reason(v) || (o.keepPositions ? 'kept where it is (keepPositions)' : 'already on the grid') });
@@ -216,18 +209,12 @@ export function planRedesign(reportPath, model, opts) {
   let theme = null;
   const themeRel = inv.themeFile && files.includes(inv.themeFile) ? inv.themeFile : null;
   if (o.restyle && Object.keys(o.restyle).length) {
-    if (!themeRel) problems.push('restyle: the original has no custom theme file (only Power BI\'s base theme), so there are no theme tokens to change: leave restyle out.');
-    else {
-      const td = themeDesign(Object.assign({}, o.restyle, { pageTint: false }));
-      td.repaired.forEach((x) => problems.push(`restyle.${x.field}: ${x.why}.`));
-      const built = buildTheme(td.design, 'en'), th = inv.themeJson || {}, tokens = {};
-      TOKENS.forEach((k) => { if (built[k] !== undefined && JSON.stringify(built[k]).toLowerCase() !== JSON.stringify(th[k] === undefined ? null : th[k]).toLowerCase()) { tokens[k] = built[k]; patches.push({ file: themeRel, pointer: '/' + k, from: th[k] === undefined ? null : th[k], to: built[k] }); } });
-      theme = { file: path.basename(themeRel), tokens, keeps: 'everything else in the theme file (fonts, visual styles, text classes) is copied as it is' };
-    }
+    const rs = tokenPatches(o.restyle, themeRel, inv.themeJson);
+    rs.problems.forEach((x) => problems.push(x)); rs.patches.forEach((x) => patches.push(x)); theme = rs.theme;
   }
   TX.patches.forEach((x) => patches.push(x));
-  // the copy's own name and id: .platform names the report, and its logical id is the item's id in a workspace
-  if (files.includes('.platform')) patches.push({ file: '.platform', pointer: '/metadata/displayName', from: null, to: loc.name }, { file: '.platform', pointer: '/config/logicalId', from: null, to: 'a new id' });
+  // the copy's own name and id (.platform)
+  namePatches(files, loc.name).forEach((x) => patches.push(x));
 
   // the copy, built and checked now; the write builds and checks it again
   const src = Object.fromEntries(files.map((r) => [r, readBytes(path.join(loc.dir, ...r.split('/')))]));
