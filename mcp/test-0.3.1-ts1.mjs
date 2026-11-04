@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
+import { generatorSource } from './test-source.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -60,7 +61,7 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   chk(() => !odd.length, () => `T2g. every size a half point within 8-60: ${odd.slice(0, 10).join(', ')}`);
   // the website loads the .min.js: the Theme Generator shows the same numbers
   chk(() => same(get(() => sizesOf(themeAt('1920x1080', 0, 0, Emin))), want(12.5, 15, 35, 22.5)), () => `T2h. design-engine.min.js (the website's Theme Generator) writes the same 1080 sizes: ${JSON.stringify(get(() => sizesOf(themeAt('1920x1080', 0, 0, Emin))))}`);
-  const tg = src('../assets/js/theme-generator.js');
+  const tg = generatorSource();   // (0.3.2 SP31: the page and its modules)
   chk(() => /E\.buildTheme\(state/.test(tg) && !/fontSize\s*:/.test(tg) && !/sizeAt|textScale/.test(tg), () => 'T2i. the Theme Generator builds its theme through the engine only (no text size of its own)');
 }
 
