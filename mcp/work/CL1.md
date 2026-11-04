@@ -29,6 +29,7 @@
   row not compared). modules 1033 (`--strict` too), agent-memory 419, result-lines 192, lint 0.
 - **Commits:** f22d80a (plan), ff1ab81 (probe), 401936a (ledger), b5729f7 (check, CI step), 893565f (pointers),
   a53742d (CI line), 9c3039c (probe: the audit), 207b2df (ledger: the audit), a95e816 (check: equal copies).
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41855679631 on a684ee57. **State: DONE.**
 - **Resume:** the reviewer's read of the proposals and of "Where I disagree".
 
 ## Where I disagree with the audit (the probe and the code, 4 Nov)
