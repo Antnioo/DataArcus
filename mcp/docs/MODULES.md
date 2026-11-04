@@ -10,7 +10,9 @@ task routes.
   copies in `ar/`. Its Power BI tools run in the browser; nothing a visitor opens is uploaded.
   Every page loads the site-wide scripts in this order: `site-navigation.js` (navigation and effects, the WhatsApp
   button, the live report facades; it sends `dataarcus:embed`), `site-forms.js` (the contact and beta forms, tracking-free;
-  it sends `dataarcus:lead`), then `main.js` (analytics and the cookie banner, and the calls to the modules before it).
+  it sends `dataarcus:lead`), `site-analytics.js` (the analytics adapter and the cookie banner: the only site file that
+  calls gtag or Clarity or touches consent; it hears both events and the clicks), then `main.js` (the bootstrap: it
+  calls the three in order).
 - **The engines** (`assets/js/*.js`, each with its `.min.js`): plain JavaScript that runs in the browser and in Node,
   **shared by the website and the MCP on purpose**, so both give the same answers. The model reader and field picker
   (`pbip-bind.js`, `tmdl-model.js`; the model's fields, normalised, `field-catalog.js`; their ranking
@@ -92,7 +94,7 @@ task routes.
 | Change | Start with |
 |---|---|
 | A website page or tool | the page's HTML and its `assets/js/` engine; `node scripts/test-site-config.mjs`; `scripts/tests/run-all.mjs` |
-| Site-wide behaviour (navigation, effects, forms, analytics, consent) | `assets/js/site-navigation.js`, `site-forms.js`, `main.js`; `scripts/tests/run-all.mjs sp35 consent site anchors` |
+| Site-wide behaviour (navigation, effects, forms, analytics, consent) | `assets/js/site-navigation.js`, `site-forms.js`, `site-analytics.js` (consent), `main.js` (the bootstrap); `scripts/tests/run-all.mjs sp35 consent site anchors` |
 | What a report looks like (layout, sizes, visuals) | `assets/js/pbip-export.js`, `pbip-page.js` (tooltip pages: `pbip-tooltip.js`; page buttons and filter panels: `pbip-navigation.js`; the visuals: `pbip-visuals.js`), `design-engine.js`; `report-rules.js` for measured limits |
 | Right to left and Arabic | `assets/js/report-mirror.js` (which family, which axis is time, what keeps left to right: `mirror-policy.js`); `mcp/lib/twin-*.mjs` (by step), `terminology.mjs`; `assets/data/arabic-report-words.json` |
 | Reading models | `assets/js/pbip-bind.js` (the binding), `field-catalog.js` (the fields and the reach), `field-suggest.js` (the ranking), `tmdl-model.js` (the website's folder or file: `model-import-browser.js`); `mcp/lib/model.mjs`, `scope.mjs` |
