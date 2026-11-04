@@ -13,6 +13,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
+import { writerPageSource } from './test-source.mjs';
 import { elicitClient } from './test-audit6.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..'), require = createRequire(import.meta.url);
@@ -89,8 +90,8 @@ const lit = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value)
 // ---------- E: 0.2.9-writer-S6, iconH and the tooltip page's size ----------
 {
   const src = (f) => fs.readFileSync(path.join(REPO, 'assets/js', f), 'utf8');
-  chk(() => !/iconH/.test(src('pbip-sizing.js')) && !/iconH/.test(src('pbip-page.js')), () => 'E1. iconH (never called) is gone from pbip-sizing.js and pbip-page.js');
-  chk(() => !/320 x 240/.test(src('pbip-page.js')) && /320 x 284 tooltip page/.test(src('pbip-page.js')), () => 'E2. pbip-page.js names the tooltip page as written, 320 x 284 (never 320 x 240)');
+  chk(() => !/iconH/.test(src('pbip-sizing.js')) && !/iconH/.test(writerPageSource()), () => 'E1. iconH (never called) is gone from pbip-sizing.js and the writer\'s page files (pbip-page.js, pbip-visuals*.js)');
+  chk(() => !/320 x 240/.test(writerPageSource()) && /320 x 284 tooltip page/.test(writerPageSource()), () => 'E2. the writer\'s page files (pbip-page.js, pbip-visuals*.js) name the tooltip page as written, 320 x 284 (never 320 x 240)');
 }
 
 // ---------- B6: the write's answer says it (plan_layout, the click, create_report, on a made-up model) ----------
