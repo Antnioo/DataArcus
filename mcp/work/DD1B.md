@@ -83,6 +83,9 @@ none (no golden, twin or Desktop-measured test changed its answer).
   `npm test`: all 42 passed. Lint 0; check-contracts PASS 752 (28 families, 107 places); contracts-probe: 1b-text,
   1b-shown, 1b-number, 1b-bool, 1d one answer each; check-modules --strict PASS 1065; test-site-config, changelog-words,
   result-lines, agent-memory, literal requires, stamps 1386, check:min (128 match) PASS.
+- CI run 41924821084 (on d6de7ca8): website-checks red on the sitemap's lastmod of the two theme generator pages
+  (their stamps changed in the merge, dated 5 Nov UTC); `node scripts/sitemap-lastmod.mjs --write`, then every
+  website-checks step run here: PASS. The note's lesson below.
 - glass-tables and sp6 failed only on the shallow clone (their base commits missing), as in DD1C; after
   `git fetch --unshallow`: 113 and 13 checks, PASS.
 - The base's own full run was stopped (two full runs at once passed the 30-minute limit): the numbers are compared with
@@ -98,4 +101,6 @@ none (no golden, twin or Desktop-measured test changed its answer).
 ## Lessons for the reviewer
 - A guard test that pins a module's requires (sp10 P10, sp42 P4) decides where a shared module may be read; check
   them before choosing a home.
+- A stamp change is a page change: after `npm run build:min` writes a page's stamps, run `node scripts/sitemap-lastmod.mjs`
+  (website-checks runs it; the local suites do not).
 - The full MCP run takes over 30 minutes on 4 cores here: run it as CI's 5 shards side by side (`DA_SHARD=k/4`).
