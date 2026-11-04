@@ -99,48 +99,33 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.onerror = () => showError('READ');
     reader.readAsArrayBuffer(file);
   }
-  // (0.3.1 FX1, the laptop's part 3, G4-1: a visitor who loaded the page and then went offline got no score: the worker
-  // was fetched only when a file was dropped) the worker is started when the page loads (its importScripts load the
-  // engine and the TMDL reader then) and kept ready between runs: it holds nothing between messages. A run still going
-  // when another file is dropped is stopped and a new worker started for the new file. Nothing is sent anywhere.
-  const WORKER_URL = '/assets/js/model-health-worker.min.js?v=20261103sp15';
-  let worker = null, ready = null, busy = false;
-  const warm = () => { try { ready = new Worker(WORKER_URL); ready.onerror = () => { ready = null; }; } catch (e) { ready = null; } };
-  warm();
+  // the worker's lifecycle (started when the page loads, kept between runs, a run still going cancelled by the next
+  // file): health-worker-client.js (0.3.2 SP32). Its messages are typed; what is shown and counted is decided here
+  const client = window.MHWorkerClient.create();
   function run(buffer, fileName) {
-    if (worker && busy) { worker.terminate(); worker = null; }
-    if (!worker) { if (!ready) warm(); worker = ready; ready = null; }
-    if (!worker) return showError('WORKER');
-    busy = true;
-    // (the worker is kept, not stopped, when it is done: the next file runs on it, also offline)
-    const done = () => { busy = false; };
-    worker.onmessage = (ev) => {
-      const d = ev.data;
-      if (d.type === 'progress') setStep(d.step);
-      else if (d.type === 'error') { done(); showError(d.code, d.message); }
-      else if (d.type === 'done') {
-        R = d.result; tab = 'issues'; filt = { cat: 'all' }; msOpen = null; msQuery = ''; msFilter = 'all';
-        // (AU47, AUD-047) a model file that could not be read: no score, so none is kept in the history either
-        if (R.unreadable) { done(); render(); root.scrollIntoView({ behavior: 'smooth', block: 'start' }); track('mh_analyze', { file_type: R.meta.source, has_report: R.meta.hasReport }); return; }
-        qRehash();   // (B-148, R5) answers whose measure or relationship changed are kept, not applied: their questions are asked again
-        const hist = store.get('dataarcus-mh-history', {});
-        const key = String(fileName).toLowerCase();
-        prev = hist[key] && hist[key].length ? hist[key][hist[key].length - 1] : null;
-        // re-insert the file so key order is least recently checked first, and the oldest check is the one dropped
-        const runs = (hist[key] || []).concat({ d: new Date().toISOString().slice(0, 10), s: score().overall }).slice(-10);
-        delete hist[key]; hist[key] = runs;
-        const keys = Object.keys(hist); if (keys.length > 30) delete hist[keys[0]];
-        store.set('dataarcus-mh-history', hist);
-        done();
-        render();
-        root.scrollIntoView({ behavior: 'smooth', block: 'start' }); // lands below the navbar (scroll-padding-top in style.css)
-        // (17 Oct, the outside audit: nothing about the user's model is sent, not even its size, counts or score)
-        track('mh_analyze', { file_type: R.meta.source, has_report: R.meta.hasReport, sample: fileName === 'Contoso-Sales-Demo.pbit' });
-      }
-    };
-    // (a worker that fails is not kept)
-    worker.onerror = () => { busy = false; if (worker) worker.terminate(); worker = null; showError('PARSE'); };
-    worker.postMessage({ buffer, fileName }, [buffer]);
+    client.run(buffer, fileName, (m) => {
+      if (m.type === 'progress') setStep(m.step);
+      else if (m.type === 'error') showError(m.code, m.message);
+      else if (m.type === 'result') analysed(m.result, fileName);
+    });
+  }
+  function analysed(result, fileName) {
+    R = result; tab = 'issues'; filt = { cat: 'all' }; msOpen = null; msQuery = ''; msFilter = 'all';
+    // (AU47, AUD-047) a model file that could not be read: no score, so none is kept in the history either
+    if (R.unreadable) { render(); root.scrollIntoView({ behavior: 'smooth', block: 'start' }); track('mh_analyze', { file_type: R.meta.source, has_report: R.meta.hasReport }); return; }
+    qRehash();   // (B-148, R5) answers whose measure or relationship changed are kept, not applied: their questions are asked again
+    const hist = store.get('dataarcus-mh-history', {});
+    const key = String(fileName).toLowerCase();
+    prev = hist[key] && hist[key].length ? hist[key][hist[key].length - 1] : null;
+    // re-insert the file so key order is least recently checked first, and the oldest check is the one dropped
+    const runs = (hist[key] || []).concat({ d: new Date().toISOString().slice(0, 10), s: score().overall }).slice(-10);
+    delete hist[key]; hist[key] = runs;
+    const keys = Object.keys(hist); if (keys.length > 30) delete hist[keys[0]];
+    store.set('dataarcus-mh-history', hist);
+    render();
+    root.scrollIntoView({ behavior: 'smooth', block: 'start' }); // lands below the navbar (scroll-padding-top in style.css)
+    // (17 Oct, the outside audit: nothing about the user's model is sent, not even its size, counts or score)
+    track('mh_analyze', { file_type: R.meta.source, has_report: R.meta.hasReport, sample: fileName === 'Contoso-Sales-Demo.pbit' });
   }
   function loading(name) {
     root.innerHTML = '<div class="mh-panel mh-loading"><div class="mh-spin"></div><div><b>' + esc(name) + '</b><div class="mh-note" id="mhStep">' + L('Reading the file in your browser…', 'قراءة الملف داخل متصفحك…') + '</div></div></div>';
