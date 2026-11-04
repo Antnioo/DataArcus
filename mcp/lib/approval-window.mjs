@@ -7,18 +7,15 @@
 // are checked, so another site or a rebound name can't send it); the page shows what the plan writes, every model name
 // as plain text. What it can't do: another program on the person's computer (one that controls their browser or mouse,
 // or another tool of the AI app that runs commands or reads the browser's history) could click it too.
-import http from 'node:http';
-import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
-// (0.3.2 SP23) what each page says: approval-disclosure.mjs (pure); (SP44) its HTML: approval-view.mjs (pure); this
-// file alone holds the secret, the Host and Origin checks, the click and the window's life
-import { askPage, donePage, gonePage } from './approval-view.mjs';
+// (0.3.2 SP23) what each page says: approval-disclosure.mjs (pure); (SP44) its HTML: approval-view.mjs (pure); the
+// server, the secret, the Host and Origin checks and the call of the click's callback: approval-http.mjs. This file
+// keeps each window's life (open, wait, state, close) and the browser launch.
+import * as Http from './approval-http.mjs';
 export { approvalHtml, PREVIEW_PAGES_MAX } from './approval-view.mjs';
 export { summary, groupFiles, kindsLine, plainLine, promptSummary, promptText, promptBox, PROMPT_SUMMARY_CAP } from './approval-disclosure.mjs';
 
-const windows = new Map();          // planId -> { secret, plan, show, decided: null | 'approve' | 'decline', waiters, opened, seen }
-const bySecret = new Map();         // secret -> planId
-let server = null, port = 0, starting = null;
+const windows = new Map();          // planId -> { plan, show, expires, decided: null | 'approve' | 'decline', waiters, opened, seen }
 
 /** The program that opens the page: the system's default browser, or DATAARCUS_BROWSER (a program's path, or a JSON
  *  array of a program and its first arguments; the tests use it for a browser of their own). */
@@ -46,60 +43,20 @@ function launch(url) {
 }
 
 
-function headers(res, code, type) {
-  res.writeHead(code, { 'Content-Type': type || 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'same-origin',
-    // (0.3.1 GD2: the preview draws a glass page on its soft picture, inline in the page as a PNG data URL) img-src data:
-    // only: no image is ever fetched, from anywhere
-    'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'" });
-}
-
-function onRequest(req, res, decide) {
-  const here = `127.0.0.1:${port}`;
-  // (DNS rebinding: a page of another name that resolves to 127.0.0.1 sends its own Host)
-  if (req.headers.host !== here) { headers(res, 421, 'text/plain; charset=utf-8'); res.end('Wrong host'); return; }
-  const m = /^\/approve\/([A-Za-z0-9_-]{20,64})$/.exec((req.url || '').split('?')[0]);
-  const id = m && bySecret.get(m[1]), w = id && windows.get(id);
-  if (!w || (w.expires && Date.now() > w.expires)) { headers(res, 404); res.end(gonePage()); return; }
-  if (req.method === 'GET') { w.seen = true; headers(res, 200); res.end(w.decided ? donePage({ plan: w.plan, show: w.show, decided: w.decided }) : askPage({ plan: w.plan, show: w.show })); return; }
-  if (req.method !== 'POST') { headers(res, 405, 'text/plain; charset=utf-8'); res.end('Method not allowed'); return; }
-  // (a click comes only from the page itself: its Origin, or, when a browser sends none or "null", Sec-Fetch-Site
-  // same-origin, which a web page can't set. The referrer policy is same-origin, not no-referrer: with no-referrer
-  // Chromium sends Origin "null" on the form's POST, found by a real click in Chromium, 14 Oct)
-  const origin = req.headers.origin, site = req.headers['sec-fetch-site'];
-  if (!(origin === 'http://' + here || ((!origin || origin === 'null') && site === 'same-origin'))) { headers(res, 403, 'text/plain; charset=utf-8'); res.end('Refused: the click must come from the DataArcus page itself.'); return; }
-  let body = '';
-  req.setEncoding('utf8');
-  req.on('data', (c) => { body += c; if (body.length > 1000) req.destroy(); });
-  req.on('end', () => {
-    const d = new URLSearchParams(body).get('decision');
-    if (!w.decided && (d === 'approve' || d === 'decline')) decide(w, d);
-    headers(res, w.decided ? 200 : 400); res.end(w.decided ? donePage({ plan: w.plan, show: w.show, decided: w.decided }) : gonePage());
-  });
-}
-
-async function listen(decide) {
-  if (server) return;
-  if (!starting) starting = new Promise((resolve, reject) => {
-    const s = http.createServer((req, res) => { try { onRequest(req, res, decide); } catch (e) { try { headers(res, 500, 'text/plain; charset=utf-8'); res.end('Error'); } catch (x) { /* closed */ } } });
-    s.once('error', (e) => { starting = null; reject(e); });
-    s.listen(0, '127.0.0.1', () => { server = s; port = s.address().port; s.unref(); resolve(); });
-  });
-  await starting;
-}
 
 /** Opens (or, with reopen, opens again) the approval window of a plan. plan: { id, kind, writes }; show: { title,
  *  sections: [{ heading, rows: [[label, value | [values]]] }] }; expires: when the plan expires (ms); onDecide(id,
  *  decision): called once, on the click. Returns { opened: true } or { opened: false, why }. */
 export async function open(plan, show, expires, onDecide, reopen) {
-  await listen((w, d) => { w.decided = d; try { onDecide(w.plan.id, d); } catch (e) { w.decided = null; return; } w.waiters.splice(0).forEach((f) => f(d)); });
+  await Http.listen({ find: (id) => windows.get(id), seen: (w) => { w.seen = true; },
+    decide: (w, d) => { w.decided = d; try { onDecide(w.plan.id, d); } catch (e) { w.decided = null; return; } w.waiters.splice(0).forEach((f) => f(d)); } });
   let w = windows.get(plan.id);
   if (w && w.decided) return { opened: false, why: 'decided' };
   if (!w) {
-    const secret = crypto.randomBytes(24).toString('base64url');
-    w = { secret, plan: { id: plan.id, kind: plan.kind, writes: plan.writes.slice() }, show, expires, decided: null, waiters: [], opened: false, seen: false };
-    windows.set(plan.id, w); bySecret.set(secret, plan.id);
+    w = { plan: { id: plan.id, kind: plan.kind, writes: plan.writes.slice() }, show, expires, decided: null, waiters: [], opened: false, seen: false };
+    windows.set(plan.id, w); Http.issue(plan.id);
   } else if (w.opened && !reopen) return { opened: true, again: false };
-  const why = await launch(`http://127.0.0.1:${port}/approve/${w.secret}`);
+  const why = await launch(Http.linkOf(plan.id));
   if (why) return { opened: false, why };
   w.opened = true;
   return { opened: true, again: !!reopen };
@@ -121,4 +78,4 @@ export function wait(id, ms) {
 export function state(id) { const w = windows.get(id); return w ? { opened: w.opened, seen: w.seen, decided: w.decided } : null; }
 
 /** Forgets a plan's window (its link answers "no longer valid" from then on). */
-export function close(id) { const w = windows.get(id); if (w) { bySecret.delete(w.secret); windows.delete(id); w.waiters.splice(0).forEach((f) => f(null)); } }
+export function close(id) { const w = windows.get(id); if (w) { Http.revoke(id); windows.delete(id); w.waiters.splice(0).forEach((f) => f(null)); } }
