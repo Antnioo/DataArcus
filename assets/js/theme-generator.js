@@ -285,9 +285,10 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=f4832d0d3ac0')))
       // (SP8: the picker's drawing is field-picker-ui.js's, which pbip-bind.js calls: loaded first)
       .then(() => (window.DAFieldPicker ? null : loadScript('/assets/js/field-picker-ui.min.js?v=f4b057b17d4c')))
-      // (SP14: reading the chosen folder or file is model-import-browser.js's, which pbip-bind.js forwards to: loaded first; DD1G: which model folder it means is model-nearest.js's, loaded before it)
+      // (SP14: reading the chosen folder or file is model-import-browser.js's, which pbip-bind.js forwards to: loaded first; DD1G: which model folder it means is model-nearest.js's, loaded before it; DD2D: a file's text and the limits are model-file.js's, loaded before it too)
+      .then(() => (window.DAModelFile ? null : loadScript('/assets/js/model-file.min.js?v=47bc00d4a4cb')))
       .then(() => (window.DAModelNearest ? null : loadScript('/assets/js/model-nearest.min.js?v=c6ffd3114120')))
-      .then(() => (window.DAModelImport ? null : loadScript('/assets/js/model-import-browser.min.js?v=5485cdfe2a50')))
+      .then(() => (window.DAModelImport ? null : loadScript('/assets/js/model-import-browser.min.js?v=16b8206a59b7')))
       // (SP30: the model's metadata, normalised, is field-catalog.js's, which pbip-bind.js reads when it loads: loaded first)
       .then(() => (window.DAFieldCatalog ? null : loadScript('/assets/js/field-catalog.min.js?v=b4ddf4d0f03a')))
       // (SP30: the ranking is field-suggest.js's, which reads field-catalog.js and which pbip-bind.js reads: loaded between)
@@ -299,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const CHECK = ['../assets/js/visual-types.min.js?v=9fe419144b32', '../assets/js/report-rules.min.js?v=0bcd683a0668', '../assets/js/layout-check.min.js?v=250e29fcfa5b'];
   const loadCheck = () => (window.DALayoutCheck ? Promise.resolve(window.DALayoutCheck) : loadBuilder().then(() => CHECK.reduce((q, src) => q.then(() => loadScript(src)), Promise.resolve())).then(() => window.DALayoutCheck));
   const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=e34cc70d8338').then(() => window.DAPagePreview));
-  const MODEL_WORKER = '/assets/js/model-health-worker.min.js?v=d8390a780e6b';
+  const MODEL_WORKER = '/assets/js/model-health-worker.min.js?v=fc2b56cc6b5a';
 
   // ---------- the downloads, the visual backgrounds and the reminder (theme-download-ui.js, 0.3.2 SP31) ----------
   const Dl = window.DAThemeDownloadUI.mount({ store: S, engine: E, $, L, isAr, track, toast, layout: Lay,
