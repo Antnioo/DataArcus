@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **Inside the MCP, the redesign's text and changes:** the consistent copy's text and the changes a redesign makes to its
+  copy (places, titles, theme colours, the copy's name) each have a file of their own; every redesign plan, check and
+  written file is exactly what it was before.
 - **Inside the design engine, the layout and the saved designs:** the page layout and text sizes, and the reading and
   repair of saved designs, each have a file of their own, shared by the website and the MCP; every theme, layout and
   saved design is exactly what it was before.
