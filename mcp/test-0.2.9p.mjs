@@ -56,7 +56,7 @@ export async function v029p({ call, check, ROOT, fs = fs0 }) {
         ms('Chiffre d\'affaires', 'SUM ( Ventes[Montant] )', '"EUR" #,0'), ms('Nombre de commandes', 'DISTINCTCOUNT ( Ventes[Commande] )', '#,0')] }]);
     const k = B.suggest(t, 3).kpis.filter(Boolean).map((x) => x.m);
     chk(() => k[0] === 'Chiffre d\'affaires' && k[1] === 'Nombre de commandes', () => `A3-6: a French model: the plain sum and count first (no English word helps): ${JSON.stringify(k)}`);
-    const src = fs.readFileSync(path.join(REPO, 'assets/js/pbip-bind.js'), 'utf8');
+    const src = ['pbip-bind.js', 'field-catalog.js', 'field-suggest.js'].map((f) => path.join(REPO, 'assets/js', f)).filter((f) => fs.existsSync(f)).map((f) => fs.readFileSync(f, 'utf8')).join('\n');   // (0.3.2 SP30: the picker's engine is split in three files)
     chk(() => /const TIEBREAK_WORDS = /.test(src) && !/const MAIN = /.test(src), () => 'A3-6: the name words are one named tie-break list (TIEBREAK_WORDS), not a main rank');
   }
 
@@ -82,7 +82,7 @@ export async function v029p({ call, check, ROOT, fs = fs0 }) {
 
   // ---------- A3-9: one documented field shape, no hidden properties, no cache on the caller's options ----------
   {
-    const src = fs.readFileSync(path.join(REPO, 'assets/js/pbip-bind.js'), 'utf8');
+    const src = ['pbip-bind.js', 'field-catalog.js', 'field-suggest.js'].map((f) => path.join(REPO, 'assets/js', f)).filter((f) => fs.existsSync(f)).map((f) => fs.readFileSync(f, 'utf8')).join('\n');   // (0.3.2 SP30: the picker's engine is split in three files)
     chk(() => /@typedef \{Object\} Field/.test(src) && !/Object\.defineProperty\(|Object\.defineProperties\(/.test(src), () => 'A3-9: a JSDoc typedef for the field, and no hidden (non-enumerable) properties: a side table (WeakMap) instead');
     const t = tablesOf([{ name: 'Sales', columns: [col('Amount', 'double'), col('Region', 'string')], measures: [ms('Total Sales', 'SUM ( Sales[Amount] )', '#,0')] }]);
     const opt = { relationships: [{ fromTable: 'Sales', toTable: 'Sales' }], modelTables: t };

@@ -24,7 +24,8 @@ const list = (dir, re) => fs.readdirSync(path.join(ROOT, dir)).filter((f) => re.
 
 // The engine code the guard reads: the website's engines (not their .min.js, built from them) and the MCP's code
 const CODE = [...list('assets/js', /^(?!.*\.min\.js$).*\.js$/), ...list('mcp/lib', /\.mjs$/), ...list('mcp/tools', /\.mjs$/), 'mcp/server.mjs'];
-const OWNER = 'assets/js/text-measure.js', PAGE_OWNER = 'assets/js/design-engine.js';
+// (0.3.2 SP29) the default page lives in design-metrics.js (DAEngine re-exports it)
+const OWNER = 'assets/js/text-measure.js', PAGE_OWNER = 'assets/js/design-metrics.js';
 // code only: block comments and line comments out (a // inside a string after a quote or a colon, a URL, is kept);
 // lines split on CRLF too (a Windows checkout: "." does not match the "\r" before a line's end)
 const codeOf = (s) => s.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\r\n]/g, ' ')).split(/\r?\n/).map((l) => l.replace(/(^|[^:'"`\\])\/\/.*$/, '$1'));

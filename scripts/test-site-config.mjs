@@ -177,6 +177,14 @@ for (const f of ['tools/power-bi-model-health-check.html', 'ar/tools/power-bi-mo
   const h = read(f), a = h.indexOf('health-downloads.min.js?v='), b = h.indexOf('js/model-health.min.js?v=');
   ok(a >= 0 && a < b && h.split('health-downloads.min.js?v=').length === 2, `${f}: must load health-downloads.min.js once, before model-health.min.js (SP24)`);
 }
+// (0.3.2 SP32) the split of model-health.js, finished: the worker's lifecycle, then the page's own script; each once
+for (const f of ['tools/power-bi-model-health-check.html', 'ar/tools/power-bi-model-health-check.html']) {
+  const h = read(f), b = h.indexOf('js/model-health.min.js?v=');
+  for (const m of ['health-worker-client', 'health-fix-plan', 'health-view']) {
+    const a = h.indexOf(m + '.min.js?v=');
+    ok(a >= 0 && a < b && h.split(m + '.min.js?v=').length === 2, `${f}: must load ${m}.min.js once, before model-health.min.js (SP32)`);
+  }
+}
 
 // The Arabic copies at /ar/ (mcp/plans/ARABIC-INDEXING.md, option 2): each page in scripts/ar-pages.mjs's PAIRS and its
 // copy name each other (hreflang en, ar, x-default = English, fully qualified), each names itself as canonical, the copy

@@ -5,6 +5,12 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **Inside the design engine, the layout and the saved designs:** the page layout and text sizes, and the reading and
+  repair of saved designs, each have a file of their own, shared by the website and the MCP; every theme, layout and
+  saved design is exactly what it was before.
+- **Inside the Model Health Check page:** the worker that reads your file, the Fix plan's scripts and the page's views
+  each have a file of their own; the page shows, counts and copies exactly what it did before, and a file dropped while
+  another is still being checked stops that check, as before.
 - **Inside the report writer:** each visual of a report page (the title and logo, the cards, the charts, the tables
   and the slicers, and their phone layout) is made in files of their own; every report, on the website and from the MCP,
   is byte for byte what it was before.
@@ -74,6 +80,8 @@ package's manifest; this file says what is in it.
   shows the same choices in the same order and the download is byte for byte what it was before.
 - **Inside the website's model choice:** reading the project folder or the model file you choose has a file of its
   own; the same models are read, the same files are refused, and the same messages are shown.
+- **Inside the field suggestions:** reading a model's fields and ranking which one goes in each visual each have a
+  file of their own, on the website and in the MCP; every suggestion is the same, in the same order.
 - **Inside the report writer:** the tooltip pages (the card and the bars shown when a chart is hovered) are made in a
   file of their own; every report, on the website and from the MCP, is byte for byte what it was before.
 - **Inside the Model Health Check, again:** the model's index (its tables, columns, measures and what each one uses)
@@ -120,6 +128,9 @@ package's manifest; this file says what is in it.
 - **Inside the MCP, the redesign's allowed changes:** each kind of change a redesign may make to its copy (the grid,
   titles, theme colours, the copy's name, consistent text) is one entry in a file of its own, which the copy's check
   reads; nothing new is allowed, and every redesign plan, check and written file is exactly what it was before.
+- **Inside the SVG KPI Designer, dragging and the panels:** moving and resizing on the canvas, and the layer list,
+  the properties and the data panels each have a file of their own; every click, drag, edit, undo and redo works
+  exactly as before.
 - **Inside the Theme Generator page:** the saved design, the colour and layout controls, and the downloads (with the
   reminder when a downloaded file is out of date) each have a file of their own; the page shows, saves and downloads
   exactly what it did before.
