@@ -45,6 +45,8 @@ const ROOT2 = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'data
 const EMPTY = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-sp42-empty-')));
 const OUT = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-sp42-out-')));
 process.env.DATAARCUS_ROOT = ROOT;
+// does this file system ignore case (Windows, macOS by default)?
+const NOCASE = (() => { fs.mkdirSync(path.join(ROOT2, 'casecheck')); const r = fs.existsSync(path.join(ROOT2, 'CASECHECK')); fs.rmdirSync(path.join(ROOT2, 'casecheck')); return r; })();
 const M = await import('./lib/model.mjs');
 const RR = await import('./lib/read-report.mjs');
 
@@ -286,6 +288,16 @@ const gold = fs.existsSync(GOLD) ? JSON.parse(fs.readFileSync(GOLD, 'utf8')).rec
 // (a file link needs rights on Windows: M5's file links are not made there, so M5 is compared on its folder link alone)
 const M5_WIN = WIN ? sha(answers.M5) : null;
 for (const k of Object.keys(answers)) {
+  // (a file system that ignores case, Windows' and macOS's: a name that matches a folder in another case is a path
+  // that exists, so loadModel reads that folder and the name search never runs: M7's "Alpha" (folder alpha/) and
+  // M8's "Deep" (folder deep/) are model reads there, as on the base. M7 and M8 are then checked by each sub-case's outcome)
+  if ((k === 'M7' || k === 'M8') && NOCASE) {
+    const r = JSON.parse(answers[k]), out = (v) => (v && v.code ? v.code : v && v.error ? v.error : v && v.source ? 'read ' + String(v.source).toLowerCase() : 'other');   // (the path keeps the case it was given in)
+    const want = k === 'M7' ? { at: 'NO_MODEL_AT', atDeep: 'NO_MODEL_AT', named: 'NO_MODEL_NAMED', namedPbip: 'NO_MODEL_NAMED', folder: 'NO_MODEL_FOLDER', empty: 'Notice', alpha: 'read alpha/alpha.semanticmodel', betaPbip: 'MANY_MODELS_NAMED' }
+      : { pair: 'MANY_MODELS', sameName: 'MANY_MODELS_NAMED', nearest: 'read nearest/near.semanticmodel', deep: 'read deep/a/b/c/deep.semanticmodel', tooDeep: 'read deep/a/b/c/deep.semanticmodel' };
+    chk(() => Object.entries(want).every(([n, w]) => out(r[n]) === w), () => `${k} (a file system that ignores case): ${Object.entries(want).filter(([n, w]) => out(r[n]) !== w).map(([n, w]) => `${n} ${out(r[n])}, not ${w}`).join('; ')}`);
+    continue;
+  }
   if (k === 'M5' && WIN) { chk(() => { const r = JSON.parse(answers.M5); return r.dirLink === false || (r.linkedFolder.code === 'OUTSIDE_LINK' && r.linkedByPath.code === 'OUTSIDE_LINK'); }, () => `M5 (Windows: the file links skipped): the folder link out is not refused: ${answers.M5.slice(0, 300)}`); continue; }
   chk(() => gold[k] && gold[k].sha256 === record[k].sha256 && gold[k].length === record[k].length, () => `${k}: not what the base gave (length ${record[k].length}, recorded ${gold[k] ? gold[k].length : 'none'}; parts ${Object.entries(JSON.parse(answers[k]) || {}).map(([n, v]) => n + ':' + JSON.stringify(v === undefined ? null : v).length).join(',')}); SP42_DUMP=<file> writes it`);
 }
