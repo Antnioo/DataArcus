@@ -7,8 +7,17 @@
 //   U2  wordsOf pinned: camel case, "_", "-", digits, the Arabic article, short vowels, «أ» read as «ا»
 //   U3  every word of the list and its plural is time, alone and with the article; the list is frozen
 //   U4  never throws on an odd input (null, a number, an object), never a data value: names only
+//   P   the parity test: every place of the ledger's 1a (mirror-policy isTime, page-preview timeDirOf, pbip-query isTime,
+//       layout-check TIMEY; run as scripts/contracts-probe.mjs runs them) gives isTimeName's answer on the 24 names,
+//       the false cases and the more true ones: one answer each
+//   S   no place keeps a word list of its own: TIME_NAME, TIME_WORDS and a wordsOf of its own are gone, each reads
+//       time-names.js; what a place knows first stays its own (a date table, the picker's time or kind mark)
 // Made-up names only.   node test-0.3.2-dd1a.mjs
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { FAMILIES, answerOf, placeName, definitions } from '../scripts/contracts-probe.mjs';
 
 const require = createRequire(import.meta.url);
 const T = require('../assets/js/time-names.js');
@@ -47,6 +56,32 @@ chk(() => Object.isFrozen(T) && Object.isFrozen(T.TIME_WORDS) && T.TIME_WORDS.le
 
 // ---- U4: odd inputs ----
 [null, undefined, 12, {}, [], true, NaN].forEach((x) => chk(() => T.isTimeName(x) === false && Array.isArray(T.wordsOf(x)), () => `U4 isTimeName(${String(x)}) threw or said true`));
+
+// ---- P: the parity test, the four places on every name ----
+const f1a = FAMILIES.find((x) => x.id === '1a');
+chk(() => f1a && f1a.places.length === 4 && f1a.inputs.length === LEDGER.length, () => 'P the probe has no family 1a with 4 places and the 24 names');
+const NAMES = LEDGER.map(([n]) => n).concat(FALSE_CASES, MORE_TRUE).map((n) => ({ label: n === '' ? "'' (empty)" : n, name: n }));
+for (const place of (f1a ? f1a.places : [])) for (const input of NAMES) {
+  const got = await answerOf(place, input), want = T.isTimeName(input.name);
+  chk(() => got.key === String(want), () => `P ${placeName(place)} on ${input.label}: ${got.shown}, isTimeName says ${want}`);
+}
+// what a place knows first stays first: a date table (mirror-policy), the picker's mark (pbip-query)
+const P = require('../assets/js/mirror-policy.js'), Q = require('../assets/js/pbip-query.js');
+const col = (t, n) => ({ Column: { Property: n, Expression: { SourceRef: { Entity: t } } } });
+chk(() => P.isTime(col('Calendar', 'Region'), ['Calendar']) === true && P.isTime(col('Sales', 'Region'), ['Calendar']) === false && P.isTime({ HierarchyLevel: { Level: 'Year' } }, []) === true,
+  () => 'P mirror-policy isTime: a date table or a hierarchy level is no longer first');
+chk(() => Q.isTime({ c: 'Day Type', kind: 'category' }) === false && Q.isTime({ c: 'Region', time: true }) === true && Q.isTime({ c: 'Month', time: false }) === false && Q.isTime({ c: 'Region', kind: 'month' }) === true,
+  () => "P pbip-query isTime: the picker's time or kind mark is no longer first");
+
+// ---- S: no own word list ----
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+const src = (f) => fs.readFileSync(path.join(ROOT, ...f.split('/')), 'utf8').replace(/\r\n/g, '\n');
+for (const f of ['assets/js/mirror-policy.js', 'assets/js/page-preview.js', 'assets/js/pbip-query.js', 'assets/js/layout-check.js']) {
+  const s = src(f), own = ['TIME_NAME', 'TIME_WORDS'].filter((n) => definitions(s, n).length > 0);
+  const ownWords = definitions(s, 'wordsOf').filter((d) => !/^(=\s*)?TN\.wordsOf$/.test(d.text.trim()));
+  chk(() => !own.length && !ownWords.length && /require\('\.\/time-names\.js'\)/.test(s) && /root\.DATimeNames/.test(s) && /TN\.isTimeName\(|TN\.isTimeName\b/.test(s),
+    () => `S ${f} keeps a word list of its own (${own.concat(ownWords.map(() => 'wordsOf')).join(', ')}) or does not read time-names.js`);
+}
 
 if (problems.length) { problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  dd1a  ${checks - problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  dd1a  ${checks} checks`);
