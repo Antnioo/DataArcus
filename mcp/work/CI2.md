@@ -69,7 +69,7 @@ The docs (read 4 Nov):
 | A [41891982211](https://github.com/Antnioo/DataArcus/actions/runs/41891982211) | check/, 369028a (2 jobs) | 0-2: 16 / 2412 (timeout); 3-4: 6 / 1139 | job 0 cancelled at 40 min after its 3 shards |
 | B [41898824324](https://github.com/Antnioo/DataArcus/actions/runs/41898824324) | check/, 5ed8405 (3 jobs) | 0: 265 / 1022; 2-3: 280 / 1345; 1-4: 263 / 1632 | green, every job |
 | fix/ [41898843192](https://github.com/Antnioo/DataArcus/actions/runs/41898843192) | fix/, 5ed8405 | macOS skipped (CI1) | green |
-| C [41904059006](https://github.com/Antnioo/DataArcus/actions/runs/41904059006) | check/, 5ed8405 (3 jobs) | (running) | (running) |
+| C [41904059006](https://github.com/Antnioo/DataArcus/actions/runs/41904059006) | check/, 5ed8405 (3 jobs) | 0: 105 / 1028; 2-3: 116 / 1551; 1-4: 40 / 1410 | green, every job |
 
 Intel per shard (run A's manifests, tests only): 0: 928, 1: 585, 2: 860, 3: 545, 4: 566 s; 3484 s in all (58 min),
 against 2037-2125 s (34-35 min) on arm64. Every macOS job had a runner (runner_name set) in every run.
@@ -79,7 +79,7 @@ against 2037-2125 s (34-35 min) on arm64. Every macOS job had a runner (runner_n
   test.mjs's 4 parts, the plan and ci-sum stay one for all three OSes, so the macOS total is the same by
   construction and no test file changes.
 - 2 jobs first (by the arm64 times), then 3 by the Intel times measured in run A (2 jobs hit the 40 minutes).
-  The groups are the best 3-way split of run A's seconds (max 1405 s); run B's slowest job was 1632 s (27 min).
+  The groups are the best 3-way split of run A's seconds (max 1405 s); the slowest job in runs B and C: 1632 and 1551 s (27 and 26 min).
 - `macos-15-intel` over `macos-26-intel`: the brief's preference, and neither page dates either one's end.
 - mcp/test-times.json not rewritten with Intel seconds: the script writes every OS from one run, so it would move
   the Linux and Windows plans too (out of scope); the macOS plan still has each suite once, only less even.
@@ -95,7 +95,7 @@ against 2037-2125 s (34-35 min) on arm64. Every macOS job had a runner (runner_n
   so: 4 jobs, or rewrite test-times.json from a full green run (macOS on Intel) and regroup.
 
 ## Seen, not in scope
-- Run A's queue wait was seconds, runs B and C's about 4.5 min: Intel capacity varies too, but every job was acquired.
+- Run A's queue wait was seconds, run B's about 4.5 min, run C's 40-116 s: Intel capacity varies too, but every job was acquired.
 - mcp/test-times.json's macOS seconds are arm64's; a later job could rewrite it from one green run of all three OSes.
 
 ## Lessons for the reviewer
