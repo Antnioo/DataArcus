@@ -8,6 +8,14 @@ package's manifest; this file says what is in it.
 - **Inside the website's shared scripts:** navigation and effects, the forms, and the analytics with the cookie
   banner each have a file of their own, and only the analytics file talks to Google Analytics or Clarity (after
   consent, as before); every page looks and behaves exactly as before.
+- **Inside the design engine, the layout and the saved designs:** the page layout and text sizes, and the reading and
+  repair of saved designs, each have a file of their own, shared by the website and the MCP; every theme, layout and
+  saved design is exactly what it was before.
+- **Inside the Model Health Check page:** the worker that reads your file, the Fix plan's scripts and the page's views
+  each have a file of their own; the page shows, counts and copies exactly what it did before, and a file dropped while
+  another is still being checked stops that check, as before.
+- **Inside the practice exams (DP-600 and PL-300):** the grading, the timed mock exam, the saved progress and study
+  plan, and the screens each have a file of their own; every screen, score, timer and saved answer is what it was before.
 - **Inside the report writer:** each visual of a report page (the title and logo, the cards, the charts, the tables
   and the slicers, and their phone layout) is made in files of their own; every report, on the website and from the MCP,
   is byte for byte what it was before.
@@ -128,6 +136,13 @@ package's manifest; this file says what is in it.
 - **Inside the SVG KPI Designer, dragging and the panels:** moving and resizing on the canvas, and the layer list,
   the properties and the data panels each have a file of their own; every click, drag, edit, undo and redo works
   exactly as before.
+- **Inside the MCP, custom visuals, the native choice:** checking a native visual against Microsoft's rules, ranking
+  the native visuals that could replace a custom one, and what the plan says about the one chosen each have a file of
+  their own; every custom visual gets the same native choice, confidence, losses and plan line as before, and nothing is
+  replaced until you approve it.
+- **Inside the Theme Generator page:** the saved design, the colour and layout controls, and the downloads (with the
+  reminder when a downloaded file is out of date) each have a file of their own; the page shows, saves and downloads
+  exactly what it did before.
 
 ## [0.3.1]: 2026-11-03 (the version for testers)
 Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports
