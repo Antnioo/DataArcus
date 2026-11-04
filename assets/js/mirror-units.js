@@ -7,7 +7,8 @@
  * kinds are mirror-policy.js's):
  *  - unitsOf(visuals) -> { on: [{ visual, host }], bars: [{ bars, names }] } (names: the visuals' names)
  *  - byNameOf(visuals) -> { name: visual.json }
- *  - widthOf(page, byName, visual) -> the width it is placed in (its parent group's, else the page's), or undefined
+ *  - frameWidth(page, byName, visual) -> the width it is placed in: its parent group's when the group's box is valid,
+ *    else the page's when finite and > 0, else undefined (0.3.2 DD1C: the one home; widthOf is the same function)
  *  - placesOf(units, byName, page) -> { at: { name: x in the twin }, keepBars: Set of the bar lists that keep their
  *    direction }
  *  - boxOf(visual) -> { x, y, w, h, z } or null; nameOf(visual) -> its name as text, or null; round(v): to 0.01
@@ -78,10 +79,19 @@
   const byNameOf = (list) => { const byName = {};
     list.forEach((v) => { if (isObj(v) && (typeof v.name === 'string' || typeof v.name === 'number')) byName[v.name] = v; });
     return byName; };
-  const widthOf = (page, byName, v) => { const parent = isObj(v) && (typeof v.parentGroupName === 'string' || typeof v.parentGroupName === 'number') ? byName[v.parentGroupName] : null; return parent && isObj(parent.position) ? parent.position.width : isObj(page) ? page.width : undefined; };
+  // (0.3.2 DD1C, D-1104-12: the one home of this rule; the twin's geometry and fitting call it) the frame a visual is
+  // placed in: its parent group's width when that group's box is valid (boxOf), else the page's width when it is a
+  // finite number > 0, else undefined (the frame is unknown: a caller never mirrors with a guess)
+  const frameWidth = (page, byName, v) => {
+    const key = isObj(v) && (typeof v.parentGroupName === 'string' || typeof v.parentGroupName === 'number') ? v.parentGroupName : null;
+    const g = key != null && isObj(byName) && Object.prototype.hasOwnProperty.call(byName, key) ? boxOf(byName[key]) : null;
+    if (g) return g.w;
+    const w = isObj(page) ? page.width : undefined;
+    return Number.isFinite(w) && w > 0 ? w : undefined; };
+  const widthOf = frameWidth;
   // where each member of a unit goes (its x in the twin), and the bars that keep their direction
   function placesOf(units, byName, page) {
-    const at = {}, keepBars = new Set(), widthIn = (v) => widthOf(page, byName, v);
+    const at = {}, keepBars = new Set(), widthIn = (v) => frameWidth(page, byName, v);
     units.bars.forEach((u) => {
       const a = boxOf(byName[u.bars]), b = boxOf(byName[u.names]), W = widthIn(byName[u.bars]); if (!Number.isFinite(W)) return;
       const left = Math.min(a.x, b.x), right = Math.max(a.x + a.w, b.x + b.w), left2 = W - right;
@@ -95,6 +105,6 @@
     return { at, keepBars };
   }
 
-  const api = Object.freeze({ unitsOf, byNameOf, widthOf, placesOf, boxOf, nameOf, round, BADGE });
+  const api = Object.freeze({ unitsOf, byNameOf, frameWidth, widthOf, placesOf, boxOf, nameOf, round, BADGE });
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAMirrorUnits = api;
 })(typeof self !== 'undefined' ? self : this);
