@@ -8,6 +8,14 @@ task routes.
 
 - **The website** (dataarcus.com, GitHub Pages): the HTML pages at the root, `tools/`, `articles/`, and their Arabic
   copies in `ar/`. Its Power BI tools run in the browser; nothing a visitor opens is uploaded.
+  Its practice exams (DP-600 and PL-300, `tools/*-practice-exam.html`): `dp600-sim.js` (the exam's settings, the bank's
+  index and the wiring: it gives each module its storage, clock and random source); `exam-grade.js` (grading, pure: a
+  question and an answer in, a credit out; a submitted mock's score and tallies; a practice session's summary);
+  `exam-session.js` (the timed mock's state machine: question ids, choices and clock events in, the saved mock through a
+  storage adapter out; its draw of questions by area weight); `exam-progress.js` (the saved progress: answers,
+  bookmarks, results, study days, readiness; the study plan, weakest skill first); `exam-view.js` (every screen's HTML,
+  its clicks and keys, the routing; the only one that touches the DOM). Each loaded before `dp600-sim.js`, which
+  calls them all; `exam-view.js` calls the other three through what `dp600-sim.js` hands it.
 - **The engines** (`assets/js/*.js`, each with its `.min.js`): plain JavaScript that runs in the browser and in Node,
   **shared by the website and the MCP on purpose**, so both give the same answers. The model reader and field picker
   (`pbip-bind.js`, `tmdl-model.js`; the picker's drawing `field-picker-ui.js`; a chosen folder or file read in the
@@ -87,6 +95,7 @@ task routes.
 | Change | Start with |
 |---|---|
 | A website page or tool | the page's HTML and its `assets/js/` engine; `node scripts/test-site-config.mjs`; `scripts/tests/run-all.mjs` |
+| The practice exams | `assets/js/dp600-sim.js` (settings, wiring), `exam-grade.js` (scores), `exam-session.js` (the timed mock), `exam-progress.js` (saved progress, study plan), `exam-view.js` (screens); `scripts/tests/sp34.mjs`, `tools.mjs` |
 | What a report looks like (layout, sizes, visuals) | `assets/js/pbip-export.js`, `pbip-page.js` (tooltip pages: `pbip-tooltip.js`; page buttons and filter panels: `pbip-navigation.js`; the visuals: `pbip-visuals.js`), `design-engine.js`; `report-rules.js` for measured limits |
 | Right to left and Arabic | `assets/js/report-mirror.js` (which family, which axis is time, what keeps left to right: `mirror-policy.js`); `mcp/lib/twin-*.mjs` (by step), `terminology.mjs`; `assets/data/arabic-report-words.json` |
 | Reading models | `assets/js/pbip-bind.js`, `tmdl-model.js` (the website's folder or file: `model-import-browser.js`); `mcp/lib/model.mjs`, `scope.mjs` |
