@@ -1,10 +1,10 @@
 // Every committed .min.js that has a source next to it must be what terser (pinned in package.json) makes from it.
-//   node scripts/check-min.mjs           check; exit code 1 and the list when a file is stale
-//   node scripts/check-min.mjs --write   rebuild the stale ones
+//   node scripts/check-min.mjs           check; exit code 1 and the list when a file is stale; then the ?v= stamps
+//   node scripts/check-min.mjs --write   rebuild the stale ones (npm run build:min, which then writes the stamps)
 // The same as `npx terser file.js -c -m -o file.min.js`. Line endings are compared as LF (the laptop checks out CRLF).
 import fs from 'node:fs';
 import path from 'node:path';
-import { execSync } from 'node:child_process';
+import { execSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { minify } from 'terser';
 
@@ -32,31 +32,12 @@ if (!stale.length) console.log(`All ${checked} .min.js files match their sources
 else if (write) console.log(`Rebuilt ${stale.length} of ${checked}:\n  ${stale.join('\n  ')}`);
 else { console.error(`${stale.length} of ${checked} .min.js files differ from what terser makes of their source (run: npm run build:min):\n  ${stale.join('\n  ')}`); process.exit(1); }
 
-// Round 22b (the review of round 22, item 7: pbip-bind.min.js changed but its ?v= stamp did not, so a browser keeps the
-// old file): every .min.js that differs from main's must be loaded with a ?v= stamp main does not use for it. Compared
-// with origin/main (CI checks out the whole history); without it, or on main itself, there is nothing to compare.
-// (--write rebuilds and only warns: the stamps are bumped by hand on the pages)
-{
-  const git = (args) => { try { return execSync('git ' + args, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }); } catch (e) { return null; } };
-  const base = git('rev-parse --verify --quiet origin/main') && git('merge-base HEAD origin/main');
-  if (!base) console.log('?v= stamps: origin/main not found, not compared.');
-  else {
-    // (the reviewer's second review, item 9: keyed by the file's path, not its name, as translations/theme-generator.min.js
-    // and theme-generator.min.js are two files; a changed file loaded with no ?v= at all fails too, written "(none)")
-    // (the third review, item 3: a reference is resolved from the file that holds it, so the worker's
-    // importScripts('tmdl-model.min.js') is assets/js/tmdl-model.min.js; a script's reference made for the page that
-    // loads it, '../assets/js/x.min.js' in assets/js/theme-generator.js, falls back to the path without its leading ../)
-    const known = new Set(files);
-    const keyOf = (ref, from) => { const near = path.posix.normalize(path.posix.join(path.posix.dirname(from), ref)), bare = ref.replace(/^(\.\.?\/|\/)+/, ''); return ref.startsWith('/') ? bare : known.has(near) ? near : bare; };
-    const stampsIn = (text, from) => { const out = {}; for (const m of text.matchAll(/([\w./-]*\.min\.js)(?:\?v=([\w.-]+))?/g)) { const k = keyOf(m[1], from); (out[k] = out[k] || new Set()).add(m[2] || '(none)'); } return out; };
-    const pages = execSync('git ls-files "*.html" "*.js"', { cwd: ROOT, encoding: 'utf8' }).trim().split('\n').filter((f) => f && !/\.min\.js$/.test(f));
-    const now = {}, before = {};
-    for (const f of pages) { const add = (to, t) => Object.entries(stampsIn(t, f)).forEach(([k, s]) => s.forEach((v) => (to[k] = to[k] || new Set()).add(v)));
-      add(now, fs.readFileSync(path.join(ROOT, f), 'utf8')); const old = git(`show ${base.trim()}:"${f}"`); if (old) add(before, old); }
-    const unbumped = files.filter((min) => { const old = git(`show ${base.trim()}:"${min}"`);
-      return old != null && lf(old) !== lf(fs.readFileSync(path.join(ROOT, min), 'utf8')) && now[min] && [...now[min]].some((v) => v === '(none)' || (before[min] && before[min].has(v))); });
-    if (unbumped.length) { console.error(`${unbumped.length} changed .min.js file${unbumped.length === 1 ? ' is' : 's are'} still loaded with main's ?v= stamp or none (give it a new one on every page that loads it):\n  ${unbumped.map((m) => `${m} (${[...now[m]].join(', ')})`).join('\n  ')}`); if (!write) process.exit(1); }
-    else console.log('?v= stamps: every .min.js changed since main has a new stamp.');
-  }
+// The ?v= stamps (ST1, 0.3.2; it retired round 22b's "a changed .min.js keeps main's stamp" block, whose job this
+// does better): every reference holds its target's current content stamp, checked by scripts/stamps.mjs (one FAIL line
+// per stale reference, the fix: npm run build:min). With --write the stamps are written by `npm run build:min`'s
+// second step, `node scripts/stamps.mjs --write`, after this rebuild.
+if (!write) {
+  const r = spawnSync(process.execPath, [path.join(ROOT, 'scripts', 'stamps.mjs')], { cwd: ROOT, stdio: 'inherit' });
+  if (r.status !== 0) process.exit(1);
 }
 }

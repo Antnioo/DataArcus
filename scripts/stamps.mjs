@@ -3,6 +3,7 @@
 //   node scripts/stamps.mjs --list    every ?v= reference: its file, the target it points at, whether the target exists
 //   node scripts/stamps.mjs --write   the build (npm run build:min, after the .min.js rebuild): every reference gets
 //                                     its target's stamp, in dependency order (a loader after the files it loads)
+//   each takes --root <dir>: another tree (scripts/test-stamps.mjs runs it on made-up ones)
 // A stamp is the first 12 hex of the sha256 of the target's final bytes, text read with LF line endings (the laptop's
 // CRLF checkout agrees), so it changes exactly when the file changes. External URLs are left alone. The MCP loads the
 // source files with no query string: nothing here changes how it loads.
@@ -34,10 +35,11 @@ export const isStamp = (s) => /^[0-9a-f]{12}$/.test(s);
 
 // the files that hold references in a tree: git's list in a repository, else every file under root (a test's fixture)
 export function holders(root) {
-  let all;
-  try { all = execSync('git ls-files', { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).split('\n').filter(Boolean); } catch (e) { all = null; }
-  if (!all || !all.length || path.resolve(execSync('git rev-parse --show-toplevel', { cwd: root, encoding: 'utf8' }).trim()) !== path.resolve(root)) {
-    const walk = (d) => fs.readdirSync(path.join(root, d), { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(path.posix.join(d, e.name)) : [path.posix.join(d, e.name)]);
+  const git = (args) => { try { return execSync('git ' + args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }); } catch (e) { return null; } };
+  const top = git('rev-parse --show-toplevel');
+  let all = top && path.resolve(top.trim()) === path.resolve(root) ? git('ls-files').split('\n').filter(Boolean) : null;
+  if (!all || !all.length) {
+    const walk = (d) => fs.readdirSync(path.join(root, d), { withFileTypes: true }).filter((e) => !/^(\.|node_modules$)/.test(e.name)).flatMap((e) => e.isDirectory() ? walk(path.posix.join(d, e.name)) : [path.posix.join(d, e.name)]);
     all = walk('.').map((f) => f.replace(/^\.\//, ''));
   }
   return all.filter((f) => HOLDER.test(f) && !NOT_HOLDER.test(f) && fs.existsSync(path.join(root, f))).sort();
@@ -105,7 +107,8 @@ export async function build(root, files = holders(root), { minify } = {}) {
     });
     if (next !== text) { fs.writeFileSync(abs, next); changed.push(f); }
     const min = f.replace(/\.js$/i, '.min.js');
-    if (/\.js$/i.test(f) && !/\.min\.js$/i.test(f) && fs.existsSync(path.join(root, min))) {
+    // (the .min.js of an unchanged source is check-min's: `npm run build:min` rebuilt every stale one just before)
+    if (next !== text && /\.js$/i.test(f) && !/\.min\.js$/i.test(f) && fs.existsSync(path.join(root, min))) {
       const built = await minOf(next.replace(/\r\n/g, '\n')), cur = fs.readFileSync(path.join(root, min), 'utf8').replace(/\r\n/g, '\n');
       if (built !== cur && built + '\n' !== cur) { fs.writeFileSync(path.join(root, min), built); changed.push(min); }
     }
@@ -114,20 +117,22 @@ export async function build(root, files = holders(root), { minify } = {}) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const arg = process.argv[2] || '';
+  // (--root <dir>: another tree, as scripts/test-stamps.mjs runs the command on a made-up one)
+  const argv = process.argv.slice(2), ri = argv.indexOf('--root'), root = ri >= 0 ? path.resolve(argv[ri + 1] || '.') : ROOT;
+  const arg = argv.filter((a, i) => ri < 0 || (i !== ri && i !== ri + 1))[0] || '';
   if (arg === '--list') {
-    const refs = scan(ROOT), kinds = {}, hand = refs.filter((r) => !isStamp(r.stamp)).length;
+    const refs = scan(root), kinds = {}, hand = refs.filter((r) => !isStamp(r.stamp)).length;
     for (const r of refs) { console.log(`${r.file}\t${r.ref}?v=${r.stamp}\t${r.target}\t${r.exists ? 'exists' : 'MISSING'}`); kinds[r.kind] = (kinds[r.kind] || 0) + 1; }
     console.log(`\n${refs.length} references in ${new Set(refs.map((r) => r.file)).size} files: ${Object.entries(kinds).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${n} .${k}`).join(', ')}; `
       + `${refs.filter((r) => !r.exists).length} missing targets; ${hand} not a content stamp (typed by hand), ${refs.length - hand} content stamps`);
     console.log(`PASS  stamps-list  ${refs.length} checks`);
   } else if (arg === '--write') {
-    const r = await build(ROOT);
+    const r = await build(root);
     if (r.missing.length) { console.error(`FAIL  stamps  ${r.missing.length} references point at no file:\n  ${r.missing.join('\n  ')}`); process.exit(1); }
     console.log(r.changed.length ? `stamps: ${r.changed.length} files written:\n  ${r.changed.join('\n  ')}` : 'stamps: nothing to change.');
     console.log(`PASS  stamps-write  ${r.order.length} checks`);
   } else if (!arg) {
-    const { refs, stale } = check(ROOT);
+    const { refs, stale } = check(root);
     if (stale.length) {
       for (const s of stale) console.error(`FAIL  ${s.file}: ${s.ref}: ${s.why} (fix: npm run build:min)`);
       console.error(`FAIL  stamps  ${stale.length} of ${refs.length} references stale (fix: npm run build:min; never type a stamp)`);
