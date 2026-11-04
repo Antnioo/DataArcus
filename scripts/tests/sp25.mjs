@@ -7,6 +7,7 @@
 // selection, the Undo and Redo buttons, the handles shown, the selected layer, the saved design, the canvas SVG (its
 // layers and viewBox; the editor's overlay and zoom are not the design) and the DAX text; an export's file name and
 // text. Recorded in fixtures/sp25-editor.json; SP25_RECORD=1 records again (only on the base, never to make a run pass).
+// (SP33) the sessions, steps and state are exported: sp33.mjs replays them (one place for them).
 //   E1..E10  EN sessions as recorded;  A1..A10  AR sessions as recorded
 //   M1       (after the move) both designer pages load svg-editor-store.min.js once, before svg-kpi-designer.min.js
 //   M2       (after the move) svg-editor-store.js has no DOM, no listeners, no timers, no storage
@@ -20,23 +21,23 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const GOLD = path.join(HERE, 'fixtures', 'sp25-editor.json');
 const STORE_JS = path.join(ROOT, 'assets/js/svg-editor-store.js');
 const moved = fs.existsSync(STORE_JS);
-const sha = (s) => (s == null ? null : crypto.createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex').slice(0, 24) + ':' + Buffer.byteLength(s, 'utf8'));
+export const sha = (s) => (s == null ? null : crypto.createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex').slice(0, 24) + ':' + Buffer.byteLength(s, 'utf8'));
 
 // made-up designs only
-const IMPORTED = { name: 'Imported KPI', w: 200, h: 60, values: [{ id: 'm1', label: 'Orders', kind: 'measure', measure: 'Orders', sample: 420 }, { id: 'm2', label: 'Goal', kind: 'measure', measure: 'Goal', sample: 500 }, { id: 'f1', label: 'Share', kind: 'ratio', a: 'm1', b: 'm2' }],
+export const IMPORTED = { name: 'Imported KPI', w: 200, h: 60, values: [{ id: 'm1', label: 'Orders', kind: 'measure', measure: 'Orders', sample: 420 }, { id: 'm2', label: 'Goal', kind: 'measure', measure: 'Goal', sample: 500 }, { id: 'f1', label: 'Share', kind: 'ratio', a: 'm1', b: 'm2' }],
   layers: [{ type: 'rect', name: 'Back', x: 0, y: 0, w: 200, h: 60, rx: 6, fill: '#223344' }, { type: 'rect', name: 'Bar', x: 10, y: 40, w: 100, h: 8, fill: '#00d4ff', bind: { w: { v: 'f1', d0: 0, d1: 1, r0: 0, r1: 180 } } },
     { type: 'text', name: 'Value', x: 10, y: 28, size: 18, weight: 700, anchor: 'start', fill: '#ffffff', text: 'x', bind: { text: { v: 'm1', fmt: 'n0' } } }] };
 
 // the page's hooks: an export's blob and file name are kept instead of downloaded
-const HOOKS = () => {
+export const HOOKS = () => {
   const oc = URL.createObjectURL.bind(URL);
   URL.createObjectURL = (b) => { window.__blob = b; return oc(b); };
   HTMLAnchorElement.prototype.click = function () { window.__dl = this.download; };
   try { localStorage.setItem('dataarcus-svg-kpi-tour', '{"seen":true}'); } catch (e) { /* ignore */ }
 };
 
-const frame = (pg) => pg.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))));
-const h = {
+export const frame = (pg) => pg.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))));
+export const h = {
   starter: (pg, id) => pg.click(`#starters [data-t="${id}"]`),
   add: (pg, type) => pg.click(`#addBar [data-add="${type}"]`),
   pick: (pg, i) => pg.click(`#layers [data-act="sel"][data-i="${i}"]`),
@@ -71,7 +72,7 @@ const h = {
 };
 
 // 10 sessions: [name, starting starter, steps]; each step [label, action]; the state is recorded after every step
-const SESSIONS = [
+export const SESSIONS = [
   ['add layers, undo, undo, redo', '__blank', [['add rect', (pg) => h.add(pg, 'rect')], ['add circle', (pg) => h.add(pg, 'circle')], ['add text', (pg) => h.add(pg, 'text')],
     ['undo', h.undo], ['undo', h.undo], ['redo', h.redo], ['add ring after a redo (the redo stack is cleared)', (pg) => h.add(pg, 'ring')], ['Control+Y with nothing to redo', (pg) => h.key(pg, 'Control+Y')]]],
   ['typing: one undo step per field visit', 'ring', [['pick the ring', (pg) => h.pick(pg, 0)], ['type the X', (pg) => h.type(pg, '#props [data-p="cx"]', '47')],
@@ -100,7 +101,7 @@ const SESSIONS = [
     ['add a measure', (pg) => pg.click('#addMeasure')], ['the bar starter', (pg) => h.starter(pg, 'bar')], ['undo (back to the edited trend)', h.undo], ['undo', h.undo], ['undo', h.undo], ['redo', h.redo]]]
 ];
 
-const state = (pg) => pg.evaluate(() => {
+export const state = (pg) => pg.evaluate(() => {
   const s = document.querySelector('#stage svg.kd-svg');
   let svg = null;
   if (s) { const c = s.cloneNode(true); c.removeAttribute('width'); c.removeAttribute('height'); c.querySelectorAll('g.kd-ui').forEach((g) => g.remove()); svg = c.outerHTML; }

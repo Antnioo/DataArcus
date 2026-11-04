@@ -18,7 +18,8 @@ task routes.
   calls them all; `exam-view.js` calls the other three through what `dp600-sim.js` hands it.
 - **The engines** (`assets/js/*.js`, each with its `.min.js`): plain JavaScript that runs in the browser and in Node,
   **shared by the website and the MCP on purpose**, so both give the same answers. The model reader and field picker
-  (`pbip-bind.js`, `tmdl-model.js`; the picker's drawing `field-picker-ui.js`; a chosen folder or file read in the
+  (`pbip-bind.js`, `tmdl-model.js`; the model's fields, normalised, `field-catalog.js`; their ranking
+  `field-suggest.js`; the picker's drawing `field-picker-ui.js`; a chosen folder or file read in the
   browser `model-import-browser.js`), the report writer (`pbip-export.js`, `pbip-page.js`, `pbip-query.js`; its ZIP `pbip-zip.js` and sample model
   `pbip-sample.js`; its tooltip pages `pbip-tooltip.js`; its page buttons and filter panels `pbip-navigation.js`; its visuals `pbip-visuals.js`), the design
   engine (`design-engine.js`), the health check (`model-health-engine.js`; its DAX tokens and report references `dax-reference-parser.js`; its model index `model-index.js`; its rules `health-rules.js` (their texts and sources `health-texts.js`); its "Please confirm" questions `health-confirm.js`; the page `model-health.js`, its text downloads `health-downloads.js`;
@@ -27,7 +28,8 @@ task routes.
   `label-limits.js`, `layout-check.js`, `report-a11y.js`), the mirror engine for right to left (`report-mirror.js`; its named rules `mirror-policy.js`),
   the preview renderer (`page-preview.js`) and the SVG KPI compiler (`svg-kpi-compiler.js`; its expression tree and
   preview evaluator `svg-expressions.js`, its SVG text safety `svg-escape.js`, its DAX code generation `svg-codegen.js`;
-  the designer's state, selection and undo history `svg-editor-store.js`).
+  the designer's state, selection and undo history `svg-editor-store.js`, its canvas pointer `svg-editor-pointer.js`,
+  its panels `svg-editor-panels.js`).
 - **The MCP server** (`mcp/server.mjs`, stdio): 11 tools, from `read_model` to `check_report` (every tool and option:
   `mcp/TOOLS.md`). Its modules are in `mcp/lib/`:
   - reading: `model.mjs` (models from disk, every path kept inside the working folder), `model-names.mjs` (the
@@ -98,7 +100,7 @@ task routes.
 | The practice exams | `assets/js/dp600-sim.js` (settings, wiring), `exam-grade.js` (scores), `exam-session.js` (the timed mock), `exam-progress.js` (saved progress, study plan), `exam-view.js` (screens); `scripts/tests/sp34.mjs`, `tools.mjs` |
 | What a report looks like (layout, sizes, visuals) | `assets/js/pbip-export.js`, `pbip-page.js` (tooltip pages: `pbip-tooltip.js`; page buttons and filter panels: `pbip-navigation.js`; the visuals: `pbip-visuals.js`), `design-engine.js`; `report-rules.js` for measured limits |
 | Right to left and Arabic | `assets/js/report-mirror.js` (which family, which axis is time, what keeps left to right: `mirror-policy.js`); `mcp/lib/twin-*.mjs` (by step), `terminology.mjs`; `assets/data/arabic-report-words.json` |
-| Reading models | `assets/js/pbip-bind.js`, `tmdl-model.js` (the website's folder or file: `model-import-browser.js`); `mcp/lib/model.mjs`, `scope.mjs` |
+| Reading models | `assets/js/pbip-bind.js` (the binding), `field-catalog.js` (the fields and the reach), `field-suggest.js` (the ranking), `tmdl-model.js` (the website's folder or file: `model-import-browser.js`); `mcp/lib/model.mjs`, `scope.mjs` |
 | Model health | `assets/js/model-health-engine.js` (DAX tokens and report references: `dax-reference-parser.js`; the normalised model, its index and dependency references: `model-index.js`; the rules, findings out: `health-rules.js`; the rule catalogue (texts and sources, data only): `health-texts.js`; the questions and their evidence, apart from the score: `health-confirm.js`), the page `model-health.js` (its text downloads: `health-downloads.js`), `model-health-tmdl.js`, `gulf-health.js` |
 | A tool's inputs or answer | `mcp/tools/<tool_name>.mjs`, `mcp/lib/agent-text.mjs`, `mcp/TOOLS.md` |
 | Approval or writing | `mcp/lib/plans.mjs`, `approval-window.mjs`, `artifact.mjs`, `files.mjs`, `write-io.mjs` |
