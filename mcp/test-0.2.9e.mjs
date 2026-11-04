@@ -100,7 +100,8 @@ export async function v029e({ call, check, ROOT }) {
   const bigTmdl = [{ name: 'T.tmdl', webkitRelativePath: 'P/M.SemanticModel/definition/tables/T.tmdl', size: 129 * 1024 * 1024, arrayBuffer: () => { throw new Error('read'); } }];
   let e2 = null; try { await Bind.fromFolder(bigTmdl); } catch (e) { e2 = String(e.message); }
   chk(() => e2 === 'TOO_BIG', () => `seen. the website refuses TMDL files over 128 MB together before reading them: ${e2}`);
-  chk(() => /try \{ inner = fs\.readdirSync\(full\)|readdirSafe/.test(src('lib/model.mjs')), () => 'seen. byName reads each folder so that one unreadable folder does not fail the whole search');
+  // (0.3.2 SP42: byName moved, verbatim, to lib/model-discovery.mjs)
+  chk(() => /try \{ inner = fs\.readdirSync\(full\)|readdirSafe/.test(src('lib/model-discovery.mjs')), () => 'seen. byName reads each folder so that one unreadable folder does not fail the whole search');
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

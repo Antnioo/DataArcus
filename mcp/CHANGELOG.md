@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **Inside the MCP, the readers:** finding which model a path or a name means, and working out what a report holds
+  (its pages, visuals, fields and texts), each have a file of their own; every path is still checked inside your working
+  folder before anything is read, and read_model and read_report answer exactly as before.
 - **Inside the MCP, the redesign's text and changes:** the consistent copy's text and the changes a redesign makes to its
   copy (places, titles, theme colours, the copy's name) each have a file of their own; every redesign plan, check and
   written file is exactly what it was before.
