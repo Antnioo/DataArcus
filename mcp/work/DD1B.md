@@ -15,10 +15,11 @@
   Desktop-measured test).
 - **Test:** mcp/test-0.3.2-dd1b.mjs (suite dd1b, area twin): 545 checks. Red: with report-a11y's old `tr` back, C1 and S1
   fail (543 of 545).
-- **Expected checks:** dd1b 545; every other suite's number as on the base; mutation 76/76; lint 0; check-contracts,
-  check-modules --strict green. **Got:** see Results.
-- **State:** step 5 written; next the one merge of integration/0.3.2, the full runs and CI.
-- **Resume:** merge origin/integration/0.3.2 once, `npm run build:min`, full runs, `gh workflow run tests.yml`.
+- **Expected checks:** dd1b 545; every other suite's number as before; mutation 76/76; lint 0; check-contracts,
+  check-modules --strict green. **Got:** exactly that (Results).
+- **Merge:** integration/0.3.2 moved to 59877edb (DD1G, CI2): merged once (82e6edc7), `npm run build:min`.
+- **State:** the full runs green after the merge; CI on the branch (its line below).
+- **Resume:** none once CI is green; the reviewer reads and merges.
 
 ## Readers before -> after (each place)
 | family | place | after |
@@ -76,7 +77,16 @@ none (no golden, twin or Desktop-measured test changed its answer).
 - Text readers that read a non-quoted value as text (`12D` -> "12D") now read none: no suite depends on it.
 
 ## Results
-(the full runs after the merge: below)
+- On 82e6edc7 (after the merge): MCP as CI's 5 shards side by side (`DA_SHARD=k/4 node run-tests.mjs --keep-going`):
+  all 5 exit 0; every suite's number as on this branch's first full run (after step 2) but dd1b 112 -> 545 and dd1g 35
+  (new from integration); mutation 76/76 killed; twin-fuzz 185, sp39 96, sp10 113, sp11 21, sp42 22, dd1c 75. Website
+  `npm test`: all 42 passed. Lint 0; check-contracts PASS 752 (28 families, 107 places); contracts-probe: 1b-text,
+  1b-shown, 1b-number, 1b-bool, 1d one answer each; check-modules --strict PASS 1065; test-site-config, changelog-words,
+  result-lines, agent-memory, literal requires, stamps 1386, check:min (128 match) PASS.
+- glass-tables and sp6 failed only on the shallow clone (their base commits missing), as in DD1C; after
+  `git fetch --unshallow`: 113 and 13 checks, PASS.
+- The base's own full run was stopped (two full runs at once passed the 30-minute limit): the numbers are compared with
+  this branch's step-2 run, where no test had changed.
 
 ## Seen, not in scope
 - Inline literal reads that are not named places: twin-pages `wholeTitles` (its quote test), twin-texts `goesTo`,
