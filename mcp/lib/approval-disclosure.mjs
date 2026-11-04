@@ -15,7 +15,8 @@ import { E } from './design.mjs';             // (D6: the written colour's own c
 import { BEFORE_APPLIED as FLIP_BEFORE } from './flip-cards.mjs';   // (F1: what a flip card shows before its script)
 import { folderSaid } from './plain-words.mjs';   // (0.3.0 T1, T-4)
 import { CLASSES as TEXT_CLASSES } from './text-format.mjs';   // (0.3.1 R4A: a text class in words, never its key)
-import { arOf, INPUT_AR } from './approval-ar.mjs';   // (0.3.1 FX1: an Arabic plan's page wholly Arabic)
+import { arOf, INPUT_AR } from './approval-ar.mjs';
+import { ORDER_FUNCTIONS, ORDER_CALC_SAID } from './twin-calcs.mjs';   // (0.3.2 VC2: the one list and VC1's sentence)   // (0.3.1 FX1: an Arabic plan's page wholly Arabic)
 
 // (D7) a right-to-left waterfall's switch, in the person's words
 const Gallery = createRequire(import.meta.url)('../../assets/js/visual-gallery.js');
@@ -424,6 +425,15 @@ function summaryOf(kind, data) {
     const AD = Array.isArray(d.added) ? d.added.slice(0, 30) : [];
     if (AD.length) sections.push({ heading: `Visuals the twin adds (${AD.length})`, rows: AD.map((x) => [{ en: `Page "${String(x.page)}": ${String(x.name)}`, ar: `صفحة «${String(x.page)}»: ${String(x.name)}` },
       { en: `a table of the weekday names beside the heatmap ${String(x.beside)}, at its grid's right edge (a new visual; nothing of the report is written over)`, ar: `جدول بأسماء أيام الأسبوع بجانب الخريطة الحرارية ${String(x.beside)}، عند الحافة اليمنى لشبكتها (مرئي جديد؛ لا يُكتب فوق أي شيء من التقرير)` }]) });
+    // (0.3.2 VC2, B-306) each visual the twin turns that holds a running or neighbour visual calculation (VC1's
+    // orderCalculations), by its safe page/visual name, its functions (only the list's names), VC1's sentence
+    const OC = d.orderCalculations && typeof d.orderCalculations === 'object' && Array.isArray(d.orderCalculations.visuals) ? d.orderCalculations : null;
+    if (OC && OC.visuals.length) {
+      const fnsOf = (f) => ORDER_FUNCTIONS.filter((k) => f && typeof f === 'object' && Number(f[k]) > 0).map((k) => (Number(f[k]) > 1 ? `${k} x${Number(f[k])}` : k)).join(', ');
+      const more = Number(OC.notListed) > 0 ? [[{ en: `${Number(OC.notListed)} more`, ar: `${Number(OC.notListed)} أخرى` }, { en: 'not listed here; the plan counts them', ar: 'غير مذكورة هنا؛ تعدّها الخطة' }]] : [];
+      sections.push({ heading: `Turned visuals with an order calculation (${Number(OC.count) || OC.visuals.length})`, rows: OC.visuals.slice(0, 30).map((x) => { const f = fnsOf(x && x.functions);
+        return [{ en: `Visual "${String(x && x.visual)}"${f ? ` (${f})` : ''}`, ar: `المرئي «${String(x && x.visual)}»${f ? ` (${f})` : ''}` }, { en: ORDER_CALC_SAID.en, ar: ORDER_CALC_SAID.ar }]; }).concat(more) });
+    }
     // (0.3.1 K2) what stays English or unmirrored in this report, in one line (Arabic first: the page is Arabic)
     const NF = d.notFullyArabic && typeof d.notFullyArabic === 'object' ? d.notFullyArabic : null;
     if (NF && NF.en) sections.push({ heading: 'Not fully Arabic', rows: [[{ en: 'In short', ar: 'باختصار' }, { en: String(NF.en), ar: String(NF.ar || NF.en) }]] });

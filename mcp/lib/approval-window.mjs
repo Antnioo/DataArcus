@@ -137,7 +137,7 @@ const HEAD_AR = [['Report', 'التقرير'], ['Layout', 'التخطيط'], ['F
   ['Flip cards', 'البطاقات القابلة للقلب'], ['Status icons', 'أيقونات الحالة'], ['Waterfalls, right to left', 'الشلالات من اليمين إلى اليسار'], ['Metric switcher', 'مبدّل المقاييس'], ['Thinner bars', 'أشرطة أرفع'], ['Visual gallery', 'معرض المرئيات'],
   ['Custom visuals replaced', 'المرئيات المخصصة المستبدلة'],
   // (FX1) the rest an Arabic page shows
-  ['Not fully Arabic', 'ليست عربية بالكامل'], ['Matrices written as tables', 'المصفوفات المكتوبة جداول'], ['Visuals the twin adds', 'مرئيات تضيفها النسخة العربية'], ['More', 'المزيد'], ['Already there, not written again', 'موجود من قبل، لا يُكتب مرة أخرى'], ['Answers to record', 'الإجابات التي ستُسجَّل']];
+  ['Not fully Arabic', 'ليست عربية بالكامل'], ['Matrices written as tables', 'المصفوفات المكتوبة جداول'], ['Visuals the twin adds', 'مرئيات تضيفها النسخة العربية'], ['Turned visuals with an order calculation', 'مرئيات معكوسة فيها حساب يعتمد على الترتيب'], ['More', 'المزيد'], ['Already there, not written again', 'موجود من قبل، لا يُكتب مرة أخرى'], ['Answers to record', 'الإجابات التي ستُسجَّل']];
 // (SQ3, T1-S9: «تظهر بالإنجليزية · Shown in English (21, no Arabic text)» kept the count's words English only) a count
 // with words takes its Arabic words in the Arabic half; a bare count, or words not listed here, stays in the English half
 const COUNT_AR = [[/^(\d+), no Arabic text$/, (n) => `${n}، دون نص عربي`], [/^(\d+), no Arabic name$/, (n) => `${n}، دون اسم عربي`],
