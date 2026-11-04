@@ -7,7 +7,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   const $ = (id) => document.getElementById(id);
   const track = (name, params) => { if (typeof window.dataArcusTrack === 'function') window.dataArcusTrack(name, params); };
-  const STORE = 'dataarcus-theme-generator';
   // Arabic/English for text drawn by this script (static page text uses data-i18n)
   const isAr = () => document.documentElement.lang === 'ar';
   const L = (en, ar) => (isAr() ? ar : en);
@@ -24,16 +23,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // (0.3.2 OP1) the font choices are the engine's list (text-measure.js's catalog), drawn here: the page has no copy
   if ($('font')) $('font').innerHTML = E.FONTS.map((f) => `<option>${f}</option>`).join('');
 
-  // ---------- state ----------
-  let state;
-  try { state = JSON.parse(localStorage.getItem(STORE)); } catch (e) { state = null; }
-  // an old or hand-edited save may be partial: each value that is not valid falls back to its default
-  // (0.3.1 GD1, the owner, 27 Oct: "i want to make the glassy dashboard default") a first visit, with nothing saved,
-  // opens on the glass look; a saved design keeps its own look (one saved without a look: plain, as it was made)
-  const firstVisit = !state || typeof state !== 'object';
-  state = E.repairState(state);
-  if (firstVisit) state.chart = Object.assign({}, state.chart, { look: E.DEFAULT_LOOK });
-  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* private mode */ } };
+  // ---------- state: the saved design and its migration (theme-state-ui.js, 0.3.2 SP31) ----------
+  // `state` is the store's design: every change of the whole design goes through S.replace, which rebinds it here
+  const S = window.DAThemeState.createStore({ storage: (() => { try { return window.localStorage; } catch (e) { return null; } })(), engine: E });
+  let state = S.get();
+  S.subscribe((s) => { state = s; });
+  const save = () => S.save();
 
   // ---------- builders ----------
   const colorInput = (key, value, label) => `<div class="tg-color"><input type="color" value="${value}" data-key="${key}" aria-label="${label} color"><input type="text" value="${value}" data-key="${key}" maxlength="9" aria-label="${label} hex code" spellcheck="false"><span>${label}</span></div>`;
@@ -981,9 +976,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- foldable steps: each section folds on its own; a folded one shows a one-line summary ----------
   // All open on a first visit; what the visitor folds is remembered. Anything that points at a section
   // (the steps bar, "See an example", a #download link) unfolds it first, so nobody lands on a closed step.
-  const FOLD = STORE + '-folded', FOLDS = ['colors', 'layout', 'download'];
+  const FOLD = S.keep('-folded'), FOLDS = ['colors', 'layout', 'download'];
   let folded = [];
-  try { folded = JSON.parse(localStorage.getItem(FOLD) || '[]').filter((id) => FOLDS.includes(id)); } catch (e) { folded = []; }
+  try { folded = JSON.parse(FOLD.get() || '[]').filter((id) => FOLDS.includes(id)); } catch (e) { folded = []; }
   const foldSum = (id) => {
     const c = lay(), p = page(c);
     if (id === 'colors') return (state.preset ? (isAr() ? PRESET_AR[state.preset] || state.preset : state.preset) : L('Your colors', 'ألوانك')) + ' · ' + state.font + ' · ' + (state.name || '');
@@ -1000,7 +995,7 @@ document.addEventListener('DOMContentLoaded', () => {
     b.setAttribute('aria-label', (fold ? L('Open', 'افتح') : L('Fold', 'اطوِ')) + ' ' + panel.querySelector('h2 .tg-step').textContent);
     if (!restoring) {
       folded = FOLDS.filter((f) => $(f) && $(f).classList.contains('tg-folded'));
-      try { localStorage.setItem(FOLD, JSON.stringify(folded)); } catch (e) { /* private mode */ }
+      FOLD.set(JSON.stringify(folded));
     }
     if (fold) foldSums();
   };
@@ -1032,15 +1027,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // "See an example": a complete executive sales design; the visitor's own design can be restored
   // the visitor's design is kept next to the saved one, so Undo still works after a reload
-  const UNDO = STORE + '-before';
-  let beforeExample = null;
-  try { beforeExample = localStorage.getItem(UNDO); } catch (e) { /* private mode */ }
+  const UNDO = S.keep('-before');
+  let beforeExample = UNDO.get();
   if (beforeExample) $('exampleUndo').hidden = false;
   $('exampleBtn').addEventListener('click', () => {
-    if (!beforeExample) { beforeExample = JSON.stringify(state); try { localStorage.setItem(UNDO, beforeExample); } catch (e) { /* private mode */ } }
+    if (!beforeExample) { beforeExample = JSON.stringify(state); UNDO.set(beforeExample); }
     const p = PRESETS['Desert Gulf'];
-    state = { preset: 'Desert Gulf', name: 'Executive Sales', font: 'Segoe UI', data: p.data.slice(), ui: { ...p.ui },
-      layout: { preset: 'exec', kpis: 4, filters: true, fpos: 'top', dir: isAr() ? 'rtl' : 'ltr', v: 3, radius: 8, shadow: true, header: true, kpiBar: 'top', kpiBarC: 'data', headLine: 'full', samples: true, transparent: true, page: E.DEFAULT_PAGE, hh: 64, logoW: 200 } };
+    S.replace({ preset: 'Desert Gulf', name: 'Executive Sales', font: 'Segoe UI', data: p.data.slice(), ui: { ...p.ui },
+      layout: { preset: 'exec', kpis: 4, filters: true, fpos: 'top', dir: isAr() ? 'rtl' : 'ltr', v: 3, radius: 8, shadow: true, header: true, kpiBar: 'top', kpiBarC: 'data', headLine: 'full', samples: true, transparent: true, page: E.DEFAULT_PAGE, hh: 64, logoW: 200 } });
     pageMsg = ''; renderPresets(); renderInputs(); renderAll();
     $('exampleUndo').hidden = false;
     openStep('layout'); $('layout').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1053,8 +1047,8 @@ document.addEventListener('DOMContentLoaded', () => {
   exPic(); new MutationObserver(exPic).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   $('exampleUndo').addEventListener('click', () => {
     if (!beforeExample) return;
-    state = JSON.parse(beforeExample); beforeExample = null; pageMsg = '';
-    try { localStorage.removeItem(UNDO); } catch (e) { /* private mode */ }
+    S.replace(JSON.parse(beforeExample)); beforeExample = null; pageMsg = '';
+    UNDO.remove();
     renderPresets(); renderInputs(); renderAll();
     $('exampleUndo').hidden = true;
     toast(L('Your design is back', 'عاد تصميمك'));
