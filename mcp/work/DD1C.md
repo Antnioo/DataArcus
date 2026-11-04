@@ -62,8 +62,11 @@ none (no golden or twin test changed its answer).
   position.width); new: frameWidth (a valid box only).
 
 ## Results
-- Local (faeb19b): `npm test -- --keep-going` in mcp, `npm test` at the root, lint 0, check:min (124 match, stamps
-  new since main), test-site-config PASS, check-modules --strict PASS 1035, changelog-words PASS, result-lines PASS.
+- Local (faeb19b): mcp `npm test -- --keep-going` 193/193 (dd1c 61, mutation 76/76, twin 44/44 with dd1c, every
+  other number as on the base); root `npm test` 42/42. glass-tables and sp6 first failed only because the clone was
+  shallow (their base commits cba24a5, 04a9922 missing): after `git fetch --unshallow` 113 and 4 checks, PASS.
+  Lint 0, check:min (124 match, stamps new since main), test-site-config PASS, check-modules --strict PASS 1035,
+  changelog-words PASS, result-lines PASS, agent-memory PASS.
 
 ## Seen, not in scope
 - twin-geometry's boxOk accepts a width of 0 or below for the twin's own visuals (aroundTables, badgesWithText).
