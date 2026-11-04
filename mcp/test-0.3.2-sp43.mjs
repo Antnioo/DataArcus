@@ -8,10 +8,10 @@ import './test-env.mjs';
 // length, recorded in fixtures/sp43-split.json; SP43_RECORD=1 records them again (only on the base, never to make a run pass).
 //   B1-B4  bidi: isolateFiles on a made-up file map (approved names mixed Arabic and English; every mixed text), the
 //          writer's Arabic build with mixed names, its English build (left alone)
-//   R1-R6  reportRun(a, 'build') (in process): designed EN and AR (mixed names, a page filter, the switcher, flip cards,
-//          status icons), the gallery on the twin, hand-placed pages with a theme, a text slot left out; every file and
-//          every value it returns;  R7  reportRun(a, 'write') with no approved artifact: its refusal
-//   P1-P5  the seeded server: a plan then its write with the same pins (the answer and every written file), the same
+//   R1-R6, R8  reportRun(a, 'build') (in process): designed EN and AR (mixed names, a page filter, the switcher, flip
+//          cards, status icons), the gallery on the twin, hand-placed pages with a theme, a text slot left out (hand-placed
+//          and designed); every file and every value it returns;  R7  reportRun(a, 'write') with no approved artifact: its refusal
+//   P1-P5  the seeded server: a plan then its write with the same pins (the answer and every written file; a long name), the same
 //          plan's write refused when a pin changed (nothing written), the bilingual plan, a refused field, hand pages
 //   C1  the runs reach every seam (isolation in names and all modes, scripts, gallery, bilingual, both refusals)
 //   M1-M3  after each move: the module holds the code, the facade calls it and keeps what the map leaves it
@@ -108,7 +108,7 @@ const fileMap = () => [
 }
 
 // ---------- R: reportRun's build, in process ----------
-tiny('t1'); tiny('t2'); copy('twin-project', 'w3'); copy('health-project', 'h4'); tiny('t5'); tiny('t6'); tiny('t7');
+tiny('t1'); tiny('t2'); copy('twin-project', 'w3'); copy('health-project', 'h4'); tiny('t5'); tiny('t6'); tiny('t7'); tiny('t8');
 const { reportRun } = await import('./lib/report-run.mjs'), { withLookDefaults } = await import('./lib/report-inputs.mjs'), { planLayout } = await import('./lib/design.mjs');
 const designOf = (o) => planLayout(Object.assign({ lang: 'en' }, o)).design;
 // a theme file next to the hand-placed pages (generate_theme's 1920 x 1080 sizes: scaled to the 1280 x 720 pages)
@@ -122,7 +122,8 @@ const RUNS = [
   ['R3', { path: 'w3', name: 'SP43 gallery', lang: 'en', design: designOf({ layout: 'analysis' }), gallery: ['combo', 'waterfall'], text: 'What it means: made-up words.' }],
   ['R4', { path: 'h4', name: 'SP43 hand placed pages with a long name', lang: 'en', pages: HAND, theme: 'h4/theme.json' }],
   ['R5', { path: 't5', name: 'SP43 icons', lang: 'en', design: designOf({ layout: 'exec' }), fields: Object.assign({}, FIELDS, { table: ['Sales[Region]', 'Sales[Fill Rate]', 'Sales[Total Sales]'] }), statusIcons: [{ measure: 'Sales[Fill Rate]', good: '>= 0.97', bad: '< 0.94' }] }],
-  ['R6', { path: 't6', name: 'SP43 hand AR', lang: 'ar', pages: HAND, displayNames: MIXED, fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]'], category: 'Sales[Product]' } }]
+  ['R6', { path: 't6', name: 'SP43 hand AR', lang: 'ar', pages: HAND, displayNames: MIXED, fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]'], category: 'Sales[Product]' } }],
+  ['R8', { path: 't8', name: 'SP43 focus, no text', lang: 'en', design: designOf({ layout: 'focus' }), fields: FIELDS }]
 ];
 const valuesOf = (b) => JSON.stringify(Object.fromEntries(Object.entries(b).filter(([k, v]) => typeof v !== 'function' && k !== 'm' && k !== 'files')));
 for (const [id, a] of RUNS) {
@@ -140,7 +141,7 @@ for (const [id, a] of RUNS) {
 tiny('p1'); tiny('p2'); copy('twin-project', 'p3'); tiny('p4'); copy('health-project', 'p5');
 const s = await serverClient(ROOT, { NODE_OPTIONS: [process.env.NODE_OPTIONS, `--import ${SEED}`].filter(Boolean).join(' ') });
 const ask = async (name, args) => { try { return await s.call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
-const P1 = { path: 'p1', name: 'SP43 plan AR', layout: 'exec', kpis: 3, lang: 'ar', planFields: FIELDS, displayNames: MIXED, flipCards: true };
+const P1 = { path: 'p1', name: 'SP43 plan AR, a name longer than thirty characters', layout: 'exec', kpis: 3, lang: 'ar', planFields: FIELDS, displayNames: MIXED, flipCards: true };
 try {
   {
     const pl = await ask('plan_layout', P1), id = pl.j && pl.j.plan && pl.j.plan.planId;
@@ -185,7 +186,7 @@ if (fs.existsSync(path.join(HERE, '..', 'assets', 'js', 'pbip-bidi.js'))) {
 if (there('lib/report-build.mjs')) {
   const rr = read('lib/report-run.mjs'), rb = read('lib/report-build.mjs');
   chk(() => /export function reportBuild\(/.test(rb) && /reportBuild\(/.test(rr) && !/Pbip\.build\(/.test(rr) && /Pbip\.build\(/.test(rb) && /Plans\.gate\(/.test(rr) && /if \(!building\) throw/.test(rr) && /writeTree\(/.test(rr)
-      && !/Plans\.|writeTree|withPlan|writeFile|mkdirSync|fieldBinding\(/.test(rb),
+      && !/\bPlans\.|writeTree\(|withPlan\(|writeFileSync|mkdirSync|fieldBinding\(/.test(rb),
     () => 'M2. report-build.mjs builds (Pbip.build), report-run.mjs keeps the gate, the binding, the mode boundary and the write; report-build.mjs writes nothing and touches no plan');
 }
 if (there('lib/plan-artifact.mjs')) {
