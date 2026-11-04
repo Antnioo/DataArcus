@@ -8,7 +8,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const $ = (id) => document.getElementById(id);
   const K = window.SVGKPI, T = window.SVGKPITemplates;
-  if (!K || !T || !window.SVGEditorStore || !$('kdApp')) return;
+  if (!K || !T || !window.SVGEditorStore || !window.SVGEditorPointer || !$('kdApp')) return;
   const isAr = () => document.documentElement.lang === 'ar';
   const L = (en, ar) => (isAr() ? ar : en);
   const track = (name, params) => { if (typeof window.dataArcusTrack === 'function') window.dataArcusTrack(name, params || {}); };
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   // the design, the selection and the undo history: svg-editor-store.js (0.3.2 SP25; the pages load it first)
   const S = window.SVGEditorStore.create({ limit: 100 });
-  let zoom = 1, drag = null, guides = [];
+  let zoom = 1; // the canvas's scale, set by renderCanvas; the pointer reads it
   let tour = null; // the beginner tutorial, set up below
 
   // ---------- history ----------
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ns = 'http://www.w3.org/2000/svg';
     const ui = document.createElementNS(ns, 'g'); ui.setAttribute('class', 'kd-ui');
     const px = 1 / zoom;
-    guides.forEach((g) => { const ln = document.createElementNS(ns, 'line'); Object.entries(g.axis === 'x' ? { x1: g.at, x2: g.at, y1: 0, y2: H } : { y1: g.at, y2: g.at, x1: 0, x2: W }).forEach(([k, v]) => ln.setAttribute(k, v)); ln.setAttribute('class', 'kd-guide'); ln.setAttribute('stroke-width', px); ui.appendChild(ln); });
+    ptr.guides.forEach((g) => { const ln = document.createElementNS(ns, 'line'); Object.entries(g.axis === 'x' ? { x1: g.at, x2: g.at, y1: 0, y2: H } : { y1: g.at, y2: g.at, x1: 0, x2: W }).forEach(([k, v]) => ln.setAttribute(k, v)); ln.setAttribute('class', 'kd-guide'); ln.setAttribute('stroke-width', px); ui.appendChild(ln); });
     if (S.sel >= 0 && S.design.layers[S.sel]) {
       const b = bboxOf(S.sel), l = S.design.layers[S.sel];
       if (b) {
@@ -155,53 +155,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tour) tour.check();
   }
 
-  // ---------- pointer: select, move, resize ----------
-  stage.addEventListener('pointerdown', (e) => {
-    if (!svgEl() || e.button > 0) return;
-    const p = toDesign(e), hEl = e.target.closest('[data-h]'), lEl = e.target.closest('[data-l]');
-    if (hEl && S.sel >= 0) drag = { mode: 'resize', h: hEl.dataset.h, p0: p, l0: clone(S.design.layers[S.sel]), b0: bboxOf(S.sel), moved: false };
-    else if (lEl) {
-      const i = +lEl.dataset.l;
-      if (i !== S.sel) { S.select(i); renderLayers(); renderProps(); }
-      drag = { mode: 'move', p0: p, l0: clone(S.design.layers[S.sel]), b0: bboxOf(S.sel), others: S.design.layers.map((_, j) => (j === S.sel ? null : bboxOf(j))).filter(Boolean), moved: false };
-    } else { S.select(-1); renderLayers(); renderProps(); renderCanvas(); return; }
-    stage.setPointerCapture(e.pointerId);
-    renderCanvas();
-    e.preventDefault();
+  // ---------- pointer: select, move, resize: svg-editor-pointer.js (0.3.2 SP33; the pages load it first) ----------
+  const ptr = window.SVGEditorPointer.attach({
+    stage, store: S, pos: POS, r1, clone,
+    view: { hasCanvas: () => !!svgEl(), zoom: () => zoom, toDesign, bboxOf },
+    on: { picked: () => { renderLayers(); renderProps(); }, canvas: () => renderCanvas(), moved: () => renderDax(), dropped: () => { renderProps(); save(); } }
   });
-  stage.addEventListener('pointermove', (e) => {
-    if (!drag) return;
-    const p = toDesign(e); let dx = p.x - drag.p0.x, dy = p.y - drag.p0.y;
-    if (!drag.moved) { if (Math.hypot(dx, dy) * zoom < 3) return; S.checkpoint(); drag.moved = true; }
-    const l = S.design.layers[S.sel], l0 = drag.l0, bd = l0.bind || {};
-    guides = [];
-    if (drag.mode === 'move') {
-      // snap the box edges and centre to the card and to other layers (hold Alt to turn off)
-      if (!e.altKey && drag.b0) {
-        const thr = 5 / zoom, b = drag.b0;
-        const tx = [0, S.design.w / 2, S.design.w], ty = [0, S.design.h / 2, S.design.h];
-        drag.others.forEach((o) => { tx.push(o.x, o.x + o.width / 2, o.x + o.width); ty.push(o.y, o.y + o.height / 2, o.y + o.height); });
-        const best = (start, size, targets, d) => { let bestD = null; [0, size / 2, size].forEach((off) => targets.forEach((t) => { const diff = t - (start + d + off); if (Math.abs(diff) < thr && (bestD == null || Math.abs(diff) < Math.abs(bestD.diff))) bestD = { diff: diff, at: t }; })); return bestD; };
-        const sx = best(b.x, b.width, tx, dx), sy = best(b.y, b.height, ty, dy);
-        if (sx) { dx += sx.diff; guides.push({ axis: 'x', at: sx.at }); }
-        if (sy) { dy += sy.diff; guides.push({ axis: 'y', at: sy.at }); }
-      }
-      POS[l.type].forEach(([kx, ky]) => { if (!bd[kx]) l[kx] = r1(l0[kx] + dx); if (!bd[ky]) l[ky] = r1(l0[ky] + dy); });
-    } else {
-      const h = drag.h;
-      if (h === 'se' || h === 'e') l.w = Math.max(1, r1(p.x - l0.x));
-      if (h === 'se' || h === 's') l.h = Math.max(1, r1(p.y - l0.y));
-      if (h === 'r') l.r = Math.max(1, r1(Math.hypot(p.x - l0.cx, p.y - l0.cy)));
-      if (h === 'p1') { l.x1 = r1(p.x); l.y1 = r1(p.y); }
-      if (h === 'p2') { l.x2 = r1(p.x); l.y2 = r1(p.y); }
-      if (h === 'size') l.size = Math.max(4, r1(Math.max(p.x - l0.x, p.y - l0.y)));
-      if (h === 'fs' && drag.b0) l.size = Math.max(4, Math.min(200, r1(l0.size * (p.y - drag.b0.y) / drag.b0.height)));
-    }
-    renderCanvas(); renderDax();
-  });
-  const endDrag = () => { if (!drag) return; const moved = drag.moved; drag = null; guides = []; if (moved) { renderProps(); save(); } renderCanvas(); };
-  stage.addEventListener('pointerup', endDrag);
-  stage.addEventListener('pointercancel', endDrag);
 
   // ---------- layers panel ----------
   function renderLayers() {

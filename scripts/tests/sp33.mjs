@@ -117,7 +117,7 @@ function pointerInNode() {
   const ev = (x, y, o) => Object.assign({ clientX: x, clientY: y, button: 0, pointerId: 1, altKey: true, target: target(0), preventDefault: () => {} }, o || {});
   const fire = (k, e) => (listeners.get(k) || []).forEach((fn) => fn(e));
   const p = P.attach({
-    stage, store, pos: { rect: [['x', 'y']] },
+    stage, store, pos: { rect: [['x', 'y']] }, r1: (n) => Math.round(n * 10) / 10, clone: (x) => JSON.parse(JSON.stringify(x)),
     view: { hasCanvas: () => true, zoom: () => 1, toDesign: (e) => ({ x: e.clientX, y: e.clientY }), bboxOf: (i) => ({ x: design.layers[i].x, y: design.layers[i].y, width: 20, height: 10 }) },
     on: { picked: () => {}, canvas: () => { frames++; }, moved: () => {}, dropped: () => {} }
   });
