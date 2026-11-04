@@ -13,8 +13,8 @@
 //   after commit A: K1 pbip-bind re-exports field-catalog's functions (the same ones) and holds no catalog code;
 //     K2 field-catalog.js reads no file, DOM or network and requires field-meaning.js only; K3 theme-generator.js's
 //     loadBind loads field-catalog.min.js once, after field-meaning and before pbip-bind
-//   after commit B: S1 suggest is build(rank(...).choices) + notes, pbip-bind holds no ranking code; S2 field-suggest.js
-//     requires field-catalog.js only, no DOM, file, network or build; S3 loadBind loads field-suggest.min.js once, after
+//   after commit B: K4 suggest is build(rank(...).choices) + notes, pbip-bind holds no ranking code; K5 field-suggest.js
+//     requires field-catalog.js only, no DOM, file, network or build; K6 loadBind loads field-suggest.min.js once, after
 //     field-catalog and before pbip-bind
 //   node test-0.3.2-sp30.mjs
 import fs from 'node:fs';
@@ -191,6 +191,18 @@ try {
   const tg = read('theme-generator.js'), at = (f) => tg.indexOf('/assets/js/' + f + '.min.js?v='), once = (f) => tg.split('/assets/js/' + f + '.min.js?v=').length === 2;
   chk(() => once('field-catalog') && once('pbip-bind') && at('field-meaning') < at('field-catalog') && at('field-catalog') < at('pbip-bind') && at('field-catalog') > tg.indexOf('const loadBind'),
     () => 'K3 theme-generator.js\'s loadBind must load field-catalog.min.js once, after field-meaning and before pbip-bind.min.js');
+
+  // ---------- after commit B (SP30): the ranking is field-suggest.js's; suggest is build of its choices ----------
+  const Sug = require('../assets/js/field-suggest.js'), sugSrc = code(read('field-suggest.js'));
+  let ranked = 0; const realRank = Sug.rank;
+  try { Sug.rank = (...a) => { ranked++; return realRank(...a); }; Bind.suggest([{ name: 'T', columns: [{ name: 'C', dataType: 'string' }], measures: [{ name: 'M', expression: '1' }] }], 1); } finally { Sug.rank = realRank; }
+  chk(() => ranked === 1 && Bind.counts === Sug.counts && Bind.statsOf === Sug.statsOf && Object.keys(Sug).join() === 'rank,counts,statsOf'
+    && !/function (rank|counts|statsOf|byLang)\s*\(|TIEBREAK_WORDS|NOT_CAT|DATE_PARTS|grossBase|NEEDS_PERIOD/.test(bindSrc + code(read('pbip-bind.js'))),
+    () => `K4 pbip-bind.js's suggest must be build of field-suggest.js's rank (called ${ranked} times), counts and statsOf the same functions, and pbip-bind hold no ranking code`);
+  chk(() => (sugSrc.match(/require\(['"][^'"]+['"]\)/g) || []).join() === "require('./field-catalog.js')" && !/document\.|window\.|fetch\(|XMLHttpRequest|FileReader|arrayBuffer|localStorage|postMessage|importScripts|Math\.random|Date\.now|new Date|function build|build\(|EVALUATE|new WeakMap/.test(sugSrc),
+    () => 'K5 field-suggest.js must require field-catalog.js only: no file, page, network, query, random source, clock, META of its own or build');
+  chk(() => once('field-suggest') && at('field-catalog') < at('field-suggest') && at('field-suggest') < at('pbip-bind'),
+    () => 'K6 theme-generator.js\'s loadBind must load field-suggest.min.js once, after field-catalog and before pbip-bind.min.js');
 
   if (RECORD) fs.writeFileSync(GOLD, JSON.stringify(got, null, 1) + '\n');
 } catch (e) { problems.push('crashed: ' + String(e && e.stack || e).slice(0, 400)); }
