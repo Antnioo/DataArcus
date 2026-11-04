@@ -64,8 +64,11 @@ CASES.forEach(([name, make], i) => {
 
 // K1: the catalogue (every rule, its texts and its source) and the score from the findings of S1 and E1
 {
-  const fs1 = (outs[0] || [])[0].result.findings, fe = (outs[14] || [])[0].result.findings;
-  const t = JSON.stringify({ rules: Health.RULES, bpa: Health.BPA_URL, score: [fs1, fe].map((f) => [Health.scoreFrom(f), Health.scoreFrom(f, new Set(f.slice(0, 3).map((x) => x.id))), Health.scoreFrom(f, new Set())]), empty: Health.scoreFrom() });
+  let t;
+  try {
+    const fs1 = outs[0][0].result.findings, fe = outs[14][0].result.findings;
+    t = JSON.stringify({ rules: Health.RULES, bpa: Health.BPA_URL, score: [fs1, fe].map((f) => [Health.scoreFrom(f), Health.scoreFrom(f, new Set(f.slice(0, 3).map((x) => x.id))), Health.scoreFrom(f, new Set())]), empty: Health.scoreFrom() });
+  } catch (e) { t = 'threw: ' + String(e && e.stack || e); }
   texts.K1 = t; now.K1 = { length: t.length, sha256: sha(t) };
 }
 
@@ -92,7 +95,7 @@ const COVER = {
   'every question asked': QUESTIONS.every((id) => asked.has(id)),
   'a check skipped for an unknown type': all.some((r) => r.skipped.length),
   'the incomplete model keeps its warning': /"unreadable":\{"message":"[^"]*Notes\.tmdl/.test(texts[Object.keys(texts).find((k) => k.startsWith('S11 '))]) && /Notes\.tmdl/.test(q),
-  'unused fields claimed with a report only': (outs[14] || [])[6].result.findings.some((f) => f.id === 'UNUSED_COL') && !(outs[14] || [])[7].result.findings.some((f) => /^UNUSED_/.test(f.id))
+  'unused fields claimed with a report only': ((e) => { try { return e[e.length - 4].result.findings.some((f) => f.id === 'UNUSED_COL') && !e[e.length - 3].result.findings.some((f) => /^UNUSED_/.test(f.id)); } catch (x) { return false; } })(outs[14] || [])
 };
 chk(() => Object.values(COVER).every(Boolean), () => `C1. the cases cover the rules and the questions: missing ${JSON.stringify(Object.keys(COVER).filter((k) => !COVER[k]))} (rules not raised: ${Object.keys(Health.RULES).filter((id) => !raised.has(id)).join(' ')})`);
 
@@ -121,7 +124,7 @@ const requiresOf = (s) => Array.from(s.matchAll(/require\('([^']+)'\)/g), (x) =>
 let E2 = null, sameOut = true;
 if (RULES_AFTER || CONFIRM_AFTER) {
   E2 = sandboxed();
-  CASES.forEach(([, make], i) => make().forEach((c, j) => { if (JSON.stringify(E2.analyze(c.model, c.report)) !== JSON.stringify(outs[i][j].result)) sameOut = false; }));
+  CASES.forEach(([, make], i) => make().forEach((c, j) => { try { if (JSON.stringify(E2.analyze(c.model, c.report)) !== JSON.stringify(outs[i][j].result)) sameOut = false; } catch (e) { sameOut = false; } }));
 }
 
 if (RULES_AFTER) {

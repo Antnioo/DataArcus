@@ -214,7 +214,12 @@ export const guardModels = () => [
   { model: { compatibilityLevel: 1567, model: { tables: [
     { name: 'Orders', partitions: mp('Orders'), columns: [col('Customer Id', 'int64'), col('Ship Customer Key', 'int64'), col('Amount', 'double')] },
     { name: 'Customers', partitions: mp('Customers'), columns: [col('Ship Customer Key', 'int64', { isKey: true }), col('Name', 'string')] }],
-  relationships: [rel('Orders', 'Customer Id', 'Customers', 'Ship Customer Key')] } }, report: null }];
+  relationships: [rel('Orders', 'Customer Id', 'Customers', 'Ship Customer Key')] } }, report: null },
+  // the same relationship with no column carrying the key's name (nothing to ask), and with two (which one: nothing asked)
+  ...[[], ['Ship Customer Key', 'Ship_Customer_Key']].map((extra) => ({ model: { compatibilityLevel: 1567, model: { tables: [
+    { name: 'Orders', partitions: mp('Orders'), columns: [col('Customer Id', 'int64'), col('Amount', 'double')].concat(extra.map((n) => col(n, 'int64'))) },
+    { name: 'Customers', partitions: mp('Customers'), columns: [col('Ship Customer Key', 'int64', { isKey: true }), col('Name', 'string')] }],
+  relationships: [rel('Orders', 'Customer Id', 'Customers', 'Ship Customer Key')] } }, report: null }))];
 // U: the unused-field claims with a report: a field parameter, a sort-by column, a measures table's placeholder, a
 // hierarchy, a role, a report measure, a column only a calculated column reads
 export const unusedModel = () => ({ compatibilityLevel: 1567, model: { culture: 'en-US', tables: [
