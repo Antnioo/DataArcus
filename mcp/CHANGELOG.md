@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **Inside the website's shared scripts:** navigation and effects, the forms, and the analytics with the cookie
+  banner each have a file of their own, and only the analytics file talks to Google Analytics or Clarity (after
+  consent, as before); every page looks and behaves exactly as before.
 - **Inside the report writer:** each visual of a report page (the title and logo, the cards, the charts, the tables
   and the slicers, and their phone layout) is made in files of their own; every report, on the website and from the MCP,
   is byte for byte what it was before.
