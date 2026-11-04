@@ -17,8 +17,8 @@
   "Numbers"); mutation 76/76; `npm run lint` 0; check-min, stamps, check-contracts, check-modules --strict,
   check-agent-memory, check-result-lines green; the probe: crc 6 places, png-chunk 4, u32 3, lru 3 (the new place
   added beside the old ones until they go, then the module and its callers), one answer per input.
-- **State:** step 3 (design-engine.js, pbip-zip.js, theme-download-ui.js read png-bytes.js; the pages load it).
-- **Resume:** step 4 (the parity test).
+- **State:** step 4 (the parity test: every old place from the base's source, one answer; the 15 outputs the same).
+- **Resume:** step 5 (CONTRACTS.md, MODULES.md).
 
 ## Plan (one commit each, every suite green between them)
 1. The two modules, their .min.js (png-bytes only: a browser file), the test dd2p (units: 8 byte strings, 8 chunks,
@@ -36,25 +36,35 @@ A script in os.tmpdir() (not committed) loaded the base's engines in one Node pr
 2026 09:30, local) and the seeded random of `mcp/fixtures/sp1/seeded-random.mjs`, and printed the SHA-256 of each
 output below; run twice, the same. The test does the same in its own process.
 
-## Hashes (base deff19e; after: filled at step 4)
+## Hashes (base deff19e; after: step 4, 8da3c9f5, the same 15)
 | output | bytes | SHA-256 (base) | after |
 |---|---|---|---|
-| theme background, glassPng 1280x720 (DataArcus) | 96999 | 9648460bb936...61d1c684 | |
-| theme background, glassPng 1920x1080 (Desert Gulf) | 151334 | 68dd99c823a4...4c327b37 | |
-| encodePng 24x9, a comment, the browser deflate | 385 | 4ffb815ac861...1a6df21a | |
-| encodePng 24x9, node:zlib | 171 | eaa48acd7e49...c7aa2153 | |
-| the glass flipped (flipGlassPng) | 97278 | 1008ffb464bf...f097b06e | |
-| the glass preview (glassPreviewUrl) | 30538 | daa679edb3a6...580016a8 | |
-| page picture opaque (writePng 17x5) | 108 | e6153d7c3b33...35018b70 | |
-| page picture with alpha (writePng 17x5) | 117 | 7bc52d7a198a...16c22e8f | |
-| page picture palette (testPng) | 162 | 540223cb624a...23ddf691 | |
-| page picture interlaced (testPng) | 411 | 8f2fe12287a1...f0ff9f09 | |
-| page picture flipped (pagePicture, Normal) | 110 | 72311c431247...25423157 | |
-| theme generator text chunks (textChunk x2) | 140 | b657f58e0bc1...b080c4d5 | |
-| ZIP, pbip-export build (en, DataArcus) | 379608 | 522a03df9d59...36c84bd8 | |
-| ZIP, pbip-export build (ar, Desert Gulf) | 390049 | a27b9650da28...9d2ab4f2 | |
-| ZIP, pbip-zip zip (three made-up entries) | 97329 | d38b248badeb...7139f992 | |
+| theme background, glassPng 1280x720 (DataArcus) | 96999 | 9648460bb936...61d1c684 || the same |
+| theme background, glassPng 1920x1080 (Desert Gulf) | 151334 | 68dd99c823a4...4c327b37 || the same |
+| encodePng 24x9, a comment, the browser deflate | 385 | 4ffb815ac861...1a6df21a || the same |
+| encodePng 24x9, node:zlib | 171 | eaa48acd7e49...c7aa2153 || the same |
+| the glass flipped (flipGlassPng) | 97278 | 1008ffb464bf...f097b06e || the same |
+| the glass preview (glassPreviewUrl) | 30538 | daa679edb3a6...580016a8 || the same |
+| page picture opaque (writePng 17x5) | 108 | e6153d7c3b33...35018b70 || the same |
+| page picture with alpha (writePng 17x5) | 117 | 7bc52d7a198a...16c22e8f || the same |
+| page picture palette (testPng) | 162 | 540223cb624a...23ddf691 || the same |
+| page picture interlaced (testPng) | 411 | 8f2fe12287a1...f0ff9f09 || the same |
+| page picture flipped (pagePicture, Normal) | 110 | 72311c431247...25423157 || the same |
+| theme generator text chunks (textChunk x2) | 140 | b657f58e0bc1...b080c4d5 || the same |
+| ZIP, pbip-export build (en, DataArcus) | 379608 | 522a03df9d59...36c84bd8 || the same |
+| ZIP, pbip-export build (ar, Desert Gulf) | 390049 | a27b9650da28...9d2ab4f2 || the same |
+| ZIP, pbip-zip zip (three made-up entries) | 97329 | d38b248badeb...7139f992 || the same |
 (The full hashes are pinned in the test.)
+
+## The parity test and its red proof (step 4)
+dd2p: 112 checks (U 32, H 15, P 41, B 15, S 9). P runs every old place from `git show deff19e:<file>` (each definition
+and the names it needs, the probe's way of reading a nested name) beside the one place; B writes the 15 outputs with
+the base's own engines (every assets/js file and the two MCP picture files at deff19e in os.tmpdir(), in a child
+process with the same clock and seed) and compares them with now, so a platform whose node:zlib writes other bytes
+still proves "unchanged" (H then skips only its zlib pins, with a note).
+Red proof (not committed): in png-bytes.js the table line's `t[n] = c >>> 0` made `t[n] = (n === 7 ? c ^ 1 : c) >>> 0`
+(one entry changed): `FAIL  dd2p  91 of 112 checks` (U13, P13, P38, H1-H3, H5, H6, H10, H13-H15 and B the same ten);
+the file restored, 112 of 112.
 
 ## Numbers (filled as measured)
 

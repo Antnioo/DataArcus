@@ -7,8 +7,23 @@
 //            '123456789'), 8 chunks, 8 reads (16908288 for 01 02 at 0), 8 cache step lists (32 checks)
 //   H1-H15   every PNG the website and the MCP write (the theme background, the glass flipped and its preview, the twin's
 //            page pictures), the theme generator's text chunks and three ZIPs of made-up reports: their SHA-256 as on the
-//            base deff19e (measured before DD2P, mcp/work/DD2P.md), pinned. node:zlib's own bytes for a fixed input are compared first: on
-//            a platform whose zlib writes other bytes the pictures it deflates are checked by P below only (15 checks)
+//            base deff19e (measured before DD2P, mcp/work/DD2P.md), pinned. node:zlib's own bytes for a fixed input are
+//            compared first: on a platform whose zlib writes other bytes the pictures it deflates are checked by B only
+//            (15 checks)
+//   P1-P40   the parity: every old place, run from the base's source (git show deff19e: each definition and the names it
+//            needs, read from the file as scripts/contracts-probe.mjs reads a nested name), and the one place on every
+//            input: one answer each. crc: design-engine, pbip-zip, glass-picture, page-picture, theme-download-ui and
+//            png-bytes crc32 (8 byte strings); png-chunk: design-engine chunk (in pngOf), glass-picture chunk (in
+//            encode), page-picture chunk and pngChunk (8 chunks); u32: glass-picture, page-picture and png-bytes (8
+//            reads); lru: glass-picture, page-picture and small-cache (8 step lists); theme-download-ui textChunk, the
+//            old and the new (8 keys and texts) (40 checks)
+//   P41      pbip-zip.js exports png-bytes.js crc32 itself (its callers change nothing) (1 check)
+//   B1-B15   the 15 outputs of H written by the base's own engines (every assets/js file and glass-picture.mjs,
+//            page-picture.mjs at deff19e, in a temporary folder, in a child process with the same clock and seed): the
+//            same bytes as now, on any platform (15 checks)
+//   S1-S9    one job, one place: the CRC table is in png-bytes.js only and the cache in small-cache.mjs only (in
+//            assets/js and mcp/lib); each of the five callers loads png-bytes.js, the two MCP ones small-cache.mjs
+//            (9 checks)
 // Made-up data only; the clock fixed and the random seeded in this process.   node test-0.3.2-dd2p.mjs
 import fs from 'node:fs';
 import path from 'node:path';
@@ -16,6 +31,8 @@ import crypto from 'node:crypto';
 import zlib from 'node:zlib';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
+import os from 'node:os';
+import { execFileSync } from 'node:child_process';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const require = createRequire(import.meta.url);
@@ -82,9 +99,14 @@ LRUS.forEach((x, i) => chk(() => lruOf(lru, x) === KEPT[i], () => `U${i + 25}. l
 // it writes these
 const ZLIB_PIN = '90c2aad4bfa0cd6d089568a4b186e7fd0d681f3d60351d8ac03fe1a4551212cc';
 const zlibHere = sha(zlib.deflateSync(Uint8Array.from({ length: 65536 }, (_, i) => ((i * 7919) >> 3) & (i % 97 ? 255 : 15))));
-const E = require('../assets/js/design-engine.js'), Pbip = require('../assets/js/pbip-export.js'), Zip = require('../assets/js/pbip-zip.js');
-const G = await import('./lib/glass-picture.mjs'), PP = await import('./lib/page-picture.mjs');
-const design = (preset) => { const d = E.fresh(); d.preset = preset; d.data = E.PRESETS[preset].data.slice(); d.ui = Object.assign({}, E.PRESETS[preset].ui); E.repairState(d); return d; };
+// the engines of a tree (this repository, or the base's files in a temporary folder)
+async function enginesOf(tree, root) {
+  const req = createRequire(path.join(tree, 'mcp', 'x.mjs')), at = (f) => pathToFileURL(path.join(tree, ...f.split('/'))).href;
+  return { E: req('../assets/js/design-engine.js'), Pbip: req('../assets/js/pbip-export.js'), Zip: req('../assets/js/pbip-zip.js'),
+    G: await import(at('mcp/lib/glass-picture.mjs')), PP: await import(at('mcp/lib/page-picture.mjs')),
+    textChunk: textChunkFrom(fs.readFileSync(path.join(tree, 'assets', 'js', 'theme-download-ui.js'), 'utf8'), root) };
+}
+const designOf = (E, preset) => { const d = E.fresh(); d.preset = preset; d.data = E.PRESETS[preset].data.slice(); d.ui = Object.assign({}, E.PRESETS[preset].ui); E.repairState(d); return d; };
 const rgbOf = (w, h) => Uint8Array.from({ length: w * h * 3 }, (_, i) => (i * 37 + (i >> 5)) & 255);
 const rgbaOf = (w, h, alpha) => Uint8Array.from({ length: w * h * 4 }, (_, i) => (i % 4 === 3 ? (alpha ? (i * 11) & 255 : 255) : (i * 53 + (i >> 4)) & 255));
 // the theme generator's text chunks (a browser page script): its block from the comment to withCredits, run as it is
@@ -94,6 +116,7 @@ const credits = (textChunk) => Buffer.concat([textChunk('Software', 'DataArcus P
 const png = (i) => new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, i]);
 // a made-up report (the writer's sample model): the glass picture behind its first page
 function outputs(m) {
+  const design = (preset) => designOf(m.E, preset);
   const glass = m.E.glassPng(design('DataArcus'), 1280, 720);
   const input = (lang, preset) => { const d = design(preset), pages = m.E.projectPages(d.layout, lang, { second: true });
     return { name: 'DD2P ' + lang, title: lang === 'ar' ? 'لوحة المبيعات 2026' : 'Sales 2026', pageName: pages[0].name, lang, rtl: lang === 'ar', font: d.font, sample: true, logo: null, theme: m.E.buildTheme(d, lang), ui: d.ui,
@@ -134,15 +157,89 @@ const BASE_SHAS = {
   'ZIP of a made-up report (pbip-export build, ar)': 'a27b9650da281fcfcd45e2d4103e269f7d6d9721aca83248743a24ec9d2ab4f2',
   'ZIP of three made-up entries (pbip-zip zip)': 'd38b248badeb359367d4d1e9b9199eb23b044835ef490436becc1cf67139f992',
 };
+const shasOf = (m) => Object.fromEntries(outputs(m).map(([label, , make]) => { let got; try { got = sha(make()); } catch (e) { got = 'throws ' + e.message; } return [label, got]; }));
+// a child process (B below): the base's engines in the tree it is given, the SHA-256 of each output as one JSON line
+if (process.env.DD2P_TREE) { console.log(JSON.stringify(shasOf(await enginesOf(process.env.DD2P_TREE, {})))); process.exit(0); }
 const zlibSame = zlibHere === ZLIB_PIN;
-if (!zlibSame) notes.push(`node:zlib here writes other bytes (${zlibHere.slice(0, 16)}): the pictures it deflates are checked against the base's own source (P) only`);
-const now = outputs({ E, G, PP, Pbip, Zip, textChunk: textChunkFrom(fs.readFileSync(path.join(REPO, 'assets', 'js', 'theme-download-ui.js'), 'utf8'), { DAPngBytes: P }) });
+if (!zlibSame) notes.push(`node:zlib here writes other bytes (${zlibHere.slice(0, 16)}): the pictures it deflates are checked against the base's own engines (B) only`);
+const engines = await enginesOf(REPO, { DAPngBytes: P }), now = outputs(engines);
 const shasNow = {};
 now.forEach(([label, usesZlib, make], i) => {
   let got = null; try { got = sha(make()); } catch (e) { got = 'throws ' + e.message; }
   shasNow[label] = got;
   chk(() => (usesZlib && !zlibSame) || got === BASE_SHAS[label], () => `H${i + 1}. ${label}: the base's bytes (${BASE_SHAS[label].slice(0, 16)}): ${String(got).slice(0, 80)}`);
 });
+
+// ---------- P: every old place (the base's source) and the one place, one answer per input ----------
+const BASE = process.env.DD2P_BASE || 'deff19e';
+const baseSrc = new Map();
+const baseOf = (f) => { if (!baseSrc.has(f)) baseSrc.set(f, execFileSync('git', ['show', `${BASE}:${f}`], { cwd: REPO, maxBuffer: 1 << 26 }).toString('utf8').replace(/\r\n/g, '\n')); return baseSrc.get(f); };
+// one definition `const name = ...;` read from a source: from its name to the ';' where its brackets close (the one
+// inside `within` when given); the old copies are one-line helpers with no brackets inside strings but balanced ones
+function definition(src, name, within) {
+  let from = 0;
+  if (within) { from = src.search(new RegExp(`(?:const|function)\\s+${within}\\b`)); if (from < 0) throw new Error(`${within} is not in the base's source`); }
+  const at = src.indexOf(`const ${name} =`, from);
+  if (at < 0) throw new Error(`${name} is not in the base's source`);
+  let depth = 0;
+  for (let i = at; i < src.length; i++) {
+    const c = src[i];
+    if ('([{'.includes(c)) depth++; else if (')]}'.includes(c)) depth--; else if (c === ';' && depth === 0) return src.slice(at, i + 1);
+  }
+  throw new Error(`${name}: no end`);
+}
+// an old place: its definition and the names it needs (in order), run as they were
+const oldPlace = (file, names, within) => { const src = baseOf(file); return new Function('"use strict";\n' + names.map((n) => definition(src, n, within)).join('\n') + `\nreturn ${names[names.length - 1]};`)(); };
+const old = (file, names, within) => { try { return { file, f: oldPlace(file, names, within) }; } catch (e) { return { file, f: () => { throw e; } }; } };
+const CRC_OLD = [old('assets/js/design-engine.js', ['CRC', 'crc32']), old('assets/js/pbip-zip.js', ['CRC', 'crc32']), old('mcp/lib/glass-picture.mjs', ['CRC', 'crc32']),
+  old('mcp/lib/page-picture.mjs', ['CRC', 'crc32']), old('assets/js/theme-download-ui.js', ['CRC', 'crc32'])];
+const CHUNK_OLD = [old('assets/js/design-engine.js', ['CRC', 'crc32', 'u32', 'chunk']), old('mcp/lib/glass-picture.mjs', ['CRC', 'crc32', 'be', 'chunk']), old('mcp/lib/page-picture.mjs', ['CRC', 'crc32', 'be', 'chunk'])];
+const U32_OLD = [old('mcp/lib/glass-picture.mjs', ['u32']), old('mcp/lib/page-picture.mjs', ['u32'])];
+const LRU_OLD = [old('mcp/lib/glass-picture.mjs', ['lru']), old('mcp/lib/page-picture.mjs', ['lru'])];
+const TEXT_OLD = old('assets/js/theme-download-ui.js', ['CRC', 'crc32', 'textChunk']);
+const answer = (run) => { try { return String(run()); } catch (e) { return 'throws ' + e.message; } };
+const parity = (id, x, label, places) => {
+  const got = places.map(([who, run]) => [who, answer(run)]), one = new Set(got.map((g) => g[1])).size === 1;
+  chk(() => one, () => `${id}. ${label}: one answer from every place: ${got.map(([w, a]) => w + ' ' + a.slice(0, 40)).join('; ')}`);
+};
+let pn = 0;
+BYTES.forEach((x) => parity('P' + ++pn, x, 'crc ' + x.label, CRC_OLD.map((o) => [o.file, () => crcOf(o.f, x)]).concat([['png-bytes.js', () => crcOf(P.crc32, x)], ['pbip-zip.js now', () => crcOf(engines.Zip.crc32, x)]])));
+CHUNKS.forEach((x) => parity('P' + ++pn, x, 'png-chunk ' + x.label, CHUNK_OLD.map((o) => [o.file, () => chunkOf(o.f, x)]).concat([['png-bytes.js', () => chunkOf(P.pngChunk, x)]])));
+U32.forEach((x) => parity('P' + ++pn, x, 'u32 ' + x.label, U32_OLD.map((o) => [o.file, () => readOf(o.f, x)]).concat([['png-bytes.js', () => readOf(P.u32, x)]])));
+LRUS.forEach((x) => parity('P' + ++pn, x, 'lru ' + x.label, LRU_OLD.map((o) => [o.file, () => lruOf(o.f, x)]).concat([['small-cache.mjs', () => lruOf(lru, x)]])));
+const TEXTS = [['Software', 'DataArcus Power BI Theme & Layout Generator'], ['Source', 'https://dataarcus.com/tools/power-bi-theme-generator.html'], ['Comment', 'made up'], ['a', ''],
+  ['', 'x'], ['Title', 'المبيعات 2026'], ['Title', 'café'], ['k', '\u0000\u00ff\u0100']];
+TEXTS.forEach(([k, v]) => parity('P' + ++pn, null, `textChunk(${JSON.stringify(k)}, ${JSON.stringify(v)})`, [['theme-download-ui.js (base)', () => sha(TEXT_OLD.f(k, v))], ['theme-download-ui.js (now)', () => sha(engines.textChunk(k, v))]]));
+chk(() => engines.Zip.crc32 === P.crc32, () => 'P41. pbip-zip.js exports png-bytes.js crc32 itself (the same function)');
+
+// ---------- B: the 15 outputs written by the base's own engines, in a child process ----------
+{
+  let base = null, why = '';
+  try {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-dd2p-base-'));
+    const files = execFileSync('git', ['ls-tree', '--name-only', BASE, 'assets/js/'], { cwd: REPO }).toString('utf8').split('\n').filter((f) => /^assets\/js\/[^/]+\.js$/.test(f) && !/\.min\.js$/.test(f))
+      .concat(['mcp/lib/glass-picture.mjs', 'mcp/lib/page-picture.mjs']);
+    for (const f of files) { const to = path.join(dir, ...f.split('/')); fs.mkdirSync(path.dirname(to), { recursive: true }); fs.writeFileSync(to, baseOf(f)); }
+    const out = execFileSync(process.execPath, [fileURLToPath(import.meta.url)], { cwd: HERE, env: Object.assign({}, process.env, { DD2P_TREE: dir }), maxBuffer: 1 << 24 }).toString('utf8').trim().split('\n').pop();
+    base = JSON.parse(out);
+    fs.rmSync(dir, { recursive: true, force: true });
+  } catch (e) { why = String(e.message || e).slice(0, 300); }
+  Object.keys(BASE_SHAS).forEach((label, i) => chk(() => base && base[label] === shasNow[label] && /^[0-9a-f]{64}$/.test(shasNow[label]),
+    () => `B${i + 1}. ${label}: the base's engines write the same bytes as now: base ${base ? String(base[label]).slice(0, 16) : why}, now ${String(shasNow[label]).slice(0, 16)}`));
+}
+
+// ---------- S: one job, one place ----------
+{
+  const list = (dir, re) => fs.readdirSync(path.join(REPO, ...dir.split('/'))).filter((f) => re.test(f) && !/\.min\.js$/.test(f)).map((f) => dir + '/' + f);
+  const sources = list('assets/js', /\.js$/).concat(list('mcp/lib', /\.mjs$/), list('mcp/tools', /\.mjs$/)), text = (f) => fs.readFileSync(path.join(REPO, ...f.split('/')), 'utf8');
+  const withTable = sources.filter((f) => /0xedb88320/i.test(text(f))), withCache = sources.filter((f) => /m\.keys\(\)\.next\(\)\.value/.test(text(f)));
+  chk(() => withTable.length === 1 && withTable[0] === 'assets/js/png-bytes.js', () => `S1. the CRC table (0xedb88320) is in png-bytes.js only: ${withTable.join(', ')}`);
+  chk(() => withCache.length === 1 && withCache[0] === 'mcp/lib/small-cache.mjs', () => `S2. the small cache is in small-cache.mjs only: ${withCache.join(', ')}`);
+  [['assets/js/design-engine.js', /require\('\.\/png-bytes\.js'\)[^\n]*root\.DAPngBytes/], ['assets/js/pbip-zip.js', /require\('\.\/png-bytes\.js'\)[^\n]*root\.DAPngBytes/], ['assets/js/theme-download-ui.js', /root\.DAPngBytes/],
+    ['mcp/lib/glass-picture.mjs', /assets\/js\/png-bytes\.js/], ['mcp/lib/page-picture.mjs', /assets\/js\/png-bytes\.js/]]
+    .forEach(([f, re], i) => chk(() => re.test(text(f)), () => `S${i + 3}. ${f} loads png-bytes.js`));
+  ['mcp/lib/glass-picture.mjs', 'mcp/lib/page-picture.mjs'].forEach((f, i) => chk(() => /import \{ lru \} from '\.\/small-cache\.mjs'/.test(text(f)), () => `S${i + 8}. ${f} imports small-cache.mjs`));
+}
 
 if (process.env.DD2P_PRINT === '1') { console.log('zlib ' + zlibHere); Object.entries(shasNow).forEach(([k, v]) => console.log(k + ': ' + v)); }
 notes.forEach((n) => console.log('  note: ' + n));
