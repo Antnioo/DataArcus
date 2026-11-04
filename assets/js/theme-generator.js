@@ -287,9 +287,10 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=f4832d0d3ac0')))
       // (SP8: the picker's drawing is field-picker-ui.js's, which pbip-bind.js calls: loaded first)
       .then(() => (window.DAFieldPicker ? null : loadScript('/assets/js/field-picker-ui.min.js?v=f4b057b17d4c')))
-      // (SP14: reading the chosen folder or file is model-import-browser.js's, which pbip-bind.js forwards to: loaded first; DD1G: which model folder it means is model-nearest.js's, loaded before it)
+      // (SP14: reading the chosen folder or file is model-import-browser.js's, which pbip-bind.js forwards to: loaded first; DD1G: which model folder it means is model-nearest.js's, loaded before it; DD2D: a file's text and the limits are model-file.js's, loaded before it too)
+      .then(() => (window.DAModelFile ? null : loadScript('/assets/js/model-file.min.js?v=47bc00d4a4cb')))
       .then(() => (window.DAModelNearest ? null : loadScript('/assets/js/model-nearest.min.js?v=c6ffd3114120')))
-      .then(() => (window.DAModelImport ? null : loadScript('/assets/js/model-import-browser.min.js?v=5485cdfe2a50')))
+      .then(() => (window.DAModelImport ? null : loadScript('/assets/js/model-import-browser.min.js?v=16b8206a59b7')))
       // (DD1H: which column sorts a month or day name is sort-column.js's, which field-catalog.js reads when it loads: loaded first)
       .then(() => (window.DASortColumn ? null : loadScript('/assets/js/sort-column.min.js?v=8fba2c19aba2')))
       // (SP30: the model's metadata, normalised, is field-catalog.js's, which pbip-bind.js reads when it loads: loaded first)
@@ -304,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const loadCheck = () => (window.DALayoutCheck ? Promise.resolve(window.DALayoutCheck) : loadBuilder().then(() => CHECK.reduce((q, src) => q.then(() => loadScript(src)), Promise.resolve())).then(() => window.DALayoutCheck));
   // (0.3.2 DD1B: the preview reads its literals with pbir-values.js, loaded first unless the builder already did)
   const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : (window.DAPbirValues ? Promise.resolve() : loadScript('../assets/js/pbir-values.min.js?v=57e0aebe7cdf')).then(() => loadScript('../assets/js/page-preview.min.js?v=eeab036d9a4e')).then(() => window.DAPagePreview));
-  const MODEL_WORKER = '/assets/js/model-health-worker.min.js?v=d8390a780e6b';
+  const MODEL_WORKER = '/assets/js/model-health-worker.min.js?v=fc2b56cc6b5a';
 
   // ---------- the downloads, the visual backgrounds and the reminder (theme-download-ui.js, 0.3.2 SP31) ----------
   const Dl = window.DAThemeDownloadUI.mount({ store: S, engine: E, $, L, isAr, track, toast, layout: Lay,

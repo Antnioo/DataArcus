@@ -2953,9 +2953,10 @@ if (part('pbit-limits')) {
     const M = await import(new URL('./lib/model.mjs', import.meta.url).href);
     const z = zipOf([{ name: 'DataModelSchema', data: schema, deflate: true }].concat([1, 2, 3].map((i) => ({ name: `Report/definition/pages/p${i}/page.json`, data: Buffer.alloc(400, 32), deflate: true }))));
     let err = ''; try { M.unzipNeeded(z, { entry: 1000, model: 1000, total: 900, file: 1e6, entries: 100 }); } catch (e) { err = String(e.message); }
-    const worker = fs.readFileSync(path.join(REPO, 'assets/js/model-health-worker.js'), 'utf8');
+    // (0.3.2 DD2D) the numbers live in assets/js/model-file.js, which the worker and model.mjs both read
+    const worker = fs.readFileSync(path.join(REPO, 'assets/js/model-health-worker.js'), 'utf8'), shared = fs.readFileSync(path.join(REPO, 'assets/js/model-file.js'), 'utf8');
     const L = M.PBIT_LIMITS || {}, MB = 1024 * 1024;
-    check(/total/i.test(err) && L.model === 64 * MB && L.entry === 32 * MB && L.total === 128 * MB && L.file === 300 * MB && new RegExp(`model: 64 \\* MB, entry: 32 \\* MB, total: 128 \\* MB, file: 300 \\* MB, entries: ${L.entries}\\b`).test(worker),
+    check(/total/i.test(err) && L.model === 64 * MB && L.entry === 32 * MB && L.total === 128 * MB && L.file === 300 * MB && new RegExp(`model: 64 \\* MB, entry: 32 \\* MB, total: 128 \\* MB, file: 300 \\* MB, entries: ${L.entries}\\b`).test(shared) && /const LIMITS = self\.DAModelFile\.LIMITS;/.test(worker),
       `the total of the parts read must be capped, and the website's worker must carry the same limits: "${err}" ${JSON.stringify(L)}`);
   }
 }
