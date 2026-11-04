@@ -86,6 +86,8 @@ package's manifest; this file says what is in it.
 - **Inside the MCP, the approval page:** what each approval page and the app's own prompt say about a plan is put
   together in one file of its own; every page and prompt is exactly what it was before, and only the click in
   DataArcus's own window approves a plan, as before.
+- **Inside the SVG KPI Designer:** what you have drawn, which layer is picked and the undo history are kept in a file
+  of their own; every edit, undo and redo, export and import works exactly as before.
 
 ## [0.3.1]: 2026-11-03 (the version for testers)
 Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports
