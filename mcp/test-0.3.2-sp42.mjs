@@ -50,7 +50,8 @@ const RR = await import('./lib/read-report.mjs');
 
 // ---------- normalising for the OS ----------
 const ROOTS = [[ROOT, '<ROOT>'], [ROOT2, '<ROOT2>'], [EMPTY, '<EMPTY>'], [OUT, '<OUT>'], [path.basename(OUT), '<OUT-NAME>']];
-const normStr = (s) => { let t = String(s); for (const [r, n] of ROOTS) t = t.split(r).join(n); return t.replace(/\\/g, '/'); };
+// (each folder in its own form and written with '/': model.mjs gives a report file's path with '/' on Windows too)
+const normStr = (s) => { let t = String(s); for (const [r, n] of ROOTS) t = t.split(r).join(n).split(r.replace(/\\/g, '/')).join(n); return t.replace(/\\/g, '/'); };
 const norm = (v) => (typeof v === 'string' ? normStr(v) : Array.isArray(v) ? v.map(norm) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, norm(x)])) : v);
 const byKey = (k) => (a, b) => { const x = JSON.stringify(k(a)), y = JSON.stringify(k(b)); return x < y ? -1 : x > y ? 1 : 0; };
 const sorted = (xs, k = (x) => x) => (Array.isArray(xs) ? xs.slice().sort(byKey(k)) : xs);
@@ -286,7 +287,7 @@ const gold = fs.existsSync(GOLD) ? JSON.parse(fs.readFileSync(GOLD, 'utf8')).rec
 const M5_WIN = WIN ? sha(answers.M5) : null;
 for (const k of Object.keys(answers)) {
   if (k === 'M5' && WIN) { chk(() => { const r = JSON.parse(answers.M5); return r.dirLink === false || (r.linkedFolder.code === 'OUTSIDE_LINK' && r.linkedByPath.code === 'OUTSIDE_LINK'); }, () => `M5 (Windows: the file links skipped): the folder link out is not refused: ${answers.M5.slice(0, 300)}`); continue; }
-  chk(() => gold[k] && gold[k].sha256 === record[k].sha256 && gold[k].length === record[k].length, () => `${k}: not what the base gave (length ${record[k].length}, recorded ${gold[k] ? gold[k].length : 'none'}); SP42_DUMP=<file> writes it`);
+  chk(() => gold[k] && gold[k].sha256 === record[k].sha256 && gold[k].length === record[k].length, () => `${k}: not what the base gave (length ${record[k].length}, recorded ${gold[k] ? gold[k].length : 'none'}; parts ${Object.entries(JSON.parse(answers[k]) || {}).map(([n, v]) => n + ':' + JSON.stringify(v === undefined ? null : v).length).join(',')}); SP42_DUMP=<file> writes it`);
 }
 void M5_WIN;
 const parsed = Object.fromEntries(Object.entries(answers).map(([k, v]) => [k, JSON.parse(v)]));
