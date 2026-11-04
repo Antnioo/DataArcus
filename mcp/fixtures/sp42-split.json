@@ -1,0 +1,69 @@
+{
+ "about": "SP42: sha256 and length of what loadModel (M1-M10) and the report inventory with read_report's answers (R1-R6) give for made-up models and reports, normalised for the OS (the working folder as <ROOT>, paths with /, readdir-ordered lists sorted), recorded on integration/0.3.2 643e1e6 (before model-discovery.mjs and report-inventory.mjs moved out). Never re-record to make a run pass.",
+ "record": {
+  "M1": {
+   "length": 80965,
+   "sha256": "c1d13a798460482422070216aa1883c74e4b1126699b1a4c9d56d85dede83639"
+  },
+  "M2": {
+   "length": 25399,
+   "sha256": "9c627d21f50afa0b6cfd2e53f5692239324014d4d9fc2a89311b6f48e310fe81"
+  },
+  "M3": {
+   "length": 32949,
+   "sha256": "4aa629d3b2713e0e047e2266c87f4e8db1f600689a0d4d8b6524a9ed2437312d"
+  },
+  "M4": {
+   "length": 969719,
+   "sha256": "b5ddb46287a4d06866b729bfd4dc3367c2568bc3a26ded6622d8dd48f507c587"
+  },
+  "M5": {
+   "length": 1594,
+   "sha256": "c85e5c972393ccd3c956fcfbd5dcbb1683250b8b85f1f09df6d76feaf6f92f31"
+  },
+  "M6": {
+   "length": 13970,
+   "sha256": "5cdfa31a1980d6ffd8efa87f7cc70d6c0df99b8d6c17f7847d38bda0c93586c6"
+  },
+  "M7": {
+   "length": 2101,
+   "sha256": "6989ae29d1624a79c185be2986cb74fca8c4544f80946fc1dedcf45da3609ff4"
+  },
+  "M8": {
+   "length": 2688,
+   "sha256": "c89bb3f14913dbb80a58e5f22aafb998614524c23f27b06ffe3104fe6f02ac64"
+  },
+  "M9": {
+   "length": 20692,
+   "sha256": "502cd26a8b9b7d87956e63a53471a71428a7b26a4504e7c089ed9b0668774940"
+  },
+  "M10": {
+   "length": 1398,
+   "sha256": "36c2cd6659cb81dd2e24c101bb1a66a4681d8dac9b238f38ebd53529f1b80da0"
+  },
+  "R1": {
+   "length": 51917,
+   "sha256": "4b94ea3fa6ffa57c9567eccc2d4e76a709f2197c0f2bdeb6b51bcc5eeb00b079"
+  },
+  "R2": {
+   "length": 19377,
+   "sha256": "24a797818c723d045ce1c74614a7976e4c1e80d680172da140794f8f061947e3"
+  },
+  "R3": {
+   "length": 46132,
+   "sha256": "7014f3d20fa089c47b3a6b902c4636c7ae454e2e905c1458bc3e5eb5ba2f471e"
+  },
+  "R4": {
+   "length": 58320,
+   "sha256": "1ce953992f090c32c8d9a93a10c2132b24dd36183e639e6a5f766721443624bb"
+  },
+  "R5": {
+   "length": 51399,
+   "sha256": "58d013bd2b0c3db2636e9b0696aba96fcecd370a99908cee51fff64916bcb3dd"
+  },
+  "R6": {
+   "length": 4356,
+   "sha256": "e9365b2a44a8ecbc1be87df01e143e9d0b492c4af3ad7c813e09ff98b6a73a5e"
+  }
+ }
+}
