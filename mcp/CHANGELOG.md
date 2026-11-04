@@ -8,9 +8,22 @@ package's manifest; this file says what is in it.
 - **Inside the design engine, the layout and the saved designs:** the page layout and text sizes, and the reading and
   repair of saved designs, each have a file of their own, shared by the website and the MCP; every theme, layout and
   saved design is exactly what it was before.
+- **Check that a copy asks the same questions:** `check_report` takes the original report as `against` and says, visual
+  by visual, whether the copy (an Arabic twin, a native copy, a redesign or your own) asks the model the same question:
+  the same fields, totals, filters, sort, Top N and visual calculations, the same display units and decimals, or only
+  another order. It reads the files only and changes nothing; filter values and slicer selections are compared, never
+  shown; it does not run the queries, so it never says the numbers themselves are the same.
+- **Arabic twin tables reach the right edge:** a table whose column widths Power BI works out itself now has its
+  columns fill its box on the Arabic pages, so its first English column ends at the box's right edge, as a matrix's
+  does; a table with a width for every column, or with its own column sizing setting, is left exactly as it was.
 - **The macOS tests run where changes are merged:** the full test run on macOS now runs on the main and release
   branches, on pull requests to main and on the check before each merge, no longer on every work branch; Linux and
   Windows still run everywhere, as before.
+- **Ramadan and Eid measures with the Gulf calendar:** add_gulf_calendar can add, for up to 5 of your measures, the
+  same Ramadan days of the Hijri year before (not the Gregorian last year, which pairs no Ramadan day with its own),
+  its growth and the Eid windows, the website's own measures; on request also a dated standard VAT rate column for
+  your country and a table of the Gulf currency pegs (the Kuwaiti dinar a basket, with no rate). Every rate and date
+  is sourced; nothing is tax advice, and your amounts are never read.
 - **Three small Arabic twin fixes:** a table header grows into its table's free room even when the table keeps widths
   for fields it no longer shows (those settings stay as they are); a column the English hides stays hidden at the
   table's left end, never as a thin strip after the names; a chart kept where the plain mirror puts it under a heatmap

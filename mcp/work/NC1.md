@@ -1,94 +1,102 @@
-# NC1 (0.3.1, the owner's most important question of 26 Oct): the custom visuals lab
+# NC1 (0.3.2): the number check, layer 1: check_report says whether a copy asks the model the same questions
 
 ## Summary
-- **Approval:** the owner, 26 Oct: "i have a report of 5 pages having custom visuals can dataarcus reads the report
-  replaces all custom visuals with native ones and clean up the clutter"; he chose to prove it on the laptop run. The
-  brief "Go on NC1". Builder; the reviewer reviews and merges.
-- **Scope:** a lab and its suite only: `mcp/lab/custom-visuals-lab.mjs` (the report), `mcp/lab/custom-visuals-run.mjs`
-  (the laptop's driver), `mcp/lab/CUSTOM-VISUALS-LAB.md` (the run sheet), `mcp/test-0.3.1-custom-visuals-lab.mjs` (one
-  line in `mcp/tests.json`), this note. No product code changed (no test found a defect). BD1, CS1 (`redesign.mjs`, the
-  formatting inventory) and GL1 (the glass look) run beside it: none of their files touched.
-- **Base:** `feat/0.3.1-custom-visuals-lab` from `origin/integration/0.3.1` 0cbb017. Push only it; no merge, no PR.
-- **Expected checks:** the new suite PASS (about 40 checks); 13 custom visuals, 11 replaced, 2 not replaced (the
-  networks); validator 0 errors on the original, the native copy and the redesign; `npm test -- report` and the full
-  run unchanged plus one suite; `check-result-lines`, `check-agent-memory` PASS.
-- **Got:** custom-visuals-lab PASS 38 checks (one expectation flipped on purpose: 2 red, then restored); 11 replaced
-  exactly as planned below, 2 not replaced; validator 0 errors, 0 warnings on all three reports; report: "run-tests: 30 suites passed (report)";
-  full run "run-tests: 93 suites passed" (the base registry plus this suite); check-result-lines PASS 93; check-agent-memory PASS.
-- **CS1:** not merged at 0cbb017: the lab's redesign is the grid redesign alone (said in the run sheet, with the step
-  to add when CS1 lands).
-- **Resume:** done; waits for the reviewer, then the laptop ("For the laptop" below).
+- **Approval:** the owner, D-1104-01 (4 Nov) "Agree on all r&ds": RD2's recommendation (way 1) built as its section g
+  says (`rd/0.3.2-number-check`, `mcp/research/RD2-number-check.md`, read only). D-1102-02: CI on the branch is the gate.
+- **Base:** `feat/0.3.2-nc1` from `origin/integration/0.3.2` at 1e5e3b3. Push only this branch; never merge, no PR.
+- **Scope:** `check_report { path, against }`: `path` the copy, `against` the original; a `sameQuestion` section
+  beside the findings, visual by visual (page id and visual name), in three tiers: question (the numbers can differ),
+  display (units, decimals), order (sort; the same fields in another order). Filters, slicer selections, visual
+  calculations, report measures and bookmarks compared by SHA-256, said by field, type and count of literals, never
+  returned (nor the hashes). At most 60 visuals listed, the rest counted. Read-only. Refused: two models, PBIR-Legacy,
+  outside the folder, a link, a copy naming no model. Files: new `lib/same-question.mjs`; `lib/check-report.mjs`
+  (+5 lines), `tools/check_report.mjs` (option, description), `TOOLS.md`, `PRIVACY.md` (check_report's row, layer 2's
+  line), the public line in `ROADMAP.md` and `plans/NUMBER-CHECK.md`; new suite `test-0.3.2-same-question.mjs`
+  (checker), `tests.json`, CHANGELOG, WORK. Not touched: the twin, mirror, native copy, redesign, read-report.mjs.
+- **Expected checks:** (written before the code) `same-question` about 30 checks, red on 1e5e3b3 first: twin 6 same /
+  2 order / 1 question / 0 display / 8 no query / 0 not matched; native 8 / 0 / 1 / 0; redesign 9 / 0 / 0 / 0; the
+  planted changes each found once on its visual, nothing else; a canary in a page filter, a visual filter, a slicer
+  selection, a visual calculation, a report measure and a bookmark: in no answer; 1,017 visuals with 300 differing: 60
+  listed, the whole answer under 40,000 and without `truncated`, under 2 s; the refusals; files byte for byte after;
+  the public line. No other suite's expected number moves; checker area and claims green.
+- **Answer size (L-1102-06, measured on twin-project, base 1e5e3b3 -> after):** check_report without `against`:
+  the original 14,487 -> 14,487, its twin 15,690 -> 15,690 (+0); the twin with `against`: 17,471 (the section 1,765),
+  not cut. 1,017 visuals, 300 differing (`checks: ["schemas"]`): 20,239, not cut. The description 1,192 -> 1,472
+  (+280), the input schema 2,039 -> 2,591 (+552). The server's instructions untouched.
+- **Got:** `same-question` 41 checks, red on 1e5e3b3: 34 of 41 failed (7 guards green there: the copies written, no
+  section without against, S2, S3, R3, W1, C1). After: 41 of 41. Twin 6 / 2 / 1 / 0 / 8 / 0, native 8 / 0 / 1 / 0 /
+  8 / 0, redesign 9 / 0 / 0 / 0 / 8 / 0 (RD2's numbers); 10 planted changes found once each; 1,017 visuals in about
+  800 ms. checker 9 of 9 suites, release 5 of 5, lint 0 (again after the merge). Merged origin/integration/0.3.2
+  (39c46bb, PK1) once after the last code commit: WORK.md's line, both sides kept.
+- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41781527910 on 9ae0227 (Linux 5 of 5,
+  Windows 5 of 5, website green; macOS skipped on a work branch, CI1).
+- **Resume:** the reviewer: review and merge; way 2 (the step in each copy's plan) is its own brief.
 
-## What the lab holds
-`node lab/custom-visuals-lab.mjs <empty folder>` writes "Gulf Retail": a made-up model (Sales about 1,000 rows, 8
-branches in 6 Gulf cities, 12 products, a daily Calendar 2025-01-01 to 2026-10-31, typed Power Query rows,
-relationships; measures Total Sales, Sales LY, Sales Target, Sales Max in AED, Units Sold, Orders) and 5 pages at
-1280x720 with 13 custom visuals (declared in `report.json` publicCustomVisuals, no package bytes), 10 native ones, a
-text box and a shape per page, and the clutter (page 1's top row gaps 13, 21, 23 px; the Orders card 5 px low; titles
-in 5 size and font pairs; page titles in 5 sizes and fonts). Validator: 0 errors, 0 warnings.
+## The plan
+1. Red first: `test-0.3.2-same-question.mjs` on the base (the twin, native copy and redesign made through the real
+   server: plan, approve_plan, write; the planted copies; the scale copies; the refusals), registered in tests.json.
+2. `lib/same-question.mjs` from RD2's prototype: the reading block (locate, diskSource, inventory) for both, names out
+   through safeName, fields written as read_report writes them, the same-model check, the tiers, the cap.
+3. check_report: the option, the section, its budget inside AIM; the description and TOOLS.md, PRIVACY.md's row.
+4. The public line: layer 1 said exactly (what it proves, what it does not); layer 2 stays planned.
+5. Area runs, lint, merge the base once if it moved, CI.
 
-The plan on it (`plan_layout customVisualsFrom`, with the owner's sharedAxes answers "comparable"):
+## What the answer says (the twin of twin-project)
+`said`: "6 of 9 visuals ask the same question; 1 differs (listed); 2 only in order; 0 only in display." Listed:
+tblProducts (question: "Values: field added" the Row label report measure, "report measure changed"), colRegion and
+lineMonth (order: the sort the mirror turns). Then `tiers`, `proves`, `notProved` (it does not run the queries).
 
-| Page | Custom visual (roles) | Became | Confidence |
-|---|---|---|---|
-| 1 | kpiTile (Indicator, TrendAxis date, Goal) | kpi | high, a guess |
-| 1 | dialGauge (Value, TargetValue, Minimum, Maximum) | gauge | high, a guess |
-| 1 | drillBarChart (Category: City, Branch; Values) | clusteredBarChart, 2 drill levels | high, a guess |
-| 2 | chipSlicer (Category) | slicer | high, a guess |
-| 2 | bulletChart (Category, Value, TargetValue) | clusteredBarChart, 2 bars per branch | low, a guess |
-| 2 | dataGrid (Values: 2 columns, 2 measures) | tableEx | high, a guess |
-| 3 | wordCloud (Category, Values) | clusteredBarChart | medium, a guess |
-| 3 | tornadoChart (Category, Values x2) | clusteredBarChart, 2 bars per category | medium, a guess |
-| 3 | multiInfoCard (Values x3) | cardVisual | high, a guess |
-| 4 | calendarHeatmap (Date daily, Values) | lineChart over 669 days | medium, a guess |
-| 4 | smoothLineChart (Axis month start, Values x2) | lineChart | high, a guess |
-| 5 | sankeyDiagram (Source, Destination, Weight) | not replaced: a network, no native visual draws it | - |
-| 5 | forceGraph (Source, Target, Weight) | not replaced: a network | - |
-
-Without the sharedAxes answers the bullet, tornado and smooth line each become 2 charts side by side (one axis each)
-and the plan asks; the suite checks both. The redesign of the native copy: 21 visuals moved or resized, 12 kept (5
-text boxes, 5 shapes, the 2 networks); the Orders card back on its row (y 96 with the others); page 1's top row gaps
-16, 16, 16.
+## CHANGELOG line
+- **Check that a copy asks the same questions:** `check_report` takes the original report as `against` and says,
+  visual by visual, whether the copy (an Arabic twin, a native copy, a redesign or your own) asks the model the same
+  question: the same fields, totals, filters, sort, Top N and visual calculations, the same display units and
+  decimals, or only another order. It reads the files only and changes nothing; filter values and slicer selections
+  are compared, never shown; it does not run the queries, so it never says the numbers themselves are the same.
 
 ## Decisions I made
-1. Ids made up in AppSource's shape (a name and a 13-digit number), no vendor's id or name; role names as Microsoft's
-   public visuals name them where I know them (sankey Source/Destination/Weight, force graph Source/Target/Weight,
-   word cloud and chip slicer Category/Values, tornado Category/Values, bullet Category/Value/TargetValue), else
-   plausible (KPI tile, dial gauge, data grid, calendar heatmap, smooth line, multi card).
-2. The chip slicer holds only its Category (as most hand reports fill it): with a value it reads as a chart.
-3. The report is named "Gulf Retail", not a longer name: the redesign's name is capped at 30 characters
-   (`redesign.mjs` nameFor), and "Gulf Retail Review native" lost its "native" there (see Seen 6).
-4. The sharedAxes answers (comparable for Total Sales with Sales Target and with Sales LY) are written in the driver
-   (`SHARED_AXES`) as the owner's answer made before the run; the run sheet says so and how to see the split.
-5. Unattended approval: the driver uses the tests' browser (`mcp/test-browser.mjs`) to click Approve on the local
-   page, on the lab's made-up report only; `--click manual` keeps a person's click.
-6. The suite runs the real chain (plan, approve, write, redesign plan, approve, write) through the server over
-   stdio, plus the driver once, so the laptop's script cannot go stale unseen.
+- `path` is the copy and `against` the original, so `check_report`'s own checks run on the copy (the report just
+  made) as before, and the compare is one more section; a refusal of `against` refuses the whole call, before any
+  other work (the brief: "else refused").
+- The same model: `definition.pbir`'s `byPath` resolved to its real path (lower case on Windows), or `byConnection`
+  by hash. Two copies of one model in two folders count as two models: the brief says "on the same model", and
+  layer 1 cannot tell two model folders are the same model.
+- Fields as read_report writes them (`Table[Column]`, `[Measure]`, `Sum(...)`, the same aggregation words), each name
+  through safeName; a visual calculation said by its name, its expression only in the key by hash; a per-series
+  display entry said as "(one series)", its selector (which can hold a value) only in the key by hash.
+- No hash is returned (RD2's prototype returned 12 characters of one): a short expression's hash could be guessed.
+- A page's or the report's filter that changed counts as a question on each visual of that page (their numbers can
+  differ), said once in `pages` / `report` and as one line on the visual.
+- Bookmarks in their own line (before, after, changed, added, removed): a bookmark is not a visual's question.
+- `expected` (what a copy's plan changes on purpose) is not built: it is way 2 (its own brief, RD2 section e).
+- The list: question first, then display, then order; at most 60 and within 16,000 characters (the counts never cut).
+- The suite plants 10 changes, RD2's 6 plus a slicer selection, a sort with no Top N (order only), a report measure
+  and a bookmark state, so each canary kind the brief names is planted.
+- The suite registers in the checker area (its code is check_report's).
 
-## For the laptop (the lab's run, step by step; in full: `mcp/lab/CUSTOM-VISUALS-LAB.md`)
-1. Unzip the .mcpb under test; an empty work folder, e.g. `C:\DataArcus\tests\nc1`; work models closed.
-2. From `mcp/`: `node lab/custom-visuals-run.mjs <unzipped>\server.mjs C:\DataArcus\tests\nc1` (plan -> approve ->
-   "Gulf Retail native" -> redesign plan -> approve -> "Gulf Retail native redesigned"; `nc1-results.md` and `.json`).
-3. `lab-tools\harness.ps1`: open the original, the native copy and the redesign in Desktop in turn, Refresh, screenshot
-   every page at 100% (15 screenshots).
-4. Fill the result table (per custom visual: what it became, confidence, what the plan said is lost, whether the native
-   visual draws the same fields sensibly; the clutter before/after), then "Seen, not in scope".
-   Expected in Desktop: the original's 13 custom visuals show "can't display this visual" (no packages: expected); the
-   native copy draws 11 native visuals in their places, the 2 networks still "can't display"; the redesign as planned.
+## For the owner
+none (nothing a report shows changes: the option is new and read-only)
+
+## Risky changes
+none (read-only; one new option; without `against` the answer is byte for byte the base's size, measured)
 
 ## Seen, not in scope
-1. Bullet chart -> clustered bar of value and target as two bars (confidence low): the target marker is lost; a native
-   bar with the target as an error bar or a constant line is not offered.
-2. Word cloud -> clustered bar of 12 products: right fields, nothing of the cloud; said only as "its own look".
-3. Calendar heatmap -> line chart of 669 daily points: the calendar grid is gone; a matrix (weekday by week, shaded
-   by conditional formatting) would be closer; not offered.
-4. Tornado -> clustered bar with two bars per category: the two-sided layout is lost and not named in `lost`.
-5. Every replacement is "a guess" (no package, so no role definitions) yet 7 say confidence "high": the two read
-   oddly together in the plan.
-6. The redesign's name cap (30 characters, `redesign.mjs` nameFor) drops " native" from a long name: "Gulf Retail
-   Review native" -> "Gulf Retail Review redesigned", which then collides with a redesign of the original (CS1's file).
-7. The grid redesign leaves the vertical gaps uneven: page 1's rows touch (row 1 ends at y 248, row 2 starts at 248),
-   others 8 to 24 px; the text boxes stay at x 24 while the grid's margin is 16 (CS1's file).
-8. Title sizes and fonts stay mixed without CS1's consistent option (expected).
-9. The `lost` lines say "its own format settings (1: labels)" for the bullet and tornado although their value labels
-   are carried over (`format.valueLabels`): the line does not say which settings were kept.
+- `content/BLOG-PLAN.md` line 10 still says "a number check is planned": an internal content plan, not the public
+  line; worth one word ("layer 2 of a number check is planned") at the next article.
+- The EN-AR copy (`into: "same"`) gives its Arabic pages new ids: `against` finds those visuals "not found" (RD2's
+  decision: matching them needs the plan's page pairs, way 2).
+- The twin's waterfall rebuild (report-mirror.js) changes the query on purpose: `against` says "question differs"
+  for it until way 2 passes the mirror's own list.
+- R3 (an original outside the folder) passes on the base too, for another reason (the unknown input is refused).
+
+## For the laptop
+RD2's Desktop checks D2 and D3 (made-up model only: twin-project or "Ramadan Test"):
+| Check | Test | Expected |
+|---|---|---|
+| RD2-D2 a visual calculation turned | twin-project's p1overview `lineMonth` with a visual calculation `RUNNINGSUM([Total Sales])` added; its twin; open both, Performance Analyzer on `lineMonth` | either the same running totals per month (the calculation follows the month order, not the sort: then "order changed on a visual with a visual calculation: its numbers can change" is too strict) or other totals (then the twin must not turn it, or must say so: a mirror fix) |
+| RD2-D3 a sort near a data limit | a column chart with more than 60 series (made-up), sorted, then the sort turned (a copy); `check_report { path: copy, against: original }` says "sort direction changed" (order) | whether Desktop shows the same 60 series in both; if not, "order" on such a visual becomes a question |
+
+## Lessons for the reviewer
+- A copy beside the original with its own model folder is "another model" by design: tests that copy a whole project
+  must point the copy's `definition.pbir` at the original's model (the suite's `copyReport`).
+- The scale test runs with `checks: ["schemas"]`, so its size and its "no truncated" (L-1103-03) measure the
+  section and not check_report's other findings on 1,017 made-up visuals (not measured with every check).
