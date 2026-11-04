@@ -78,8 +78,8 @@ const L = (s) => ({ expr: { Literal: { Value: "'" + s.replace(/'/g, "''") + "'" 
 const fileMap = () => [
   { path: 'X.Report/definition/pages/p1/page.json', data: JSON.stringify({ displayName: 'مبيعات KSA', objects: { outspace: [{ properties: { color: L('#ffffff') } }] } }, null, 2) + '\n' },
   { path: 'X.Report/definition/pages/p1/visuals/v1/visual.json', data: JSON.stringify({ visual: { visualType: 'card', visualContainerObjects: { title: [{ properties: { text: L('Total Sales') } }], general: [{ properties: { altText: L('إجمالي المبيعات KSA حسب Region') } }] },
-    query: { queryState: { Values: { projections: [{ displayName: 'الطلبات B2B', field: {} }, { displayName: 'Plain', field: {} }] } } } }, filterConfig: { filters: [{ name: 'f', filter: { Where: [{ Condition: { In: { Values: [[L('KSA شمال')]] } } }] } }] } }, null, 2) + '\n' },
-  { path: 'X.Report/definition/pages/p1/visuals/v2/visual.json', data: JSON.stringify({ visual: { visualType: 'textbox', objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: 'نسبة EBITDA في Q1' }, { value: 'English only' }] }] } }] } } }, null, 2) },
+    query: { queryState: { Values: { projections: [{ displayName: 'الطلبات B2B', field: {} }, { displayName: 'Plain', field: {} }] } } } }, filterConfig: { filters: [{ name: 'f', objects: { general: [{ properties: { isInvertedSelectionMode: L('KSA شمال') } }] }, filter: { Where: [{ Condition: { In: { Values: [[L('KSA شمال')]] } } }] } }] }, selector: { metadata: 'مبيعات KSA', properties: { x: L('مبيعات KSA') } } }, null, 2) + '\n' },
+  { path: 'X.Report/definition/pages/p1/visuals/v2/visual.json', data: JSON.stringify({ visual: { visualType: 'textbox', objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: 'نسبة EBITDA في Q1' }, { value: 'English only' }, { value: 'مبيعات KSA B2B' }] }] } }] } } }, null, 2) },
   { path: 'X.Report/definition/pages/p1/visuals/v3/mobile.json', data: JSON.stringify({ visualContainerObjects: { title: [{ properties: { text: L('المنتج SKU-7') } }] } }, null, 2) + '\n' },
   { path: 'X.Report/definition/bookmarks/b1.bookmark.json', data: JSON.stringify({ displayName: 'إعادة Reset', name: 'b1' }, null, 2) + '\n' },
   { path: 'X.Report/definition/reportExtensions.json', data: JSON.stringify({ entities: [{ name: 'Sales', measures: [
@@ -90,7 +90,7 @@ const fileMap = () => [
   { path: 'X.SemanticModel/model.bim', data: '{"name":"مبيعات KSA"}' },
   { path: 'X.Report/static/logo.png', data: new Uint8Array([137, 80, 78, 71]) }];
 {
-  const names = Object.values(MIXED).concat(['⁨KSA⁩ معزول', 'English Only']);
+  const names = ['مبيعات KSA', 'B2B', 'مبيعات KSA B2B'].concat(Object.values(MIXED), ['⁨KSA⁩ معزول', 'English Only']);
   const f1 = fileMap(), n1 = Pbip.isolateFiles(f1, names);
   chk(() => same('B1', n1 + '\n' + listOf(f1)), () => `B1. isolateFiles with the approved names (Arabic and English mixed) changes the same texts as the base: ${was('B1')}`);
   const f2 = fileMap(), n2 = Pbip.isolateFiles(f2, [], { all: true });
