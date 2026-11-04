@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **Inside the Arabic twin, the charts, the texts and the badges:** the right-to-left rules of the charts, the texts a
+  reader sees with their Arabic, and the visuals mirrored as one (a badge on its tile, a bar list and its names) each
+  have a file of their own; every twin page, phone layout and right-to-left chart is exactly what it was before.
 - **Inside the design engine, the layout and the saved designs:** the page layout and text sizes, and the reading and
   repair of saved designs, each have a file of their own, shared by the website and the MCP; every theme, layout and
   saved design is exactly what it was before.
