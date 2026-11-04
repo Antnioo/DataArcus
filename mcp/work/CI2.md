@@ -17,10 +17,10 @@
   `npm run lint` 0; test-results-adapter, check-agent-memory, test-stamps green.
 - **Got:** measured on Intel (run A), 2 jobs do not fit: job 0 ran shards 0-2 (928, 585, 860 s) and hit the 40
   minutes, so 3 jobs (0 | 2, 3 | 1, 4), as the brief allows. Runs B and C (3 jobs) green, every macOS job acquired;
-  ci-sum on macOS 17652 checks, 193 suites, 5 shards, as before (run 41875882575, 5 jobs). Lint 0; results-adapter
+  ci-sum on macOS 17652 checks, 193 suites, 5 shards, as before (run 41875882575, 5 jobs); after integration's merge 17701, 194 suites (DD1G's suite), 5 shards. Lint 0; results-adapter
   42; agent-memory 422; stamps-test 17.
-- **State: DONE** (the CI green line at the end).
-- **Resume:** the reviewer: read runs B and C, then the merge.
+- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41908827882 on 9a9bf97
+- **Resume:** the reviewer: read runs B, C and D, then the merge.
 
 ## The plan
 1. Measure: the last 3 green macOS runs' shard times; the docs' lines on the labels.
@@ -69,6 +69,8 @@ The docs (read 4 Nov):
 | A [41891982211](https://github.com/Antnioo/DataArcus/actions/runs/41891982211) | check/, 369028a (2 jobs) | 0-2: 16 / 2412 (timeout); 3-4: 6 / 1139 | job 0 cancelled at 40 min after its 3 shards |
 | B [41898824324](https://github.com/Antnioo/DataArcus/actions/runs/41898824324) | check/, 5ed8405 (3 jobs) | 0: 265 / 1022; 2-3: 280 / 1345; 1-4: 263 / 1632 | green, every job |
 | fix/ [41898843192](https://github.com/Antnioo/DataArcus/actions/runs/41898843192) | fix/, 5ed8405 | macOS skipped (CI1) | green |
+| D [41908827882](https://github.com/Antnioo/DataArcus/actions/runs/41908827882) | check/, 9a9bf97 (final, integration in) | 0: 142 / 928; 2-3: 211 / 1348; 1-4: 4 / 1048 | green, every job |
+| fix/ [41908832879](https://github.com/Antnioo/DataArcus/actions/runs/41908832879) | fix/, 9a9bf97 (final) | macOS skipped (CI1) | green |
 | C [41904059006](https://github.com/Antnioo/DataArcus/actions/runs/41904059006) | check/, 5ed8405 (3 jobs) | 0: 105 / 1028; 2-3: 116 / 1551; 1-4: 40 / 1410 | green, every job |
 
 Intel per shard (run A's manifests, tests only): 0: 928, 1: 585, 2: 860, 3: 545, 4: 566 s; 3484 s in all (58 min),
@@ -102,3 +104,5 @@ against 2037-2125 s (34-35 min) on arm64. Every macOS job had a runner (runner_n
 - Measure on the runner you move to: arm64 times said 2 jobs fit; Intel is 1.6x slower, and only a run showed it.
 - A job that runs several shards keeps ci-sum's identity checks unchanged; read `PASS mcp ... (macos: 193 suites,
   5 shards)` in mcp-macos's log for the proof.
+
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/41908827882 on 9a9bf97
