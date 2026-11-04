@@ -78,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const shuffle = (a) => SES.shuffle(a, Math.random);
   const LET = 'ABCDEFGH';
   const fmtTime = (s) => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };
-  const today = () => new Date().toISOString().slice(0, 10);
 
   // ---------- data ----------
   const QS = DATA.q.slice();
@@ -104,53 +103,13 @@ document.addEventListener('DOMContentLoaded', () => {
       (weak && DOM[d].study ? '<div class="dp-domsub"><a href="' + esc(DOM[d].study) + '" target="_blank" rel="noopener" data-learn data-study><i class="bi bi-book"></i> ' + L('Study: this area in Microsoft\'s study guide', 'ذاكر: هذا المحور في دليل المذاكرة من Microsoft') + '</a></div>' : '') + '</div>';
   };
 
-  // Most-cited Microsoft Learn pages per skill, taken from the question references
-  const LEARN = {};
-  Object.keys(SKILL).forEach((s) => {
-    const cnt = {};
-    ALL.filter((q) => q.s === s).forEach((q) => (q.ref || []).forEach((r) => { const k = r.u; cnt[k] = cnt[k] || { t: r.t, u: r.u, n: 0 }; cnt[k].n++; }));
-    LEARN[s] = Object.values(cnt).sort((a, b) => b.n - a.n).slice(0, 3);
-  });
-
-  // ---------- saved progress ----------
-  const STORE = EX.store;
-  const blank = () => ({ ans: {}, bm: [], mocks: [], days: [], mock: null });
-  let P;
-  try { P = Object.assign(blank(), JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) { P = blank(); }
-  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(P)); } catch (e) { /* private mode */ } };
-  const markDay = () => { const t = today(); if (!P.days.includes(t)) { P.days.push(t); P.days = P.days.slice(-60); } };
-  const streak = () => {
-    const set = new Set(P.days); let n = 0; const d = new Date();
-    if (!set.has(today())) d.setDate(d.getDate() - 1);
-    while (set.has(d.toISOString().slice(0, 10))) { n++; d.setDate(d.getDate() - 1); }
-    return n;
-  };
-  const record = (q, ok) => {
-    const a = P.ans[q.id] || { n: 0, c: 0 };
-    a.n++; if (ok) a.c++; a.last = ok ? 1 : 0; a.t = Date.now();
-    P.ans[q.id] = a; markDay(); save();
-  };
-  const isBm = (id) => P.bm.includes(id);
-  const toggleBm = (id) => { P.bm = isBm(id) ? P.bm.filter((x) => x !== id) : P.bm.concat(id); save(); };
-  const rank = (id) => (P.ans[id] ? (P.ans[id].last ? 2 : 1) : 0);
-  // the mock in progress: exam-session.js's state machine, saved in the progress through this adapter
-  const MK = SES.create({ storage: { load: () => P.mock, store: (m) => { P.mock = m; save(); } }, now: () => Date.now() });
-
-  const stats = (list) => {
-    let seen = 0, right = 0;
-    list.forEach((q) => { const a = P.ans[q.id]; if (a) { seen++; if (a.last) right++; } });
-    return { total: list.length, seen, right, acc: seen ? right / seen : 0 };
-  };
-  const readiness = () => {
-    let sum = 0, w = 0;
-    Object.keys(DOM).forEach((d) => {
-      const st = stats(ALL.filter((q) => q.d === d));
-      const cover = Math.min(1, st.seen / (st.total * 0.6));
-      sum += DOM[d].wt * st.acc * cover; w += DOM[d].wt;
-    });
-    return Math.round((sum / w) * 100);
-  };
-  const mistakes = () => ALL.filter((q) => P.ans[q.id] && !P.ans[q.id].last);
+  // ---------- saved progress and the study plan (exam-progress.js; the storage and the clock passed in) ----------
+  const PROG = window.DAExamProgress;
+  const LEARN = PROG.learnPages(ALL, SKILL);
+  const PR = PROG.create({ storage: { read: () => localStorage.getItem(EX.store), write: (t) => localStorage.setItem(EX.store, t) }, now: () => Date.now(), questions: ALL, domains: DOM, skills: SKILL });
+  const { stats, readiness, mistakes, streak, record, isBm, toggleBm, rank } = PR;
+  // the mock in progress: exam-session.js's state machine, saved in the progress through its adapter
+  const MK = SES.create({ storage: PR.mockStorage, now: () => Date.now() });
 
   // ---------- grading (exam-grade.js: pure, answers in, score out) ----------
   const { grade, answered, scoreMock, tallySession } = window.DAExamGrade;
@@ -279,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       html = '<i class="bi bi-shield-check"></i> ' + L('Checked weekly against Microsoft\'s ' + EX.code + ' ' + guide + '. Last check: ' + fmtDate(OUT.checked) + '. Questions match the skills measured as of ' + fmtDate(OUT.bankOutlineDate) + '.',
         'نراجع أسبوعيًا ' + guide + ' الخاص بـ ' + EX.code + ' من Microsoft. آخر فحص: ' + fmtDate(OUT.checked) + '. الأسئلة مطابقة للمهارات المقاسة اعتبارًا من ' + fmtDate(OUT.bankOutlineDate) + '.');
-      if (today() < OUT.bankOutlineDate) html += ' ' + L('Taking the exam before then? The previous outline is still live and most topics overlap.', 'ستختبر قبل هذا التاريخ؟ المنهج السابق ما زال ساريًا ومعظم المواضيع مشتركة.');
+      if (PR.today() < OUT.bankOutlineDate) html += ' ' + L('Taking the exam before then? The previous outline is still live and most topics overlap.', 'ستختبر قبل هذا التاريخ؟ المنهج السابق ما زال ساريًا ومعظم المواضيع مشتركة.');
     }
     el.innerHTML = html;
   }
@@ -307,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- HOME ----------
   function home() {
-    const rd = readiness(), st = stats(ALL), mk = mistakes().length, best = P.mocks.reduce((m, x) => Math.max(m, x.score), 0);
+    const rd = readiness(), st = stats(ALL), mk = mistakes().length, best = PR.state().mocks.reduce((m, x) => Math.max(m, x.score), 0);
     const inProg = !!MK.current();
     const domRows = Object.keys(DOM).map((d) => {
       const s = stats(ALL.filter((q) => q.d === d));
@@ -328,10 +287,10 @@ document.addEventListener('DOMContentLoaded', () => {
       modeCard('practice', 'bi-lightning-charge', L('Practice by skill', 'تدريب حسب المهارة'), L('Pick a skill, answer, and see why each option is right or wrong.', 'اختر مهارة وأجب، وشاهد لماذا كل خيار صحيح أو خطأ.')) +
       modeCard('cases', 'bi-journal-text', L('Case studies', 'دراسات الحالة'), L('Read a full company scenario and answer its questions.', 'اقرأ سيناريو شركة كامل وأجب عن أسئلته.')) +
       modeCard('mistakes', 'bi-arrow-repeat', L('Review mistakes', 'مراجعة الأخطاء'), mk ? L(num(mk) + ' questions to fix', num(mk) + ' سؤال للمراجعة') : L('Nothing yet. Wrong answers land here.', 'لا شيء بعد. الإجابات الخاطئة تظهر هنا.'), false, !mk) +
-      modeCard('bookmarks', 'bi-bookmark-star', L('Bookmarks', 'المحفوظات'), P.bm.length ? L(num(P.bm.length) + ' saved', num(P.bm.length) + ' محفوظ') : L('Save questions to revisit.', 'احفظ أسئلة لتعود إليها.'), false, !P.bm.length) +
+      modeCard('bookmarks', 'bi-bookmark-star', L('Bookmarks', 'المحفوظات'), PR.state().bm.length ? L(num(PR.state().bm.length) + ' saved', num(PR.state().bm.length) + ' محفوظ') : L('Save questions to revisit.', 'احفظ أسئلة لتعود إليها.'), false, !PR.state().bm.length) +
       modeCard('plan', 'bi-map', L('Study plan', 'خطة المذاكرة'), L('Your weakest skills first, with the Microsoft Learn pages to read.', 'مهاراتك الأضعف أولًا، مع صفحات Microsoft Learn المناسبة.')) +
       '</div>' +
-      (P.mocks.length ? '<div class="dp-panel mt-3"><span class="tg-label">' + L('Mock history', 'سجل الاختبارات') + '</span><div class="dp-hist">' + P.mocks.slice(-8).map((m) => '<div class="dp-histbar ' + (m.score >= 700 ? 'pass' : '') + '" title="' + m.score + '"><span style="height:' + Math.max(6, m.score / 10) + '%"></span><b>' + m.score + '</b></div>').join('') + '<i class="dp-passline"></i></div></div>' : '') +
+      (PR.state().mocks.length ? '<div class="dp-panel mt-3"><span class="tg-label">' + L('Mock history', 'سجل الاختبارات') + '</span><div class="dp-hist">' + PR.state().mocks.slice(-8).map((m) => '<div class="dp-histbar ' + (m.score >= 700 ? 'pass' : '') + '" title="' + m.score + '"><span style="height:' + Math.max(6, m.score / 10) + '%"></span><b>' + m.score + '</b></div>').join('') + '<i class="dp-passline"></i></div></div>' : '') +
       '</div></div>';
     root.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => {
       const g = b.dataset.go;
@@ -342,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (g === 'cases') return go('cases');
       if (g === 'plan') return go('plan');
       if (g === 'mistakes') return startSession(shuffle(mistakes()), 'mistakes');
-      if (g === 'bookmarks') return startSession(P.bm.map((id) => byId[id]).filter(Boolean), 'bookmarks');
+      if (g === 'bookmarks') return startSession(PR.state().bm.map((id) => byId[id]).filter(Boolean), 'bookmarks');
     }));
   }
   const modeCard = (go, icon, title, desc, primary, disabled) =>
@@ -377,10 +336,10 @@ document.addEventListener('DOMContentLoaded', () => {
     root.querySelector('#dpStart').addEventListener('click', () => {
       let list = shuffle(pool());
       if (pset.skill === 'weak') {
-        const acc = {}; Object.keys(SKILL).forEach((s) => { const st = stats(ALL.filter((q) => q.s === s)); acc[s] = st.seen ? st.acc : 0.5; });
+        const acc = PR.skillAccuracy();
         list.sort((a, b) => acc[a.s] - acc[b.s]);
       }
-      if (pset.fresh) list.sort((a, b) => (P.ans[a.id] ? (P.ans[a.id].last ? 2 : 1) : 0) - (P.ans[b.id] ? (P.ans[b.id].last ? 2 : 1) : 0));
+      if (pset.fresh) list.sort((a, b) => rank(a.id) - rank(b.id));
       if (pset.count) list = list.slice(0, pset.count);
       if (!list.length) return toast(L('No questions match. Try another filter.', 'لا توجد أسئلة مطابقة. جرّب اختيارًا آخر.'));
       track(EX.ev + '_practice_start', { skill: pset.skill, count: list.length });
@@ -459,12 +418,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- STUDY PLAN ----------
   function plan() {
-    const rows = Object.keys(SKILL).map((s) => ({ s, st: stats(ALL.filter((q) => q.s === s)) }))
-      .sort((a, b) => (a.st.seen ? a.st.acc : -1 + a.st.seen) - (b.st.seen ? b.st.acc : -1 + b.st.seen));
-    const status = (st) => !st.seen ? ['new', L('Not started', 'لم تبدأ')] : st.acc < 0.6 ? ['weak', L('Needs work', 'تحتاج جهدًا')] : st.acc < 0.8 ? ['mid', L('Getting there', 'في الطريق')] : ['good', L('Strong', 'قوية')];
+    const rows = PR.planRows();
+    const status = { new: L('Not started', 'لم تبدأ'), weak: L('Needs work', 'تحتاج جهدًا'), mid: L('Getting there', 'في الطريق'), good: L('Strong', 'قوية') };
     root.innerHTML = back() + '<div class="dp-panel"><h2 class="h4 fw-bold">' + L('Your study plan', 'خطة مذاكرتك') + '</h2><p class="dp-note">' + L('Work top to bottom. Each skill links to the Microsoft Learn pages our questions draw on most.', 'ابدأ من الأعلى. كل مهارة مرتبطة بصفحات Microsoft Learn التي تعتمد عليها أسئلتنا أكثر.') + '</p>' +
-      rows.map(({ s, st }) => {
-        const [k, lab] = status(st);
+      rows.map(({ s, st, k }) => {
+        const lab = status[k];
         return '<div class="dp-planrow"><div class="dp-plantop"><div><b>' + skillName(s) + '</b> <small class="dp-note">' + domName(SKILL[s].d) + '</small></div><span class="dp-status ' + k + '">' + lab + '</span></div>' +
           '<div class="dp-planmid">' + bar(st.acc * Math.min(1, st.seen / st.total * 1.6)) + '<span class="dp-note">' + L(num(st.seen) + '/' + num(st.total) + ' answered · ' + (st.seen ? Math.round(st.acc * 100) + '% right' : 'no answers yet'), 'أجبت ' + num(st.seen) + '/' + num(st.total) + ' · ' + (st.seen ? Math.round(st.acc * 100) + '% صحيحة' : 'لا إجابات بعد')) + '</span></div>' +
           '<div class="dp-planlinks" lang="en" dir="ltr">' + LEARN[s].map((r) => '<a href="' + esc(r.u) + '" target="_blank" rel="noopener" data-learn><i class="bi bi-book"></i> ' + esc(r.t) + '</a>').join('') + '</div>' +
@@ -591,15 +549,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const M = MK.current(); if (!M) return;
     if (timer) { clearInterval(timer); timer = null; }
     const { res, score, dom, sk, ren } = scoreMock(M.items, byId, { domains: Object.keys(DOM), renTopic, renewal: M.kind === 'renewal' });
-    M.items.forEach((it, i) => {
-      const q = byId[it.id], g = res[i];
-      if (answered(q, it.r)) P.ans[q.id] = Object.assign(P.ans[q.id] || { n: 0, c: 0 }, { n: ((P.ans[q.id] || {}).n || 0) + 1, c: ((P.ans[q.id] || {}).c || 0) + (g === 1 ? 1 : 0), last: g === 1 ? 1 : 0, t: Date.now() });
-    });
     const used = MK.used();
     const rec = Object.assign({ t: Date.now(), kind: M.kind, score, pass: score >= 700, n: M.items.length, used, dom, sk }, M.kind === 'renewal' ? { ren } : {});
-    P.mocks.push(rec); P.mocks = P.mocks.slice(-30);
+    PR.recordMock(M.items.map((it) => ({ q: byId[it.id], r: it.r })), res, answered, rec);
     const last = { rec, items: M.items, flags: M.flags, res, timeUp };
-    markDay(); MK.end();
+    MK.end();
     track(EX.ev + '_mock_finish', { length: rec.kind, score, passed: rec.pass, questions: rec.n, time_used_min: Math.round(used / 60) });
     go('results', { last, filter: 'all' });
   }
@@ -664,7 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- reset ----------
   // delegated: the button sits inside translated HTML that is replaced on language change
-  document.addEventListener('click', (e) => { if (!e.target.closest('#dpReset')) return; modal(L('Reset all progress?', 'مسح كل التقدم؟'), L('This clears your answers, bookmarks and mock history on this device.', 'سيتم مسح إجاباتك ومحفوظاتك وسجل الاختبارات على هذا الجهاز.'), L('Reset', 'مسح'), () => { P = blank(); save(); go('home'); toast(L('Progress cleared', 'تم مسح التقدم')); }); });
+  document.addEventListener('click', (e) => { if (!e.target.closest('#dpReset')) return; modal(L('Reset all progress?', 'مسح كل التقدم؟'), L('This clears your answers, bookmarks and mock history on this device.', 'سيتم مسح إجاباتك ومحفوظاتك وسجل الاختبارات على هذا الجهاز.'), L('Reset', 'مسح'), () => { PR.reset(); go('home'); toast(L('Progress cleared', 'تم مسح التقدم')); }); });
 
   // Re-render in the new language, keeping the current screen
   new MutationObserver(() => { const y = window.scrollY; render(); window.scrollTo(0, y); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
