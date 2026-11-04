@@ -16,7 +16,8 @@
   One CHANGELOG line under 0.3.2.
 - **Expected checks:** dd1g passes; sp14 (fromFolder) every number as on the base; contracts check and probe: 1g one
   answer per input; check-modules --strict green; lint 0; every other suite as on the base.
-- **State:** built; the last checks and the CI run are next.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41902639619 on 08162dc8212d1737b424623cb960a08135580a17
+- **State:** DONE (Linux and Windows; macOS runs where the reviewer merges). integration/0.3.2 did not move (240d179): no merge.
 - **Resume:** none until the CI line below; then the reviewer reads and merges.
 
 ## Two answers -> one (made-up folder lists; the website before / the MCP / after, both)
