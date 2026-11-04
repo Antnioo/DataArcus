@@ -45,6 +45,10 @@ jobs:
       - name: Every .min.js is built from its source
         run: node scripts/check-min.mjs
 
+      # (B-336, ST1 0.3.2) the ?v= stamps made by the build (scripts/stamps.mjs): red on made-up trees, green on the real one
+      - name: The ?v= stamps are what the build makes (made-up trees and the real one)
+        run: node scripts/test-stamps.mjs
+
       - name: The shipped code loads every module by a literal path (packaging stages only what it can name, B-196)
         run: node scripts/test-literal-requires.mjs && node scripts/check-literal-requires.mjs
 
