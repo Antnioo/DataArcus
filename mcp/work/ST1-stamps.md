@@ -22,7 +22,9 @@
   were red on the built tree before step 4 (sp32 P1 "worker now ...?v=d8390a780e6b"), green after; sp14 20, sp31 17,
   sp32 39 (numbers unchanged). Lint 0; agent-memory, check-modules --strict, result-lines, site-config, csp, ar-pages,
   literal-requires PASS. Full runs: MCP 192 of 192, website 42 of 42 (Results).
-- **State:** the work done; the full runs and CI below.
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/41863312965 on ffd73c37
+- **State:** DONE (first run; every job green on Linux and Windows, macOS skipped on a builder branch; integration/0.3.2
+  had not moved from 762bba06, nothing merged in).
 - **Resume:** the reviewer's merge, then the gate's stamp tools (Lessons for the reviewer).
 
 ## Before -> after
