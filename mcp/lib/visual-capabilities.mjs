@@ -4,8 +4,8 @@
 // loaded once by a top-level await; null when the package can't load, and then only the capabilities are checked).
 // Pure functions: no I/O after the load, no network, the input is not changed; names in roles are never acted on.
 // Interface:
-//   isValue(field) -> boolean (a measure or an aggregation)   isCol(field) -> boolean (a column): the field shapes, one
-//     place for rolesOf, the candidates and the validation alike
+//   isValue(field) -> boolean (a measure or an aggregation)   isCol(field) -> boolean (a column)   copy(field) -> a
+//     shallow copy: the field helpers, one place for rolesOf, the candidates and the validation alike
 //   capsOf(visualType) -> Microsoft's capabilities object | null     drillsIn(visualType) -> boolean (it drills down)
 //   fitsCapabilities(visualType, { Role: [field] }) -> { ok, problems: [text] } (role names are the native's own)
 //   roleLabel(visualType, role) -> the role's display name in Desktop's field wells (the role itself when none)
@@ -19,6 +19,7 @@ try { VP = await (await import('@microsoft/powerbi-report-authoring-cli')).getMe
 
 export const isValue = (f) => f.kind === 'measure' || f.kind === 'aggregation';
 export const isCol = (f) => f.kind === 'column';
+export const copy = (f) => Object.assign({}, f);
 
 // ---- Microsoft's capabilities of the native visuals (@microsoft/powerbi-core-visual-schema, the version mcp/package.json pins) ----
 export const capsOf = (type) => { try { return type ? getCapabilities(type) || null : null; } catch (e) { return null; } };
