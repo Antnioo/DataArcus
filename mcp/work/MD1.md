@@ -26,8 +26,13 @@
   with `--strict` (every caller named really loads its file; every pure cell matches the code); `PASS  test-modules
   11 checks` (red: a module with no row, a row whose file is gone, two rows, an unknown caller, a missing page, no
   folder, no section, 4 cells, a bad pure cell, two strict-only misses; green on the repo; the command's PASS and FAIL
-  lines); agent-memory 253, ARCHITECTURE.md 5020 of 5200 characters; lint 0. Integration did not move (no merge).
-- **Resume:** CI on the branch, then the reviewer's merge.
+  lines); agent-memory 253, ARCHITECTURE.md 5020 of 5200 characters; lint 0.
+- **The reviewer's follow-up (09:13):** integration/0.3.2 merged in once (c2dbd06: SP30, SP33) in 5cb36e1; the four
+  new modules have their rows (field-catalog.js, field-suggest.js, svg-editor-pointer.js, svg-editor-panels.js).
+  **Named 161 of 161:** `PASS  modules  852 checks (161 module files, 161 rows)`, the same with `--strict`;
+  test-modules 11, agent-memory 256, result-lines 183, lint 0. The first CI run (41802878066) was cancelled by the
+  reviewer (pre-merge head).
+- **Resume:** none; the reviewer's merge.
 
 ## The table's shape and why
 - Eleven tables under `## Every module`, one per part (the engines, with bold group rows: reader, writer, design,
@@ -49,6 +54,9 @@
   an engine with module.exports is required in Node for its keys (the engines are side-effect free there). Known
   limit: a page script's local variable named `root` reads as a global write (model-health.js, dp600-sim.js); their
   pure cell is no either way.
+- At the merge, the facts script also reads DOM use through an element a module is given (addEventListener,
+  innerHTML...): `field-picker-ui.js` (my row had said pure) and the two editor modules are "no: DOM (the element it
+  is given)".
 - MODULES.md's "The parts" keeps one entry file per area and links the area's table; "Where to start reading" keeps
   its starting files and links the rest; a row was added there and in ARCHITECTURE.md's routes (f) for a new module.
 
