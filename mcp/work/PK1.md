@@ -29,7 +29,11 @@
 - **Got:** as expected: pk1 44 of 50 on the base (3 runs identical, recorded), 50 after, records unchanged; mutation 76
   of 76 killed before (186 s) and after; report 58 of 58 suites, safety 18 of 18; lint 0. redesign.mjs 534 -> 526
   lines, redesign-kinds.mjs 161 (new). R12 changed before recording (a group moved is accepted by verifyCopy: Seen 1).
-- **Resume:** the merge of integration (if it moved), the area runs, CI on the branch.
+- integration/0.3.2 did not move (still 1691046): no merge. Area runs on the last code commit: report 58 of 58,
+  safety 18 of 18, core 11 of 11 suites; lint 0.
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41770210920 on 970d5137** (first run, every job
+  green: Linux, Windows, macOS, website). **State: DONE.**
+- **Resume:** none; the reviewer's merge.
 
 ## Plan
 1. This note (commit, push). 2. pk1 on the base, recorded, 3 runs identical; mutation suite before.
