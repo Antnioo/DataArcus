@@ -137,5 +137,19 @@ const COVER = {
 const missing = Object.keys(COVER).filter((k) => (Array.isArray(COVER[k]) ? COVER[k].length : !COVER[k]));
 chk(() => !missing.length && rs.length === BUILDS.length, () => `C1. the builds cover every visual family: missing ${JSON.stringify(missing.map((k) => (Array.isArray(COVER[k]) ? k + ' ' + COVER[k].join() : k)))}; built ${rs.length} of ${BUILDS.length}`);
 
+// ---------- after the move (SP28): pbip-page.js assembles, pbip-visuals.js builds; the website loads it before pbip-tooltip ----------
+const SRC = (f) => fs.readFileSync(path.join(HERE, '..', 'assets', 'js', f), 'utf8'), lines = (t) => t.split('\n').length - 1;
+const pageSrc = SRC('pbip-page.js'), VIS = ['pbip-visuals.js'], visSrc = VIS.map(SRC).join('\n'), Vis = require('../assets/js/pbip-visuals.js');
+chk(() => ['look', 'slotKind', 'kpiRow', 'slicers', 'categoryPlan', 'visual', 'noDataCard', 'emptyPanel', 'phoneLook', 'themeSizes'].every((f) => typeof Vis[f] === 'function') && /require\('\.\/pbip-visuals\.js'\)/.test(pageSrc)
+  && ['V.look(', 'V.slotKind(', 'V.kpiRow(', 'V.slicers(', 'V.categoryPlan(', 'V.visual(', 'V.noDataCard(', 'V.phoneLook('].every((t) => pageSrc.includes(t))
+  && !/const (fixVisual|asBar|byField|slicerHeader|valuesKnown|phoneLook|PHONE|topCount|knownCount|BAND_TYPES|cardObjects|paneObjects) = /.test(pageSrc) && /const BAND_TYPES = /.test(visSrc)
+  && !/(^|[^.\w])(rnd|add|json|container)\(|\bD \+ '\/pages|new WeakMap/.test(visSrc) && lines(pageSrc) < 600,
+  () => `M1 pbip-page.js must be the page assembly over pbip-visuals.js (look, slotKind, kpiRow, slicers, categoryPlan, visual, phoneLook), whose builders hold the visuals' rules once, name no visual, write no file and keep no state; pbip-page.js under 600 lines: ${[['pbip-page.js', pageSrc]].concat(VIS.map((f) => [f, SRC(f)])).map(([f, t]) => f + ' ' + lines(t)).join(', ')}`);
+const tg = SRC('theme-generator.js'), list = (tg.match(/const BUILDER = \[([^\]]*)\]/) || [])[1] || '';
+const at = (f) => list.indexOf('/assets/js/' + f + '.min.js?v='), once = (f) => list.split('/assets/js/' + f + '.min.js?v=').length === 2;
+chk(() => ['story-titles', 'pbip-query', 'pbip-sizing', 'label-limits', 'pbip-tooltip', 'pbip-page'].concat(VIS.map((f) => f.replace(/\.js$/, ''))).every(once)
+  && VIS.every((f) => { const i = at(f.replace(/\.js$/, '')); return ['story-titles', 'pbip-query', 'pbip-sizing', 'label-limits'].every((d) => at(d) < i) && i < at('pbip-tooltip'); }),
+  () => 'M2 theme-generator.js\'s BUILDER loads pbip-visuals once, after what it reads and before pbip-tooltip and pbip-page: ' + list.slice(0, 400));
+
 if (problems.length) { console.log(`FAIL script=test-0.3.2-sp28.mjs cause=${problems[0].slice(0, 300)}`); problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  sp28  ${problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  sp28  ${checks} checks`);

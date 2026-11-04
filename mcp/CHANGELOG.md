@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **Inside the report writer:** each visual of a report page (the title and logo, the cards, the charts, the tables
+  and the slicers, and their phone layout) is made in files of their own; every report, on the website and from the MCP,
+  is byte for byte what it was before.
 - **The macOS tests run where changes are merged:** the full test run on macOS now runs on the main and release
   branches, on pull requests to main and on the check before each merge, no longer on every work branch; Linux and
   Windows still run everywhere, as before.

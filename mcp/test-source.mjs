@@ -26,3 +26,8 @@ export const TWIN_STEPS = ['lib/twin-read.mjs', 'lib/twin-visuals.mjs', 'lib/twi
   'lib/twin-plan.mjs', 'lib/twin-preview.mjs', 'lib/twin-write.mjs'];
 export const twinFiles = () => ['lib/arabic-twin.mjs'].concat(TWIN_STEPS.filter(there));
 export const twinSource = () => twinFiles().map(read).join('\n');
+
+// (0.3.2 SP28) the report writer's page: assets/js/pbip-page.js (the page assembly), then the visuals' builders it calls
+export const WRITER_PAGE = ['../assets/js/pbip-page.js', '../assets/js/pbip-visuals.js', '../assets/js/pbip-visuals-charts.js', '../assets/js/pbip-visuals-tables.js'];
+export const writerPageFiles = () => WRITER_PAGE.filter(there);
+export const writerPageSource = () => writerPageFiles().map(read).join('\n');
