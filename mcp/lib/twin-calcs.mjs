@@ -4,8 +4,9 @@
 // (the model's values), so no part of it is ever returned; strings, comments and [names] are removed before counting.
 // Sources: Microsoft Learn "Visual calculations" and the DAX reference of each function (mcp/work/VC1.md).
 const isObj = (x) => x !== null && typeof x === 'object' && !Array.isArray(x);
-// running and neighbour calculations: along the visual's axis, in its order
-export const ORDER_FUNCTIONS = ['RUNNINGSUM', 'MOVINGAVERAGE', 'PREVIOUS', 'NEXT', 'FIRST', 'LAST', 'RANK'];
+// running and neighbour calculations: along the visual's axis, in its order (the one list: the plan counts these and
+// the approval page names only these; 0.3.2 VC2: OFFSET, INDEX, WINDOW, RANGE and ROWNUMBER, the window functions)
+export const ORDER_FUNCTIONS = ['RUNNINGSUM', 'MOVINGAVERAGE', 'PREVIOUS', 'NEXT', 'FIRST', 'LAST', 'RANK', 'OFFSET', 'INDEX', 'WINDOW', 'RANGE', 'ROWNUMBER'];
 const CALL = new RegExp('\\b(' + ORDER_FUNCTIONS.join('|') + ')\\s*\\(', 'gi');
 // DAX strings ("" inside), comments (//, --, /* */) and bracketed names ([RANK (old)]) say nothing of a call
 const bare = (s) => String(s).replace(/"(?:[^"]|"")*"?|\/\*[\s\S]*?(?:\*\/|$)|(?:\/\/|--)[^\n]*|\[(?:[^\]]|\]\])*\]?|'(?:[^']|'')*'?/g, ' ');
@@ -43,5 +44,5 @@ export function orderCalculationsSaid(list) {
   if (!list.length) return null;
   return { count: list.length, visuals: list.slice(0, 30), ...(list.length > 30 ? { notListed: list.length - 30 } : {}),
     en: `${list.length} visual${list.length === 1 ? '' : 's'} ${ORDER_CALC_SAID.en}.`, ar: `${list.length} من المرئيات: ${ORDER_CALC_SAID.ar}.`,
-    sayInPlan: 'Say each of these visuals to the user by page and visual, in these words: the twin still turns it (its order right to left); a running sum, moving average, previous, next, first, last or rank in it may then count along the turned order. Ask the user to compare its numbers with the original in Power BI Desktop.' };
+    sayInPlan: 'Say each of these visuals to the user by page and visual, in these words: the twin still turns it (its order right to left); a running sum, moving average, previous, next, first, last, rank, offset, index, window, range or row number in it may then count along the turned order. Ask the user to compare its numbers with the original in Power BI Desktop.' };
 }

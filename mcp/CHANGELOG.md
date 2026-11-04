@@ -14,6 +14,9 @@ package's manifest; this file says what is in it.
 - **The twin says when a turned chart holds a running calculation:** its plan names each visual it turns right to
   left that holds a running sum, moving average, previous, next, first, last or rank calculation, in English and
   Arabic, so its numbers can be checked against the original in Desktop; the twin itself is written as before.
+- **The twin's approval page shows the turned charts to check:** each visual the twin turns right to left that holds
+  a running or neighbour calculation is listed on the page you approve, with what to check in Desktop; offset, index,
+  window, range and row number calculations are now named too.
 - **A chart under a heatmap that cannot move:** when lining it up under the heatmap's grid would cover another
   visual, it stays where the plain mirror puts it but keeps its English sort, value axis and padding, so its hours still
   read left to right like the grid above it.
