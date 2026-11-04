@@ -324,140 +324,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- Fix plan: safe order, quick-fixes script, cleanup scripts, expert items ----------
   const QUICK = new Set(['DATE_NOT_MARKED', 'MONTH_SORT', 'SUMMARIZE_KEYS', 'FK_VISIBLE', 'UNUSED_COL', 'UNUSED_MEASURE']);
   const EXPERT = new Set(['FILTER_TABLE', 'FILTER_MEASURE', 'BIDI', 'M2M', 'DEEP_CHAIN', 'LONG_MEASURE', 'CALC_COLS', 'STRING_KEYS', 'LONG_M', 'HARDCODED_PATH', 'NO_RLS']);
-  const unusedData = () => {
-    const cols = [];
-    R.tables.filter((t) => !t.auto).forEach((t) => { const u = t.columns.filter((c) => c.used === false); if (u.length) cols.push({ t, u }); });
-    return { cols, ms: R.measures.filter((m) => m.used === false) };
-  };
-  const splitObj = (o) => { const m = String(o).match(/^(.*)\[(.*)\]$/); return m ? [m[1], m[2]] : null; };
-  const findingOf = (id) => (ignored.has(id) ? null : R.findings.find((f) => f.id === id));
-  // The column a month or day name should sort by. "Month Year" needs a year-month number (202401):
-  // sorting it by the month number 1-12 would put January of every year together.
-  // (the rule itself is in model-health-tmdl.js, shared with the MCP's health check and kept like the report writer's)
-  const sortColumnFor = (t, name) => (window.MHTmdl ? window.MHTmdl.sortColumnFor(t.columns, name) : null);
-  const noSortColumn = (name) => (window.MHTmdl ? window.MHTmdl.noSortColumn(name) : 'no number column');
-  // Mechanical fixes as data, shared by the Tabular Editor and TMDL versions
-  function quickEdits() {
-    const dates = [], edits = [], notes = [];
-    const dt = findingOf('DATE_NOT_MARKED');
-    if (dt) dt.items.forEach((i) => {
-      const t = R.tables.find((x) => x.name === i.obj); if (!t) return;
-      const target = R.relationships.find((r) => r.toTable === t.name && t.columns.some((c) => c.name === r.toColumn && c.dataType === 'dateTime'));
-      const dcol = (target && target.toColumn) || (t.columns.find((c) => /^date$/i.test(c.name) && c.dataType === 'dateTime') || t.columns.find((c) => c.dataType === 'dateTime') || {}).name;
-      if (dcol) dates.push({ table: t.name, column: dcol });
-    });
-    const ms = findingOf('MONTH_SORT');
-    if (ms) ms.items.forEach((i) => {
-      const p = splitObj(i.obj); if (!p) return;
-      const t = R.tables.find((x) => x.name === p[0]); if (!t) return;
-      const sortCol = sortColumnFor(t, p[1]);
-      if (sortCol) edits.push({ table: t.name, column: p[1], set: { sortByColumn: sortCol.name }, kind: 'sort' });
-      else notes.push(t.name + '[' + p[1] + ']: ' + noSortColumn(p[1]));
-    });
-    const sk = findingOf('SUMMARIZE_KEYS');
-    if (sk) sk.items.forEach((i) => { const p = splitObj(i.obj); if (p) edits.push({ table: p[0], column: p[1], set: { summarizeBy: 'none' }, kind: 'sum' }); });
-    const fk = findingOf('FK_VISIBLE');
-    if (fk) fk.items.forEach((i) => { const p = splitObj(i.obj); if (p) edits.push({ table: p[0], column: p[1], set: { isHidden: true }, kind: 'hide' }); });
-    return { dates, edits, notes };
-  }
-  // What the cleanup can safely remove. An unused column stays when something that stays needs it (a measure
-  // that is only moved to the review folder, a hierarchy, a DAX table, the sort of a column that stays, a quick
-  // fix), or when it is the last column of its table. Removing any of these would break the next refresh.
-  function cleanupPlan() {
-    const { cols, ms } = unusedData();
-    const key = (t, c) => (t + '|' + c).toLowerCase();
-    const qe = quickEdits();
-    const fixNeeds = new Map();
-    qe.edits.forEach((e) => { if (e.set.sortByColumn) fixNeeds.set(key(e.table, e.set.sortByColumn), L('the quick fixes sort ' + e.column + ' by it', 'الإصلاحات السريعة ترتّب ' + e.column + ' حسبه')); });
-    qe.dates.forEach((d) => fixNeeds.set(key(d.table, d.column), L('the date column when ' + d.table + ' is marked as a date table', 'عمود التاريخ عند تعليم ' + d.table + ' كجدول تاريخ')));
-    const out = new Map(); // key -> { t, c }: removed in Power Query (data columns) or deleted by hand (calculated columns)
-    cols.forEach((x) => x.u.forEach((c) => { if ((c.kind === 'data' && x.t.fromM) || c.kind === 'calculated') out.set(key(x.t.name, c.name), { t: x.t, c }); }));
-    const kept = [];
-    const keep = (k, why) => { const x = out.get(k); out.delete(k); kept.push({ t: x.t.name, c: x.c.name, why }); };
-    R.tables.filter((t) => !t.auto && t.columns.length && t.columns.every((c) => out.has(key(t.name, c.name)))).forEach((t) => t.columns.forEach((c) => keep(key(t.name, c.name),
-      t.used === false ? L('nothing in ' + t.name + ' is used: delete the whole table instead', 'لا شيء في ' + t.name + ' مستخدم: احذف الجدول كله بدلًا من ذلك') : L(t.name + ' would have no columns left', 'لن يبقى في ' + t.name + ' أي عمود'))));
-    const what = (d) => (d.type === 'measure' ? '[' + d.name + ']' : d.type === 'column' ? d.table + '[' + d.name + ']' : d.type === 'hierarchy' ? L('hierarchy ', 'التسلسل الهرمي ') + d.table + '[' + d.name + ']' : d.type === 'function' ? d.name + '()' : d.name);
-    for (let changed = true; changed;) {
-      changed = false;
-      Array.from(out.keys()).forEach((k) => {
-        const x = out.get(k);
-        const needs = (x.c.neededBy || []).filter((d) => !(d.type === 'column' && out.has(key(d.table, d.name))));
-        if (fixNeeds.has(k)) keep(k, fixNeeds.get(k));
-        else if (needs.length) keep(k, L('still needed by ', 'ما زال يحتاجه ') + needs.slice(0, 3).map(what).join(', ') + (needs.length > 3 ? ' …' : ''));
-        else return;
-        changed = true;
-      });
-    }
-    const pq = [], calc = [];
-    cols.forEach((x) => {
-      const names = x.u.filter((c) => c.kind === 'data' && out.has(key(x.t.name, c.name))).map((c) => c.sourceColumn || c.name);
-      if (names.length) pq.push({ t: x.t, names });
-      x.u.forEach((c) => { if (c.kind === 'calculated' && out.has(key(x.t.name, c.name))) calc.push({ t: x.t.name, c: c.name }); });
-    });
-    return { pq, calc, kept, ms };
-  }
-  function tmdlScripts() {
-    if (!window.MHTmdl || !R.rawTables) return null;
-    const qe = quickEdits();
-    const fixes = qe.edits.length ? window.MHTmdl.columnFixes(R.rawTables, qe.edits) : null;
-    const unused = R.meta.hasReport ? R.measures.filter((m) => m.used === false).map((m) => m.name) : [];
-    const move = unused.length ? window.MHTmdl.moveMeasures(R.rawTables, unused, '_Unused (review)') : null;
-    // formats fixed at the source (6 Oct 2026): the same rule and the same script as the MCP's check_model_health
-    const formats = window.MHTmdl.formatReview ? window.MHTmdl.formatReview(R.rawTables) : null;
-    return { fixes, move, formats: formats && (formats.items.length || formats.byHand.length) ? formats : null, dates: qe.dates, notes: qe.notes };
-  }
-
-  function quickFixScript() {
-    const lines = [];
-    const q = (x) => csStr(x);
-    const col = (t, c) => 'Model.Tables[' + q(t) + '].Columns[' + q(c) + ']';
-    const has = (t, c) => 'Model.Tables.Contains(' + q(t) + ') && Model.Tables[' + q(t) + '].Columns.Contains(' + q(c) + ')';
-    let count = 0;
-    const dt = findingOf('DATE_NOT_MARKED');
-    if (dt) {
-      lines.push('', '// 1. Mark calendar tables as date tables');
-      dt.items.forEach((i) => {
-        const t = R.tables.find((x) => x.name === i.obj); if (!t) return;
-        const target = R.relationships.find((r) => r.toTable === t.name && t.columns.some((c) => c.name === r.toColumn && c.dataType === 'dateTime'));
-        const dcol = (target && target.toColumn) || (t.columns.find((c) => /^date$/i.test(c.name) && c.dataType === 'dateTime') || t.columns.find((c) => c.dataType === 'dateTime') || {}).name;
-        if (!dcol) return;
-        lines.push('if (' + has(t.name, dcol) + ') { Model.Tables[' + q(t.name) + '].DataCategory = "Time"; ' + col(t.name, dcol) + '.IsKey = true; n++; }'); count++;
-      });
-    }
-    const ms = findingOf('MONTH_SORT');
-    if (ms) {
-      const out = [];
-      ms.items.forEach((i) => {
-        const p = splitObj(i.obj); if (!p) return;
-        const t = R.tables.find((x) => x.name === p[0]); if (!t) return;
-        const sortCol = sortColumnFor(t, p[1]);
-        if (sortCol) { out.push('if (' + has(t.name, p[1]) + ' && Model.Tables[' + q(t.name) + '].Columns.Contains(' + q(sortCol.name) + ')) { ' + col(t.name, p[1]) + '.SortByColumn = ' + col(t.name, sortCol.name) + '; n++; }'); count++; }
-        else out.push('// ' + t.name + '[' + p[1] + ']: ' + noSortColumn(p[1]) + ' found. Add one, then sort by it.');
-      });
-      if (out.length) lines.push('', '// 2. Sort month and day names by their number'), lines.push.apply(lines, out);
-    }
-    const sk = findingOf('SUMMARIZE_KEYS');
-    if (sk) {
-      lines.push('', '// 3. IDs, years and codes: do not summarize');
-      sk.items.forEach((i) => { const p = splitObj(i.obj); if (p) { lines.push('if (' + has(p[0], p[1]) + ') { ' + col(p[0], p[1]) + '.SummarizeBy = AggregateFunction.None; n++; }'); count++; } });
-    }
-    const fk = findingOf('FK_VISIBLE');
-    if (fk) {
-      lines.push('', '// 4. Hide key columns on the many side of relationships');
-      fk.items.forEach((i) => { const p = splitObj(i.obj); if (p) { lines.push('if (' + has(p[0], p[1]) + ') { ' + col(p[0], p[1]) + '.IsHidden = true; n++; }'); count++; } });
-    }
-    if (!count) return null;
-    return { count, code: '// DataArcus Model Health Check: quick fixes (' + count + ' changes). Save a copy of your file first.\n// Tabular Editor: C# Script tab, paste, run (F5), then save (Ctrl+S).\nint n = 0;' + lines.join('\n') + '\n\nInfo(n + " quick fixes applied. Save the model to keep them.");' };
-  }
+  // the plan's data and scripts (quick edits, the cleanup, the Tabular Editor, Power Query and TMDL scripts):
+  // health-fix-plan.js (0.3.2 SP32); the copy buttons give plan.scripts[key]
+  const fixPlan = () => window.MHFixPlan.plan({ result: R, ignored, lang: isAr() ? 'ar' : 'en', tmdl: window.MHTmdl || null });
   function tFix() {
     const el = $('mhTab');
     const key = String(R.meta.fileName).toLowerCase();
     const plans = store.get('dataarcus-mh-plan', {});
     const done = new Set(plans[key] || []);
-    const plan = R.meta.hasReport ? cleanupPlan() : { pq: [], calc: [], kept: [], ms: [] };
+    const fp = fixPlan(), plan = fp.cleanup;
+    scripts = fp.scripts;
     const ms = plan.ms;
-    const broken = findingOf('BROKEN_REF');
-    const qf = quickFixScript();
+    const broken = fp.broken;
+    const qf = fp.quick;
     const pqCount = plan.pq.length;
     const calcCount = plan.calc.length;
     const steps = [['copy', L('Save a copy of your .pbix', 'احفظ نسخة من ملف ‎.pbix'), L('Every step below changes the model. Keep a copy so you can go back.', 'كل خطوة بالأسفل تغيّر النموذج، فاحتفظ بنسخة للرجوع إليها.')]];
@@ -476,14 +355,9 @@ document.addEventListener('DOMContentLoaded', () => {
       (experts.length ? '<div class="mh-panel mt-4 mh-expertbox"><div class="mh-h"><b><i class="bi bi-person-gear"></i> ' + L('Needs an expert', 'يحتاج خبيرًا') + '</b></div><p class="mh-note">' + L('These need design decisions and testing against your data, not a script. Getting them wrong can change the numbers in your reports.', 'هذه تحتاج قرارات تصميم واختبارًا على بياناتك وليس سكربتًا، والخطأ فيها قد يغيّر أرقام تقاريرك.') + '</p><ul class="mh-elist">' + experts.map((f) => '<li><span class="mh-sev cap-pill ' + f.sev + '">' + (isAr() ? SEVL[f.sev][1] : SEVL[f.sev][0]) + '</span> ' + rt(f.id)[0] + ' <small>(' + num(f.items.length) + ')</small></li>').join('') + '</ul><a href="/#contact" class="btn btn-accent btn-sm" data-expert="plan"><i class="bi bi-calendar3"></i> ' + L('Book a free call', 'احجز مكالمة مجانية') + '</a></div>' : '') +
       '</div><div class="col-lg-7">' +
       (qf ? '<div class="mh-panel mh-clean"><div class="mh-h"><b><i class="bi bi-lightning-charge-fill text-warning"></i> ' + L('Quick-fixes script', 'سكربت الإصلاحات السريعة') + '</b><span class="mh-count">' + num(qf.count) + '</span><button type="button" class="mh-copy ms-auto" data-script="te:quick"><i class="bi bi-clipboard"></i> ' + L('Copy', 'نسخ') + '</button></div><p class="mh-note">' + L('One Tabular Editor script for the mechanical fixes. External tools > Tabular Editor > C# Script, paste, run, save. If Power BI Desktop blocks one change, do that one by hand.', 'سكربت Tabular Editor واحد للإصلاحات الآلية. من External tools افتح Tabular Editor ثم C# Script والصق وشغّل واحفظ. إن منع Power BI Desktop تعديلًا فنفّذه يدويًا.') + '</p><pre class="mh-dax mh-qf">' + esc(qf.code) + '</pre></div>' : '') +
-      tmdlPanel() +
+      tmdlPanel(fp.tmdl) +
       (R.meta.hasReport ? cleanupHtml(plan) :'<div class="mh-panel mh-note">' + L('Cleanup scripts for unused columns and measures need the report pages. Use a .pbit.', 'سكربتات تنظيف الأعمدة والمقاييس غير المستخدمة تحتاج صفحات التقرير. استخدم ملف .pbit.') + '</div>') +
       '</div></div>';
-    if (qf) scripts['te:quick'] = qf.code;
-    const tm = tmdlScripts();
-    if (tm && tm.fixes && tm.fixes.script) scripts['tmdl:fixes'] = tm.fixes.script;
-    if (tm && tm.move && tm.move.script) scripts['tmdl:move'] = tm.move.script;
-    if (tm && tm.formats && tm.formats.script) scripts['tmdl:formats'] = tm.formats.script;
     el.querySelectorAll('[data-step]').forEach((c) => c.onchange = () => {
       if (c.checked) done.add(c.dataset.step); else done.delete(c.dataset.step);
       plans[key] = Array.from(done); store.set('dataarcus-mh-plan', plans);
@@ -494,8 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
     el.querySelectorAll('[data-expert]').forEach((a) => a.addEventListener('click', () => track('mh_expert_click', { rule: a.dataset.expert, score: score().overall })));
   }
 
-  function tmdlPanel() {
-    const tm = tmdlScripts();
+  function tmdlPanel(tm) {
     if (!tm || (!(tm.fixes && tm.fixes.script) && !(tm.move && tm.move.script) && !tm.formats && !tm.dates.length)) return '';
     const btn = (k, label, n) => '<button type="button" class="btn btn-accent btn-sm" data-script="' + k + '"><i class="bi bi-clipboard"></i> ' + label + ' <small>(' + num(n) + ')</small></button>';
     let h = '<div class="mh-panel mt-4 mh-premium"><div class="mh-h"><b><i class="bi bi-stars"></i> ' + L('Apply in Power BI Desktop, no install', 'طبّق داخل Power BI Desktop بدون تثبيت أي أداة') + '</b><span class="mh-prem cap-pill">' + L('Premium preview', 'نسخة مميزة تجريبية') + '</span></div>' +
@@ -517,24 +390,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Ready-to-paste cleanup: Power Query steps for unused source columns, Tabular Editor scripts for unused measures
-  const scripts = {};
-  const csStr = (x) => '"' + String(x).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
-  const mStr = (x) => '"' + String(x).replace(/"/g, '""') + '"';
+  let scripts = {};
   function cleanupHtml(plan) {
     const { pq, calc, kept, ms } = plan;
     let html = '<div class="mh-panel mt-4 mh-clean"><div class="mh-h"><b><i class="bi bi-magic"></i> ' + L('Cleanup scripts', 'سكربتات التنظيف') + '</b></div><p class="mh-note">' + L('Save a copy of your file first. Then use these to remove what nobody uses.', 'احفظ نسخة من ملفك أولًا، ثم استخدم هذه السكربتات لحذف ما لا يستخدمه أحد.') + '</p>';
     if (pq.length) {
       html += '<span class="tg-label mt-2">' + L('Power Query: remove unused source columns', 'Power Query: حذف أعمدة المصدر غير المستخدمة') + '</span><p class="mh-note">' + L('In Power Query, select the table, click fx to add a step, and paste the line. Replace #"Previous step" with the name Power Query shows in the formula bar.', 'في Power Query اختر الجدول واضغط fx لإضافة خطوة والصق السطر. استبدل #"Previous step" بالاسم الذي يظهره Power Query في شريط الصيغة.') + '</p>';
       pq.forEach((x, i) => {
-        const code = '= Table.RemoveColumns(#"Previous step", {' + x.names.map(mStr).join(', ') + '}, MissingField.Ignore)';
-        scripts['pq:' + i] = code;
+        const code = scripts['pq:' + i];
         html += '<div class="mh-script"><div class="mh-sh"><b>' + bdi(x.t.name) + '</b> <small>' + L(num(x.names.length) + ' columns', num(x.names.length) + ' عمود') + '</small><button type="button" class="mh-copy ms-auto" data-script="pq:' + i + '"><i class="bi bi-clipboard"></i> ' + L('Copy', 'نسخ') + '</button></div><pre class="mh-dax">' + esc(code) + '</pre></div>';
       });
     }
     if (ms.length) {
-      const list = 'var names = new[] {\n    ' + ms.map((m) => csStr(m.name)).join(',\n    ') + '\n};\n';
-      scripts['te:move'] = '// DataArcus Model Health Check: move measures no visual uses into a review folder (safe, nothing is deleted)\n' + list + 'foreach (var n in names) {\n    var m = Model.AllMeasures.FirstOrDefault(x => x.Name == n);\n    if (m != null) m.DisplayFolder = string.IsNullOrEmpty(m.DisplayFolder) ? ' + csStr('_Unused (review)') + ' : ' + csStr('_Unused (review)\\') + ' + m.DisplayFolder;\n}';
-      scripts['te:delete'] = '// DataArcus Model Health Check: delete measures no visual uses. Save a copy of your file first.\n' + list + 'foreach (var n in names) {\n    var m = Model.AllMeasures.FirstOrDefault(x => x.Name == n);\n    if (m != null) m.Delete();\n}';
       html += '<span class="tg-label mt-3">' + L('Tabular Editor: ' + num(ms.length) + ' unused measures', 'Tabular Editor: ' + num(ms.length) + ' مقياس غير مستخدم') + '</span><p class="mh-note">' + L('Open the model in Tabular Editor (External tools), then C# Script, paste and run, then save. Start with "move to folder": it hides nothing and deletes nothing, so you can review first.', 'افتح النموذج في Tabular Editor من External tools ثم C# Script والصق وشغّل ثم احفظ. ابدأ بـ "نقل لمجلد": لا يحذف شيئًا، فتراجع أولًا.') + '</p>' +
         '<div class="mh-sbtns"><button type="button" class="tg-btn2 btn-sm" data-script="te:move"><i class="bi bi-folder-symlink"></i> ' + L('Copy: move to a review folder', 'نسخ: نقل إلى مجلد مراجعة') + '</button><button type="button" class="tg-btn2 btn-sm mh-danger" data-script="te:delete"><i class="bi bi-trash3"></i> ' + L('Copy: delete them', 'نسخ: حذفها') + '</button></div>';
     }

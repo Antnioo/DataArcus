@@ -180,7 +180,7 @@ for (const f of ['tools/power-bi-model-health-check.html', 'ar/tools/power-bi-mo
 // (0.3.2 SP32) the split of model-health.js, finished: the worker's lifecycle, then the page's own script; each once
 for (const f of ['tools/power-bi-model-health-check.html', 'ar/tools/power-bi-model-health-check.html']) {
   const h = read(f), b = h.indexOf('js/model-health.min.js?v=');
-  for (const m of ['health-worker-client']) {
+  for (const m of ['health-worker-client', 'health-fix-plan']) {
     const a = h.indexOf(m + '.min.js?v=');
     ok(a >= 0 && a < b && h.split(m + '.min.js?v=').length === 2, `${f}: must load ${m}.min.js once, before model-health.min.js (SP32)`);
   }
