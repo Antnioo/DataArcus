@@ -16,12 +16,12 @@
   "Where to start reading": file lists the table holds become pointers to it; stale facts fixed from the code.
   (4) `scripts/check-modules.mjs` + `scripts/test-modules.mjs` (red on a missing row, a row whose file is gone, a file
   with two rows, an unknown "used by" name), one CI step beside the startup pack. (5) one route line in ARCHITECTURE.md.
-- **Measured before:** 158 module files today (assets/js 65: health-texts.js came with SP27 after the brief counted
-  64; mcp/lib 82; mcp/tools 11); the brief's count on 157: MODULES.md names 89, 68 not named.
-- **Expected checks:** check-modules: 158 files (more if integration adds modules before the merge), each one row;
+- **Measured before:** 157 module files (assets/js 64, mcp/lib 82, mcp/tools 11: `scripts/modules-facts.mjs`);
+  MODULES.md names 89 of them, 68 not named (the brief's count).
+- **Expected checks:** check-modules: 157 files (more if integration adds modules before the merge), each one row;
   `PASS  modules  <N> checks` with N = files + rows + used-by names checked. test-modules: 4 red proofs + the real
   file green, `PASS  test-modules  <N> checks`. Unchanged: agent-memory (its caps kept), result-lines, lint 0.
-- **Resume:** step 1 (the facts script).
+- **Resume:** step 2 (the map).
 
 ## Decisions I made
 - (filled as the work goes)
