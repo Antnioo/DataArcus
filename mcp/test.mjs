@@ -276,6 +276,11 @@ check(!r.err && JSON.stringify(r.j.columnTypes && r.j.columnTypes.alreadyTyped) 
   const mismatch = [];
   for (const dataType of ['unknown', 'int64', 'string']) for (const n of colsM) { const cs = colsM.map((x) => ({ name: x, dataType: /name|short|اسم/i.test(x) ? 'string' : dataType }));
     const a = (Bn.sortColumnFor(cs, n) || {}).name, b = typeof Tm.sortColumnFor === 'function' ? (Tm.sortColumnFor(cs, n) || {}).name : 'no function'; if (a !== b) mismatch.push(`${n} (${dataType}): ${a} vs ${b}`); }
+  // (0.3.2 DD1H: the inputs above give every column a type and no suffix; these give none, the Arabic suffix, Hijri and
+  // fiscal names, so a stale copy shows: one answer for both, the rule in assets/js/sort-column.js)
+  const untyped = ['Month Name', 'Month Number', 'Day Name (Arabic)', 'Month Name (Arabic)', 'Day of Week Number', 'Hijri Month Name', 'Hijri Month Number', 'Fiscal Month Name', 'Fiscal Month No', 'Month Year', 'Year Month Number', 'اسم الشهر', 'رقم الشهر', 'Month'];
+  for (const typed of [false, true]) for (const n of untyped) { const cs = untyped.map((x) => Object.assign({ name: x }, typed ? { dataType: /name|year$|اسم/i.test(x) ? 'string' : 'int64' } : {}));
+    const a = (Bn.sortColumnFor(cs, n) || {}).name, b = typeof Tm.sortColumnFor === 'function' ? (Tm.sortColumnFor(cs, n) || {}).name : 'no function'; if (a !== b) mismatch.push(`${n} (${typed ? 'typed' : 'no dataType'}): ${a} vs ${b}`); }
   check(!mismatch.length, `sort column rule differs between the report writer and the health check: ${mismatch.slice(0, 4).join(' | ')}`);
 }
 
