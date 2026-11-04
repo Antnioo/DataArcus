@@ -88,7 +88,7 @@ try {
     chk(() => GM && Array.isArray(GM.PATTERNS) && GM.PATTERNS.map((p) => p.id).join() === 'ramLY,ramPct,eidFitr,eidFitrLY,eidFitrPct,eidAdha,eidAdhaLY,eidAdhaPct', () => `B1. assets/js/gulf-measures.js exports the 8 Ramadan and Eid patterns in the page's order: ${GM ? JSON.stringify((GM.PATTERNS || []).map((p) => p.id)) : 'no module'}`);
     [0, 1].forEach((k) => {
       const f = FIX.mb.find((x) => x.lang === 'en' && JSON.stringify(x.saved) === JSON.stringify(FIX.mb.filter((y) => y.lang === 'en')[k].saved)), s = f.saved;
-      const base = s.base, cal = s.cal || 'Calendar', dc = s.dateCol || 'Date', page = measuresOf('\n' + f.tmdl.replace(/^createOrReplace\n\n\tref table [^\n]+\n/, ''));
+      const base = s.base || 'Total Sales', cal = s.cal || 'Calendar', dc = s.dateCol || 'Date', page = measuresOf('\n' + f.tmdl.replace(/^createOrReplace\n\n\tref table [^\n]+\n/, ''));
       const got = GM ? GM.measuresFor({ base, cal, dateColumn: dc }) : [];
       chk(() => got.length === 8 && got.every((m) => page[m.name] === m.expression), () => `B2-${k}. the shared builder's 8 measures equal the page's base capture (${JSON.stringify(s).slice(0, 80)}): ${got.filter((m) => page[m.name] !== m.expression).map((m) => m.name).join(', ') || got.length}`);
     });

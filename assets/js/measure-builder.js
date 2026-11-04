@@ -63,17 +63,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const dateRef = () => colRef(name('cal'), name('dateCol'));
   const fyEndArg = () => { const [mm, dd] = state.fyEnd.split('-').map(Number); return mm === 12 && dd === 31 ? '' : `, "${mm}/${dd}"`; };
 
-  // Eid windows: the days before each Eid plus the Eid days (Eid al-Fitr: 1-3 Shawwal, Eid al-Adha: 10-13 Dhu al-Hijjah,
-  // as the calendar's flags), for the Eids whose first day is in view, so a month or a year shows the Eid it holds.
-  // Last year: the Eid of the previous Hijri year of each Eid in view, looked up in the whole calendar.
-  const eidDax = (b, month, day, eidDays, lastYear) => {
-    const c = tbl(name('cal')), d = dateRef(), hm = `${c}[Hijri Month Number] = ${month}`, hd = `${c}[Hijri Day] = ${day}`;
-    const eids = lastYear
-      ? `VAR _Years =\n    SELECTCOLUMNS (\n        FILTER ( ${c}, ${hm} && ${hd} ),\n        "@Year", ${c}[Hijri Year] - 1\n    )\nVAR _Eids =\n    SELECTCOLUMNS (\n        FILTER ( ALL ( ${c} ), ${hm} && ${hd} && ${c}[Hijri Year] IN _Years ),\n        "@Eid", ${d}\n    )`
-      : `VAR _Eids =\n    SELECTCOLUMNS (\n        FILTER ( ${c}, ${hm} && ${hd} ),\n        "@Eid", ${d}\n    )`;
-    return `VAR _DaysBefore = 7\nVAR _EidDays = ${eidDays}\n${eids}\nVAR _Window =\n    FILTER (\n        ALL ( ${d} ),\n        VAR _Day = ${d}\n        RETURN\n            NOT ISEMPTY (\n                FILTER ( _Eids, _Day >= [@Eid] - _DaysBefore && _Day <= [@Eid] + _EidDays - 1 )\n            )\n    )\nRETURN\n    IF (\n        NOT ISEMPTY ( ${lastYear ? '_Years' : '_Eids'} ),\n        CALCULATE ( ${b}, REMOVEFILTERS ( ${c} ), _Window )\n    )`;
-  };
-  const eidPct = (e) => () => { const w = mRef(`${baseName()} ${e} Window`), ly = mRef(`${baseName()} ${e} Window Last Year`); return `DIVIDE ( ${w} - ${ly}, ${ly} )`; };
+  // (0.3.2 GM1) the Ramadan and Eid measures come from the shared builder (gulf-measures.js), which the MCP's
+  // add_gulf_calendar uses too; the page gives it its calendar, date column and the names of the sibling measures
+  const GM = window.DataArcusGulfMeasures;
+  const gulfX = () => ({ c: tbl(name('cal')), d: dateRef(), ref: (id) => mRef(`${baseName()} ${GM.byId(id).suffix}`) });
 
   // Each pattern: id, group, name suffix, what it does, expression builder, format hint, needs other patterns
   const PATTERNS = [
@@ -105,31 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
       dax: (b, d) => `VAR _LastDate = MAX ( ${d} )\nRETURN\n    CALCULATE (\n        ${b},\n        ${d} <= _LastDate,\n        REMOVEFILTERS ( ${tbl(name('cal'))} )\n    )` },
     { id: 'share', g: 'Rolling', suffix: '% of Total', pct: true, what: 'Share of the grand total for the visible period, e.g. each brand’s share of sales.',
       dax: (b) => `DIVIDE ( ${b}, CALCULATE ( ${b}, ALLSELECTED () ) )` },
-    { id: 'ramLY', g: 'Ramadan', suffix: 'Last Ramadan', ramadan: true,
-      what: 'Same Ramadan days last Hijri year. Put Ramadan Day on the axis to compare day by day. Needs the DataArcus calendar table.',
-      // The Ramadan days in view (Hijri year + day, so a year with two Ramadans keeps both), moved back one Hijri year.
-      // Not MAX ( Hijri Year ): on a card or total row that is the latest year in view, often the Ramadan in view itself.
-      dax: (b) => { const c = tbl(name('cal')); return `VAR _RamadanDays =\n    FILTER (\n        SUMMARIZE ( ${c}, ${c}[Hijri Year], ${c}[Ramadan Day] ),\n        NOT ISBLANK ( ${c}[Ramadan Day] )\n    )\nVAR _SameDaysLastYear =\n    SELECTCOLUMNS (\n        _RamadanDays,\n        "Hijri Year", ${c}[Hijri Year] - 1,\n        "Ramadan Day", ${c}[Ramadan Day]\n    )\nRETURN\n    CALCULATE (\n        ${b},\n        REMOVEFILTERS ( ${c} ),\n        TREATAS ( _SameDaysLastYear, ${c}[Hijri Year], ${c}[Ramadan Day] )\n    )`; } },
-    { id: 'ramPct', g: 'Ramadan', suffix: 'vs Last Ramadan %', pct: true, ramadan: true, needs: ['ramLY'],
-      what: 'Growth of the Ramadan days in view vs the same days of last Ramadan. Days outside Ramadan are left out, so a card filtered to a year compares the two Ramadans.',
-      // only the Ramadan days count on this side too, or a year card divides the whole year by one Ramadan
-      dax: (b) => `VAR _ThisRamadan = CALCULATE ( ${b}, KEEPFILTERS ( ${tbl(name('cal'))}[Is Ramadan] = TRUE () ) )\nVAR _LastRamadan = ${mRef(baseName() + ' Last Ramadan')}\nRETURN\n    DIVIDE ( _ThisRamadan - _LastRamadan, _LastRamadan )` },
-    { id: 'eidFitr', g: 'Eid', suffix: 'Eid al-Fitr Window', ramadan: true,
-      what: 'The 7 days before Eid al-Fitr and its 3 days, for each Eid whose first day is in view. Needs the DataArcus calendar table.',
-      dax: (b) => eidDax(b, 10, 1, 3, false) },
-    { id: 'eidFitrLY', g: 'Eid', suffix: 'Eid al-Fitr Window Last Year', ramadan: true,
-      what: 'The same Eid al-Fitr window in the previous Hijri year, for each Eid in view.',
-      dax: (b) => eidDax(b, 10, 1, 3, true) },
-    { id: 'eidFitrPct', g: 'Eid', suffix: 'Eid al-Fitr Window vs Last Year %', pct: true, ramadan: true, needs: ['eidFitr', 'eidFitrLY'],
-      what: 'Growth of the Eid al-Fitr window vs last year’s.', dax: eidPct('Eid al-Fitr') },
-    { id: 'eidAdha', g: 'Eid', suffix: 'Eid al-Adha Window', ramadan: true,
-      what: 'The 7 days before Eid al-Adha and its 4 days (10 to 13 Dhu al-Hijjah), for each Eid whose first day is in view. Needs the DataArcus calendar table.',
-      dax: (b) => eidDax(b, 12, 10, 4, false) },
-    { id: 'eidAdhaLY', g: 'Eid', suffix: 'Eid al-Adha Window Last Year', ramadan: true,
-      what: 'The same Eid al-Adha window in the previous Hijri year, for each Eid in view.',
-      dax: (b) => eidDax(b, 12, 10, 4, true) },
-    { id: 'eidAdhaPct', g: 'Eid', suffix: 'Eid al-Adha Window vs Last Year %', pct: true, ramadan: true, needs: ['eidAdha', 'eidAdhaLY'],
-      what: 'Growth of the Eid al-Adha window vs last year’s.', dax: eidPct('Eid al-Adha') }
+    // the 8 Ramadan and Eid measures, in their order (gulf-measures.js)
+    ...GM.PATTERNS.map((p) => ({ id: p.id, g: p.g, suffix: p.suffix, pct: p.pct, ramadan: true, needs: p.needs, what: p.what, dax: (b) => p.dax(b, gulfX()) }))
   ];
   const val = (x) => (typeof x === 'function' ? x() : x);
   // rolling months and average days: whole numbers within the same limits as the number boxes (max="36", max="365")

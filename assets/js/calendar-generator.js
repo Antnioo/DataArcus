@@ -92,6 +92,15 @@
       : `IF ( [Date] >= ${dateDax(rules[rules.length - 1].from)}, ${inDays(rules[rules.length - 1].days)}, ${nest(rules.slice(0, -1))} )`);
     return nest(COUNTRY[st.weekend]);
   };
+  // (0.3.2 GM1, RD5) the standard VAT rate in force on the date, in percent, for a country of gulf-dates.js's vat: the
+  // newest rule first, each older one in the IF's else branch, as weekendDax; null when the country has no rules
+  const VAT_COLUMN = 'VAT Standard Rate %';
+  const vatDax = (country) => {
+    const rules = GD && GD.vat && own(GD.vat.rates, country) ? GD.vat.rates[country] : null;
+    if (!rules) return null;
+    const nest = (r) => (r.length === 1 ? String(r[0].rate) : `IF ( [Date] >= ${dateDax(r[r.length - 1].from)}, ${r[r.length - 1].rate}, ${nest(r.slice(0, -1))} )`);
+    return nest(rules);
+  };
 
   const q = (s) => '"' + String(s).replace(/"/g, '""') + '"';
   const sw = (expr, list, offset = 1) => `SWITCH ( ${expr}, ${list.map((v, i) => `${i + offset}, ${q(v)}`).join(', ')} )`;
@@ -147,6 +156,9 @@
       col('Year Offset', 'YEAR ( [Date] ) - YEAR ( TODAY () )');
       col('Is Past', '[Date] < TODAY ()');
     }
+    // (0.3.2 GM1) the VAT standard rate column, only when asked (st.vat: a country code; the page never sets it)
+    const vat = st.vat ? vatDax(st.vat) : null;
+    if (vat) col(VAT_COLUMN, vat, 'number');
 
     let hijriVar = '', hijriLayer = '', hijriCols = 0;
     if (st.hijri && hijriFmt) {
@@ -218,7 +230,7 @@ ${L.join(',\n')}
   const hijriFor = (st) => (observedOn(st) ? hijriFrom(hijriMonthStarts(st, parse(st.start), parse(st.end))) : hijri);
 
   return { MONTHS, DAYS, HIJRI, ARABIC, arabicOn, WEEKENDS, COUNTRY, GD, DAY, DEFAULTS, MIN_DATE, MAX_DATE, own, iso, parse, addYears, hijriFmt, hijri, hijriFrom, hijriMonthStarts, hijriFor,
-    observedOn, weekendDays, tableName, build };
+    observedOn, weekendDays, tableName, build, vatDax, VAT_COLUMN };
 });
 
 if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded', () => {
