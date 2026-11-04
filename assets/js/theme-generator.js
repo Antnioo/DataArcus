@@ -10,16 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Arabic/English for text drawn by this script (static page text uses data-i18n)
   const isAr = () => document.documentElement.lang === 'ar';
   const L = (en, ar) => (isAr() ? ar : en);
-  const PRESET_AR = { 'DataArcus': 'DataArcus', 'Corporate': 'رسمي', 'Colorblind safe': 'آمن لعمى الألوان', 'Desert Gulf': 'صحراء الخليج', 'Midnight': 'منتصف الليل', 'Earthy': 'ترابي' };
 
   const E = window.DAEngine;   // design-engine.js: colours, theme JSON, page sizes, slots, background
   const PRESETS = E.PRESETS;
-  const UI_LABELS_EN = { background: 'Page', card: 'Visual', text: 'Text', accent: 'Table accent', good: 'Good', neutral: 'Neutral', bad: 'Bad' };
-  const UI_LABELS_AR = { background: 'الصفحة', card: 'المرئي', text: 'النص', accent: 'لون الجدول', good: 'جيد', neutral: 'محايد', bad: 'سيئ' };
-  const uiLabel = (k) => (isAr() ? UI_LABELS_AR : UI_LABELS_EN)[k];
-  const UI_LABELS = UI_LABELS_EN;
 
-  const { clampHex, mix, contrast, generate } = E;
+  const { mix, contrast, KINDS, LAYOUTS } = E;
   // (0.3.2 OP1) the font choices are the engine's list (text-measure.js's catalog), drawn here: the page has no copy
   if ($('font')) $('font').innerHTML = E.FONTS.map((f) => `<option>${f}</option>`).join('');
 
@@ -30,17 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
   S.subscribe((s) => { state = s; });
   const save = () => S.save();
 
-  // ---------- builders ----------
-  const colorInput = (key, value, label) => `<div class="tg-color"><input type="color" value="${value}" data-key="${key}" aria-label="${label} color"><input type="text" value="${value}" data-key="${key}" maxlength="9" aria-label="${label} hex code" spellcheck="false"><span>${label}</span></div>`;
-  const CHART_INPUTS = { csLabels: 'labels', csGrid: 'grid', csLegend: 'legend', csAxis: 'axis', csTable: 'table', csLook: 'look' };
-  const renderInputs = () => {
-    $('dataColors').innerHTML = state.data.map((c, i) => colorInput('d' + i, c, L('Color ', 'اللون ') + (i + 1))).join('');
-    $('uiColors').innerHTML = Object.keys(UI_LABELS).map((k) => colorInput('u_' + k, state.ui[k], uiLabel(k))).join('');
-    $('themeName').value = state.name; $('font').value = state.font;
-    Object.entries(CHART_INPUTS).forEach(([id, k]) => { $(id).value = chart()[k]; });
-    document.querySelectorAll('.tg-preset').forEach((b) => b.classList.toggle('active', b.dataset.p === state.preset));
-  };
-  const setColor = (key, val) => { if (key[0] === 'd') state.data[+key.slice(1)] = val; else state.ui[key.slice(2)] = val; state.preset = null; };
+  // ---------- the controls and the layout step (theme-layout-ui.js, 0.3.2 SP31) ----------
+  const Lay = window.DAThemeLayoutUI.mount({ store: S, engine: E, $, L, isAr, track, toast: (m) => toast(m),
+    hooks: { renderAll: () => renderAll(), renderJson: () => renderJson(), clearLook: () => { lookMsg = ''; }, glassUrl: () => glassUrl(), bgSvg: (slots, opt) => bgSvg(slots, opt),
+      canvasFit: () => canvasFit && canvasFit(), renderVis: () => renderVis(), updateStatus: () => updateStatus(), layoutChanged: () => layoutChanged() } });
+  const { PH, PRESET_AR, lay, page, applyPage, computeSlots, boxOf, rtl, nm, pngSize, seg, renderInputs, renderPresets, renderLayout, renderLayoutPreview } = Lay;
 
   // chart style choices with the defaults filled in, and the theme JSON
   const chart = () => E.chart(state);
@@ -124,52 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     lookMsg = L('Plain look: with these colours the glass look can\'t keep every text readable, so the cards are solid. Choose other colours for glass.', 'شكل عادي: بهذه الألوان لا يُبقي الشكل الزجاجي كل النصوص مقروءة، لذا البطاقات مصمتة. اختر ألوانًا أخرى للشكل الزجاجي.');
   };
   const renderAll = () => { lookGate(); renderPreview(); renderContrast(); renderJson(); renderLayout(); save(); if (window.__tgFoldSums) window.__tgFoldSums(); };
-  // Every font in the list is built into Power BI, but only some have Arabic letters: in an Arabic or
-  // right-to-left report the others fall back to another font, so say so under the font picker.
-  const AR_FONTS = E.AR_FONTS;
-  function fontNote() {
-    const sel = $('font'); if (!sel) return;
-    let n = $('fontNote');
-    if (!n) { n = document.createElement('small'); n.id = 'fontNote'; n.className = 'd-block mt-1 tg-warn'; n.setAttribute('role', 'status'); sel.insertAdjacentElement('afterend', n); }
-    const arabic = isAr() || (state.layout && state.layout.dir === 'rtl');
-    n.textContent = arabic && !AR_FONTS.includes(state.font)
-      ? L(`${state.font} has no Arabic letters, so Arabic text will show in another font. For Arabic reports use Segoe UI, Tahoma or Arial.`, `خط ${state.font} لا يحتوي حروفًا عربية، فسيظهر النص العربي بخط آخر. للتقارير العربية استخدم Segoe UI أو Tahoma أو Arial.`)
-      : '';
-    n.hidden = !n.textContent;
-  }
 
-  // ---------- events ----------
-  const renderPresets = () => {
-    $('presets').innerHTML = Object.entries(PRESETS).map(([name, p]) => `<button class="tg-preset${name === state.preset ? ' active' : ''}" type="button" data-p="${name}"><span class="sw">${p.data.slice(0, 5).map((c) => `<i style="background:${c}"></i>`).join('')}</span>${isAr() ? PRESET_AR[name] : name}</button>`).join('');
-  };
-  renderPresets();
-  $('presets').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-p]'); if (!b) return;
-    const p = PRESETS[b.dataset.p]; state.preset = b.dataset.p; state.data = p.data.slice(); state.ui = { ...p.ui };
-    renderInputs(); renderAll(); track('theme_preset', { preset: state.preset });
-  });
-  const onColor = (e) => {
-    const el = e.target; if (!el.dataset.key) return;
-    const val = el.type === 'color' ? el.value : clampHex(el.value);
-    if (el.type === 'text') { el.classList.toggle('is-invalid', !val); el.setAttribute('aria-invalid', String(!val)); }
-    if (!val) return;
-    setColor(el.dataset.key, val);
-    const twin = el.parentElement.querySelector(el.type === 'color' ? 'input[type=text]' : 'input[type=color]'); twin.value = val;
-    document.querySelectorAll('.tg-preset').forEach((b) => b.classList.remove('active'));
-    renderAll();
-  };
-  ['dataColors', 'uiColors'].forEach((id) => { $(id).addEventListener('input', onColor); });
-  // leaving a hex box with something that is not a color: the box shows the color in use again, and says why
-  ['dataColors', 'uiColors'].forEach((id) => $(id).addEventListener('change', (e) => {
-    const el = e.target; if (el.type !== 'text' || !el.dataset.key) return;
-    const k = el.dataset.key, cur = k[0] === 'd' ? state.data[+k.slice(1)] : state.ui[k.slice(2)], val = clampHex(el.value);
-    if (!val) toast(L('Use a hex color like #1a2b3c', 'استخدم رمز لون مثل ‎#1a2b3c'));
-    el.value = val || cur; el.classList.remove('is-invalid'); el.setAttribute('aria-invalid', 'false');
-  }));
-  $('genBtn').addEventListener('click', () => {
-    state.data = generate($('brand').value, $('harmony').value); state.ui.accent = state.data[0]; state.preset = null;
-    renderInputs(); renderAll(); track('theme_generate', { harmony: $('harmony').value });
-  });
   // ---------- a theme from a logo (0.3.0 step 6) ----------
   // The file is drawn on a small canvas in this tab and only its pixels are read (an object URL, revoked at once): it is
   // never uploaded, never saved, and no request is made. The engine finds the brand colours (logoColours) and builds the
@@ -232,11 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
     drop.addEventListener('drop', (e) => { e.preventDefault(); readLogo(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]); });
     new MutationObserver(renderLogo).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   }
-  $('themeName').addEventListener('input', (e) => { state.name = e.target.value.slice(0, 60); renderJson(); save(); });
-  $('font').addEventListener('change', (e) => { state.font = e.target.value; renderAll(); });
-  Object.entries(CHART_INPUTS).forEach(([id, k]) => $(id).addEventListener('change', (e) => {
-    state.chart = Object.assign(chart(), { [k]: e.target.value }); lookMsg = ''; renderAll(); track('theme_chart_style', { [k]: e.target.value });
-  }));
 
   const toast = (msg) => { const t = $('toast'); t.textContent = msg; t.style.opacity = 1; clearTimeout(toast.h); toast.h = setTimeout(() => { t.style.opacity = 0; }, 1800); };
   $('copyBtn').addEventListener('click', () => {
@@ -258,30 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
     track('theme_download', { preset: state.preset || 'custom', font: state.font, from });
   };
   $('dlBtn').addEventListener('click', () => downloadJson('step3'));
-
-  // ---------- page layout: a full background with a place for every visual ----------
-  // Power BI's default page is 1280 × 720, so every slot is in those units and can be typed straight
-  // into Format › General › Properties. The PNG is drawn at 1.5× (1920 × 1080) so it stays sharp.
-  let PW = 1280, PH = 720;   // the current page's size on the 720-tall design grid
-  const { PAGES, LIM, within, fitCustom, KINDS, LAYOUTS, hasMain, hasSplit } = E;
-  const page = (c) => E.page(c || lay());
-  let pageMsg = '';   // shown once after a typed value was outside the limits
-  const shapeMsg = (c) => { if (c.page !== 'custom') return ''; const [w, h] = fitCustom(c.pageW, c.pageH);
-    // (0.2.9, the audit's A2-1: the small-page rule is the design engine's, so the page says what the report will get)
-    const sp = E.smallPage(c), small = sp ? L(`Under ${E.SMALL_PAGE.w} wide the executive layout becomes the single-focus layout (the KPI cards and one large chart), with no second page.`, `تحت عرض ${E.SMALL_PAGE.w} يصبح الملخص التنفيذي تخطيط الرسالة الواحدة (بطاقات المؤشرات ومخطط كبير واحد)، بدون صفحة ثانية.`) : '';
-    return [w === c.pageW && h === c.pageH ? '' : L(`This shape is outside 4:3 to 2.4:1, so the preview uses ${w} × ${h}.`, `هذا الشكل خارج النطاق من 4:3 إلى 2.4:1، لذلك تستخدم المعاينة <bdi dir="ltr">${w} × ${h}</bdi>.`), small].filter(Boolean).join(' '); };
-  const applyPage = (c) => { const p = page(c); PW = Math.round(p.w / p.s); PH = 720; return p; };
-  const boxOf = (s, c) => E.boxOf(s, c || lay());
-  const lay = () => state.layout;
-  const rtl = (c) => E.rtl(c || lay(), isAr() ? 'ar' : 'en');
-  const nm = (x) => E.label(x, isAr() ? 'ar' : 'en');   // (A2-9: the engine's labels are keyed by language)
-
-  // sizes kept inside their safe ranges (the filter panel's depends on the current page width; the header's and the top
-  // filter rail's start higher on a small page, so their text fits)
-  const rangeOf = (k) => E.rangeOf(k, PW, lay());
-  const clampTo = (k, v) => E.clampTo(k, v, PW, lay());
-  const sizes = (c) => E.sizes(c, PW);
-  function computeSlots(c) { applyPage(c); return E.computeSlots(c, isAr() ? 'ar' : 'en'); }
 
   // (0.3.1 FX5) the sample's bars and columns as thick as Power BI draws n of them in the slot: the writer's rule
   // (pbip-sizing.js barBand, never thicker than its maximum), else Desktop's default (its 20% between categories);
@@ -336,8 +251,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return '';
   }
-  // accent bars: side, thickness and color (Advanced options)
-  const barW = (k, c) => E.barW(k, c || lay());
   const c0 = () => E.c0(lay()); // KPI text sits after a side bar
 
   // The background (design engine); the preview adds sample visuals, slot names and sizes over the panels
@@ -357,139 +270,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return s;
   };
   const bgSvg = (slots, opt) => E.bgSvg(state, slots, Object.assign({}, opt, { overlay: previewMarks }), isAr() ? 'ar' : 'en');
-
-  // small wireframe for the layout buttons (corners: the design's radius, as the panels; the audit's seen-not-in-scope)
-  const thumb = (key) => {
-    const c = Object.assign({}, lay(), { preset: key, kpis: LAYOUTS[key].kpis, filters: LAYOUTS[key].filters, kpiH: null, mainW: null, split: null }), u = state.ui;
-    return `<svg viewBox="0 0 ${PW} ${PH}"><rect width="${PW}" height="${PH}" fill="${u.background}"/>${c.header ? `<rect width="${PW}" height="${sizes(c).hh}" fill="${E.roles(u).band}"/>` : ''}`
-      + computeSlots(c).filter((s) => s.kind !== 'title' && s.kind !== 'logo').map((s) => `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="${+c.radius || 0}" fill="${s.kind === 'kpi' ? u.accent : u.card}" opacity="${s.kind === 'kpi' ? 0.55 : 1}"/>`).join('') + '</svg>';
-  };
-
-  const seg = (key, opts, cur) => `<div class="tg-seg" role="group">${opts.map(([v, t]) => `<button type="button" data-l="${key}" data-v="${v}" class="${String(v) === String(cur) ? 'active' : ''}" aria-pressed="${String(v) === String(cur)}">${t}</button>`).join('')}</div>`;
-  const chk = (key, t, note) => `<label class="tg-check"><input type="checkbox" data-l="${key}"${lay()[key] ? ' checked' : ''}> <span>${t}${note ? `<br><small class="text-white-50">${note}</small>` : ''}</span></label>`;
-
-  // sliders show and take page units (percentages stay percentages)
-  const rng = (key, label, v, unit, st) => { const f = unit === '%' ? 1 : page().s, [lo, hi] = rangeOf(key);
-    return `<label class="tg-range"><span>${label} <b data-out="${key}">${Math.round(v * f)}${unit || ''}</b></span><input type="range" data-l="${key}" data-u="${unit || ''}" data-f="${f}" min="${Math.round(lo * f)}" max="${Math.round(hi * f)}" step="${unit === '%' ? 1 : Math.max(1, Math.round((st || 4) * f))}" value="${Math.round(v * f)}"></label>`; };
-  function sizeControls(c) {
-    applyPage(c);
-    const P = LAYOUTS[c.preset], z = sizes(c), out = [], pg = page(c);
-    if (c.header) out.push(rng('hh', L('Header height', 'ارتفاع الشريط العلوي'), z.hh), rng('logoW', L('Logo width', 'عرض الشعار'), z.logoW));
-    if (c.filters) {
-      out.push(`<div><span class="tg-label">${L('Filter panel position', 'موضع لوحة الفلاتر')}</span>${seg('fpos', [['start', L('Start side', 'جهة البداية')], ['end', L('End side', 'جهة النهاية')], ['top', L('Top', 'أعلى')]], z.fpos)}</div>`);
-      out.push(z.fpos === 'top' ? rng('fh', L('Filter strip height', 'ارتفاع شريط الفلاتر'), z.fh) : rng('fw', L('Filter panel width', 'عرض لوحة الفلاتر'), z.fw));
-    }
-    out.push(rng('kpiH', L('KPI row height', 'ارتفاع صف المؤشرات'), z.kpiH));
-    if (hasMain(P)) out.push(rng('mainW', L('Main chart width', 'عرض المخطط الرئيسي'), z.mainW, '%'));
-    if (hasSplit(P)) out.push(rng('split', L('Top row share of the chart area', 'حصة الصف العلوي من مساحة المخططات'), z.split, '%'));
-    return `<div class="tg-sizes"><div class="d-flex justify-content-between align-items-center"><span class="tg-label mb-0">${L('Adjust sizes', 'ضبط المقاسات')}</span><button type="button" class="tg-reset" data-l="reset"><i class="bi bi-arrow-counterclockwise"></i> ${L('Reset sizes', 'إعادة المقاسات')}</button></div>
-      <small class="text-white-50 d-block mb-2">${L(`Start side is the left in left-to-right reports and the right in Arabic ones. Sizes are in your page units (${pg.w} × ${pg.h}).`, `جهة البداية هي اليسار في التقارير من اليسار لليمين واليمين في التقارير العربية. المقاسات بوحدات صفحتك (${pg.w} × ${pg.h}).`)}</small>${out.join('')}</div>`;
-  }
-  // Advanced options: exact values for people who want them; closed by default
-  let advOpen = false;
-  const dot = (col) => `<i class="tg-dot" style="background:${col}"></i>`;
-  const colorSeg = (key, cur) => { const u = state.ui;
-    return seg(key, [['accent', dot(u.accent) + L('Accent', 'التمييز')], ['good', dot(u.good) + L('Good', 'جيد')], ['neutral', dot(u.neutral) + L('Neutral', 'محايد')], ['data', `<span class="tg-dots">${state.data.slice(0, 3).map(dot).join('')}</span>` + L('Data colors', 'ألوان البيانات')]], cur || 'accent'); };
-  function advControls(c) {
-    const out = [rng('radius', L('Exact corner radius', 'نصف قطر الزوايا بدقة'), +c.radius || 0, '', 1)];
-    if (c.kpiBar && c.kpiBar !== 'none') out.push(rng('kpiBarW', L('KPI bar thickness', 'سُمك خط المؤشرات'), barW('kpiBarW', c), '', 1),
-      `<div><span class="tg-label">${L('KPI bar color', 'لون خط المؤشرات')}</span>${colorSeg('kpiBarC', c.kpiBarC)}</div>`);
-    if (c.header && c.headLine !== 'none') out.push(rng('headLineW', L('Header line thickness', 'سُمك خط الشريط العلوي'), barW('headLineW', c), '', 1),
-      `<div><span class="tg-label">${L('Header line color', 'لون خط الشريط العلوي')}</span>${colorSeg('headLineC', c.headLineC)}</div>`);
-    return `<details class="tg-adv"${advOpen ? ' open' : ''}><summary>${L('Advanced options', 'خيارات متقدمة')}</summary><div class="tg-sizes mt-2">
-      <div class="d-flex justify-content-between align-items-center"><small class="text-white-50">${L(`Fine control over corners and accent lines, in your page units (${page(c).w} × ${page(c).h}).`, `تحكم دقيق في الزوايا والخطوط الملونة، بوحدات صفحتك (${page(c).w} × ${page(c).h}).`)}</small><button type="button" class="tg-reset flex-shrink-0" data-l="resetAdv"><i class="bi bi-arrow-counterclockwise"></i> ${L('Reset', 'إعادة')}</button></div>
-      ${out.join('')}</div></details>`;
-  }
-  const pngSize = (c) => E.pngSize(c || lay());
-  // (0.3.1 LC1) the canvas's slots: page 1 as the project download writes it (canvasFit, page units) on the 720 grid,
-  // each with its row in the slot table (s: the same kind and name, in order), or the layout's slots
-  const canvasSlots = (c, slots) => {
-    const fit = canvasFit && canvasFit(); if (!fit) return null;
-    const own = computeSlots(fit.layout), k = page(fit.layout).s, seen = {};
-    const drawn = fit.slots.map((f) => { const key = f.kind + '|' + nm(own[f.i].role), n = seen[key] = (seen[key] || 0) + 1;
-      const row = slots.map((x, j) => [x, j]).filter(([x]) => x.kind + '|' + nm(x.role) === key)[n - 1];
-      return Object.assign({}, own[f.i], { x: f.x / k, y: f.y / k, w: f.w / k, h: f.h / k, s: row ? row[1] : null }, f.stack ? { stack: true } : {}); });
-    computeSlots(c);   // (the page's size back to the layout's)
-    return { drawn, moved: drawn.length !== slots.length || drawn.some((d) => { const b = boxOf(d, c), r = d.s != null ? boxOf(slots[d.s], c) : null; return !r || b.x !== r.x || b.y !== r.y || b.w !== r.w || b.h !== r.h; }) };
-  };
-  function renderLayoutPreview() {
-    const c = lay(), slots = computeSlots(c), pg = page(c), [pw, ph] = pngSize(c), fit = canvasSlots(c, slots);
-    $('layCanvas').innerHTML = bgSvg(fit ? fit.drawn : slots, Object.assign({ preview: true }, E.isGlass(state) ? { glass: Object.assign({ url: glassUrl() }, E.glassLook(state)) } : {}));
-    if (fit) $('layCanvas').querySelector('svg').setAttribute('data-fit', fit.moved ? 'moved' : 'same');
-    const H = isAr() ? ['العنصر', 'النوع المقترح', 'أفقي X', 'رأسي Y', 'العرض', 'الارتفاع'] : ['Slot', 'Suggested visual', 'X (horizontal)', 'Y (vertical)', 'Width', 'Height'];
-    $('slotTable').innerHTML = `<table><thead><tr>${H.map((h, i) => `<th${i > 1 ? ' class="n"' : ''}>${h}</th>`).join('')}</tr></thead><tbody>${slots.map((s, i) => `<tr data-i="${i}"><td>${nm(s.role)}</td><td>${nm(KINDS[s.kind])}</td>${((b) => [b.x, b.y, b.w, b.h].map((n) => `<td class="n">${n}</td>`).join(''))(boxOf(s, c))}</tr>`).join('')}</tbody></table>`;
-    updateStatus();
-    const note = $('layUnits'); if (note) note.innerHTML = L(`Numbers are for a Power BI page of <b>${pg.w} × ${pg.h}</b> (Format page › Canvas settings). The PNG is ${pw} × ${ph} pixels for a sharp background; with Image fit <b>Stretch</b> it lines up exactly.`, `الأرقام لصفحة Power BI بمقاس <b><bdi dir="ltr">${pg.w} × ${pg.h}</bdi></b> (<bdi dir="ltr">Format page › Canvas settings</bdi>). الصورة PNG بمقاس <bdi dir="ltr">${pw} × ${ph}</bdi> بكسل لتكون حادة، ومع <bdi dir="ltr">Image fit: Stretch</bdi> تنطبق تمامًا.`) + (fit && fit.moved ? ' ' + L('The preview shows page 1 as the Power BI project download writes it (the filter panel as high as its slicers). The table, PNG and CSV keep the layout\'s slots, for placing visuals yourself.', 'تعرض المعاينة الصفحة 1 كما يكتبها تنزيل مشروع Power BI (لوحة الفلاتر بارتفاع مقسماتها). يبقى الجدول وصورة PNG وملف CSV بمواضع التخطيط، لتضع العناصر بنفسك.') : '');
-  }
-  function renderLayout() {
-    const c = lay(); applyPage(c); renderJson(); // the theme's corner radius follows the page size and corners
-    // page size first: it is set once in Power BI and every number below depends on it
-    $('pageSize').innerHTML = `<span class="tg-label">${L('Power BI page size', 'مقاس صفحة Power BI')}</span>
-      <div>${seg('page', [[E.DEFAULT_PAGE, `${E.PAGES[E.DEFAULT_PAGE].join(' × ')}<small>${L('16:9 · Power BI default', '16:9 · افتراضي Power BI')}</small>`], ['1280x720', `1280 × 720<small>${L('16:9 · older reports', '16:9 · تقارير أقدم')}</small>`], ['960x720', `960 × 720<small>4:3</small>`], ['custom', `${L('Custom', 'مخصص')}<small>${L('any size', 'أي مقاس')}</small>`]], c.page === 'custom' || PAGES[c.page] ? c.page : E.DEFAULT_PAGE)}
-        ${c.page === 'custom' ? `<div class="tg-custom"><label>${L('Width', 'العرض')}<input type="number" inputmode="numeric" data-l="pageW" min="${LIM.w[0]}" max="${LIM.w[1]}" step="1" value="${c.pageW}"></label><span aria-hidden="true">×</span><label>${L('Height', 'الارتفاع')}<input type="number" inputmode="numeric" data-l="pageH" min="${LIM.h[0]}" max="${LIM.h[1]}" step="1" value="${c.pageH}"></label></div>
-        <small class="d-block mt-1 ${pageMsg || shapeMsg(c) ? 'tg-warn' : 'text-white-50'}" role="status">${[pageMsg, shapeMsg(c)].filter(Boolean).join(' ') || L('Match Format page › Canvas settings › Custom in Power BI.', 'طابقه مع <bdi dir="ltr">Format page › Canvas settings › Custom</bdi> في Power BI.')}</small>` : ''}</div>
-      <small class="d-block mt-2 text-white-50">${L('Use the same size in Power BI: <b>Format page › Canvas settings</b>. All sizes and positions below follow it.', 'استخدم المقاس نفسه في Power BI: <b><bdi dir="ltr">Format page › Canvas settings</bdi></b>. كل المقاسات والمواضع أدناه تتبعه.')}</small>`;
-    $('layControls').innerHTML = `
-      <div><span class="tg-label">${L('Layout', 'التخطيط')}</span><div class="tg-lays">${Object.keys(LAYOUTS).map((k) => `<button type="button" class="tg-lay-b${k === c.preset ? ' active' : ''}" data-l="preset" data-v="${k}" aria-pressed="${k === c.preset}">${thumb(k)}${nm(LAYOUTS[k].name)}</button>`).join('')}</div></div>
-      <div><span class="tg-label">${L('KPI cards', 'بطاقات المؤشرات')}</span>${seg('kpis', [[3, '3'], [4, '4'], [5, '5'], [6, '6']], c.kpis)}</div>
-      <div><span class="tg-label">${L('Reading direction', 'اتجاه القراءة')}</span>${seg('dir', [['ltr', L('Left to right', 'من اليسار لليمين')], ['rtl', L('Right to left (Arabic)', 'من اليمين لليسار (عربي)')]], rtl() ? 'rtl' : 'ltr')}</div>
-      <div><span class="tg-label">${L('Corners', 'الزوايا')}</span>${seg('radius', [[0, L('Square', 'حادة')], [8, L('Soft', 'ناعمة')], [16, L('Round', 'دائرية')]], c.radius)}</div>
-      <div><span class="tg-label">${L('KPI accent bar', 'الخط الملون لبطاقات المؤشرات')}</span>${seg('kpiBar', [['start', L('Start side', 'جهة البداية')], ['top', L('Top', 'أعلى')], ['bottom', L('Bottom', 'أسفل')], ['none', L('None', 'بدون')]], c.kpiBar || 'none')}</div>
-      ${c.header ? `<div><span class="tg-label">${L('Header accent line', 'الخط الملون للشريط العلوي')}</span>${seg('headLine', [['short', L('Short, under the title', 'قصير تحت العنوان')], ['full', L('Full width', 'بعرض الصفحة')], ['none', L('None', 'بدون')]], c.headLine || 'short')}</div>` : ''}
-      <div class="d-flex flex-column gap-2">
-        ${chk('header', L('Header band for title and logo', 'شريط علوي للعنوان والشعار'))}
-        ${chk('filters', L('Filter panel', 'لوحة الفلاتر'))}
-        ${chk('shadow', L('Soft shadows', 'ظلال خفيفة'))}
-        ${chk('samples', L('Sample visuals in the preview', 'عناصر تجريبية في المعاينة'))}
-      </div>
-      ${sizeControls(c)}
-      ${advControls(c)}`;
-    $('layWhy').innerHTML = LAYOUTS[c.preset].why.map((w) => `<span><i class="bi bi-check2"></i> ${nm(w)}</span>`).join('');
-    renderLayoutPreview(); renderVis(); fontNote();
-  }
-
-  const step2 = $('layout');
-  step2.addEventListener('click', (e) => {
-    const b = e.target.closest('button[data-l]'); if (!b) return;
-    const k = b.dataset.l, v = b.dataset.v, c = lay();
-    if (k === 'preset') { c.preset = v; c.kpis = LAYOUTS[v].kpis; c.filters = LAYOUTS[v].filters; delete c.kpiH; delete c.mainW; delete c.split; track('theme_layout', { layout: v }); }
-    else if (k === 'reset') ['hh', 'logoW', 'fpos', 'fw', 'fh', 'kpiH', 'mainW', 'split'].forEach((x) => delete c[x]);
-    else if (k === 'resetAdv') { c.radius = 8; ['kpiBarW', 'kpiBarC', 'headLineW', 'headLineC'].forEach((x) => delete c[x]); }
-    else if (k === 'page') { if (v === 'custom' && c.page !== 'custom') { const p = page(c); c.pageW = p.w; c.pageH = p.h; } c.page = v; pageMsg = ''; track('theme_page_size', { size: v }); }
-    else c[k] = ['dir', 'fpos', 'kpiBar', 'kpiBarC', 'headLine', 'headLineC'].includes(k) ? v : +v;
-    if (['kpiBar', 'kpiBarC', 'headLine', 'headLineC'].includes(k)) track('theme_accent', { option: k, accent_value: v });
-    layoutChanged(); renderLayout(); save();
-  });
-  // sliders redraw the preview while dragging, without rebuilding the controls
-  step2.addEventListener('input', (e) => {
-    const el = e.target.closest('input[type="range"][data-l]'); if (!el) return;
-    lay()[el.dataset.l] = clampTo(el.dataset.l, el.value / (+el.dataset.f || 1));
-    const o = $('layControls').querySelector(`[data-out="${el.dataset.l}"]`); if (o) o.textContent = el.value + el.dataset.u;
-    // the exact radius slider keeps the Square/Soft/Round buttons in step
-    if (el.dataset.l === 'radius') $('layControls').querySelectorAll('button[data-l="radius"]').forEach((b) => { const on = +b.dataset.v === lay().radius; b.classList.toggle('active', on); b.setAttribute('aria-pressed', on); });
-    if (el.dataset.l === 'radius') renderJson();
-    layoutChanged(); renderLayoutPreview(); save();
-  });
-  step2.addEventListener('change', (e) => {
-    const num = e.target.closest('input[type="number"][data-l]');
-    if (num) {
-      const c = lay(), k = num.dataset.l, isW = k === 'pageW', lim = isW ? LIM.w : LIM.h;
-      if (num.value === '' || !isFinite(+num.value)) { pageMsg = L('Enter a whole number.', 'أدخل رقمًا صحيحًا.'); renderLayout(); return; }
-      const v = Math.round(+num.value), kept = within(v, lim);
-      pageMsg = kept !== v ? (isW ? L(`Width set to ${kept} (allowed ${lim[0]} to ${lim[1]}).`, `تم ضبط العرض على ${kept} (المسموح من ${lim[0]} إلى ${lim[1]}).`) : L(`Height set to ${kept} (allowed ${lim[0]} to ${lim[1]}).`, `تم ضبط الارتفاع على ${kept} (المسموح من ${lim[0]} إلى ${lim[1]}).`)) : '';
-      c[k] = kept; const [w, h] = fitCustom(c.pageW, c.pageH); track('theme_page_size', { size: w + 'x' + h });
-      layoutChanged(); renderLayout(); save(); return;
-    }
-    const el = e.target.closest('input[type="checkbox"][data-l]'); if (!el) return;
-    lay()[el.dataset.l] = el.checked;
-    layoutChanged(); renderLayout(); save();
-  });
-  // remember whether Advanced options is open when the controls are rebuilt (toggle does not bubble)
-  $('layControls').addEventListener('toggle', (e) => { if (e.target.classList && e.target.classList.contains('tg-adv')) advOpen = e.target.open; }, true);
-  // hovering a row outlines its panel on the preview
-  const hl = (i) => { $('layCanvas').querySelectorAll('[data-s] .o').forEach((o) => o.setAttribute('opacity', o.parentNode.dataset.s === i ? '1' : '0')); };
-  $('slotTable').addEventListener('mouseover', (e) => { const tr = e.target.closest('tr[data-i]'); if (tr) hl(tr.dataset.i); });
-  $('slotTable').addEventListener('mouseleave', () => hl(null));
 
   // every download is named after the theme: letters of any script are kept (Arabic, café), other symbols dropped
   const fileBase = () => E.fileBase(state.name);
@@ -1035,7 +815,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const p = PRESETS['Desert Gulf'];
     S.replace({ preset: 'Desert Gulf', name: 'Executive Sales', font: 'Segoe UI', data: p.data.slice(), ui: { ...p.ui },
       layout: { preset: 'exec', kpis: 4, filters: true, fpos: 'top', dir: isAr() ? 'rtl' : 'ltr', v: 3, radius: 8, shadow: true, header: true, kpiBar: 'top', kpiBarC: 'data', headLine: 'full', samples: true, transparent: true, page: E.DEFAULT_PAGE, hh: 64, logoW: 200 } });
-    pageMsg = ''; renderPresets(); renderInputs(); renderAll();
+    Lay.clearPageMsg(); renderPresets(); renderInputs(); renderAll();
     $('exampleUndo').hidden = false;
     openStep('layout'); $('layout').scrollIntoView({ behavior: 'smooth', block: 'start' });
     toast(L('Example loaded: an executive sales report', 'تم تحميل المثال: تقرير مبيعات تنفيذي'));
@@ -1047,7 +827,7 @@ document.addEventListener('DOMContentLoaded', () => {
   exPic(); new MutationObserver(exPic).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   $('exampleUndo').addEventListener('click', () => {
     if (!beforeExample) return;
-    S.replace(JSON.parse(beforeExample)); beforeExample = null; pageMsg = '';
+    S.replace(JSON.parse(beforeExample)); beforeExample = null; Lay.clearPageMsg();
     UNDO.remove();
     renderPresets(); renderInputs(); renderAll();
     $('exampleUndo').hidden = true;
