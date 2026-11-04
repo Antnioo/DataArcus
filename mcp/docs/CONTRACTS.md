@@ -29,9 +29,9 @@ How it is kept true:
 | family | places | disagree on N of M inputs | who sees it | newest copy |
 |---|---|---|---|---|
 | [1a Is this column time?](#1a-is-this-column-time) | 4 | 12 of 24 | the twin, the preview, the writer, check_report | merge (pbip-query.js splits camel case, layout-check.js takes the Arabic article off, page-preview.js has the most words) |
-| [1b-text What text does a literal hold?](#1b-text-what-text-does-a-literal-hold) | 18 | 11 of 15 | check_report, read_report, the writer, the twin, the preview, the redesign | merge (tagged decoder) |
-| [1b-number What number does a literal hold?](#1b-number-what-number-does-a-literal-hold) | 8 | 12 of 15 | check_report, read_report, the twin, the preview | merge (tagged decoder) |
-| [1b-bool What true or false does a literal hold?](#1b-bool-what-true-or-false-does-a-literal-hold) | 6 | 13 of 15 | check_report, read_report, the twin, the preview, the native copy | merge (tagged decoder) |
+| [1b-text What text does a literal hold?](#1b-text-what-text-does-a-literal-hold) | 14 | 11 of 15 | check_report, read_report, the writer, the twin, the preview, the redesign | merge (tagged decoder) |
+| [1b-number What number does a literal hold?](#1b-number-what-number-does-a-literal-hold) | 6 | 12 of 15 | check_report, read_report, the twin, the preview | merge (tagged decoder) |
+| [1b-bool What true or false does a literal hold?](#1b-bool-what-true-or-false-does-a-literal-hold) | 5 | 13 of 15 | check_report, read_report, the twin, the preview, the native copy | merge (tagged decoder) |
 | [1c How wide is the frame a visual is mirrored inside?](#1c-how-wide-is-the-frame-a-visual-is-mirrored-inside) | 4 | 0 of 10 | the twin | one place since DD1C2: `assets/js/mirror-units.js` `frameWidth` |
 | [1d What width did the report set for this table column?](#1d-what-width-did-the-report-set-for-this-table-column) | 5 | 3 of 12 | check_report, the twin, create_report | merge (tagged decoder) |
 | [1f Is this text Arabic?](#1f-is-this-text-arabic) | 7 | 4 of 11 | every measured text, check_report, create_report, the twin | `text-measure.js` / `field-catalog.js` (the broad test) |
@@ -121,11 +121,7 @@ undone to `'`), or nothing.
 | `mcp/lib/dax-functions.mjs` `textOf` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | create_report (the DAX functions option), check_report |
 | `mcp/lib/flip-cards.mjs` `textOf` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | create_report (flip cards) |
 | `mcp/lib/report-inventory.mjs` `litStr` | [reading](MODULES.md#the-mcp-reading) | read_report's answer |
-| `mcp/lib/terminology.mjs` `litText` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's terms, plan_layout |
-| `mcp/lib/twin-geometry.mjs` `litOf` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (its geometry) |
-| `mcp/lib/twin-pages.mjs` `lit` (in `fitPhoneTabs`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (its phone tabs) |
 | `mcp/lib/twin-pictures.mjs` `lit` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (pages drawn on a picture) |
-| `mcp/lib/twin-visuals.mjs` `litStr` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (every step's literals) |
 | `mcp/lib/redesign.mjs` `L` (in `danglingOf`) | [redesign](MODULES.md#the-mcp-the-redesign) | create_report's redesign (a link left pointing nowhere) |
 
 **Today** (A: mirror-policy strOf, page-preview lit and strOf, terminology litText; B: layout-check litStr,
@@ -169,8 +165,6 @@ reader over the same parse, and `""` where a caller wants it is the caller's `||
 | `assets/js/report-rules.js` `num` | [engines](MODULES.md#the-website-engines) | check_report's measured rules, the twin's text fit |
 | `mcp/lib/flip-cards.mjs` `numOf` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | create_report (flip cards) |
 | `mcp/lib/report-inventory.mjs` `litNum` | [reading](MODULES.md#the-mcp-reading) | read_report's answer |
-| `mcp/lib/twin-visuals.mjs` `num` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (header and button fitting) |
-| `mcp/lib/twin-geometry.mjs` `lit0` (in `underGrids`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a chart under a heatmap's grid) |
 | `assets/js/report-a11y.js` `tr` (in `backgroundOf`) | [engines](MODULES.md#the-website-engines) | check_report (contrast: a background's transparency) |
 
 **Today** (A: page-preview numOf, layout-check litNum, report-inventory litNum; B: report-rules num, flip-cards numOf,
@@ -208,7 +202,6 @@ answer for a real literal. The reviewer and the owner decide.
 | `assets/js/page-preview.js` `boolOf` | [engines](MODULES.md#the-website-engines) | the preview (shown or hidden parts) |
 | `assets/js/layout-check.js` `litBool` | [engines](MODULES.md#the-website-engines) | check_report and plan lint |
 | `mcp/lib/report-inventory.mjs` `litBool` | [reading](MODULES.md#the-mcp-reading) | read_report's answer |
-| `mcp/lib/twin-texts.mjs` `isOn` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's texts (a title or label that is on) |
 | `assets/js/visual-replace.js` `isTrue` (in `formatFacts`) | [engines](MODULES.md#the-website-engines) | the native copy (native-copy.mjs) |
 | `assets/js/report-a11y.js` `show` | [engines](MODULES.md#the-website-engines) | check_report (is a title or a card shown) |
 
@@ -816,7 +809,7 @@ ledger does not add it again.
 - `mcp/lib/twin-texts.mjs` `ARABIC_END`: whether a text's last character is Arabic (where a neutral end goes), not
   whether the text is Arabic (1f).
 - `mcp/lib/plan-disclosure.mjs` `isEn`: "English and no Arabic", for the approval page's wording, not 1f's opposite.
-- `assets/js/pbip-bidi.js` `lit` and `mcp/lib/terminology.mjs` `lit`: the quoted literal itself (`'Sales'` with its
+- `assets/js/pbip-bidi.js` `lit`: the quoted literal itself (`'Sales'` with its
   quotes) or null, for a writer that puts it back as it was; not the text it holds (1b-text).
 - `mcp/lib/text-format.mjs` `lit`: any text value as written, for a format check; not the text of a literal.
 - `assets/js/svg-expressions.js` `ESCAPES` and `mcp/lib/dax-functions.mjs` `esc`: XML and a data URL's `%` and `#`

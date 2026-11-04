@@ -5,13 +5,15 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { canSync, safeName, mustJson } from './read-report.mjs';
 import { json, jsonAt, isObj, EXT, pageOf } from './twin-read.mjs';
-import { posOf, typeOf, clone, litStr, Lv, Ls, isPageBtn, overlaps, holdsBox, absBox, idMaker, textLook, hexOf, solid } from './twin-visuals.mjs';
+import { posOf, typeOf, clone, Lv, Ls, isPageBtn, overlaps, holdsBox, absBox, idMaker, textLook, hexOf, solid } from './twin-visuals.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
 const Rules = require('../../assets/js/report-rules.js');
 const Sizing = require('../../assets/js/pbip-sizing.js');
 const Engine = require('../../assets/js/design-engine.js');
+// a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
+const { litText } = require('../../assets/js/pbir-values.js');
 const A11y = require('../../assets/js/report-a11y.js');
 
 // ---- (0.3.0 X1, the owner, 19 Oct: "add the toggle") English and Arabic in ONE report: the copy "<name> (EN-AR)" ----
@@ -149,8 +151,8 @@ export function languageCopy(P, built, labels) {
     const vco = isObj(vj.visual) && isObj(vj.visual.visualContainerObjects) ? vj.visual.visualContainerObjects : null;
     if (vco) ['visualLink', 'visualTooltip'].forEach((k) => (Array.isArray(vco[k]) ? vco[k] : []).forEach((e) => {
       if (!isObj(e) || !isObj(e.properties)) return;
-      ['navigationSection', 'section', 'drillthroughSection'].forEach((p) => { const v = litStr(e.properties[p]); if (v != null && arOf.has(v)) e.properties[p] = Ls(arOf.get(v)); });
-      const b = litStr(e.properties.bookmark); if (b != null && bmOf.has(b)) e.properties.bookmark = Ls(bmOf.get(b));
+      ['navigationSection', 'section', 'drillthroughSection'].forEach((p) => { const v = litText(e.properties[p]); if (v != null && arOf.has(v)) e.properties[p] = Ls(arOf.get(v)); });
+      const b = litText(e.properties.bookmark); if (b != null && bmOf.has(b)) e.properties.bookmark = Ls(bmOf.get(b));
     }));
   };
   // (0.3.1 GD2, the owner, 27 Oct: "i want the twin to be identical") an Arabic page drawn on DataArcus's glass picture gets
@@ -159,7 +161,7 @@ export function languageCopy(P, built, labels) {
   const takenRes = new Set(R.files.filter((f) => f.startsWith(RES)).map((f) => f.slice(RES.length).toLowerCase()).concat((built.addedPictures || []).map((x) => x.name.toLowerCase())));
   const arPicOf = (n) => { if (arPics.has(n)) return arPics.get(n).to; const m = /^(.*?)(\.[^.]+)?$/.exec(n); let to = m[1] + '-ar' + (m[2] || ''); for (let k = 2; takenRes.has(to.toLowerCase()); k++) to = m[1] + '-ar-' + k + (m[2] || ''); takenRes.add(to.toLowerCase()); arPics.set(n, { to, data: pics.get(RES + n) }); return to; };
   const withArPicture = (pgj) => ['background', 'wallpaper'].forEach((k) => (isObj(pgj.objects) && Array.isArray(pgj.objects[k]) ? pgj.objects[k] : []).forEach((e) => {
-    const im = isObj(e) && isObj(e.properties) && isObj(e.properties.image) && isObj(e.properties.image.image) ? e.properties.image.image : null, n = im ? litStr(im.name) : null;
+    const im = isObj(e) && isObj(e.properties) && isObj(e.properties.image) && isObj(e.properties.image.image) ? e.properties.image.image : null, n = im ? litText(im.name) : null;
     if (n == null || !pics.has(RES + n)) return;
     const to = arPicOf(n); im.name = Ls(to);
     if (isObj(im.url) && isObj(im.url.expr) && isObj(im.url.expr.ResourcePackageItem)) im.url.expr.ResourcePackageItem.ItemName = to;

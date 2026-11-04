@@ -10,6 +10,8 @@ import * as Terms from './terminology.mjs';
 import { TEXT_CAP, isObj, pageOf } from './twin-read.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
+// a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
+const { litBool } = require('../../assets/js/pbir-values.js');
 const Mirror = require('../../assets/js/report-mirror.js');
 const Rules = require('../../assets/js/report-rules.js');
 
@@ -157,7 +159,6 @@ const safeId = (raw) => (!INSTRUCTION.test(raw) && visible(raw) === raw && raw.l
 // [{ key: 'title' | 'subTitle', i (the entry), id (the text's id, as an explicit one's), vals, cats: [{ ref, name }] }]
 const AUTO_CATS = new Set(['Category', 'Series', 'Legend', 'Rows', 'Columns', 'Axis', 'Group', 'Details']), AUTO_SKIP = new Set(['Tooltips']);
 const AUTO_KINDS = new Set(['button', 'textbox', 'shape', 'image', 'group', 'unreadable']);
-const isOn = (p) => isObj(p) && isObj(p.expr) && isObj(p.expr.Literal) && String(p.expr.Literal.Value) === 'true';
 const hasText = (p) => p !== undefined && p !== null && !(isObj(p) && isObj(p.expr) && isObj(p.expr.Literal) && /^'\s*'$/.test(String(p.expr.Literal.Value)));
 // (0.3.1 TB1, the laptop's part 4: AdventureWorks' chart on a field parameter kept its English title, never listed) a
 // visual on a field parameter: its automatic title follows the field chosen. Each entry says it (param: the parameter's
@@ -175,7 +176,7 @@ export function autoTitlesOf(pageId, json) {
   if (vals.length + cats.length < (param != null ? 1 : 2)) return [];   // (one field: its own name, no "by" to compose)
   const vco = isObj(json.visual.visualContainerObjects) ? json.visual.visualContainerObjects : {}, where = pageId + '/' + json.name, out = [];
   ['title', 'subTitle'].forEach((key) => (Array.isArray(vco[key]) ? vco[key] : []).forEach((e, i) => {
-    if (!isObj(e) || e.selector || !isObj(e.properties) || !isOn(e.properties.show) || hasText(e.properties.text)) return;
+    if (!isObj(e) || e.selector || !isObj(e.properties) || litBool(e.properties.show) !== true || hasText(e.properties.text)) return;
     out.push(Object.assign({ key, i, id: key === 'title' ? 'title:' + where : `text:${where}/c.subTitle.${i}.text`, vals, cats, where }, param != null ? { param } : {}));
   }));
   // (0.3.1 FX3b, the owner's hand-made charts: no title card at all) no "show" set and no text: the type's default title

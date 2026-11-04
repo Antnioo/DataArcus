@@ -11,7 +11,6 @@ import * as Terms from './terminology.mjs';
 import { fieldParametersOf } from './metric-switcher.mjs';
 import { DAX_MEASURE } from './dax-functions.mjs';
 import { TEXTS_MAX, pathOut, locate, memoryLoc, bytesAt, readOriginal, isObj, byPathOf, pageOf, sizeOf } from './twin-read.mjs';
-import { litStr } from './twin-visuals.mjs';
 import { placeholderProblem, textsOf, rawLabels, cleanLabel, sameTextLabels, notTranslatedOf, termsOf, autoSentence } from './twin-texts.mjs';
 import { modelOf, dateTablesOf, continuousColumnsOf, textColumnsOf, monthOffer, waterfallFacts } from './twin-model.mjs';
 import { COPY_TAG, LANG, languageCopy } from './twin-copy.mjs';
@@ -24,6 +23,8 @@ const Mirror = require('../../assets/js/report-mirror.js');
 const Gallery = require('../../assets/js/visual-gallery.js');
 const Rules = require('../../assets/js/report-rules.js');
 const TextMeasure = require('../../assets/js/text-measure.js');
+// a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
+const { litText, litNumber, litBool, columnWidth } = require('../../assets/js/pbir-values.js');
 const { isGlassPng } = require('../../assets/js/design-engine.js');   // (GD1: the glass picture, known by its mark)
 import { flipGlassPng } from './glass-picture.mjs';   // (GD2: the Arabic page's picture, the English page's flipped)
 import { picturesOf, flipPicturesOf, picturePagesSaid, picturePageIds } from './twin-pictures.mjs';   // (MP1: pages drawn on a picture)
@@ -246,7 +247,7 @@ export function planTwin(a) {
   // (0.3.0 L4) a flip card's faces are picture measures of the model (its flip cards script): mirrored as one box, still
   // turning by their bookmarks, and drawn as those measures draw them
   const flipFaces = R.pages.flatMap((pg) => pg.visuals.filter((v) => { const vis = isObj(v.json) && isObj(v.json.visual) ? v.json.visual : {}, vco = isObj(vis.visualContainerObjects) ? vis.visualContainerObjects : {};
-    return vis.visualType === 'image' && Array.isArray(vco.visualLink) && vco.visualLink.some((e) => isObj(e) && isObj(e.properties) && litStr(e.properties.type) === 'Bookmark'); }).map((v) => safeName(pg.id) + '/' + safeName(v.json.name)));
+    return vis.visualType === 'image' && Array.isArray(vco.visualLink) && vco.visualLink.some((e) => isObj(e) && isObj(e.properties) && litText(e.properties.type) === 'Bookmark'); }).map((v) => safeName(pg.id) + '/' + safeName(v.json.name)));
   // (0.3.0 A3) the metric switcher's choices are the rows of a field parameter table of the model (its script, made for
   // the English report, names them): the twin's slicer still switches, and its choices read as that table names them
   const switchers = fieldParametersOf(R.pages.flatMap((pg) => pg.visuals.map((v) => ({ file: safeName(pg.id) + '/' + safeName(isObj(v.json) ? v.json.name : ''), json: v.json }))));
@@ -300,8 +301,8 @@ export function planTwin(a) {
     (x.visuals || []).forEach((v) => { if (!isObj(v) || !isObj(v.visual) || v.visual.visualType !== 'tableEx' || !isObj(v.position) || !Number.isFinite(v.position.width)) return;
       const ps = isObj(v.visual.query) && isObj(v.visual.query.queryState) && isObj(v.visual.query.queryState.Values) && Array.isArray(v.visual.query.queryState.Values.projections) ? v.visual.query.queryState.Values.projections.filter((q) => isObj(q) && typeof q.queryRef === 'string') : [];
       if (ps.length < 2) return;
-      const cw = isObj(v.visual.objects) && Array.isArray(v.visual.objects.columnWidth) ? v.visual.objects.columnWidth : [], T = Rules.tableHeaders(v, R.theme, 'Segoe UI', sc), wrapHead = (isObj(v.visual.objects) && Array.isArray(v.visual.objects.columnHeaders) ? v.visual.objects.columnHeaders : []).some((e) => isObj(e) && !e.selector && isObj(e.properties) && litStr(e.properties.wordWrap) === 'true');   // (a header that wraps takes a second line, not more width)
-      const own = (r) => { const e = cw.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === r && isObj(y.properties)); const n = e && isObj(e.properties.value) && isObj(e.properties.value.expr) && isObj(e.properties.value.expr.Literal) ? parseFloat(String(e.properties.value.expr.Literal.Value)) : NaN; return Number.isFinite(n) ? n : null; };
+      const cw = isObj(v.visual.objects) && Array.isArray(v.visual.objects.columnWidth) ? v.visual.objects.columnWidth : [], T = Rules.tableHeaders(v, R.theme, 'Segoe UI', sc), wrapHead = (isObj(v.visual.objects) && Array.isArray(v.visual.objects.columnHeaders) ? v.visual.objects.columnHeaders : []).some((e) => isObj(e) && !e.selector && isObj(e.properties) && litBool(e.properties.wordWrap) === true);   // (a header that wraps takes a second line, not more width)
+      const own = (r) => columnWidth(cw, r);
       const need = ps.reduce((n, q) => n + (own(q.queryRef) != null ? own(q.queryRef) : Rules.headerNeed(wrapHead ? longestWord(String(q.displayName != null ? q.displayName : q.nativeQueryRef || '')) : String(q.displayName != null ? q.displayName : q.nativeQueryRef || ''), T.t, T.font, sc).needW), 0), room = Math.floor(v.position.width - 36 * sc);
       // (0.3.1 MX3, laptop part 9: RepeatIQ p4 pricing, its first column out of view behind columns Power BI sized from
       // the data) columns with no width of their own beside ones that have one: when what is known already takes half the
@@ -323,10 +324,10 @@ export function planTwin(a) {
     const qs = isObj(v.visual.query) && isObj(v.visual.query.queryState) ? v.visual.query.queryState : {}, ps = (r) => (isObj(qs[r]) && Array.isArray(qs[r].projections) ? qs[r].projections.filter(isObj) : []);
     const lg = (isObj(v.visual.objects) && Array.isArray(v.visual.objects.legend) ? v.visual.objects.legend : []).find((e) => isObj(e) && !e.selector && isObj(e.properties)) || { properties: {} }, P0 = lg.properties;
     const pie = /^(donutChart|pieChart|funnel|treemap)$/.test(v.visual.visualType), byField = pie ? ps('Category')[0] || ps('Group')[0] : ps('Series')[0], measures = pie && !byField ? ps('Y').concat(ps('Values')) : !byField && ps('Y').length > 1 ? ps('Y') : [];
-    if (litStr(P0.show) === 'false' || (!byField && measures.length < 2)) return;
-    const pt = parseFloat(litStr(P0.fontSize)) || 8, font = litStr(P0.fontFamily) || 'Segoe UI', tw = (t) => TextMeasure.textWidth(t, pt, false, font);
-    const pos = litStr(P0.position) || 'Top', row = /^(Top|Bottom)/.test(pos), room = Math.floor(row ? v.position.width - 20 : v.position.width * 0.4);
-    const title = byField && litStr(P0.showTitle) !== 'false' ? String(litStr(P0.titleText) || byField.displayName || byField.nativeQueryRef || '') : '', titleRoom = Math.floor(room * TITLE_SHARE), titleW = title ? Math.min(tw(title), titleRoom) + 10 : 0, at = safeName(x.pg.id) + '/' + safeName(String(v.name));
+    if (litBool(P0.show) === false || (!byField && measures.length < 2)) return;
+    const pt = litNumber(P0.fontSize) || 8, font = litText(P0.fontFamily) || 'Segoe UI', tw = (t) => TextMeasure.textWidth(t, pt, false, font);
+    const pos = litText(P0.position) || 'Top', row = /^(Top|Bottom)/.test(pos), room = Math.floor(row ? v.position.width - 20 : v.position.width * 0.4);
+    const title = byField && litBool(P0.showTitle) !== false ? String(litText(P0.titleText) || byField.displayName || byField.nativeQueryRef || '') : '', titleRoom = Math.floor(room * TITLE_SHARE), titleW = title ? Math.min(tw(title), titleRoom) + 10 : 0, at = safeName(x.pg.id) + '/' + safeName(String(v.name));
     if (title && tw(title) > titleRoom) legends.push({ first: false, line: `${at} (its title «${safeName(title)}» may be cut: about ${Math.ceil(tw(title))} wide, its room about ${titleRoom})` });
     if (measures.length >= 2) {
       const texts = measures.map((p) => String(p.displayName != null ? p.displayName : p.nativeQueryRef || '')), share = row ? (room - titleW) / texts.length - 22 : room - 22;

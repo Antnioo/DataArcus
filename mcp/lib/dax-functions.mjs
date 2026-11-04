@@ -23,6 +23,8 @@ import { targetOf, kpiSaid } from './status-icons.mjs';
 import { besideSaid } from './plain-words.mjs';   // (0.3.1 R4A, T-9: the folder by its name and where it is)
 
 const require = createRequire(import.meta.url);
+// a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
+const { litText, columnWidth } = require('../../assets/js/pbir-values.js');
 const Fix = require('../../assets/js/model-health-tmdl.js'), Pbip = require('../../assets/js/pbip-export.js'), E = require('../../assets/js/design-engine.js');
 const dax = Pbip.daxNames;
 
@@ -149,8 +151,7 @@ export function coloursOf(ui) {
 // ---------- the measures DataArcus writes with the library (each one call of a function) ----------
 const lit = (v) => ({ expr: { Literal: { Value: v } } }), str = (s) => lit("'" + String(s).replace(/'/g, "''") + "'"), bool = (b) => lit(b ? 'true' : 'false');
 const obj = (p) => [{ properties: p }];
-const litOf = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value) : '');
-const textOf = (p) => litOf(p).replace(/^'|'$/g, '').replace(/''/g, "'");
+const textOf = litText;
 const measureRef = (t, m) => ({ Measure: { Expression: { SourceRef: { Entity: t } }, Property: m } });
 const WORDS = { en: { period: 'last year', units: null }, ar: { period: 'العام الماضي', units: UNITS_AR } };
 // (0.3.1 SQ2, L6-S2) the value's text as the flip cards say it, K/M/B in the report's language: the number, then in
@@ -213,7 +214,7 @@ export function applyDax(files, o) {
   // only into their slack, in proportion. Too little room: no picture column, told.)
   const fitPictures = (v, cols) => {
     const vis = v.j.visual, ps = vis.query.queryState.Values.projections, cw = ((vis.objects || {}).columnWidth || []), sc = (pageH.get(v.path.replace(/\/visuals\/[^/]+\/visual\.json$/, '')) || 1080) / 1080;
-    const widthOf = (p) => { const e = cw.find((x) => x.selector && x.selector.metadata === p.queryRef); return e ? +String(e.properties.value.expr.Literal.Value).replace(/D$/, '') : null; };
+    const widthOf = (p) => columnWidth(cw, p.queryRef);
     const shown = ps.filter((p) => widthOf(p) !== 0 && p.displayName !== ' ');
     const need = (p) => Math.ceil(Pbip.columnRoom(p, tt, o.font || 'Segoe UI') - 10 + 24 * sc);
     const box = Math.round(v.j.position.width) - 36, others = shown.reduce((a, p) => a + need(p), 0);

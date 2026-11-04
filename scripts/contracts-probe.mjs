@@ -131,6 +131,15 @@ function importsOf(file) {
   }
   return out;
 }
+// the names a file takes by a destructured require (const { a, b: c } = require('x'), or createRequire(...)('x')):
+// name -> { from, key }
+function requiredOf(file) {
+  const out = new Map(), s = sourceOf(file);
+  for (const m of s.matchAll(/\bconst\s*\{([^}]*)\}\s*=\s*(?:require|createRequire\(import\.meta\.url\))\(\s*'([^']+)'\s*\)/g)) {
+    m[1].split(',').map((x) => x.trim()).filter(Boolean).forEach((x) => { const [k, as] = x.split(/\s*:\s*/); out.set((as || k).trim(), { from: m[2], key: k.trim() }); });
+  }
+  return out;
+}
 async function importValue(file, spec) {
   const target = spec.from.startsWith('.') ? pathToFileURL(path.join(path.dirname(abs(file)), spec.from)).href : spec.from.startsWith('node:') ? spec.from : pathToFileURL(createRequire(abs(file)).resolve(spec.from)).href;
   const m = await import(target);
@@ -178,6 +187,8 @@ class SourcePlace {
     if (!m || m[1] in locals || this.given.has(m[1]) || this.deps.includes(m[1])) return false;
     const n = m[1];
     if (definitionOf(this.file, n, this.within)) { this.deps.unshift(n); return true; }
+    const req = requiredOf(this.file).get(n);   // a name taken from a module by a destructured require (DD1B)
+    if (req) { this.given.set(n, createRequire(abs(this.file))(req.from)[req.key]); return true; }
     const imp = this.file.endsWith('.mjs') ? importsOf(this.file).get(n) : null;
     if (imp) { this.given.set(n, await importValue(this.file, imp)); return true; }
     return false;
@@ -445,11 +456,7 @@ export const FAMILIES = [
       P('mcp/lib/dax-functions.mjs', 'textOf', 'source', lit1()),
       P('mcp/lib/flip-cards.mjs', 'textOf', 'source', lit1()),
       P('mcp/lib/report-inventory.mjs', 'litStr', 'source', lit1()),
-      P('mcp/lib/terminology.mjs', 'litText', 'source', lit1()),
-      P('mcp/lib/twin-geometry.mjs', 'litOf', 'source', lit1()),
-      P('mcp/lib/twin-pages.mjs', 'lit', 'source', lit1(), { within: 'fitPhoneTabs' }),
       P('mcp/lib/twin-pictures.mjs', 'lit', 'source', lit1()),
-      P('mcp/lib/twin-visuals.mjs', 'litStr', 'export', lit1()),
       P('mcp/lib/redesign.mjs', 'L', 'source', lit1(), { within: 'danglingOf' }),
     ] },
   { id: '1b-number', title: 'What number does a literal hold?', question: "a property's Literal: the number it holds (12D -> 12), or nothing",
@@ -459,8 +466,6 @@ export const FAMILIES = [
       P('assets/js/report-rules.js', 'num', 'inner', lit1()),
       P('mcp/lib/flip-cards.mjs', 'numOf', 'source', lit1()),
       P('mcp/lib/report-inventory.mjs', 'litNum', 'source', lit1()),
-      P('mcp/lib/twin-visuals.mjs', 'num', 'export', lit1()),
-      P('mcp/lib/twin-geometry.mjs', 'lit0', 'source', lit1(), { within: 'underGrids' }),
       P('assets/js/report-a11y.js', 'tr', 'source', lit1(), { within: 'backgroundOf' }),
     ] },
   { id: '1b-bool', title: 'What true or false does a literal hold?', question: "a property's Literal: true, false, or nothing",
@@ -468,7 +473,6 @@ export const FAMILIES = [
       P('assets/js/page-preview.js', 'boolOf', 'inner', lit1()),
       P('assets/js/layout-check.js', 'litBool', 'inner', lit1()),
       P('mcp/lib/report-inventory.mjs', 'litBool', 'source', lit1()),
-      P('mcp/lib/twin-texts.mjs', 'isOn', 'source', lit1()),
       P('assets/js/visual-replace.js', 'isTrue', 'source', lit1(), { within: 'formatFacts' }),
       P('assets/js/report-a11y.js', 'show', 'inner', async (x, get) => (await get())(x.p === undefined ? {} : { show: x.p })),
     ] },
