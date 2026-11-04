@@ -17,8 +17,8 @@
   "Numbers"); mutation 76/76; `npm run lint` 0; check-min, stamps, check-contracts, check-modules --strict,
   check-agent-memory, check-result-lines green; the probe: crc 6 places, png-chunk 4, u32 3, lru 3 (the new place
   added beside the old ones until they go, then the module and its callers), one answer per input.
-- **State:** step 4 (the parity test: every old place from the base's source, one answer; the 15 outputs the same).
-- **Resume:** step 5 (CONTRACTS.md, MODULES.md).
+- **State:** step 5 (the ledger and the map); then the merge check, the full run and CI (the line below).
+- **Resume:** the CI line; then the reviewer reads and merges.
 
 ## Plan (one commit each, every suite green between them)
 1. The two modules, their .min.js (png-bytes only: a browser file), the test dd2p (units: 8 byte strings, 8 chunks,
@@ -66,16 +66,64 @@ Red proof (not committed): in png-bytes.js the table line's `t[n] = c >>> 0` mad
 (one entry changed): `FAIL  dd2p  91 of 112 checks` (U13, P13, P38, H1-H3, H5, H6, H10, H13-H15 and B the same ten);
 the file restored, 112 of 112.
 
+## Copies before -> after (each place)
+| job | before (deff19e) | after |
+|---|---|---|
+| CRC-32 and its table | design-engine.js `crc32`, pbip-zip.js `crc32`, theme-download-ui.js `crc32`, glass-picture.mjs `crc32`, page-picture.mjs `crc32` (5 tables) | png-bytes.js `crc32` (1 table); pbip-zip.js exports it as the same function |
+| PNG chunk writer | design-engine.js `chunk` (in pngOf), glass-picture.mjs `chunk` (in encode), page-picture.mjs `chunk`, theme-download-ui.js `textChunk` (DataView) | png-bytes.js `pngChunk` |
+| big-endian write | design-engine.js `u32` (in pngOf), glass-picture.mjs `be`, page-picture.mjs `be` | png-bytes.js `be32` |
+| big-endian read | glass-picture.mjs `u32`, page-picture.mjs `u32` | png-bytes.js `u32` |
+| small cache | glass-picture.mjs `lru`, page-picture.mjs `lru` | small-cache.mjs `lru` |
+Same-shape files (git grep in assets/js and mcp/lib, no .min.js): the CRC table 5 -> 1, the big-endian write 3 -> 1,
+the read 3 -> 2 (the third is design-metrics.js imageSize, see Seen), the cache 2 -> 1, the DataView chunk 1 -> 0.
+samejob.py is not in the repository: not run (as DD1C said); these greps stand in for it.
+
 ## Numbers (filled as measured)
+| check | base deff19e | after |
+|---|---|---|
+| MCP suites (`npm test -- --keep-going`) | 194 suites; 193 passed, glass-tables failed only because this clone was shallow (cba24a5 missing); after `git fetch --unshallow`: glass-tables 113 checks | (the final run, below) |
+| mutation | 198 checks (76 mutants, all killed) | (below) |
+| website suites (`node scripts/tests/run-all.mjs`) | (base run) | 42 of 42 at step 3 |
+| dd2p | (new) | 112 checks |
+| contracts / probe | 808 checks, 27 families, 118 places | 771 checks, 27 families, 111 places (7 places gone: the copies); the four families one answer on every input |
+| modules --strict | 1042 checks, 199 files | 1053 checks, 201 files (the two new rows) |
+| lint, check-min, stamps, result-lines, agent-memory, site config | green | green |
 
 ## Decisions I made
+- `be32` returns an Array of 4 numbers (as every old copy did), so `be32(w).concat(be32(h), ...)` stays as it was;
+  `pngChunk` returns a Uint8Array; the MCP files hand it to Buffer.concat as it is (the bytes the same, B proves it).
+- pbip-zip.js keeps `crc32` as `const crc32 = (...png-bytes).crc32` (a name for the same function, not a copy) so the
+  ledger can name it and pbip-export.js changes nothing; P41 checks it is the same function.
+- theme-download-ui.js reads `root.DAPngBytes` inside the page's mount (the pages load png-bytes.min.js before
+  design-colours, so before every engine); theme-generator.js's BUILDER lists it before pbip-zip (the page already has
+  it: `onPage` skips it). MODULES.md names the theme generator page as the user for that part (modules-facts reads
+  require/import and page tags only).
+- The ledger moved in steps 2 and 3 with the code (check-contracts names every place, so it had to); step 5 wrote the
+  "One place" lines and the "Since DD2P" paragraphs. The probe's places are the module (and pbip-zip's export).
+- The hashes are pinned (H) and also recomputed from the base's own engines (B): pinned node:zlib bytes may differ on
+  another platform (the macOS runner where the reviewer merges); then H skips its zlib pins with a note and B decides.
+- MODULES.md's rows went in at step 1 (check-modules --strict names a file without a row), "used by" grown per step.
+- WORK.md was at 3,193 of 3,200 characters: to add DD2P I shortened SP43's parenthesis (its file list) to "the split
+  is done, SP1-SP44"; nothing else changed there.
+- No CHANGELOG line (nothing a person sees changes).
 
 ## For the owner
 none
 
 ## Risky changes
-none yet
+- The theme generator pages now need png-bytes.min.js before design-engine.min.js: a page that loads the engine
+  without it would fail at the background PNG (no such page today: the three theme generator pages are the only ones
+  that load design-engine.min.js or theme-download-ui.min.js; the website suites, 42 of 42, run them in Chromium).
 
 ## Seen, not in scope
+- A third big-endian read: design-metrics.js `imageSize` `u` (a logo's PNG size); not in the ledger's u32 family. The
+  same answer by its text; a follow-up could read png-bytes.js `u32` (design-metrics is loaded before the engine).
+- This clone was shallow: glass-tables (and any suite that reads an old commit) fails locally until
+  `git fetch --unshallow`; CI fetches the whole history.
+- `run-tests.mjs --affected` diffs against origin/integration/0.3.1, which no longer exists here: it exits 2.
 
 ## Lessons for the reviewer
+- check-contracts names every place, so a brief that removes copies moves the ledger with each step, not only at the
+  end; the brief's step 5 then only adds the "One place" lines.
+- Pinning node:zlib output is platform-bound in principle; recomputing the base's bytes with the base's own engines
+  in a child process (fresh seed and clock) proves "byte-identical" on any runner.
