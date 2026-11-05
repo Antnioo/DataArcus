@@ -31,8 +31,24 @@
   const { RULES, BPA_URL } = T;
 
   // ---------- the rules: the model in, findings out ----------
+  // (0.3.2 FN1A) runRules calls one named step per rule group, in the checking order; each step's code is the code
+  // it was inside runRules, moved. x: runRules's input; out: the collector; sh: the DAX shape helpers.
   function runRules(input) {
-    const { M, IX, report: rep, used, vis, broken, styleByMeasure, userTables, autoDateTables, allMeasures, mQueries, chainDepths } = input;
+    const out = collector(), sh = daxShape(input.IX);
+    relationshipRules(input, out);
+    autoDateRules(input, out);
+    unusedRules(input, out);
+    columnRules(input, out, sh);
+    dateTableRules(input, out);
+    measureRules(input, out, sh);
+    duplicateRules(input, out, sh);
+    namingRules(input, out);
+    powerQueryRules(input, out);
+    return { findings: out.findings, skipped: out.skipped };
+  }
+
+  // the findings and the skipped checks, each in the order it is added
+  function collector() {
     const findings = [];
     const add = (id, items) => { if (items && items.length) findings.push({ id, items }); };
     // A check that needs a column's type is skipped for a column whose type is unknown (dataType "unknown": a TMDL
@@ -43,8 +59,12 @@
       if (!s) skipped.push(s = { id, reason: 'unknownType', items: [] });
       if (!s.items.some((x) => x.obj === obj)) s.items.push({ obj });
     };
-    const untyped = (c) => c.dataType === 'unknown';
+    return { findings, skipped, add, skip };
+  }
+  const untyped = (c) => c.dataType === 'unknown';
 
+  function relationshipRules(x, out) {
+    const { M, IX, report: rep, broken } = x, { add, skip } = out;
     // ---- relationships ----
     // Microsoft's exceptions (Bi-directional relationship guidance): a one-to-one relationship is always both ways (it
     // can't be set otherwise), never a finding; a many-to-many dimension bridge needs one both-way relationship. A
@@ -102,13 +122,19 @@
       if (c && c.col.dataType === 'string' && !strKeys.some((x) => x.obj === `${r.toTable}[${r.toColumn}]`)) strKeys.push({ obj: `${r.toTable}[${r.toColumn}]` });
     });
     add('STRING_KEYS', strKeys);
+  }
 
+  function autoDateRules(x, out) {
+    const { M, autoDateTables } = x, { add } = out;
     // ---- auto date/time ----
     if (autoDateTables.length) add('AUTODATE', autoDateTables.filter((t) => /^LocalDateTable_/.test(t.name)).map((t) => {
       const owner = M.tables.find((x) => x.columns.some((c) => c.relatedColumnDetails || (c.extendedProperties && JSON.stringify(c.extendedProperties).includes(t.name))));
       return { obj: t.name, detail: owner ? owner.name : '' };
     }));
+  }
 
+  function unusedRules(x, out) {
+    const { report: rep, used, userTables, allMeasures } = x, { add } = out;
     // ---- unused (only with a report) ----
     if (rep) {
       const unusedCols = [];
@@ -123,9 +149,10 @@
       add('UNUSED_MEASURE', allMeasures.filter((ms) => !used.has(K.m(ms.name))).map((ms) => ({ obj: `[${ms.name}]`, detail: ms.displayFolder })));
       add('UNUSED_TABLE', userTables.filter((t) => !used.has(K.t(t.name)) && !t.columns.some((c) => used.has(K.c(t.name, c.name))) && !t.measures.some((ms) => used.has(K.m(ms.name)))).map((t) => ({ obj: t.name })));
     }
+  }
 
-    // ---- columns ----
-    // ---- DAX shape helpers ----
+  // ---- the DAX shape helpers, over the model's index ----
+  function daxShape(IX) {
     const isTbl = (tk) => tk && (tk.t === 'tbl' || tk.t === 'id') && IX.tables.has(lc(tk.v));
     const isOp = (x, v) => x && x.t === 'op' && x.v === v;
     const call = (tk, i) => tk[i] && tk[i].t === 'id' && isOp(tk[i + 1], '(');
@@ -145,6 +172,10 @@
       if (isTbl(p)) return !IX.columns.has(lc(p.v) + '|' + lc(x.v));
       return !(home && IX.columns.has(lc(home) + '|' + lc(x.v)));
     };
+    return { isTbl, isOp, call, closeOf, argsOf, measureRef };
+  }
+  function textCheck(IX, sh) {
+    const { isTbl, isOp, call, closeOf, argsOf, measureRef } = sh;
     // Does a measure return text, so a number format can't apply? From the DAX: the result (after VAR ... RETURN) is a
     // string, an "&", CONCATENATE(X), FORMAT, UNICHAR, SELECTEDVALUE / MAX / MIN of a text column, a variable holding
     // one of these, an IF / SWITCH whose results are all text, CALCULATE(TABLE) of one of these, an EXTERNALMEASURE
@@ -192,6 +223,10 @@
       return false;
     };
     const returnsText = (expr) => isText(tokenizeDax(expr), {}, 0);
+    return returnsText;
+  }
+  function daxOnlyColumnOf(sh) {
+    const { isTbl, call, measureRef } = sh;
     // A calculated column Microsoft says belongs in DAX ("when the formula involves evaluating measures, or it requires
     // specific modeling functionality only supported in DAX functions"): parent-child paths, a measure, context
     // transition, RANKX, EARLIER, or an aggregate over another table. RELATED alone is a lookup a merge can do.
@@ -209,6 +244,12 @@
       }
       return false;
     };
+    return daxOnlyColumn;
+  }
+
+  // ---- columns ----
+  function columnRules(x, out, sh) {
+    const { M, report: rep, used, userTables } = x, { add, skip } = out, daxOnlyColumn = daxOnlyColumnOf(sh);
     const doubles = [], calcCols = [], fkVisible = [], sumKeys = [], monthSort = [];
     const manySide = new Set(M.relationships.filter((r) => r.fromCard === 'many' && r.toCard === 'one').map((r) => lc(r.fromTable) + '|' + lc(r.fromColumn)));
     const isUnused = (t, c) => rep && !used.has(K.c(t.name, c.name));
@@ -237,7 +278,10 @@
       });
     });
     add('DOUBLE', doubles); add('CALC_COLS', calcCols); add('FK_VISIBLE', fkVisible); add('SUMMARIZE_KEYS', sumKeys); add('MONTH_SORT', monthSort);
+  }
 
+  function dateTableRules(x, out) {
+    const { M, userTables } = x, { add, skip } = out;
     // ---- date table ----
     const dateParts = (t) => t.columns.filter((c) => /^(year|month|month name|month number|quarter|weekday|week|day|fiscal year)/i.test(c.name.trim())).length;
     const relDateTargets = new Set(M.relationships.map((r) => lc(r.toTable) + '|' + lc(r.toColumn)));
@@ -253,9 +297,11 @@
     // would be a calendar if a column of unknown type were a date
     userTables.filter((t) => !calendars.includes(t) && !isPicker(t) && lc(t.dataCategory) !== 'time' && calendarBy((c) => c.dataType === 'dateTime' || untyped(c))(t)).forEach((t) => skip('DATE_NOT_MARKED', t.name));
     add('CALENDARAUTO', userTables.filter((t) => t.isCalcTable && /CALENDARAUTO\s*\(/i.test(daxCode(t.calcExpr))).map((t) => ({ obj: t.name })));
+  }
 
-    // ---- DAX patterns ----
-    const filterTable = [], filterMeasure = [], iferr = [], division = [], noFmt = [], pctFmt = [], noFolder = [], noDesc = [], longMs = [], deep = [], qualM = [], unqualC = [];
+  // ---- DAX patterns ----
+  function filterKinds(sh) {
+    const { isTbl, isOp, call, closeOf, measureRef } = sh;
     // FILTER(<table>, ...) or FILTER(ALL(<table>), ...) used directly as a filter argument of CALCULATE / CALCULATETABLE.
     // Returns which kinds it found: 'table' (the predicate tests columns: a Boolean filter can do it) and 'measure' (the
     // predicate references a measure: a Boolean filter can't, so FILTER is right, over a column; Microsoft's own advice).
@@ -297,6 +343,10 @@
       }
       return kinds;
     };
+    return filterOverTable;
+  }
+  function measureShape(IX, sh) {
+    const { isOp, call, closeOf, argsOf } = sh;
     const msHidden = (ms) => ms.hidden || !!(IX.tables.get(lc(ms.table)) || {}).hidden;
     // daxCode with each use of a VAR bound to a nonzero number written as that number (VAR _Ticks = 60 ... / _Ticks)
     const constVarCode = (src) => {
@@ -322,6 +372,12 @@
       }
       return false;
     };
+    return { msHidden, constVarCode, countRoot };
+  }
+  function measureRules(x, out, sh) {
+    const { IX, vis, styleByMeasure, allMeasures, chainDepths } = x, { add } = out;
+    const filterOverTable = filterKinds(sh), returnsText = textCheck(IX, sh), { msHidden, constVarCode, countRoot } = measureShape(IX, sh);
+    const filterTable = [], filterMeasure = [], iferr = [], division = [], noFmt = [], pctFmt = [], noFolder = [], noDesc = [], longMs = [], deep = [], qualM = [], unqualC = [];
     allMeasures.forEach((ms, i) => {
       const code = daxCode(ms.expr);
       const name = `[${ms.name}]`;
@@ -358,7 +414,10 @@
     if (shown && noDesc.length / shown > 0.5) add('NO_DESC', noDesc);
     add('LONG_MEASURE', longMs); add('DEEP_CHAIN', deep);
     add('QUALIFIED_MEASURE', qualM); add('UNQUALIFIED_COLUMN', unqualC);
+  }
 
+  function duplicateRules(x, out, sh) {
+    const { IX, allMeasures } = x, { add } = out, { isTbl } = sh;
     // identical DAX
     const byExpr = new Map();
     allMeasures.forEach((ms) => {
@@ -371,7 +430,10 @@
     const dups = [];
     byExpr.forEach((names) => { if (names.length > 1) dups.push({ obj: names.map((n) => `[${n}]`).join(' = ') }); });
     add('DUP_MEASURE', dups);
+  }
 
+  function namingRules(x, out) {
+    const { M, userTables } = x, { add } = out;
     // ---- naming ----
     const styles = { underscore: [], space: [] };
     userTables.forEach((t) => { const m2 = t.name.match(/^(dim|fact|fct|d|f)([_ ])/i); if (m2) (m2[2] === '_' ? styles.underscore : styles.space).push(t.name); });
@@ -386,7 +448,10 @@
       t.measures.forEach((ms) => { if (ms.name !== ms.name.trim()) spaced.push({ obj: `[${ms.name}]` }); });
     });
     add('TRAILING_SPACE', spaced);
+  }
 
+  function powerQueryRules(x, out) {
+    const { M, mQueries } = x, { add } = out;
     // ---- Power Query ----
     const hard = [], buffer = [], longM = [];
     mQueries.forEach((q) => {
@@ -404,7 +469,6 @@
     });
     add('HARDCODED_PATH', hard); add('TABLE_BUFFER', buffer); add('LONG_M', longM);
     if (!M.roles.length) add('NO_RLS', [{ obj: 'Model' }]);
-    return { findings, skipped };
   }
 
   const api = { RULES, BPA_URL, runRules };

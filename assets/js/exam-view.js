@@ -18,9 +18,26 @@
   'use strict';
   // the HTML escape: html-escape.js htmlEsc, its one home (0.3.2 DD2H; the page loads it first, Node requires it)
   const HE = typeof module !== 'undefined' && module.exports ? require('./html-escape.js') : glob.DAHtmlEscape;
+  // (0.3.2 FN1A) mount builds the page by named steps, each one part of it; each step's code is the code it was inside
+  // mount, moved. vw: the page's context (the input, the progress's calls, the state ui) each step adds its functions
+  // to; ui: the page's own state (the screen, its context, the mock's timer, the practice and mock choices, the outline).
   function mount({ root, EX, QS, CASES, byId, ALL, DOM, SKILL, REN, renTopic, LEARN, PR, MK, SES, G, track }) {
     const { stats, readiness, mistakes, streak, record, isBm, toggleBm, rank } = PR;
-
+    const ui = { view: 'home', ctx: {}, timer: null, pset: { skill: 'all', diff: 0, count: 10, fresh: true }, mset: 'full', OUT: null };
+    const vw = { root, EX, QS, CASES, byId, ALL, DOM, SKILL, REN, renTopic, LEARN, PR, MK, SES, G, track, stats, readiness, mistakes, streak, record, isBm, toggleBm, rank, ui };
+    [kit, questionPart, answerPart, routerPart, sessionPart, homePart, practicePart, casesPart, mockSetupPart, mockPart, resultsPart, listenersPart].forEach((step) => step(vw));
+    const { go, render, renderOutline, home } = vw;
+    // Deep links: ?mode=mock / renewal / practice / cases / plan
+    const start = (qm) => {
+      if (qm === 'renewal' && REN) { ui.mset = 'renewal'; go('mockSetup'); } else if (qm === 'mock') go('mockSetup'); else if (qm === 'practice') go('practiceSetup'); else if (qm === 'cases') go('cases'); else if (qm === 'plan') go('plan');
+      else render();
+    };
+    // the outline file has come: its note, and the home screen again with the weights it gives
+    const outline = (d) => { ui.OUT = d; renderOutline(); if (ui.view === 'home') home(); };
+    return { start, outline };
+  }
+  function kit(vw) {
+    const { root, DOM, SKILL, REN, SES, G } = vw;
     // ---------- helpers ----------
     const isAr = () => document.documentElement.lang === 'ar';
     const L = (en, ar) => (isAr() ? ar : en);
@@ -29,7 +46,6 @@
     const shuffle = (a) => SES.shuffle(a, Math.random);
     const LET = 'ABCDEFGH';
     const fmtTime = (s) => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };
-
     const renName = (k) => { const t = REN.topics.find((x) => x.k === k); return L(t.en, t.ar); };
     const skillName = (s) => L(SKILL[s].en, SKILL[s].ar);
     const domName = (d) => L(DOM[d].en, DOM[d].ar);
@@ -39,21 +55,46 @@
       return '<div class="dp-domrow" data-dom="' + d + '"><div class="dp-domtop"><span>' + domName(d) + ' <small><bdi dir="ltr">' + DOM[d].w + '</bdi></small></span><b>' + (n ? pct + '%' : '·') + '</b></div>' + bar(p, pct >= 70 ? 'good' : 'warn') +
         (weak && DOM[d].study ? '<div class="dp-domsub"><a href="' + esc(DOM[d].study) + '" target="_blank" rel="noopener" data-learn data-study><i class="bi bi-book"></i> ' + L('Study: this area in Microsoft\'s study guide', 'ذاكر: هذا المحور في دليل المذاكرة من Microsoft') + '</a></div>' : '') + '</div>';
     };
-
     // ---------- grading (exam-grade.js: pure, answers in, score out) ----------
     const { grade, answered, scoreMock, tallySession } = G;
     const newInst = (q) => SES.newInst(q, Math.random);
-
+    // ---------- small UI bits ----------
+    let toastT;
+    function toast(msg) {
+      let t = document.getElementById('dpToast');
+      if (!t) { t = document.createElement('div'); t.id = 'dpToast'; t.className = 'dp-toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+      t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200);
+    }
+    function modal(title, text, okLabel, onOk, cancelLabel) {
+      const m = document.createElement('div');
+      m.className = 'dp-modal';
+      m.innerHTML = '<div class="dp-mbox" role="dialog" aria-modal="true"><h3>' + title + '</h3><p>' + text + '</p><div class="dp-mbtns"><button type="button" class="tg-btn2" data-x>' + (cancelLabel || L('Cancel', 'إلغاء')) + '</button><button type="button" class="btn btn-accent" data-ok>' + okLabel + '</button></div></div>';
+      document.body.appendChild(m);
+      const close = () => m.remove();
+      m.querySelector('[data-x]').onclick = close;
+      m.querySelector('[data-ok]').onclick = () => { close(); onOk(); };
+      m.addEventListener('click', (e) => { if (e.target === m) close(); });
+      m.querySelector('[data-ok]').focus();
+    }
+    const ring = (pct, label, color) => {
+      const r = 42, c = 2 * Math.PI * r, off = c * (1 - Math.max(0, Math.min(1, pct)));
+      return '<svg class="dp-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="' + r + '" class="bg"/><circle cx="50" cy="50" r="' + r + '" class="fg" style="stroke:' + (color || 'var(--accent)') + ';stroke-dasharray:' + c + ';stroke-dashoffset:' + off + '"/></svg><div class="dp-ringlabel">' + label + '</div>';
+    };
+    const bar = (pct, cls) => '<div class="dp-bar ' + (cls || '') + '"><span style="width:' + Math.round(Math.max(0, Math.min(1, pct)) * 100) + '%"></span></div>';
+    // back to the top of the exam when it is scrolled out of view; the offset comes from --top-offset (style.css)
+    const top = () => { if (root.getBoundingClientRect().top < parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)) root.scrollIntoView({ behavior: 'instant', block: 'start' }); };
+    Object.assign(vw, { isAr, L, esc, num, shuffle, LET, fmtTime, renName, skillName, domName, domRow, grade, answered, scoreMock, tallySession, newInst, toast, modal, ring, bar, top });
+  }
+  function questionPart(vw) {
+    const { isAr, L, LET } = vw;
     // ---------- question renderer ----------
     const diffDots = (d) => '<span class="dp-diff" title="' + L('Difficulty', 'الصعوبة') + '">' + [1, 2, 3].map((i) => '<i class="' + (i <= d ? 'on' : '') + '"></i>').join('') + '</span>';
-
     const typeHint = (q) => ({
       single: L('Choose one answer.', 'اختر إجابة واحدة.'),
       multi: L('Select ' + q.n + ' answers.', 'اختر ' + q.n + ' إجابات.'),
       yesno: L('Select Yes or No for each statement.', 'اختر نعم أو لا لكل عبارة.'),
       order: L('Tap the actions in the right order to build your answer.', 'اضغط على الخطوات بالترتيب الصحيح لبناء إجابتك.')
     }[q.type]);
-
     function qHTML(q, inst, reveal) {
       const r = inst.r;
       let body = '';
@@ -89,7 +130,10 @@
       }
       return '<div class="dp-q" data-qid="' + q.id + '" lang="en" dir="ltr"><div class="dp-qtext">' + q.q + '</div><div class="dp-hint" lang="' + (isAr() ? 'ar' : 'en') + '" dir="' + (isAr() ? 'rtl' : 'ltr') + '">' + typeHint(q) + '</div>' + body + '</div>';
     }
-
+    Object.assign(vw, { diffDots, qHTML });
+  }
+  function answerPart(vw) {
+    const { EX, CASES, track, isAr, L, esc, grade, toast } = vw;
     function explainHTML(q, r) {
       const g = grade(q, r), ok = g === 1;
       const verdict = ok ? '<span class="dp-verdict ok"><i class="bi bi-check-circle-fill"></i> ' + L('Correct', 'إجابة صحيحة') + '</span>'
@@ -101,7 +145,6 @@
         (q.ar && isAr() ? '<div class="dp-ar" lang="ar" dir="rtl"><span>' + 'الخلاصة' + '</span>' + q.ar + '</div>' : '') +
         (refs ? '<div class="dp-refs"><b>' + L('Learn more on Microsoft Learn', 'اقرأ أكثر على Microsoft Learn') + '</b><ul>' + refs + '</ul></div>' : '') + '</div>';
     }
-
     // Wires clicks inside a rendered question to update inst.r, then calls onChange
     function bindQ(el, q, inst, onChange) {
       el.querySelectorAll('[data-opt]').forEach((b) => b.addEventListener('click', () => {
@@ -120,67 +163,101 @@
       el.querySelectorAll('[data-down]').forEach((b) => b.addEventListener('click', () => mv(+b.dataset.down, 1)));
       el.querySelectorAll('[data-learn]').forEach((a) => a.addEventListener('click', () => track(EX.ev + '_learn_click', { question_id: q.id })));
     }
-
     function caseHTML(c) {
       return '<div class="dp-case" lang="en" dir="ltr"><div class="dp-casehead"><i class="bi bi-journal-text"></i> Case study: ' + esc(c.title) + '</div><div class="dp-casebody">' + c.scenario + '</div></div>';
     }
     const caseOf = (q) => (q.caseId ? CASES.find((c) => c.id === q.caseId) : null);
-
-    // ---------- small UI bits ----------
-    let toastT;
-    function toast(msg) {
-      let t = document.getElementById('dpToast');
-      if (!t) { t = document.createElement('div'); t.id = 'dpToast'; t.className = 'dp-toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
-      t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200);
-    }
-    function modal(title, text, okLabel, onOk, cancelLabel) {
-      const m = document.createElement('div');
-      m.className = 'dp-modal';
-      m.innerHTML = '<div class="dp-mbox" role="dialog" aria-modal="true"><h3>' + title + '</h3><p>' + text + '</p><div class="dp-mbtns"><button type="button" class="tg-btn2" data-x>' + (cancelLabel || L('Cancel', 'إلغاء')) + '</button><button type="button" class="btn btn-accent" data-ok>' + okLabel + '</button></div></div>';
-      document.body.appendChild(m);
-      const close = () => m.remove();
-      m.querySelector('[data-x]').onclick = close;
-      m.querySelector('[data-ok]').onclick = () => { close(); onOk(); };
-      m.addEventListener('click', (e) => { if (e.target === m) close(); });
-      m.querySelector('[data-ok]').focus();
-    }
-    const ring = (pct, label, color) => {
-      const r = 42, c = 2 * Math.PI * r, off = c * (1 - Math.max(0, Math.min(1, pct)));
-      return '<svg class="dp-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="' + r + '" class="bg"/><circle cx="50" cy="50" r="' + r + '" class="fg" style="stroke:' + (color || 'var(--accent)') + ';stroke-dasharray:' + c + ';stroke-dashoffset:' + off + '"/></svg><div class="dp-ringlabel">' + label + '</div>';
-    };
-    const bar = (pct, cls) => '<div class="dp-bar ' + (cls || '') + '"><span style="width:' + Math.round(Math.max(0, Math.min(1, pct)) * 100) + '%"></span></div>';
-    // back to the top of the exam when it is scrolled out of view; the offset comes from --top-offset (style.css)
-    const top = () => { if (root.getBoundingClientRect().top < parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)) root.scrollIntoView({ behavior: 'instant', block: 'start' }); };
-
+    Object.assign(vw, { explainHTML, bindQ, caseHTML, caseOf });
+  }
+  // the outline note, the router (the screens are looked up on vw when drawn), the way back to the dashboard
+  function routerPart(vw) {
+    const { root, EX, PR, ui, isAr, L, esc, top } = vw;
     // ---------- weekly outline check (assets/data/dp600-outline.json, refreshed by a GitHub Action) ----------
-    let OUT = null;
     const fmtDate = (iso) => new Intl.DateTimeFormat(isAr() ? 'ar-u-nu-latn' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(iso + 'T00:00:00Z'));
     function renderOutline() {
       const el = document.getElementById('dpOutline');
-      if (!el || !OUT || !OUT.checked) return;
-      const guide = '<a href="' + esc(OUT.sources.studyGuide) + '" target="_blank" rel="noopener">' + L('study guide', 'دليل المذاكرة') + '</a>';
+      if (!el || !ui.OUT || !ui.OUT.checked) return;
+      const guide = '<a href="' + esc(ui.OUT.sources.studyGuide) + '" target="_blank" rel="noopener">' + L('study guide', 'دليل المذاكرة') + '</a>';
       let html;
-      el.classList.toggle('review', OUT.status === 'review');  // toggled, not replaced: the page's own classes (its margin) stay
-      if (OUT.status === 'review') {
-        html = '<i class="bi bi-arrow-repeat"></i> ' + L('Microsoft updated the ' + EX.code + ' skills outline (checked ' + fmtDate(OUT.checked) + '). We are reviewing the questions now. Most of them still apply. See the ' + guide + ' for what changed.',
-          'حدّثت Microsoft منهج ' + EX.code + ' (آخر فحص ' + fmtDate(OUT.checked) + '). نراجع الأسئلة الآن ومعظمها ما زال صالحًا. راجع ' + guide + ' لمعرفة التغييرات.');
+      el.classList.toggle('review', ui.OUT.status === 'review');  // toggled, not replaced: the page's own classes (its margin) stay
+      if (ui.OUT.status === 'review') {
+        html = '<i class="bi bi-arrow-repeat"></i> ' + L('Microsoft updated the ' + EX.code + ' skills outline (checked ' + fmtDate(ui.OUT.checked) + '). We are reviewing the questions now. Most of them still apply. See the ' + guide + ' for what changed.',
+          'حدّثت Microsoft منهج ' + EX.code + ' (آخر فحص ' + fmtDate(ui.OUT.checked) + '). نراجع الأسئلة الآن ومعظمها ما زال صالحًا. راجع ' + guide + ' لمعرفة التغييرات.');
       } else {
-        html = '<i class="bi bi-shield-check"></i> ' + L('Checked weekly against Microsoft\'s ' + EX.code + ' ' + guide + '. Last check: ' + fmtDate(OUT.checked) + '. Questions match the skills measured as of ' + fmtDate(OUT.bankOutlineDate) + '.',
-          'نراجع أسبوعيًا ' + guide + ' الخاص بـ ' + EX.code + ' من Microsoft. آخر فحص: ' + fmtDate(OUT.checked) + '. الأسئلة مطابقة للمهارات المقاسة اعتبارًا من ' + fmtDate(OUT.bankOutlineDate) + '.');
-        if (PR.today() < OUT.bankOutlineDate) html += ' ' + L('Taking the exam before then? The previous outline is still live and most topics overlap.', 'ستختبر قبل هذا التاريخ؟ المنهج السابق ما زال ساريًا ومعظم المواضيع مشتركة.');
+        html = '<i class="bi bi-shield-check"></i> ' + L('Checked weekly against Microsoft\'s ' + EX.code + ' ' + guide + '. Last check: ' + fmtDate(ui.OUT.checked) + '. Questions match the skills measured as of ' + fmtDate(ui.OUT.bankOutlineDate) + '.',
+          'نراجع أسبوعيًا ' + guide + ' الخاص بـ ' + EX.code + ' من Microsoft. آخر فحص: ' + fmtDate(ui.OUT.checked) + '. الأسئلة مطابقة للمهارات المقاسة اعتبارًا من ' + fmtDate(ui.OUT.bankOutlineDate) + '.');
+        if (PR.today() < ui.OUT.bankOutlineDate) html += ' ' + L('Taking the exam before then? The previous outline is still live and most topics overlap.', 'ستختبر قبل هذا التاريخ؟ المنهج السابق ما زال ساريًا ومعظم المواضيع مشتركة.');
       }
       el.innerHTML = html;
     }
     // ---------- router ----------
-    let view = 'home', ctx = {};
-    let timer = null;
-    const go = (v, c) => { view = v; ctx = c || {}; if (timer && v !== 'mock') { clearInterval(timer); timer = null; } render(); top(); };
+    const go = (v, c) => { ui.view = v; ui.ctx = c || {}; if (ui.timer && v !== 'mock') { clearInterval(ui.timer); ui.timer = null; } render(); top(); };
     function render() {
-      root.classList.toggle('dp-exammode', view === 'mock');
+      root.classList.toggle('dp-exammode', ui.view === 'mock');
       renderOutline();
-      ({ home, practiceSetup, session, mockSetup, mock, results, plan, cases: caseList })[view]();
+      ({ home: vw.home, practiceSetup: vw.practiceSetup, session: vw.session, mockSetup: vw.mockSetup, mock: vw.mock, results: vw.results, plan: vw.plan, cases: vw.caseList })[ui.view]();
     }
-
+    const back = () => '<button type="button" class="dp-back" id="dpBack"><i class="bi bi-arrow-left"></i> ' + L('Dashboard', 'لوحة التقدم') + '</button>';
+    const bindBack = () => { const b = root.querySelector('#dpBack'); if (b) b.addEventListener('click', () => go('home')); };
+    Object.assign(vw, { renderOutline, go, render, back, bindBack });
+  }
+  function sessionPart(vw) {
+    const { root, EX, byId, DOM, track, mistakes, record, isBm, toggleBm, ui, L, esc, num, shuffle, skillName, domRow, grade, answered, tallySession, newInst, ring, bar, top, diffDots, qHTML, explainHTML, bindQ, caseHTML, caseOf, go, back, bindBack } = vw;
+    // ---------- PRACTICE / REVIEW SESSION ----------
+    function startSession(list, kind, extra) {
+      if (!list.length) return;
+      go('session', Object.assign({ kind, items: list.map(newInst), i: 0, checked: {}, score: 0 }, extra || {}));
+    }
+    function session() {
+      const c = ui.ctx;
+      if (c.i >= c.items.length) return sessionEnd();
+      const inst = c.items[c.i], q = byId[inst.id], done = c.checked[c.i] != null;
+      const cs = caseOf(q);
+      const title = { practice: L('Practice', 'تدريب'), mistakes: L('Review mistakes', 'مراجعة الأخطاء'), bookmarks: L('Bookmarks', 'المحفوظات'), case: L('Case study', 'دراسة حالة') }[c.kind];
+      root.innerHTML = back() +
+        '<div class="dp-sbar"><span><b>' + title + '</b> · ' + L('Question ' + (c.i + 1) + ' of ' + c.items.length, 'سؤال ' + (c.i + 1) + ' من ' + c.items.length) + '</span><span class="dp-sscore"><i class="bi bi-check2-circle"></i> ' + num(c.score) + '</span></div>' + bar((c.i + (done ? 1 : 0)) / c.items.length, 'thin') +
+        '<div class="' + (cs ? 'dp-split' : '') + '">' + (cs ? caseHTML(cs) : '') +
+        '<div class="dp-panel dp-qpanel"><div class="dp-qmeta"><span class="dp-tag">' + skillName(q.s) + '</span><span class="dp-tag alt">' + esc(q.tag) + '</span>' + diffDots(q.diff) + '<button type="button" class="dp-bm' + (isBm(q.id) ? ' on' : '') + '" id="dpBm" aria-label="' + L('Bookmark', 'حفظ') + '"><i class="bi bi-bookmark' + (isBm(q.id) ? '-fill' : '') + '"></i></button></div>' +
+        '<div id="dpQ">' + qHTML(q, inst, done) + '</div>' + (done ? explainHTML(q, inst.r) : '') +
+        '<div class="dp-actions">' + (done
+          ? '<button type="button" class="btn btn-accent" id="dpNext">' + (c.i + 1 < c.items.length ? L('Next question', 'السؤال التالي') : L('See summary', 'عرض الملخص')) + ' <i class="bi bi-arrow-right"></i></button>'
+          : '<button type="button" class="btn btn-accent" id="dpCheck" ' + (answered(q, inst.r) ? '' : 'disabled') + '>' + L('Check answer', 'تحقق من الإجابة') + '</button><button type="button" class="tg-btn2" id="dpSkip">' + L('Skip', 'تخطي') + '</button>') +
+        '</div></div></div>';
+      bindBack();
+      root.querySelector('#dpBm').addEventListener('click', () => { toggleBm(q.id); session(); });
+      if (!done) {
+        bindQ(root.querySelector('#dpQ'), q, inst, session);
+        root.querySelector('#dpCheck').addEventListener('click', check);
+        root.querySelector('#dpSkip').addEventListener('click', () => { if (c.i >= c.items.length - 1) c.i++; else c.items.push(c.items.splice(c.i, 1)[0]); session(); top(); });
+      } else {
+        bindQ(root.querySelector('.dp-exp'), q, inst, () => {});
+        root.querySelector('#dpNext').addEventListener('click', () => { c.i++; session(); top(); });
+      }
+    }
+    function check() {
+      const c = ui.ctx, inst = c.items[c.i], q = byId[inst.id];
+      if (!answered(q, inst.r)) return;
+      const g = grade(q, inst.r);
+      c.checked[c.i] = g; c.score += g === 1 ? 1 : 0;
+      record(q, g === 1);
+      session();
+      const e = root.querySelector('.dp-exp'); if (e && e.getBoundingClientRect().top > window.innerHeight - 120) e.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    function sessionEnd() {
+      const c = ui.ctx, { n, right, bySkill, byDom } = tallySession(c.items, c.checked, byId);
+      root.innerHTML = back() + '<div class="dp-panel text-center dp-end"><div class="dp-ringwrap">' + ring(n ? right / n : 0, '<b>' + num(right) + '/' + num(n) + '</b><span>' + L('correct', 'صحيحة') + '</span>') + '</div>' +
+        '<h2 class="h4 fw-bold mt-3">' + (n && right / n >= 0.8 ? L('Strong session', 'جلسة قوية') : L('Session complete', 'انتهت الجلسة')) + '</h2>' +
+        (Object.keys(byDom).length ? '<div class="dp-enddoms text-start"><span class="tg-label">' + L('By exam area', 'حسب محور الاختبار') + '</span>' + Object.keys(DOM).filter((d) => byDom[d]).map((d) => domRow(d, byDom[d][0], byDom[d][1])).join('') + '</div>' : '') +
+        '<div class="dp-skilltable">' + Object.keys(bySkill).map((s) => '<div><span>' + skillName(s) + '</span>' + bar(bySkill[s][0] / bySkill[s][1], bySkill[s][0] / bySkill[s][1] >= 0.7 ? 'good' : 'warn') + '<b>' + bySkill[s][0] + '/' + bySkill[s][1] + '</b></div>').join('') + '</div>' +
+        '<div class="dp-actions justify-content-center"><button type="button" class="btn btn-accent" data-a="again">' + L('Practice more', 'تدرّب أكثر') + '</button>' + (mistakes().length ? '<button type="button" class="tg-btn2" data-a="mist">' + L('Review mistakes', 'راجع الأخطاء') + ' (' + num(mistakes().length) + ')</button>' : '') + '</div></div>';
+      bindBack();
+      root.querySelectorAll('[data-learn]').forEach((a) => a.addEventListener('click', () => track(EX.ev + '_learn_click', { from: 'practice' })));
+      root.querySelectorAll('[data-a]').forEach((b) => b.addEventListener('click', () => (b.dataset.a === 'again' ? go('practiceSetup') : startSession(shuffle(mistakes()), 'mistakes'))));
+    }
+    Object.assign(vw, { startSession, session });
+  }
+  function homePart(vw) {
+    const { root, byId, ALL, DOM, REN, PR, MK, stats, readiness, mistakes, streak, ui, L, num, shuffle, domName, ring, bar, go, startSession } = vw;
     // ---------- HOME ----------
     function home() {
       const rd = readiness(), st = stats(ALL), mk = mistakes().length, best = PR.state().mocks.reduce((m, x) => Math.max(m, x.score), 0);
@@ -212,8 +289,8 @@
       root.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => {
         const g = b.dataset.go;
         if (g === 'resume') return go('mock');
-        if (g === 'mock') { if (mset === 'renewal') mset = 'full'; return go('mockSetup'); }
-        if (g === 'renewal') { mset = 'renewal'; return go('mockSetup'); }
+        if (g === 'mock') { if (ui.mset === 'renewal') ui.mset = 'full'; return go('mockSetup'); }
+        if (g === 'renewal') { ui.mset = 'renewal'; return go('mockSetup'); }
         if (g === 'practice') return go('practiceSetup');
         if (g === 'cases') return go('cases');
         if (g === 'plan') return go('plan');
@@ -223,101 +300,52 @@
     }
     const modeCard = (go, icon, title, desc, primary, disabled) =>
       '<button type="button" class="dp-mode' + (primary ? ' primary' : '') + '" data-go="' + go + '" ' + (disabled ? 'disabled' : '') + '><i class="bi ' + icon + '"></i><span><b>' + title + '</b><small>' + desc + '</small></span></button>';
-
+    Object.assign(vw, { home });
+  }
+  function practicePart(vw) {
+    const { root, EX, ALL, SKILL, PR, track, stats, rank, ui, L, num, shuffle, skillName, toast, back, bindBack, startSession } = vw;
     // ---------- PRACTICE SETUP ----------
-    let pset = { skill: 'all', diff: 0, count: 10, fresh: true };
     function practiceSetup() {
       const chip = (k, label, sel, attr) => '<button type="button" class="tg-preset' + (sel ? ' active' : '') + '" ' + attr + '="' + k + '">' + label + '</button>';
       const skills = ['all', 'weak'].concat(Object.keys(SKILL));
       root.innerHTML = back() + '<div class="dp-panel dp-setup"><h2 class="h4 fw-bold">' + L('Practice by skill', 'تدريب حسب المهارة') + '</h2>' +
         '<span class="tg-label">' + L('Skill', 'المهارة') + '</span><div class="dp-chips">' + skills.map((s) => {
           const label = s === 'all' ? L('All skills', 'كل المهارات') : s === 'weak' ? L('Weakest first', 'الأضعف أولًا') : skillName(s) + ' <small>' + stats(ALL.filter((q) => q.s === s)).total + '</small>';
-          return chip(s, label, pset.skill === s, 'data-skill');
+          return chip(s, label, ui.pset.skill === s, 'data-skill');
         }).join('') + '</div>' +
-        '<span class="tg-label mt-3">' + L('Difficulty', 'الصعوبة') + '</span><div class="dp-chips">' + [[0, L('Any', 'الكل')], [1, L('Easy', 'سهل')], [2, L('Medium', 'متوسط')], [3, L('Hard', 'صعب')]].map((d) => chip(d[0], d[1], pset.diff === d[0], 'data-diff')).join('') + '</div>' +
-        '<span class="tg-label mt-3">' + L('Questions', 'عدد الأسئلة') + '</span><div class="dp-chips">' + [10, 20, 40, 0].map((n) => chip(n, n ? num(n) : L('All', 'الكل'), pset.count === n, 'data-count')).join('') + '</div>' +
-        '<label class="dp-check mt-3"><input type="checkbox" id="dpFresh" ' + (pset.fresh ? 'checked' : '') + '> ' + L('Questions I have not answered yet first', 'الأسئلة التي لم أجب عنها أولًا') + '</label>' +
+        '<span class="tg-label mt-3">' + L('Difficulty', 'الصعوبة') + '</span><div class="dp-chips">' + [[0, L('Any', 'الكل')], [1, L('Easy', 'سهل')], [2, L('Medium', 'متوسط')], [3, L('Hard', 'صعب')]].map((d) => chip(d[0], d[1], ui.pset.diff === d[0], 'data-diff')).join('') + '</div>' +
+        '<span class="tg-label mt-3">' + L('Questions', 'عدد الأسئلة') + '</span><div class="dp-chips">' + [10, 20, 40, 0].map((n) => chip(n, n ? num(n) : L('All', 'الكل'), ui.pset.count === n, 'data-count')).join('') + '</div>' +
+        '<label class="dp-check mt-3"><input type="checkbox" id="dpFresh" ' + (ui.pset.fresh ? 'checked' : '') + '> ' + L('Questions I have not answered yet first', 'الأسئلة التي لم أجب عنها أولًا') + '</label>' +
         '<div class="mt-4"><button type="button" class="btn btn-accent" id="dpStart">' + L('Start practice', 'ابدأ التدريب') + ' <i class="bi bi-arrow-right"></i></button> <span class="dp-note ms-2" id="dpAvail"></span></div></div>';
       const pool = () => {
         let list = ALL.filter((q) => !q.caseId);
-        if (pset.skill !== 'all' && pset.skill !== 'weak') list = list.filter((q) => q.s === pset.skill);
-        if (pset.diff) list = list.filter((q) => q.diff === pset.diff);
+        if (ui.pset.skill !== 'all' && ui.pset.skill !== 'weak') list = list.filter((q) => q.s === ui.pset.skill);
+        if (ui.pset.diff) list = list.filter((q) => q.diff === ui.pset.diff);
         return list;
       };
       const upd = () => { root.querySelector('#dpAvail').textContent = L(num(pool().length) + ' questions available', num(pool().length) + ' سؤال متاح'); };
       upd();
-      const bindChip = (attr, key, cast) => root.querySelectorAll('[' + attr + ']').forEach((b) => b.addEventListener('click', () => { pset[key] = cast(b.getAttribute(attr)); practiceSetup(); }));
+      const bindChip = (attr, key, cast) => root.querySelectorAll('[' + attr + ']').forEach((b) => b.addEventListener('click', () => { ui.pset[key] = cast(b.getAttribute(attr)); practiceSetup(); }));
       bindChip('data-skill', 'skill', String); bindChip('data-diff', 'diff', Number); bindChip('data-count', 'count', Number);
-      root.querySelector('#dpFresh').addEventListener('change', (e) => { pset.fresh = e.target.checked; });
+      root.querySelector('#dpFresh').addEventListener('change', (e) => { ui.pset.fresh = e.target.checked; });
       bindBack();
       root.querySelector('#dpStart').addEventListener('click', () => {
         let list = shuffle(pool());
-        if (pset.skill === 'weak') {
+        if (ui.pset.skill === 'weak') {
           const acc = PR.skillAccuracy();
           list.sort((a, b) => acc[a.s] - acc[b.s]);
         }
-        if (pset.fresh) list.sort((a, b) => rank(a.id) - rank(b.id));
-        if (pset.count) list = list.slice(0, pset.count);
+        if (ui.pset.fresh) list.sort((a, b) => rank(a.id) - rank(b.id));
+        if (ui.pset.count) list = list.slice(0, ui.pset.count);
         if (!list.length) return toast(L('No questions match. Try another filter.', 'لا توجد أسئلة مطابقة. جرّب اختيارًا آخر.'));
-        track(EX.ev + '_practice_start', { skill: pset.skill, count: list.length });
+        track(EX.ev + '_practice_start', { skill: ui.pset.skill, count: list.length });
         startSession(list, 'practice');
       });
     }
-    const back = () => '<button type="button" class="dp-back" id="dpBack"><i class="bi bi-arrow-left"></i> ' + L('Dashboard', 'لوحة التقدم') + '</button>';
-    const bindBack = () => { const b = root.querySelector('#dpBack'); if (b) b.addEventListener('click', () => go('home')); };
-
-    // ---------- PRACTICE / REVIEW SESSION ----------
-    function startSession(list, kind, extra) {
-      if (!list.length) return;
-      go('session', Object.assign({ kind, items: list.map(newInst), i: 0, checked: {}, score: 0 }, extra || {}));
-    }
-    function session() {
-      const c = ctx;
-      if (c.i >= c.items.length) return sessionEnd();
-      const inst = c.items[c.i], q = byId[inst.id], done = c.checked[c.i] != null;
-      const cs = caseOf(q);
-      const title = { practice: L('Practice', 'تدريب'), mistakes: L('Review mistakes', 'مراجعة الأخطاء'), bookmarks: L('Bookmarks', 'المحفوظات'), case: L('Case study', 'دراسة حالة') }[c.kind];
-      root.innerHTML = back() +
-        '<div class="dp-sbar"><span><b>' + title + '</b> · ' + L('Question ' + (c.i + 1) + ' of ' + c.items.length, 'سؤال ' + (c.i + 1) + ' من ' + c.items.length) + '</span><span class="dp-sscore"><i class="bi bi-check2-circle"></i> ' + num(c.score) + '</span></div>' + bar((c.i + (done ? 1 : 0)) / c.items.length, 'thin') +
-        '<div class="' + (cs ? 'dp-split' : '') + '">' + (cs ? caseHTML(cs) : '') +
-        '<div class="dp-panel dp-qpanel"><div class="dp-qmeta"><span class="dp-tag">' + skillName(q.s) + '</span><span class="dp-tag alt">' + esc(q.tag) + '</span>' + diffDots(q.diff) + '<button type="button" class="dp-bm' + (isBm(q.id) ? ' on' : '') + '" id="dpBm" aria-label="' + L('Bookmark', 'حفظ') + '"><i class="bi bi-bookmark' + (isBm(q.id) ? '-fill' : '') + '"></i></button></div>' +
-        '<div id="dpQ">' + qHTML(q, inst, done) + '</div>' + (done ? explainHTML(q, inst.r) : '') +
-        '<div class="dp-actions">' + (done
-          ? '<button type="button" class="btn btn-accent" id="dpNext">' + (c.i + 1 < c.items.length ? L('Next question', 'السؤال التالي') : L('See summary', 'عرض الملخص')) + ' <i class="bi bi-arrow-right"></i></button>'
-          : '<button type="button" class="btn btn-accent" id="dpCheck" ' + (answered(q, inst.r) ? '' : 'disabled') + '>' + L('Check answer', 'تحقق من الإجابة') + '</button><button type="button" class="tg-btn2" id="dpSkip">' + L('Skip', 'تخطي') + '</button>') +
-        '</div></div></div>';
-      bindBack();
-      root.querySelector('#dpBm').addEventListener('click', () => { toggleBm(q.id); session(); });
-      if (!done) {
-        bindQ(root.querySelector('#dpQ'), q, inst, session);
-        root.querySelector('#dpCheck').addEventListener('click', check);
-        root.querySelector('#dpSkip').addEventListener('click', () => { if (c.i >= c.items.length - 1) c.i++; else c.items.push(c.items.splice(c.i, 1)[0]); session(); top(); });
-      } else {
-        bindQ(root.querySelector('.dp-exp'), q, inst, () => {});
-        root.querySelector('#dpNext').addEventListener('click', () => { c.i++; session(); top(); });
-      }
-    }
-    function check() {
-      const c = ctx, inst = c.items[c.i], q = byId[inst.id];
-      if (!answered(q, inst.r)) return;
-      const g = grade(q, inst.r);
-      c.checked[c.i] = g; c.score += g === 1 ? 1 : 0;
-      record(q, g === 1);
-      session();
-      const e = root.querySelector('.dp-exp'); if (e && e.getBoundingClientRect().top > window.innerHeight - 120) e.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-    function sessionEnd() {
-      const c = ctx, { n, right, bySkill, byDom } = tallySession(c.items, c.checked, byId);
-      root.innerHTML = back() + '<div class="dp-panel text-center dp-end"><div class="dp-ringwrap">' + ring(n ? right / n : 0, '<b>' + num(right) + '/' + num(n) + '</b><span>' + L('correct', 'صحيحة') + '</span>') + '</div>' +
-        '<h2 class="h4 fw-bold mt-3">' + (n && right / n >= 0.8 ? L('Strong session', 'جلسة قوية') : L('Session complete', 'انتهت الجلسة')) + '</h2>' +
-        (Object.keys(byDom).length ? '<div class="dp-enddoms text-start"><span class="tg-label">' + L('By exam area', 'حسب محور الاختبار') + '</span>' + Object.keys(DOM).filter((d) => byDom[d]).map((d) => domRow(d, byDom[d][0], byDom[d][1])).join('') + '</div>' : '') +
-        '<div class="dp-skilltable">' + Object.keys(bySkill).map((s) => '<div><span>' + skillName(s) + '</span>' + bar(bySkill[s][0] / bySkill[s][1], bySkill[s][0] / bySkill[s][1] >= 0.7 ? 'good' : 'warn') + '<b>' + bySkill[s][0] + '/' + bySkill[s][1] + '</b></div>').join('') + '</div>' +
-        '<div class="dp-actions justify-content-center"><button type="button" class="btn btn-accent" data-a="again">' + L('Practice more', 'تدرّب أكثر') + '</button>' + (mistakes().length ? '<button type="button" class="tg-btn2" data-a="mist">' + L('Review mistakes', 'راجع الأخطاء') + ' (' + num(mistakes().length) + ')</button>' : '') + '</div></div>';
-      bindBack();
-      root.querySelectorAll('[data-learn]').forEach((a) => a.addEventListener('click', () => track(EX.ev + '_learn_click', { from: 'practice' })));
-      root.querySelectorAll('[data-a]').forEach((b) => b.addEventListener('click', () => (b.dataset.a === 'again' ? go('practiceSetup') : startSession(shuffle(mistakes()), 'mistakes'))));
-    }
-
+    Object.assign(vw, { practiceSetup });
+  }
+  function casesPart(vw) {
+    const { root, EX, CASES, SKILL, LEARN, PR, track, stats, ui, L, esc, num, skillName, domName, bar, go, back, bindBack, startSession } = vw;
     // ---------- CASE STUDIES ----------
     function caseList() {
       root.innerHTML = back() + '<div class="row g-4">' + CASES.map((c) => {
@@ -332,7 +360,6 @@
         startSession(c.questions.slice(), 'case');
       }));
     }
-
     // ---------- STUDY PLAN ----------
     function plan() {
       const rows = PR.planRows();
@@ -349,15 +376,17 @@
         EX.official.map((o) => '<li><a href="' + o[0] + '" target="_blank" rel="noopener" data-learn>' + L(o[1], o[2]) + '</a></li>').join('') + '</ul></div></div>';
       bindBack();
       root.querySelectorAll('[data-learn]').forEach((a) => a.addEventListener('click', () => track(EX.ev + '_learn_click', { from: 'plan' })));
-      root.querySelectorAll('[data-skill]').forEach((b) => b.addEventListener('click', () => { pset.skill = b.dataset.skill; go('practiceSetup'); }));
+      root.querySelectorAll('[data-skill]').forEach((b) => b.addEventListener('click', () => { ui.pset.skill = b.dataset.skill; go('practiceSetup'); }));
     }
-
+    Object.assign(vw, { caseList, plan });
+  }
+  function mockSetupPart(vw) {
+    const { root, EX, QS, CASES, byId, DOM, SKILL, REN, MK, SES, track, rank, ui, isAr, L, esc, num, newInst, modal, go, back, bindBack } = vw;
     // ---------- MOCK EXAM ----------
     const MOCKS = SES.lengths(REN);
-    let mset = 'full';
     function mockSetup() {
-      const card = (k, t, d) => '<button type="button" class="dp-mode' + (mset === k ? ' primary' : '') + '" data-len="' + k + '"><i class="bi ' + (k === 'full' ? 'bi-trophy' : k === 'half' ? 'bi-hourglass-split' : 'bi-lightning') + '"></i><span><b>' + t + '</b><small>' + d + '</small></span></button>';
-      if (mset === 'renewal' && REN) return renewalSetup();
+      const card = (k, t, d) => '<button type="button" class="dp-mode' + (ui.mset === k ? ' primary' : '') + '" data-len="' + k + '"><i class="bi ' + (k === 'full' ? 'bi-trophy' : k === 'half' ? 'bi-hourglass-split' : 'bi-lightning') + '"></i><span><b>' + t + '</b><small>' + d + '</small></span></button>';
+      if (ui.mset === 'renewal' && REN) return renewalSetup();
       root.innerHTML = back() + '<div class="dp-panel dp-setup"><h2 class="h4 fw-bold">' + L('Mock exam', 'اختبار تجريبي') + '</h2>' +
         '<div class="dp-modes one">' +
         card('full', L('Full exam', 'اختبار كامل'), L('50 questions including a 6-question case study · 100 minutes', '50 سؤالًا منها دراسة حالة من 6 أسئلة · 100 دقيقة')) +
@@ -370,9 +399,9 @@
         '<li>' + L('Your exam is saved if you close the tab. The timer keeps running.', 'يُحفظ اختبارك إذا أغلقت الصفحة، لكن الوقت يستمر.') + '</li></ul>' +
         '<button type="button" class="btn btn-accent mt-2" id="dpGo">' + L('Start exam', 'ابدأ الاختبار') + ' <i class="bi bi-arrow-right"></i></button></div>';
       bindBack();
-      root.querySelectorAll('[data-len]').forEach((b) => b.addEventListener('click', () => { mset = b.dataset.len; mockSetup(); }));
+      root.querySelectorAll('[data-len]').forEach((b) => b.addEventListener('click', () => { ui.mset = b.dataset.len; mockSetup(); }));
       root.querySelector('#dpGo').addEventListener('click', () => {
-        const go2 = () => { buildMock(mset); go('mock'); };
+        const go2 = () => { buildMock(ui.mset); go('mock'); };
         if (MK.running()) modal(L('Replace the exam in progress?', 'استبدال الاختبار الحالي؟'), L('Your unfinished mock exam will be discarded.', 'سيتم حذف الاختبار غير المكتمل.'), L('Start new exam', 'ابدأ اختبارًا جديدًا'), go2);
         else go2();
       });
@@ -411,11 +440,16 @@
       MK.start({ kind, ids, caseId, min: cfg.min }, (id) => newInst(byId[id]));
       track(EX.ev + '_mock_start', { length: kind, questions: ids.length });
     }
+    Object.assign(vw, { mockSetup });
+  }
+  // the mock in progress: its question, its timer, the review grid, the submit
+  function mockPart(vw) {
+    const { root, EX, byId, DOM, renTopic, PR, MK, track, ui, L, fmtTime, answered, scoreMock, modal, bar, top, qHTML, bindQ, caseHTML, caseOf, go } = vw;
     function mock() {
       const M = MK.current();
       if (!M) return go('home');
       if (MK.expired()) return submitMock(true);
-      if (ctx.review) return mockReview();
+      if (ui.ctx.review) return mockReview();
       const inst = M.items[M.i], q = byId[inst.id], cs = caseOf(q), flagged = MK.flagged();
       root.innerHTML =
         '<div class="dp-exambar"><span class="dp-ex-title">' + EX.code + ' ' + (M.kind === 'renewal' ? L('renewal check', 'اختبار التجديد') : L('mock exam', 'اختبار تجريبي')) + '</span><span class="dp-ex-count">' + (M.i + 1) + ' / ' + M.items.length + '</span><span class="dp-timer" id="dpTimer"><i class="bi bi-clock"></i> <b></b></span></div>' +
@@ -431,8 +465,8 @@
       root.querySelector('#dpFlag').addEventListener('click', () => { MK.flag(); mock(); });
       root.querySelector('#dpPrev').addEventListener('click', () => { MK.prev(); mock(); top(); });
       const nx = root.querySelector('#dpNext'); if (nx) nx.addEventListener('click', () => { MK.next(); mock(); top(); });
-      root.querySelector('#dpRev').addEventListener('click', () => { ctx.review = true; mock(); top(); });
-      const r2 = root.querySelector('#dpRev2'); if (r2) r2.addEventListener('click', () => { ctx.review = true; mock(); top(); });
+      root.querySelector('#dpRev').addEventListener('click', () => { ui.ctx.review = true; mock(); top(); });
+      const r2 = root.querySelector('#dpRev2'); if (r2) r2.addEventListener('click', () => { ui.ctx.review = true; mock(); top(); });
       startTimer();
     }
     function startTimer() {
@@ -440,9 +474,9 @@
         if (!MK.current()) return;
         const { left, low, up } = MK.clock();
         const t = document.querySelector('#dpTimer b'); if (t) { t.textContent = fmtTime(left); t.parentElement.classList.toggle('low', low); }
-        if (up) { clearInterval(timer); timer = null; submitMock(true); }
+        if (up) { clearInterval(ui.timer); ui.timer = null; submitMock(true); }
       };
-      if (!timer) timer = setInterval(tick, 1000);
+      if (!ui.timer) ui.timer = setInterval(tick, 1000);
       tick();
     }
     function mockReview() {
@@ -456,15 +490,15 @@
         }).join('') + '</div>' +
         '<div class="dp-actions"><button type="button" class="tg-btn2" id="dpBackQ"><i class="bi bi-arrow-left"></i> ' + L('Back to questions', 'رجوع للأسئلة') + '</button>' + (M.flags.length ? '<button type="button" class="tg-btn2" id="dpFlagged"><i class="bi bi-flag"></i> ' + L('Review flagged', 'راجع المعلّمة') + '</button>' : '') + '<button type="button" class="btn btn-accent" id="dpSubmit">' + L('Submit exam', 'سلّم الاختبار') + '</button></div>' +
         (un ? '<p class="dp-note mt-2 text-warning">' + L(un + ' question(s) not answered. Unanswered questions score zero.', 'يوجد ' + un + ' سؤال بلا إجابة، وسيُحسب صفرًا.') + '</p>' : '') + '</div>';
-      root.querySelectorAll('[data-j]').forEach((b) => b.addEventListener('click', () => { MK.move(+b.dataset.j); ctx.review = false; mock(); top(); }));
-      root.querySelector('#dpBackQ').addEventListener('click', () => { ctx.review = false; mock(); });
-      const fl = root.querySelector('#dpFlagged'); if (fl) fl.addEventListener('click', () => { MK.firstFlagged(); ctx.review = false; mock(); top(); });
+      root.querySelectorAll('[data-j]').forEach((b) => b.addEventListener('click', () => { MK.move(+b.dataset.j); ui.ctx.review = false; mock(); top(); }));
+      root.querySelector('#dpBackQ').addEventListener('click', () => { ui.ctx.review = false; mock(); });
+      const fl = root.querySelector('#dpFlagged'); if (fl) fl.addEventListener('click', () => { MK.firstFlagged(); ui.ctx.review = false; mock(); top(); });
       root.querySelector('#dpSubmit').addEventListener('click', () => modal(L('Submit your exam?', 'تسليم الاختبار؟'), un ? L('You still have ' + un + ' unanswered question(s).', 'لا يزال لديك ' + un + ' سؤال بلا إجابة.') : L('You can review every answer and explanation after submitting.', 'ستتمكن من مراجعة كل إجابة وشرحها بعد التسليم.'), L('Submit', 'تسليم'), () => submitMock(false)));
       startTimer();
     }
     function submitMock(timeUp) {
       const M = MK.current(); if (!M) return;
-      if (timer) { clearInterval(timer); timer = null; }
+      if (ui.timer) { clearInterval(ui.timer); ui.timer = null; }
       const { res, score, dom, sk, ren } = scoreMock(M.items, byId, { domains: Object.keys(DOM), renTopic, renewal: M.kind === 'renewal' });
       const used = MK.used();
       const rec = Object.assign({ t: Date.now(), kind: M.kind, score, pass: score >= 700, n: M.items.length, used, dom, sk }, M.kind === 'renewal' ? { ren } : {});
@@ -474,12 +508,15 @@
       track(EX.ev + '_mock_finish', { length: rec.kind, score, passed: rec.pass, questions: rec.n, time_used_min: Math.round(used / 60) });
       go('results', { last, filter: 'all' });
     }
-
+    Object.assign(vw, { mock });
+  }
+  function resultsPart(vw) {
+    const { root, EX, byId, DOM, REN, track, isBm, toggleBm, ui, L, esc, num, fmtTime, renName, skillName, domRow, ring, bar, qHTML, explainHTML, bindQ, caseHTML, caseOf, go, back, bindBack } = vw;
     // ---------- RESULTS ----------
     function results() {
-      const { last } = ctx; if (!last) return go('home');
+      const { last } = ui.ctx; if (!last) return go('home');
       const r = last.rec, pass = r.pass;
-      const f = ctx.filter;
+      const f = ui.ctx.filter;
       const rows = last.items.map((it, i) => ({ it, i, q: byId[it.id], g: last.res[i] }))
         .filter((x) => f === 'all' || (f === 'wrong' && x.g < 1) || (f === 'flag' && last.flags.includes(x.i)));
       root.innerHTML = back() +
@@ -503,7 +540,7 @@
         [['all', L('All', 'الكل')], ['wrong', L('Incorrect', 'الخاطئة')], ['flag', L('Flagged', 'المعلّمة')]].map((x) => '<button type="button" data-f="' + x[0] + '" class="' + (f === x[0] ? 'active' : '') + '">' + x[1] + '</button>').join('') + '</div></div>' +
         (rows.length ? rows.map((x) => '<details class="dp-rev"><summary><span class="dp-revn">' + (x.i + 1) + '</span><i class="bi ' + (x.g === 1 ? 'bi-check-circle-fill ok' : x.g > 0 ? 'bi-dash-circle-fill part' : 'bi-x-circle-fill bad') + '"></i><span class="dp-revq" lang="en" dir="ltr">' + esc(x.q.q.replace(/<pre>[\s\S]*?<\/pre>/g, ' [code] ').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/g, ' ').slice(0, 140)) + '…</span><span class="dp-tag">' + skillName(x.q.s) + '</span></summary><div class="dp-revbody" data-k="' + x.i + '"></div></details>').join('') : '<p class="dp-note">' + L('Nothing here.', 'لا يوجد شيء هنا.') + '</p>') + '</div>';
       bindBack();
-      root.querySelectorAll('[data-f]').forEach((b) => b.addEventListener('click', () => { ctx.filter = b.dataset.f; results(); }));
+      root.querySelectorAll('[data-f]').forEach((b) => b.addEventListener('click', () => { ui.ctx.filter = b.dataset.f; results(); }));
       root.querySelectorAll('[data-learn]').forEach((a) => a.addEventListener('click', () => track(EX.ev + '_learn_click', { from: 'results' })));
       root.querySelectorAll('details.dp-rev').forEach((d) => d.addEventListener('toggle', () => {
         const body = d.querySelector('.dp-revbody'); if (!d.open || body.innerHTML) return;
@@ -514,8 +551,8 @@
       }));
       root.querySelectorAll('[data-a]').forEach((b) => b.addEventListener('click', () => {
         const a = b.dataset.a;
-        if (a === 'retake') { mset = r.kind === 'renewal' ? 'renewal' : (mset === 'renewal' ? 'full' : mset); go('mockSetup'); }
-        if (a === 'weak') { pset = Object.assign(pset, { skill: 'weak', diff: 0, count: 20, fresh: false }); go('practiceSetup'); }
+        if (a === 'retake') { ui.mset = r.kind === 'renewal' ? 'renewal' : (ui.mset === 'renewal' ? 'full' : ui.mset); go('mockSetup'); }
+        if (a === 'weak') { ui.pset = Object.assign(ui.pset, { skill: 'weak', diff: 0, count: 20, fresh: false }); go('practiceSetup'); }
         if (a === 'share') {
           track(EX.ev + '_share', { score: r.score });
           const url = EX.page + '?utm_source=linkedin&utm_medium=social&utm_campaign=' + EX.ev + '_share';
@@ -523,31 +560,24 @@
         }
       }));
     }
-
+    Object.assign(vw, { results });
+  }
+  // the page's listeners: the keyboard, the reset button, the language
+  function listenersPart(vw) {
+    const { root, PR, ui, L, toast, modal, go, render } = vw;
     // ---------- keyboard ----------
     document.addEventListener('keydown', (e) => {
       if (e.target.closest('input,textarea,select') || e.metaKey || e.ctrlKey || e.altKey) return;
-      if (view !== 'session' && view !== 'mock') return;
+      if (ui.view !== 'session' && ui.view !== 'mock') return;
       const k = e.key;
       if (/^[1-8]$/.test(k)) { const opts = root.querySelectorAll('.dp-q [data-opt]:not([disabled]), .dp-q [data-add]:not([disabled])'); const b = opts[+k - 1]; if (b) { b.click(); e.preventDefault(); } }
-      if (k === 'Enter' && view === 'session') { const b = root.querySelector('#dpCheck:not([disabled]), #dpNext'); if (b && document.activeElement.tagName !== 'BUTTON') { b.click(); e.preventDefault(); } }
+      if (k === 'Enter' && ui.view === 'session') { const b = root.querySelector('#dpCheck:not([disabled]), #dpNext'); if (b && document.activeElement.tagName !== 'BUTTON') { b.click(); e.preventDefault(); } }
     });
-
     // ---------- reset ----------
     // delegated: the button sits inside translated HTML that is replaced on language change
     document.addEventListener('click', (e) => { if (!e.target.closest('#dpReset')) return; modal(L('Reset all progress?', 'مسح كل التقدم؟'), L('This clears your answers, bookmarks and mock history on this device.', 'سيتم مسح إجاباتك ومحفوظاتك وسجل الاختبارات على هذا الجهاز.'), L('Reset', 'مسح'), () => { PR.reset(); go('home'); toast(L('Progress cleared', 'تم مسح التقدم')); }); });
-
     // Re-render in the new language, keeping the current screen
     new MutationObserver(() => { const y = window.scrollY; render(); window.scrollTo(0, y); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
-
-    // Deep links: ?mode=mock / renewal / practice / cases / plan
-    const start = (qm) => {
-      if (qm === 'renewal' && REN) { mset = 'renewal'; go('mockSetup'); } else if (qm === 'mock') go('mockSetup'); else if (qm === 'practice') go('practiceSetup'); else if (qm === 'cases') go('cases'); else if (qm === 'plan') go('plan');
-      else render();
-    };
-    // the outline file has come: its note, and the home screen again with the weights it gives
-    const outline = (d) => { OUT = d; renderOutline(); if (view === 'home') home(); };
-    return { start, outline };
   }
 
   const api = { mount };
