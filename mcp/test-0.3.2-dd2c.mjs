@@ -6,7 +6,16 @@
 //           an empty object and array, a string, a number, true), each answer pinned; F1 the module's one name
 //   B1-B3, M1-M4, D1-D3  the base's (128285e, measured before DD2C, mcp/work/DD2C.md) digests and differences of
 //           made-up plans: bindingOf, modelPrintOf and inputDifferences, byte for byte
+//   P1-P16  parity: both old copies (artifact.mjs canon and plans.mjs canon, read from the base's source with git show,
+//           DD2C_BASE to name another) and canon.mjs on C1-C16: one answer per value
+//   Q1-Q3   the bindings and prints of B1, B2 and M1 taken with each old copy (sha256 of its text): the same digest
+//   S1-S2   one place: neither caller holds a canonical text of its own; each imports canon.mjs
 //   node test-0.3.2-dd2c.mjs
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import * as Canon from './lib/canon.mjs';
 import { bindingOf, modelPrintOf } from './lib/artifact.mjs';
 import { inputDifferences } from './lib/plans.mjs';
@@ -57,6 +66,40 @@ export const DIGESTS = [
   ['D3', () => show(inputDifferences({ pages: [{ b: 1, a: 2 }] }, { pages: [{ a: 2, b: 1 }] })), '[]'],
 ];
 for (const [id, f, want] of DIGESTS) { let got; try { got = f(); } catch (e) { got = 'throws ' + e.message; } chk(() => got === want, () => `${id}: ${show(got).slice(0, 200)}, the base gave ${show(want).slice(0, 200)}`); }
+
+// ---------- P: both old copies (the base's source) and canon.mjs, one answer per value ----------
+const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
+const BASE = process.env.DD2C_BASE || '128285e';
+// the old copy: its one line `const canon = ...;` read from the base's file, run as it was
+const oldCanon = (file) => {
+  try {
+    const src = execFileSync('git', ['show', `${BASE}:${file}`], { cwd: REPO, maxBuffer: 1 << 26 }).toString('utf8').replace(/\r\n/g, '\n');
+    const line = src.split('\n').filter((l) => l.startsWith('const canon = '));
+    if (line.length !== 1) throw new Error(`${file}: ${line.length} lines "const canon = " in the base's source, 1 wanted`);
+    return { file, f: new Function('"use strict";\n' + line[0] + '\nreturn canon;')() };
+  } catch (e) { return { file, f: () => { throw e; } }; }
+};
+const OLD = [oldCanon('mcp/lib/artifact.mjs'), oldCanon('mcp/lib/plans.mjs')];
+const answer = (run) => { try { return String(run()); } catch (e) { return 'throws ' + String(e.message).slice(0, 120); } };
+const parity = (id, label, places) => {
+  const got = places.map(([who, run]) => [who, answer(run)]);
+  chk(() => new Set(got.map((g) => g[1])).size === 1, () => `${id} ${label}: not one answer: ${got.map(([w, a]) => w + ' ' + a.slice(0, 60)).join('; ')}`);
+};
+VALUES.forEach(([id, label, v], i) => parity('P' + (i + 1), `(${id}) ${label}`, OLD.map((o) => [o.file + ' (base)', () => o.f(v)]).concat([['canon.mjs', () => canon(v)]])));
+const sha = (t) => crypto.createHash('sha256').update(t).digest('hex');
+const BIND = [
+  ['Q1', 'B1', (c) => sha(c({ digest: Z, pin: { slots: [{ kind: 'card', field: 'Sales[Amount]' }], theme: 'dark', x: undefined }, modelPrint: 'print-1' }))],
+  ['Q2', 'B2', (c) => sha(c({ digest: 'ab'.repeat(32), pin: { pages: 2, lang: 'ar', title: 'المبيعات' }, modelPrint: sha(c(SALES.tmsl)) }))],
+  ['Q3', 'M1', (c) => sha(c(M1.tmsl))],
+];
+for (const [id, b, f] of BIND) { const want = DIGESTS.find((d) => d[0] === b)[2]; parity(id, `${b} taken with each copy`, OLD.map((o) => [o.file + ' (base)', () => f(o.f)]).concat([['canon.mjs', () => f(canon)], ['the base', () => want]])); }
+
+// ---------- S: one place ----------
+const lib = (f) => fs.readFileSync(path.join(HERE, 'lib', f), 'utf8');
+const CALLERS = { 'artifact.mjs': lib('artifact.mjs'), 'plans.mjs': lib('plans.mjs') };
+const own = /\.sort\(\)\.filter\(\(key\) => x\[key\] !== undefined\)|\b(?:const|let|var|function)\s+canon\b/;
+chk(() => Object.values(CALLERS).every((s) => !own.test(s)), () => `S1 a caller holds a canonical text of its own again: ${Object.entries(CALLERS).filter(([, s]) => own.test(s)).map(([k]) => k)}: import mcp/lib/canon.mjs`);
+chk(() => Object.values(CALLERS).every((s) => /^import \{ canon \} from '\.\/canon\.mjs';/m.test(s)), () => `S2 artifact.mjs and plans.mjs must import { canon } from './canon.mjs'`);
 
 if (problems.length) { problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  dd2c  ${checks - problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  dd2c  ${checks} checks`);

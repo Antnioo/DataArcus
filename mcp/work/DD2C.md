@@ -18,8 +18,8 @@
   unchanged (r4a, j14-exact, the twin artifact: no expected answer moves); mutation 76/76; the probe's canon table:
   1 place, 0 of 10 differ (was 2 places, equal); samejob.py is the reviewer's (not in this repo): its same-shape
   groups go DOWN by one, not countable here.
-- **State:** step 2 done (artifact.mjs and plans.mjs import canon; the probe and the ledger table: 1 place).
-- **Resume:** step 3.
+- **State:** step 3 done (the parity test: dd2c 48 checks).
+- **Resume:** step 4.
 
 ## The answers (before, measured on the base 128285e; after: the same, pinned in dd2c)
 The probe's 10 values, canon(v): `{"a":2,"b":1}`, `{"b":1}`, `null` (undefined at the top), `null`, `[3,1,2]`,
@@ -38,3 +38,10 @@ Made-up plans (dd2c's inputs B1-B3, M1-M4, D1-D3), the base's digests:
 | D1 | inputDifferences (slicers and theme differ) | the two sentences, pinned in dd2c |
 | D2 | inputDifferences (files.b differs, kpis.y undefined both sides) | `["files (b)"]` |
 | D3 | inputDifferences (the same object, keys in another order) | `[]` |
+
+## The red proof (not committed)
+1. The one copy: `Object.keys(x).sort().filter` made `Object.keys(x).filter` in mcp/lib/canon.mjs, then
+   `node test-0.3.2-dd2c.mjs`: FAIL 31 of 48 (C1, C7, C9, C12, C13 pinned; P1, P7, P9, P12, P13 parity; B1, B2, M1, M2,
+   D1 digests; Q1-Q3). Restored: PASS 48.
+2. An old copy: a tree object made with `git mktree` (no commit, no branch) holding the base with plans.mjs's sort()
+   taken out, passed as `DD2C_BASE=<tree>`: FAIL 40 of 48 (P1, P7, P9, P12, P13, Q1-Q3: plans.mjs (base) alone differs).
