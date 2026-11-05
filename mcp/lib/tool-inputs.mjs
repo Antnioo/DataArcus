@@ -24,6 +24,9 @@ export const modelPath = z.string().describe('A Power BI project folder, its .Se
 
 export const pageInput = z.union([z.enum(['1920x1080', '1280x720', '960x720']), z.object({ w: z.number(), h: z.number() })])
   .describe('Power BI page size: 1920x1080 (default), 1280x720, 960x720, or { w, h } (640-3840 x 360-2160, shaped 4:3 to 2.4:1; other sizes are fitted as the website does)');
+// (0.3.2 LG1, D-1105-16) the person's language for a reading tool's answer words (the "several models" error): optional,
+// no default, so without it read-words.mjs keeps AR4's rule (Arabic letters in the path or a tied folder)
+export const readLangInput = z.enum(['en', 'ar']).optional().describe('The language the user writes in: pass "ar" when the user writes in Arabic (even when the folder names are English), "en" when in English; then an answer about which model is meant is said in it');
 export const langInput = z.enum(['en', 'ar']).default('en').describe('Language of the report: names in it, and right to left when dir is not given');
 export const slot = z.object({
   kind: z.enum(VISUAL_KINDS),

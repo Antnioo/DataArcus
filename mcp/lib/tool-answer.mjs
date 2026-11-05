@@ -37,10 +37,12 @@ export const text = (o, opts) => (typeof o === 'string' ? { content: [{ type: 't
 export const compact = (o, opts) => ({ content: [{ type: 'text', text: scrub(flat(capAnswer(out(o), (x) => flat(x).length, opts))) }] });
 // (A1-9: the reading block's coded errors are worded here, in the tool layer; A6: a name's invisible characters shown, nameOut)
 // (0.3.2 TK1, B-281: an error skipped the cap) an error answer is capped as a text answer is, the cut said
-const fail = (e) => ({ isError: true, content: [{ type: 'text', text: capText(scrub(textOut(wordOf(e)))) }] });
+const fail = (e, lang) => ({ isError: true, content: [{ type: 'text', text: capText(scrub(textOut(wordOf(e, lang)))) }] });
 // A working folder that is chosen but can't be used yet (it doesn't exist, or it is empty): a normal answer with what
 // to do, not an error (an AI app shows an error as "Failed" in red, though nothing went wrong). Nothing is read or written.
 const notice = (state, whatToDo) => text({ workingFolder: ROOT ? path.basename(ROOT) : ROOT, state, done: 'Nothing was read or written.', whatToDo });
 // no working folder set: every tool refuses with the reason and touches no file
 // (audit 6, A6-17: an internal error is told as one, with what this call wrote, from the files module's log)
-export const safe = (fn) => async (args) => { const mark = writtenSince(); try { const problem = rootProblem(); if (problem) return ROOT ? notice('missing', problem) : fail(problem); return await fn(args); } catch (e) { return e instanceof Notice ? notice(e.state, e.message) : fail(e && e.code && !/^E[A-Z]+$/.test(e.code) ? e : failText(e, writtenSince(mark))); } };   // (a reading block's coded error is worded by wordOf, A1-9; any other by failText, A6)
+// (0.3.2 LG1) opts.lang: the tool's own lang input also says its coded errors (the reading tools; a write tool's lang
+// defaults to "en" and would turn AR4's letter rule off, so it is not passed)
+export const safe = (fn, opts) => async (args) => { const mark = writtenSince(), lang = opts && opts.lang && args ? args.lang : undefined; try { const problem = rootProblem(); if (problem) return ROOT ? notice('missing', problem) : fail(problem); return await fn(args); } catch (e) { return e instanceof Notice ? notice(e.state, e.message) : fail(e && e.code && !/^E[A-Z]+$/.test(e.code) ? e : failText(e, writtenSince(mark)), lang); } };   // (a reading block's coded error is worded by wordOf, A1-9; any other by failText, A6)

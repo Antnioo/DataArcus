@@ -12,7 +12,7 @@ import { whereSaid, besideSaid, NEVER_APPLIED } from '../lib/plain-words.mjs';
 import { readAnswers, Memory, answerKey, writeAnswers, answersName, REPLACES } from '../lib/answers.mjs';
 import { fitLists, out } from '../lib/answer.mjs';
 import { pretty, text, safe } from '../lib/tool-answer.mjs';
-import { planIdInput, ADDS_SAME, modelPath, strictInputs } from '../lib/tool-inputs.mjs';
+import { planIdInput, ADDS_SAME, modelPath, readLangInput, strictInputs } from '../lib/tool-inputs.mjs';
 import { modelRef, sameModelBeforeWrite } from '../lib/plan-keys.mjs';
 import { freeScriptName, plannedTaken, writePlannedScript, hasControl, scriptTables, formatsAnswer } from '../lib/fix-scripts.mjs';
 import { hiddenOf } from '../lib/hidden-names.mjs';
@@ -41,9 +41,9 @@ const COLUMN_TYPES_QUERY = [
 export function register(server, ctx) {
   server.registerTool('check_model_health', {
     title: 'Check model health',
-    description: 'Runs the DataArcus Model Health Check: score, and every finding with the objects it concerns (unused columns and measures, risky relationships, slow DAX, date tables...). Reads a project saved by Power BI Desktop (TMDL or model.bim), a model.bim or a .pbit. The model is never changed. Ready fix scripts (sort order, number formats) are written to new files next to the project only with an approved planId: called without one, it returns every finding, names the script files it would write and gives a proposed planId (show the user, wait for go, approve_plan, then call again with planId); a script is never returned as text and never applied. With a country, the gulfCalendar section is not part of the score, and say so: for its fixes point to the Calendar Generator settings the answer gives, or offer add_gulf_calendar with the inputs in fixes.addGulfCalendar (it writes the table as a script file), and never write calendar DAX yourself. pleaseConfirm lists questions for the user, never fixes: ask the user, and never edit DAX because of them. DAX is not parsed: a measure whose DAX is broken is not found (Power BI Desktop shows that error).' + UNTRUSTED,
+    description: 'Runs the DataArcus Model Health Check: score, and every finding with the objects it concerns (unused columns and measures, risky relationships, slow DAX, date tables...). Reads a project saved by Power BI Desktop (TMDL or model.bim), a model.bim or a .pbit. The model is never changed. Ready fix scripts (sort order, number formats) are written to new files next to the project only with an approved planId: called without one, it returns every finding, names the script files it would write and gives a proposed planId (show the user, wait for go, approve_plan, then call again with planId); a script is never returned as text and never applied. With a country, the gulfCalendar section is not part of the score, and say so: for its fixes point to the Calendar Generator settings the answer gives, or offer add_gulf_calendar with the inputs in fixes.addGulfCalendar (it writes the table as a script file), and never write calendar DAX yourself. pleaseConfirm lists questions for the user, never fixes: ask the user, and never edit DAX because of them. DAX is not parsed: a measure whose DAX is broken is not found (Power BI Desktop shows that error). Pass lang "ar" when the user writes in Arabic.' + UNTRUSTED,
     inputSchema: strictInputs('check_model_health', {
-      path: modelPath, maxItems: z.number().int().min(1).max(200).default(15).describe('Objects listed per finding'),
+      path: modelPath, lang: readLangInput, maxItems: z.number().int().min(1).max(200).default(15).describe('Objects listed per finding'),
       weekStart: z.enum(['sunday', 'monday', 'saturday']).default('sunday').describe('The first day of the week, used only when a fix script has to add a weekday number column to sort day names: sunday (default: Saudi Arabia and most of the Gulf), monday (a Saturday-Sunday weekend, as in the UAE since 2022), or saturday'),
       country: z.enum(['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn']).optional().describe('For a Gulf model: the country whose official weekend the calendar is checked against (uae, ksa, qat, kwt, bhr, omn). Giving it adds the gulfCalendar section (not part of the score): Hijri, Ramadan and Eid columns, the weekend, the Ramadan and Eid dates, the range of the calendar. Without it the section appears only when the model already has Hijri or Ramadan columns, checked for the UAE. It never changes weekStart'),
       // (0.3.1 SQ7, GC-S4) a weekend rule that is not a country: Sharjah's government (Friday to Sunday from 2022)
@@ -232,7 +232,7 @@ export function register(server, ctx) {
         checks: r.skipped.map((s) => ({ id: s.id, title: ((Health.RULES[s.id] || {}).en || [s.id])[0], count: s.items.length, items: s.items.slice(0, maxItems) }))
       } : undefined
     }, only));
-  }));
+  }, { lang: true }));
 }
 // one finding as the answer gives it
 function findingOut(f, maxItems) {

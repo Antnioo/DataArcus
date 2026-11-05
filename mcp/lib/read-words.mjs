@@ -5,11 +5,12 @@ const { hasArabic } = createRequire(import.meta.url)('../../assets/js/arabic-scr
 // (0.3.2 AR4) several models at one level, said in Arabic when the person's own words are Arabic (the path they gave,
 // or a tied folder): the dual for 2, "N نماذج" for 3 and up, as the website says it (AR2, D-1105-02, D-1105-05)
 const manyAr = (d) => `يحتوي "${d.path}" على ${d.models.length === 2 ? 'نموذجين' : d.models.length + ' نماذج'} في المستوى نفسه: ${d.models.join('; ')}. أعطِ read_model مسار النموذج الذي تقصده.`;
-export function wordOf(e) {
+// (0.3.2 LG1, D-1105-16) lang: the person's language when the tool was given it ('ar' | 'en'); absent: AR4's letter rule
+export function wordOf(e, lang) {
   const d = (e && e.data) || {};
   switch (e && e.code) {
     case 'MANY_MODELS_NAMED': return `${e.message} Give read_model the path of the one you mean.`;
-    case 'MANY_MODELS': if (Array.isArray(d.models) && d.models.length > 1 && hasArabic([d.path].concat(d.models).join(' '))) return manyAr(d); return `${e.message} Give read_model the path of the one you mean.`;
+    case 'MANY_MODELS': if (Array.isArray(d.models) && d.models.length > 1 && (lang === 'ar' || (lang !== 'en' && hasArabic([d.path].concat(d.models).join(' '))))) return manyAr(d); return `${e.message} Give read_model the path of the one you mean.`;
     case 'NO_MODEL_NAMED': return `${e.message} ${(d.models || []).length ? 'Give read_model one of these paths, or "." for the working folder itself.' : 'Give read_model the path of a project folder, or "." for the working folder itself.'}`;
     // (0.3.1 MR1, B-271) a model path that does not exist: as a bare wrong name, the tool called again with one listed
     case 'NO_MODEL_AT': return `${e.message} ${(d.models || []).length ? 'Call the tool again with one of these paths (relative to the working folder), or "." for the working folder itself.' : 'Call the tool again with the path of a project folder, or "." for the working folder itself.'}`;
