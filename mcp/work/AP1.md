@@ -16,5 +16,34 @@
 - **Expected checks:** approval-complete 25 -> more; the suite that owns plan_layout's time axis grows; every other
   suite's number as on the base unless this job's text changes exactly it (named below); lint 0; mutation 86/86;
   check-agent-memory, check-modules --strict, check-result-lines green. CHANGELOG: one plain line.
-- **State:** step 1.
-- **Resume:** step 2.
+- **Found (step 2):** (a) is a REAL page gap, not two plans. Made-up "Service" model, 3 slicers asked, filters "top":
+  the click wrote 4 pages, 48 visuals; the page named 3 slicers once, 2 chart fields and "Other visuals: chosen by
+  DataArcus from the model". A re-plan's write is the approved plan's own (below).
+- **State:** step 2 done.
+- **Resume:** step 3 (the failing test in test-0.3.0-approval-complete.mjs).
+
+## Step 2: what was written and what the page named (made-up model, 5 Nov)
+Model: `Service.SemanticModel` (model.bim): Work Orders (Order ID, Date Key, Department, Status, Hours; measures Work
+Order Count, Total Hours), Dim Date (Date, Year, Month, Month Number), Date Key -> Date. plan_layout { path, name,
+filters "top", planFields { slicers: Dim Date[Year], Work Orders[Department], Work Orders[Status]; category
+Department, category2 Status } }, approve_plan (the test click), create_report { path, planId }, then read back.
+
+| Page (as written) | visuals | slicers | buttons | charts | other |
+|---|---|---|---|---|---|
+| 1 Executive summary | 23 | 3 (Year, Department, Status) | 3: reset (bookmark), 2 page | 2 bar (Status, Department), 1 line (Dim Date[Month]) | 6 cards, 1 table, 3 text boxes, 1 shape, 3 groups |
+| 2 Details | 21 | 3 (the same) | 3: reset, 2 page | 1 bar (Department), 1 column (Status) | 5 cards, 1 table, 3 text boxes, 1 shape, 3 groups |
+| 3 Tooltip (tooltip, hidden) | 2 | 0 | 0 | 1 bar (Department) | 1 card |
+| 4 Tooltip · Month (tooltip, hidden) | 2 | 0 | 0 | 1 bar (Dim Date[Month]) | 1 card |
+
+What the approval page named for the same plan (English and Arabic pages alike, the HTML the window serves): the
+file count ("1 report: 4 pages, 48 visuals, 2 bookmarks, 33 phone layouts"), a preview of pages 1 and 2 only, Slicers
+3 (one list, no page: 6 written), "Bar chart by Work Orders[Department]", "Bar chart by Work Orders[Status] (planned as
+a column chart ...)" (true of page 1 only: page 2's Status chart is a column chart), "Written as another kind:
+Comparison: Bar chart" (page 1 only), "Other visuals: chosen by DataArcus from the model" (b: nothing listed), no
+button, no card, no table, no tooltip page by name (d: only its page.json path in the folded file list).
+
+Re-plan: plan A (3 slicers) and plan B (1 slicer, Status) of the same model; B approved and written: B's report (3
+slicers a page: Status asked, Year and Department "added by DataArcus to fill the design's slicer slots", as B's page
+said); create_report with A's id: "Nothing was written: plan ... is not approved yet". create_report takes only path
+and planId and writes the approved plan's own files by digest, so a write can't come from another plan than the one
+approved: the round's 9 slicers and 3 reset buttons (3 pages) were on the approved plan, not shown by its page.
