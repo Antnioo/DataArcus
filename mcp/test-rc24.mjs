@@ -1,6 +1,7 @@
 // rc.24: the gaps the laptop's Desktop release proof of rc.23 found (18 Oct 2026, Power BI Desktop 2.159), each written red
 // first. They finish what 0.2.9 already approved (B-140, the Arabic twin B-137/B-138); nothing else changes.
 //   B-140: the approval page names each chart field by the kind it is written as, with the reason when it changed
+//     (0.3.2 AP1: and the page it is on: the plan's kinds are its first page's, said "on page 1 \"<name>\"")
 //          ("Bar chart by Plan Groups[Plan Group Name] (planned as a column chart: ...)"), never "Column chart by"
 //   T-1:   the twin offers the visible texts of the report's title measures ("Chart title (from a title measure)") and
 //          writes its own Arabic title measures, used by its visuals only; a title measure whose DAX builds the text
@@ -61,13 +62,13 @@ try {
     const page = await pageOf(w, pl.j.plan.planId);
     const fields = (/<h2>Fields[\s\S]*?<\/table>/.exec(page) || [''])[0];
     chk(() => !/Column chart by/.test(fields), () => `B-140. the approval page's field rows never say "Column chart by" for a chart written as a bar chart: ${fields.slice(0, 600)}`);
-    chk(() => /Bar chart by<\/td><td[^>]*>Plan Groups\[Plan Group Name\] \(planned as a column chart: [^<]+\)/.test(fields), () => `B-140. the row says "Bar chart by Plan Groups[Plan Group Name] (planned as a column chart: why)": ${fields.slice(0, 600)}`);
+    chk(() => /Bar chart by<\/td><td[^>]*>Plan Groups\[Plan Group Name\] \(on page 1 &quot;[^&<]+&quot;: planned as a column chart: [^<]+\)/.test(fields), () => `B-140. the row says "Bar chart by Plan Groups[Plan Group Name] (planned as a column chart: why)": ${fields.slice(0, 600)}`);
     chk(() => /Bar chart by<\/td><td[^>]*>Sales\[Region\]</.test(fields), () => `B-140. the bar chart planned as a bar chart says no reason: ${fields.slice(0, 600)}`);
     // without fields of its own the layout section says which visual is written as another kind
     const pl2 = await w.call('plan_layout', { path: 'large', focus: 'Web Orders', name: 'Kinds 2', layout: 'exec', secondPage: false });
     const changed = !pl2.err && pl2.j.kindChanges ? pl2.j.kindChanges.slots : [];
     const page2 = await pageOf(w, pl2.j.plan.planId);
-    chk(() => changed.every((x) => new RegExp(`${x.role}: [A-Za-z]+ chart \\(planned as a ${x.layout === 'column' ? 'column' : x.layout === 'bar' ? 'bar' : x.layout} chart`).test(page2)), () => `B-140. every kind change is on the approval page (${JSON.stringify(changed)}): ${(/<h2>Layout[\s\S]*?<\/table>/.exec(page2) || [''])[0].slice(0, 600)}`);
+    chk(() => changed.every((x) => new RegExp(`${x.role} on page 1 &quot;[^&<]+&quot;: [A-Za-z]+ chart \\(planned as a ${x.layout === 'column' ? 'column' : x.layout === 'bar' ? 'bar' : x.layout} chart`).test(page2)), () => `B-140. every kind change is on the approval page (${JSON.stringify(changed)}): ${(/<h2>Layout[\s\S]*?<\/table>/.exec(page2) || [''])[0].slice(0, 600)}`);
   }
 
   // ---------- the golden report (large synthetic model, focus Web Orders), and its twin ----------

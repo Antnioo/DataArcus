@@ -5,6 +5,11 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **The approval page names every visual, slicer and button the click writes:** a new report's approval page lists each
+  page it writes, the tooltip pages too, and on it every visual by kind and count, each slicer by its field, each button
+  by where it goes and each chart by the field it groups by; a chart written as another kind says which page it is on.
+- **No time axis when the person asks for none:** plan_layout and create_report take `timeAxis: "none"` in the plan's
+  fields: the report gets no trend chart, no month tooltip and no date slicer DataArcus would add, and the plan says so.
 - **Several models in one folder, said in Arabic:** when a folder holds several models at the same level and the folder or a model name is in Arabic, the reading tools now say so in Arabic («نموذجين» for two, «N نماذج» for three or more); the English message is unchanged.
 - **Mixed Arabic and English titles in the preview, in the report's order:** on an Arabic page, the approval window's
   preview and the theme generator's preview now draw a title such as «Sales YTD الإجمالي» or «هامش الربح %» in the order
