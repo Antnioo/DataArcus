@@ -6,6 +6,9 @@ package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
 - **Several models in one folder, said in Arabic:** when a folder holds several models at the same level and the folder or a model name is in Arabic, the reading tools now say so in Arabic («نموذجين» for two, «N نماذج» for three or more); the English message is unchanged.
+- **Mixed Arabic and English titles in the preview, in the report's order:** on an Arabic page, the approval window's
+  preview and the theme generator's preview now draw a title such as «Sales YTD الإجمالي» or «هامش الربح %» in the order
+  the report writes it, the English word read first from the right, instead of in another order.
 - **A text box that holds only a number is text:** a text box that holds only a number, such as 0, is now seen as text by
   the accessibility check (it keeps its Tab stop and gets its alt text) and drawn in the preview, as the report check and
   read_report already read it.
