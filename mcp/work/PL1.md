@@ -20,7 +20,8 @@
   of 211 passed, glass-default R2 pinned the old card look line (fixed in eff34702, 43 of 43); lint 0; agent-memory,
   modules --strict, result-lines, contracts, changelog-words, test-site-config green.
 - CI green: https://github.com/Antnioo/DataArcus/actions/runs/42029826587 on eff34702abde5039ed54daabe46747f3fcb60345
-- **State:** DONE. **Resume:** the reviewer reads and merges; the owner's Arabic drafts (For the owner).
+- **State:** DONE (Linux and Windows CI).
+- **Resume:** the reviewer reads and merges; the owner reads the Arabic drafts (For the owner).
 
 ## Step 1: every option label the page shows today (base d0cabe5b)
 Report page, "Look and options" (`LK`, approval-disclosure.mjs): Visual gallery, Theme file, Logo, Colours, Bar
