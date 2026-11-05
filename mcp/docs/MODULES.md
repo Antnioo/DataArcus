@@ -276,6 +276,7 @@ In `mcp/lib/`. Nothing is written before the person's click.
 | file | job | in -> out | used by | pure |
 |---|---|---|---|---|
 | `plans.mjs` | the gate: plan ids, what each plan pins, the approval and the refusal | a proposal -> a plan id; an approval -> recorded; a write -> allowed or refused | every writing tool, `approve_plan.mjs`, `files.mjs`, `plan-keys.mjs` | no: env |
+| `canon.mjs` | the canonical text of a plan, one copy (0.3.2 DD2C): JSON with keys sorted and undefined left out, the text every plan digest and binding is taken of | a value -> its text | `artifact.mjs`, `plans.mjs` | yes |
 | `plan-keys.mjs` | what a plan is pinned to: the model's key and print, the inputs, the check right before a write | a model, the inputs -> the keys; a plan id -> same model or refused | `create_report.mjs`, `plan_layout.mjs`, `generate_theme.mjs`, `report-run.mjs` | no: fs |
 | `approval-window.mjs` | DataArcus's own approval window: each window's life (open, wait, state, close) and the browser launch with the one-time link the AI never receives | a plan, its disclosure model, the decision callback -> the window opened, the person's click (or none) | `approve_plan.mjs` | no: process, env |
 | `approval-http.mjs` | the window's HTTP side on 127.0.0.1: it alone owns the one-time secret, the Host and Origin checks, the headers and the call of the decision callback | a request, the window's hooks (find, seen, decide) -> the answer; a plan id -> its secret and link | `approval-window.mjs` | no: network |

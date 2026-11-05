@@ -81,5 +81,14 @@ chk(() => fs.existsSync(path.join(REPO, 'assets/js/model-nearest.min.js')), () =
 { const u = src('assets/js/theme-download-ui.js');
   chk(() => /MANY_MODELS/.test(u) && /models at the same level: \$\{many\}\. Choose the model's own folder\./.test(u) && /في المستوى نفسه: \$\{many\}\. اختر مجلد النموذج نفسه\./.test(u), () => 'U1: theme-download-ui.js does not say two models in English and Arabic'); }
 
+// U2 (0.3.2 AR2) the Arabic sentence per count, pinned exactly: the template is read from the page's source and run
+{ const u = src('assets/js/theme-download-ui.js'), m = u.match(/`(يحتوي هذا المجلد[^`]*)`/), en = u.match(/`(This folder holds[^`]*)`/);
+  const say = (tpl, models) => new Function('e', 'many', 'return `' + tpl + '`;')({ models }, models.join('; '));
+  const ar = (n) => m ? say(m[1], Array.from({ length: n }, (_, i) => String.fromCharCode(65 + i))) : '';
+  chk(() => ar(2) === 'يحتوي هذا المجلد على نموذجين في المستوى نفسه: A; B. اختر مجلد النموذج نفسه.', () => 'U2: for 2 models the Arabic reads "' + ar(2) + '"');
+  chk(() => ar(3) === 'يحتوي هذا المجلد على 3 نماذج في المستوى نفسه: A; B; C. اختر مجلد النموذج نفسه.', () => 'U2: for 3 models the Arabic reads "' + ar(3) + '"');
+  chk(() => ar(12) === 'يحتوي هذا المجلد على 12 نماذج في المستوى نفسه: A; B; C; D; E; F; G; H; I; J; K; L. اختر مجلد النموذج نفسه.', () => 'U2: for 12 models the Arabic reads "' + ar(12) + '"');
+  chk(() => !!en && say(en[1], ['A', 'B']) === 'This folder holds 2 models at the same level: A; B. Choose the model\'s own folder.', () => 'U2: the English sentence changed'); }
+
 if (problems.length) { problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  dd1g  ${checks - problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  dd1g  ${checks} checks`);
