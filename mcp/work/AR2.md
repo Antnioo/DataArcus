@@ -9,6 +9,8 @@
   unchanged; lint 0; check-agent-memory, changelog-words, site config pass.
 - **Resume:** all commits done; merge integration if moved, `npm run build:min`, checks, tests.yml, wait.
 
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/41959414731 on 853080fd
+
 ## Before -> after
 - N = 2: «يحتوي هذا المجلد على 2 نماذج في المستوى نفسه: A; B. اختر مجلد النموذج نفسه.» -> «يحتوي هذا المجلد على نموذجين في المستوى نفسه: A; B. اختر مجلد النموذج نفسه.»
 - N = 3: «... على 3 نماذج في المستوى نفسه: A; B; C. ...» -> unchanged.
