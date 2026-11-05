@@ -5,6 +5,9 @@
  *                     "_", "-", spaces, digits and marks; the Arabic article «ال» taken off a word of 3 letters or more
  *                     (التاريخ -> تاريخ); Arabic short vowels and the tatweel dropped, «أ إ آ» read as «ا» (اسبوع = أسبوع)
  *   isTimeName(name)  true when one of its words is in TIME_WORDS (whole words only: Holiday, Today, Candidate are not)
+ *                     «عام» (year, and also "general") counts only as the FIRST word of a name («العام», «عام 2024»),
+ *                     never after another word («المدير العام», «القطاع العام»): an Arabic adjective follows its noun
+ *                     (owner D-1105-04, TN2). «أعوام» (only "years") counts anywhere.
  *   TIME_WORDS        the one list: date, day, weekday, week, month, quarter, qtr, year, yr, fy, period, hijri and
  *                     تاريخ، يوم، أسبوع، شهر، ربع، سنة، عام، فترة، هجري, each with its plural
  * The name only: what a place knows first (a date table, the field picker's time or kind mark) stays first in its own
@@ -23,7 +26,8 @@
   const wordsOf = (name) => (typeof name === 'string' || typeof name === 'number' ? fold(String(name)) : '')
     .replace(/([a-z])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2').toLowerCase()
     .split(/[^a-zء-يٮ-ۓ]+/).filter(Boolean).map((w) => w.replace(/^ال(?=..)/, ''));
-  const isTimeName = (name) => wordsOf(name).some((w) => SET.has(w));
+  const AAM = fold('عام');
+  const isTimeName = (name) => wordsOf(name).some((w, i) => SET.has(w) && (w !== AAM || i === 0));
   const api = Object.freeze({ TIME_WORDS, wordsOf, isTimeName });
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DATimeNames = api;
 })(typeof self !== 'undefined' ? self : this);
