@@ -26,8 +26,10 @@
   (the Documentation buttons' events), E17 (home drawn again when the outline file comes). New checks, each red on
   e56b070 first: `mcp/test-0.3.2-fn1a.mjs` A1-A4 (red under R3, R7, R11, R6) and `scripts/tests/fn1a.mjs` D1, O1 (red
   under V15, E17; green on the base and on the split).
-- **State:** CI started on 68563c1 (see the last line).
-- **Resume:** CI's result; then the reviewer's merge.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42028709100 on 68563c1 (Linux and Windows; macOS skipped
+  by the workflow on a branch run, CI1). After it only this note changed.
+- **State: DONE.**
+- **Resume:** none; the reviewer's merge (WORK.md's 0.3.2 line: FN1A, left to the merge, the file is at its cap).
 
 ## The steps (one per job of the old function, called in the old order)
 - **health-rules.js:** runRules -> collector, relationshipRules, autoDateRules, unusedRules, columnRules,
