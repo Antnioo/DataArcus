@@ -1,94 +1,63 @@
-# PF1 (0.3.1): the glass pictures fast again (decode once, node:zlib, no closure per byte, the flip cached)
-
 ## Summary
-- **Approval:** the reviewer's brief "Go on PF1" (27 Oct); the owner, D-1027-21 "yes start PF1 and if it works that
-  needs yo go live asap so don't change anything midrun but halt anything new till pf1 is fone"; D-1027-05 (glass the
-  default, everywhere); D-1027-12 (the twin identical: the Arabic picture the English one mirrored, kept exactly).
-- **Scope:** `mcp/lib/glass-picture.mjs` only (the caching inside glassPixels, glassPreviewUrl and flipGlassPng, no
-  caller changes); the new suite `mcp/test-0.3.1-glass-speed.mjs` and its line in `mcp/tests.json`; this note.
-  Not design-engine.js (TS1), not plan-lint.mjs / twin-plan.mjs / twin-preview.mjs (TW1, as is).
-- **Base:** `fix/0.3.1-glass-speed` from `origin/integration/0.3.1` (a69fffc5). Push only this branch.
-- **Expected checks:** (written before the work) the new suite `glass-speed` about 10 checks, red first on a69fffc5 (24
-  previews of one picture decode it 24 times, not once; 3 flips of one picture decode 3 times; the engine's JavaScript
-  deflate, not node:zlib); `glass-twin` 28 = 28, `twin-preview` 23 = 23, `glass-default`, `glass`, `look-options`
-  equal (no check changed: glass-twin already compares the flipped picture's pixels, not its bytes); `twin` and
-  `report` areas equal + 1 suite; full run: the base's suites + 1 (glass-speed).
-- **Got:** glass-speed 23 (4 of 21 red on a69fffc5 first: 48 decodes for 24 figures, 3 for 3 flips, no node:zlib;
-  P6-P7 added after, they pass on the old code too: pixel checks) -> 23 PASS; twin area 10 suites (9 = 9 + glass-speed),
-  glass-twin 28 = 28, twin-preview 23 = 23; no other test changed. twin-preview 39.3 s -> 11.3 s plain, 347 s (RED,
-  timed out) -> 21.5 s under NODE_V8_COVERAGE. Full run 108 -> 109 suites (+ glass-speed).
-- Full run on d42befe: "run-tests: 109 suites passed"
-- **Resume:** done; CI on the branch green (run 40592747988 on 88a64f2: Linux, Windows, macOS); waits for the reviewer, then the laptop.
+- **Approval:** the brief "PF1 (0.3.2)" (5 Nov), from the owner's D-1105-11 (the Desktop look batched: lab/look032 C, 5 Nov, Power BI Desktop 2.159.1231.0); B-381 (HIGH, before 0.3.2 ships) and B-380.
+- **Base:** fix/0.3.2-pf1 from origin/integration/0.3.2 (12d9d30c). Push only it; no merge but integration once before the last CI, no PR.
+- **Scope:** B-381: create_report drops planFields.measure when planFields.kpis is an empty list (no KPI cards): every chart and table shows "Sum of Amount". Cause and fix in mcp/lib/report-bind.mjs fieldBinding (its one place). B-380: create_arabic_twin with timeRightToLeft false says "categories right to left" for column and line charts over time it keeps left to right. Cause in assets/js/mirror-charts.js chartsOf (kind "column" kept), sentence in assets/js/report-mirror.js KIND_WHAT (a new kind "columnTime", as "waterfallTime" is for waterfalls).
+- **Expected checks:** new suites pf1 (area report, 21 checks, red on 12d9d30c first: 16 of 21) and pf1t (area twin, 13 checks, red on 12d9d30c first: 7 of 13); sp10 113 and sp39 96 unchanged in number, their recorded kind moved on purpose (below); every other suite unchanged.
+- **Resume:** done. CI green: https://github.com/Antnioo/DataArcus/actions/runs/42116688415 on f3655c91 (the first run, 42114092708, was red: fn1c, re-recorded on purpose; sp6, green on the rerun)
 
 ## The plan
-1. **Decode once.** glassPixels keeps the last few decoded pictures (an LRU of 4, keyed by the bytes' SHA-1 and
-   length: a 1920 x 1080 picture is 6.2 MB decoded); each call gets its own copy of the pixels, so no caller can change
-   a cached picture. glassPreviewUrl keeps its result (a string, immutable) the same way (16), flipGlassPng too (8,
-   each call a copy of the bytes). The internal reads use the cached pixels without copying.
-2. **node:zlib.** The pictures written here (the flip, the preview) are encoded in this file: the same marked layout
-   as the engine's encodePng (signature, IHDR RGB 8 bits, the tEXt "Comment\0DataArcus glass look" chunk right after
-   the header, so isGlassPng reads it, IDAT from zlib.deflateSync, IEND), CRC-32 by a table (zlib.crc32 is not in
-   every Node the package allows, ">=20.10"). (After a first measure: every row filtered Up, see Decisions.)
-   The bytes differ from the engine's (another deflate): the pixels are identical (checked in the new suite, pixel by
-   pixel against the old encoder's output); glass-twin already compares pixels.
-3. **The filter loops:** no function per byte; the Paeth predictor inlined.
-4. **The flip cached** by the source bytes (the twin, the EN-AR copy and the bilingual report flip the same picture).
+1. B-381, pinned first (L-1105-09): a made-up model "Time Lab" (Sales: FiscalYear, Qtr, Amount, measure Total Sales; «المبيعات»: «شهر» sorted by «رقم الشهر», «المبلغ», measure «إجمالي المبيعات»; no relationship), the brief's plan_layout input (exec, kpis 0, no filters, planFields measure, timeAxis, category, category2, and the swapped run) with planFields.kpis [] (no cards), plan -> approve -> create_report; every written value projection is Sales[Total Sales] (red on the base: 0 Total Sales, 11 Sum(Sales.Amount), the laptop's count). Each other key (kpis, timeAxis, category, category2, table, slicers) checked written as given.
+2. Diagnose with file:line (below), then the fix in fieldBinding only.
+3. A chosen field that cannot be used: the plan says so before Approve (a missing field, a column as the measure, a measure as an axis: planProblems, checked).
+4. B-380: a failing test of the twin's answer for both choices (timeRightToLeft true and false) on a column and a line chart over time and a column chart by a non-time category; then the new kind and its sentence.
 
-## Expected numbers (this machine; measured before the work, on a69fffc5)
-- One 1920 x 1080 picture (scratchpad bench: engine glassPng, then glassPixels, glassPreviewUrl, flipGlassPng):
-  make 957 / decode 299 / preview 341 / flip 913 ms; under NODE_V8_COVERAGE 8454 / 2149 / 2558 / 10921 ms.
-  Expected after: decode about the same the first time (the inflate is zlib's already), then 0 for the same bytes;
-  preview and flip a few tens of ms (zlib, no closure); make unchanged (the engine's, not this job's).
-- test-0.3.1-twin-preview: plain 39.3 s (23 PASS); under NODE_V8_COVERAGE 347 s and RED here (V1-8 "Request timed
-  out"). Expected after: plain under 15 s, coverage green and well under 100 s.
-- The full run's wall time: measured on the base below, then after.
+## Diagnosis
+- B-381: `mcp/lib/report-bind.mjs:84` (base 12d9d30c), fieldBinding: `usable = F && F.kpis ? F.kpis.map(...) : Bind.suggest(...)`. planFields.kpis [] (the person's "no KPI cards") is truthy, so usable was [] and `COUNTS` (line 88, Bind.counts: the path for a model with no measures) took every value: each chart and the table summed Amount and counted FiscalYear. planFields.measure reached the picker (planBinding's `main`) but countBind replaced it (`main: C[0]`). Measured on the base with the Time Lab input: 0 projections Total Sales, 11 `Sum(Sales.Amount)` (the laptop's 11) plus 2 `Count(Sales.FiscalYear)` in the tables. The same happened when every planFields.kpis entry was a text measure (report-run.mjs:65 empties the list). Without planFields.kpis (top-level kpis 0) the base already wrote Total Sales: that is why my first reproductions passed.
+- The other keys, measured on the same input (R2, R3): timeAxis, category, category2, kpis, table and slicers are each written as given; plan_layout already refuses (planProblems, no planId) a field not in the model, a column as the measure and a measure as an axis (report-fields.mjs fieldsAndProblems, R4).
+- B-380: `assets/js/mirror-charts.js` chartRtl keeps a time category's order with timeRightToLeft false (no sort turned, no axis inverted: `keepTime`, the one time test mirror-policy.js categoryIsTime -> time-names.js isTimeName), but chartsOf returned kind "column", so twin-plan.mjs:244 said `KIND_WHAT.column` ("categories right to left by the sort"). A chart over time sorted by its value is still turned right to left: it stays "column".
 
-## Before -> after (this machine, Linux, Node 22.22; the scratchpad bench and `node test-0.3.1-twin-preview.mjs`)
-| | before (a69fffc5) | after (d42befe) |
-|---|---|---|
-| one 1920 x 1080 picture: make / decode / preview / flip | 957 / 299 / 341 / 913 ms | 583-693 / 73-82 / 26-30 / 132 ms |
-| the same under NODE_V8_COVERAGE | 8454 / 2149 / 2558 / 10921 ms | 8528 / 502 / 34 / 352 ms |
-| twin-preview, plain | 39.3 s (23 PASS) | 11.3 s (23 PASS) |
-| twin-preview, NODE_V8_COVERAGE | 347 s, RED (V1-8 timed out) | 21.5 s (23 PASS) |
-| the full run (`npm test -- --keep-going`) | 3130 s (52.2 min), 108 suites passed | 2405 s (40.1 min), 109 suites passed |
+## Before -> after
+- B-381: create_report with planFields.kpis [] and planFields.measure: every chart and table `Sum of Amount` -> `Total Sales` (9 value projections, 0 summed or counted, both runs). fieldBinding's usable measures: the plan's cards, else the picker's, else the plan's measure; the number of cards stays the plan's (report-build.mjs maxKpis).
+- B-380: chartRtl returns `{ timeKept }`; chartsOf passes it on; mirrorVisual reports kind "columnTime" (inside, its rules stay the column family's, so mirror-policy.js `titled` still right-aligns its title); `KIND_WHAT.columnTime`: "column, line, area and combo charts over time, kept left to right as asked (timeRightToLeft false): value axis at the right, their periods in the original's order from the left". Written files byte for byte the base's for both choices (pf1t T3: digests recorded on the base).
+- Area runs on ac54711f (each from its run's own last line): report 66 suites passed, twin 52, core 11, arabic 17; sp23 29, sp41 24, sp44 23; lint exit 0; test-contracts 14, contracts 715, modules 1160, result-lines 216, changelog-words 217, agent-memory 441, site config PASS. After the merge (335c8778): pf1 21, pf1t 13, sp10 113, sp39 96, lint 0.
+- Time Lab twin plan answer: 21,664 (default) and 21,686 characters (time kept) of 40,000; fx1 PASS 22 three runs of three.
 
-"make" is the engine's glassPng (design-engine.js, TS1's file, not changed here: its 8 s under coverage stays; it is
-cached by the engine per colours and size). The bench calls decode, then preview and flip of the same bytes, so those
-two read the cached pixels; a picture not seen before costs decode + preview or decode + flip (about 100 / 200 ms).
+## Changed on purpose
+- mcp/fixtures/sp39-mirror.json: 8 run entries (lineMonth, xColumn, xLineDate, xCombo; runs B and E, the two with timeRightToLeft false): `"kind": "column"` -> `"kind": "columnTime"` and their `sha` (each 4 characters longer: the word "Time" in the digested output); `api.KIND_WHAT` 4dead3bc4cfd5540595ca76d:3923 -> 9c51555d8d5056948ac004db:4115 (the new sentence).
+- mcp/fixtures/sp10-policy.json: 20 run entries (lineMonth, mDateHier, mDateHierLine, mFiscalYearDim, mStartOfMonth, mOrderDateCat, mMonthName, mArabicMonth, mComboMonth, mYearCol; runs B and E): the same kind and sha. mcp/test-0.3.2-sp10.mjs's DD1A overlay: mFiscalYear runs B and E kind "column" -> "columnTime" (it pins them in the test, not the file).
+- mcp/fixtures/fn1c-plans.json (caught by CI run 42114092708; fn1c is in no area I ran): run r2 (the twin plan with timeRightToLeft false) `answer` 3b112a74... -> 3aa3bea9..., `size` 32011 -> 31910. Dumped on 12d9d30c and on this branch: mirrors' column count 5 -> 4 plus a columnTime entry (count 1, the new sentence); the longer mirrors make the answer's text paging list 18 texts instead of 19 (textsFrom 18, notListed 36, the field text "Sum of Amount" moves to the next answer). Nothing else differs. Re-recorded with `node test-0.3.2-fn1c.mjs --record`: those 2 lines only.
+- fn1c P2 r2, the reason B-380, word for word (`diff` of the answer dumped with JSON indent 1 on 12d9d30c and on f3655c91; every differing line):
+  - mirrors: `"count": 5` -> `"count": 4` (the column entry), and added `{ "kind": "columnTime", "what": "column, line, area and combo charts over time, kept left to right as asked (timeRightToLeft false): value axis at the right, their periods in the original's order from the left", "count": 1 }`.
+  - the text paging (the answer's cap, reacting to the longer mirrors; no text changed): the 19th listed text `{ "id": "field:Sum(Sales.Amount)", "kind": "field", ..., "text": "Sum of Amount", "draftArabic": "إجمالي المبلغ", "field": "Sales[Amount]" }` moves to the next answer; `"textsNotListed": 35` -> `36`; `"listed": 19` -> `18`, `"from": 19` -> `18`, `"notListed": 35` -> `36`; `"how": "Only 19 texts (from 0) fit in one answer. Call create_arabic_twin again with the same inputs and textsFrom: 19 ..."` -> the same with 18 and `textsFrom: 18`. The reviewer's call: these lines are the sentence's counted length, not a change of rule (fn1c P3, the full texts list, is unchanged).
+  - The other twin pins: sp11 21, sp26 26, sp40 28 pass unchanged (none plans with timeRightToLeft false; no fixture of theirs holds the sentence); only sp39 holds KIND_WHAT (above).
+- Done by a script that copies only those two fields from a fresh recording and stops if anything else in the run differs; a full re-record was refused (it would also move entries DD1A pinned in its overlay). Nothing else in either file changed (git diff: 28 kinds, 28 shas, 1 digest).
 
 ## CHANGELOG line
-none: no behaviour a person sees changes (the same pictures, faster); `mcp/CHANGELOG.md` is not in this job's files.
+A report planned with no KPI cards now shows the chosen measure on every chart and table (it showed a sum of a column), and the Arabic twin says that charts over time stay left to right when you keep time left to right.
 
 ## Decisions I made
-- The encoder writes every row with the Up filter, not the engine's per-row search of five: the first version kept the
-  search (flip 352 ms, 6 s under coverage); Up alone is one pass, the file is 172 KB against the engine's 187 KB, and
-  the pixels are identical (P2-P4, P7). The decoder still reads all five filters (P6, a picture using each).
-- The cache keys are SHA-1 of the bytes plus their length (a speed cache, not a security boundary: a collision would need
-  a crafted picture that is also a valid marked glass PNG). LRU sizes: 4 decoded pictures (6.2 MB each at 1920 x 1080),
-  16 previews (strings), 8 flips (about 170 KB each).
-- glassPixels returns a copy of the pixels (a typed array can not be frozen); flipGlassPng a copy of the bytes; the
-  preview is a string.
-- The decode counted by wrapping node:zlib's own inflateSync in the test (glass-picture.mjs calls it on that object), so
-  the guard needs no hook in the code and was red on the old code.
-- Not a CRC from zlib.crc32 (Node 20.15 / 22.2 on; the package says ">=20.10"): a table in the file.
+- Two suites, not one: pf1 (report) and pf1t (twin), each in its area.
+- The kind "columnTime" is said by mirrorVisual only; chartsOf's working kind stays "column" so every later rule (the title, in mirror-policy.js, outside my scope) is unchanged. A first try that renamed the working kind changed the files (pf1t T3 caught it).
+- The plan's measure is the last fallback, not the first: with planFields.measure but no planFields.kpis the cards keep the picker's measures (as before).
+- No Arabic text changed (KIND_WHAT is English, for the AI app): nothing to draft.
 
 ## For the owner
 none
 
 ## Risky changes
-none: no security policy, approval step, file writing path, answer, network or process changed; the bytes of the
-flipped picture the twin writes differ from before (node:zlib, the Up filter), its pixels are identical (checked).
+- What an answer returns: create_arabic_twin's mirrors gains a kind "columnTime" (with timeRightToLeft false only) instead of "column" for charts over time; same files written.
+- What a report writes: with planFields.kpis [] (or text measures only) the charts and the table now bind the model's measures instead of summed columns. Tests that lose checks: none.
+- build:min restamped two `?v=` values in assets/js/theme-generator.js (a fenced file: check/0.3.2-batch-3e1e78ec) and the theme generator pages: stamps only, made by the build (ST1), never typed; a clash there is settled by running build:min again.
 
 ## For the laptop
-- One glass report's Arabic twin opened in Desktop: the Arabic pages' picture shows as the English one mirrored, as
-  after GD2 (the file is now written by node:zlib; Desktop reads any valid PNG). Record: the picture shows, yes / no.
+- Re-run look032 C's B-381 input from this branch: every chart and the table should show Total Sales. B-380 needs no new look (the files are unchanged; only the sentence).
 
 ## Seen, not in scope
-- The engine's glassPng (make: 0.6 s plain, 8.5 s under coverage per new colours and size) and its JavaScript deflate
-  are now the slowest part; a node:zlib path there is design-engine.js (TS1's file).
-- page-preview.js fromFiles asks for a page's picture twice per page (48 calls for 24 pages); harmless now (cached).
+- With kpis 0 at the top level and no planFields.kpis, the written report still holds 2 card visuals showing Total Sales (counted in visual.json files on the Time Lab run; which pages they sit on not checked): whether top-level kpis 0 should mean no card there is worth a look. Not changed here.
+- The answer for a text measure as the only planFields.kpis still says it after the write (create_report's note), not in the plan.
 
 ## Lessons for the reviewer
-- The session's foreground command is capped at 10 minutes here: a 30-40 minute full run can not run in the
-  foreground; it ran in the background with a Monitor waiting on its last line (the session never idle).
-- twin-preview under coverage was red on the base on this machine (a request timed out at 347 s), not only slow.
+- fn1c pins the twin plan's whole answer (r2: timeRightToLeft false) but sits outside the twin area: a change to KIND_WHAT should run fn1c too (it went red in CI, not in my area runs).
+- CI run 42114092708: sp6 (website, shard 2) said the plain preview differs at equal size (43517 bytes); it passed locally 3 of 3 and failed in no other recent run. Green on the next run (42116688415): a flake, not this change.
+- The brief's "kpis: 0" hid the trigger: the bug needs planFields.kpis [] (or all text measures); top-level kpis 0 alone writes Total Sales. A brief that pins an eval input should copy the lab driver's exact JSON.
+- sp10's fixture predates DD1A; a re-record moves DD1A's overlay entries too, so a kind change must be patched field by field.

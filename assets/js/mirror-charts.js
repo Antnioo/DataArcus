@@ -52,8 +52,11 @@
   // 0.3.1 M1, the owner: "make sure the AR and twin are using the same engine"). v: the visual (visual.json's "visual"),
   // kind: kindOf's ('bar', 'column', 'waterfallKept' or 'waterfallTime': a waterfall that stays one gets its value axis at
   // the right). Changes v in place; what it changed is pushed to changes ----
+  // Returns { timeKept }: true for a column-family chart over time whose order is kept left to right as asked
+  // (o.timeRightToLeft false, the one time test: mirror-policy.js categoryIsTime) (0.3.2 PF1, B-380)
   function chartRtl(v, kind, o, changes, kept0) {
     const kept = kept0 || [];
+    let timeKept = false;
     const objects = () => (v.objects === undefined ? (v.objects = {}) : isObj(v.objects) ? v.objects : {});
     if (kind === 'waterfallKept' || kind === 'waterfallTime') { plainEntry(objects(), 'valueAxis').properties.switchAxisPosition = mk('true'); changes.push('value axis'); }
     if (kind === 'bar') {
@@ -75,7 +78,8 @@
         const ref = (f) => { const x = entityOf(f); return isObj(x) && isObj(x.Expression) && isObj(x.Expression.SourceRef) ? x.Expression.SourceRef.Entity : null; };
         const orderKey = c0 && ref(s.field) != null && ref(s.field) === ref(c0.field) && (projections(q, 'Tooltips') || []).some((t) => isObj(t) && sameField(t.field, s.field));
         const byCategory = c0 && (sameField(s.field, c0.field) || orderKey);
-        if (!(keepTime && byCategory)) {
+        if (keepTime && byCategory) timeKept = true;
+        else {
           s.direction = s.direction === 'Descending' ? 'Ascending' : 'Descending';
           // (0.3.1 MP1e, laptop part 8: AdventureWorks' lines on a 4-level date hierarchy kept the months inside a year
           // left to right) every further sort key that is a category level turns with the first
@@ -83,7 +87,8 @@
           sd.sort.slice(1).forEach((x) => { if (isObj(x) && cats.some((c) => isObj(c) && sameField(c.field, x.field))) x.direction = x.direction === 'Descending' ? 'Ascending' : 'Descending'; });
           changes.push('sort');
         }
-      } else if (c0 && c0.field !== undefined && !keepTime && (q.sortDefinition === undefined)) {
+      } else if (keepTime) timeKept = true;
+      else if (c0 && c0.field !== undefined && (q.sortDefinition === undefined)) {
         // (MP1e: Consumer Complaints' Year and Month, sorted by the year alone) every level of the category descending
         const levels = (projections(q, 'Category') || []).filter((c) => isObj(c) && c.field !== undefined && isObj(c.field.HierarchyLevel));
         q.sortDefinition = { sort: (levels.length > 1 ? levels : [c0]).map((c) => ({ field: clone(c.field), direction: 'Descending' })), isDefaultSort: true };
@@ -104,6 +109,7 @@
         else if (!LEGEND[cur]) kept.push({ what: 'legend position', value: cur });
       }
     }
+    return { timeKept };
   }
 
   // ---- a visual's chart transforms (report-mirror.js mirrorVisual calls this after the place and the shadow, before
@@ -157,8 +163,12 @@
         measures = wf.measures; changes.push('waterfall', 'value axis', 'sort');
       } else { kind = 'waterfallKept'; why = wf.why; }
     }
-    if (kind === 'bar' && o.keepDirection) { /* its bars keep their direction */ } else chartRtl(v, kind, o, changes, kept);
-    return { kind, changes, kept, measures, why };
+    // (0.3.2 PF1, B-380: the answer said "categories right to left" for charts over time Desktop drew left to right, as
+    // asked) timeKept: a column, line, area or combo chart whose time order is kept; mirrorVisual says it "columnTime"
+    // (report-mirror.js KIND_WHAT), its rules after this still the column family's
+    let timeKept = false;
+    if (kind === 'bar' && o.keepDirection) { /* its bars keep their direction */ } else { const r = chartRtl(v, kind, o, changes, kept); timeKept = kind === 'column' && r.timeKept; }
+    return Object.assign({ kind, changes, kept, measures, why }, timeKept ? { timeKept } : {});
   }
 
   // ---- the matrix (0.3.1 M1: the owner opened an Arabic copy whose months-across matrix was not mirrored at all) ----
