@@ -17,8 +17,11 @@
 - **Expected checks:** dd2o passes (new: units, parity, one place); every other suite's number as on the base (the base
   run, 5 shards locally, in "Numbers"); mutation 76/76; `npm run lint` 0; check-contracts, check-modules --strict,
   check-agent-memory, check-result-lines green; the probe one answer per input for overlap and overlap-area.
-- **State:** steps 1-3 pushed (module, callers, parity); step 4 and the full run next.
-- **Resume:** step 4 (the probe's --md, the docs), then the full run, the merge and CI.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41949499227 on 3052673163ead33d8e74e38e731d6ebd822172ab
+- **State:** DONE (Linux and Windows; macOS runs where the reviewer merges). Local full run (5 shards): 204 lines, 0 FAIL;
+  every suite's number as on the base ae8c173 (new: dd2o 89, dd2n 32 from the merge); mutation 76/76.
+- **Resume:** the reviewer reads and merges.
+- **Merge:** origin/integration/0.3.2 merged once (DD2N; WORK.md kept both lines), then `npm run build:min` (no change).
 
 ## Plan (one commit each, every suite green between them)
 1. `mcp/lib/box-overlap.mjs` and `mcp/test-0.3.2-dd2o.mjs` (one line in tests.json beside dd2p): the probe's 9 pairs
