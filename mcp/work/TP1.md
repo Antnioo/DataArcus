@@ -19,8 +19,9 @@
 - **Red first:** A11 red on 4f8da4a7 first (e536a95f: approval-complete 68 checks, 9 failed); green on a8f43156.
 - **Changed on purpose:** sp23, sp44 (6 pages' hashes each), preview P-08, preview-match T1, sq13 R1-S3b,
   approval window W-09/W-10, twin-preview, bilingual-report B3e, glass-twin P1/P2 (below).
-- **State:** the change done, area runs green; then CI on this branch.
-- **Resume:** CI on `fix/0.3.2-tp1`, then "CI green: <url> on <sha>" here.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42081553507 on 1c41d6ce644268cefa8aed5a78441ba0f4e6a9a8
+- **State:** DONE.
+- **Resume:** the reviewer reads and merges.
 
 ## How the preview gets its pages today (base 4f8da4a7)
 - plan_layout (`mcp/tools/plan_layout.mjs` previewOf) calls `planPreview` (`mcp/lib/plan-lint.mjs`) with the exact
