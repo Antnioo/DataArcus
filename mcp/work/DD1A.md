@@ -16,8 +16,8 @@
   back, 20 fail (291 of 311: 19 P, 1 S).
 - **Expected checks:** dd1a 311; dd1b 545 -> 546 (its S2 exception went, the brief); sp10 113 as before; every other
   suite's number as before; mutation 76/76; lint 0; check-contracts, check-modules --strict green.
-- **Got:** see "## Results".
-- **State:** see "## Results".
+- **Got:** exactly that (Results). integration/0.3.2 did not move: no merge.
+- **State:** CI below.
 - **Resume:** none once CI is green; the reviewer reads and merges.
 
 ## Lists before -> after (each place; the probe's 24 names)
@@ -75,7 +75,16 @@ here so you can see them: StartOfMonth was not one of the brief's three examples
 - page-preview read Arabic words as substrings before (طعام held عام); now whole words only: such a name loses the arrow.
 
 ## Results
-(filled in at the end)
+- On 6fe7ca7a (code as of 5f6443a1; later commits: the dd1a test file and docs): MCP as CI's 5 shards side by side
+  (`DA_SHARD=k/4 node run-tests.mjs --keep-going`, after `git fetch --unshallow`): all 5 exit 0, 200 suites PASS;
+  dd1a 311, dd1b 546, sp10 113, mutation 76/76 killed, twin-fuzz 185, sp39 96, sp42 22, dd1c 75, glass-tables 113,
+  sp6 13 (the numbers DD1B reported, dd1b +1). No base run here (two full runs at once pass the time limit).
+- Website `npm test`: 42 of 42. The first run's shared browser closed after 17 (every later suite "crashed" in 0 s,
+  then my 20-minute timeout); the 25 run again: all PASS. theme-generator 922, theme-generator-lab 922, pbip 111,
+  layout 512 passed in the first run.
+- Lint 0; check-contracts PASS 757 (28 families, 108 places); contracts-probe 1a: all 4 answer the same on all 24;
+  check-modules --strict PASS 1078; test-site-config, changelog-words, result-lines, agent-memory, literal requires,
+  stamps 1169, check:min (128 match), sitemap-lastmod PASS.
 
 ## Seen, not in scope
 - DATE_LIKE (mirror-policy: a date column by its shape) is its own question; not this job.
