@@ -18,8 +18,8 @@
   unchanged (r4a, j14-exact, the twin artifact: no expected answer moves); mutation 76/76; the probe's canon table:
   1 place, 0 of 10 differ (was 2 places, equal); samejob.py is the reviewer's (not in this repo): its same-shape
   groups go DOWN by one, not countable here.
-- **State:** step 3 done (the parity test: dd2c 48 checks).
-- **Resume:** step 4.
+- **State:** step 4 done (CONTRACTS.md One place; WORK.md line). Next: the full run and CI.
+- **Resume:** merge integration once if it moved, build:min, every check, CI.
 
 ## The answers (before, measured on the base 128285e; after: the same, pinned in dd2c)
 The probe's 10 values, canon(v): `{"a":2,"b":1}`, `{"b":1}`, `null` (undefined at the top), `null`, `[3,1,2]`,

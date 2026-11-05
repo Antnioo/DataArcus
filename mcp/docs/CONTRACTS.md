@@ -459,6 +459,8 @@ hundredPercentStackedBarChart) in one list; the same for `stackedColumnChart`. T
 
 ## canon What is the canonical text of a plan?
 
+**One place:** mcp/lib/canon.mjs canon (test mcp/test-0.3.2-dd2c.mjs).
+
 **Question:** a value: its JSON with keys sorted and undefined left out (the text a plan's digest is taken of).
 
 **Newest copy:** equal (the audit and the probe).
@@ -471,7 +473,13 @@ hundredPercentStackedBarChart) in one list; the same for `stackedColumnChart`. T
 
 **Decided answer:** today's; one copy (Phase 2: same code, should be one).
 
-**The test that will pin it:** the probe's 10 values (family `canon`).
+**The test that pins it:** `mcp/test-0.3.2-dd2c.mjs` (the probe's 10 values and 6 more pinned; the base's bindings,
+model prints and gate differences of made-up plans byte for byte; both old copies, from the base's source, beside the one
+place: one answer each) and the probe's 10 values (family `canon`).
+
+**Since DD2C (5 Nov):** one canonical text: canon.mjs `canon`. artifact.mjs (`modelPrintOf`, `bindingOf`) and plans.mjs
+(`inputDifferences`, the gate) import it; their copies are gone. No answer and no digest changed. The "Today" line
+above is the ledger's snapshot before DD2C (2 places).
 
 ## crc What is the CRC-32 of these bytes?
 
