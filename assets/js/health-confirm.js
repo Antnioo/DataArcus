@@ -101,9 +101,25 @@
   const AMOUNT = /\b(sales|revenue|revenues|amount|amounts|cost|costs|profit|profits|value|price|budget|spend|spending|income|expense|expenses|turnover|ebitda|cash|payroll|salary|salaries)\b|المبيعات|الإيرادات|التكلفة|الربح|القيمة|المبلغ/i;
   const UNIT = /\b(ms|sec|secs|second|seconds|minute|minutes|hour|hours|duration|time|bytes?|kb|mb|gb|tb|size|memory|meters?|metres?|km|grams?|kg|tons?|tonnes?|liters?|litres?|ml|mwh|kwh|watts?)\b|ms\b|ms\]/i;
   const SCALED = /(^|[^a-z])(k|m|mn|bn|thousands?|millions?|000s|in 000)([^a-z]|$)|بالآلاف|بالملايين/i;
+  // the questions in three steps, each given the context { M, ctx, out } and adding to out in the old order (0.3.2 FN1D)
   function pleaseConfirm(M, ctx) {
     ctx = ctx || {};
     const out = [];
+    const pc = { M, ctx, out };
+    measureQuestions(pc);
+    relationshipQuestions(pc);
+    unrelatedQuestions(pc);
+    return out;
+  }
+
+  // names written as one word, and the generic ids that are an entity's own (never a role-qualified key)
+  const flat = (s) => CF.words(s).join('');
+  const GENERIC = ['id', 'key', 'code', 'no', 'number', 'date', 'recordid', 'recordkey'];
+
+  // each measure's questions: a total leaving out a category, an aggregate added twice, the wrong column, a shifted date,
+  // a format that may not show what the measure means
+  function measureQuestions(pc) {
+    const { M, out } = pc;
     const column = (r) => { const t = r && M.tables.find((x) => lc(x.name) === lc(r.table)); return t ? t.columns.find((c) => lc(c.name) === lc(r.column)) || null : null; };
     const measures = [];
     M.tables.forEach((t) => t.measures.forEach((m) => measures.push({ m, ts: CF.lex(m.expr) })));
@@ -175,9 +191,11 @@
             `يقسم المقياس على ${by.n === '1000' ? '1,000' : '1,000,000'} ويعرض تنسيقه رقمًا عاديًا. هل كان المقصود تنسيق عرض ${by.n === '1000' ? 'بالآلاف (K)' : 'بالملايين (M)'}؟`, by.ts);
       }
     });
-    // a relationship on another column while an unused column of the same table carries the key's own name and type
-    const flat = (s) => CF.words(s).join('');
-    const GENERIC = ['id', 'key', 'code', 'no', 'number', 'date', 'recordid', 'recordkey'];
+  }
+
+  // a relationship on another column while an unused column of the same table carries the key's own name and type
+  function relationshipQuestions(pc) {
+    const { M, out } = pc;
     const inRel = (t, c) => M.relationships.some((x) => (x.fromTable === t && x.fromColumn === c) || (x.toTable === t && x.toColumn === c));
     M.relationships.forEach((r) => {
       if (!r.active || r.fromCard !== 'many' || r.toCard !== 'one') return;
@@ -193,6 +211,10 @@
           ar: `العمود ${from.name}[${cands[0].name}] يحمل اسم المفتاح ونوعه لكنه غير مستخدم. هل العلاقة على العمود الصحيح؟` },
         evidence: '', relationship: { fromTable: r.fromTable, fromColumn: r.fromColumn, toTable: r.toTable, toColumn: r.toColumn, candidateColumn: cands[0].name } });
     });
+  }
+
+  function unrelatedQuestions(pc) {
+    const { M, ctx, out } = pc;
     // B-143: a date table or a fact table that no relationship touches (the owner's rc.21 test: Calendar and Sales with
     // no relationship, and nothing said so). Tables that are meant to stand alone are never asked about: calculation
     // groups, field parameters, what-if and other DAX helper tables, measure tables, hidden tables, one-column tables
@@ -204,7 +226,7 @@
       return !(t.isCalcTable && /\b(GENERATESERIES|NAMEOF|DATATABLE|SELECTCOLUMNS|ROW|UNION)\s*\(/i.test(t.calcExpr));
     });
     const related = (t) => M.relationships.some((r) => lc(r.fromTable) === lc(t.name) || lc(r.toTable) === lc(t.name));
-    if (regular.length < 2) return out;
+    if (regular.length < 2) return;
     // where DAX reads a table, outside time-intelligence calls (those filter nothing through a table no relationship touches)
     const TI = /^(SAMEPERIODLASTYEAR|DATEADD|DATESYTD|DATESQTD|DATESMTD|TOTALYTD|TOTALQTD|TOTALMTD|PARALLELPERIOD|PREVIOUSDAY|PREVIOUSMONTH|PREVIOUSQUARTER|PREVIOUSYEAR|NEXTDAY|NEXTMONTH|NEXTQUARTER|NEXTYEAR|DATESINPERIOD|DATESBETWEEN|OPENINGBALANCEYEAR|CLOSINGBALANCEYEAR|STARTOFYEAR|ENDOFYEAR|STARTOFMONTH|ENDOFMONTH|STARTOFQUARTER|ENDOFQUARTER|FIRSTDATE|LASTDATE)$/;
     const daxOf = [];
@@ -251,7 +273,6 @@
         return;
       }
     });
-    return out;
   }
 
   const api = { pleaseConfirm };
