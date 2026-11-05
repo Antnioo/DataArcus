@@ -25,6 +25,8 @@ import { besideSaid } from './plain-words.mjs';   // (0.3.1 R4A, T-9: the folder
 const require = createRequire(import.meta.url);
 // a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
 const { litText, columnWidth } = require('../../assets/js/pbir-values.js');
+// is this text Arabic: arabic-script.js, its one home (0.3.2 DD1F; CONTRACTS.md 1f)
+const { hasArabic } = require('../../assets/js/arabic-script.js');
 const Fix = require('../../assets/js/model-health-tmdl.js'), Pbip = require('../../assets/js/pbip-export.js'), E = require('../../assets/js/design-engine.js');
 const dax = Pbip.daxNames;
 
@@ -172,7 +174,7 @@ export const cardDax = (t, mo, title, cal, c, w, h, lang) => { const mref = dax.
 // (0.3.1 TT1, the owner, 27 Oct: a title is wholly Arabic or wholly English) the Arabic sentence only for an Arabic noun;
 // an English noun takes the English sentence in an Arabic report too (the leader is a data value: the plan says it may
 // be in the other language)
-export const storyLang = (noun, lang) => (lang === 'ar' && /[\u0600-\u06FF]/.test(String(noun)) ? 'ar' : 'en');
+export const storyLang = (noun, lang) => (lang === 'ar' && hasArabic(noun) ? 'ar' : 'en');
 export const storyDax = (t, mo, cat, noun, cal, lang0) => { const lang = storyLang(noun, lang0), mref = dax.column(t, mo.name), cref = dax.column(cat.t, cat.c);
   return [`VAR _top = TOPN ( 1, FILTER ( VALUES ( ${cref} ), NOT ISBLANK ( ${mref} ) ), ${mref}, DESC )`, `VAR _k = MAXX ( _top, ${cref} )`,
     `VAR _v = CALCULATE ( ${mref}, TREATAS ( { _k }, ${cref} ) )`, `VAR _s = ${valueDax(mo, mref, lang)}`,

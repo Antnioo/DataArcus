@@ -29,6 +29,8 @@
   const FM = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./field-meaning.js') : root.DataArcusFieldMeaning;
   // the sort-column rule (0.3.2 DD1H): sort-column.js, its one home; the page loads it before this file
   const SC = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./sort-column.js') : root.DASortColumn;
+  // is this text Arabic: arabic-script.js, its one home (0.3.2 DD1F; CONTRACTS.md 1f)
+  const AS = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./arabic-script.js') : root.DAArabicScript;
   /**
    * The field shape the picker gives out (builder 7's audit A3-9, 11 Oct: one documented contract):
    * @typedef {Object} Field
@@ -263,7 +265,7 @@
   // is not text) none. Twins: an "ar" and an "en" text column of the same table that hold the same thing; the names
   // cannot tell a translation, so a twin is the one with the same name less its Arabic mark, else the same data
   // category, else the column next to it, each column in one pair at most.
-  const AR_SCRIPT = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+  // (0.3.2 DD1F: Arabic letters are arabic-script.js's hasArabic, their one home; CONTRACTS.md 1f)
   // (round 23 part 5, the review's 8: "AR" or "_ar" alone is not a mark: "Aging AR" is accounts receivable; "(AR)",
   // "(Arabic)", the word Arabic, and Arabic letters are)
   // (part 6, the re-review's 3: the word Arabic only at the end or the start: "Non-Arabic Customers", "Is Arabic
@@ -273,7 +275,7 @@
   // _AR, -AR or " AR" is Arabic where the same table has the English column of that name (City + City_AR); alone
   // ("Aging AR", accounts receivable) it stays English. Set in catalog, which sees the table)
   const AR_SUFFIX = /[\s_-]ar$/i;
-  const langOf = (name) => { const n = String(name == null ? '' : name); return AR_SCRIPT.test(n) || AR_MARK.test(n) ? 'ar' : /[A-Za-z]/.test(n) ? 'en' : null; };
+  const langOf = (name) => { const n = String(name == null ? '' : name); return AS.hasArabic(n) || AR_MARK.test(n) ? 'ar' : /[A-Za-z]/.test(n) ? 'en' : null; };
   const twinKey = (n) => String(n).replace(AR_MARK, '').replace(AR_SUFFIX, '').trim().toLowerCase();
   function pairTwins(columns) {
     const byTable = {};

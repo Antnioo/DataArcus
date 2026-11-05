@@ -5,6 +5,10 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **One answer to "is this text Arabic?":** a title or a name typed with Arabic presentation forms (such as «ﻻ») or
+  with letters from the Arabic supplement is now treated as Arabic everywhere: the report writer joins it with «حسب»,
+  create_report writes its story sentence and its count word in Arabic, the Arabic twin reads it as already Arabic, and
+  the report check measures it as an Arabic header.
 - **A name with a hyphen is written in quotes:** a table or column name with a hyphen (Sales-2024) is now written in
   quotes ('Sales-2024') in the health check's fix scripts and the measure builder, as every other DataArcus script writes it.
 - **One answer to "is this column a date part?":** the Arabic twin, the approval preview, the report writer and the

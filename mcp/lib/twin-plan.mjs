@@ -25,7 +25,9 @@ const Rules = require('../../assets/js/report-rules.js');
 const TextMeasure = require('../../assets/js/text-measure.js');
 // a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
 const { litText, litNumber, litBool, columnWidth } = require('../../assets/js/pbir-values.js');
-const { isGlassPng } = require('../../assets/js/design-engine.js');   // (GD1: the glass picture, known by its mark)
+const { isGlassPng } = require('../../assets/js/design-engine.js');
+// is this text Arabic: arabic-script.js, its one home (0.3.2 DD1F; CONTRACTS.md 1f)
+const { hasArabic } = require('../../assets/js/arabic-script.js');   // (GD1: the glass picture, known by its mark)
 import { flipGlassPng } from './glass-picture.mjs';   // (GD2: the Arabic page's picture, the English page's flipped)
 import { picturesOf, flipPicturesOf, picturePagesSaid, picturePageIds } from './twin-pictures.mjs';   // (MP1: pages drawn on a picture)
 
@@ -172,7 +174,7 @@ export function planTwin(a) {
   const fieldAr = new Map(texts.filter((t) => t.kind === 'field').map((t) => [String(t.rawId).slice('field:'.length), labels[t.id]]));
   // (TB1) a visual's own name for a field: its own label, else no Arabic draft from the field's
   const ownAr = new Map(texts.filter((t) => t.kind === 'visualField').map((t) => [t.rawId.slice('fieldAt:'.length), labels[t.id]]));
-  texts.forEach((t) => { if (!t.auto) return; const d = autoSentence(t.auto, (x) => { const k = t.auto.where + '/' + x.ref, v = ownAr.has(k) ? ownAr.get(k) : fieldAr.get(x.ref); return v != null && /[\u0600-\u06FF]/.test(v) ? String(v).trim() : null; }, true); if (d) t.draftArabic = d; });
+  texts.forEach((t) => { if (!t.auto) return; const d = autoSentence(t.auto, (x) => { const k = t.auto.where + '/' + x.ref, v = ownAr.has(k) ? ownAr.get(k) : fieldAr.get(x.ref); return hasArabic(v) ? String(v).trim() : null; }, true); if (d) t.draftArabic = d; });
   T.statuses();
   texts.forEach((t) => { if (labels[t.id] != null) t.label = labels[t.id]; });
   // (TB1) an approved title that changed with the selection: said, it is now a fixed title
@@ -180,7 +182,7 @@ export function planTwin(a) {
   // (0.3.1 TB1b, D-1027-03: a title is wholly Arabic or wholly English) a field parameter's title kept (Power BI's to
   // compose) on a visual where one of its fields will be written with an Arabic name would be composed from both: mixed.
   // Named here; the tool gives no plan id while one is left (approve a fixed Arabic title, or keep those names English)
-  const arOf = (v) => v != null && /[\u0600-\u06FF]/.test(String(v)), fieldNow = new Map(texts.filter((t) => t.kind === 'field').map((t) => [String(t.rawId).slice('field:'.length), labels[t.id]]));
+  const arOf = hasArabic, fieldNow = new Map(texts.filter((t) => t.kind === 'field').map((t) => [String(t.rawId).slice('field:'.length), labels[t.id]]));
   const ownNow = new Map(texts.filter((t) => t.kind === 'visualField').map((t) => [t.rawId.slice('fieldAt:'.length), labels[t.id]]));
   // (TB1c) and a title given by a column (mixOf): it would sit English beside the Arabic names
   const mixedTitles = texts.filter((t) => (t.autoParam || t.mixOf) && labels[t.id] == null).map((t) => { const a = t.autoParam || t.mixOf, ar = a.vals.concat(a.cats).filter((x) => { const k = a.where + '/' + x.ref; return arOf(ownNow.has(k) ? ownNow.get(k) : fieldNow.get(x.ref)); });

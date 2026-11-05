@@ -44,7 +44,9 @@
   // are; a text with no Arabic letter or no Latin letter is unchanged; a text already wrapped is not wrapped again, and
   // one an older build isolated (V1) gets the wrap round its isolates. The marks come from the writer only: a name a
   // person gives with one is refused (the MCP's display-names.mjs, writtenName). textWidth counts them 0 wide.
-  const ARABIC = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/, ISOLATED = /[\u2066-\u2069]/;
+  // is this text Arabic: arabic-script.js, its one home (0.3.2 DD1F; CONTRACTS.md 1f); ARABIC stays exported, the same object
+  const AS = typeof module !== 'undefined' && module.exports ? require('./arabic-script.js') : root.DAArabicScript;
+  const ARABIC = AS.ARABIC, ISOLATED = /[\u2066-\u2069]/;
   const RUN = /[A-Za-z0-9](?:[A-Za-z0-9_%]|[ .,'&+#/\-](?=[A-Za-z0-9]))*/g;
   const FSI = '\u2068', PDI = '\u2069', RLM = '\u200F', RLI = '\u2067';
   const runs = (t) => t.replace(RUN, (run) => (/[A-Za-z]/.test(run) ? FSI + run + PDI : run));

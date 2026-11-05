@@ -319,7 +319,9 @@
   // Round 14, the owner's ask (6 Oct 2026): a title is never half Arabic, half English. "A by B" joins two names of the
   // same script with that script's word ("إجمالي المبيعات حسب اسم اليوم", "Total Sales by Day Name"); when only one of
   // the two names is Arabic, the title is the measure's name alone (plan_layout proposes Arabic names to approve).
-  const AR_LETTERS = /[\u0600-\u06FF]/;
+  // (0.3.2 DD1F: an Arabic letter is arabic-script.js's, its one home; CONTRACTS.md 1f. AR_LETTERS stays exported, the
+  // same object: pbip-bidi, pbip-tooltip, pbip-page and visual-gallery read it)
+  const AR_LETTERS = (typeof module !== 'undefined' && module.exports ? require('./arabic-script.js') : root.DAArabicScript).ARABIC;
   const byTitle = (a, by, b) => {
     if (!a || !b) return a || null;
     const ar = AR_LETTERS.test(a);
