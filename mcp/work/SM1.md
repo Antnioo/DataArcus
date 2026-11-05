@@ -16,7 +16,11 @@
 - **Expected checks:** mutation 76 -> 86 mutants, all killed (its check count up by 10); a guard suite that gets a case
   only goes up; every other suite's number as on the base; lint 0; check-agent-memory, check-modules --strict,
   check-result-lines green. No CHANGELOG line (nothing a person sees changes).
-- **State:** plan pushed. **Resume:** step 2 (each mutant by hand, its killing suite written below).
+- **Mutants before -> after:** 76 -> 86, all killed: AH-host, AH-link, AH-expiry, AH-method, AH-origin, AH-body, AH-once,
+  AH-revoke (killed by sp44, 4 of them by test-approval too), RD-scrub, RD-mask (killed by sp41).
+- **Guards added:** sp41 X2 (RD-mask; 23 -> 24 checks), sp44 L8 (AH-link; 22 -> 23 checks): each red with its mutant.
+- **State:** the code done; the last CI below.
+- **Resume:** the reviewer reads and merges.
 
 ## Plan (one commit each)
 1. This note.
@@ -30,16 +34,52 @@
 ## Step 2: each mutant by hand (the harness's copy, `DA_MUTATION_ALL=1`, every guard; base cd7392f)
 | Mutant | Killed by (every guard run) |
 |---|---|
-| AH-host | test-0.3.2-sp44 (H1 wrongHost), test-approval (W-03 rebound Host) |
+| AH-host | test-0.3.2-sp44 (H1), test-approval (W-03) |
 | AH-link | test-0.3.2-sp44 by V2 only (the source text of the pattern): no behaviour; L8 added (step 3) |
 | AH-expiry | test-0.3.2-sp44 (L1), test-approval (W-07) |
-| AH-method | test-0.3.2-sp44 (H1 wrongMethod: a PUT approved) |
-| AH-origin | test-0.3.2-sp44 (H1 wrongOrigin), test-approval (W-03) |
-| AH-body | test-0.3.2-sp44 (L5: the 70,000-byte body decided) |
-| AH-once | test-0.3.2-sp44 (H1 secondClick), test-approval (W-04 the later "Not now") |
-| AH-revoke | test-0.3.2-sp44 (L2: the old link opens the new window) |
+| AH-method | test-0.3.2-sp44 (H1; test-approval passes) |
+| AH-origin | test-0.3.2-sp44 (H1), test-approval (W-03) |
+| AH-body | test-0.3.2-sp44 (L5; test-approval passes) |
+| AH-once | test-0.3.2-sp44 (H1), test-approval (W-04) |
+| AH-revoke | test-0.3.2-sp44 (L2; test-approval passes) |
 | RD-scrub | test-0.3.2-sp41 (X1, K answers) |
 | RD-mask | none (sp41, check, tb2 pass): X2 added (step 3) |
 test-approval-hardening and test-z kill none of the AH mutants (they reach the gate in plans.mjs, not the HTTP side).
 test-0.3.0-sweep-s1 can't be a guard: on the copy it fails its baseline (it runs `scripts/check-literal-requires.mjs`,
 which the copy does not hold); left out of RD's guards.
+
+## Step 3: the missing cases (made-up inputs; red with the mutant on a scratch copy, green without)
+- RD-mask: sp41 X2, a made-up page of the twin-project without its required `name`: the SCHEMA finding says
+  `must have required property <value>`. With the mutant: `... property 'name'`, X2 alone fails (1 of 24).
+- AH-link: sp44 L8 (in process, outside the recorded fixture): `/approve/<secret>/x`, `/x/approve/<secret>`,
+  `/approve/<secret>/`, `/a/approve/<secret>`, GET and POST each: 404, nothing decided. With the mutant: all 200 and
+  the POST approves; L8 and V2 fail (21 of 23).
+
+## Step 4
+The 10 in `mcp/test-0.3.1-mutation.mjs`, section 7 (D-1104-14, B-329); guards: AH sp44 then test-approval, RD sp41.
+`node mcp/test-0.3.1-mutation.mjs`: `PASS  mutation  220 checks (86 mutants, all killed, 43 guard suites, 219s;
+equivalent, not run: G-artifact, W-size, W-free-real)`.
+
+## Decisions I made
+- AH-link is the pattern unanchored and of any length: loosening `{20,64}` alone is equivalent (the lookup is an
+  exact Map key of a 32-character secret), so the mutant drops the anchors too, which a path around the secret reaches.
+- RD-scrub turns off both quoted-part maskings (the standing-alone pairs and the first-to-last) and keeps the path cut.
+- A mutant killed only by a source-text check (AH-link by V2) got a behaviour case too (L8).
+- The new cases sit outside sp41's and sp44's recorded fixtures (never re-recorded); each suite only goes up by one.
+- Guards are the suites measured to kill; test-approval-hardening, test-z, test-0.3.0-check and tb2 killed none;
+  sweep-s1 can't run on the copy (needs `scripts/check-literal-requires.mjs`).
+
+## For the owner
+none (no mutant is equivalent). One thing to know: with today's ajv messages, the parts maskValues hides are the
+schema's own words (a required property's name, a pattern), not the report's text; X2 pins the rule all the same.
+
+## Risky changes
+none (tests only; no product file changed).
+
+## Seen, not in scope
+- test-0.3.0-sweep-s1 can't guard a mutant: the mutation copy holds no `scripts/*.mjs` (a later job could copy them).
+- B-330 (blockOverlap, arabicMonth): not met.
+
+## Lessons for the reviewer
+- sp44's V2 is a source-text check: it "kills" any edit to the link's pattern, so a pattern mutant looked guarded when
+  no request proved it. Read which check kills, not only which suite.
