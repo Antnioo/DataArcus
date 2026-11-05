@@ -24,6 +24,8 @@
 (function (root) {
   // text-measure.js: the font catalog, the measured heights and Power BI's 8-60 text sizes, one place (0.3.2 OP1)
   const TM = typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure;
+  // png-bytes.js: the big-endian four bytes, one place (0.3.2 DD2U; the generator pages load it before this file)
+  const { u32 } = typeof module !== 'undefined' && module.exports ? require('./png-bytes.js') : root.DAPngBytes;
 
   // ---------- page layout: a full background with a place for every visual ----------
   // Power BI's default page is 1280 × 720, so every slot is in those units and can be typed straight
@@ -244,7 +246,7 @@
   function imageSize(b) {
     if (!b || b.length < 24) return null;
     if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) {
-      const u = (i) => ((b[i] << 24) | (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3]) >>> 0, w = u(16), h = u(20);
+      const w = u32(b, 16), h = u32(b, 20);
       return w && h ? { w, h } : null;
     }
     if (b[0] === 0xff && b[1] === 0xd8) {

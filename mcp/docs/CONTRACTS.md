@@ -765,7 +765,7 @@ DataView writer gone) read it.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/png-bytes.js` `u32` | [engines](MODULES.md#the-website-engines) | the one place (DD2P): glass-picture.mjs (the glass picture read back, the twin flips it) and page-picture.mjs (the twin's page pictures read) read it |
+| `assets/js/png-bytes.js` `u32` | [engines](MODULES.md#the-website-engines) | the one place (DD2P): glass-picture.mjs (the glass picture read back, the twin flips it), page-picture.mjs (the twin's page pictures read) and, since DD2U, design-metrics.js `imageSize` (an attached logo's size) read it |
 
 **Today:** both answer the same on all 8 reads (past the end too: 16908288 for `01 02`, both).
 
