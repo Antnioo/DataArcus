@@ -3,7 +3,7 @@
 - **Scope:** assets/js/gulf-health.js (GC_NO_HIJRI Arabic title and sentence) and one new check block in scripts/tests/gulf-calendar.mjs. No gulf-health.min.js exists (build:min: stamps nothing to change). Fenced.
 - **Base:** fix/0.3.2-hj1 from origin/integration/0.3.2 (56f1b891). Push only it; no merge, no PR.
 - **Expected checks:** gulf-calendar 913 -> 916 (+3: English title, Arabic title, Arabic sentence), red on 56f1b891 first (2 of the 3 failed); sp9 16, sp15 19, sp27 25 unchanged.
-- **Resume:** code done at c30fa4dc; CI red once (this note's summary labels); rerun CI and write the green line.
+- **Resume:** done. CI green: https://github.com/Antnioo/DataArcus/actions/runs/42054748024 on 1d683ebb
 
 ## Before -> after
 Title: التقويم بلا تاريخ هجري -> التقويم لا يحتوي على تواريخ هجرية.
@@ -29,4 +29,5 @@ none
 - mcp/WORK.md is 3244 characters, over the 3,200 cap in the brief (check-agent-memory counts the whole startup pack and passes).
 
 ## Lessons for the reviewer
+- CI run 42052172743 went red once on Windows: the mutation suite's baseline copy of sp44 failed 22/23 (sp44 passed 23 in its own shard; nothing of mine touches the approval page). A rerun was green: sp44 looks flaky inside the mutation baseline on Windows.
 - check-agent-memory needs the summary lines as "- **Approval:**", "**Scope:**", "**Base:**", "**Expected checks:**", "**Resume:**"; the brief's wording did not say so and CI went red once.
