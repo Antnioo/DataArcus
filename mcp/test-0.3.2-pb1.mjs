@@ -139,7 +139,7 @@ const rewrite = (p) => {
   const t = litText(p); if (t != null) return Ls(t);
   const b = litBool(p); if (b != null) return Lv(String(b));
   const n = litNumber(p); if (n != null) return Lv(String(n) + 'D');
-  return p;
+  return { unread: p };   // a literal no reader reads is a failure, never kept as it was
 };
 property('V1', 'a made-up visual\'s literals read (pbir-values.js) and written back are byte-equal', fc.property(visualArb, (v) => {
   const before = JSON.stringify(v);
