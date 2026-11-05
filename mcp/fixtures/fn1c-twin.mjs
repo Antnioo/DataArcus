@@ -2,8 +2,9 @@
 // fixtures/twin-project with a page "p4more" added: matrices (grouped, with columns, flat), the kinds Power BI cannot
 // mirror (scatter, treemap, map, decomposition tree), a card grid, a flip card's face, a DAX library measure, a field
 // parameter's slicer, bar lists with their names beside them or hidden, a badge on a card, a legend at a place
-// Microsoft's catalog does not list, a running visual calculation, wide tables, long legends and a title given by a
-// column; pages drawn on a picture (PNGs made here): p5pic flipped, p6words asked (it may hold words), p7bad unreadable. makeProject(dir) writes it; noModel(dir) drops its model.
+// Microsoft's catalog does not list, a running visual calculation, wide tables, long legends, a title given by a column
+// and one by a report measure the twin cannot translate; pages drawn on a picture (PNGs made here): p5pic flipped,
+// p6words asked (it may hold words), p7bad unreadable. makeProject(dir) writes it; noModel(dir) drops its model.
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
@@ -57,6 +58,8 @@ const MORE = [
   box('longLegend', 700, 940, 220, 140, 21000, { visualType: 'donutChart', query: qs({ Y: [mea(S, 'Total Sales', 'Total sales of the whole region'), mea(S, 'Orders', 'Total sales of the whole period')] }), objects: { legend: obj({ show: L('true'), position: Q('Top'), fontSize: L('12D') }) } }),
   box('legendTitle', 940, 940, 200, 140, 22000, { visualType: 'pieChart', query: qs({ Category: [col(S, 'Region', 'The region where each of the orders was sold')], Y: [mea(S, 'Total Sales')] }), objects: { legend: obj({ show: L('true'), position: Q('Right') }) } }),
   box('colTitle', 1200, 720, 300, 160, 24000, { visualType: 'clusteredColumnChart', query: qs({ Category: [col(S, 'Region')], Y: [mea(S, 'Total Sales')] }), visualContainerObjects: { title: obj({ show: L('true'), text: { expr: { Column: { Expression: { SourceRef: { Entity: S } }, Property: 'Region' } } } }) } }),
+  box('yearTitle', 1520, 720, 300, 160, 25000, { visualType: 'clusteredBarChart', query: qs({ Category: [col(S, 'Product')], Y: [mea(S, 'Orders')] }), visualContainerObjects: { title: obj({ show: L('true'), text: { expr: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: S } }, Property: 'Title: Year' } } } }) } }),
+  box('narrowTbl', 1180, 940, 110, 120, 26000, { visualType: 'tableEx', query: qs({ Values: [col(S, 'Region', 'The region of the sale as it is named'), col(S, 'Product', 'The product sold in that region of sales'), mea(S, 'Total Sales', 'Total sales in the whole period chosen')] }) }),
   box('padBtn', 1700, 900, 200, 40, 23000, { visualType: 'actionButton', objects: { text: [{ properties: { show: L('true') } }, { properties: { text: Q('  Back to start  ') }, selector: { id: 'default' } }] }, visualContainerObjects: { visualLink: obj({ show: L('true'), type: Q('PageNavigation'), navigationSection: Q('p1overview') }) } }),
 ];
 
@@ -80,6 +83,9 @@ export function makeProject(dir) {
       objects: { background: obj({ image: { image: { name: Q(file), url: { expr: { ResourcePackageItem: { PackageName: 'RegisteredResources', PackageType: 1, ItemName: file } } }, scaling: Q('Normal') } }, transparency: L('0D') }) } });
     put(path.join(P, id, 'visuals/c' + id + '/visual.json'), box('c' + id, 600, 300, 300, 160, 1000, { visualType: 'card', query: qs({ Values: [mea(S, 'Orders')] }) })); });
   const pages = JSON.parse(fs.readFileSync(path.join(P, 'pages.json'), 'utf8')); pages.pageOrder.push('p4more', 'p5pic', 'p6words', 'p7bad'); put(path.join(P, 'pages.json'), pages);
+  // a title measure of the report that builds its text with FORMAT (the twin cannot translate it)
+  put(path.join(R, 'definition/reportExtensions.json'), { $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension',
+    entities: [{ name: S, measures: [{ name: 'Title: Year', dataType: 'Text', expression: '"Sales in " & FORMAT ( TODAY (), "yyyy" )' }] }] });
   const rp = path.join(R, 'definition/report.json'), rj = JSON.parse(fs.readFileSync(rp, 'utf8'));
   const items = ((rj.resourcePackages || []).find((p) => p.name === 'RegisteredResources') || {}).items;
   if (items) ['bands.png', 'words.png', 'bad.png'].forEach((n) => items.push({ name: n, path: n, type: 'Image' })); put(rp, rj);
