@@ -4,6 +4,7 @@
 // the shared renderer (assets/js/page-preview.js), from the twin's own build (planTwin's buildTwin / languageCopy, the
 // objects writeTwin writes): no second layout.
 //   V1-1  the separate twin's page: one figure per Arabic report page
+//   V1-8  (0.3.2 TP1) the twin's and the copy's tooltip pages drawn after their report pages, each box the written one
 //   V1-2  the copy's page: each English page beside its Arabic page, labelled
 //   V1-3  every svg direction="ltr" inside the rtl page; the placeholders note
 //   V1-4  each drawn box is the written visual.json's box (after approve + write); the Arabic pages mirrored
@@ -46,8 +47,11 @@ const w = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARC
 // the approval page of a plan (html, unescaped for reading), and its figures: { caption, svg, boxes: [{ x, y, w, h, kind }] }
 const pageOf = async (pid) => { const n = links().length; await w.call('approve_plan', { planId: pid }); const url = await linkAt(n); return { url, raw: url ? await req(url, 'GET') : '' }; };
 const approve = async (url, pid) => { if (url) { await req(url, 'POST', 'decision=approve'); await w.call('approve_plan', { planId: pid }); } };
-const figures = (raw) => [...String(raw).matchAll(/<figure[^>]*>([\s\S]*?)<\/figure>/g)].map((m) => {
-  const svg = (m[1].match(/<svg[\s\S]*?<\/svg>/) || [''])[0], cap = unesc(((m[1].match(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/) || ['', ''])[1]).replace(/<[^>]+>/g, ''));
+// (0.3.2 TP1, D-1105-17) figures(raw): the report pages' figures; tipFigures(raw): the tooltip pages', drawn after them
+const tipIds = (dir) => (fs.existsSync(dir) ? rd(path.join(dir, 'definition/pages/pages.json')).pageOrder.filter((id) => rd(path.join(dir, 'definition/pages', id, 'page.json')).type === 'Tooltip') : []);
+const tipFigures = (raw) => figures(raw, true);
+const figures = (raw, tips) => [...String(raw).matchAll(/<figure([^>]*)>([\s\S]*?)<\/figure>/g)].filter((m) => /class="tip"/.test(m[1]) === !!tips).map((m) => m[2]).map((m1) => {
+  const svg = (m1.match(/<svg[\s\S]*?<\/svg>/) || [''])[0], cap = unesc(((m1.match(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/) || ['', ''])[1]).replace(/<[^>]+>/g, ''));
   const boxes = [...svg.matchAll(/<g class="v" data-i="(\d+)" data-kind="([a-z]+)"[^>]*><rect class="box" x="(-?[\d.]+)" y="(-?[\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)].map((b) => ({ i: +b[1], kind: b[2], x: +b[3], y: +b[4], w: +b[5], h: +b[6] }));
   const vb = (svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/) || []).slice(1).map(Number);
   return { caption: cap, svg, boxes, W: vb[0], H: vb[1] };
@@ -112,6 +116,8 @@ try {
     chk(() => F1.length === REPORT.length && !bad.length, () => `V1-4a. each drawn box of the twin is the written visual.json's box: ${bad.join(' ; ')}`);
     // mirrored: most drawn Arabic boxes are an English box mirrored (x -> W - x - w)
     const mir = REPORT.map((p, i) => { const E = written(ORIG, p).map((b) => key({ x: W0 - b.x - b.w, y: b.y, w: b.w, h: b.h })), D = (F1[i] || { boxes: [] }).boxes; return D.length ? D.filter((b) => E.includes(key(b))).length / D.length : 0; });
+    const T1 = tipFigures(A1.raw), ti1 = tipIds(TWIN);
+    chk(() => ti1.length && T1.length === ti1.length && ti1.every((id, i) => sameBoxes(T1[i].boxes, written(TWIN, id))), () => `V1-8a. (TP1) each tooltip page of the twin drawn after its report pages, every box the written one: ${T1.length} pictures, ${ti1.length} written; ${ti1.map((id, i) => (T1[i] ? JSON.stringify(diffBoxes(T1[i].boxes, written(TWIN, id))) : 'no figure')).join(' ; ')}`);
     chk(() => mir.length && mir.every((r) => r >= 0.5), () => `V1-4b. the Arabic pages are drawn mirrored (share of boxes that are an English box mirrored): ${mir.map((r) => r.toFixed(2))}`);
   }
 
@@ -131,6 +137,8 @@ try {
     const seq = REPORT.flatMap((p) => [p, arOf[p]]);
     const bad = seq.map((p, i) => (F2[i] && sameBoxes(F2[i].boxes, written(COPY, p)) ? null : `${p}: ${JSON.stringify(F2[i] ? diffBoxes(F2[i].boxes, written(COPY, p)) : 'no figure')}`)).filter(Boolean);
     chk(() => F2.length === seq.length && !bad.length, () => `V1-4c. each drawn box of the copy (English and Arabic pages, the language buttons too) is the written box: ${bad.join(' ; ')}`);
+    const T2 = tipFigures(A2.raw), ti2 = tipIds(COPY);
+    chk(() => ti2.length && T2.length === ti2.length && ti2.every((id, i) => sameBoxes(T2[i].boxes, written(COPY, id))), () => `V1-8b. (TP1) each tooltip page of the copy (English and Arabic) drawn after the pairs, every box the written one: ${T2.length} pictures, ${ti2.length} written; ${ti2.map((id, i) => (T2[i] ? JSON.stringify(diffBoxes(T2[i].boxes, written(COPY, id))) : 'no figure')).join(' ; ')}`);
     const btn = F2.map((f) => f.boxes.filter((b) => b.kind === 'button').length), wbtn = seq.map((p) => written(COPY, p).filter((b) => b.type === 'actionButton').length);
     chk(() => F2.length && btn.every((n, i) => n === wbtn[i]) && seq.every((p, i) => written(ORIG, REPORT[Math.floor(i / 2)]).filter((b) => b.type === 'actionButton').length + 1 === written(COPY, p).filter((b) => b.type === 'actionButton').length),
       () => `V1-4d. each page draws its buttons, its language button with them: drawn ${btn}, written ${wbtn}`);

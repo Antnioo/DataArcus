@@ -69,7 +69,8 @@ const s = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARC
 const approve = async (id) => { const n = links().length; await s.call('approve_plan', { planId: id }); for (let k = 0; k < 100 && links().length <= n; k++) await sleep(50);
   const html = await req(links()[n]); await req(links()[n], 'decision=approve'); await s.call('approve_plan', { planId: id }); return html; };
 // the approval page's preview figures: each picture behind a page (its bytes) and the cards' fill opacity
-const figures = (html) => [...html.matchAll(/<svg[^>]*role="img"[\s\S]*?<\/svg>/g)].map((m) => ({ img: (/<image[^>]+href="data:image\/png;base64,([^"]+)"/.exec(m[0]) || [])[1] || null,
+// (0.3.2 TP1) the report pages' figures only: a tooltip page (figure class "tip") is drawn solid, as its page.json writes it
+const figures = (html) => [...html.replace(/<figure class="tip"[\s\S]*?<\/figure>/g, '').matchAll(/<svg[^>]*role="img"[\s\S]*?<\/svg>/g)].map((m) => ({ img: (/<image[^>]+href="data:image\/png;base64,([^"]+)"/.exec(m[0]) || [])[1] || null,
   ops: [...m[0].matchAll(/class="box"[^>]*fill-opacity="([0-9.]+)"/g)].map((x) => +x[1]) }));
 const twinOf = async (pbip, into) => {
   const src = String(pbip).split('\\').join('/'), o = into ? { into } : {};

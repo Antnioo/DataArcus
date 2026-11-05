@@ -18,7 +18,7 @@
   sp2 10, sp4 5 unchanged; lint 0; check-agent-memory, check-modules, check-result-lines, changelog-words green.
 - **Red first:** A11 red on 4f8da4a7 first (e536a95f: approval-complete 68 checks, 9 failed); green on a8f43156.
 - **Changed on purpose:** sp23, sp44 (6 pages' hashes each), preview P-08, preview-match T1, sq13 R1-S3b,
-  approval window W-09/W-10 (below).
+  approval window W-09/W-10, twin-preview, bilingual-report B3e, glass-twin P1/P2 (below).
 - **State:** the change done, area runs green; then CI on this branch.
 - **Resume:** CI on `fix/0.3.2-tp1`, then "CI green: <url> on <sha>" here.
 
@@ -56,10 +56,13 @@
 | preview | 71 | 75 (P-08: one check per model, the tooltip pages counted apart) |
 | preview-match | 41 | 43 (T1a/T1b: one check each, the tooltip pictures) |
 | sq13 | 39 | 39 (R1-S3b: 2 report pages, then the tooltip pages) |
+| twin-preview | 23 | 25 (V1-8a/8b: each tooltip picture's boxes are the written tooltip page's, twin and copy) |
+| bilingual-report | 33 | 34 (B3f: the tooltip pages after the pairs, captioned) |
+| glass-twin | 28 | 28 (P1/P2 read the report pages' pictures; tooltip pages drawn solid, as written) |
 | approval window (test-approval) | 31 | 32 (W-09/W-10 count the report pages' pictures; one check: the tooltip pictures after them) |
 | sp23 / sp44 | 29 / 23 | 29 / 23 (re-recorded, below) |
 | sp1 / sp2 / sp4 | 11 / 10 / 5 | 11 / 10 / 5 (fixtures unchanged) |
-Area runs: safety 23 suites, arabic 17 suites, report (keep-going) green after sq13; website pbip 111, pv2 20;
+Area runs: safety 23 suites, arabic 17 suites, report (keep-going) green after sq13; twin, core: below; website pbip 111, pv2 20;
 test-site-config, lint 0, modules --strict, result-lines, changelog-words, agent-memory PASS.
 
 ## Changed on purpose
@@ -70,7 +73,7 @@ test-site-config, lint 0, modules --strict, result-lines, changelog-words, agent
   base's (all 6 "same as base once removed: true"; sp44's pages are sp23's bytes). Re-recorded with SP23_RECORD=1 and
   SP44_RECORD=1: in each fixture `pages.report-en`, `report-ar`, `report-cap`, `report-hostile`, `twin`, `copy`
   (sha256 and length); nothing else.
-- preview P-08, preview-match T1a/T1b, sq13 R1-S3b, approval window W-09/W-10 counted planPreview's or the page's pictures as report pages; they
+- preview P-08, preview-match T1a/T1b, sq13 R1-S3b, approval window W-09/W-10, twin-preview V1-1/2/4, bilingual-report B3e, glass-twin P1/P2 counted planPreview's or the page's pictures as report pages; they
   now count the report pages as before and check the tooltip pages apart (no expected number changed).
 
 ## CHANGELOG line
@@ -83,6 +86,8 @@ test-site-config, lint 0, modules --strict, result-lines, changelog-words, agent
   over the report at 100%, not scaled with the report page (that would draw it about 235 wide).
 - Report pages win the cap; tooltip pages fill what is left; each kind left out is counted in its own line.
 - The copy's tooltip pages are drawn one by one after the pairs (an English one in English), never as a pair.
+- A tooltip page is drawn solid, as its page.json writes it (a card-colour background, no picture), on a glass
+  report too; the glass look's picture and see-through cards stay on the report's pages.
 - No CSS rule added: a style attribute on the tooltip figure (CSP allows inline styles), so pages without tooltip
   pages keep their exact bytes (a first try with a CSS rule changed all 12 pages by 50 bytes).
 
