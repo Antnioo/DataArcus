@@ -1,0 +1,1934 @@
+{
+ "about": "FN1E: the whole output of summaryOf (with promptText and promptBox), checkReport and meaningOf for made-up inputs, recorded on integration/0.3.2 f6bf9fac before the split (test-0.3.2-fn1e.mjs). Never re-recorded to make a run pass.",
+ "linked": true,
+ "pins": {
+  "D report full": {
+   "sha": "6bc02f6772c0cae57b4dd39e3c2168d51b65a386b1f3812cb2cb87449a847b41",
+   "len": 13335
+  },
+  "D report without outputs": {
+   "sha": "2f849d8f003c23359cddc30181f3afed70e562fadf5f6305595fb90b3416641a",
+   "len": 11670
+  },
+  "D report without blankImages": {
+   "sha": "99368c4d56886cb205f81fdf442211c17e7242f7a55d84d7c4db51c32789ffd0",
+   "len": 13253
+  },
+  "D report without glassImages": {
+   "sha": "8eb060978bc7b536d772b31bf6886bd8bdcf9eb6b75e66b29234633709416562",
+   "len": 13253
+  },
+  "D report without bilingual": {
+   "sha": "be079d331986f08dd696ec88f6ab93624d094b90376b3984ef12437ccfe37b7e",
+   "len": 12252
+  },
+  "D report without preview": {
+   "sha": "d727d7991c52fcb7d5a1462d4d35e52682bbbffaf207d739987b5ef2c950e516",
+   "len": 13283
+  },
+  "D report without daxFunctions": {
+   "sha": "11cc50af5f2582492cf0f4350ac6ef865ecf22284b2c2c2157db2fdc180d49da",
+   "len": 12675
+  },
+  "D report without kinds": {
+   "sha": "5c9d1b266d16371dcbb3e7676eb6d7ad6db568d4adc6aec852672b86e784dee9",
+   "len": 12582
+  },
+  "D report without pagesWritten": {
+   "sha": "cc5fb3ef077cc3e79ea4b90210704952675dbb29b0e26e01e8905dbfc8051259",
+   "len": 12043
+  },
+  "D report without terminology": {
+   "sha": "d6a2359eb98a0ac58e5fb97b1d3d7c372ef84b9e2294b7d8d98b885df9b69200",
+   "len": 12941
+  },
+  "D report without gulfDates": {
+   "sha": "add34c01d133b75e5a65a10650985fc5a5db4f0704fcd733209def9f862da66d",
+   "len": 13245
+  },
+  "D report without notTranslated": {
+   "sha": "d7da44cf25600bf7e77d44719c9f5b05e750e74b3c1e94fb30f40ae4fd7bbc9e",
+   "len": 13246
+  },
+  "D report without waterfallRtl": {
+   "sha": "fb2320ffea1fb36b95af82611fc4da47dc4c261cf8bb2a4623de8c38f20ae589",
+   "len": 13176
+  },
+  "D report without waterfalls": {
+   "sha": "6bc02f6772c0cae57b4dd39e3c2168d51b65a386b1f3812cb2cb87449a847b41",
+   "len": 13335
+  },
+  "D report without flipCards": {
+   "sha": "25e2bd7952824fff69263086346cfd9da30345bde0c057a683079290440cfc66",
+   "len": 12293
+  },
+  "D report without statusIcons": {
+   "sha": "53fdc7c2b1a775721e99963bceb7873221f10a88950be42f93820cadbab7ad9f",
+   "len": 12828
+  },
+  "D report without colours": {
+   "sha": "d03b6313cab58afd619351ab5b1187e1ed68fc9b302221b0fd9f58ad1acb6675",
+   "len": 13035
+  },
+  "D report without look": {
+   "sha": "69fd38820193f98b444448c3fd3ad22402d5b3d82cf08620d3ba33068194588b",
+   "len": 13148
+  },
+  "D report without metricSwitcher": {
+   "sha": "edf49ce1b3839b6a032fe6ed29c905050b569a3a4fe2b1a1c1276abc92380861",
+   "len": 12829
+  },
+  "D report without barThickness": {
+   "sha": "e4a50333f224c4871b0f773ed18451e0a58d54177c1914c2e15f72117d49c520",
+   "len": 13213
+  },
+  "D report without gallery": {
+   "sha": "b6b8466dd5ae0e1ffe254005a000d7229567553212a4b1a604378fd474ebff7c",
+   "len": 12957
+  },
+  "D report without alreadyThere": {
+   "sha": "5c47fe37754b5083c13739d00c3f6c8a2af9f5adcad81d10922d6da9a7548064",
+   "len": 13155
+  },
+  "D report without customVisualsShown": {
+   "sha": "0338eec6cbe6927a4cd456a6df89e41d7fcf53325bf56ac8c0a1d17beac02e01",
+   "len": 12917
+  },
+  "D report without exact": {
+   "sha": "2cef246b2e84cf37abb8d5c2f9695b67f7bdb15227b986d4a6e11056d73ffb33",
+   "len": 13169
+  },
+  "D report without writesAr": {
+   "sha": "127a4c28e8e9c38ff64ef8ac31c0929d62980925a96555bb75e7787a7787451c",
+   "len": 13307
+  },
+  "D report without outputsAt": {
+   "sha": "4c9000c2fa4e2de791bef7e6f1e258b382df3ff5895a195ee1024eaa5026427a",
+   "len": 13315
+  },
+  "D report without pins.create_report.name": {
+   "sha": "233603e26c0fb5f1c9697321cd63e5d6101df04c470d6ab275a8592a9613dabd",
+   "len": 13166
+  },
+  "D report without pins.create_report.title": {
+   "sha": "03516fb531af51bf6bede186a8307476af74ea0cda2511b25d2143c04f5e7acb",
+   "len": 13307
+  },
+  "D report without pins.create_report.lang": {
+   "sha": "6bc02f6772c0cae57b4dd39e3c2168d51b65a386b1f3812cb2cb87449a847b41",
+   "len": 13335
+  },
+  "D report without pins.create_report.page": {
+   "sha": "1a53666f575a0cc744e6e3cd6c7b100c09d53938b3bdf46537deba0314e23049",
+   "len": 13308
+  },
+  "D report without pins.create_report.customVisualsFrom": {
+   "sha": "faedb7c434defa540ceee4be99f6be3b06917251720f3ddecd5190a3fab6f7f2",
+   "len": 13272
+  },
+  "D report without pins.create_report.design": {
+   "sha": "81742b89add5be3d5550dd085422a5b2c9f6101452a2af88e8900ef041eca915",
+   "len": 12582
+  },
+  "D report without pins.create_report.secondPage": {
+   "sha": "800e5a3d4bf5ca827d6621343f8ebfebe35a3675a8ffd4bd6f4308d0ff7262c2",
+   "len": 13355
+  },
+  "D report without pins.create_report.fields": {
+   "sha": "383f448ebb5ed7bfd259871fa664c674c5ef115bddf823704e67e83957c3fd33",
+   "len": 12775
+  },
+  "D report without pins.create_report.displayNames": {
+   "sha": "4b10e1fb590c41ef945c533e59834f66b6acdd010e6c529c4f1e5e2ae4134728",
+   "len": 13237
+  },
+  "D report without pins.create_report.focus": {
+   "sha": "6bc02f6772c0cae57b4dd39e3c2168d51b65a386b1f3812cb2cb87449a847b41",
+   "len": 13335
+  },
+  "D report without pins.create_report.tables": {
+   "sha": "6bc02f6772c0cae57b4dd39e3c2168d51b65a386b1f3812cb2cb87449a847b41",
+   "len": 13335
+  },
+  "D report without pins.create_report.gallery": {
+   "sha": "9e17b50c36952e0744b799a90ea439efe17063a9864974bcc0988a08ae308cef",
+   "len": 13292
+  },
+  "D report without pins.create_report.theme": {
+   "sha": "6c19f6b146c6bf3b8d4f16529c3d6fe812fa8332c5c648ea3a15cff414913778",
+   "len": 13307
+  },
+  "D report without pins.create_report.logo": {
+   "sha": "2182e7fe3967854f4b7cddd78d0639fc3b35ff7f4d89dc73095cea34a0c8fb26",
+   "len": 13315
+  },
+  "D report without pins.create_report.colors": {
+   "sha": "dc78c14e07d65328b1f877c0e089d1aa0242fa3f29c2fbe33e4f8c984bc1a8ca",
+   "len": 13267
+  },
+  "D report without pins.create_report.chartAxes": {
+   "sha": "e454066eff1ac97db5e7847b691ae48864e84933c8047888276cd1a29a7292dc",
+   "len": 13314
+  },
+  "D report without pins.create_report.kpiValues": {
+   "sha": "a2c1f814ed744cc231f7a20822d3f5850882bc0f0acc082e09e4f40091066ec9",
+   "len": 13267
+  },
+  "D report without pins.create_report.noDataMessage": {
+   "sha": "af009aba30924e7111e07f0fdf54858c8fd99e044f1a265bc532480802b575ab",
+   "len": 13287
+  },
+  "D report without pins.create_report.slidePanel": {
+   "sha": "e5b0109160cf432cb050055a75ca8e0100c63d02ace2a0ee3c081747fc22032d",
+   "len": 13297
+  },
+  "D report without pins.create_report.smoothLines": {
+   "sha": "a6fa2a6fdd41acd0733a4a2128a1fb827f148fbb53d8a8ad7abb7adba979efac",
+   "len": 13288
+  },
+  "D report without pins.create_report.slicerStyle": {
+   "sha": "039c3f31cb36f137c32f2332035dc2f654b3c9e9f57f155026d611867852b4f0",
+   "len": 13211
+  },
+  "D report without pins.create_report.grid": {
+   "sha": "977fea5903039e0b646058ebd15ee372c7165613233c03e064035ab26a1d01c8",
+   "len": 13300
+  },
+  "D report without pins.create_report.flipCards": {
+   "sha": "fa31edb0f317e6272c21db38e714d475c8a6d30459b85213db15b93b56951c2b",
+   "len": 13306
+  },
+  "D report without pins.create_report.waterfallRtl": {
+   "sha": "6bc02f6772c0cae57b4dd39e3c2168d51b65a386b1f3812cb2cb87449a847b41",
+   "len": 13335
+  },
+  "D report without pins.create_report.statusIcons": {
+   "sha": "ff0abd905ef891522fe0b458ac0d2681fa5f920318fe6fe7fac47ce10f0cf8e3",
+   "len": 13273
+  },
+  "D report without pins.create_report.daxFunctions": {
+   "sha": "a643606a12d9bba695fa6b232925617df784ed19d481486d06be2b1a58386c52",
+   "len": 13304
+  },
+  "D report without pins.create_report.sharedAxes": {
+   "sha": "8d01c4ae65430eca62d2778c3b4defa4131914613ee26df888072cb551f82f82",
+   "len": 13206
+  },
+  "D report without pins.create_report.font": {
+   "sha": "5a952d90e21fadb6b011e721bf9722ca847fcdec772b6f37319033421da2619d",
+   "len": 13290
+  },
+  "D report without pins.create_report.rtl": {
+   "sha": "c8a9d25eeaacd77b5f08f90302a16546cd39e2a4bdd337d4e3eebfe6f47dee57",
+   "len": 13312
+  },
+  "D report without pins.create_report.dir": {
+   "sha": "108c092a99d4c4a4edc193e982ddf6fde9b02bb48ffdd39988f68a4e74ea4810",
+   "len": 13307
+  },
+  "D report without pins.create_report.pageFilters": {
+   "sha": "f1c1bb5809838c077aeb2476745ab9ad46cc80b685192a57c536f78e091959ea",
+   "len": 13305
+  },
+  "D report without pins.create_report.text": {
+   "sha": "58070590484c9a3fd27c2397ab14675f431b1def8ffdb846386f93fbe26fdf19",
+   "len": 13287
+  },
+  "D report without pins.create_report.subtitles": {
+   "sha": "0848267971ee94f115722e4d5e5ce6ec43d137fb98dc15d757e42eab2a407bc5",
+   "len": 13309
+  },
+  "D report without pins.create_report.svgColumns": {
+   "sha": "69c271266baa6374b8f42072fa201b530cd80e8d84ba0a9c810f3824b32dcde2",
+   "len": 13297
+  },
+  "D report without pins.create_report.svgCards": {
+   "sha": "143f93d1c190b06b74f49eb4499f97752f861189c4033d828a24bf0d417445d9",
+   "len": 13285
+  },
+  "D report Arabic": {
+   "sha": "34660066067c108247aea5b6e3a0eb1f443eb958e3ee366e20c70d4c7e48a605",
+   "len": 14105
+  },
+  "D report Arabic without outputs": {
+   "sha": "919770cee320ce2a4741bca941b930a0906c23a08495c5b92afa54328f3712dd",
+   "len": 12440
+  },
+  "D report Arabic without blankImages": {
+   "sha": "a3a930bcbc1c8615423d27fb70a2cb55a7f671f52db5ee62a9b2442bfe48c973",
+   "len": 14023
+  },
+  "D report Arabic without glassImages": {
+   "sha": "b2eb7c98436bb19605a350dbada3a8ca135a50a0e540b53e4d3f4d8f776f0bdc",
+   "len": 14023
+  },
+  "D report Arabic without bilingual": {
+   "sha": "f66e85f85d71ada78a156a7cb0c84cf552ac8693aa299798d48a9f0f55f48e5a",
+   "len": 13020
+  },
+  "D report Arabic without preview": {
+   "sha": "0245e797e0e6229cda1f758ce0c31b27d5f13d3b63be7a56f287845f40ebfc16",
+   "len": 14053
+  },
+  "D report Arabic without daxFunctions": {
+   "sha": "b13b3af522f69a08d8e032215ea339c7c1c3ac567f13cef65b4df880a0cfb8de",
+   "len": 13455
+  },
+  "D report Arabic without kinds": {
+   "sha": "569ccf57bea68a060e21c4752196bb2c7c73aac060226d1c2161ccb0f424ce6c",
+   "len": 12956
+  },
+  "D report Arabic without pagesWritten": {
+   "sha": "b1f4f8a0c16faa5dcb86c25756f578b4850410fab69e1e1bc9d06d991d5c93c0",
+   "len": 12721
+  },
+  "D report Arabic without terminology": {
+   "sha": "4269cbac52fa8aed9b48d69794380e59262c857d55f2c5b541340d4c4ebd4ad5",
+   "len": 13711
+  },
+  "D report Arabic without gulfDates": {
+   "sha": "331004b1da4e7a54ed4510a927ca2ecbeae145a9d6263815d2a5ca0ac4441c57",
+   "len": 14015
+  },
+  "D report Arabic without notTranslated": {
+   "sha": "4dcd31603fc85c086a50055b018580ec9879a22166714e5e810525ffeb063ddc",
+   "len": 14016
+  },
+  "D report Arabic without waterfallRtl": {
+   "sha": "59633edca9359f60808ec5429b2687bf1ccfc3c51c87cf8a4f2cd655a7a7ae5f",
+   "len": 13946
+  },
+  "D report Arabic without waterfalls": {
+   "sha": "34660066067c108247aea5b6e3a0eb1f443eb958e3ee366e20c70d4c7e48a605",
+   "len": 14105
+  },
+  "D report Arabic without flipCards": {
+   "sha": "0e658544cd9b1ef999a2d810c89cf8c48d9c32a7dfe1826e62b0ca0f5bff2b8b",
+   "len": 13063
+  },
+  "D report Arabic without statusIcons": {
+   "sha": "c9b56a28c768ef460f01a292761a478185e7a2e3a3acb4c67b273909ed683fad",
+   "len": 13598
+  },
+  "D report Arabic without colours": {
+   "sha": "e0552a5a45340b1db77d5f3e74754bf64de09a8c7a0243e5209359f534b01b2b",
+   "len": 13805
+  },
+  "D report Arabic without look": {
+   "sha": "68c44b2b66b408905c7eac2de21e1c17172bfc7487608e8f53a65f6f37ab1375",
+   "len": 13918
+  },
+  "D report Arabic without metricSwitcher": {
+   "sha": "b2c37818626db813e767781179f5a232798f3714d0454b675369d0307d76fba4",
+   "len": 13599
+  },
+  "D report Arabic without barThickness": {
+   "sha": "4db1b5f87825ba58ecfd926e431328749d2f1f1e6e41592ce943d9a9fd4b8b35",
+   "len": 13983
+  },
+  "D report Arabic without gallery": {
+   "sha": "22a2f0aaa7df4b1cb3cc0c4fa12f784cdb3892e76b93271328f21a8184508c1f",
+   "len": 13727
+  },
+  "D report Arabic without alreadyThere": {
+   "sha": "0ee3f8c50a1693ed943309f0b9ce9bf4120976ce639126cb66c7f716274f8c7e",
+   "len": 13925
+  },
+  "D report Arabic without customVisualsShown": {
+   "sha": "480239c4cc8ec589377f42379ec1f391cdf5281dff75679b9bcec56fec323253",
+   "len": 13687
+  },
+  "D report Arabic without exact": {
+   "sha": "2aeda7a78b244f52da8c1fd7ff14d5a57a95c01077664f3ea5114d993c13a2bc",
+   "len": 13939
+  },
+  "D report Arabic without writesAr": {
+   "sha": "083de4a1207adbdeab0792c664a6b0d7298f55098aa1c893cb9244ed7be4a31d",
+   "len": 14077
+  },
+  "D report Arabic without outputsAt": {
+   "sha": "dcf763324e86c8aa329ab549155bbbb046eb72034ba6fba2a2451f0048a1a196",
+   "len": 14085
+  },
+  "D report Arabic without pins.create_report.name": {
+   "sha": "19cf76fcd9c156622cbb938d9b3a220b78a23ce58aa3794785d20a280c4b3190",
+   "len": 13936
+  },
+  "D report Arabic without pins.create_report.title": {
+   "sha": "a4fa9598a626a053f2c392d37d4105d10e8fc6a13ea1ffb082dead8159eb1200",
+   "len": 14077
+  },
+  "D report Arabic without pins.create_report.lang": {
+   "sha": "6bc02f6772c0cae57b4dd39e3c2168d51b65a386b1f3812cb2cb87449a847b41",
+   "len": 13335
+  },
+  "D report Arabic without pins.create_report.page": {
+   "sha": "68ef1869787cc4fe9067d932a5e7f9226ac970bbebb2967d9ce84e7edf1ef5f1",
+   "len": 14078
+  },
+  "D report Arabic without pins.create_report.customVisualsFrom": {
+   "sha": "ca2180156458b904df4e789f713b28e24b63d802ef8f0fc3eb44c8775fcbdc89",
+   "len": 14042
+  },
+  "D report Arabic without pins.create_report.design": {
+   "sha": "1f921e28f11174462a48c7c16144ff1c0d5293459de69e06deec99cea4d88d46",
+   "len": 12956
+  },
+  "D report Arabic without pins.create_report.secondPage": {
+   "sha": "c45ef7bb925b1d1ed80cd8c3eace5a2f23c57ec4132ef2350ca9c097c6fc13f3",
+   "len": 14125
+  },
+  "D report Arabic without pins.create_report.fields": {
+   "sha": "6c10e7e4e6ccd379030723cb48b8e5159f5938c88fa0aacb47c3bed40153a275",
+   "len": 13545
+  },
+  "D report Arabic without pins.create_report.displayNames": {
+   "sha": "5eb34a448d2895832bbc0072cd731ca745a4e6f75c999aedee3866ad81cfe836",
+   "len": 14007
+  },
+  "D report Arabic without pins.create_report.focus": {
+   "sha": "34660066067c108247aea5b6e3a0eb1f443eb958e3ee366e20c70d4c7e48a605",
+   "len": 14105
+  },
+  "D report Arabic without pins.create_report.tables": {
+   "sha": "34660066067c108247aea5b6e3a0eb1f443eb958e3ee366e20c70d4c7e48a605",
+   "len": 14105
+  },
+  "D report Arabic without pins.create_report.gallery": {
+   "sha": "ef476b78f4c690afe726e6c3d69d92ae7b510b93b9e90c102ff9c1b1bf82fd5f",
+   "len": 14062
+  },
+  "D report Arabic without pins.create_report.theme": {
+   "sha": "a2aa01878d344f1604ad5f216f0280f85b31a032ca5d91ccfa9add5fd50425a9",
+   "len": 14077
+  },
+  "D report Arabic without pins.create_report.logo": {
+   "sha": "903642ccba731f21d941f2e175cf6c70df4fe8206fe093b0557b81edf998976e",
+   "len": 14085
+  },
+  "D report Arabic without pins.create_report.colors": {
+   "sha": "5d8dbbcd09dd1140cf072dd9131a438d56d307e36c6f4d36af5e7e097e47f794",
+   "len": 14037
+  },
+  "D report Arabic without pins.create_report.chartAxes": {
+   "sha": "a1628c9443c72ea42d7261981f8725982bec2e358c965dd882ff1df982ede55c",
+   "len": 14084
+  },
+  "D report Arabic without pins.create_report.kpiValues": {
+   "sha": "5bfbd7b258e3eb6e11bfcaef4d196ca42178730d7ca4b300b853d34cb4e7a993",
+   "len": 14037
+  },
+  "D report Arabic without pins.create_report.noDataMessage": {
+   "sha": "deb86a50112ea1647ea452abeced13ded328a80f1fb5852076e2793f31fc0ce0",
+   "len": 14057
+  },
+  "D report Arabic without pins.create_report.slidePanel": {
+   "sha": "77e8e8e0b9ea3ddc549ee878bc15168033cd8e36847cc942191562d060bb94f6",
+   "len": 14067
+  },
+  "D report Arabic without pins.create_report.smoothLines": {
+   "sha": "ab88fc78946427319b058a882fb9cf78ed8ec303ef28165afbdd6d119a52340b",
+   "len": 14058
+  },
+  "D report Arabic without pins.create_report.slicerStyle": {
+   "sha": "1ca82879ffb0249d0790de2b3a28e562552871358d65b9fdeda3713976f4f3a5",
+   "len": 13981
+  },
+  "D report Arabic without pins.create_report.grid": {
+   "sha": "52b1abb300c7c156a88dcaebe03d16f0a8afe69c978797f7ddeb063cd22bf70c",
+   "len": 14070
+  },
+  "D report Arabic without pins.create_report.flipCards": {
+   "sha": "3669f90651a124c936dbf3715c494165ef81013ba6aa05b0a01dcaa18fb822f5",
+   "len": 14076
+  },
+  "D report Arabic without pins.create_report.waterfallRtl": {
+   "sha": "14b5ed326f0852947759a14b46d8086b646a3a921d163407ef2b0a8360ec1a42",
+   "len": 13818
+  },
+  "D report Arabic without pins.create_report.statusIcons": {
+   "sha": "6ba678ff4f298727cd7f9f6617f72192a0a5ed4bb033dde919171b82dc16d24a",
+   "len": 14043
+  },
+  "D report Arabic without pins.create_report.daxFunctions": {
+   "sha": "f23f6f5a1175656deb139dd412ddb4aafa778420ba61494df0f953eee3170060",
+   "len": 14074
+  },
+  "D report Arabic without pins.create_report.sharedAxes": {
+   "sha": "0f406de8b92a11f3c758a769a1662a7abed7f42511d2c9772d310059c4a3409f",
+   "len": 13976
+  },
+  "D report Arabic without pins.create_report.font": {
+   "sha": "f5e08826436224beadf8056d0a568fc54b6fffc12ff04cd323d011258a74e407",
+   "len": 14060
+  },
+  "D report Arabic without pins.create_report.rtl": {
+   "sha": "89434f39343e19f7dbe00934fa707ff9e7e3be80aac80f2d9cc0975e17ab104a",
+   "len": 14082
+  },
+  "D report Arabic without pins.create_report.dir": {
+   "sha": "7cc476f8f4769290e1210b7d4b3ce309a2252521124653031253eb507b548e11",
+   "len": 14077
+  },
+  "D report Arabic without pins.create_report.pageFilters": {
+   "sha": "51a180c6ee6f772a076cd46047a8436f5c783c3def894b8acfb2b7dbd59fc8aa",
+   "len": 14075
+  },
+  "D report Arabic without pins.create_report.text": {
+   "sha": "b2374143751341b64d5ac3b88bd23ce71ea0eef0f685f47e77d97b120ef5991b",
+   "len": 14057
+  },
+  "D report Arabic without pins.create_report.subtitles": {
+   "sha": "c16f9e4673c349f9d16251148b6d3db613c6d5a414164d0e193f4a39176c3377",
+   "len": 14079
+  },
+  "D report Arabic without pins.create_report.svgColumns": {
+   "sha": "aa118079d72b5960e8b24f003a124e6798d7ef714b22c07ffda84debca1953b2",
+   "len": 14067
+  },
+  "D report Arabic without pins.create_report.svgCards": {
+   "sha": "c92258b6ea5439b9fb27b8234ebb437ad8c1029383d7f06f0b71dbff6ac6f01d",
+   "len": 14055
+  },
+  "D report name the same as written": {
+   "sha": "233603e26c0fb5f1c9697321cd63e5d6101df04c470d6ab275a8592a9613dabd",
+   "len": 13166
+  },
+  "D report Arabic name the same as written": {
+   "sha": "19cf76fcd9c156622cbb938d9b3a220b78a23ce58aa3794785d20a280c4b3190",
+   "len": 13936
+  },
+  "D report no title, a name": {
+   "sha": "03516fb531af51bf6bede186a8307476af74ea0cda2511b25d2143c04f5e7acb",
+   "len": 13307
+  },
+  "D report Arabic no title, a name": {
+   "sha": "a4fa9598a626a053f2c392d37d4105d10e8fc6a13ea1ffb082dead8159eb1200",
+   "len": 14077
+  },
+  "D report no page, layout page": {
+   "sha": "1a53666f575a0cc744e6e3cd6c7b100c09d53938b3bdf46537deba0314e23049",
+   "len": 13308
+  },
+  "D report Arabic no page, layout page": {
+   "sha": "68ef1869787cc4fe9067d932a5e7f9226ac970bbebb2967d9ce84e7edf1ef5f1",
+   "len": 14078
+  },
+  "D report customVisualsFrom empty": {
+   "sha": "84c99bbc058bdf85d42f4ee42e64aa53a1c15feb30ba130524435716f61c112a",
+   "len": 13315
+  },
+  "D report Arabic customVisualsFrom empty": {
+   "sha": "ae8da45224d14f3d3d86f1f2bfa9478968ba761bc8cd393eda2e7d58d0820d22",
+   "len": 14085
+  },
+  "D report header undefined": {
+   "sha": "27d9725c770708bd7a4aa2c72b2b8c0a0ab83e1505a16ee0b7e0f30e7f8060c3",
+   "len": 13336
+  },
+  "D report Arabic header undefined": {
+   "sha": "1055c9516cf07c38125e903c6bb404dfc03ceb7e4c2ed4230180358b0d0b8334",
+   "len": 14106
+  },
+  "D report filters none": {
+   "sha": "bf67b026b84c9b1fdb78d0a1574c8fe40a4bd7ee5b5806bb61fe9b5c22600fa4",
+   "len": 13335
+  },
+  "D report Arabic filters none": {
+   "sha": "ce4f2fe278e4957ecadeb73b20466f65a4b670c1ced3bca8c340256bf9409d38",
+   "len": 14105
+  },
+  "D report preset unknown": {
+   "sha": "68ecd3a26407a1204717308fcbb282e9c36ef7acf1cc611751623309f015b1d3",
+   "len": 13320
+  },
+  "D report Arabic preset unknown": {
+   "sha": "5c90267e19cd02254610c0196210b899a73d2777418ea29b0a4593baf7c71142",
+   "len": 14090
+  },
+  "D report kpis undefined": {
+   "sha": "4e7cafa87b7cc7b661f6e730e25d1feeddf316b9ba475e99393999a7386071b7",
+   "len": 13317
+  },
+  "D report Arabic kpis undefined": {
+   "sha": "6f79e254e7cf772ce4b5a8841e113623af6eec63700f1f79b73f45916ede4ba9",
+   "len": 14087
+  },
+  "D report secondPage true": {
+   "sha": "800e5a3d4bf5ca827d6621343f8ebfebe35a3675a8ffd4bd6f4308d0ff7262c2",
+   "len": 13355
+  },
+  "D report Arabic secondPage true": {
+   "sha": "c45ef7bb925b1d1ed80cd8c3eace5a2f23c57ec4132ef2350ca9c097c6fc13f3",
+   "len": 14125
+  },
+  "D report fields all seven": {
+   "sha": "cbb77596316bb845827ba0d31fa7969e86744ae2518d00d922ca5eb124e30298",
+   "len": 13133
+  },
+  "D report Arabic fields all seven": {
+   "sha": "42d3f489d087e1db92ddf2e5a3107342466e5e54942e0b2ac80f36092e54c74b",
+   "len": 13903
+  },
+  "D report fields none": {
+   "sha": "383f448ebb5ed7bfd259871fa664c674c5ef115bddf823704e67e83957c3fd33",
+   "len": 12775
+  },
+  "D report Arabic fields none": {
+   "sha": "6c10e7e4e6ccd379030723cb48b8e5159f5938c88fa0aacb47c3bed40153a275",
+   "len": 13545
+  },
+  "D report displayNames empty": {
+   "sha": "4b10e1fb590c41ef945c533e59834f66b6acdd010e6c529c4f1e5e2ae4134728",
+   "len": 13237
+  },
+  "D report Arabic displayNames empty": {
+   "sha": "5eb34a448d2895832bbc0072cd731ca745a4e6f75c999aedee3866ad81cfe836",
+   "len": 14007
+  },
+  "D report pages by hand": {
+   "sha": "5865f8874209c646f8a4419f210b828126733bdc0afefc108c1a34ae22309859",
+   "len": 13484
+  },
+  "D report Arabic pages by hand": {
+   "sha": "ce9b10a01fb663977eb8e5dd3e146575802c5b258522c46c66f1d076ee42832c",
+   "len": 14254
+  },
+  "D report chartColors solid": {
+   "sha": "afd5f47d35016820b67975a66fa7117ec3edddeabcd8917f7f9b77dc94e93840",
+   "len": 13251
+  },
+  "D report Arabic chartColors solid": {
+   "sha": "0cacfbc793e9f2b48970348b795481620bf978a7c0d24e3c24a9db8311a43e37",
+   "len": 14021
+  },
+  "D report chartColors gradient": {
+   "sha": "6bc02f6772c0cae57b4dd39e3c2168d51b65a386b1f3812cb2cb87449a847b41",
+   "len": 13335
+  },
+  "D report Arabic chartColors gradient": {
+   "sha": "34660066067c108247aea5b6e3a0eb1f443eb958e3ee366e20c70d4c7e48a605",
+   "len": 14105
+  },
+  "D report gallery true": {
+   "sha": "3fc8a3611f5ad595ce16c1bcac2a661aefc0bfd1a355648f8093f932f44ab7a4",
+   "len": 13346
+  },
+  "D report Arabic gallery true": {
+   "sha": "f68060b3b24610ca38d0e383ea84f649f9dbba9770312a180039aeb4799b9bc1",
+   "len": 14116
+  },
+  "D report gallery false": {
+   "sha": "a206a09cc3a4cf71da7e5ed6c1e7bb9602ca9abad4ed29ccd487454cf28ddd0b",
+   "len": 13316
+  },
+  "D report Arabic gallery false": {
+   "sha": "6351cb0d72418a16780d5c4bc2b49527930ca4ead5fa3befb3842b28113e86d4",
+   "len": 14086
+  },
+  "D report smoothLines true": {
+   "sha": "0aa2d0ed09685a3d66820dc42014ebdcd492d770a90dcff4186d28b1b3411782",
+   "len": 13378
+  },
+  "D report Arabic smoothLines true": {
+   "sha": "d691915a86921e8f748c8eb78c82cb5734ecb7b688a4f25e93b9b6359549c0eb",
+   "len": 14148
+  },
+  "D report slicerStyle dropdown": {
+   "sha": "43cd3845ea2ea19a4e785f66aeb19acfc8c6fe1e2f1c2f76862d0955ab0850db",
+   "len": 13248
+  },
+  "D report Arabic slicerStyle dropdown": {
+   "sha": "730b77d7aa8828665371fae5eec9367a62315a647253bce093c14bc7539cfd5b",
+   "len": 14018
+  },
+  "D report grid solid": {
+   "sha": "c8e01b411ba06eb15bf621dc035ae4dbb174d676afb6fbeae1279636c094e119",
+   "len": 13329
+  },
+  "D report Arabic grid solid": {
+   "sha": "15865410395a7c56b55ef13d4a3626a23290191033625dd81c81d615b82f06ee",
+   "len": 14099
+  },
+  "D report grid other": {
+   "sha": "373a215b7ea6b1e0825177e8951a7c9fa616f4442d46c906161b59205944de9a",
+   "len": 13319
+  },
+  "D report Arabic grid other": {
+   "sha": "eee4eb4d51c3395ed864f0c4074437db46484666803cac6cf8af4ce52a391970",
+   "len": 14089
+  },
+  "D report flipCards true": {
+   "sha": "5c60f63722b85b0e127dae720d74ed13993ac633d82e5fa2c72b7db334f4bc3a",
+   "len": 13343
+  },
+  "D report Arabic flipCards true": {
+   "sha": "100acf4d50c00ead7ad2c5f911e4570a9123232fab0aa48e3884c17627a332e4",
+   "len": 14113
+  },
+  "D report flipCards two": {
+   "sha": "bfdb623c81aa709300f622e3683689ca8245ac350c71d770cf8d3ca41c5d65cb",
+   "len": 13339
+  },
+  "D report Arabic flipCards two": {
+   "sha": "bcfa6ba788832c02e86fd61bfa24592c0e102a2442d4ec33674d50e998fa19fb",
+   "len": 14109
+  },
+  "D report flipCards false": {
+   "sha": "35901ae430f290b4f6e68bc2171f1ef5220ccaf9a6f5543da30eb52844d8c03c",
+   "len": 13326
+  },
+  "D report Arabic flipCards false": {
+   "sha": "30096d14709ae9d81a0d60498e7ad171d254a72d7e2e9d057472d1a84c03018b",
+   "len": 14096
+  },
+  "D report statusIcons true": {
+   "sha": "8712a51dd9ba0d9e4e52b9a7bfea3dce964943a71f0cd3cdba5910c2d1b99c03",
+   "len": 13336
+  },
+  "D report Arabic statusIcons true": {
+   "sha": "0836b5c1d426ac4db4bd461cdb786ea47483cf3d5d09365552683a10f92732c9",
+   "len": 14106
+  },
+  "D report statusIcons two": {
+   "sha": "e91cebfcf3fcb6580d30855e816e2ff3cc6bff26cd7a76bc8b1cf7f8b3c2f034",
+   "len": 13336
+  },
+  "D report Arabic statusIcons two": {
+   "sha": "13b34c0f7485c5a6e8c1581374132bcdc30464032250fac1abfe2fdc3c47f377",
+   "len": 14106
+  },
+  "D report statusIcons false": {
+   "sha": "8a10ffa1a46a8258b1a86fd6b7200145603a7811c3c3b79279bff0ff95c43d5a",
+   "len": 13295
+  },
+  "D report Arabic statusIcons false": {
+   "sha": "e5fe9eebda2df29c0b6657444887dd8a00a268d6097ff8c8e8922c0cd4c5cedf",
+   "len": 14065
+  },
+  "D report kpiValues full": {
+   "sha": "02065419deb97d07cdb3ae148ef719c5b16b1b27f2782bb4d4dba952159fcd57",
+   "len": 13289
+  },
+  "D report Arabic kpiValues full": {
+   "sha": "d4aea1e384879aaa41370ee55e516e14b6e37cf47fc1563849ef7173add04b2e",
+   "len": 14059
+  },
+  "D report colors text": {
+   "sha": "d8dee13fa6d36720ef5cca055fda57d72297471a3a67bf53f95b8a3d595b92cd",
+   "len": 13287
+  },
+  "D report Arabic colors text": {
+   "sha": "cc6a3126f75236b86d7cfffde4d9bfff1a88a3bd458ca448469df3905c2f30f3",
+   "len": 14057
+  },
+  "D report sharedAxes text": {
+   "sha": "423eb4fb53fcd706a04129fc169c8d2cd6e89f116f37a97be7e3ccb237f45440",
+   "len": 13249
+  },
+  "D report Arabic sharedAxes text": {
+   "sha": "c33111d346c3e7d86a63f800d383975dfc1354ecd5e5f86e8facb96e19ef75b5",
+   "len": 14019
+  },
+  "D report rtl true": {
+   "sha": "3ffe31e82e2f90fffd1f85d5a32b023d564e2c095c3d0a01142f7df9ceaac341",
+   "len": 13623
+  },
+  "D report Arabic rtl true": {
+   "sha": "0598a33a441124b4d53156f95dc0ecb4b449f2d3239de184f7541009dd43913d",
+   "len": 14106
+  },
+  "D report dir rtl": {
+   "sha": "0402fe671fefc5cdf20a954db84eea4346091597ac3375fcef6f37a7d08ba48d",
+   "len": 13622
+  },
+  "D report Arabic dir rtl": {
+   "sha": "55d5b464b906ffa0ac9293f3a7ee8f53915108e268b752f65efee1fcd4ab986d",
+   "len": 14105
+  },
+  "D report waterfallRtl native": {
+   "sha": "6bc02f6772c0cae57b4dd39e3c2168d51b65a386b1f3812cb2cb87449a847b41",
+   "len": 13335
+  },
+  "D report Arabic waterfallRtl native": {
+   "sha": "e9994a1fa6343c8c4fc0ee5df3d0aa1b8b71d97716aae063092296542126faf6",
+   "len": 14041
+  },
+  "D report waterfallRtl list empty": {
+   "sha": "fb2320ffea1fb36b95af82611fc4da47dc4c261cf8bb2a4623de8c38f20ae589",
+   "len": 13176
+  },
+  "D report Arabic waterfallRtl list empty": {
+   "sha": "fabf15d58554e94840833e8040814e24286346e4ec580d79cb07e508a8ebac36",
+   "len": 13659
+  },
+  "D report waterfalls 0": {
+   "sha": "6bc02f6772c0cae57b4dd39e3c2168d51b65a386b1f3812cb2cb87449a847b41",
+   "len": 13335
+  },
+  "D report Arabic waterfalls 0": {
+   "sha": "14b5ed326f0852947759a14b46d8086b646a3a921d163407ef2b0a8360ec1a42",
+   "len": 13818
+  },
+  "D report waterfalls 1": {
+   "sha": "6bc02f6772c0cae57b4dd39e3c2168d51b65a386b1f3812cb2cb87449a847b41",
+   "len": 13335
+  },
+  "D report Arabic waterfalls 1": {
+   "sha": "34660066067c108247aea5b6e3a0eb1f443eb958e3ee366e20c70d4c7e48a605",
+   "len": 14105
+  },
+  "D report bilingual true": {
+   "sha": "fb93ef823fbb01527fdcc25b5759caa04918245139bd54af064ea6ded02839fd",
+   "len": 12301
+  },
+  "D report Arabic bilingual true": {
+   "sha": "3b2eb2292a0c71413b95551b105fc1627d13e51ead014b96af5afc81e1e9add6",
+   "len": 13069
+  },
+  "D report preview with pairs": {
+   "sha": "849682c7a7611a833f7b308dd60a57d7ed245da9bf1d10ff873dd16d5afc38a4",
+   "len": 13321
+  },
+  "D report Arabic preview with pairs": {
+   "sha": "55e9e71304986360871a35a331d25967ca5de6e33fbc109669722be0fcd5be85",
+   "len": 14091
+  },
+  "D report preview no pages": {
+   "sha": "d727d7991c52fcb7d5a1462d4d35e52682bbbffaf207d739987b5ef2c950e516",
+   "len": 13283
+  },
+  "D report Arabic preview no pages": {
+   "sha": "0245e797e0e6229cda1f758ce0c31b27d5f13d3b63be7a56f287845f40ebfc16",
+   "len": 14053
+  },
+  "D report DF not raised": {
+   "sha": "cab6f76fa90e67b2ed47d713b941abb0ac07693563945a0f77182862f52392ce",
+   "len": 13349
+  },
+  "D report Arabic DF not raised": {
+   "sha": "c7251e61157a8d08b76976628a8e0dbf1419bf27ce0fc695371a9dc3feb561ec",
+   "len": 14120
+  },
+  "D report DF no compatibility": {
+   "sha": "11cc50af5f2582492cf0f4350ac6ef865ecf22284b2c2c2157db2fdc180d49da",
+   "len": 12675
+  },
+  "D report Arabic DF no compatibility": {
+   "sha": "b13b3af522f69a08d8e032215ea339c7c1c3ac567f13cef65b4df880a0cfb8de",
+   "len": 13455
+  },
+  "D report DF empty": {
+   "sha": "a0835d13597623e051b9006cd2c5555867568392afea22734989066d7b2c645f",
+   "len": 12867
+  },
+  "D report Arabic DF empty": {
+   "sha": "b9bb1d65a45afdf5d8267adeb14b79540eae98f5cf57dd23fffe8c5e4126933b",
+   "len": 13638
+  },
+  "D report kinds said with saidAr": {
+   "sha": "a311398c95eb77eb49808ed9407df3a80cae938a0cb2536dae8855719712c270",
+   "len": 12935
+  },
+  "D report Arabic kinds said with saidAr": {
+   "sha": "b6f906a30b989f3320c317150ff8b2310df66fc4f46d9b14e0536c9d39f5a637",
+   "len": 13491
+  },
+  "D report kinds bar only": {
+   "sha": "324959cd2341df6c764c61d6f34b05957bd9993dca5003966ef2e78ee2d53912",
+   "len": 12834
+  },
+  "D report Arabic kinds bar only": {
+   "sha": "17c5be28c073b7d299d53bbc1415de73afbf8ee6b481ba797a29443953fb24cf",
+   "len": 13307
+  },
+  "D report kinds none": {
+   "sha": "5c9d1b266d16371dcbb3e7676eb6d7ad6db568d4adc6aec852672b86e784dee9",
+   "len": 12582
+  },
+  "D report Arabic kinds none": {
+   "sha": "569ccf57bea68a060e21c4752196bb2c7c73aac060226d1c2161ccb0f424ce6c",
+   "len": 12956
+  },
+  "D report pagesWritten tooltips only": {
+   "sha": "ecb8f63a373ddab8b57d598ebe758581acecf1e9e385b47cf9f65eebafde9039",
+   "len": 12280
+  },
+  "D report Arabic pagesWritten tooltips only": {
+   "sha": "276b6bb600ff69a7c43aa572c3f8e88e6304413c1e655559cadd53c985c918b7",
+   "len": 12958
+  },
+  "D report pagesWritten empty": {
+   "sha": "cc5fb3ef077cc3e79ea4b90210704952675dbb29b0e26e01e8905dbfc8051259",
+   "len": 12043
+  },
+  "D report Arabic pagesWritten empty": {
+   "sha": "b1f4f8a0c16faa5dcb86c25756f578b4850410fab69e1e1bc9d06d991d5c93c0",
+   "len": 12721
+  },
+  "D report pagesWritten one visual": {
+   "sha": "06c5b10919526f5ba58d5c5a8af74a9ad36acd01dc120f5dd263cfc20f963c3f",
+   "len": 13249
+  },
+  "D report Arabic pagesWritten one visual": {
+   "sha": "9f7556a20e129486e4b185b13f5eb21eb3387fab8c97c63aed6eecd28edc42e0",
+   "len": 14347
+  },
+  "D report slicersAdded": {
+   "sha": "2a28fb362246a09a39764aabce5cde6644cb4dbc7f860ad20f9ae89db4a3735b",
+   "len": 13601
+  },
+  "D report Arabic slicersAdded": {
+   "sha": "3b227f1450963c57e2fa653f87d746edcc633bc6c455db29f1fa6fdff6d5e3cf",
+   "len": 14371
+  },
+  "D report colours changed second": {
+   "sha": "3b941d512e40b6bc2050f52e13b1951aa2e328e9525c19288aa8050adc674a23",
+   "len": 13400
+  },
+  "D report Arabic colours changed second": {
+   "sha": "df30b2f41c194e30a877eb41e10e34e13c680588a16b0c3063616cc61b3397d2",
+   "len": 14170
+  },
+  "D report colours card odd": {
+   "sha": "3b4251d08703d478590ef99a3e78384159d481d88211417503aabd09a1bfc262",
+   "len": 13585
+  },
+  "D report Arabic colours card odd": {
+   "sha": "53a006c3a6eae09dffcefe0f63ff86bfd236ab63fecb4639d8ef29418341ae33",
+   "len": 14355
+  },
+  "D report look glass asked": {
+   "sha": "8742762aa2758323155dd7db00793daa45c13a791bd6317001c9a4f6bbff04bf",
+   "len": 13259
+  },
+  "D report Arabic look glass asked": {
+   "sha": "f4c84bf9b18ad0570bff57f45921119c1dd2d0e484a1727d0895760822ced06c",
+   "len": 14029
+  },
+  "D report look plain failed": {
+   "sha": "d48ad01dae808ad34a39edd3104ce36f84eb2b711173efc3ea69381e230608eb",
+   "len": 13306
+  },
+  "D report Arabic look plain failed": {
+   "sha": "67a1a714c14935b813094e69a1ae0fabbce52c424e4ee7fad6e1e32d8155f266",
+   "len": 14076
+  },
+  "D report look plain asked": {
+   "sha": "f44895a2989fa437bf23b6202d62a5db7e32676b5deae7c1e5c797563f4b60ce",
+   "len": 13202
+  },
+  "D report Arabic look plain asked": {
+   "sha": "846d972578009b34dd099ea27203aa8ceb7f1a0b4dbc8f7a03371369da388849",
+   "len": 13972
+  },
+  "D report look not object": {
+   "sha": "69fd38820193f98b444448c3fd3ad22402d5b3d82cf08620d3ba33068194588b",
+   "len": 13148
+  },
+  "D report Arabic look not object": {
+   "sha": "68c44b2b66b408905c7eac2de21e1c17172bfc7487608e8f53a65f6f37ab1375",
+   "len": 13918
+  },
+  "D report metricSwitcher bare": {
+   "sha": "442d8a267d4fc14bec6b06382fa7940396cef17daf75dd3639e9f1ebdef76725",
+   "len": 13037
+  },
+  "D report Arabic metricSwitcher bare": {
+   "sha": "1cf8f4a1f35808e7aa8f1c05d3e5c538d763467cfcfa3d1e89ead63c0436ce0f",
+   "len": 13807
+  },
+  "D report metricSwitcher long": {
+   "sha": "36f4bce8abe2eb2f31884918de0ebcf65b0d686537278535b5cc8811dad88f59",
+   "len": 13742
+  },
+  "D report Arabic metricSwitcher long": {
+   "sha": "94531ab8abd8bb3cb4a7243b938827e10c75ea3be44bae02094b7e7c0d6a18fc",
+   "len": 14512
+  },
+  "D report barThickness text": {
+   "sha": "e4a50333f224c4871b0f773ed18451e0a58d54177c1914c2e15f72117d49c520",
+   "len": 13213
+  },
+  "D report Arabic barThickness text": {
+   "sha": "4db1b5f87825ba58ecfd926e431328749d2f1f1e6e41592ce943d9a9fd4b8b35",
+   "len": 13983
+  },
+  "D report barThickness no ar": {
+   "sha": "b29f13fee7b701964a9b3f05132e0c73deccb50463a2e914c1557fb5c952a5f9",
+   "len": 13302
+  },
+  "D report Arabic barThickness no ar": {
+   "sha": "f7e6cb8ed132c8237a4dd485b894224a7c46008074ca6704429e68a0c24b59e7",
+   "len": 14072
+  },
+  "D report gallery long title": {
+   "sha": "5f4ea96310de077ebc496d11eb963ca9529c2d6a30b17dfa5696a23255d9e6dd",
+   "len": 13261
+  },
+  "D report Arabic gallery long title": {
+   "sha": "494a587ca9bac4efbdadb1b70d5d7b4766e7f751fc6c505717de75ffc16dcd03",
+   "len": 14031
+  },
+  "D report notFullyArabic no ar": {
+   "sha": "b11ede6a763805c3e32e66ab93e66925dde292b12a5c7559029367b4b1f59b0f",
+   "len": 13302
+  },
+  "D report Arabic notFullyArabic no ar": {
+   "sha": "ad355b71a3ea847f73247e666f851ea869765b996b997f894e5027e0ffb9400b",
+   "len": 14081
+  },
+  "D report notFullyArabic no en": {
+   "sha": "03c5b497d73f3e2455e10c0ee8ea6d77fb1891e3f402bb7c8a5f1d393b77c278",
+   "len": 13202
+  },
+  "D report Arabic notFullyArabic no en": {
+   "sha": "0ec0c7a79bcc957afc1e589eda70348372b409fc2376b752181e29595c75d1c8",
+   "len": 13970
+  },
+  "D report customVisualsShown none": {
+   "sha": "0338eec6cbe6927a4cd456a6df89e41d7fcf53325bf56ac8c0a1d17beac02e01",
+   "len": 12917
+  },
+  "D report Arabic customVisualsShown none": {
+   "sha": "480239c4cc8ec589377f42379ec1f391cdf5281dff75679b9bcec56fec323253",
+   "len": 13687
+  },
+  "D report customVisuals": {
+   "sha": "6bc02f6772c0cae57b4dd39e3c2168d51b65a386b1f3812cb2cb87449a847b41",
+   "len": 13335
+  },
+  "D report Arabic customVisuals": {
+   "sha": "34660066067c108247aea5b6e3a0eb1f443eb958e3ee366e20c70d4c7e48a605",
+   "len": 14105
+  },
+  "D report customVisualsShown no lead": {
+   "sha": "72badbf11e6efc73e600f4d6533f3f8ac8ea10897e21db1eaa5b62543effc3a9",
+   "len": 13097
+  },
+  "D report Arabic customVisualsShown no lead": {
+   "sha": "626283a0d202a4ab92c6c8d4d7214dc4a468b64366d559d0eb2cbcfbf797e7c1",
+   "len": 13867
+  },
+  "D report exact no pages": {
+   "sha": "146df060bc252382cb7477ca1d546181c9bd418cdc52e03b9904eddbcdb5c5ad",
+   "len": 13457
+  },
+  "D report Arabic exact no pages": {
+   "sha": "8579e16f89f9b85798a10e33a2f4c12b98c17f2fbeb6e4a7271777febbcef520",
+   "len": 14227
+  },
+  "D report flipCards none": {
+   "sha": "25e2bd7952824fff69263086346cfd9da30345bde0c057a683079290440cfc66",
+   "len": 12293
+  },
+  "D report Arabic flipCards none": {
+   "sha": "0e658544cd9b1ef999a2d810c89cf8c48d9c32a7dfe1826e62b0ca0f5bff2b8b",
+   "len": 13063
+  },
+  "D report flip no pbip": {
+   "sha": "21f053619fe881703820d3270cf3ba4f046f620844cd8a8ecddc2b875ab49f1a",
+   "len": 11884
+  },
+  "D report Arabic flip no pbip": {
+   "sha": "fbb37788c86ede03651cd7cc8ab0ccee83dd422ccfaed91f8b7ad04ee1d4e283",
+   "len": 12654
+  },
+  "D report statusIcons bare": {
+   "sha": "8294a05043c98151b37dcb1aae2b608fd7d8af7fc4e69285ff2a7146c080b3f4",
+   "len": 13296
+  },
+  "D report Arabic statusIcons bare": {
+   "sha": "318ec1325c44ade39c1a3eddc292052c25e72e5f1f182bd192a3a101e2fe54d3",
+   "len": 14066
+  },
+  "D report terminology empty": {
+   "sha": "d6a2359eb98a0ac58e5fb97b1d3d7c372ef84b9e2294b7d8d98b885df9b69200",
+   "len": 12941
+  },
+  "D report Arabic terminology empty": {
+   "sha": "4269cbac52fa8aed9b48d69794380e59262c857d55f2c5b541340d4c4ebd4ad5",
+   "len": 13711
+  },
+  "D report gulfDates empty": {
+   "sha": "add34c01d133b75e5a65a10650985fc5a5db4f0704fcd733209def9f862da66d",
+   "len": 13245
+  },
+  "D report Arabic gulfDates empty": {
+   "sha": "331004b1da4e7a54ed4510a927ca2ecbeae145a9d6263815d2a5ca0ac4441c57",
+   "len": 14015
+  },
+  "D report notTranslated empty": {
+   "sha": "d7da44cf25600bf7e77d44719c9f5b05e750e74b3c1e94fb30f40ae4fd7bbc9e",
+   "len": 13246
+  },
+  "D report Arabic notTranslated empty": {
+   "sha": "4dcd31603fc85c086a50055b018580ec9879a22166714e5e810525ffeb063ddc",
+   "len": 14016
+  },
+  "D report alreadyThere empty": {
+   "sha": "5c47fe37754b5083c13739d00c3f6c8a2af9f5adcad81d10922d6da9a7548064",
+   "len": 13155
+  },
+  "D report Arabic alreadyThere empty": {
+   "sha": "0ee3f8c50a1693ed943309f0b9ce9bf4120976ce639126cb66c7f716274f8c7e",
+   "len": 13925
+  },
+  "D report waterfallRtl long": {
+   "sha": "181428a7a61a940d1cbebb8b7170b1d8ea0adba270dece9cc0a6599587353e13",
+   "len": 13390
+  },
+  "D report Arabic waterfallRtl long": {
+   "sha": "11763111a3d9a859cbe3b8a871cf5814e73734277b6446e0d65eece6cd8f2da8",
+   "len": 14160
+  },
+  "D report empty": {
+   "sha": "98df7d9f62f81091b6dbbec048adc3e4a836c2e48e683ed40763a399a80cadae",
+   "len": 803
+  },
+  "D report null": {
+   "sha": "98df7d9f62f81091b6dbbec048adc3e4a836c2e48e683ed40763a399a80cadae",
+   "len": 803
+  },
+  "D report name only": {
+   "sha": "026d2bf088b232d49b292ff84d250e566fda8690d4660a16d2f4ef77b18c81d0",
+   "len": 881
+  },
+  "D report design only": {
+   "sha": "35b7de2c1f4c6057c1c26261987b88f8e92eea9f655faf9c55a60bcfc5b4a8a1",
+   "len": 1036
+  },
+  "D report pages only": {
+   "sha": "e614ad5ddd9e19908af8eac4d1de80a0f511ec2a10214be2ae9be46b7c8342e0",
+   "len": 849
+  },
+  "D redesign full": {
+   "sha": "ae46f9d8c286a5f06ecfe762b69488388f729d1603964687cc7f159f959b31de",
+   "len": 4407
+  },
+  "D redesign no theme": {
+   "sha": "a0df8974fb0dcc5b23a5e4bd6609fcdf80d31ec8bd8601b102aa876bb402cddc",
+   "len": 4148
+  },
+  "D redesign theme no tokens": {
+   "sha": "a0df8974fb0dcc5b23a5e4bd6609fcdf80d31ec8bd8601b102aa876bb402cddc",
+   "len": 4148
+  },
+  "D redesign text mode most": {
+   "sha": "bcb4cdcda4a4617a72dffe57449be7d9bf7f8ffb1a4bf5757be7556f67bb48eb",
+   "len": 4422
+  },
+  "D redesign no text": {
+   "sha": "d62f2c4b03708d5c02c86e0c6e6152fc5b9065bcb466677f5ebce8fcdb8418c6",
+   "len": 3848
+  },
+  "D redesign text set not a list": {
+   "sha": "d62f2c4b03708d5c02c86e0c6e6152fc5b9065bcb466677f5ebce8fcdb8418c6",
+   "len": 3848
+  },
+  "D redesign no kept list": {
+   "sha": "e3084dd264914667557507958a4f72c003b9fb13cb3eed20fdd7cc2268582e28",
+   "len": 4238
+  },
+  "D redesign no themeStyles": {
+   "sha": "e8b20faf01531fc1ca3e915c2a7c12b5e5b490019ddcec84cc4a40100fea909c",
+   "len": 4366
+  },
+  "D redesign not copied": {
+   "sha": "9618479aa45326b3223f36c1051841f2ad453ed9c3274d943876bead7550d646",
+   "len": 4088
+  },
+  "D redesign no outputs": {
+   "sha": "6471277d348a51d26a6dec93e26660ee51e03d78b458bb65df9361d8f48c4e4e",
+   "len": 3977
+  },
+  "D redesign no pages": {
+   "sha": "d07b85a6851c76089af54cd98ba0d90f96376671ec7dcf5e113faba816921c16",
+   "len": 2940
+  },
+  "D redesign keptAsIs ones": {
+   "sha": "9dd1796944816ed0c38408d5dba5c52e05043fa8a5a504943b38a4bef228a690",
+   "len": 4433
+  },
+  "D redesign no original": {
+   "sha": "eb358705f40153f9dd2ae6efd96136b923bbe8b62e8962b578ba2a72bfc5c847",
+   "len": 4397
+  },
+  "D redesign empty": {
+   "sha": "367e31ce6a2c5b38aeb3099c18435f047606b235c67a6d617dd739a65608e3cc",
+   "len": 893
+  },
+  "D sample Arabic": {
+   "sha": "19b19dc7338465e2bc187a6873fa595d4459d7a9e4a6a6f6aea1cc7dd99f10af",
+   "len": 1859
+  },
+  "D sample English": {
+   "sha": "94760b981a366fd5c26bb2cb682cfaee75562d3b272b7ffe7ac78d48eca83853",
+   "len": 1384
+  },
+  "D sample tables differ": {
+   "sha": "dcbfde0d6bef013c1541730ecc97225bab0cd8c9a00dd53e41c7da624abe90fb",
+   "len": 1814
+  },
+  "D sample no sampleAr": {
+   "sha": "68db3f4d51fe7cbf3902dfd5d810cea995716992035b17725d6150bc3461af3f",
+   "len": 1464
+  },
+  "D sample sampleAr text": {
+   "sha": "68db3f4d51fe7cbf3902dfd5d810cea995716992035b17725d6150bc3461af3f",
+   "len": 1464
+  },
+  "D sample no folder": {
+   "sha": "6da80a80ab7568612cd8601d86cc250be3e9537205a6f2a6a9fcae1ffba3f4cb",
+   "len": 1642
+  },
+  "D sample relationships null": {
+   "sha": "04b0bc1253f97cda4e57c3a2f9728385962a45a8037c1013d7565b745d6d4162",
+   "len": 1797
+  },
+  "D sample relationships 2": {
+   "sha": "8a40332c8d1ab9ed6ccb2f36d78e98d09bdab561be83bede12cbecc06c8630be",
+   "len": 1859
+  },
+  "D sample no outputs": {
+   "sha": "e2e3e74fdce8ecf7755f7ff81c3e2d6e3dc6440bf3254832bc119361d54f95ac",
+   "len": 1473
+  },
+  "D sample no tables": {
+   "sha": "774d4543642dc724282bbfcd9c7f9c8008081715815aab320ee33ee0d8b49873",
+   "len": 1719
+  },
+  "D sample empty": {
+   "sha": "9d1f894bb781aba8580db56e2454fb418965a611590c91c2110bf73cf484d913",
+   "len": 636
+  },
+  "D twin full": {
+   "sha": "d9f58df97e4a169b052b2ef82d84d20aa244432c48ef206b9710b7e7881fd75d",
+   "len": 33156
+  },
+  "D twin time left to right": {
+   "sha": "2244a3dbb04f8df0c3d49a6fa6a6393b5486e504eab3468aca8b7b07c11ff194",
+   "len": 33146
+  },
+  "D twin no month": {
+   "sha": "0dd585d200dcb6b1729c21c0ef43c75908159b5d8a4021eee94adcf06c08af74",
+   "len": 33032
+  },
+  "D twin pictures": {
+   "sha": "823a822b2dadee808aba5a22dbcf44f26ea3cfa7948440af41efdd1cf9b1f361",
+   "len": 33137
+  },
+  "D twin picture pages 0": {
+   "sha": "a89dc9b6643dc5c3a1d0e9d564ff0652ea2484f830282f756c2d2bec68d16596",
+   "len": 32956
+  },
+  "D twin picture pages mirrored": {
+   "sha": "bc85371c7151c1a2754ef1e76df4055eab157f879ac33e9f525873da2b45c9d4",
+   "len": 33130
+  },
+  "D twin picture pages unknown": {
+   "sha": "d9f58df97e4a169b052b2ef82d84d20aa244432c48ef206b9710b7e7881fd75d",
+   "len": 33156
+  },
+  "D twin waterfalls 0": {
+   "sha": "1d684b502f933a331c939a9601b8d9b439403805f56ac31c6fef6499f48d392a",
+   "len": 32891
+  },
+  "D twin waterfall mirror": {
+   "sha": "a2a1f876cf177b136fd12b0ec539cee27042d95199ae8c3430c1627909e1969a",
+   "len": 33220
+  },
+  "D twin no matrices": {
+   "sha": "e7447bd2e1c848d29dbbd12c0d7503200ed91ca804644fc0e150dddf877715bd",
+   "len": 32782
+  },
+  "D twin matrixAsTable empty": {
+   "sha": "4660e0682f5a7f88b7a7bfbfa6eb516e5d1150fbc3708ebef43802c8bb3c966d",
+   "len": 32580
+  },
+  "D twin no labels": {
+   "sha": "17c0e15b6d5176c5b88a978f5ff43397a940513ffbf67327cbcfdc09c9620260",
+   "len": 33048
+  },
+  "D twin no names": {
+   "sha": "5396d361f735f1107babcb4cd1068fa890fbafc39318725fd169e9d2bcc9e733",
+   "len": 33148
+  },
+  "D twin no terminology": {
+   "sha": "adb9a8fc577f59fa7c662b2847534ccfef14395ab7c226dbd2c6b32bba175039",
+   "len": 33055
+  },
+  "D twin no notTranslated": {
+   "sha": "38fc6c859ee21df857d46d9269aa19e652c8a78b8d0285ded493c44781f0ebe3",
+   "len": 33049
+  },
+  "D twin preview null": {
+   "sha": "946f5c829da33a3d3914348292649b3ffb3c829ee5ec50a074d7102b40ad67aa",
+   "len": 24021
+  },
+  "D twin preview no pages": {
+   "sha": "404ea0ce2901b97d3c842363528e6e61dcf511893070181f05b248158ded1640",
+   "len": 23999
+  },
+  "D twin no preview": {
+   "sha": "946f5c829da33a3d3914348292649b3ffb3c829ee5ec50a074d7102b40ad67aa",
+   "len": 24021
+  },
+  "D twin oc none listed": {
+   "sha": "5fb677aeb0c10193109d63c16dbf28a2651d1b0b55684a40e781c295c5bd07bb",
+   "len": 23025
+  },
+  "D twin oc not a list": {
+   "sha": "a29eff8fdfc9c924771cb5cf690e766fe6226f19c0f073c2c1b2ae9a99e661f1",
+   "len": 22618
+  },
+  "D twin oc empty": {
+   "sha": "a29eff8fdfc9c924771cb5cf690e766fe6226f19c0f073c2c1b2ae9a99e661f1",
+   "len": 22618
+  },
+  "D twin no added": {
+   "sha": "8dacaf8cf44ac2aae37b2e3aeac0302b888fed2610089d12e89f7377db7510d9",
+   "len": 22856
+  },
+  "D twin nf no ar": {
+   "sha": "7b4c4f63c720883056da2e45630177777b8e5df6d33a8419312072eb01c111fc",
+   "len": 33120
+  },
+  "D twin nf no en": {
+   "sha": "74b3877967f2e64e9de505df479a8bfe50fe40af8a8aff877c7d8e94c339b8de",
+   "len": 33025
+  },
+  "D twin languages": {
+   "sha": "50e45552aad01502ff950ddcdad085447e468d775078dcc36d7e8ae5eef1ae74",
+   "len": 34070
+  },
+  "D twin no outputs": {
+   "sha": "d8f6d9e7ef7a71b066fc6ffe222357d47e14e864864cc796f4652d5b0d90a69a",
+   "len": 32960
+  },
+  "D twin empty": {
+   "sha": "c7007b6ff4b00d298c8ec0545207de1ae354daf18380e2fd1d3200fdc3e82d34",
+   "len": 1444
+  },
+  "D theme full": {
+   "sha": "bf983e2b64864cb6889f51f0313671e6de298c2d1239cb36928c952f4733978c",
+   "len": 1524
+  },
+  "D theme from theme": {
+   "sha": "0d380d424ebf37c79c4a21bdac8b8238cd38af51f4a70124921197c070208149",
+   "len": 1518
+  },
+  "D theme from theme and visuals": {
+   "sha": "aec21577b95bfb1f8fa0a21500795d0c37522ed2023e9493b883cc27dded40c1",
+   "len": 1549
+  },
+  "D theme no source": {
+   "sha": "26822b7e570461010744c0b78ceb2196917cabb7f5f3355f829eec90953fa125",
+   "len": 1447
+  },
+  "D theme mode light asked light": {
+   "sha": "93bab7ce4b76d02f04171caa29f369531964084ba351c6037adfa06f92b4f10c",
+   "len": 1434
+  },
+  "D theme mode asked other": {
+   "sha": "f622dc6b29465473f2d23d36f0c701c3e1a650ecfc848e370431218f98f62fb0",
+   "len": 1456
+  },
+  "D theme mode same": {
+   "sha": "f622dc6b29465473f2d23d36f0c701c3e1a650ecfc848e370431218f98f62fb0",
+   "len": 1456
+  },
+  "D theme no mode": {
+   "sha": "d3fc19711776a86b68098e9dc75d490b165d93b4ed414de774f91f5b076b90df",
+   "len": 1440
+  },
+  "D theme Arabic": {
+   "sha": "d94702dc30c1224d02bb2baa9a87adedec4edab278482463db184ac32794e131",
+   "len": 1600
+  },
+  "D theme no colours": {
+   "sha": "6d39e5a4c5f94e7a4424dc868cd3399b53da605298cc6bebb9977bbb3afe7fd7",
+   "len": 1107
+  },
+  "D theme no outputs": {
+   "sha": "2d14bad08e371dc8fe2537e55c726897662993d0a4e0085c538fd4655888a848",
+   "len": 1406
+  },
+  "D scripts": {
+   "sha": "c50fadaec1ae78753ab6b5360daaece9ff51f9d459e4836c71979bb59e9178d5",
+   "len": 3669
+  },
+  "D scripts no answers shown": {
+   "sha": "d5a375afffacec014f2b608e959b238f3235e2f3c10edcbf1b3c14a7c53a2579",
+   "len": 3472
+  },
+  "D scripts answers shown empty": {
+   "sha": "643abb739421304ea529ea8e4999e27f716ad65565e3b7e33a513dc23ac96070",
+   "len": 3365
+  },
+  "D calendar": {
+   "sha": "485a56c731c64e9042af2eec6ef5f07357321a3170f70ec15d3ed8c738d7183f",
+   "len": 3135
+  },
+  "D calendar Arabic": {
+   "sha": "f2e82d118d4df922529593f51f07c84c48fc400290bb101367dc03f3c85fcb01",
+   "len": 3456
+  },
+  "D calendar columns only": {
+   "sha": "4d1fe398e46807658aeff7a9faecbd6f319234a6cb646f970947405f51307035",
+   "len": 1597
+  },
+  "D calendar columns only Arabic": {
+   "sha": "aaf2fe6c5759eb6688ddff5683b326f1d4d93e48b57dc0ec447edf7a4bc0b9a4",
+   "len": 1571
+  },
+  "D theme inputs Arabic": {
+   "sha": "c3343ef3918a05061814989d1f860c6443a77d0020c594923006799b97f51e77",
+   "len": 989
+  },
+  "D another kind": {
+   "sha": "a0d136d76d7637756e003f614eb0fc40629ecf6c44bbfdffddb5fe1a40c9ac53",
+   "len": 896
+  },
+  "D another kind empty": {
+   "sha": "a8b94640859e39001ce989a7a29fabf5a162afa4ff7eebfb2eaa79b301135b9e",
+   "len": 559
+  },
+  "D scripts no pins": {
+   "sha": "fa3ae6931dcdc0c47fcaed16d1a79a627e46358b7254a9865492bb02105c7c80",
+   "len": 596
+  },
+  "C twin all": {
+   "sha": "379c71b93ee579fe2b836bb0a9a2e6935ce0b0ad648a8bef07aac7e727989cc8",
+   "len": 14487
+  },
+  "C twin checks validator": {
+   "sha": "6649dff251c485be1decf4becbf5f525df8838f76a3766ad331546f489764180",
+   "len": 6440
+  },
+  "C twin checks schemas": {
+   "sha": "74b8e0bac2a78f786a7d2fcb2959519ccac73829cb09ef86443563d4046f14bb",
+   "len": 6366
+  },
+  "C twin checks empty": {
+   "sha": "379c71b93ee579fe2b836bb0a9a2e6935ce0b0ad648a8bef07aac7e727989cc8",
+   "len": 14487
+  },
+  "C twin checks a11y and lint": {
+   "sha": "c4a08323aa49b056286abd2920712c00f702053c3d481d3478b230e39f5023df",
+   "len": 14081
+  },
+  "C twin checks navigation theme": {
+   "sha": "4e0376490ccd1a3e9aa369056ef25ddf64526298e06f21a1516061dd703bd6a0",
+   "len": 6416
+  },
+  "C twin lang ar": {
+   "sha": "3b7f7fdf93ce33af802ee588960b271dc0305610a5db95c5a0b06ea778642f2f",
+   "len": 20324
+  },
+  "C twin lang he": {
+   "sha": "3e5f5bb1badc05418014e1a6eb32e85c65ae205fd342975e8ab2e473867c587a",
+   "len": 20324
+  },
+  "C twin lang en": {
+   "sha": "379c71b93ee579fe2b836bb0a9a2e6935ce0b0ad648a8bef07aac7e727989cc8",
+   "len": 14487
+  },
+  "C twin lang auto": {
+   "sha": "379c71b93ee579fe2b836bb0a9a2e6935ce0b0ad648a8bef07aac7e727989cc8",
+   "len": 14487
+  },
+  "C twin cap 1": {
+   "sha": "80f665de87b92abd212677e41fc5653f8ee00eae1a935bfcb48a425d4d6d0081",
+   "len": 8453
+  },
+  "C twin cap 0": {
+   "sha": "379c71b93ee579fe2b836bb0a9a2e6935ce0b0ad648a8bef07aac7e727989cc8",
+   "len": 14487
+  },
+  "C twin cap 500": {
+   "sha": "379c71b93ee579fe2b836bb0a9a2e6935ce0b0ad648a8bef07aac7e727989cc8",
+   "len": 14487
+  },
+  "C twin no options": {
+   "sha": "379c71b93ee579fe2b836bb0a9a2e6935ce0b0ad648a8bef07aac7e727989cc8",
+   "len": 14487
+  },
+  "C pending": {
+   "sha": "8073551e78a7ea9e868315d56dd603af795066bd75a97fe70cb4c2515694e1c0",
+   "len": 31870
+  },
+  "C pending lint only": {
+   "sha": "ca63c192f1de9f0d2be36faaeca062da41343cf2edd2b4253ff77a8e5b6a5e39",
+   "len": 9666
+  },
+  "C pending no model": {
+   "sha": "3c3c7f29ae62ae65b5283bd8f034b3ae037eee3bdad99a25e0ef50b31aecba89",
+   "len": 27589
+  },
+  "C fonts mixed": {
+   "sha": "528f80c9b8d93155c41ddddbbbcf1a206ed4072a9ceb8941ca67d64578f29ab0",
+   "len": 16367
+  },
+  "C fonts mixed on one page": {
+   "sha": "6777aed753f115c7efc246a4479e23e7d42df6ed1d5004ca7b554979c9859722",
+   "len": 16377
+  },
+  "C instructions": {
+   "sha": "fde567d018375b4be2bce3c907113cd0bb08cd5a254ae0aef60a0d5e89932a07",
+   "len": 19389
+  },
+  "C instructions with a page": {
+   "sha": "67b0358f3b76b31a5595f2518cc0a2c7ca1ae6fec37d1e14b466693bedbe617f",
+   "len": 17295
+  },
+  "C field parameters": {
+   "sha": "d22a35cc4cb7bbe2e06af2ecd2a761e4f44ec49b8e68f8b14103556c6b6b59a1",
+   "len": 25161
+  },
+  "C field parameter missing": {
+   "sha": "c3a87c7a018f72358562210f2a97d6e13ee90b06cfbb9ce7f1fb1f19974fccec",
+   "len": 18525
+  },
+  "C field parameter in the model": {
+   "sha": "39c566079673b0a9f38b9d30317f1f8e084097529b74b4b1f743d64cab768808",
+   "len": 18323
+  },
+  "C field parameter no model": {
+   "sha": "0296db86fecaf1988297ea62148c5d71798c8b602a55666fce098f44c7d33fc1",
+   "len": 19142
+  },
+  "C Arabic": {
+   "sha": "00cd961c25d12e688ec0aaa0bdc25c8226901ae1c6278619b1137f16e544e6ba",
+   "len": 16997
+  },
+  "C Arabic as English": {
+   "sha": "a8e7db02053cc9fab10d11fc7754c23db5a7cd33f37bcde37b2036bdc1d22e22",
+   "len": 15893
+  },
+  "C mixed": {
+   "sha": "470597f1d9b76e53dd0d1e064fb72b5c66a31e94413226a5974a4fe249248db1",
+   "len": 22737
+  },
+  "C mixed as Arabic": {
+   "sha": "470597f1d9b76e53dd0d1e064fb72b5c66a31e94413226a5974a4fe249248db1",
+   "len": 22737
+  },
+  "C mixed auto": {
+   "sha": "470597f1d9b76e53dd0d1e064fb72b5c66a31e94413226a5974a4fe249248db1",
+   "len": 22737
+  },
+  "C titles only": {
+   "sha": "e42409b2d4def41b0f698ecb7a1e624d9c25d39af8854d3993f2b3e4ef904220",
+   "len": 15927
+  },
+  "C sizes and unreadable": {
+   "sha": "b3239863e8a37dfbc3cc1bbf40000444383c7edc82c62a89c994cf2b4fafbd78",
+   "len": 23629
+  },
+  "C six files too large": {
+   "sha": "6e2735c802dab4d42dfdcb0a3dad4908ad8269aeb41b43cffdd677976537badd",
+   "len": 14997
+  },
+  "C six files too large, schemas only": {
+   "sha": "5ad4bb0a5238aa281cd3308a5b6bd66e71650c618421b0200b775a7bb0b77426",
+   "len": 6796
+  },
+  "C one file too large": {
+   "sha": "13998ced5caad3e7d2b07d78cf3912f71cf93eb639e48e30353ee9d76d346899",
+   "len": 14785
+  },
+  "C links": {
+   "sha": "9842e98ddd8179b2768845e7f81605b25f81271cb17827b76c9f32a1f561f91e",
+   "len": 14855
+  },
+  "C no model named": {
+   "sha": "ff302776587e0230c417d1c6b0d0a3924500c275414b9c409064b63527a53c7a",
+   "len": 15469
+  },
+  "C model unreadable": {
+   "sha": "3fac49a88b5c43310b25647ad7f982e873ae8c1ca3c15010a0fe80d09450de8b",
+   "len": 15456
+  },
+  "C many findings": {
+   "sha": "d2455ba381eb1832acc81b4e3bcc292c780d99a8a9a87d256a8780a052712ccf",
+   "len": 30045
+  },
+  "C many findings, cap 3": {
+   "sha": "7ba4a19d4b370ea0642a3bade70b7ea45af83320f477063406cbb7fa0ceb6d00",
+   "len": 13811
+  },
+  "C many findings, lint only": {
+   "sha": "c1f640f3e5d9ec6a94d027e71b357e6d81e235363a970f1dd4a1e86fbbec7494",
+   "len": 32203
+  },
+  "M group": {
+   "sha": "daa1c5c10bc8d927794068cc44e33eae6ccd5baa49606c1b0ce986966e133f2c",
+   "len": 163
+  },
+  "M native bar": {
+   "sha": "be6ed03f8cdbd29496e10290319ecc8b7bbb53827d86716723c1037938ed670f",
+   "len": 516
+  },
+  "M native matrix rows": {
+   "sha": "85a737fb988a73be863cf3ce42e29d22d6116654b17c9c50c39b28facf59f522",
+   "len": 278
+  },
+  "M native unknown": {
+   "sha": "00b2a9ae693fce4ff3199051fec95eb36fbfd17e59b8772a21380d1bd0264732",
+   "len": 403
+  },
+  "M native no fields": {
+   "sha": "9060d67fc73ba5a3e50a66aadee5d9feb6289868b82cd405c6f3e826ac0c29c0",
+   "len": 157
+  },
+  "M declared custom": {
+   "sha": "212a5603a0be04bbb218aa502ce71e11724b8508a9e4a682cbd6899db77e096c",
+   "len": 461
+  },
+  "M no live roles": {
+   "sha": "b45e5b21ce53b0deb55c2157ea40bc586ea88d220324bce516a692389aec4a86",
+   "len": 197
+  },
+  "M no fields": {
+   "sha": "b45e5b21ce53b0deb55c2157ea40bc586ea88d220324bce516a692389aec4a86",
+   "len": 197
+  },
+  "M schedule": {
+   "sha": "a5774f6cbc5f750ac5cbcac378a4964573b6d59c9ca5cfede3ca31b13f18bf15",
+   "len": 811
+  },
+  "M start only": {
+   "sha": "923e64090905fb64d16c4a03ed891b0ae0b5346c74bb55d4374e773d188a7d15",
+   "len": 463
+  },
+  "M end only value": {
+   "sha": "31b8e9811158a88376ef962d3af3db3a7374d9cf3d26144b2cec49247d7459b5",
+   "len": 472
+  },
+  "M network": {
+   "sha": "082276e2917f076c3336017110891fd8a22b1b66ed7670d831bb493a72d918a2",
+   "len": 719
+  },
+  "M network nodes": {
+   "sha": "cd6a77ae205e2cf1223b45a6f85bc8964ffe60d0fb3a68f5dbacdf571a13228d",
+   "len": 678
+  },
+  "M map lat lon": {
+   "sha": "c49196b50fe54f2024b0ea40e5fb775f87f590028350f00ded580b7e414cf2ef",
+   "len": 878
+  },
+  "M map location": {
+   "sha": "c5923c43afa88d3eb58ca465654fa2a46304be4eb805de5c243773790ae7d6ce",
+   "len": 536
+  },
+  "M map name category": {
+   "sha": "90ede1378cbfeb2f1549b68aaf9ded59012e963424e1605e83be7e285e702b65",
+   "len": 588
+  },
+  "M map category only": {
+   "sha": "c69660dc01a1986494094c859093059fa2b701207920351e790e401a5169481b",
+   "len": 502
+  },
+  "M map lat only": {
+   "sha": "8000590d2f18349138a3f850c685ff96652d3ce8f4df12c71e22347ecd7d104f",
+   "len": 575
+  },
+  "M scatter": {
+   "sha": "0cd778f19e7645772b9601347e28f1bcc7601fff7b1a95b011cacef7e80097cd",
+   "len": 650
+  },
+  "M scatter value": {
+   "sha": "e3413191f2f8836c837aadf9280f4a1439807af93b43709512471cc5bdacc0bc",
+   "len": 545
+  },
+  "M scatter pair": {
+   "sha": "e3413191f2f8836c837aadf9280f4a1439807af93b43709512471cc5bdacc0bc",
+   "len": 545
+  },
+  "M matrix": {
+   "sha": "9d0fb3de0b14126d31d5711c253774fea09351fa89781ec4952cbaeba1b3d4e3",
+   "len": 860
+  },
+  "M matrix by category": {
+   "sha": "fc7cc702140a85ceadb50f5b00593781ec1957f45bda0d91fada0a3ec82058b6",
+   "len": 551
+  },
+  "M mixed": {
+   "sha": "425c9b012fd69a3e3885bab91f4b166727a26dd605fe4a9e362a7cacec85f627",
+   "len": 475
+  },
+  "M gauge": {
+   "sha": "7994304ebb3d94347ded0f692027c972a29e9922a4841742d931777d13498c41",
+   "len": 590
+  },
+  "M gauge min only": {
+   "sha": "636c94667f894d54864459243e557b40eb18796f80692f185126d97b540ab224",
+   "len": 465
+  },
+  "M start value alone": {
+   "sha": "00b2a9ae693fce4ff3199051fec95eb36fbfd17e59b8772a21380d1bd0264732",
+   "len": 403
+  },
+  "M card": {
+   "sha": "7bdabb88c4880cf0d98e53c0b7a7a08b28a456c93bef7720e276eada987e875a",
+   "len": 449
+  },
+  "M card one": {
+   "sha": "00b2a9ae693fce4ff3199051fec95eb36fbfd17e59b8772a21380d1bd0264732",
+   "len": 403
+  },
+  "M slicer": {
+   "sha": "0a752c91114943dce66518d6e19f526718a4804fd198eb63419568d413760b14",
+   "len": 715
+  },
+  "M slicer one": {
+   "sha": "23053b904c3fef232d8cc4902c70b33415f4b89fa30fc724da5bcd28c24fb1e5",
+   "len": 407
+  },
+  "M table cols": {
+   "sha": "24cfa9eb51f4c625bdb81a3177a69ff5cc59946d1b3e91e2001f1699930ed3a1",
+   "len": 457
+  },
+  "M kpi": {
+   "sha": "cf773c19277771dddec5de3385eecd6bfdf33873baee6feb00cabc0f522758df",
+   "len": 576
+  },
+  "M kpi two dates": {
+   "sha": "7a3dbcb9d29918a93fa27e3ab0e046dd69e2f47461007cc44a071f4c56ff7c96",
+   "len": 977
+  },
+  "M chart combo": {
+   "sha": "97f4a6ef0c73bb92ff4b381745c31773537dda656b1615f4fe3ff90c9bc8db36",
+   "len": 556
+  },
+  "M chart percent": {
+   "sha": "a7085e11ee7b124c4730651f6859fafa0f66ff39805f9b01c891e955acf96c80",
+   "len": 926
+  },
+  "M chart percent quoted": {
+   "sha": "da8036ceece08eed171e8959e39e5e8acbaac877245d474951f686153ecf511f",
+   "len": 506
+  },
+  "M chart unknown format": {
+   "sha": "2c566e666a1245a144ec042f9e45893ed1046fb762115aa8e5cba6cb88ed0356",
+   "len": 505
+  },
+  "M chart format throws": {
+   "sha": "d9a1398181d37045d764436baff827ac66efb4a4cab30bc9572ffb1cc957ea9c",
+   "len": 503
+  },
+  "M chart time": {
+   "sha": "dd0680a55913843428f52b78656756328a6044d315505bd0ba426a2bb22b19ca",
+   "len": 464
+  },
+  "M chart time levels": {
+   "sha": "bc7c9b15c5ae697906d90843db4fa9dc4ae2bec37924450118b717ce5401711b",
+   "len": 854
+  },
+  "M chart time level no type": {
+   "sha": "cccff2c2be7e9551258f35eed76ffb284a833b2386bc5ba87e52a225b69140d7",
+   "len": 485
+  },
+  "M chart time level other language": {
+   "sha": "28752e81ae5c5307c7383b8a649ba1457add36933ddee4cd7dd12ff75839d77d",
+   "len": 481
+  },
+  "M chart waterfall": {
+   "sha": "bbdfcdb2cc78c1663b07471a18306accbd94532ed7a0bf05a2f186a539f40a00",
+   "len": 551
+  },
+  "M chart series one": {
+   "sha": "0e0973b0b35e8fcd3f46c8588473f320b9ab5e798672d2ab87ebd3e8ab7f3e44",
+   "len": 577
+  },
+  "M chart series many": {
+   "sha": "c009d2688d8d109095f5d29ee9a9d619e5250a418f1c5294e30f0c4f4b06b707",
+   "len": 622
+  },
+  "M chart second category": {
+   "sha": "0e0973b0b35e8fcd3f46c8588473f320b9ab5e798672d2ab87ebd3e8ab7f3e44",
+   "len": 577
+  },
+  "M chart kpi value": {
+   "sha": "ebcec7e55171681467af0d513c53eca398d3cebd901ec93b5a67d16ed2b352bd",
+   "len": 564
+  },
+  "M chart kpi value only": {
+   "sha": "fb5733e75724dd3f6dda5609bd64e80176bdfa369e7401b05707ee3da01803e5",
+   "len": 457
+  },
+  "M chart goal no time": {
+   "sha": "aa2c0e81a72b6489f4a9aa6dd89434c29878d749e4b2c0d51c2e7de46f74b3a5",
+   "len": 552
+  },
+  "M chart colour rule": {
+   "sha": "e113f7d49f9acb562820d0985cd8cd83ce806e0644d76c74b6eac921272ddc8f",
+   "len": 579
+  },
+  "M chart colour value": {
+   "sha": "e938793d9b3bbf0af5c21db18a0df523bf5be44305f4ee0ac7f0d59ce6d7f8a8",
+   "len": 600
+  },
+  "M chart time helper": {
+   "sha": "f9952ec7471b25e6186726ab5db9b15b24c2436c8c76b8fc82679ed15f1b36aa",
+   "len": 458
+  },
+  "M chart anon": {
+   "sha": "2f3ee042d72b72ff13c1190ee5d32fac06e85a8713703daf6cd87bd302611154",
+   "len": 492
+  },
+  "M chart anon display names": {
+   "sha": "2f3ee042d72b72ff13c1190ee5d32fac06e85a8713703daf6cd87bd302611154",
+   "len": 492
+  },
+  "M chart typeOf throws": {
+   "sha": "d4ebdd90154412ca31f1f9c45e3dd667fef275c651a4e9173d54d6196b7bf85b",
+   "len": 454
+  },
+  "M chart combo series": {
+   "sha": "89b0531615658ca564d421c6f7ccfb82c06a6d0ae8584b4257fff8402b518c1b",
+   "len": 675
+  },
+  "M chart combo two bars series": {
+   "sha": "52b3058b318ed9b45b310052023ef10e7c3cb8842a90eecb2defde232c56ba74",
+   "len": 719
+  },
+  "M chart combo series rows drill": {
+   "sha": "6fe64f71ddbe552f559484cfc8748efa4950d725a727bf9268dea604dddc9705",
+   "len": 864
+  },
+  "M hint pie fits": {
+   "sha": "26801e4acc0f55a51bef29d110f056e7d78aa2498cf5fc1ef7789144968c9758",
+   "len": 505
+  },
+  "M hint pie unfit": {
+   "sha": "43bdf0187b0f93ed78dec0b2f0ac7fe7c57d724ae166d0ae92b467b2055a11b3",
+   "len": 576
+  },
+  "M hint donut": {
+   "sha": "1db77eabf0766010002b507ccba0b1a3d473f0bb7169bc417ea7052c8abf9461",
+   "len": 513
+  },
+  "M hint combo known no line": {
+   "sha": "097e1347c96f9644104b0909171a0ceb50cd0c6d8975bdff26f8a1472035a144",
+   "len": 668
+  },
+  "M hint combo known no line time": {
+   "sha": "778d9b23851ddb4c7e535ab0ad618bbeb3e92e6afed5818b245c831f20e014dd",
+   "len": 674
+  },
+  "M hint combo not known": {
+   "sha": "c6c7bda6b024af44a70e66ec915ead337f773b98284a0d7ce89cdcd7dd4f1ce5",
+   "len": 858
+  },
+  "M hint combo y2": {
+   "sha": "60902f6279a84e744f662202e2dd13417b3b5ee0d9c3782e569778cec4125866",
+   "len": 712
+  },
+  "M hint combo one value": {
+   "sha": "55abf0c2ae53169d74fcb4fa1328845a2932234e6edf6c67f9405566a31b70fb",
+   "len": 532
+  },
+  "M hint time": {
+   "sha": "dd992cc5f295f25868758b4478b1844c13977cc8f058b67016e3886ae6741a60",
+   "len": 526
+  },
+  "M hint time combo": {
+   "sha": "80129c22db78c4cf07d9c485a1ca6ebdc449cb86cb797b8b18773558e2b7a75c",
+   "len": 617
+  },
+  "M hint time no axis": {
+   "sha": "5ccdd0269c18ad6ad0f5506faf44f6d0d9dedd8bdc3f36e2ab8ca878a40cd3b7",
+   "len": 528
+  },
+  "M hint waterfall": {
+   "sha": "37a6fd35016651339d0d97a660aec891266d729a6ea0ff61cb226109575f7f90",
+   "len": 529
+  },
+  "M hint line": {
+   "sha": "136365f123dcd374ad45dd7e5228e5a32189f7704c573dd6ab997a3a8f3c1078",
+   "len": 509
+  },
+  "M hint bar on map": {
+   "sha": "2eac9374d64fe6db20be8531010322eb151d560c4fa2701e5e86ddabc48abe22",
+   "len": 519
+  },
+  "M hint map": {
+   "sha": "2eac9374d64fe6db20be8531010322eb151d560c4fa2701e5e86ddabc48abe22",
+   "len": 519
+  },
+  "M hint kpi gauge": {
+   "sha": "dc9074cdcf4da78e272f0e16f9b9839664fe504958d68e2754715e780c23ead8",
+   "len": 528
+  },
+  "M hint kpi": {
+   "sha": "927fba59433b70a92163849ada5a68c925a3c82bb823093e08c016c80d53e9bd",
+   "len": 632
+  },
+  "M hint gauge": {
+   "sha": "0eccf18ac696c3af7fb66e447d920be44a5b128809727bc91e7993863dddc6f1",
+   "len": 530
+  },
+  "M hint card": {
+   "sha": "212a5603a0be04bbb218aa502ce71e11724b8508a9e4a682cbd6899db77e096c",
+   "len": 461
+  },
+  "M hint table": {
+   "sha": "f803c4aa006a58c35e72e5c7da04ae846072d79f556a2ce129d28b9b866440cf",
+   "len": 535
+  },
+  "M hint matrix": {
+   "sha": "933ba51aefffd21baa571180b71c907df5a309f6042690f6335c5e9da1815697",
+   "len": 553
+  },
+  "M hint slicer": {
+   "sha": "f13cb07ed180b8804b4a0075c10829aed35f0379563be319657f77933d5c8466",
+   "len": 474
+  },
+  "M hint network": {
+   "sha": "730e308076f45d0f7ade3134c4a30d71b3d4b25632243ba7d6736ab76a4148e8",
+   "len": 734
+  },
+  "M hint scatter": {
+   "sha": "c12b17e1c46ca6e0f151fc77511264c4d4b222d89b378808c308608271069fd5",
+   "len": 609
+  },
+  "M hint area": {
+   "sha": "17d009d78c43863e100eba99eb8a6efa497e15ef651595e6d8753da2fc8ae1a2",
+   "len": 630
+  },
+  "M hint column": {
+   "sha": "458d367600a9106f877a75e20f7bf1cb2d162b7b18bb89dd0110aea614fd5393",
+   "len": 526
+  },
+  "M object hint": {
+   "sha": "d1496960252305c8b6c422fb90bdb38e7398813ca42d58aa040b680f3eeeabb2",
+   "len": 514
+  },
+  "M object hint on visual": {
+   "sha": "f9952ec7471b25e6186726ab5db9b15b24c2436c8c76b8fc82679ed15f1b36aa",
+   "len": 458
+  },
+  "M object and id hint": {
+   "sha": "60719119da17531502e6782adfe80a44fcda4d738f9fb1d0e2243b635c013886",
+   "len": 514
+  },
+  "M hint combo bar drill": {
+   "sha": "a25865f4353252fe0c121e4e8485ddc4ba6f2b962518af70f6486a65129016a8",
+   "len": 1020
+  },
+  "M drill matrix": {
+   "sha": "63107d6af5465898006e328b4ebdde5d7429cb244218a1e50c0debaef1c93761",
+   "len": 954
+  },
+  "M no opts": {
+   "sha": "f9952ec7471b25e6186726ab5db9b15b24c2436c8c76b8fc82679ed15f1b36aa",
+   "len": 458
+  },
+  "M null visual": {
+   "sha": "0ac05e593c7fd7af399167f256302ef23053cd0a5b40276adf6da1d893154f30",
+   "len": 61
+  }
+ }
+}
