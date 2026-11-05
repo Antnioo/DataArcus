@@ -10,10 +10,12 @@
 //          matrices chosen flat or refused, the kinds that cannot mirror, a card grid, a flip card, a field parameter's
 //          slicer, bar lists, a badge, legends, a running calculation, wide tables, a picture page, labels by id and by
 //          words, the copy in both languages, and no model; byte for byte as on ca3a1b73 (fixtures/fn1c-plans.json)
-//   W1-W2  assets/js/pbip-page.js write: every file and the whole result of six builds of the shared writer (as sp28
+//   W1-W2  assets/js/pbip-page.js write: every file and the whole result of ten builds of the shared writer (as sp28
 //          builds), with what no other build has: a designed header grown by a second row of page tabs, two pages of one
 //          name with their tabs in two rows, report texts without the groups' names,
-//          four charts coloured each by its own category, two measures that differ only by a direction mark; byte for byte as on ca3a1b73
+//          four charts coloured each by its own category, two measures that differ only by a direction mark, charts
+//          of a model without measures whose titles would be the same (English, Arabic; more
+//          of them than the sentences for one column; one fixed title over two columns); byte for byte as on ca3a1b73
 //          (fixtures/fn1c-builds.json)
 //   node test-0.3.2-fn1c.mjs            (--record writes the fixture: only on the base, never to make a split pass)
 import './fixtures/sp1/seeded-random.mjs';
@@ -185,7 +187,22 @@ const builds = {};
       const pages = [{ name: 'Colours', page: { w: 1280, h: 720 }, hand: true, panel: null, png: new Uint8Array([4]), slots: [Sl('title', 24, 12, 400, 56), Sl('logo', 1136, 12, 120, 56),
         Sl('column', 24, 190, 400, 250), Sl('bar', 440, 190, 400, 250), Sl('column', 856, 190, 400, 250), Sl('bar', 24, 456, 400, 250)] }];
       return Px.build({ name: 'FN1C colours', title: 'FN1C colours', pageName: 'Colours', lang: 'en', rtl: false, font: d.font, ui: d.ui, theme: E.buildTheme(d, 'en'), sample: false, model: { byPath: 'M.SemanticModel' },
-        bind: Object.assign({}, bind, { catPool: [C('City'), C('Channel'), C('Segment'), C('Product')] }), texts: E.REPORT_TEXTS.en, pages, chartColors: 'gradient' }); } };
+        bind: Object.assign({}, bind, { catPool: [C('City'), C('Channel'), C('Segment'), C('Product')] }), texts: E.REPORT_TEXTS.en, pages, chartColors: 'gradient' }); },
+    // w7, w8: a model without measures (a count of a column, Function 5), several charts by the same column and by two
+    // columns, English and Arabic: titles that would be the same, told apart (a number, the column, another sentence)
+    ...Object.fromEntries(['en', 'ar'].map((lang, i) => ['w' + (7 + i), () => { const d = E.fresh(); if (lang === 'ar') d.font = 'Tahoma'; E.repairState(d); const Sl = (kind, x, y, w, h, more) => Object.assign({ kind, x, y, w, h }, more || {});
+      const cnt = { t: T, c: 'Order Id', agg: 5 }, R0 = C('Region'), R1 = C('Channel');
+      const b = { kpis: [cnt], measure: cnt, cats: { bar: R0, column: R0, donut: R1, funnel: R0, treemap: R0, map: R0 }, catPool: [R0, R1], table: [R0, cnt], slicers: [R0] };
+      const pages = [{ name: lang === 'ar' ? 'المكرر' : 'Same', page: { w: 1280, h: 720 }, hand: true, panel: null, png: new Uint8Array([5]), slots: [Sl('title', 24, 12, 400, 56), Sl('logo', 1136, 12, 120, 56),
+        Sl('column', 24, 90, 400, 300), Sl('column', 440, 90, 400, 300), Sl('column', 856, 90, 400, 300), Sl('bar', 24, 400, 400, 300), Sl('bar', 440, 400, 400, 300), Sl('table', 856, 400, 400, 300)] }];
+      return Px.build({ name: 'FN1C same', title: 'FN1C same', pageName: pages[0].name, lang, rtl: lang === 'ar', font: d.font, ui: d.ui, theme: E.buildTheme(d, lang), sample: false, model: { byPath: 'M.SemanticModel' }, bind: b, texts: E.REPORT_TEXTS[lang], pages }); }])),
+    // w9: more charts by one column (a long name, not cut to a Top N) than its sentences (numbered); w10: one fixed title over twelve charts
+    // by two columns (the column said, numbered once its sentences run out)
+    ...Object.fromEntries([['w9', 7, null, [C('Fiscal quarter of the order as the finance calendar names it', { cal: { rows: 4, kind: 'quarter' } })]], ['w10', 12, 'Mix', [C('Region'), C('Channel')]]].map(([k, n, ttl, pool]) => [k, () => { const d = E.fresh(); E.repairState(d);
+      const cnt = { t: T, c: 'Order Id', agg: 5 }, b = { kpis: [cnt], measure: cnt, cats: { bar: pool[0], column: pool[pool.length - 1], donut: pool[0], funnel: pool[0], treemap: pool[0], map: pool[0] }, catPool: pool, table: [pool[0], cnt], slicers: [pool[0]] };
+      const slots = [{ kind: 'title', x: 24, y: 12, w: 400, h: 56 }, { kind: 'logo', x: 1136, y: 12, w: 120, h: 56 }].concat(Array.from({ length: n }, (z, j) => Object.assign({ kind: j % 2 ? 'bar' : 'column', x: 24 + (j % 4) * 310, y: 90 + Math.floor(j / 4) * 205, w: 300, h: 200 }, ttl ? { title: ttl } : {})));
+      return Px.build({ name: 'FN1C ' + k, title: 'FN1C ' + k, pageName: 'Many', lang: 'en', rtl: false, font: d.font, ui: d.ui, theme: E.buildTheme(d, 'en'), sample: false, model: { byPath: 'M.SemanticModel' }, bind: b, texts: E.REPORT_TEXTS.en,
+        pages: [{ name: 'Many', page: { w: 1280, h: 720 }, hand: true, panel: null, png: new Uint8Array([6]), slots }] }); }])) };
   for (const [k, f] of Object.entries(RUNS)) {
     let r; try { r = f(); } catch (e) { r = { threw: String(e && e.message || e) }; }
     const files = (r.files || []).map((x) => x.path + '\0' + digest(typeof x.data === 'string' ? x.data : Buffer.from(x.data || []).toString('base64'))).join('\n'), rest = Object.assign({}, r); delete rest.files; delete rest.zip;
@@ -209,7 +226,7 @@ for (const k of Object.keys(wantP)) {
   chk(g.texts === wantP[k].texts && g.labels === wantP[k].labels && g.rest === wantP[k].rest, `P3 ${k}. its texts, labels, what stays English and the terminology sheet as on ca3a1b73`);
 }
 const wantB = JSON.parse(fs.readFileSync(FIX3, 'utf8'));
-chk(Object.keys(builds).length === 6 && Object.keys(wantB).length === 6 && wantB.w1.headerGrew > 0 && wantB.w1.tabRows > 0, `W1. the 6 recorded builds are made, a header grown and tabs in two rows among them (got ${JSON.stringify(builds.w1)})`);
+chk(Object.keys(builds).length === 10 && Object.keys(wantB).length === 10 && wantB.w1.headerGrew > 0 && wantB.w1.tabRows > 0, `W1. the 10 recorded builds are made, a header grown and tabs in two rows among them (got ${JSON.stringify(builds.w1)})`);
 for (const k of Object.keys(wantB)) {
   const g = builds[k] || {};
   chk(g.files === wantB[k].files && g.n === wantB[k].n && g.result === wantB[k].result, `W2 ${k}. every file and the whole result of the build, byte for byte as on ca3a1b73`);
