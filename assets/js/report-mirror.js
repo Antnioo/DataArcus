@@ -45,6 +45,8 @@
   const { unitsOf, nameOf, round } = Units;
   const KIND_WHAT = {
     column: 'column, line, area and combo charts: value axis at the right, categories right to left by the sort',
+    // (0.3.2 PF1, B-380) the same charts over time with timeRightToLeft false (mirror-charts.js chartsOf)
+    columnTime: 'column, line, area and combo charts over time, kept left to right as asked (timeRightToLeft false): value axis at the right, their periods in the original\'s order from the left',
     waterfall: 'waterfall charts: no Total column in Arabic: the last step on the left ends at the total, with no total label either (Power BI 2.159 does not draw it); every step\'s tooltip gives the running total. Power BI draws a waterfall left to right only and its axis holds only the model\'s members, so each is written as a stacked column chart drawn as a waterfall (an invisible base under each step, from the twin\'s own report measures): the running total in the original\'s order, the first period at the right and each step rising or falling from the one at its right, the value axis at the right, labels on the steps (a fall shown negative), the original waterfall\'s increase and decrease colours, no legend (a stacked column chart\'s legend would list the invisible base); hovering the empty space under a step shows its base in the tooltip. The series are named in Arabic: القاعدة، ارتفاع، انخفاض، ارتفاع تحت الصفر، انخفاض تحت الصفر، الإجمالي الجاري، الإجمالي',
     // (D7) waterfallRtl "native": Power BI's own waterfall, kept as it is
     waterfallNative: 'waterfall charts: the waterfall reads left to right, as Power BI draws it',
@@ -124,6 +126,8 @@
     // line, area and combo charts' rules (chartRtl, shared with create_report's writer: mirrorChart)
     const ch = Charts.chartsOf(Object.assign({}, o, { visual: v, kind }));
     kind = ch.kind; changes.push(...ch.changes); kept.push(...ch.kept); measures = ch.measures; why = ch.why;
+    // (0.3.2 PF1, B-380) a chart over time kept left to right is said as itself (KIND_WHAT.columnTime) once mirrored
+    const said = (k) => (ch.timeKept && k === 'column' ? 'columnTime' : k);
     // (0.3.0 L2) a button slicer on one row (the writer's pills): its buttons read from the right, by a descending sort on
     // its field (a sort it already has is turned round); one of several rows moves only
     // (one row: mirror-policy.js oneRowButtons)
@@ -231,7 +235,7 @@
       const e = plainEntry(vco(), 'title'), a = strOf(e.properties.alignment);
       if (a !== 'center' && a !== 'right') { e.properties.alignment = str('right'); changes.push('title'); }
     }
-    return Object.assign({ json, kind, changes }, measures ? { measures } : {}, why ? { why } : {}, kept.length ? { kept } : {});
+    return Object.assign({ json, kind: said(kind), changes }, measures ? { measures } : {}, why ? { why } : {}, kept.length ? { kept } : {});
   }
 
 

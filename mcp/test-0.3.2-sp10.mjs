@@ -145,7 +145,8 @@ const gold = record ? got : rd(GOLD);
 // and the FiscalYear waterfall is kept as a time waterfall. Those runs' output (sha) is not pinned here; their kind and
 // changes are.
 const DD1A = {
-  'made-up/mFiscalYear': { time: { dt: true, none: true }, runs: { B: { kind: 'column', changes: ['position', 'value axis', 'title'] }, E: { kind: 'column', changes: ['position', 'value axis', 'title'] } } },
+  // (0.3.2 PF1, B-380: a chart over time kept left to right is said "columnTime"; its output is the same)
+  'made-up/mFiscalYear': { time: { dt: true, none: true }, runs: { B: { kind: 'columnTime', changes: ['position', 'value axis', 'title'] }, E: { kind: 'columnTime', changes: ['position', 'value axis', 'title'] } } },
   'made-up/mFiscalYearDim': { time: { dt: true, none: true } },
   'made-up/mStartOfMonth': { time: { dt: true, none: true } },
   'made-up/mWaterfallFiscal': { time: { dt: true, none: true }, runs: { E: { kind: 'waterfallTime', changes: ['position', 'value axis'] } } },

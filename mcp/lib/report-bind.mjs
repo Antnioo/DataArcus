@@ -81,7 +81,13 @@ export function fieldBinding(o) {
     (b.kpis || []).forEach((f) => list(cardFormats, f, f && f.cardFormat)); (b.table || []).forEach((f) => list(tableFormats, f, f && f.tableFormat));
     return b;
   };
-  const usable = F && F.kpis ? F.kpis.map((k) => k.m) : Bind.suggest(pickFrom, 8, relsOf(m, lang)).kpis.filter(Boolean).map((k) => k.m);
+  // (0.3.2 PF1, B-381, the laptop's look032 C: planFields.kpis [] (no cards) with planFields.measure Sales[Total Sales]
+  // wrote every chart with "Sum of Amount") the measures the report can show: the plan's cards, else the
+  // picker's, else the plan's measure. An empty list of cards (or one of text measures only, left out above) means no card,
+  // never "the model has no measures": the counted columns below are for a model without any (the cards' number is
+  // the plan's: report-build.mjs maxKpis)
+  const picked = () => Bind.suggest(pickFrom, 8, relsOf(m, lang)).kpis.filter(Boolean).map((k) => k.m);
+  const usable = F && F.kpis && F.kpis.length ? F.kpis.map((k) => k.m) : ((u) => (u.length || !(F && F.measure) ? u : [F.measure.m]))(picked());
   // Round 12 (#25): a model without measures gets its numbers from its columns, counted or summed by the visuals
   // (Bind.counts), so the report has cards, charts and a table instead of a page four fifths empty
   // (0.3.1 TT1: arName above)

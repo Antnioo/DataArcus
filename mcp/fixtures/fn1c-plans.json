@@ -7,11 +7,11 @@
   "size": 32095
  },
  "r2": {
-  "answer": "3b112a749d960e194d0a2f12fd3110c92dbacfb76ab01005a3167a49868f747f",
+  "answer": "3aa3bea98d6a0d14bdabbec4679966d667219c96ed802c2d5cb8ada4bc8df566",
   "texts": "b7f22638bd8d22092fae980fee05e0818e2ac56dcd89818c3bc316ef4ce4cc28",
   "labels": "c89a148be40e6752261e3038609a4b68de22fa3bfdaf32f884edffb8480b9bbe",
   "rest": "68a57ccb32198b54c8ef21e77d2beadfcbc420cd31a2e2f707c6804fc57ac000",
-  "size": 32011
+  "size": 31910
  },
  "r3": {
   "answer": "86fe9190d1421d2928e9766d057227a17540097e68139d532fc19db0c5177b75",
