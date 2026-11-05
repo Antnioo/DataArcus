@@ -78,6 +78,13 @@ Drawn on an Arabic page, runs left to right as on screen (a right-to-left reader
 - Orders are measured as AR3 measured them (each character's box; a tie by direction), the reference in the SVG's own
   font, size and weight, so a machine's font does not decide the result.
 
+## For the reviewer
+- Your message of 10:19 (on CI 42008846072: re-record sp23/sp44 after AP1, decide PM-3, wait for AP1) reached this
+  session at 11:33, after the narrowed fix, the one merge (cdc09a88) and the green run 42018097401. On 6744c983:
+  sp23, sp44 and preview-match pass unchanged; no fixture is re-recorded, no test changed. The narrowed rule leaves
+  «السنة» and «إجمالي المبيعات حسب المنتج: التفاصيل» as before, so PM-3 needs neither of your two options.
+  Nothing for AP1 to wait on from here. If you still want AP1 merged in first, that is a second merge: your call.
+
 ## For the owner
 - New Arabic text: none. AR3's open question stays on the laptop list: a text with no Latin letter («هامش الربح %») is
   written unwrapped; the preview now draws it right to left as an Arabic report reads it. One Desktop look tells if
