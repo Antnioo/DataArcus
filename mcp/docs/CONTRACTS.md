@@ -39,7 +39,7 @@ How it is kept true:
 | [1g Which model folder is read?](#1g-which-model-folder-is-read) | 3 | 0 of 8 | the website's model import, every MCP tool that reads a model | equal (one place: `model-nearest.js`) |
 | [1h Which column sorts this one?](#1h-which-column-sorts-this-one) | 3 | 0 of 11 | the website's field picker, check_model_health's fix script | equal (one place: `sort-column.js`) |
 | [grid Does this visual keep its grid left to right?](#grid-does-this-visual-keep-its-grid-left-to-right) | 2 | 0 of 18 | the twin | one place since DD2V: `assets/js/mirror-policy.js` `keepsGridLtr` |
-| [vt-slicer Is this visual a slicer?](#vt-slicer-is-this-visual-a-slicer) | 5 | 1 of 18 | read_report, check_report, the twin, the preview | (not in the audit) |
+| [vt-slicer Is this visual a slicer?](#vt-slicer-is-this-visual-a-slicer) | 5 | 0 of 18 | read_report, check_report, the twin, the preview | one place since DD2Z: `assets/js/visual-types.js` `SLICER_TYPES`, `isSlicer` |
 | [vt-bar Is this visual a bar chart?](#vt-bar-is-this-visual-a-bar-chart) | 5 | 0 of 18 | the twin, the preview, check_report | one place since DD2V: `assets/js/visual-types.js` `BAR_TYPES`, `isBar` |
 | [canon What is the canonical text of a plan?](#canon-what-is-the-canonical-text-of-a-plan) | 1 | 0 of 10 | every write (the approval's digest) | one place since DD2C: `mcp/lib/canon.mjs` `canon` |
 | [crc What is the CRC-32 of these bytes?](#crc-what-is-the-crc-32-of-these-bytes) | 2 | 0 of 8 | every PNG and ZIP written | one place since DD2P: `assets/js/png-bytes.js` `crc32` |
@@ -55,7 +55,7 @@ How it is kept true:
 | [decode What text do the bytes of a Power BI file hold?](#decode-what-text-do-the-bytes-of-a-power-bi-file-hold) | 4 | 0 of 10 | every model read (the MCP and the website) | one place since DD2D: `assets/js/model-file.js` `decodeText` |
 | [limits How large may a model file be?](#limits-how-large-may-a-model-file-be) | 4 | 0 of 8 | every model read (the MCP and the website) | one place since DD2D: `assets/js/model-file.js` `LIMITS` |
 | [text-runs What text does a text box hold?](#text-runs-what-text-does-a-text-box-hold) | 1 | 0 of 9 | check_report, read_report, the preview | one place since DD2T: `assets/js/text-runs.js` `paragraphTexts` |
-| [blank What is BLANK minus or divided by a number?](#blank-what-is-blank-minus-or-divided-by-a-number) | 2 | 3 of 10 | the SVG KPI designer page, create_report's SVG KPIs | equal by the audit; the probe differs (a division by BLANK or 0) |
+| [blank What is BLANK minus or divided by a number?](#blank-what-is-blank-minus-or-divided-by-a-number) | 2 | 0 of 14 | the SVG KPI designer page, create_report's SVG KPIs | one place since DD2Z: `assets/js/svg-expressions.js` `evalNode`, `evalValueKind` |
 
 "places" counts a function once for each family it answers (`mirror-policy.js` `kindOf` answers two). Who sees it:
 the MCP tool whose answer or written file carries the place's answer, or the website page. Golden tests that pin a
@@ -425,29 +425,38 @@ ledger's snapshot before DD1F.
 
 ## vt-slicer Is this visual a slicer?
 
+**One place:** assets/js/visual-types.js SLICER_TYPES and isSlicer (test mcp/test-0.3.2-dd2z.mjs).
+
 **Question:** a visual type: is it a slicer (a visual that filters the page by its field)?
 
 **Newest copy:** not in the audit.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/visual-types.js` `isSlicer` | [engines](MODULES.md#the-website-engines) | read_report, check_report |
-| `assets/js/mirror-policy.js` `kindOf` | [engines](MODULES.md#the-website-engines) | the twin |
+| `assets/js/visual-types.js` `isSlicer` | [engines](MODULES.md#the-website-engines) | the one place (DD2Z, with `SLICER_TYPES`): the four below read it |
+| `assets/js/mirror-policy.js` `kindOf` | [engines](MODULES.md#the-website-engines) | the twin; its `SLICER` list is gone |
 | `assets/js/page-preview.js` `kindOf` | [engines](MODULES.md#the-website-engines) | the preview |
-| `assets/js/report-a11y.js` `SLICERS` | [engines](MODULES.md#the-website-engines) | check_report (accessibility), the writer |
-| `mcp/lib/report-inventory.mjs` `SLICERS` | [reading](MODULES.md#the-mcp-reading) | read_report's answer |
+| `assets/js/report-a11y.js` `describe` | [engines](MODULES.md#the-website-engines) | check_report (accessibility), the writer; its `SLICERS` is gone |
+| `mcp/lib/report-inventory.mjs` `inventory` | [reading](MODULES.md#the-mcp-reading) | read_report's answer (a visual's `slicer` flag); its `SLICERS` is gone |
 
-**Today** (A: visual-types isSlicer, report-inventory SLICERS; B: mirror-policy kindOf; C: page-preview kindOf; D:
-report-a11y SLICERS):
+**What Desktop makes** (measured on 5 Nov, Power BI Desktop 2.159.1231.0, engine branch lab/look032 A): the pane's
+Slicer saves as `slicer`, the Button slicer as `advancedSlicerVisual`, the Input slicer as `textSlicer`, the List
+slicer (Preview) as `listSlicer`. None saves as `filterSlicer`.
 
-| input | A | B | C | D |
-|---|---|---|---|---|
-| filterSlicer | true | false (other) | false (other) | false |
+**Today** (before DD2Z; A: visual-types isSlicer, report-inventory SLICERS; B: mirror-policy kindOf, page-preview
+kindOf, report-a11y SLICERS): `filterSlicer` was a slicer for A, "other" for B. Now all five answer the same on all 18
+types.
 
-**Decided answer:** proposed: visual-types.js `isSlicer` (the catalog's slicers, filterSlicer included) for all five.
-The reviewer and the owner decide (a filterSlicer would then be mirrored as a slicer: a Desktop check first).
+**Decided answer:** the four Desktop makes; `filterSlicer` (a catalog type Desktop never writes as a slicer) is "other"
+everywhere (D-1104-15, with the Desktop check of 5 Nov).
 
-**The test that will pin it:** the probe's 18 types (family `vt-slicer`).
+**The test that pins it:** `mcp/test-0.3.2-dd2z.mjs` (the probe's 18 types through `isSlicer`, source and .min.js; the
+five places on the 18 types: one answer each; no place keeps a list of its own) and the probe's 18 types (family
+`vt-slicer`).
+
+**Since DD2Z (5 Nov):** one list, `SLICER_TYPES` in visual-types.js (the four), with `isSlicer`; the four places read it.
+The one answer that changed: `filterSlicer` is no longer a slicer for read_report (a visual's `slicer` flag, the
+SLICER marker in its answer) and check_report; the twin and the preview already said "other".
 
 ## vt-bar Is this visual a bar chart?
 
@@ -920,30 +929,45 @@ Where the paragraphs sit stays each caller's (`plain(general)` in three, the fir
 
 ## blank What is BLANK minus or divided by a number?
 
-**Question:** a - b and a / b with BLANK (null), as DAX answers them.
+**One place:** assets/js/svg-expressions.js evalNode and evalValueKind (test mcp/test-0.3.2-dd2z.mjs).
 
-**Newest copy:** equal by the audit; **the probe disagrees** on a division by BLANK or by 0.
+**Question:** DIVIDE ( a, b ), a / b and a - b with BLANK (null), as Power BI Desktop answers them.
+
+**Newest copy:** equal by the audit; the probe disagreed on `/` before DD2Z (evalNode threw).
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/svg-expressions.js` `evalNode` | [engines](MODULES.md#the-website-engines) | the SVG KPI's preview values (the designer page, create_report's SVG KPIs) |
-| `assets/js/svg-editor-panels.js` `evalValues` | [engines](MODULES.md#the-website-engines) | the SVG KPI designer page (the results beside the inputs) |
+| `assets/js/svg-expressions.js` `evalNode` | [engines](MODULES.md#the-website-engines) | the one place (DD2Z): the SVG KPI's preview values (the designer page, create_report's SVG KPIs) |
+| `assets/js/svg-editor-panels.js` `evalValues` | [engines](MODULES.md#the-website-engines) | the SVG KPI designer page (the results beside the inputs): calls `evalValueKind`, which runs the compiler's own tree through `evalNode` |
 
-**Today** (A: svg-expressions evalNode, B: svg-editor-panels evalValues):
+**What Desktop answers** (measured on 5 Nov, Power BI Desktop 2.159.1231.0, DAX query view, ISBLANK and the value as
+text; engine branch lab/look032 B). No expression raises an error:
 
-| input | A | B |
-|---|---|---|
-| 5 / BLANK | throws Error | null |
-| BLANK / BLANK | throws Error | null |
-| 5 / 0 | throws Error | null |
+| expression | Desktop |
+|---|---|
+| `DIVIDE ( 5, BLANK () )` | BLANK |
+| `DIVIDE ( BLANK (), BLANK () )` | BLANK |
+| `DIVIDE ( 5, 0 )` | BLANK |
+| `5 / BLANK ()` | Infinity |
+| `BLANK () / BLANK ()` | BLANK |
+| `5 / 0` | Infinity |
+| `0 / 0` | NaN |
 
-A throws DIV0 for its caller to show; B shows nothing. DAX's `/` gives an error for 5 / 0 and BLANK for BLANK / BLANK
-and 5 / BLANK; `DIVIDE` gives BLANK for all three.
+**Before DD2Z:** `evalNode` threw DIV0 for a `/` by BLANK or by 0 (the old text here said "DAX's `/` gives an error for
+5 / 0": wrong, Desktop gives Infinity); `evalValues` showed nothing (BLANK) for them.
 
-**Decided answer:** proposed: which DAX each one mirrors (the compiled measure's `/` or `DIVIDE`) decides it; then one
-evaluator. The reviewer and the owner decide.
+**Decided answer:** one evaluator (`evalNode`), exactly the table above (BLANK is null; Infinity and NaN are JavaScript's),
+`DIVIDE` where the expression is DIVIDE and `/` where it is `/`; what the compiled measure does after (the `COALESCE ( ..., 0 )`
+of a drawn value) is applied as the compiled DAX writes it. The SVG KPI "Progress ring" with a BLANK or a 0 target
+draws an empty ring reading "0%" (never an error). The compiler's DAX is the truth and is unchanged.
 
-**The test that will pin it:** the probe's 10 sums (family `blank`).
+**The test that pins it:** `mcp/test-0.3.2-dd2z.mjs` (the probe's 14 BLANK inputs through both places; the ring with a
+BLANK, a 0 and a missing target) and the probe's 14 inputs (family `blank`); the designer page's ring cases in
+`scripts/tests/dd2z.mjs`.
+
+**Since DD2Z (5 Nov):** `evalValues` calls `evalValueKind` (svg-expressions.js), which builds the compiler's value tree
+(`VALUE_NODES`, also read by svg-kpi-compiler.js) and evaluates it; its own ratio, diff and % rules are gone. `/` by BLANK
+or 0 no longer throws.
 
 ## Equal copies, not probed (the audit's Phase 2 list)
 

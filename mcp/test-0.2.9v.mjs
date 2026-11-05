@@ -186,9 +186,9 @@ export async function v029visuals({ check }) {
       { path: 'definition/pages/p1/visuals/c/visual.json', data: JSON.stringify(Object.assign(vj('c', 'filterSlicer', { Values: [col('Orders', 'Region')] }), { position: { x: 0, y: 500, z: 0, width: 10, height: 10 } })) }];
     let inv = null; try { inv = RR.inventory(memorySource(files), 'R'); } catch (e) { /* below */ }
     const by = inv ? Object.fromEntries(inv.pages[0].visuals.map((v) => [v.id, v])) : {};
-    chk(() => JSON.stringify(inv.customVisuals.map((c) => c.type || c)) === '["heatMap"]' && by.a.meaning && !by.b.meaning && by.c.slicer === true && RR.typeName('scorecard') === 'scorecard' && RR.typeName('drilldownpie') === 'custom drilldownpie',
-      () => `A5-6 + A6-13: read_report: a type the report declares custom is custom (heatMap here), a catalog type is not (scorecard), filterSlicer is a slicer, a plain-word id is custom: ${JSON.stringify(inv && { custom: inv.customVisuals, v: inv.pages[0].visuals.map((v) => [v.id, v.type, !!v.meaning, !!v.slicer]) })}`); }
-  chk(() => VT.SLICER_TYPES.includes('filterSlicer') && VT.SLICER_TYPES.every((t) => catalog.includes(t)), () => 'A5-6: the slicers come from the catalog, filterSlicer among them');
+    chk(() => JSON.stringify(inv.customVisuals.map((c) => c.type || c)) === '["heatMap"]' && by.a.meaning && !by.b.meaning && !by.c.slicer && RR.typeName('scorecard') === 'scorecard' && RR.typeName('drilldownpie') === 'custom drilldownpie',
+      () => `A5-6 + A6-13: read_report: a type the report declares custom is custom (heatMap here), a catalog type is not (scorecard), filterSlicer is not a slicer (DD2Z: Desktop never saves one as a slicer), a plain-word id is custom: ${JSON.stringify(inv && { custom: inv.customVisuals, v: inv.pages[0].visuals.map((v) => [v.id, v.type, !!v.meaning, !!v.slicer]) })}`); }
+  chk(() => !VT.SLICER_TYPES.includes('filterSlicer') && VT.SLICER_TYPES.every((t) => catalog.includes(t)), () => 'A5-6: the slicers come from the catalog, filterSlicer not among them (DD2Z: Desktop makes four, none saves as filterSlicer)');
   chk(() => ['scorecard', 'heatMap', 'filterSlicer', 'aiNarratives'].every((t) => meaningOf({ type: t, fields: {} }).why === 'a Power BI visual: kept as it is'), () => 'A5-6: the meaning module asks the same catalog (scorecard, heatMap, filterSlicer, aiNarratives are Power BI\'s own)');
   // every chosen native visual takes its roles by Microsoft's capabilities (role names, kinds, counts)
   const { nativeFor, fitsCapabilities } = M;

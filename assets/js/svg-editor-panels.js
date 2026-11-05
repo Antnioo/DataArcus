@@ -27,15 +27,12 @@ function valuesKit(p) {
   // ---------- values (what the panels show of them) ----------
   const byId = (id) => S.design.values.find((v) => v.id === id);
   const valueName = (id) => { const v = byId(id); return v ? v.label || v.measure || v.id : '?'; };
-  // Same BLANK rules as the compiler, for showing formula results next to the inputs
+  // The compiler's own evaluator (svg-expressions.js evalValueKind, 0.3.2 DD2Z), for showing formula results next to the inputs
   const evalValues = () => {
     const out = {}, m = samples();
     S.design.values.forEach((v) => {
-      const a = out[v.a], b = out[v.b];
       if (v.kind === 'measure') out[v.id] = v.measure in m ? m[v.measure] : null;
-      else if (v.kind === 'ratio') out[v.id] = a == null || b == null || b === 0 ? null : a / b;
-      else if (v.kind === 'diff') out[v.id] = a == null && b == null ? null : (a || 0) - (b || 0);
-      else if (v.kind === 'pct') { const n = a == null && b == null ? null : (a || 0) - (b || 0); out[v.id] = n == null || b == null || b === 0 ? null : n / b; }
+      else if (v.kind === 'ratio' || v.kind === 'diff' || v.kind === 'pct') out[v.id] = root.SVGKPIExpr.evalValueKind(v.kind, out[v.a], out[v.b]);
     });
     return out;
   };
