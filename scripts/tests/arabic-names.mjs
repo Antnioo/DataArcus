@@ -28,7 +28,7 @@ const PIN = path.join(HERE, 'fixtures', 'tt2-english-download.json');
 const AR = /[؀-ۿ]/, bare = (s) => String(s == null ? '' : s).replace(/[‎‏⁦-⁩]/g, '');
 const mixed = (s) => AR.test(bare(s)) && /[A-Za-z]/.test(bare(s));
 
-function unzip(buf) {
+export function unzip(buf) {
   const out = {}; let p = 0;
   while (buf.readUInt32LE(p) === 0x04034b50) {
     const size = buf.readUInt32LE(p + 18), nlen = buf.readUInt16LE(p + 26), xlen = buf.readUInt16LE(p + 28);
