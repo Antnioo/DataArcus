@@ -21,8 +21,8 @@
   "Models" with 2, then 3 English-named made-up models: read_model, suggest_fields, check_model_health with
   `lang: "ar"` say AR4's Arabic exactly («نموذجين», «3 نماذج»); read_model without lang: English as today (2 and 3);
   `lang: "en"` on an Arabic-named folder («نماذج»): English; without lang on it: Arabic (AR4's letter rule kept);
-  the three schemas take `lang` en|ar optional and read_report's does not. Red first on the base: 7 of 12 fail
-  (the six `lang: "ar"`/`"en"` answers and the schema check; the strict inputs refuse an unknown `lang`).
+  the three schemas take `lang` en|ar optional and read_report's does not. Red first on the base: 8 of 12 failed on ca3a1b73
+  (the six `lang` answers and the two schema checks; the strict inputs refused an unknown `lang`).
   ar4 stays 10; every other suite unchanged; sp42 and the pinned fixtures unchanged; lint 0.
 - **Resume:** plan pushed; next the red test, then the change, CHANGELOG, merge integration once, area runs, tests.yml, wait.
 
