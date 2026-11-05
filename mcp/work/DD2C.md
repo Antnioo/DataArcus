@@ -18,8 +18,9 @@
   unchanged (r4a, j14-exact, the twin artifact: no expected answer moves); mutation 76/76; the probe's canon table:
   1 place, 0 of 10 differ (was 2 places, equal); samejob.py is the reviewer's (not in this repo): its same-shape
   groups go DOWN by one, not countable here.
-- **State:** step 4 done (CONTRACTS.md One place; WORK.md line). Next: the full run and CI.
-- **Resume:** merge integration once if it moved, build:min, every check, CI.
+- **State:** steps 1-4 done. integration/0.3.2 did not move (no merge); build:min: nothing to change. Local: MCP 205
+  of 205 (5 shards side by side; mutation 76/76; dd2c 48), site 42 of 42, lint 0. CI: below.
+- **Resume:** none; the reviewer reads and merges.
 
 ## The answers (before, measured on the base 128285e; after: the same, pinned in dd2c)
 The probe's 10 values, canon(v): `{"a":2,"b":1}`, `{"b":1}`, `null` (undefined at the top), `null`, `[3,1,2]`,
@@ -45,3 +46,43 @@ Made-up plans (dd2c's inputs B1-B3, M1-M4, D1-D3), the base's digests:
    D1 digests; Q1-Q3). Restored: PASS 48.
 2. An old copy: a tree object made with `git mktree` (no commit, no branch) holding the base with plans.mjs's sort()
    taken out, passed as `DD2C_BASE=<tree>`: FAIL 40 of 48 (P1, P7, P9, P12, P13, Q1-Q3: plans.mjs (base) alone differs).
+
+## Copies before -> after (2 -> 1)
+| place | before | after |
+|---|---|---|
+| `mcp/lib/artifact.mjs` `canon` | its own line | `import { canon } from './canon.mjs'` (modelPrintOf, bindingOf) |
+| `mcp/lib/plans.mjs` `canon` | the same line | `import { canon } from './canon.mjs'` (shown, saidOf, differences: inputDifferences, the gate) |
+| `mcp/lib/canon.mjs` `canon` | none | the one place |
+Answers before and after: the same on every input (the table above); the probe's family canon: 1 place, 0 of 10 differ.
+
+## Decisions I made
+- canon.mjs is MCP only (no browser place has it): an ES module of one export, the shape of small-cache.mjs.
+- The probe's family canon and the ledger's place table moved in step 2 (the copies went there, so check-contracts
+  would fail otherwise); step 4 is the ledger's prose (One place, the test, Since DD2C).
+- MODULES.md: the row sits in "the approval gate" (the security path); its "used by" was "none (a test)" in step 1,
+  as check-modules --strict reads callers from the code.
+- tests.json: dd2c in area "safety" (beside j14), placed before dd2d.
+- The parity test reads the old copy as the one line `const canon = ` of each file at the base (DD2C_BASE to name
+  another revision), not the probe's source reader: one line, nothing it names.
+- WORK.md: two family names shortened ("nearest", "sort-col") to stay under 3,200 characters.
+
+## For the owner
+none
+
+## Risky changes
+none: the security path's text is one line moved, every digest pinned byte for byte against the base and by both
+old copies; the gate's mutants still all killed (76/76).
+
+## Seen, not in scope
+- My step 4 commit went 7 characters over WORK.md's cap: `check-agent-memory | tail -1` hid the exit code (a
+  pipe before a commit); the next commit fixed it. WORK.md's list line is near its cap: the next DD job will need to
+  fold it (for example "DD1A-DD2C").
+- A local `npm test` run while the 5 MCP shards ran: the 5 site suites still open when my time limit stopped the run
+  failed with "browser has been closed"; run again alone, all 5 passed (sp31-sp36).
+- mcp/lib/redesign.mjs has its own local `canon` (a patch list's text, another question): not this family.
+
+## Lessons for the reviewer
+- A family whose places are a lib's private names: the probe's place moves to the new module in the same commit as
+  the import (check-contracts reads the definitions).
+- A parity test of a lib's private line can read just that line from `git show <base>:<file>`; a `git mktree` tree
+  with one copy changed makes the red proof of an old copy without a commit.
