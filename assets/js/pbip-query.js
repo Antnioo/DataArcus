@@ -51,8 +51,9 @@
     return [h.slice(0, 8), h.slice(8, 12), h.slice(12, 16), h.slice(16, 20), h.slice(20, 32)].map((p) => p.join('')).join('-');
   };
   // contrast of two colours (WCAG): the page's marks keep the accent colour only where it can be read on the card
-  const lum = (hex) => { const v = [1, 3, 5].map((i) => parseInt(String(hex).slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4))); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
-  const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const Contrast = typeof module !== 'undefined' && module.exports ? require('./contrast.js') : root.DAContrast;
+  const lum = Contrast.luminance;
+  const contrast = Contrast.contrast;
   const mixHex = (a, b, t) => {
     const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
     const A = p(a), B = p(b);
