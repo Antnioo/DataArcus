@@ -27,8 +27,9 @@
 - **Local:** merged origin/integration/0.3.2 once (cdc09a88), build:min (no change), `npm test -- --keep-going`:
   211 suites passed; lint 0; mutation 86 of 86 killed; modules --strict, result-lines, contracts, agent-memory,
   test-site-config, changelog-words green; the website's run-all 42 of 42.
-- **State:** CI next.
-- **Resume:** the CI line below; then the reviewer.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42020891995 on b52e74001d2174531992f0f9d82e7159b15c4d62
+- **State:** DONE (Linux and Windows CI; macOS where the reviewer merges).
+- **Resume:** the reviewer reads and merges.
 
 ## Step 2: what was written and what the page named (made-up model, 5 Nov)
 Model: `Service.SemanticModel` (model.bim): Work Orders (Order ID, Date Key, Department, Status, Hours; measures Work
