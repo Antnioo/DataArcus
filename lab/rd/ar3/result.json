@@ -1,0 +1,943 @@
+{
+  "labels": 14,
+  "order": {
+    "previewDiffersFromBrowser": 8,
+    "candidateFixDiffersFromBrowser": 0,
+    "candidateFixDiffersFromBidiJs": 0,
+    "browserRtlBaseDiffersFromLtrBase": 1,
+    "bidiJsDiffersFromChromiumPreviewText": 0,
+    "bidiJsDiffersFromChromiumWritten": 0,
+    "rows": [
+      {
+        "label": "الربع الأول 2026",
+        "written": false,
+        "shownIsLabel": true,
+        "preview": [
+          "2026",
+          "الربع الأول "
+        ],
+        "browser": [
+          "2026",
+          "الربع الأول "
+        ],
+        "previewVsBrowser": true,
+        "fixVsBrowser": true,
+        "fixVsBidiJsRtl": true,
+        "browserRtlVsLtr": true,
+        "bidiJsVsPreview": true,
+        "bidiJsVsBrowser": true,
+        "bidiJsVsPlainLtr": true,
+        "bidiJs": [
+          "2026",
+          "الربع الأول "
+        ],
+        "bidiJsPreviewText": [
+          "2026",
+          "الربع الأول "
+        ]
+      },
+      {
+        "label": "رمضان",
+        "written": false,
+        "shownIsLabel": true,
+        "preview": [
+          "رمضان"
+        ],
+        "browser": [
+          "رمضان"
+        ],
+        "previewVsBrowser": true,
+        "fixVsBrowser": true,
+        "fixVsBidiJsRtl": true,
+        "browserRtlVsLtr": true,
+        "bidiJsVsPreview": true,
+        "bidiJsVsBrowser": true,
+        "bidiJsVsPlainLtr": true,
+        "bidiJs": [
+          "رمضان"
+        ],
+        "bidiJsPreviewText": [
+          "رمضان"
+        ]
+      },
+      {
+        "label": "Q1 / الربع 1",
+        "written": true,
+        "shownIsLabel": true,
+        "preview": [
+          "Q1 / ",
+          "الربع 1"
+        ],
+        "browser": [
+          " / الربع 1",
+          "Q1"
+        ],
+        "previewVsBrowser": false,
+        "fixVsBrowser": true,
+        "fixVsBidiJsRtl": true,
+        "browserRtlVsLtr": true,
+        "bidiJsVsPreview": true,
+        "bidiJsVsBrowser": true,
+        "bidiJsVsPlainLtr": true,
+        "bidiJs": [
+          " / الربع 1",
+          "Q1"
+        ],
+        "bidiJsPreviewText": [
+          "Q1 / ",
+          "الربع 1"
+        ]
+      },
+      {
+        "label": "05/11/2026",
+        "written": false,
+        "shownIsLabel": true,
+        "preview": [
+          "05/11/2026"
+        ],
+        "browser": [
+          "05/11/2026"
+        ],
+        "previewVsBrowser": true,
+        "fixVsBrowser": true,
+        "fixVsBidiJsRtl": true,
+        "browserRtlVsLtr": true,
+        "bidiJsVsPreview": true,
+        "bidiJsVsBrowser": true,
+        "bidiJsVsPlainLtr": true,
+        "bidiJs": [
+          "05/11/2026"
+        ],
+        "bidiJsPreviewText": [
+          "05/11/2026"
+        ]
+      },
+      {
+        "label": "٪12",
+        "written": false,
+        "shownIsLabel": true,
+        "preview": [
+          "٪12"
+        ],
+        "browser": [
+          "٪12"
+        ],
+        "previewVsBrowser": true,
+        "fixVsBrowser": true,
+        "fixVsBidiJsRtl": true,
+        "browserRtlVsLtr": true,
+        "bidiJsVsPreview": true,
+        "bidiJsVsBrowser": true,
+        "bidiJsVsPlainLtr": true,
+        "bidiJs": [
+          "٪12"
+        ],
+        "bidiJsPreviewText": [
+          "٪12"
+        ]
+      },
+      {
+        "label": "المبيعات حسب الشهر - Q1 2026",
+        "written": true,
+        "shownIsLabel": true,
+        "preview": [
+          "المبيعات حسب الشهر",
+          " - Q1 2026"
+        ],
+        "browser": [
+          "Q1 2026",
+          "المبيعات حسب الشهر - "
+        ],
+        "previewVsBrowser": false,
+        "fixVsBrowser": true,
+        "fixVsBidiJsRtl": true,
+        "browserRtlVsLtr": true,
+        "bidiJsVsPreview": true,
+        "bidiJsVsBrowser": true,
+        "bidiJsVsPlainLtr": true,
+        "bidiJs": [
+          "Q1 2026",
+          "المبيعات حسب الشهر - "
+        ],
+        "bidiJsPreviewText": [
+          "المبيعات حسب الشهر",
+          " - Q1 2026"
+        ]
+      },
+      {
+        "label": "رمضان 1447 (Feb 2026)",
+        "written": true,
+        "shownIsLabel": true,
+        "preview": [
+          "1447",
+          "رمضان ",
+          " (Feb 2026)"
+        ],
+        "browser": [
+          ")",
+          "Feb 2026",
+          " (",
+          "1447",
+          "رمضان "
+        ],
+        "previewVsBrowser": false,
+        "fixVsBrowser": true,
+        "fixVsBidiJsRtl": true,
+        "browserRtlVsLtr": true,
+        "bidiJsVsPreview": true,
+        "bidiJsVsBrowser": true,
+        "bidiJsVsPlainLtr": true,
+        "bidiJs": [
+          ")",
+          "Feb 2026",
+          " (",
+          "1447",
+          "رمضان "
+        ],
+        "bidiJsPreviewText": [
+          "1447",
+          "رمضان ",
+          " (Feb 2026)"
+        ]
+      },
+      {
+        "label": "Sales YTD الإجمالي",
+        "written": true,
+        "shownIsLabel": true,
+        "preview": [
+          "Sales YTD ",
+          "الإجمالي"
+        ],
+        "browser": [
+          " الإجمالي",
+          "Sales YTD"
+        ],
+        "previewVsBrowser": false,
+        "fixVsBrowser": true,
+        "fixVsBidiJsRtl": true,
+        "browserRtlVsLtr": true,
+        "bidiJsVsPreview": true,
+        "bidiJsVsBrowser": true,
+        "bidiJsVsPlainLtr": true,
+        "bidiJs": [
+          " الإجمالي",
+          "Sales YTD"
+        ],
+        "bidiJsPreviewText": [
+          "Sales YTD ",
+          "الإجمالي"
+        ]
+      },
+      {
+        "label": "الهدف 12% مقابل الفعلي 9.5%",
+        "written": false,
+        "shownIsLabel": true,
+        "preview": [
+          "9.5",
+          "% مقابل الفعلي ",
+          "12",
+          "الهدف ",
+          "%"
+        ],
+        "browser": [
+          "%",
+          "9.5",
+          "% مقابل الفعلي ",
+          "12",
+          "الهدف "
+        ],
+        "previewVsBrowser": false,
+        "fixVsBrowser": true,
+        "fixVsBidiJsRtl": true,
+        "browserRtlVsLtr": false,
+        "bidiJsVsPreview": true,
+        "bidiJsVsBrowser": true,
+        "bidiJsVsPlainLtr": true,
+        "bidiJs": [
+          "%",
+          "9.5",
+          "% مقابل الفعلي ",
+          "12",
+          "الهدف "
+        ],
+        "bidiJsPreviewText": [
+          "9.5",
+          "% مقابل الفعلي ",
+          "12",
+          "الهدف ",
+          "%"
+        ]
+      },
+      {
+        "label": "عيد الفطر 20/03/2026",
+        "written": false,
+        "shownIsLabel": true,
+        "preview": [
+          "20/03/2026",
+          "عيد الفطر "
+        ],
+        "browser": [
+          "20/03/2026",
+          "عيد الفطر "
+        ],
+        "previewVsBrowser": true,
+        "fixVsBrowser": true,
+        "fixVsBidiJsRtl": true,
+        "browserRtlVsLtr": true,
+        "bidiJsVsPreview": true,
+        "bidiJsVsBrowser": true,
+        "bidiJsVsPlainLtr": true,
+        "bidiJs": [
+          "20/03/2026",
+          "عيد الفطر "
+        ],
+        "bidiJsPreviewText": [
+          "20/03/2026",
+          "عيد الفطر "
+        ]
+      },
+      {
+        "label": "Revenue (AED) الإيرادات",
+        "written": true,
+        "shownIsLabel": true,
+        "preview": [
+          "Revenue (AED) ",
+          "الإيرادات"
+        ],
+        "browser": [
+          ") الإيرادات",
+          "AED",
+          " (",
+          "Revenue"
+        ],
+        "previewVsBrowser": false,
+        "fixVsBrowser": true,
+        "fixVsBidiJsRtl": true,
+        "browserRtlVsLtr": true,
+        "bidiJsVsPreview": true,
+        "bidiJsVsBrowser": true,
+        "bidiJsVsPlainLtr": true,
+        "bidiJs": [
+          ") الإيرادات",
+          "AED",
+          " (",
+          "Revenue"
+        ],
+        "bidiJsPreviewText": [
+          "Revenue (AED) ",
+          "الإيرادات"
+        ]
+      },
+      {
+        "label": "الربع 2 - Q2",
+        "written": true,
+        "shownIsLabel": true,
+        "preview": [
+          "الربع 2",
+          " - Q2"
+        ],
+        "browser": [
+          "Q2",
+          "الربع 2 - "
+        ],
+        "previewVsBrowser": false,
+        "fixVsBrowser": true,
+        "fixVsBidiJsRtl": true,
+        "browserRtlVsLtr": true,
+        "bidiJsVsPreview": true,
+        "bidiJsVsBrowser": true,
+        "bidiJsVsPlainLtr": true,
+        "bidiJs": [
+          "Q2",
+          "الربع 2 - "
+        ],
+        "bidiJsPreviewText": [
+          "الربع 2",
+          " - Q2"
+        ]
+      },
+      {
+        "label": "الأسبوع 45 من 52",
+        "written": false,
+        "shownIsLabel": true,
+        "preview": [
+          "52",
+          " من ",
+          "45",
+          "الأسبوع "
+        ],
+        "browser": [
+          "52",
+          " من ",
+          "45",
+          "الأسبوع "
+        ],
+        "previewVsBrowser": true,
+        "fixVsBrowser": true,
+        "fixVsBidiJsRtl": true,
+        "browserRtlVsLtr": true,
+        "bidiJsVsPreview": true,
+        "bidiJsVsBrowser": true,
+        "bidiJsVsPlainLtr": true,
+        "bidiJs": [
+          "52",
+          " من ",
+          "45",
+          "الأسبوع "
+        ],
+        "bidiJsPreviewText": [
+          "52",
+          " من ",
+          "45",
+          "الأسبوع "
+        ]
+      },
+      {
+        "label": "KPI: نسبة الإنجاز ٪87",
+        "written": true,
+        "shownIsLabel": true,
+        "preview": [
+          "KPI: ",
+          "87",
+          "نسبة الإنجاز ٪"
+        ],
+        "browser": [
+          "87",
+          ": نسبة الإنجاز ٪",
+          "KPI"
+        ],
+        "previewVsBrowser": false,
+        "fixVsBrowser": true,
+        "fixVsBidiJsRtl": true,
+        "browserRtlVsLtr": true,
+        "bidiJsVsPreview": true,
+        "bidiJsVsBrowser": true,
+        "bidiJsVsPlainLtr": true,
+        "bidiJs": [
+          "87",
+          ": نسبة الإنجاز ٪",
+          "KPI"
+        ],
+        "bidiJsPreviewText": [
+          "KPI: ",
+          "87",
+          "نسبة الإنجاز ٪"
+        ]
+      }
+    ]
+  },
+  "shaping": {
+    "runs": 13,
+    "maxWidthDiffPct": 0,
+    "maxPixelDiffPct": 3.23,
+    "minUnshapedPixelDiffPct": 47.54,
+    "maxHalfInkDiffPct": 3.27,
+    "unshapedContextualGlyphs": 0,
+    "arabicLetters": 97,
+    "contextualGlyphs": 73,
+    "glyphs": 139,
+    "list": [
+      {
+        "text": "الربع الأول",
+        "letters": 10,
+        "glyphs": [
+          "uni0644",
+          "uni0648",
+          "uni0654",
+          "uni0627.fina.rlig",
+          "uni0644.init.rlig",
+          "uni0627",
+          "space",
+          "uni0639.fina",
+          "dotbelowar",
+          "uni066E.init",
+          "uni0631.fina",
+          "uni0644.init",
+          "uni0627"
+        ],
+        "advance": 3886,
+        "notdef": 0,
+        "contextual": 6,
+        "unshapedContextual": 0,
+        "unshapedGlyphs": [
+          "uni0644",
+          "uni0648",
+          "uni0623",
+          "uni0644",
+          "uni0627",
+          "space",
+          "uni0639",
+          "uni0628",
+          "uni0631",
+          "uni0644",
+          "uni0627"
+        ],
+        "browserWidth": 186.53,
+        "harfbuzzWidth": 186.53,
+        "widthDiffPct": 0,
+        "pixelDiffPct": 3.23,
+        "halfInkDiffPct": 3.27,
+        "unshapedPixelDiffPct": 79.38
+      },
+      {
+        "text": "رمضان",
+        "letters": 5,
+        "glyphs": [
+          "dotabovear",
+          "uni06BA",
+          "uni0627.fina",
+          "dotabovear",
+          "uni0635.medi",
+          "uni0645.init",
+          "uni0631"
+        ],
+        "advance": 2777,
+        "notdef": 0,
+        "contextual": 3,
+        "unshapedContextual": 0,
+        "unshapedGlyphs": [
+          "uni0646",
+          "uni0627",
+          "uni0636",
+          "uni0645",
+          "uni0631"
+        ],
+        "browserWidth": 133.3,
+        "harfbuzzWidth": 133.3,
+        "widthDiffPct": 0,
+        "pixelDiffPct": 3.21,
+        "halfInkDiffPct": 2.45,
+        "unshapedPixelDiffPct": 65.41
+      },
+      {
+        "text": "الربع",
+        "letters": 5,
+        "glyphs": [
+          "uni0639.fina",
+          "dotbelowar",
+          "uni066E.init",
+          "uni0631.fina",
+          "uni0644.init",
+          "uni0627"
+        ],
+        "advance": 1664,
+        "notdef": 0,
+        "contextual": 4,
+        "unshapedContextual": 0,
+        "unshapedGlyphs": [
+          "uni0639",
+          "uni0628",
+          "uni0631",
+          "uni0644",
+          "uni0627"
+        ],
+        "browserWidth": 79.87,
+        "harfbuzzWidth": 79.87,
+        "widthDiffPct": 0,
+        "pixelDiffPct": 1.62,
+        "halfInkDiffPct": 1.23,
+        "unshapedPixelDiffPct": 83.94
+      },
+      {
+        "text": "٪",
+        "letters": 0,
+        "glyphs": [
+          "uni066A"
+        ],
+        "advance": 473,
+        "notdef": 0,
+        "contextual": 0,
+        "unshapedContextual": 0,
+        "unshapedGlyphs": [
+          "uni066A"
+        ],
+        "browserWidth": 22.7,
+        "harfbuzzWidth": 22.7,
+        "widthDiffPct": 0,
+        "pixelDiffPct": 0.84,
+        "halfInkDiffPct": 0.56,
+        "unshapedPixelDiffPct": 0.84
+      },
+      {
+        "text": "المبيعات حسب الشهر",
+        "letters": 16,
+        "glyphs": [
+          "uni0631.fina",
+          "uni0647.medi",
+          "threedotsupabovear",
+          "uni0633.medi",
+          "uni0644.init",
+          "uni0627",
+          "space",
+          "dotbelowar",
+          "uni066E.fina",
+          "uni0633.medi",
+          "uni062D.init",
+          "space",
+          "twodotshorizontalabovear",
+          "uni066E",
+          "uni0627.fina",
+          "uni0639.medi",
+          "twodotshorizontalbelowar",
+          "uni066E.medi.wide",
+          "dotbelowar",
+          "uni066E.medi",
+          "uni0645.medi",
+          "uni0644.init",
+          "uni0627"
+        ],
+        "advance": 8900,
+        "notdef": 0,
+        "contextual": 13,
+        "unshapedContextual": 0,
+        "unshapedGlyphs": [
+          "uni0631",
+          "uni0647",
+          "uni0634",
+          "uni0644",
+          "uni0627",
+          "space",
+          "uni0628",
+          "uni0633",
+          "uni062D",
+          "space",
+          "uni062A",
+          "uni0627",
+          "uni0639",
+          "uni064A",
+          "uni0628",
+          "uni0645",
+          "uni0644",
+          "uni0627"
+        ],
+        "browserWidth": 427.2,
+        "harfbuzzWidth": 427.2,
+        "widthDiffPct": 0,
+        "pixelDiffPct": 2.35,
+        "halfInkDiffPct": 2.02,
+        "unshapedPixelDiffPct": 84.53
+      },
+      {
+        "text": "الإجمالي",
+        "letters": 8,
+        "glyphs": [
+          "twodotshorizontalbelowar",
+          "uni0649.fina",
+          "uni0644.init",
+          "uni0627.fina",
+          "uni0645.medi",
+          "dotbelowar",
+          "uni062D.init",
+          "uni0655",
+          "uni0627.fina.rlig",
+          "uni0644.init.rlig",
+          "uni0627"
+        ],
+        "advance": 3274,
+        "notdef": 0,
+        "contextual": 7,
+        "unshapedContextual": 0,
+        "unshapedGlyphs": [
+          "uni064A",
+          "uni0644",
+          "uni0627",
+          "uni0645",
+          "uni062C",
+          "uni0625",
+          "uni0644",
+          "uni0627"
+        ],
+        "browserWidth": 157.15,
+        "harfbuzzWidth": 157.15,
+        "widthDiffPct": 0,
+        "pixelDiffPct": 1.81,
+        "halfInkDiffPct": 2.05,
+        "unshapedPixelDiffPct": 84.76
+      },
+      {
+        "text": "الهدف",
+        "letters": 5,
+        "glyphs": [
+          "dotabovear",
+          "uni06A1",
+          "uni062F.fina",
+          "uni0647.medi",
+          "uni0644.init",
+          "uni0627"
+        ],
+        "advance": 2520,
+        "notdef": 0,
+        "contextual": 3,
+        "unshapedContextual": 0,
+        "unshapedGlyphs": [
+          "uni0641",
+          "uni062F",
+          "uni0647",
+          "uni0644",
+          "uni0627"
+        ],
+        "browserWidth": 120.96,
+        "harfbuzzWidth": 120.96,
+        "widthDiffPct": 0,
+        "pixelDiffPct": 1.53,
+        "halfInkDiffPct": 1.9,
+        "unshapedPixelDiffPct": 56.21
+      },
+      {
+        "text": "مقابل الفعلي",
+        "letters": 11,
+        "glyphs": [
+          "twodotshorizontalbelowar",
+          "uni0649.fina",
+          "uni0644.medi",
+          "uni0639.medi",
+          "dotabovear",
+          "uni06A1.medi",
+          "uni0644.init",
+          "uni0627",
+          "space",
+          "uni0644.fina",
+          "dotbelowar",
+          "uni066E.init",
+          "uni0627.fina",
+          "twodotshorizontalabovear",
+          "uni06A1.medi",
+          "uni0645.init"
+        ],
+        "advance": 5120,
+        "notdef": 0,
+        "contextual": 10,
+        "unshapedContextual": 0,
+        "unshapedGlyphs": [
+          "uni064A",
+          "uni0644",
+          "uni0639",
+          "uni0641",
+          "uni0644",
+          "uni0627",
+          "space",
+          "uni0644",
+          "uni0628",
+          "uni0627",
+          "uni0642",
+          "uni0645"
+        ],
+        "browserWidth": 245.76,
+        "harfbuzzWidth": 245.76,
+        "widthDiffPct": 0,
+        "pixelDiffPct": 2.63,
+        "halfInkDiffPct": 2.93,
+        "unshapedPixelDiffPct": 88.92
+      },
+      {
+        "text": "عيد الفطر",
+        "letters": 8,
+        "glyphs": [
+          "uni0631.fina",
+          "uni0637.medi",
+          "dotabovear",
+          "uni06A1.medi",
+          "uni0644.init",
+          "uni0627",
+          "space",
+          "uni062F.fina",
+          "twodotshorizontalbelowar",
+          "uni066E.medi.wide",
+          "uni0639.init"
+        ],
+        "advance": 3767,
+        "notdef": 0,
+        "contextual": 7,
+        "unshapedContextual": 0,
+        "unshapedGlyphs": [
+          "uni0631",
+          "uni0637",
+          "uni0641",
+          "uni0644",
+          "uni0627",
+          "space",
+          "uni062F",
+          "uni064A",
+          "uni0639"
+        ],
+        "browserWidth": 180.82,
+        "harfbuzzWidth": 180.82,
+        "widthDiffPct": 0,
+        "pixelDiffPct": 2.21,
+        "halfInkDiffPct": 1.87,
+        "unshapedPixelDiffPct": 80.05
+      },
+      {
+        "text": "الإيرادات",
+        "letters": 9,
+        "glyphs": [
+          "twodotshorizontalabovear",
+          "uni066E",
+          "uni0627",
+          "uni062F",
+          "uni0627",
+          "uni0631.fina",
+          "twodotshorizontalbelowar",
+          "uni066E.init.wide",
+          "uni0655",
+          "uni0627.fina.rlig",
+          "uni0644.init.rlig",
+          "uni0627"
+        ],
+        "advance": 3436,
+        "notdef": 0,
+        "contextual": 4,
+        "unshapedContextual": 0,
+        "unshapedGlyphs": [
+          "uni062A",
+          "uni0627",
+          "uni062F",
+          "uni0627",
+          "uni0631",
+          "uni064A",
+          "uni0625",
+          "uni0644",
+          "uni0627"
+        ],
+        "browserWidth": 164.93,
+        "harfbuzzWidth": 164.93,
+        "widthDiffPct": 0,
+        "pixelDiffPct": 2.05,
+        "halfInkDiffPct": 2.2,
+        "unshapedPixelDiffPct": 61.25
+      },
+      {
+        "text": "الأسبوع",
+        "letters": 7,
+        "glyphs": [
+          "uni0639",
+          "uni0648.fina",
+          "dotbelowar",
+          "uni066E.medi",
+          "uni0633.init",
+          "uni0654",
+          "uni0627.fina.rlig",
+          "uni0644.init.rlig",
+          "uni0627"
+        ],
+        "advance": 2926,
+        "notdef": 0,
+        "contextual": 5,
+        "unshapedContextual": 0,
+        "unshapedGlyphs": [
+          "uni0639",
+          "uni0648",
+          "uni0628",
+          "uni0633",
+          "uni0623",
+          "uni0644",
+          "uni0627"
+        ],
+        "browserWidth": 140.45,
+        "harfbuzzWidth": 140.45,
+        "widthDiffPct": 0,
+        "pixelDiffPct": 2.32,
+        "halfInkDiffPct": 2.8,
+        "unshapedPixelDiffPct": 70.01
+      },
+      {
+        "text": "من",
+        "letters": 2,
+        "glyphs": [
+          "dotabovear",
+          "uni06BA.fina",
+          "uni0645.init"
+        ],
+        "advance": 1255,
+        "notdef": 0,
+        "contextual": 2,
+        "unshapedContextual": 0,
+        "unshapedGlyphs": [
+          "uni0646",
+          "uni0645"
+        ],
+        "browserWidth": 60.24,
+        "harfbuzzWidth": 60.24,
+        "widthDiffPct": 0,
+        "pixelDiffPct": 1.31,
+        "halfInkDiffPct": 1.15,
+        "unshapedPixelDiffPct": 47.54
+      },
+      {
+        "text": "نسبة الإنجاز ٪",
+        "letters": 11,
+        "glyphs": [
+          "uni066A",
+          "space",
+          "dotabovear",
+          "uni0631",
+          "uni0627.fina",
+          "dotbelowar",
+          "uni062D.medi",
+          "dotabovear",
+          "uni066E.init",
+          "uni0655",
+          "uni0627.fina.rlig",
+          "uni0644.init.rlig",
+          "uni0627",
+          "space",
+          "twodotshorizontalabovear",
+          "uni0647.fina",
+          "dotbelowar",
+          "uni066E.medi",
+          "uni0633.medi",
+          "dotabovear",
+          "uni066E.init"
+        ],
+        "advance": 5325,
+        "notdef": 0,
+        "contextual": 9,
+        "unshapedContextual": 0,
+        "unshapedGlyphs": [
+          "uni066A",
+          "space",
+          "uni0632",
+          "uni0627",
+          "uni062C",
+          "uni0646",
+          "uni0625",
+          "uni0644",
+          "uni0627",
+          "space",
+          "uni0629",
+          "uni0628",
+          "uni0633",
+          "uni0646"
+        ],
+        "browserWidth": 255.6,
+        "harfbuzzWidth": 255.6,
+        "widthDiffPct": 0,
+        "pixelDiffPct": 2.83,
+        "halfInkDiffPct": 2.77,
+        "unshapedPixelDiffPct": 76.82
+      }
+    ]
+  },
+  "cost": {
+    "sizes": {
+      "harfbuzzjs": {
+        "package": 1321408,
+        "wasm": 444394,
+        "wasmGzip": 181449,
+        "js": 85257
+      },
+      "bidiJs": {
+        "package": 171249,
+        "minJs": 11975,
+        "minJsGzip": 5801
+      },
+      "font": {
+        "ttf": 194176
+      }
+    },
+    "bidiFirstPageMs": 8.17,
+    "bidiMsPerPage": 0.294,
+    "harfbuzzInitMs": 1.53,
+    "harfbuzzMsPerPage": 0.437
+  }
+}
