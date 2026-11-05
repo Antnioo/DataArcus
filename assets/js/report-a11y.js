@@ -23,6 +23,8 @@
   'use strict';
   const node = typeof module !== 'undefined' && module.exports;
   const Engine = node ? require('./design-engine.js') : root.DAEngine;
+  // a slicer: visual-types.js isSlicer, its one home (0.3.2 DD2Z; the writer loads visual-types.js before this file)
+  const VT = node ? require('./visual-types.js') : root.DAVisualTypes;
   // the story titles are optional: on a branch without them the model's names are used as they are
   const ST = (() => { if (!node) return root.DAStoryTitles || null; try { return require('./story-titles.js'); } catch (e) { return null; } })();
 
@@ -58,7 +60,6 @@
   const CARDS = /^(card|cardVisual|multiRowCard|kpi|gauge)$/;
   const TABLES = /^(tableEx|table)$/;
   const MATRIX = /^(pivotTable|matrix)$/;
-  const SLICERS = /^(slicer|advancedSlicerVisual|listSlicer|textSlicer)$/;
   // a chart: a visual whose colour draws its data (contrast and legend rules)
   const isChart = (type) => Object.prototype.hasOwnProperty.call(SHAPE, type);
   const DECORATIVE = /^(shape|basicShape|image|actionButton)$/;
@@ -124,7 +125,7 @@
     if (!all.length) return null;
     const names = (ps) => uniq(ps.map((p) => nameOf(p, ar)));
     const values = names(all.filter(isValueProj)), cols = names(all.filter((p) => !isValueProj(p)));
-    if (SLICERS.test(type)) return capped([S.slicer(and(names(all), ar))]);
+    if (VT.isSlicer(type)) return capped([S.slicer(and(names(all), ar))]);
     if (CARDS.test(type)) return values.length || cols.length ? capped([S.card(and(values.length ? values : cols, ar))]) : null;
     if (TABLES.test(type)) {
       // (a right-to-left table's row label is a report measure named as its column: one name, said once)

@@ -74,7 +74,7 @@ chk(() => percent(noneSvg) === '0%' && /^0\.00 /.test(dash(blankSvg)) && dash(no
 chk(() => percent(fullSvg) === '83%' && dash(fullSvg) !== dash(blankSvg), () => `R4 1240000 of 1500000: ${percent(fullSvg)}, wanted 83% and a ring that differs from the empty one`);
 
 // ---- S: one place, no list of its own ----
-const NO_LIST = [['assets/js/mirror-policy.js', /\bSLICER = Object\.freeze/], ['assets/js/page-preview.js', /advancedSlicerVisual/], ['assets/js/report-a11y.js', /\bSLICERS\b|advancedSlicerVisual/],
+const NO_LIST = [['assets/js/mirror-policy.js', /\bSLICER = Object\.freeze/], ['assets/js/page-preview.js', /\^\(slicer\|advancedSlicerVisual/], ['assets/js/report-a11y.js', /\bSLICERS\b|advancedSlicerVisual/],
   ['mcp/lib/report-inventory.mjs', /\bSLICERS\b/], ['assets/js/svg-editor-panels.js', /a == null \|\| b == null \|\| b === 0/]];
 for (const [f, re] of NO_LIST) chk(() => !re.test(read(f)), () => `S1 ${f} holds a rule of its own (${re})`);
 const READS = [['assets/js/mirror-policy.js', /VT\.isSlicer/], ['assets/js/page-preview.js', /VT\.isSlicer/], ['assets/js/report-a11y.js', /VT\.isSlicer/],

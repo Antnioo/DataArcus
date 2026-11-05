@@ -534,8 +534,14 @@ export const FAMILIES = [
       P('assets/js/visual-types.js', 'isSlicer', 'export', async (x, get) => (await get())(x.t)),
       P('assets/js/mirror-policy.js', 'kindOf', 'inner', async (x, get) => { const k = await mpKind(x.t, get); return { v: k === 'slicer', note: k }; }),
       P('assets/js/page-preview.js', 'kindOf', 'inner', async (x, get) => { const k = await ppKind(x.t, get); return { v: k === 'slicer', note: k }; }),
-      P('assets/js/report-a11y.js', 'SLICERS', 'inner', async (x, get) => (await get()).test(x.t)),
-      P('mcp/lib/report-inventory.mjs', 'SLICERS', 'source', async (x, get) => (await get()).test(x.t)),
+      // (DD2Z) check_report's alt text for a slicer ("Filters the page by ...") and read_report's inventory flag `slicer`
+      P('assets/js/report-a11y.js', 'describe', 'export', async (x, get) => { const t = (await get())({ visualType: x.t, query: { queryState: { Values: { projections: [{ field: { Column: { Expression: { SourceRef: { Entity: 'Sales' } }, Property: 'Region' } }, queryRef: 'Sales.Region' }] } } } }, 'en'); return typeof t === 'string' && t.startsWith('Filters the page by'); }),
+      P('mcp/lib/report-inventory.mjs', 'inventory', 'export', async (x, get) => {
+        const J = (o) => Buffer.from(JSON.stringify(o)), { memorySource } = await import(pathToFileURL(abs('mcp/lib/read-report.mjs')).href);
+        const files = [{ path: 'definition/report.json', data: J({}) }, { path: 'definition/pages/pages.json', data: J({ pageOrder: ['p1'] }) }, { path: 'definition/pages/p1/page.json', data: J({ name: 'p1', displayName: 'P' }) },
+          { path: 'definition/pages/p1/visuals/v1/visual.json', data: J({ name: 'v1', position: { x: 0, y: 0, width: 100, height: 50 }, visual: { visualType: x.t } }) }];
+        return (await get())(memorySource(files), 'R').pages[0].visuals[0].slicer === true;
+      }),
     ] },
   { id: 'vt-bar', title: 'Is this visual a bar chart?', question: 'a visual type: a chart of horizontal bars?',
     inputs: TYPES, places: [

@@ -25,7 +25,6 @@
   const COLUMN = Object.freeze(['columnChart', 'clusteredColumnChart', 'hundredPercentStackedColumnChart', 'lineChart', 'areaChart', 'stackedAreaChart', 'hundredPercentStackedAreaChart', 'lineClusteredColumnComboChart', 'lineStackedColumnComboChart', 'ribbonChart']);
   // (a waterfall's steps follow its category order: the sort reverses them; its category axis has no invertAxis)
   const WATERFALL = Object.freeze(['waterfallChart']);
-  const SLICER = Object.freeze(['slicer', 'advancedSlicerVisual', 'listSlicer', 'textSlicer']);
   // visuals with nothing that has a side (the labs and round 13: they move only). Any other Power BI visual (a scatter
   // chart, a decomposition tree...) is 'other': it moves only too, but the plan says no setting is proven
   // for it (the cross-review's T6), instead of claiming it has no side
@@ -52,7 +51,7 @@
     if (t === 'textbox') return 'textbox';
     if (t === 'actionButton') return 'button';
     if (t === 'pageNavigator') return 'navigator';
-    if (SLICER.includes(t)) return 'slicer';
+    if (VT.isSlicer(t)) return 'slicer';
     return SIDELESS.includes(t) ? 'plain' : 'other';
   }
 
@@ -134,7 +133,7 @@
   const keepsGridLtr = (json) => { const k = kindOf(json); return k === 'matrix' || k === 'table'; };
 
   const api = Object.freeze({ isObj, lit, strOf, entries, projections, first,
-    COLUMN, BAR, WATERFALL, SLICER, SIDELESS, isCustom, kindOf,
+    COLUMN, BAR, WATERFALL, SIDELESS, isCustom, kindOf,
     DATE_LIKE, isTime, categoryIsTime, invertsTimeAxis,
     MOVES_ONLY, movesOnly, waterfallKind, ONE_ROW_H, oneRowButtons, verticalValues, TITLED, titled, keepsGridLtr });
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAMirrorPolicy = api;
