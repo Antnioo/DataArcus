@@ -26,7 +26,12 @@
 - **Characterisation, red-proven on a16fa727:** 152 mutants (engine 64, Gulf 47, questions 41), one or more per part,
   each in a git worktree of the base: 147 red (sp27 56, sq7 3, fn1d 88: each fn1d case red on a16fa727 under its
   mutant first, fn1d green on a16fa727 unmutated); 5 equivalent (below).
-- **Resume:** CI on the merged head, then DONE.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42102425083 on 9bc25c38 (Linux and Windows; macOS skipped
+  by the workflow on a branch run). The run before (42100227753 on 77d77112) was red on website-checks' sitemap
+  lastmod only: `sitemap-lastmod --write` was not run after the last commit; 9bc25c38 is that write. After it only
+  this note changed.
+- **State: DONE.**
+- **Resume:** none; the reviewer's merge (WORK.md's 0.3.2 line: FN1D, left to the merge). The ratchet: 18 -> 15.
 
 ## The steps (one per job of the old function, called in the old order)
 - **model-health-engine.js analyze**, context `ah`: graphStep (normalise, index, auto date tables, the dependency
@@ -121,6 +126,8 @@ none
 ## Lessons for the reviewer
 - A survivors list written with `echo` ends in a newline, and `split(' ')` then misses its last id (H10, Q40 skipped
   once, run again alone): read such lists with `.trim()`.
+- I forgot `node scripts/sitemap-lastmod.mjs --write` after the last commit and CI went red on it once (a page's
+  stamp changed): the DONE rule could list it before `gh workflow run`.
 - `cat > file` with no input in a compound command waits for stdin until the timeout: a stray one cost a run.
 - Mutants of a function whose outputs a suite pins by hash (sp27) still survive when the fixtures sit away from the
   edges: 31 of 41 question mutants needed new small models. A brief could ask for edge models per condition first.
