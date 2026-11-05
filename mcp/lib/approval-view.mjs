@@ -21,7 +21,9 @@ import { cut, HEX, KIND_AR, isScript, kindsLine, plainLine } from './approval-di
 // (0.3.0 step 1, "Preview before Approve": the planned pages drawn by the shared renderer, the lab page's too)
 const Preview = createRequire(import.meta.url)('../../assets/js/page-preview.js');
 
-const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// (0.3.2 DD2H) the HTML escape: assets/js/html-escape.js htmlEsc, its one home (CONTRACTS.md family html)
+const { htmlEsc } = createRequire(import.meta.url)('../../assets/js/html-escape.js');
+const esc = htmlEsc;
 
 const STYLE = `:root{color-scheme:light dark;--bg:#f4f6fa;--card:#fff;--ink:#14213d;--soft:#5b6478;--line:#dde3ee;--accent:#0f7c90;--accent-ink:#fff;--warn:#8a5a00}
 @media (prefers-color-scheme:dark){:root{--bg:#0d1424;--card:#16203a;--ink:#e8edf7;--soft:#a7b1c8;--line:#2a3756;--accent:#33c3d8;--accent-ink:#06202a;--warn:#f0c060}}

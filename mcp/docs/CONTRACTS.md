@@ -648,6 +648,9 @@ The reviewer and the owner decide.
 
 **The test that will pin it:** the probe's 10 texts (family `html`).
 
+**DD2H (in progress):** `assets/js/html-escape.js` `htmlEsc` is the one home; `mcp/lib/approval-view.mjs` `esc` reads it
+(the MCP has required assets/js modules since DD1C, so the note above that it stays self-contained no longer holds).
+
 ## decode What text do the bytes of a Power BI file hold?
 
 **One place:** assets/js/model-file.js decodeText (test mcp/test-0.3.2-dd2d.mjs).
