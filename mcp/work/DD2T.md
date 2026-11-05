@@ -11,13 +11,14 @@
   page-preview.js read it, loaded first in theme-generator.js (BUILDER, loadPreview), `npm run build:min`; 4 the parity
   test (every place, every input); 5 CONTRACTS.md, MODULES.md, CHANGELOG, WORK.md. Then merge integration once if it
   moved, `npm run build:min`, every check, `gh workflow run tests.yml`, wait.
-- **Expected:** 4 readers -> 1 (2 joins, each named at its caller). dd2t about 50 checks after step 1, about 110
+- **Expected checks:** 4 readers -> 1 (2 joins, each named at its caller). dd2t about 50 checks after step 1, about 110
   after step 4 (exact numbers in Results). Every other suite's number unchanged; mutation 76/76; lint 0;
   check-contracts, check-modules --strict green; same-shape groups go down (4 copies of the runs reader -> 0).
 - **Answers that change (only these):** a run whose value is a number (0, 12) or a boolean is text for report-a11y (a
   Tab stop, the alt-text note) and is drawn by page-preview. Two paragraphs, an empty paragraph, spaces around: each
   caller's answer as before. Anything else in a golden, twin or Desktop-measured test: stop, "## For the owner".
-- **State:** plan pushed. **Resume:** step 1.
+- **State:** step 1 (the module, dd2t 73 checks).
+- **Resume:** step 2.
 
 ## The rule
 `paragraphTexts(paragraphs)`: a list, one text per paragraph that is an object (a paragraph that is not one is
