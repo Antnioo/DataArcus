@@ -24,8 +24,11 @@
   rc24 (2 regexes): below.
 - **Step 4:** planFields.timeAxis "none" (create_report's fields.timeAxis too): no time axis in the plan, its text,
   the page or the report. gulf-date-questions 63 -> 68 (GD-12, red on the base: 3 of 66 failed).
-- **State:** step 4 done.
-- **Resume:** merge integration once, build:min, the full run, CI.
+- **Local:** merged origin/integration/0.3.2 once (cdc09a88), build:min (no change), `npm test -- --keep-going`:
+  211 suites passed; lint 0; mutation 86 of 86 killed; modules --strict, result-lines, contracts, agent-memory,
+  test-site-config, changelog-words green; the website's run-all 42 of 42.
+- **State:** CI next.
+- **Resume:** the CI line below; then the reviewer.
 
 ## Step 2: what was written and what the page named (made-up model, 5 Nov)
 Model: `Service.SemanticModel` (model.bim): Work Orders (Order ID, Date Key, Department, Status, Hours; measures Work
@@ -98,3 +101,43 @@ approved: the round's 9 slicers and 3 reset buttons (3 pages) were on the approv
   field-suggest.min.js and the ?v= stamps (theme-generator.js and its pages); test-site-config green; the website's
   scripts/tests/run-all.mjs 42 of 42 (run alone: run beside 3 MCP suites its shared browser crashed, 26 "crash").
 - CHANGELOG [Unreleased]: two plain lines (the page names everything; no time axis when asked).
+
+## Decisions I made
+- (a) is a page gap: the evidence is the gate (create_report takes path and planId only, writes the approved plan's
+  files by digest; an unapproved plan's id is refused), the re-plan test, and the counts above.
+- The list is read back from the exact files (the reading layer), not rebuilt from the plan's slots: it can't say
+  something other than what is written. Kept in the plan's data (`pagesWritten`), outside the digest.
+- One row a page with one item per kind (the brief's "a count line per page"); the slicers and the charts' fields
+  are named, cards, text boxes, shapes and groups only counted. Buttons by where they go; a bookmark button by its
+  name "(a bookmark)", no claim on what the bookmark restores (the file says only which bookmark).
+- (b) the row stays and points to the list (it is true: DataArcus chose them); without a read-back (no path) it
+  is as before.
+- (c) the plan's kind changes are the first page's (plan_layout's slots): said "on page 1 "<name>"". The other
+  pages' kinds are in the list.
+- (d) every tooltip page is named, with its visuals and the pages that show it; not drawn in the preview.
+- (e) `timeAxis: "none"` on the existing planFields (and create_report's fields), not a new input: the smallest
+  option, pinned with the plan like every field. It also leaves out the year slicer the picker would add; a slicer
+  the person names (Dim Date[Year]) stays, as asked.
+- sp23, sp44 and rc24 changed: this job's text exactly (Step 3).
+
+## For the owner
+- The Arabic of the new section (Step 3): a draft for you to approve or change.
+- Whether the preview should also draw the tooltip pages (named now, not drawn).
+
+## Risky changes
+- `assets/js/field-suggest.js` (shared with the website): `pinned.noDate` only; the website never pins it, so its
+  picks are the same (run-all 42 of 42, sp30 and the field-suggest suites unchanged).
+
+## Seen, not in scope
+- The Layout row shows "Filters: true" for filters "top" (the raw value, not "top").
+- plan_layout's kindChanges, like the page, covers the first page only; a kind changed on page 2 is said only by
+  the new list.
+- The website's run-all crashes its shared browser when run beside other suites in this container (26 "crash");
+  alone, 42 of 42.
+
+## Lessons for the reviewer
+- To see the gap: plan a design report with path (any made-up model) and count the written pages' visual.json
+  against the page: the old page named only the Fields rows. A9 does it on its own made-up service model.
+- sp23/sp44 were re-recorded only after a dump of the base's and the branch's pages (SP23_DUMP): 2 lines rewritten,
+  the rest the new section; the 16 other entries unchanged. Check that before accepting any re-record.
+- This container's clone was shallow: sp6 and glass-tables need the base commits (`git fetch --unshallow`).
