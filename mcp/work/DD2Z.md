@@ -42,6 +42,7 @@ Lists: vt-slicer 5 places over 4 lists -> 1; blank 2 rules -> 1. Same-shape grou
 
 ## Changed on purpose
 - `mcp/fixtures/sp16-codegen.json` (sp16 E1): the base's output listed "D21 _x: evaluator threw DIV0, DAX Infinity" as a disagreement; now the evaluator says Infinity too. Lines that differ: `"agree": 139` -> `140`, and the D21 line removed (3 disagreements -> 2; D25 and D26 are number-format ones, untouched). Edited by hand, not re-recorded, so nothing else moved.
+- `mcp/test-0.2.9v.mjs` (v029visuals, still 105 checks; CI shard 4 found it, red on the first CI run): two expectations said filterSlicer is a slicer; now they say it is not: `by.c.slicer === true` -> `!by.c.slicer` (read_report on a made-up filterSlicer visual), and `VT.SLICER_TYPES.includes('filterSlicer')` -> `!...includes(...)`. Same checks, opposite answer for the one type, as the brief decides.
 - Source of the measured table: lab/look032 A and B, Power BI Desktop 2.159.1231.0 (the brief, 5 Nov).
 
 ## CHANGELOG line
