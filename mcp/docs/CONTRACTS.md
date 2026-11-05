@@ -38,9 +38,9 @@ How it is kept true:
 | [1f Is this text Arabic?](#1f-is-this-text-arabic) | 7 | 4 of 11 | every measured text, check_report, create_report, the twin | `text-measure.js` / `field-catalog.js` (the broad test) |
 | [1g Which model folder is read?](#1g-which-model-folder-is-read) | 3 | 0 of 8 | the website's model import, every MCP tool that reads a model | equal (one place: `model-nearest.js`) |
 | [1h Which column sorts this one?](#1h-which-column-sorts-this-one) | 3 | 0 of 11 | the website's field picker, check_model_health's fix script | equal (one place: `sort-column.js`) |
-| [grid Does this visual keep its grid left to right?](#grid-does-this-visual-keep-its-grid-left-to-right) | 2 | 0 of 18 | the twin | equal |
+| [grid Does this visual keep its grid left to right?](#grid-does-this-visual-keep-its-grid-left-to-right) | 2 | 0 of 18 | the twin | one place since DD2V: `assets/js/mirror-policy.js` `keepsGridLtr` |
 | [vt-slicer Is this visual a slicer?](#vt-slicer-is-this-visual-a-slicer) | 5 | 1 of 18 | read_report, check_report, the twin, the preview | (not in the audit) |
-| [vt-bar Is this visual a bar chart?](#vt-bar-is-this-visual-a-bar-chart) | 4 | 1 of 18 | the twin, the preview, check_report | (not in the audit) |
+| [vt-bar Is this visual a bar chart?](#vt-bar-is-this-visual-a-bar-chart) | 5 | 0 of 18 | the twin, the preview, check_report | one place since DD2V: `assets/js/visual-types.js` `BAR_TYPES`, `isBar` |
 | [canon What is the canonical text of a plan?](#canon-what-is-the-canonical-text-of-a-plan) | 1 | 0 of 10 | every write (the approval's digest) | one place since DD2C: `mcp/lib/canon.mjs` `canon` |
 | [crc What is the CRC-32 of these bytes?](#crc-what-is-the-crc-32-of-these-bytes) | 2 | 0 of 8 | every PNG and ZIP written | one place since DD2P: `assets/js/png-bytes.js` `crc32` |
 | [png-chunk What bytes make a PNG chunk?](#png-chunk-what-bytes-make-a-png-chunk) | 1 | 0 of 8 | every PNG written | one place since DD2P: `assets/js/png-bytes.js` `pngChunk` |
@@ -403,6 +403,8 @@ ledger's snapshot before DD1F.
 
 ## grid Does this visual keep its grid left to right?
 
+**One place:** assets/js/mirror-policy.js keepsGridLtr (test mcp/test-0.3.2-dd2v.mjs).
+
 **Question:** a visual type: a table or a matrix, whose columns Desktop keeps left to right in the twin.
 
 **Newest copy:** equal (the audit and the probe).
@@ -410,14 +412,16 @@ ledger's snapshot before DD1F.
 | place | MODULES.md | who sees it |
 |---|---|---|
 | `assets/js/mirror-policy.js` `keepsGridLtr` | [engines](MODULES.md#the-website-engines) | the twin (the one home of the rule, twin-geometry.mjs says) |
-| `mcp/lib/page-picture.mjs` `TABLES` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's answer (new overlaps beside a table or a matrix) |
+| `mcp/lib/page-picture.mjs` `newOverlaps` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's answer (new overlaps beside a table or a matrix): reads `keepsGridLtr` since DD2V; its `TABLES` copy is gone |
 
 **Today:** both answer the same on all 18 types (tableEx and pivotTable; the catalog's `table`, `matrix` and
 `accessibleTable` neither).
 
 **Decided answer:** today's; one list (mirror-policy.js `keepsGridLtr`).
 
-**The test that will pin it:** the probe's 18 types (family `grid`; the same 18 pin vt-slicer and vt-bar).
+**The test that pins it:** `mcp/test-0.3.2-dd2v.mjs` (the probe's 18 types through `keepsGridLtr`, each answer pinned; both places on the 18 types: one answer each) and the probe's 18 types (family `grid`; the same 18 pin vt-slicer and vt-bar).
+
+**Since DD2V (5 Nov):** page-picture.mjs reads mirror-policy.js `keepsGridLtr`; its `TABLES` is gone. No answer changed.
 
 ## vt-slicer Is this visual a slicer?
 
@@ -447,16 +451,19 @@ The reviewer and the owner decide (a filterSlicer would then be mirrored as a sl
 
 ## vt-bar Is this visual a bar chart?
 
+**One place:** assets/js/visual-types.js BAR_TYPES and isBar (test mcp/test-0.3.2-dd2v.mjs).
+
 **Question:** a visual type: a chart of horizontal bars?
 
 **Newest copy:** not in the audit.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
+| `assets/js/visual-types.js` `isBar` | [engines](MODULES.md#the-website-engines) | the one place (DD2V, with `BAR_TYPES`): the four below read it |
 | `assets/js/mirror-policy.js` `kindOf` | [engines](MODULES.md#the-website-engines) | the twin |
-| `assets/js/page-preview.js` `kindOf` | [engines](MODULES.md#the-website-engines) | the preview |
-| `assets/js/layout-check.js` `BARS` | [engines](MODULES.md#the-website-engines) | check_report and plan lint |
-| `mcp/lib/page-picture.mjs` `BARS` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (new overlaps) |
+| `assets/js/page-preview.js` `kindOf` | [engines](MODULES.md#the-website-engines) | the preview (and its bars' padding band) |
+| `assets/js/layout-check.js` `placeOf` | [engines](MODULES.md#the-website-engines) | check_report and plan lint (and its bar-label rule); its `BARS` is gone |
+| `mcp/lib/page-picture.mjs` `newOverlaps` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (new overlaps); its `BARS` is gone |
 
 **Today** (A: mirror-policy kindOf; B: page-preview kindOf; C: layout-check BARS, page-picture BARS):
 
@@ -470,7 +477,9 @@ The reviewer and the owner decide (a filterSlicer would then be mirrored as a sl
 **Decided answer:** proposed: the catalog's bar types only (barChart, clusteredBarChart,
 hundredPercentStackedBarChart) in one list; the same for `stackedColumnChart`. The reviewer and the owner decide.
 
-**The test that will pin it:** the probe's 18 types (family `vt-bar`).
+**The test that pins it:** `mcp/test-0.3.2-dd2v.mjs` (the probe's 18 types through `isBar`, source and .min.js; the five places on the 18 types: one answer each; no place keeps a list of its own) and the probe's 18 types (family `vt-bar`).
+
+**Since DD2V (5 Nov):** one list, `BAR_TYPES` in visual-types.js (the catalog's three bar types) with `isBar`; the four places read it. The one answer that changed: `stackedBarChart` (not a Power BI type) is no longer a bar in the preview, check_report and the twin's picture. `stackedColumnChart` left the column kind lists of page-preview.js (the shape, the bars' padding band, the category) and layout-check.js `KINDS`. The "Today" table above is the ledger's snapshot before DD2V.
 
 ## canon What is the canonical text of a plan?
 

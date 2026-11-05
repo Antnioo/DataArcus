@@ -12,4 +12,5 @@
 - **Answers that change (only these):** `stackedBarChart` is no longer a bar in the preview, check_report and the twin's picture;
   `stackedColumnChart` leaves the column kind lists of page-preview KIND and layout-check KINDS (listed in the note after step 3).
 - **Expected checks:** dd2v new; every other suite's number unchanged; lint 0; check-contracts, check-modules --strict, check-agent-memory, check-result-lines green.
-- **State:** step 1 written. **Resume:** step 2.
+- **State:** steps 1-4 written; the full runs and CI follow.
+- **Resume:** run the checks, merge integration once if it moved, `npm run build:min`, CI.
