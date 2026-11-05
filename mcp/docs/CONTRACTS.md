@@ -50,7 +50,7 @@ How it is kept true:
 | [overlap-area How much do two boxes overlap?](#overlap-area-how-much-do-two-boxes-overlap) | 1 | 0 of 9 | the twin | one place since DD2O: `mcp/lib/box-overlap.mjs` `overlapArea` |
 | [contrast What is the contrast of two colours?](#contrast-what-is-the-contrast-of-two-colours) | 4 | 0 of 9 | generate_theme, the writer, the SVG KPIs | one place since DD2K: `assets/js/contrast.js` `contrast` |
 | [xml How is a text escaped for XML (SVG)?](#xml-how-is-a-text-escaped-for-xml-svg) | 2 | 0 of 10 | the SVG KPIs, the flip cards | equal |
-| [html How is a text escaped for HTML?](#html-how-is-a-text-escaped-for-html) | 9 | 3 of 10 | the website's pages, the approval window | equal by the audit; the probe differs (null, `'`) |
+| [html How is a text escaped for HTML?](#html-how-is-a-text-escaped-for-html) | 9 | 0 of 10 | the website's pages, the approval window | one place since DD2H: `assets/js/html-escape.js` `htmlEsc` |
 | [tmdl-name How is a name written in TMDL?](#tmdl-name-how-is-a-name-written-in-tmdl) | 7 | 0 of 9 | check_model_health's fix scripts, the measure builder page, the twin's model, create_report's sample | equal (one place: `tmdl-name.js`) |
 | [decode What text do the bytes of a Power BI file hold?](#decode-what-text-do-the-bytes-of-a-power-bi-file-hold) | 4 | 0 of 10 | every model read (the MCP and the website) | one place since DD2D: `assets/js/model-file.js` `decodeText` |
 | [limits How large may a model file be?](#limits-how-large-may-a-model-file-be) | 4 | 0 of 8 | every model read (the MCP and the website) | one place since DD2D: `assets/js/model-file.js` `LIMITS` |
@@ -617,6 +617,8 @@ svg-kpi-compiler.js `contrastOf`); their own copies are gone. The 3:1 and 4.5:1 
 
 ## html How is a text escaped for HTML?
 
+**One place:** assets/js/html-escape.js htmlEsc (test mcp/test-0.3.2-dd2h.mjs).
+
 **Question:** a text: the same text safe inside an HTML page (`&`, `<`, `>`, `"`, `'`).
 
 **Newest copy:** equal by the audit; **the probe disagrees**: null and undefined give `""` in six copies and their words in three, and measure-builder.js leaves `'`.
@@ -648,9 +650,12 @@ The reviewer and the owner decide.
 
 **The test that will pin it:** the probe's 10 texts (family `html`).
 
-**DD2H (in progress):** `assets/js/html-escape.js` `htmlEsc` is the one home; every place above reads it and keeps its
-own name as a one-line alias (the MCP has required assets/js modules since DD1C, so the note above that it stays
-self-contained no longer holds). The probe: 9 places, 0 of 10 disagree.
+**Since DD2H (5 Nov):** one copy, group B's answer: `assets/js/html-escape.js` `htmlEsc` (& < > " ' as entities, `'` as
+`&#39;`, null and undefined as ""). Every place above reads it and keeps its own name as a one-line alias (the pages'
+own scripts from the page's window, the engines and approval-view.mjs by require; the MCP has required assets/js
+modules since DD1C, so the note above that it stays self-contained no longer holds). Answers that changed: null and
+undefined give "" in exam-view, theme-generator and measure-builder (they gave "null" / "undefined"); measure-builder
+escapes `'` (the browser reads `&#39;` as `'`). The probe: 9 places, 0 of 10 disagree; dd2h runs every place on 14 texts.
 
 ## decode What text do the bytes of a Power BI file hold?
 

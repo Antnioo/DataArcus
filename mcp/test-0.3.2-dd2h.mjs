@@ -3,9 +3,21 @@
 //   H1-H10  the contract probe's 10 texts through htmlEsc, source and .min.js: each answer pinned
 //   H11-H14 four more (0, false, all five characters, a text with a line break): each answer pinned
 //   F1      the module is frozen and holds htmlEsc only
+//   P       the parity test: every place of CONTRACTS.md's family html (the probe's places, run as
+//           scripts/contracts-probe.mjs runs them) on all 14 texts: one answer each, htmlEsc's
+//   S1-S3   one place: no place holds an escape chain of its own; each keeps its name as a one-line alias of htmlEsc;
+//           the ledger's places are the probe's (9)
+//   L1-L3   loaded first: every page that loads a place's script loads html-escape.min.js before it; the theme
+//           generator's loaders load it before the field picker and the preview
 //   node test-0.3.2-dd2h.mjs
+import fs from 'node:fs';
+import path from 'node:path';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
+import { FAMILIES, answerOf, placeName } from '../scripts/contracts-probe.mjs';
 
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+const read = (f) => fs.readFileSync(path.join(ROOT, ...f.split('/')), 'utf8').replace(/\r\n/g, '\n');
 const require = createRequire(import.meta.url);
 const HE = require('../assets/js/html-escape.js');
 const HEmin = require('../assets/js/html-escape.min.js');
@@ -36,6 +48,53 @@ for (const [id, label, t, want] of TEXTS) {
   chk(() => a === want && m === want, () => `${id} (${label}): htmlEsc ${show(a)}, .min.js ${show(m)}, wanted ${show(want)}`);
 }
 chk(() => Object.isFrozen(HE) && Object.keys(HE).join() === 'htmlEsc', () => `F1 html-escape.js exports ${show(Object.keys(HE))}, frozen ${Object.isFrozen(HE)}; wanted only htmlEsc, frozen`);
+
+// ---- P: every place on every text, one answer each (the probe's own loaders) ----
+const fam = FAMILIES.find((f) => f.id === 'html');
+const PLACES = [
+  ['assets/js/exam-view.js', 'esc'], ['assets/js/field-picker-ui.js', 'esc'], ['assets/js/health-downloads.js', 'esc'],
+  ['assets/js/health-view.js', 'esc'], ['assets/js/page-preview.js', 'esc'], ['assets/js/svg-kpi-designer.js', 'esc'],
+  ['assets/js/theme-generator.js', 'esc'], ['assets/js/measure-builder.js', 'escapeHtml'], ['mcp/lib/approval-view.mjs', 'esc'],
+];
+chk(() => fam && fam.places.length === PLACES.length && PLACES.every(([f, n]) => fam.places.some((p) => p.file === f && p.fn === n)),
+  () => `S3 the probe's family html has ${fam ? fam.places.map(placeName).join(', ') : 'no family'}; wanted the ${PLACES.length} places`);
+for (const p of (fam ? fam.places : [])) {
+  for (const [id, label, t, want] of TEXTS) {
+    const got = await answerOf(p, { label, s: t });
+    chk(() => got.key === show(want), () => `P ${placeName(p)} ${id} (${label}): ${got.shown}, wanted ${show(want)}`);
+  }
+}
+
+// ---- S: one place ----
+const CHAIN = /replace\(\/\[&<>"'?\]\/g|'&amp;'/;
+for (const [f, n] of PLACES) {
+  const src = read(f);
+  chk(() => !CHAIN.test(src), () => `S1 ${f} holds an HTML escape chain of its own again: read html-escape.js htmlEsc`);
+  const alias = new RegExp(`^\\s*const ${n} = (?:HE\\.htmlEsc|window\\.DAHtmlEscape\\.htmlEsc|htmlEsc);$`, 'm');
+  chk(() => alias.test(src) && /html-escape\.js|DAHtmlEscape/.test(src), () => `S2 ${f} must keep \`const ${n} = ...htmlEsc;\` and read html-escape.js`);
+}
+
+// ---- L: loaded first ----
+const PAGES = ['tools', 'ar/tools'].flatMap((d) => fs.readdirSync(path.join(ROOT, d)).filter((x) => x.endsWith('.html')).map((x) => d + '/' + x));
+const SCRIPTS = ['exam-view', 'health-downloads', 'health-view', 'svg-kpi-designer', 'theme-generator', 'measure-builder'];
+let pagesSeen = 0;
+for (const pg of PAGES) {
+  const h = read(pg), at = (n) => h.search(new RegExp(`assets/js/${n}\\.min\\.js\\?v=`));
+  const uses = SCRIPTS.filter((n) => at(n) >= 0);
+  if (!uses.length) continue;
+  pagesSeen++;
+  const he = at('html-escape');
+  chk(() => he >= 0 && uses.every((n) => he < at(n)) && h.split('html-escape.min.js').length === 2,
+    () => `L1 ${pg} must load html-escape.min.js once, before ${uses.join(', ')}`);
+}
+chk(() => pagesSeen === 13, () => `L2 ${pagesSeen} pages load a place's script, 13 wanted (the exam, health check, SVG KPI, measure builder and theme generator pages, English and Arabic)`);
+const tg = read('assets/js/theme-generator.js'), pos = (re) => tg.search(re);
+chk(() => {
+  const bind = pos(/const loadBind = /), prev = pos(/const loadPreview = /);
+  const heInBind = tg.indexOf('html-escape.min.js', bind), picker = tg.indexOf('field-picker-ui.min.js', bind);
+  const heInPrev = tg.indexOf('html-escape.min.js', prev), preview = tg.indexOf('page-preview.min.js', prev);
+  return heInBind > bind && heInBind < picker && heInPrev > prev && heInPrev < preview && preview < tg.indexOf('\n', prev);
+}, () => 'L3 theme-generator.js must load html-escape.min.js in loadBind before field-picker-ui.min.js and in loadPreview before page-preview.min.js');
 
 if (problems.length) { problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  dd2h  ${checks - problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  dd2h  ${checks} checks`);
