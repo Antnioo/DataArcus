@@ -13,6 +13,8 @@ const Svg = require('../../assets/js/svg-kpi-compiler.js');
 // (round 22b, the reviewer's second review, item 3) with the whole model's tables, which a measure's DAX may read outside the scope
 // (round 23: lang, the report's language, for the picker's language rule)
 // (round 23 part 5, the review's 10: one reader of relationships, the shared engine's, with both-directions ones)
+/** (AP1) a plan's or a report's fields.timeAxis "none": the person asked for no time axis (no trend, no month tooltip). */
+export const NO_TIME_AXIS = 'none', isNoTime = (v) => String(v == null ? '' : v).trim().toLowerCase() === NO_TIME_AXIS;
 export const relsOf = (m, lang) => ({ ...(lang ? { lang } : {}), modelTables: m.tables, relationships: Bind.relsOfTmsl(m.tmsl) });
 
 // ---------- the fields of an approved plan (create_report's fields) ----------
@@ -46,7 +48,9 @@ export function fieldsAndProblems(tables, fields) {
   const out = {};
   if (fields.kpis) out.kpis = fields.kpis.map((r, i) => one(r, 'm', `fields.kpis[${i}]`));
   if (fields.measure) out.measure = one(fields.measure, 'm', 'fields.measure');
-  for (const k of ['timeAxis', 'category', 'category2']) if (fields[k]) out[k] = one(fields[k], 'c', 'fields.' + k);
+  // (0.3.2 AP1, E1 round 5 (e): the person asked twice for no time field and every plan kept a month axis) timeAxis
+  // "none": the person asked for no time axis; out.noTime, and the picker takes none (report-bind.mjs pinned.noDate)
+  for (const k of ['timeAxis', 'category', 'category2']) if (fields[k]) { if (k === 'timeAxis' && isNoTime(fields[k])) out.noTime = true; else out[k] = one(fields[k], 'c', 'fields.' + k); }
   if (fields.table) out.table = fields.table.map((r, i) => one(r, 'any', `fields.table[${i}]`));
   if (fields.slicers) out.slicers = fields.slicers.map((r, i) => one(r, 'c', `fields.slicers[${i}]`));
   return { out, problems };

@@ -101,7 +101,7 @@ const scriptHtml = (s, writes, ar) => {
 
 
 // (T-5) a section's heading in Arabic, where the page knows it (the rest of the heading, a count, stays)
-const HEAD_AR = [['Report', 'التقرير'], ['Layout', 'التخطيط'], ['Fields', 'الحقول'], ['Pages', 'الصفحات'], ['Names shown in the report', 'الأسماء الظاهرة في التقرير'], ['Look and options', 'المظهر والخيارات'], ['Options', 'الخيارات'],
+const HEAD_AR = [['Report', 'التقرير'], ['Layout', 'التخطيط'], ['Fields', 'الحقول'], ['Pages', 'الصفحات'], ['What each page holds', 'ما تحويه كل صفحة'], ['Names shown in the report', 'الأسماء الظاهرة في التقرير'], ['Look and options', 'المظهر والخيارات'], ['Options', 'الخيارات'],
   ['Arabic texts', 'النصوص العربية'], ['Terminology sheet: English | Arabic', 'ورقة المصطلحات: الإنجليزية | العربية'], ['Shown in English', 'تظهر بالإنجليزية'], ['One report, English and Arabic', 'تقرير واحد بالإنجليزية والعربية'],
   ['Page pairs', 'أزواج الصفحات'], ['Language buttons', 'أزرار اللغة'], ['Slicers kept in sync', 'المقسمات المتزامنة'], ['Inputs', 'المدخلات'], ['Dates and seasonal scope', 'التواريخ والنطاق الموسمي'], ['Not checked before writing', 'لم يُفحص قبل الكتابة'],
   ['All inputs, as given (raw)', 'كل المدخلات كما أُعطيت'], ['Colours', 'الألوان'], ['Sample project (made-up data)', 'مشروع المثال (بيانات تجريبية)'], ['Tables', 'الجداول'], ['DAX function library', 'مكتبة دوال DAX'],
