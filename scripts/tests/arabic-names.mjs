@@ -28,7 +28,7 @@ const PIN = path.join(HERE, 'fixtures', 'tt2-english-download.json');
 const AR = /[؀-ۿ]/, bare = (s) => String(s == null ? '' : s).replace(/[‎‏⁦-⁩]/g, '');
 const mixed = (s) => AR.test(bare(s)) && /[A-Za-z]/.test(bare(s));
 
-function unzip(buf) {
+export function unzip(buf) {
   const out = {}; let p = 0;
   while (buf.readUInt32LE(p) === 0x04034b50) {
     const size = buf.readUInt32LE(p + 18), nlen = buf.readUInt16LE(p + 26), xlen = buf.readUInt16LE(p + 28);
@@ -56,7 +56,7 @@ const flatOf = (files) => { const ids = new Map(), at = (x) => { if (!ids.has(x)
   return Object.keys(files).filter((n) => !/\.png$/i.test(n)).map((n) => (n + '\n' + files[n].toString('utf8')).replace(RANDOM, at)).join('\n'); };
 const digest = (files) => crypto.createHash('sha256').update(flatOf(files)).digest('hex');
 
-function model(dir, name, tables, relationships) {
+export function model(dir, name, tables, relationships) {
   fs.mkdirSync(path.join(dir, name, name + '.SemanticModel'), { recursive: true });
   fs.writeFileSync(path.join(dir, name, name + '.SemanticModel', 'definition.pbism'), '{ "version": "4.0", "settings": {} }');
   fs.writeFileSync(path.join(dir, name, name + '.SemanticModel', 'model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables, relationships } }));
