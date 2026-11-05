@@ -187,3 +187,33 @@ export function aggregationAnswer(g, lang) {
   }
   return out;
 }
+
+// (0.3.2 AP1, E1 round 5: the approval page named 3 slicers and one page while the click wrote 6 slicers, 6 buttons and
+// two tooltip pages) what each page of the planned report holds, read back from the exact files the write writes (the
+// reading layer, from memory): every page in order (a tooltip page or a hidden one marked), and on it every visual by
+// its kind, counted; the slicers by their field, the buttons by where they go, the charts by the field they group by.
+// Field names only (metadata), never a value. files: the exact artifact's files ("<name>.Report/..."). Returns
+// [{ n, name, tooltip, hidden, visuals, slicers: [field], buttons: [{ to: 'page' | 'bookmark' | 'other', name }],
+//   kinds: [{ type, count, by: [field] }], usedBy?: [page name] (a tooltip page: the pages whose visuals show it) }],
+//   each list in reading order (top to bottom, then across); [] when the report can't be read back.
+const BY_ROLES = ['Category', 'Rows', 'Axis', 'Legend', 'Series', 'Values'];
+export function pagesWritten(files) {
+  let inv = null;
+  try { inv = inventory(memorySource(inReport({ files: files || [] })), 'the planned report'); } catch (e) { inv = null; }
+  if (!inv) return [];
+  const tips = new Map();
+  inv.pages.forEach((p) => p.visuals.forEach((x) => { if (x.tooltipPage) { const u = tips.get(x.tooltipPage) || []; if (!u.includes(p.name)) u.push(p.name); tips.set(x.tooltipPage, u); } }));
+  return inv.pages.map((p) => {
+    const slicers = [], buttons = [], kinds = new Map();
+    p.visuals.slice().sort((a, b) => a.ry - b.ry || a.rx - b.rx).forEach((x) => {
+      const cols = BY_ROLES.flatMap((r) => (x.fields && x.fields[r]) || []).filter((f) => f && f.kind === 'column').map((f) => `${f.table}[${f.name}]`);
+      if (x.slicer) { slicers.push(cols[0] || '(a field)'); return; }
+      if (x.type === 'actionButton') { const m = /^(\w+)(?: -> (?:bookmark|page) "(.*)")?/.exec(String(x.action || '')) || [];
+        buttons.push({ to: m[1] === 'PageNavigation' ? 'page' : m[1] === 'Bookmark' ? 'bookmark' : 'other', name: m[2] || null }); return; }
+      const k = kinds.get(x.type) || { type: x.type, count: 0, by: [] }; k.count++;
+      if (cols[0] && !/^(cardVisual|card|multiRowCard|kpi|textbox|shape|image|group|tableEx|pivotTable)$/.test(x.type)) k.by.push(cols[0]);
+      kinds.set(x.type, k);
+    });
+    return Object.assign({ n: p.n, name: p.name, tooltip: p.kind === 'Tooltip', hidden: !!p.hidden, visuals: p.visualCount, slicers, buttons, kinds: [...kinds.values()] }, p.kind === 'Tooltip' ? { usedBy: tips.get(p.name) || [] } : {});
+  });
+}

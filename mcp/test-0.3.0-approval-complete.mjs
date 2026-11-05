@@ -11,6 +11,11 @@ import './test-env.mjs';
 //   A6 approve_plan's "waiting" says a later click still counts and to call approve_plan again
 //   A1-5 the written twin: Microsoft's validator 0 errors, check_report 0 "can break"
 //   A7 hostile names on the new pages are escaped and shown as text
+//   A9 (0.3.2 AP1, E1 round 5: the page named 3 slicers and one page; the click wrote 9 slicers, 3 reset buttons, a
+//      second bar chart and tooltip pages) a first own report of a made-up service model, English and Arabic: the page
+//      names every page the click writes (the tooltip pages too) and, page by page, every visual by its kind, counted,
+//      the slicers by field, the buttons by where they go, the charts by their field (read back from the written
+//      files here); no "Other visuals: chosen by DataArcus" with nothing listed; the changed kind names its page
 //   node test-0.3.0-approval-complete.mjs
 import fs from 'node:fs';
 import os from 'node:os';
@@ -161,6 +166,55 @@ try {
       const c = await cal(lang);
       chk(() => !c.out.err && c.file && c.p.j.scriptAfterGo === c.file && c.H.includes(c.file) && fs.existsSync(path.join(ROOT, 'hp', c.file)),
         () => `A8 ${lang}. the plan and its approval page name the file the click writes: planned ${c.p.j && c.p.j.scriptAfterGo}, written ${c.file}: ${short(c.out)}`);
+    }
+  }
+  // ---------- A9: every page, visual, slicer and button the click writes is named on the page (AP1) ----------
+  {
+    const col = (name, dataType, extra) => Object.assign({ name, dataType, sourceColumn: name, summarizeBy: 'none' }, extra || {});
+    const part = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"A"}, {}) in Source' } }];
+    const SM = path.join(ROOT, 'svc', 'Service.SemanticModel'); fs.mkdirSync(SM, { recursive: true });
+    wr(path.join(SM, 'model.bim'), { compatibilityLevel: 1567, model: { culture: 'en-US', tables: [
+      { name: 'Work Orders', columns: [col('Order ID', 'int64'), col('Date Key', 'dateTime', { formatString: 'yyyy-mm-dd' }), col('Department', 'string'), col('Status', 'string'), col('Hours', 'double', { summarizeBy: 'sum' })],
+        measures: [{ name: 'Work Order Count', expression: "COUNTROWS ( 'Work Orders' )", formatString: '#,0' }, { name: 'Total Hours', expression: "SUM ( 'Work Orders'[Hours] )", formatString: '#,0.0' }], partitions: part('wo') },
+      { name: 'Dim Date', columns: [col('Date', 'dateTime', { formatString: 'yyyy-mm-dd' }), col('Year', 'int64'), col('Month', 'string', { sortByColumn: 'Month Number' }), col('Month Number', 'int64')], partitions: part('dd') }],
+      relationships: [{ name: 'r1', fromTable: 'Work Orders', fromColumn: 'Date Key', toTable: 'Dim Date', toColumn: 'Date' }] } });
+    wr(path.join(SM, 'definition.pbism'), { version: '4.0', settings: {} });
+    const AR = { 'Work Orders[Total Hours]': 'إجمالي الساعات', 'Work Orders[Work Order Count]': 'عدد أوامر العمل', 'Work Orders[Department]': 'القسم', 'Work Orders[Status]': 'الحالة', 'Work Orders[Hours]': 'الساعات', 'Work Orders[Order ID]': 'رقم الأمر',
+      'Work Orders[Date Key]': 'التاريخ', 'Dim Date[Date]': 'التاريخ', 'Dim Date[Year]': 'السنة', 'Dim Date[Month]': 'الشهر', 'Dim Date[Month Number]': 'رقم الشهر' };
+    // the written report, read here from its files: each page's name, kind, visuals by type, slicers' fields, buttons
+    const readBack = (dir) => { const pd = path.join(dir, 'definition/pages'), order = rd(path.join(pd, 'pages.json')).pageOrder;
+      return order.map((id, i) => { const pj = rd(path.join(pd, id, 'page.json')), vs = tree(path.join(pd, id, 'visuals')).filter((f) => /visual\.json$/.test(f)).map(rd), types = {}, slicers = [];
+        let buttons = 0; vs.forEach((v) => { const t = v.visualGroup ? 'group' : v.visual.visualType;
+          if (t === 'slicer') { const pr = ((((v.visual.query || {}).queryState || {}).Values || {}).projections || [])[0], c = pr && pr.field && pr.field.Column; slicers.push(c ? `${c.Expression.SourceRef.Entity}[${c.Property}]` : '?'); }
+          else if (t === 'actionButton') buttons++; else types[t] = (types[t] || 0) + 1; });
+        return { n: i + 1, name: pj.displayName, tooltip: pj.type === 'Tooltip', visuals: vs.length, types, slicers, buttons }; }); };
+    const EN = { clusteredBarChart: ['bar chart', 'bar charts'], clusteredColumnChart: ['column chart', 'column charts'], lineChart: ['line chart', 'line charts'], cardVisual: ['card', 'cards'], tableEx: ['table', 'tables'], textbox: ['text box', 'text boxes'], shape: ['shape', 'shapes'], group: ['group', 'groups'] };
+    const ARW = { clusteredBarChart: 'مخططات شريطية', clusteredColumnChart: 'مخططات عمودية', lineChart: 'مخططات خطية', cardVisual: 'بطاقات', tableEx: 'جداول', textbox: 'مربعات نص', shape: 'أشكال', group: 'مجموعات مرئيات' };
+    const n1 = (n, w) => `${n} ${n === 1 ? w[0] : w[1]}`;
+    for (const lang of ['en', 'ar']) {
+      const a = Object.assign({ path: 'svc/Service.SemanticModel', name: `Service ${lang}`, lang, filters: 'top', planFields: { slicers: ['Dim Date[Year]', 'Work Orders[Department]', 'Work Orders[Status]'], category: 'Work Orders[Department]', category2: 'Work Orders[Status]' } }, lang === 'ar' ? { displayNames: AR } : {});
+      const p = await w.call('plan_layout', a), id = p.j && p.j.plan && p.j.plan.planId;
+      chk(() => id, () => `A9 ${lang} setup. the service model's plan gets a plan id: ${short(p)}`);
+      if (!id) continue;
+      const H = unesc((await pageOf(id, true)).html).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+      const out = await w.call('create_report', { path: a.path, planId: id });
+      chk(() => !out.err, () => `A9 ${lang} setup. the report is written after the click: ${short(out)}`);
+      const pages = out.err ? [] : readBack(path.join(ROOT, 'svc', `Service ${lang}.Report`));
+      chk(() => pages.length === 4 && pages.filter((x) => x.tooltip).length === 2 && pages.reduce((s0, x) => s0 + x.slicers.length, 0) === 6, () => `A9 ${lang} setup. written: 4 pages (2 tooltip pages), 6 slicers: ${JSON.stringify(pages)}`);
+      const head = lang === 'ar' ? 'ما تحويه كل صفحة' : 'What each page holds', at = H.indexOf(head), S = at < 0 ? '' : H.slice(at);
+      chk(() => at >= 0 && new RegExp(`${head} \\(${pages.length}\\)`).test(H), () => `A9-1 ${lang}. the page has "${head} (${pages.length})": ${H.slice(H.indexOf(lang === 'ar' ? 'الحقول' : 'Fields'), H.indexOf(lang === 'ar' ? 'الحقول' : 'Fields') + 400)}`);
+      // each page's part: from its label to the next page's
+      const partOf = (x) => { const lab = lang === 'ar' ? `الصفحة ${x.n}: «${x.name}»` : `Page ${x.n}: ${x.name}`, i = S.indexOf(lab), nx = pages[x.n] ? S.indexOf(lang === 'ar' ? `الصفحة ${x.n + 1}: «` : `Page ${x.n + 1}: `, i + 1) : -1; return i < 0 ? '' : S.slice(i, nx > i ? nx : i + 1500); };
+      for (const x of pages) {
+        const P = partOf(x), want = (lang === 'ar'
+          ? [`المرئيات: ${x.visuals}`].concat(x.tooltip ? ['صفحة تلميح'] : [], x.slicers.length ? [`المقسمات: ${x.slicers.length} (`].concat(x.slicers.map((f) => `«${f}»`)) : [], x.buttons ? [`الأزرار: ${x.buttons}`] : [], Object.entries(x.types).map(([t, n]) => `${ARW[t] || t}: ${n}`))
+          : [`${x.visuals} visuals`].concat(x.tooltip ? ['a tooltip page'] : [], x.slicers.length ? [`${n1(x.slicers.length, ['slicer', 'slicers'])}: `].concat(x.slicers) : [], x.buttons ? [n1(x.buttons, ['button', 'buttons'])] : [], Object.entries(x.types).map(([t, n]) => n1(n, EN[t] || [t, t]))));
+        const missing = want.filter((t) => !P.includes(t));
+        chk(() => P && !missing.length, () => `A9-2 ${lang}. page ${x.n} "${x.name}" is named with everything on it: missing ${JSON.stringify(missing)} in ${JSON.stringify(P.slice(0, 600))}`);
+      }
+      // (b) no heading or row that names nothing; (c) the kind written in place of another names its page
+      chk(() => !/Other visuals chosen by DataArcus from the model(?!: every one is named below)/.test(H) && !/المرئيات الأخرى يختارها DataArcus من النموذج(?!: كلها مذكورة أدناه)/.test(H), () => `A9-3 ${lang}. "Other visuals: chosen by DataArcus" points to the list: ${H.slice(H.indexOf(lang === 'ar' ? 'المرئيات الأخرى' : 'Other visuals'), H.indexOf(lang === 'ar' ? 'المرئيات الأخرى' : 'Other visuals') + 200)}`);
+      chk(() => (lang === 'ar' ? /في الصفحة 1 «ملخص تنفيذي»/.test(H.slice(H.indexOf('مكتوب بنوع آخر'))) : /on page 1 "Executive summary"/.test(H.slice(H.indexOf('Written as another kind')))), () => `A9-4 ${lang}. the chart written as another kind names its page: ${H.slice(H.indexOf(lang === 'ar' ? 'مكتوب بنوع آخر' : 'Written as another kind'), H.indexOf(lang === 'ar' ? 'مكتوب بنوع آخر' : 'Written as another kind') + 300)}`);
     }
   }
 } finally {

@@ -2,20 +2,20 @@
  "about": "SP44: each approval page (sha256 and length) and every HTTP answer (status, headers without Date, Content-Length checked, body as sha256 and length) for 12 made-up plans from the real server, and the window's life in process (expiry, close, a callback that throws, reopen, a long body, wait), recorded on integration/0.3.2 4d97158 (before approval-view.mjs and approval-http.mjs). Markers as in sp23 (test-0.3.2-sp44.mjs).",
  "pages": {
   "report-en": {
-   "sha256": "fafddd14f370e1f32c06021983579270e769168f8f207d2eb0e03a775e473270",
-   "length": 95538
+   "sha256": "80473db6360d64a95d51e40a5256c6646d765a5c762a73d9501d7a39653d1f61",
+   "length": 97488
   },
   "report-ar": {
-   "sha256": "f10da90fde2f2de77fe5229deb994b64fd2140a4b1e33ac8cebb10692d9c74a2",
-   "length": 97647
+   "sha256": "7d4b0b066d5e17df52a762a78e1b7dd918c80df4e5006f3d37f4d3bc705f714c",
+   "length": 99829
   },
   "report-cap": {
-   "sha256": "78da36e474653848b61e811e95e8bc01dbfaac291af0f3885c15a2fe8e1231b2",
-   "length": 48530
+   "sha256": "ffd870b821e2c8f9f20fcffce75880d0d153eb987df0fb3f4b74a07f155cf879",
+   "length": 52998
   },
   "report-hostile": {
-   "sha256": "52785a3f2a9f96cb28e451b2a5ec6c32e8df4250bd886adf97e7700bfaf5e421",
-   "length": 95898
+   "sha256": "8d4257253cb543518220331bd3a99860d6db671d8ed67668379f8f9fa3d785bf",
+   "length": 97698
   },
   "twin": {
    "sha256": "400feed18f2c775e93da5c8e219874945983015a385ce301a5745521fa1b76cc",

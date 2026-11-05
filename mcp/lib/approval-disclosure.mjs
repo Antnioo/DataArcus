@@ -173,6 +173,36 @@ function languagesSections(LG, sections, at) {
   { heading: `Language buttons (${btns.length})`, rows: btns.map((b) => [`${String(b.on)} page "${String(b.page)}"`, b.placed ? `«${String(b.text)}» at ${String(b.at || '')}, goes to its ${b.on === 'English' ? 'Arabic' : 'English'} page; ${b.phone ? 'on the phone layout too' : `not on the phone layout${b.why ? ': ' + String(b.why) : ''}`}` : `not placed: ${String(b.why || '')}`]) },
   { heading: `Slicers kept in sync (${sg.length})`, rows: sg.map((x) => [`Page "${String(x.page)}": slicer ${String(x.slicer)}`, `with its Arabic copy ${String(x.arabicSlicer || '')}, sync group "${String(x.group)}"${x.kept ? ` (${String(x.kept)})` : ''}`]) });
 }
+// (0.3.2 AP1, E1 round 5 (a), (d): the page named 3 slicers and one page; the click wrote 9 slicers, 3 reset buttons, a
+// second bar chart and two tooltip pages) what each page of the report holds, as plan_layout read it back from the exact
+// files the write writes (plan-lint.mjs pagesWritten): every page, the tooltip pages too, and on it every visual by its
+// kind, counted; the slicers by field, the buttons by where they go, the charts by their field. English and Arabic
+// (the Arabic: a draft for the owner, mcp/work/AP1.md)
+const VT_WORDS = { clusteredBarChart: ['bar chart', 'bar charts', 'مخططات شريطية'], barChart: ['stacked bar chart', 'stacked bar charts', 'مخططات شريطية مكدسة'], clusteredColumnChart: ['column chart', 'column charts', 'مخططات عمودية'],
+  columnChart: ['stacked column chart', 'stacked column charts', 'مخططات عمودية مكدسة'], lineChart: ['line chart', 'line charts', 'مخططات خطية'], areaChart: ['area chart', 'area charts', 'مخططات مساحية'], donutChart: ['donut chart', 'donut charts', 'مخططات دائرية مجوفة'],
+  pieChart: ['pie chart', 'pie charts', 'مخططات دائرية'], lineClusteredColumnComboChart: ['combo chart', 'combo charts', 'مخططات مركبة'], waterfallChart: ['waterfall', 'waterfalls', 'مخططات شلالية'], cardVisual: ['card', 'cards', 'بطاقات'], card: ['card', 'cards', 'بطاقات'],
+  multiRowCard: ['multi-row card', 'multi-row cards', 'بطاقات متعددة الصفوف'], kpi: ['KPI visual', 'KPI visuals', 'مرئيات KPI'], tableEx: ['table', 'tables', 'جداول'], pivotTable: ['matrix', 'matrices', 'مصفوفات'], textbox: ['text box', 'text boxes', 'مربعات نص'],
+  shape: ['shape', 'shapes', 'أشكال'], image: ['image', 'images', 'صور'], group: ['group', 'groups', 'مجموعات مرئيات'], map: ['map', 'maps', 'خرائط'], filledMap: ['filled map', 'filled maps', 'خرائط ملونة'], scatterChart: ['scatter chart', 'scatter charts', 'مخططات مبعثرة'],
+  gauge: ['gauge', 'gauges', 'مقاييس دائرية'], treemap: ['treemap', 'treemaps', 'مخططات شجرية'], funnel: ['funnel', 'funnels', 'مخططات قمعية'], ribbonChart: ['ribbon chart', 'ribbon charts', 'مخططات شريطية متدفقة'] };
+const nOf = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+function pagesSection(PW) {
+  const rows = PW.map((x) => {
+    const items = [{ en: nOf(+x.visuals || 0, 'visual', 'visuals'), ar: `المرئيات: ${+x.visuals || 0}` }];
+    if (x.tooltip) { const u = (x.usedBy || []).map(String);
+      items.push({ en: `a tooltip page${x.hidden ? ', hidden in the tabs' : ''}: shown when a reader points at a chart that uses it${u.length ? ` (on ${u.map((n) => `"${n}"`).join(', ')})` : ''}`,
+        ar: `صفحة تلميح${x.hidden ? '، مخفية من علامات التبويب' : ''}: تظهر عندما يشير القارئ إلى مخطط يستخدمها${u.length ? ` (في ${u.map((n) => `«${n}»`).join('، ')})` : ''}` }); }
+    else if (x.hidden) items.push({ en: 'hidden in the tabs', ar: 'مخفية من علامات التبويب' });
+    const S = (x.slicers || []).map(String);
+    if (S.length) items.push({ en: `${nOf(S.length, 'slicer', 'slicers')}: ${S.join(', ')}`, ar: `المقسمات: ${S.length} (${S.map((f) => `«${f}»`).join('، ')})` });
+    const B = x.buttons || [];
+    if (B.length) items.push({ en: `${nOf(B.length, 'button', 'buttons')}: ${B.map((b) => (b.to === 'page' ? `to page "${b.name}"` : b.to === 'bookmark' ? `"${b.name}" (a bookmark)` : 'another action')).join('; ')}`,
+      ar: `الأزرار: ${B.length} (${B.map((b) => (b.to === 'page' ? `إلى الصفحة «${b.name}»` : b.to === 'bookmark' ? `«${b.name}» (إشارة مرجعية)` : 'إجراء آخر')).join('؛ ')})` });
+    (x.kinds || []).forEach((k) => { const w = VT_WORDS[k.type] || [String(k.type), String(k.type), String(k.type)], by = (k.by || []).map(String);
+      items.push({ en: `${nOf(+k.count || 0, w[0], w[1])}${by.length ? `: ${by.map((f) => `by ${f}`).join(', ')}` : ''}`, ar: `${w[2]}: ${+k.count || 0}${by.length ? ` (${by.map((f) => `حسب «${f}»`).join('، ')})` : ''}` }); });
+    return [`Page ${x.n}: ${cut(String(x.name), 80)}`, items];
+  });
+  return { heading: `What each page holds (${PW.length})`, rows };
+}
 export function summary(kind, data) {
   const s = summaryOf(kind, data), wa = data && data.writesAr;
   // (SQ3, T1-S6) the writes in Arabic, as the plan's tool said them (shown on an Arabic page only, line for line)
@@ -216,20 +246,29 @@ function summaryOf(kind, data) {
     // (0.3.1 R4A, round 4's problem 1: "42 px a category" where the person decides) the plan's said first: the person's
     // words, no pixels or letter widths (why, the measured numbers, is the agent's); its Arabic on an Arabic page
     const why = (k) => `planned as ${KIND_A[k.from] || 'another kind'}: ${k.said ? String(k.said) : k.why ? String(k.why) : k.to === 'donut' ? 'its category has two values' : 'the names would slant or be cut'}`;
+    // (0.3.2 AP1, E1 round 5 (c): "Bar chart by Status (planned as a column chart)" while page 2's Status chart is a
+    // column chart) a kind changed is the first page's (plan_layout's slots): said with its page; the other pages' visuals
+    // are each named under "What each page holds"
+    const PW = Array.isArray(d.pagesWritten) && d.pagesWritten.length ? d.pagesWritten : null, p1 = PW ? PW.find((x) => !x.tooltip) : null;
+    const onP1 = p1 ? { en: ` on page ${p1.n} "${String(p1.name)}"`, ar: ` في الصفحة ${p1.n} «${String(p1.name)}»` } : { en: '', ar: '' };
     const two = (en, ar) => (p.lang === 'ar' && ar ? { en, ar } : en);
     // (FX1) the Arabic of a kind changed: the role, the kind written, the kind planned, the reason in the person's words
     const whyAr = (k) => `بدلًا من ${KIND_A_AR[k.from] || 'نوع آخر'}: ${(k.saidAr || arOf(String(k.said || ''))) || (k.to === 'donut' ? 'لفئته قيمتان' : 'ستميل الأسماء أو تُقص')}`;
     if (p.design) sections.push({ heading: 'Layout', rows: [['Layout', { exec: 'Executive summary', analysis: 'Analysis', ops: 'Operations monitor', focus: 'Single focus' }[L.preset] || L.preset], ['KPI cards', L.kpis], ['Filters', L.filters ? String(L.filters) : 'none'], ['Header', L.header === false ? 'no' : 'yes'], ['Second page', p.secondPage === false ? 'no' : 'yes, with page buttons']].filter((r) => r[1] !== undefined).map(([k, v]) => [k, val(v)])
-      .concat(kinds.length ? [['Written as another kind', kinds.map((k) => (k.said ? two(`${k.role || 'A chart'}: ${KIND_NAME[k.to] || 'another kind'} (planned as ${KIND_A[k.from] || 'another kind'}): ${String(k.said)}`, `${k.role || 'مخطط'}: ${KIND_NAME_AR[k.to] || 'نوع آخر'} (${whyAr(k)})`)
-        : two(`${k.role || 'A chart'}: ${KIND_NAME[k.to] || 'another kind'} (${why(k)})`, `${k.role || 'مخطط'}: ${KIND_NAME_AR[k.to] || 'نوع آخر'} (${whyAr(k)})`)))]] : []) });
+      .concat(kinds.length ? [['Written as another kind', kinds.map((k) => (k.said ? two(`${k.role || 'A chart'}${onP1.en}: ${KIND_NAME[k.to] || 'another kind'} (planned as ${KIND_A[k.from] || 'another kind'}): ${String(k.said)}`, `${k.role || 'مخطط'}${onP1.ar}: ${KIND_NAME_AR[k.to] || 'نوع آخر'} (${whyAr(k)})`)
+        : two(`${k.role || 'A chart'}${onP1.en}: ${KIND_NAME[k.to] || 'another kind'} (${why(k)})`, `${k.role || 'مخطط'}${onP1.ar}: ${KIND_NAME_AR[k.to] || 'نوع آخر'} (${whyAr(k)})`)))]] : []) });
     // category is the bar chart's field, category2 the column chart's
     const F = p.fields || {}, FL = { kpis: 'KPI cards', measure: 'Charts\' measure', timeAxis: 'Trend axis', category: 'Bar chart by', category2: 'Column chart by', table: 'Table', slicers: 'Slicers' }, PLANNED = { category: 'bar', category2: 'column' };
     // (0.3.1 LR1) the slicers the plan adds to fill the design's slots, named after the ones asked
     const added = (k0) => (k0 === 'slicers' && Array.isArray(d.slicersAdded) ? d.slicersAdded.map((f) => ({ en: `${String(f)} (added by DataArcus to fill the design's slicer slots)`, ar: `«${String(f)}» (أضافه DataArcus لملء خانات المقسمات في التصميم)` })) : []);
     const fq = (x) => ({ en: String(x), ar: `«${String(x)}»` });
     const fr = Object.keys(FL).filter((k) => F[k] !== undefined).map((k) => { const v = Array.isArray(F[k]) ? F[k].map(fq).concat(added(k)) : fq(F[k]), c = PLANNED[k] && changeOf(PLANNED[k]);
-      return c ? [{ en: `${KIND_NAME[c.to] || 'Chart'} by`, ar: `${KIND_NAME_AR[c.to] || 'المخطط'} حسب` }, { en: `${v.en} (${why(c)})`, ar: `${v.ar} (${whyAr(c)})` }] : [FL[k], v]; });
-    sections.push({ heading: 'Fields', rows: fr.length ? fr.concat(Object.keys(F).length < Object.keys(FL).length ? [['Other visuals', 'chosen by DataArcus from the model']] : []) : [['All visuals', 'chosen by DataArcus from the model' + (p.focus ? ` (focus: ${val(p.focus)})` : '') + (p.tables ? ` (tables: ${val(p.tables)})` : '')]] });
+      return c ? [{ en: `${KIND_NAME[c.to] || 'Chart'} by`, ar: `${KIND_NAME_AR[c.to] || 'المخطط'} حسب` }, { en: `${v.en} (${onP1.en ? onP1.en.slice(1) + ': ' : ''}${why(c)})`, ar: `${v.ar} (${onP1.ar ? onP1.ar.slice(1) + ': ' : ''}${whyAr(c)})` }] : [FL[k], v]; });
+    // (AP1 (b): "Other visuals: chosen by DataArcus from the model" named none of the 28 visuals) where the plan's own
+    // files are read back, the row points to the list of every page's visuals
+    const chosen = (more) => (PW ? { en: `chosen by DataArcus from the model${more}: every one is named below, page by page (What each page holds)`, ar: `يختارها DataArcus من النموذج: كلها مذكورة أدناه، صفحة صفحة (ما تحويه كل صفحة)` } : 'chosen by DataArcus from the model' + more);
+    sections.push({ heading: 'Fields', rows: fr.length ? fr.concat(Object.keys(F).length < Object.keys(FL).length ? [['Other visuals', chosen('')]] : []) : [['All visuals', chosen((p.focus ? ` (focus: ${val(p.focus)})` : '') + (p.tables ? ` (tables: ${val(p.tables)})` : ''))]] });
+    if (PW) sections.push(pagesSection(PW));
     if (p.pages) sections.push({ heading: 'Pages', rows: p.pages.map((pg, i) => [`Page ${i + 1}: ${cut(pg.name, 80)}`, (pg.slots || []).map((s) => `${s.kind}${s.title ? `: ${s.title}` : ''}${s.text ? ` "${cut(s.text, 120)}"` : ''}`).concat(pg.background ? [`background: ${pg.background}`] : [])]) });
     if (p.displayNames && Object.keys(p.displayNames).length) sections.push({ heading: 'Names shown in the report', rows: Object.entries(p.displayNames).map(([k, v]) => [k, String(v)]) });
     if (Array.isArray(d.terminology) && d.terminology.length) sections.push(termSheet(d.terminology));
