@@ -9,8 +9,9 @@
   «القطاع العام», «Sales العام».
 - **Expected checks:** dd1a 311 -> 319; every other suite's number as before; lint 0; mutation 76/76.
 - **Not in scope:** any other word, the four callers, any other file.
-- **State:** code and pins done; full run and CI below.
-- **Resume:** run the full suites, then CI.
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/41968852661 on a8dc6ff29765f0a52e9680ce5974e2da8e7f3762
+- **State:** DONE (full run 203 PASS, mutation 76/76, lint 0).
+- **Resume:** none; the reviewer reads and merges.
 
 ## Before -> after (each name; isTimeName)
 | name | before | after |
@@ -30,6 +31,8 @@
   "nothing else moves". Red: with the old rule 4 of the 8 fail (315 of 319).
 - WORK.md was 3,197 characters; TN2 was added to its DD1A list and three words trimmed elsewhere to stay under 3,200.
 - `npm ci` in the repo root was needed for the build (terser); no lock file changed.
+- A first full run failed arabic-terms AT-3 on «العام المالي» in my comments (time-names.js, CONTRACTS); reworded.
+- Merged integration once (conflicts: page stamps, WORK.md); it moved by 10 more commits after, not merged again (once).
 - The sitemap lastmod did not move (checked after unshallowing the clone).
 
 ## For the owner
