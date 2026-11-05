@@ -17,7 +17,7 @@
   600). Over 150 in these files now: only pbip-page.js's own wrapper (as on the base).
 - **Ratchet:** the brief's count (the gate's) 21 -> 18 for the reviewer to set. My script over assets/js, mcp/lib,
   mcp/tools and server.mjs, the files' own UMD wrappers left out: 39 -> 36 (it counts more files than the gate does).
-- **Expected checks** (each run's output file, its PASS/FAIL total line): the base ca3a1b73 after `npm run build:min`:
+- **Expected checks:** (each run's output file, its PASS/FAIL total line) the base ca3a1b73 after `npm run build:min`:
   MCP `npm test -- report twin model` "144 suites passed"; website pbip 111, sp7 3, sp13 3. **Got** on the split:
   MCP "145 suites passed" (the 144 with the same check counts, suite by suite, plus the new fn1c), website pbip 111,
   sp7 3, sp13 3. No fixture re-recorded (sp7-reports.json, sp11/sp26/sp40-twins.json, sp28-builds.json unchanged).
