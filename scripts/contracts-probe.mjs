@@ -439,14 +439,23 @@ const BOXTEXTS = [
   { label: 'an empty paragraph between two', j: TB([{ textRuns: [{ value: 'A' }] }, { textRuns: [] }, { textRuns: [{ value: 'B' }] }]) },
   { label: 'spaces around', j: TB([{ textRuns: [{ value: '  Sales  ' }] }]) },
 ];
-// BLANK arithmetic: a - b and a / b, BLANK as null
+// BLANK arithmetic, as Power BI Desktop 2.159.1231.0 answers it (DAX query view, lab/look032 B, 5 Nov): DIVIDE ( a, b ), a / b and a - b,
+// BLANK as null. The editor's values panel has a ratio (DIVIDE) and a diff (-), no plain "/": a place that cannot
+// take an input has `applies` false for it and is left out of that row
 const BLANKS = [];
-for (const o of ['-', '/']) for (const [a, b] of [[5, 3], [null, 3], [5, null], [null, null], [5, 0]]) BLANKS.push({ label: `${a == null ? 'BLANK' : a} ${o} ${b == null ? 'BLANK' : b}`, o, a, b });
-const blankByCompiler = async (x, get) => { const leaf = (v) => (v == null ? { k: 'blank' } : { k: 'num', n: v }); return (await get())({ k: 'op', o: x.o, a: leaf(x.a), b: leaf(x.b) }, { vars: {}, measures: {} }); };
+const bl = (v) => (v == null ? 'BLANK' : v);
+for (const [f, a, b] of [['DIVIDE', 5, null], ['DIVIDE', null, null], ['DIVIDE', 5, 0], ['DIVIDE', 6, 3], ['/', 5, null], ['/', null, null], ['/', 5, 0], ['/', 0, 0], ['/', 6, 3],
+  ['-', 5, 3], ['-', null, 3], ['-', 5, null], ['-', null, null], ['-', 5, 0]]) BLANKS.push({ label: f === 'DIVIDE' ? `DIVIDE ( ${bl(a)}, ${bl(b)} )` : `${bl(a)} ${f} ${bl(b)}`, o: f, a, b });
+const blankByCompiler = async (x, get) => {
+  const leaf = (v) => (v == null ? { k: 'blank' } : { k: 'num', n: v });
+  const node = x.o === 'DIVIDE' ? { k: 'fn', f: 'DIVIDE', args: [leaf(x.a), leaf(x.b)] } : { k: 'op', o: x.o, a: leaf(x.a), b: leaf(x.b) };
+  return (await get())(node, { vars: {}, measures: {} });
+};
 const blankByEditor = async (x, get) => {
   const values = [{ id: 'a', kind: 'measure', measure: 'A' }, { id: 'b', kind: 'measure', measure: 'B' }, { id: 'r', kind: x.o === '-' ? 'diff' : 'ratio', a: 'a', b: 'b' }];
   return (await get({ S: { design: { values } }, samples: () => ({ A: x.a, B: x.b }) }))().r;
 };
+const editorTakes = (x) => x.o === 'DIVIDE' || x.o === '-';
 
 export const FAMILIES = [
   { id: '1a', title: 'Is this column time?', question: 'a column named like this: is it a date part (a day, month, quarter, year, a date)?',
@@ -630,10 +639,10 @@ export const FAMILIES = [
     inputs: BOXTEXTS, places: [
       P('assets/js/text-runs.js', 'paragraphTexts', 'export', async (x, get) => (await get())((((x.j.visual.objects || {}).general || [])[0] || { properties: {} }).properties.paragraphs)),
     ] },
-  { id: 'blank', title: 'What is BLANK minus or divided by a number?', question: 'a - b and a / b with BLANK (null), as DAX answers them',
+  { id: 'blank', title: 'What is BLANK minus or divided by a number?', question: 'DIVIDE ( a, b ), a / b and a - b with BLANK (null), as Power BI Desktop answers them',
     inputs: BLANKS, places: [
       P('assets/js/svg-expressions.js', 'evalNode', 'inner', blankByCompiler),
-      P('assets/js/svg-editor-panels.js', 'evalValues', 'source', blankByEditor),
+      P('assets/js/svg-editor-panels.js', 'evalValues', 'source', blankByEditor, { applies: editorTakes }),
     ] },
 ];
 
@@ -643,8 +652,9 @@ export const NOT_ONE = [
 ];
 
 // ---- running ----
-const show = (v) => (v === undefined ? 'undefined' : typeof v === 'number' && Number.isNaN(v) ? 'NaN' : typeof v === 'string' ? JSON.stringify(v) : Object.is(v, -0) ? '-0' : JSON.stringify(v));
+const show = (v) => (v === undefined ? 'undefined' : typeof v === 'number' && !Number.isFinite(v) ? String(v) : typeof v === 'string' ? JSON.stringify(v) : Object.is(v, -0) ? '-0' : JSON.stringify(v));
 export async function answerOf(place, input) {
+  if (place.applies && !place.applies(input)) return { key: '\u0000n/a', shown: 'n/a', na: true };
   for (let round = 0; ; round++) {
     try {
       const a = await place.run(input, getter(place));
@@ -664,7 +674,7 @@ export async function probe(f) {
   const sig = f.places.map((p, i) => rows.map((r) => r.answers[i].shown).join('\u0001'));
   const groups = [];
   f.places.forEach((p, i) => { const g = groups.find((x) => x.sig === sig[i]); if (g) g.places.push(i); else groups.push({ sig: sig[i], places: [i] }); });
-  rows.forEach((r) => { r.differ = new Set(r.answers.map((a) => a.key)).size > 1; });
+  rows.forEach((r) => { r.differ = new Set(r.answers.filter((a) => !a.na).map((a) => a.key)).size > 1; });
   return { family: f, rows, groups, disagree: rows.filter((r) => r.differ).length, broken: f.places.filter((p, i) => rows.every((r) => r.answers[i].error && !/^throws TypeError/.test(r.answers[i].key))).map(placeName) };
 }
 
