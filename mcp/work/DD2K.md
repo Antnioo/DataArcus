@@ -13,7 +13,8 @@
   NaN); then the three places and contrast.js give one answer per pair. Red proof: 0.05 changed to 0.04 in one copy.
 - **Expected checks:** dd2k passes; every other suite's number as on the base; check-contracts and check-modules
   --strict green; contracts probe: contrast one answer per pair; lint 0; mutation 76/76.
-- **State:** steps 1-4 committed; the local gate and CI are the last step.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41963589229 on 2a5dd8748837804b4c45184527a1f0ba2634359a
+- **State:** DONE. integration/0.3.2 merged in once (AR2, 3d9811a9); local gate: 5 shards passed, mutation 76/76.
 - **Resume:** CI green line below, then DONE; the reviewer reads and merges.
 
 ## Plan (one commit each)
