@@ -110,7 +110,9 @@ export function freeAddedNames(R, built) {
   });
   return out;
 }
-export function planTwin(a) {
+// planTwin's steps, called in order, each given the call's inputs a and the plan's context ctx (it adds what a later step reads)
+// the original read, the twin's name and place, its texts and model
+function placeStep(a, ctx) {
   // (0.3.1 X2) inMemory: { files, base, projectDir }: the English report create_report's plan builds, made one report
   // with its Arabic pages under its own name (into "same"); nothing of it is on disk yet
   const loc = a.inMemory ? memoryLoc(a.inMemory) : locate(a.path), R = readOriginal(loc), textsFrom = Math.max(0, Math.floor(Number(a.textsFrom) || 0)), termsFrom = Math.max(0, Math.floor(Number(a.termsFrom) || 0));
@@ -119,6 +121,12 @@ export function planTwin(a) {
   const twinDir = path.join(loc.project, outBase + '.Report'), twinPbip = path.join(loc.project, outBase + '.pbip');
   const free = a.inMemory ? true : nothingAt(twinDir) && nothingAt(twinPbip);
   const texts = textsOf(R), ids = new Set(texts.map((t) => t.id)), model = modelOf(R, loc), dateTables = dateTablesOf(model.m), dateColumns = continuousColumnsOf(model.m), textColumns = textColumnsOf(model.m);   // (TW1, M1-S3: numbers too)
+  Object.assign(ctx, { loc, R, textsFrom, termsFrom, same, outBase, twinDir, twinPbip, free, texts, ids, model,
+    dateTables, dateColumns, textColumns });
+}
+// the pages drawn on a picture (kept left to right or flipped), the matrices the user chose to write flat
+function picturesStep(a, ctx) {
+  const { R, loc } = ctx;
   // (T-1: Power BI has no setting that mirrors a page's background picture, so a page drawn on one stays left to right
   // unless the user asks to mirror it anyway: its visuals would leave the picture's panels)
   // (rc.22, B-137: an image that is DataArcus's own transparent placeholder, byte for byte, is no picture)
@@ -143,6 +151,11 @@ export function planTwin(a) {
     if (f.ok) { v.json = f.json; flattened.push(at); } else flatRefused.push(at + ' (' + f.why + ')');
   }));
   const pagesKept = R.pages.filter(keepLtr).length;
+  Object.assign(ctx, { pictures, mirrorPictures, pictureIds, keepLtr, flattened, flatRefused, pagesKept });
+}
+// the approved Arabic: by id, by the words, from the terms; the drafts, and the titles that would be mixed
+function labelsStep(a, ctx) {
+  const { R, ids, model, texts } = ctx;
   const given = a.labels || {}, labels = {}, unknown = [];
   Object.keys(given).forEach((k) => { if (ids.has(k)) labels[k] = cleanLabel(given[k], k); else unknown.push(visible(k).slice(0, 160)); });
   // (0.3.1 X2) the Arabic of a text by the text itself, as the plan shows it (a report built again draws new ids): every
@@ -191,6 +204,11 @@ export function planTwin(a) {
       whyAr: t.mixOf ? 'لو أُبقي لظهر هذا العنوان (القيمة المختارة في عموده، بالإنجليزية) بجانب حقول تُكتب بالعربية في المرئي نفسه: عنوان مختلط، ولا تكتب DataArcus عنوانًا مختلطًا أبدًا' : 'لو أُبقي لركّب Power BI هذا العنوان من الحقل المختار (بالإنجليزية) ومن حقول تُكتب بالعربية في المرئي نفسه: عنوان مختلط، ولا تكتب DataArcus عنوانًا مختلطًا أبدًا',
       how: 'Approve a fixed Arabic title for it (its id in labels: it then no longer changes with the selection), or keep the names of those fields English too.',
       howAr: 'وافق على عنوان عربي ثابت له (بمعرّفه في labels: فلا يتغير بعد ذلك مع التحديد)، أو أبقِ أسماء تلك الحقول بالإنجليزية أيضًا' } : null; }).filter(Boolean);
+  Object.assign(ctx, { labels, unknown, givenIds, textsUnknown, T, problems, mixedTitles });
+}
+// each page mirrored: what mirrors, counted per kind, and where each kind that cannot mirror is
+function pagesStep(a, ctx) {
+  const { R, dateColumns, dateTables, keepLtr, model, pictures, textColumns } = ctx;
   // what mirrors, counted per kind, and what cannot
   const orderCalcs = [], byKind = {}, kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [], kept: [], asTables: [], heatNames: [] }, together = { on: [], bars: [] };
   const pages = R.pages.map((pg) => {
@@ -217,6 +235,11 @@ export function planTwin(a) {
       if (own) { (byKind[own.what] = byKind[own.what] || []).push(safeName(pg.id) + '/' + safeName(v.json.name)); return; } if (where[k]) where[k].push(safeName(pg.id) + '/' + safeName(v.json.name) + (k === 'other' ? ' (' + safeName(v.json.visual.visualType) + ')' : why ? ' (' + why + ')' : '')); });
     return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length };
   });
+  Object.assign(ctx, { orderCalcs, byKind, kinds, where, together, pages });
+}
+// what mirrors, the heatmaps' names, the matrices written flat and the ones the user could choose
+function mirrorsStep(a, ctx) {
+  const { R, flatRefused, flattened, keepLtr, kinds, where } = ctx;
   // (0.3.1 MX1) the matrices written as tables named, page/visual
   const mirrors = Object.keys(kinds).map((k) => Object.assign({ kind: k, what: Mirror.KIND_WHAT[k], count: kinds[k] }, k === 'matrixAsTable' ? { where: where.asTables.slice(0, 30) } : {}));
   // (MX3) the heatmaps whose weekday names the twin writes beside their grid
@@ -228,6 +251,11 @@ export function planTwin(a) {
   const matrixChoices = flatOffer.length || flatRefused.length ? Object.assign({ option: 'matrixAsTable',
     how: 'Each of these matrices stays a matrix (its row headers at the left). On the user\'s choice, matrixAsTable with its visual names writes it as a flat table: one column per row level (the upper levels repeated on each row), then the values, its columns in reverse order so the names read at the right.',
     lost: 'What a flat table loses: ' + Mirror.FLAT_LOST + '. Ask the user before choosing it.', visuals: flatOffer.slice(0, 30) }, flatRefused.length ? { notWritten: flatRefused.slice(0, 30) } : {}) : null;
+  Object.assign(ctx, { mirrors, matrixChoices });
+}
+// what cannot mirror, said kind by kind
+function cannotStep(a, ctx) {
+  const { R, byKind, mirrorPictures, pictureIds, pictures, where } = ctx;
   const cannot = [];
   if (where.custom.length) cannot.push({ what: 'custom visuals', why: 'moved only: no report setting reaches inside a custom visual (its labels, sides and menus stay as they are; a licensed one may ask for a sign-in when its page opens)', where: where.custom.slice(0, 30) });
   if (where.navigator.length) cannot.push({ what: 'the page navigator\'s order', why: 'Power BI has no order setting: the first page stays at the left. It lists the twin\'s own pages by their (Arabic) names and keeps working', where: where.navigator.slice(0, 30) });
@@ -269,6 +297,11 @@ export function planTwin(a) {
     seek(isObj(v.json) ? v.json.visual : null); return hit.length; }).map((v) => safeName(pg.id) + '/' + safeName(v.json.name)));
   if (daxShown.length) cannot.push({ what: 'the DAX function library\'s pictures and titles', why: 'the KPI card pictures, the table\'s trend and target columns and the story titles are drawn by measures of the model (the DAX functions script made for the English report, in English): the twin shows them as those measures draw them; for Arabic ones, make the report in Arabic with create_report and daxFunctions', where: daxShown.slice(0, 30) });
   if (flipFaces.length) cannot.push({ what: 'flip cards\' faces', why: 'their text is drawn by picture measures of the model (the flip cards script made for the English report): the twin\'s cards are mirrored as one box and still turn, but their faces read as those measures draw them; for Arabic faces, make the report in Arabic with create_report and flipCards', where: flipFaces.slice(0, 30) });
+  Object.assign(ctx, { cannot });
+}
+// what to look at in the twin, what is kept together, the Arabic month's offer
+function checksStep(a, ctx) {
+  const { R, keepLtr, loc, model, outBase, together } = ctx;
   const checkInTwin = [];
   const offAxis = (v) => { const vis = isObj(v.json) && isObj(v.json.visual) ? v.json.visual : {}, es = isObj(vis.objects) && Array.isArray(vis.objects.categoryAxis) ? vis.objects.categoryAxis : []; return es.some((e) => isObj(e) && isObj(e.properties) && isObj(e.properties.show) && isObj(e.properties.show.expr) && isObj(e.properties.show.expr.Literal) && e.properties.show.expr.Literal.Value === 'false'); };
   const paired = new Set(together.bars.map((w) => w.split(' with ')[0]));
@@ -282,6 +315,11 @@ export function planTwin(a) {
   const { script, howToApply, ...monthShown } = month;
   if (monthShown.scriptAfterGo) monthShown.scriptAfterGo = safeName(monthShown.scriptAfterGo);
   const ref = byPathOf(R.pbir);
+  Object.assign(ctx, { checkInTwin, keptTogether, month, howToApply, monthShown, ref });
+}
+// the twin built in memory with the labels, and the visuals it adds named
+function builtStep(a, ctx) {
+  const { R, dateColumns, dateTables, keepLtr, labels, mirrors, model, same, textColumns, texts } = ctx;
   // (rc.24) the twin built in memory with the labels: its title measures and what its Arabic texts need
   const built = buildTwin({ R, model: model.m, keepLtr, dateTables, dateColumns, textColumns, timeRightToLeft: a.timeRightToLeft, waterfallRtl: a.waterfallRtl, same }, rawLabels(texts, labels));
   // (0.3.2 HM1, B-296: Codex N1-25, M1-1: a page with a visual already named "<heatmap>Names" lost it to the names table,
@@ -291,6 +329,11 @@ export function planTwin(a) {
   let addedVisuals = freeAddedNames(R, built);
   const hn = mirrors.find((x) => x.kind === 'heatmapNames');
   if (hn && addedVisuals.length) hn.added = addedVisuals.slice(0, 30).map((x) => x.page + '/' + x.name);
+  Object.assign(ctx, { built, addedVisuals, hn });
+}
+// the reversed tables wider than their box, or that may be
+function tablesStep(a, ctx) {
+  const { R, built, keepLtr } = ctx;
   // (0.3.1 MX1 D, the reviewer's add-on of 1 Nov: Fintech's roadmap table) a reversed table wider than its box: Power BI
   // lays a table from its left edge and scrolls to the right, so the English first column (now the last) is behind the
   // scroll. Its columns summed: its own widths (columnWidth by queryRef) or, without one, its Arabic header's width (a
@@ -312,6 +355,11 @@ export function planTwin(a) {
       const unknown = ps.filter((q) => own(q.queryRef) == null).length, known = ps.length - unknown;
       if (need <= room && unknown && known && need >= room * 0.5 && !inView.has(safeName(x.pg.id) + '/' + safeName(String(v.name)))) mayWide.push(safeName(x.pg.id) + '/' + safeName(String(v.name)) + ` (${unknown} of its ${ps.length} columns sized by Power BI from the data)`);
       if (need > room && !inView.has(safeName(x.pg.id) + '/' + safeName(String(v.name)))) wideTables.push(safeName(x.pg.id) + '/' + safeName(String(v.name)) + ` (its columns ${Math.ceil(need)} wide${ps.some((q) => own(q.queryRef) == null) ? ' at least' : ''}, its box ${room})`); }); });
+  Object.assign(ctx, { mayWide, wideTables });
+}
+// the legends that may be cut; the tables' lines
+function legendsStep(a, ctx) {
+  const { built, cannot, keepLtr, mayWide, wideTables } = ctx;
   // (0.3.1 MX2, laptop part 8: Call Center p1's legend «المكالما...» twice, Consumer Complaints p3's titles «...حجم الشر»)
   // a shown legend's Arabic that may be cut, by our estimate (Desktop has not measured a legend's room): its items when
   // they are the visual's measures (texts the plan knows; category items are data, never read) and its title (the
@@ -342,6 +390,10 @@ export function planTwin(a) {
   if (legends.length) cannot.push({ what: 'legends that may be cut', why: 'by our estimate (Desktop has not measured a legend\'s room yet), the Arabic in these legends is longer than its room, and Power BI cuts it with «...». Approve a shorter Arabic for each (on this visual, its own name for the field: the English names here may be short, as "Answered" and "Unanswered"), or move or widen the legend in the original; two items that would read the same are listed first', where: legends.filter((l) => l.first).concat(legends.filter((l) => !l.first)).map((l) => l.line).slice(0, 30) });
   if (mayWide.length) cannot.push({ what: 'tables that may be wider than their box', why: 'some of their columns are sized by Power BI from the data, which the twin never reads, so it cannot tell if the table fits: if it does not, its first column (now at the right) is out of view, reached by scrolling right. Look at it in the twin; to keep it in view, give those columns a width in the original', where: mayWide.slice(0, 30) });
   if (wideTables.length) cannot.push({ what: 'tables wider than their box', why: 'this table is wider than its box: in Arabic its first column is reached by scrolling right (Power BI lays a table from its left edge and scrolls to the right; the twin reverses its columns, so the English first column is the last, at the right). It is not narrowed: how wide its values are is data, which the twin never reads, so narrowing could cut them. To keep it in view, widen the table or narrow its columns in the original', where: wideTables.slice(0, 30) });
+}
+// the glass and page pictures flipped for the Arabic pages
+function glassStep(a, ctx) {
+  const { R, built, keepLtr, loc, pictures } = ctx;
   // (0.3.1 GD2, the owner, 27 Oct: "i want the twin to be identical") a mirrored page drawn on DataArcus's glass picture
   // gets that picture flipped left to right, pixel by pixel (built.pictures: its file -> the flipped bytes); the twin
   // writes it under the same name, the copy holding both languages as a picture of the Arabic page's own
@@ -355,6 +407,11 @@ export function planTwin(a) {
   // (0.3.1 MP1) a page drawn on a picture: its picture flipped, a new PNG of the Arabic page's own (built.addedPictures),
   // and the boxes checked after mirroring and the text fitting (built.pictureChecks)
   flipPicturesOf(R, loc, pictures, built, keepLtr);
+}
+// the copy holding both languages, built in memory; the twin's names
+function copyStep(a, ctx) {
+  const { R, built, cannot, hn, keepLtr, labels, loc, same, texts, twinDir, twinPbip } = ctx;
+  let { addedVisuals } = ctx;
   // (X1) the copy, built in memory from the twin's pages: the plan shows it, the write writes exactly it
   // (0.3.1 K2) the .platform logical id, chosen once here (the write builds again with the plan's: the approved bytes hold it)
   const logicalId = typeof a.logicalId === 'string' && a.logicalId ? a.logicalId : crypto.randomUUID();
@@ -372,6 +429,11 @@ export function planTwin(a) {
     ...(copy.notes.length ? { notes: copy.notes } : {}),
     sayInPlan: 'Show the user the copy\'s name, every page pair, the language buttons (and any not placed, with why), the slicers kept in sync and which tabs are shown (tabs.service: what a reader in the Power BI service sees). tabsShown "ar" shows the Arabic pages instead.' } : null;
   if (built.titleMeasures && built.titleMeasures.notTranslated.length) cannot.push({ what: 'chart titles from title measures that build their text another way', why: 'their DAX is not only fixed texts and the numbers the report counts, so DataArcus can\'t translate it without guessing: the title stays as it is (titleMeasures.notTranslated says why for each)', where: built.titleMeasures.notTranslated.map((x) => x.measure).slice(0, 30) });
+  Object.assign(ctx, { logicalId, copy, twinShown, languages, addedVisuals });
+}
+// what stays English, the terminology sheet, the phone, the fitted texts, the texts listed
+function listsStep(a, ctx) {
+  const { R, T, built, cannot, copy, labels, model, outBase, pagesKept, problems, texts } = ctx;
   // (0.3.0 D3) what stays English in the twin, and why, said before the go (as create_report's plan does: R2, #75)
   const notTranslated = notTranslatedOf(texts, labels, problems);
   // (0.3.0 A3) the copy's language button on each Arabic page reads "English": listed with why, as every kept text is
@@ -394,6 +456,15 @@ export function planTwin(a) {
   texts.forEach((t) => { const m = t.kind === 'altText' && !t.phone && t.text != null ? /^text:(.+)\/c\.general\.\d+\.altText$/.exec(t.rawId) : null, ti = m ? titleAt.get(m[1]) : null;
     if (ti && !altUnder.has(ti.id) && ti.raw.trim() === t.raw.trim() && labels[t.id] == null && labels[ti.id] == null) altUnder.set(ti.id, t.id); });
   const under = new Set(altUnder.values()), listed = texts.filter((t) => !under.has(t.id)).map((t) => (altUnder.has(t.id) ? Object.assign({}, t, { altTextToo: altUnder.get(t.id) }) : t));
+  Object.assign(ctx, { notTranslated, termRows, names, namesShown, phone, fitted, notFullyArabic, listed });
+}
+// the plan and its answer, fitted to one answer
+function answerStep(a, ctx) {
+  const { R, T, addedVisuals, built, cannot, checkInTwin, copy, dateColumns, dateTables, fitted, free, givenIds,
+    howToApply, keepLtr, keptTogether, labels, languages, listed, loc, logicalId, matrixChoices, mirrorPictures,
+    mirrors, mixedTitles, model, month, monthShown, names, namesShown, notFullyArabic, notTranslated, orderCalcs,
+    outBase, pages, phone, pictureIds, pictures, problems, ref, same, termRows, termsFrom, texts, textsFrom,
+    textsUnknown, twinShown, unknown } = ctx;
   // (0.3, B-154) the model's fingerprint, pinned by the plan (null: no model read)
   return { loc, R, logicalId, labels, texts, mixedTitles, textsUnknown, notTranslated, month, dateTables, dateColumns, pictureIds, pictures, keepLtr, built, addedVisuals, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, names, answer: capAnswer(twinFit({
     written: false,
@@ -430,4 +501,22 @@ export function planTwin(a) {
     ...(R.unreadable.length ? { unreadable: { count: R.unreadable.length, note: 'files that are not JSON: copied as they are, not mirrored' } } : {}),
     sayFirst: 'Nothing was written. Show the user this plan: the twin\'s name and place, the pages, what mirrors, what cannot, and the Arabic texts. draftArabic comes from a fixed glossary; for every other text draft the Arabic yourself in modern, simple Standard Arabic (Western digits, product names in Latin letters, short and natural, not a word-for-word translation) and show each one to the user as a DRAFT. Never translate silently and never write a text the user has not approved: a text without an approved label stays as it is. Call this tool again with the approved texts as labels ({ id: text }) to get a plan id for exactly those, show it, and after the user\'s go call approve_plan, then this tool with planId.'
   }, textsFrom, termsFrom), (x) => JSON.stringify(x).length, { last: ['texts'] }) };   // (A3: the texts cut last)
+}
+
+export function planTwin(a) {
+  const ctx = {};
+  placeStep(a, ctx);
+  picturesStep(a, ctx);
+  labelsStep(a, ctx);
+  pagesStep(a, ctx);
+  mirrorsStep(a, ctx);
+  cannotStep(a, ctx);
+  checksStep(a, ctx);
+  builtStep(a, ctx);
+  tablesStep(a, ctx);
+  legendsStep(a, ctx);
+  glassStep(a, ctx);
+  copyStep(a, ctx);
+  listsStep(a, ctx);
+  return answerStep(a, ctx);
 }

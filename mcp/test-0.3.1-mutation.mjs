@@ -33,6 +33,9 @@ const MN = 'mcp/lib/model-names.mjs', MM = 'mcp/lib/model-metadata.mjs';
 // (0.3.2 SM1) the approval window's HTTP side and check_report's one redaction boundary, with the suites that guard them
 const AH = 'mcp/lib/approval-http.mjs', RD = 'mcp/lib/check-redact.mjs';
 const AHG = ['test-0.3.2-sp44.mjs', 'test-approval.mjs'], RDG = ['test-0.3.2-sp41.mjs'];   // (the suites that kill them, mcp/work/SM1.md)
+// (0.3.2 SM2) plan_layout's exact artifact, with the suites that guard it (mcp/work/SM2.md)
+const PA = 'mcp/lib/plan-artifact.mjs';
+const PAG = ['test-0.3.1-fx2.mjs'];   // (S1-S4 kill them; sp43, en-ar-copy, bilingual-report and twin-artifact pass with either mutant: SM2.md)
 const MUTANTS = [
   // 1. the approval gate
   { id: 'G-unapproved', file: PL, edits: [["if (p.status !== 'approved') throw new Error(`Nothing was written: plan", "if (false) throw new Error(`Nothing was written: plan"]], guards: ['test-0.2.9.mjs', 'test-z.mjs', 'test-approval-hardening.mjs', 'test-audit6.mjs'] },
@@ -148,7 +151,11 @@ const MUTANTS = [
   { id: 'AH-once', file: AH, edits: [["if (!w.decided && (d === 'approve' || d === 'decline')) hooks.decide(w, d);", "if (d === 'approve' || d === 'decline') hooks.decide(w, d);"]], guards: AHG },
   { id: 'AH-revoke', file: AH, edits: [['if (secret) { bySecret.delete(secret); secretOf.delete(id); }', 'if (secret) { secretOf.delete(id); }']], guards: AHG },
   { id: 'RD-scrub', file: RD, edits: [[String.raw`.join('<report>').replace(/(^|[\s([])(['"“”‘’])[^'"“”‘’]{0,400}\2(?=$|[\s:,;.)\]])/g, '$1<text>');`, ".join('<report>');"], ['  if (left.length >= 2) s =', '  if (false) s =']], guards: RDG },
-  { id: 'RD-mask', file: RD, edits: [[String.raw`export const maskValues = (m) => String(m || '').replace(/['"][^'"]*['"]/g, '<value>');`, "export const maskValues = (m) => String(m || '');"]], guards: RDG }
+  { id: 'RD-mask', file: RD, edits: [[String.raw`export const maskValues = (m) => String(m || '').replace(/['"][^'"]*['"]/g, '<value>');`, "export const maskValues = (m) => String(m || '');"]], guards: RDG },
+  // (0.3.2 SM2, D-1104-14 "add the security mutants to DD1 too"; B-330, the last item) two branches of plan_layout's exact artifact
+  // that no suite caught: a design's overlap blocks the plan (FX2's C23), and the EN-AR copy's plan offers no Arabic month script
+  { id: 'PA-overlap', file: PA, edits: [['ab.design && !ab.pages ? { blockOverlap: true } : {}', '{}']], guards: PAG },
+  { id: 'PA-month', file: PA, edits: [['arabicMonth: false, waterfallRtl: ab.waterfallRtl', 'arabicMonth: true, waterfallRtl: ab.waterfallRtl']], guards: PAG }
 ];
 
 // (0.3.1 T1, Windows) a mutant's text is written with "\n"; a Windows checkout has the files with CRLF, so each text is
