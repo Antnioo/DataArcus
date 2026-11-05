@@ -14,3 +14,42 @@
 - **Expected checks:** dd2v new; every other suite's number unchanged; lint 0; check-contracts, check-modules --strict, check-agent-memory, check-result-lines green.
 - **State:** steps 1-4 written; the full runs and CI follow.
 - **Resume:** run the checks, merge integration once if it moved, `npm run build:min`, CI.
+
+## Copies before -> after (each place)
+| place | before | after |
+|---|---|---|
+| `assets/js/mirror-policy.js` `BAR` (kindOf) | its own frozen list of the 3 catalog bar types | `const BAR = VT.BAR_TYPES;` (same three) |
+| `assets/js/page-preview.js` `KIND` bar entry | a regex of 4 types (stackedBarChart in) | `{ test: VT.isBar }` |
+| `assets/js/page-preview.js` padding band (line ~448) | a regex of bar and column types | `VT.isBar(type) \|\| ` the column regex |
+| `assets/js/layout-check.js` `BARS` (bar-label rule) and the `KINDS` bar entry | a regex of 4 types, twice | `VT.isBar` both; `BARS` gone |
+| `mcp/lib/page-picture.mjs` `BARS` | a regex of 4 types | `isBar` from visual-types.js (createRequire) |
+| `mcp/lib/page-picture.mjs` `TABLES` | `Set(['pivotTable','tableEx'])` | `keepsGridLtr` from mirror-policy.js; `TABLES` gone |
+Lists: grid 2 -> 1; bar 5 -> 1 (`BAR_TYPES`). Same-shape groups go down; the loader of the preview (`theme-generator.js` loadPreview) loads visual-types.min.js first.
+
+## Answers before and after
+- `stackedBarChart`: bar in page-preview, layout-check and page-picture (before) -> not a bar (after); mirror-policy already said custom.
+- `stackedColumnChart`: column in page-preview (KIND, padding band, category) and layout-check `KINDS` (before) -> not a column ("a visual"/"other"; after).
+- The other 16 of the probe's 18 types: unchanged. No golden or twin test changed its expected answer.
+
+## Checks
+dd2v 178 checks (red proof, not committed: page-preview's bar entry put back to the 4-type regex: FAIL 176 of 178, P vt-bar page-preview stackedBarChart and S1; restored). MCP in CI's shards side by side (DA_SHARD=0..4/4): 0 failures; website suites shards 1-3 of 3: 21, 13 and 8 passed; lint 0; check-contracts, check-modules --strict, check-agent-memory, check-result-lines, check-min green.
+
+## Decisions I made
+- The probe (scripts/contracts-probe.mjs) names the new places: grid and vt-bar now run `newOverlaps` (a table and a bar over each other, the bar's axis turned in Arabic: 'barsTurned' iff the grid keeps/bar) and `placeOf` (layout-check) where the old copies were; the 18 inputs are unchanged.
+- layout-check `CHARTS` (the "is a chart" list) still holds stackedBarChart and stackedColumnChart: a different question, not in this job.
+- `stackedColumnChart` left the column lists only where they sit beside the bar list (page-preview KIND, padding band and category; layout-check KINDS).
+- Not typed: any `?v=` stamp (build:min wrote them); sitemap lastmod written after `git fetch --unshallow`.
+
+## For the owner
+none
+
+## Risky changes
+none (a type Power BI never writes changes its picture; no report Power BI writes has it)
+
+## Seen, not in scope
+- layout-check.js `CHARTS` still lists stackedBarChart and stackedColumnChart; report-a11y.js, twin-plan.mjs, visual-meaning.mjs and twin-geometry.mjs also name stackedBarChart (other questions).
+- vt-slicer waits on a Desktop look (D-1104-15).
+
+## Lessons for the reviewer
+- `git grep -l` of the edited files found 56 tests; running the whole MCP in CI's shards plus the 3 website shards was the only sure proof (about 25 minutes on 4 cores).
+- A page loader edit (theme-generator.js loadPreview) is covered by the website shards (pbip, sp31, theme-generator).
