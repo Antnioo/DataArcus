@@ -24,7 +24,8 @@
   not the browser's: fix it there (a job of its own, below). bidi-js is the pick when Node needs an order with no
   browser (a PDF, an MCP check of the writer's order); harfbuzzjs only if a PDF job finds its PDF library's shaping
   wrong.
-- **Resume:** steps 1 to 4 done; CI below.
+- **Resume:** steps 1 to 4 done. **State: DONE.**
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41999456331 on 02cf571
 
 ## What was found
 
