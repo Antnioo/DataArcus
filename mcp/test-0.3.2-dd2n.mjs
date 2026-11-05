@@ -54,7 +54,7 @@ chk(() => Object.isFrozen(TmdlName) && Object.keys(TmdlName).join() === 'PLAIN,t
 // ---------- parity ----------
 const fam = FAMILIES.find((f) => f.id === 'tmdl-name');
 const CALLER_FILES = ['assets/js/model-health-tmdl.js', 'assets/js/measure-builder.js', 'mcp/lib/model-culture.mjs', 'mcp/lib/sample-project.mjs', 'mcp/lib/shadow-model.mjs', 'mcp/lib/twin-model.mjs'];
-chk(() => fam && CALLER_FILES.every((f) => fam.places.some((p) => p.file === f)), () => 'P0 the probe\'s family tmdl-name must hold every caller');
+chk(() => fam && fam.places[0].file === 'assets/js/tmdl-name.js' && CALLER_FILES.every((f) => fam.places.some((p) => p.file === f)), () => 'P0 the probe\'s family tmdl-name must hold the module first and every caller');
 // the shipped pages: the health check's engine and the measure builder's tName, each after tmdl-name.min.js
 const Health = { self: {} }; vm.createContext(Health); vm.runInContext(src('tmdl-name.min.js'), Health); vm.runInContext(src('field-meaning.min.js'), Health); vm.runInContext(src('sort-column.min.js'), Health); vm.runInContext(src('model-health-tmdl.min.js'), Health);
 const mbLine = (s) => (/(?:const |,)(\w+)=window\.DATmdlName\.tmdlName/.exec(s) || [])[1];
