@@ -128,11 +128,10 @@ const modelOf = (tmsl) => (tmsl && (tmsl.model || tmsl)) || {};
 const isFieldParameter = (t) => (t.partitions || []).length === 1 && /\bNAMEOF\s*\(/i.test(textOf(((t.partitions[0] || {}).source || {}).expression)) && ((t.partitions[0] || {}).source || {}).type === 'calculated';
 const isCalcGroup = (t) => !!t.calculationGroup;
 
-/** The shadow of a model: { files: [{ path, text }] (relative to the SemanticModel folder), tables: [{ name, rows, kept }],
- *  guessed: [{ table, column, as }], notes: [string] }. tmsl: the model's JSON as loadModel reads it (TMDL, model.bim,
- *  or a .pbit's schema). opts: { rows (ROWS overrides), form: 'm' (default: a typed Power Query #table a table; a
- *  project opens it empty until a refresh) | 'dax' (a DATATABLE a table: computed when the project opens) }. Nothing here is a value of the model. */
-export function shadowModel(tmsl, opts) {
+// shadowModel's steps, called in order, each given the shadow's context sm (it adds what a later step reads)
+// the tables, the kept ones (a field parameter, a calculation group), the relationships and the columns that hold made-up rows
+function planStep(sm) {
+  const { opts, tmsl } = sm;
   const o = opts || {}, R = Object.assign({}, ROWS, o.rows || {}), src = modelOf(tmsl), notes = [], guessed = [], dax = o.form === 'dax';
   const tables = (src.tables || []).filter((t) => t && t.name != null);
   const kept = new Set(tables.filter((t) => isFieldParameter(t) || isCalcGroup(t)).map((t) => t.name));
@@ -154,6 +153,11 @@ export function shadowModel(tmsl, opts) {
     });
     plan.set(t.name, { t, cols, rows: 0 });
   });
+  Object.assign(sm, { R, src, notes, guessed, dax, tables, weekendFriSat, rels, plan });
+}
+// the keys: one pool a connected group (union-find over the relationships), each key's type
+function keysStep(sm) {
+  const { plan, rels } = sm;
   // ---- the keys: one pool a connected group (union-find over the relationships) ----
   const parent = new Map(), find = (k) => { while (parent.get(k) !== k) { parent.set(k, parent.get(parent.get(k))); k = parent.get(k); } return k; };
   const node = (t, c) => { const k = t + '\0' + c; if (!parent.has(k)) parent.set(k, k); return k; };
@@ -170,6 +174,11 @@ export function shadowModel(tmsl, opts) {
     const known = ks.map(colOf).find((x) => x && x.type);
     ks.map(colOf).filter((x) => x && !x.type).forEach((x) => { x.type = known ? known.type : guessType(x.c.name); x.keyGuess = true; });
   });
+  Object.assign(sm, { parent, find, unique, colOf, groups });
+}
+// each table's date key and row count, the types of the rest
+function sizesStep(sm) {
+  const { R, guessed, parent, plan, unique, weekendFriSat } = sm;
   // ---- each table: a date table (a unique date key, or the date table's key column), its row count ----
   plan.forEach((p) => {
     const key = p.cols.find((x) => (x.type || (x.c.dataType === 'unknown' ? guessType(x.c.name) : null)) === 'dateTime' && (unique.has(p.t.name + '\0' + x.c.name) || (low(p.t.dataCategory) === 'time' && x.c.isKey)));
@@ -183,6 +192,10 @@ export function shadowModel(tmsl, opts) {
     if (!x.type) x.type = x === p.dateKey ? 'dateTime' : guessType(x.c.name);
     if ((!TYPES.has(x.c.dataType) || x.keyGuess) && !x.calc) guessed.push({ table: p.t.name, column: x.c.name, as: x.type });
   }));
+}
+// the pools of the key groups
+function poolsStep(sm) {
+  const { R, colOf, groups, notes, plan, unique } = sm;
   // ---- the pools of the key groups ----
   const pools = new Map();
   groups.forEach((ks, g) => {
@@ -195,6 +208,11 @@ export function shadowModel(tmsl, opts) {
     if (type === 'boolean' && sizes.some((n) => n > 2)) notes.push(`a true/false key (${names}) has two values: its "one" side keeps two rows`);
     pools.set(g, { pool, shared: type === 'boolean' ? 2 : shared, r });
   });
+  Object.assign(sm, { pools });
+}
+// each table's made-up rows
+function rowsStep(sm) {
+  const { R, find, notes, parent, plan, pools, unique } = sm;
   // ---- the rows ----
   plan.forEach((p) => {
     const tn = p.t.name, n = p.rows;
@@ -249,6 +267,10 @@ export function shadowModel(tmsl, opts) {
     p.values = at;
     p.n = n;
   });
+}
+// each table's TMDL file
+function tablesStep(sm) {
+  const { dax, plan, tables } = sm;
   // ---- the files ----
   const files = [], out = [];
   const used = new Set();
@@ -318,6 +340,11 @@ export function shadowModel(tmsl, opts) {
     }
     files.push({ path: `definition/tables/${fileName(t.name)}.tmdl`, text: lines.join('\n') + '\n' });
   });
+  Object.assign(sm, { files, out, flag });
+}
+// the relationships, the model, the database and the .pbism files, and what is left out
+function modelStep(sm) {
+  const { files, flag, notes, src, tables, tmsl } = sm;
   // relationships
   const rl = [];
   (src.relationships || []).filter((r) => r && tables.some((t) => t.name === r.fromTable) && tables.some((t) => t.name === r.toTable)).forEach((r, i) => {
@@ -342,6 +369,22 @@ export function shadowModel(tmsl, opts) {
     if ((src[k] || []).length) notes.push(`left out: ${(src[k] || []).length} ${why}`);
   });
   if (tables.some((t) => (t.columns || []).some((c) => c.description) || (t.measures || []).some((m) => m.description) || t.description)) notes.push('left out: descriptions');
+}
+
+/** The shadow of a model: { files: [{ path, text }] (relative to the SemanticModel folder), tables: [{ name, rows, kept }],
+ *  guessed: [{ table, column, as }], notes: [string] }. tmsl: the model's JSON as loadModel reads it (TMDL, model.bim,
+ *  or a .pbit's schema). opts: { rows (ROWS overrides), form: 'm' (default: a typed Power Query #table a table; a
+ *  project opens it empty until a refresh) | 'dax' (a DATATABLE a table: computed when the project opens) }. Nothing here is a value of the model. */
+export function shadowModel(tmsl, opts) {
+  const sm = { tmsl, opts };
+  planStep(sm);
+  keysStep(sm);
+  sizesStep(sm);
+  poolsStep(sm);
+  rowsStep(sm);
+  tablesStep(sm);
+  modelStep(sm);
+  const { files, guessed, notes, out } = sm;
   return { files, tables: out, guessed, notes };
 }
 
