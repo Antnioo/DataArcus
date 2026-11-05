@@ -3,15 +3,24 @@
 // paragraphs hold?". The runs reader lives in assets/js/text-runs.js only (paragraphTexts; mcp/docs/CONTRACTS.md, family
 // text-runs); each caller keeps its own join at the call: " / " and trimmed (a box's lines on one line: layout-check.js,
 // report-inventory.mjs), " " (a test for text, the text drawn: report-a11y.js, page-preview.js).
-//   U1   the probe's 9 text boxes and 6 more (a number beside text, a paragraph with no textRuns, a run that is not an
-//        object, a true value, paragraphs that are not a list, a null value): paragraphTexts pinned
-//   U2   each caller's join on the same 15: " / " and trimmed, " "
+//   U1   the probe's 9 text boxes and 7 more (a number beside text, a paragraph with no textRuns, a run that is not an
+//        object, a true and a false value, paragraphs that are not a list, a null value): paragraphTexts pinned
+//   U2   each caller's join on the same 16: " / " and trimmed, " "
 //   U3   never throws, never changes its input (odd shapes, a frozen input, a cycle)
+//   P    every place (the four callers' textOf, run as scripts/contracts-probe.mjs runs them: an engine's inner name or
+//        its own definition read from its source) on the same 16 boxes: its answer is paragraphTexts joined as decided
+//        for it (" / " and trimmed, or " "); one paragraphTexts answer per input
+//   S    no caller reads the runs itself: each textOf is a call of TR.paragraphTexts, its join named there
 // Made-up data only.   node test-0.3.2-dd2t.mjs
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { answerOf, definitions } from '../scripts/contracts-probe.mjs';
 
 const require = createRequire(import.meta.url);
 const TR = require('../assets/js/text-runs.js');
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const problems = []; let checks = 0;
 const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } catch (e) { err = ' (threw: ' + String(e && e.message || e).slice(0, 200) + ')'; } checks++; if (!ok) { let m = ''; try { m = msg(); } catch (e) { m = 'unexpected shape'; } problems.push(m + err); } };
@@ -34,6 +43,7 @@ const BOXES = [
   { label: 'a paragraph with no textRuns', ps: [{}], want: [''], a: '', b: '' },
   { label: 'a paragraph and a run that are not objects', ps: [null, { textRuns: [null, 'x', { value: 'A' }] }], want: ['A'], a: 'A', b: 'A' },
   { label: 'a run with the value true', ps: [{ textRuns: [{ value: true }] }], want: ['true'], a: 'true', b: 'true' },
+  { label: 'a run with the value false', ps: [{ textRuns: [{ value: false }] }], want: ['false'], a: 'false', b: 'false' },
   { label: 'paragraphs that are not a list', ps: { textRuns: [{ value: 'A' }] }, want: [], a: '', b: '' },
   { label: 'a run with a null value', ps: [{ textRuns: [{ value: null }, { value: 'B' }] }], want: ['B'], a: 'B', b: 'B' },
 ];
@@ -57,6 +67,33 @@ ODD.forEach((ps, k) => {
 });
 chk(() => TR.paragraphTexts(cyc)[0] === 'x' && TR.paragraphTexts(ODD[12])[0] === 'F', () => 'U3 a cycle or a frozen input is not read');
 chk(() => Object.isFrozen(TR) && Object.keys(TR).join() === 'paragraphTexts', () => 'U3 the module hands out paragraphTexts alone, frozen');
+
+// ---- P: every place gives its decided answer (the probe's loaders; a box as the probe makes it) ----
+const TB = (ps) => ({ visual: { visualType: 'textbox', objects: ps === undefined ? {} : { general: [{ properties: { paragraphs: ps } }] } } });
+const PLACES = [
+  { file: 'assets/js/layout-check.js', fn: 'textOf', how: 'inner', join: 'a', run: async (x, get) => (await get())(x.j) },
+  { file: 'mcp/lib/report-inventory.mjs', fn: 'textOf', how: 'source', join: 'a', run: async (x, get) => (await get())(x.j) },
+  { file: 'assets/js/report-a11y.js', fn: 'textOf', how: 'inner', join: 'b', run: async (x, get) => (await get())(x.j.visual) },
+  { file: 'assets/js/page-preview.js', fn: 'textOf', how: 'inner', join: 'b', run: async (x, get) => (await get())(x.j) },
+];
+const JOINS = { a: lineOf, b: textOf };
+for (const x of BOXES) {
+  const input = { label: x.label, j: TB(x.ps) };
+  const one = await answerOf({ how: 'export', run: async () => TR.paragraphTexts(x.ps) }, input);
+  chk(() => one.key === JSON.stringify(x.want), () => `P paragraphTexts on ${x.label}: ${one.shown}, one answer ${show(x.want)}`);
+  for (const p of PLACES) {
+    const got = await answerOf(p, input), want = JOINS[p.join](x.ps);
+    chk(() => got.key === JSON.stringify(want), () => `P ${p.file} ${p.fn} on ${x.label}: ${got.shown}, decided (${p.join === 'a' ? '" / " and trimmed' : '" "'}) ${show(want)}`);
+  }
+}
+
+// ---- S: no caller reads the runs itself ----
+const src = (f) => fs.readFileSync(path.join(ROOT, ...f.split('/')), 'utf8').replace(/\r\n/g, '\n');
+for (const p of PLACES) {
+  const defs = definitions(src(p.file), p.fn), sep = p.join === 'a' ? ".join(' / ').trim()" : ".join(' ')";
+  chk(() => defs.length === 1 && /\bTR\.paragraphTexts\(/.test(defs[0].text) && defs[0].text.includes(sep) && !/textRuns|\.value\b/.test(defs[0].text), () => `S ${p.file} ${p.fn} reads the runs itself (or not with its join ${sep}): ${defs.map((d) => d.text.slice(0, 160)).join(' / ')}`);
+}
+chk(() => /text-runs\.js/.test(src('mcp/lib/visual-meaning.mjs')) && /\bTR\b/.test(src('mcp/lib/report-inventory.mjs').split('\n').find((l) => l.startsWith('import {') && l.includes('visual-meaning')) || ''), () => 'S report-inventory.mjs does not take TR from visual-meaning.mjs (sp42 P4: its imports stay three)');
 
 if (problems.length) { problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  dd2t  ${checks - problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  dd2t  ${checks} checks`);

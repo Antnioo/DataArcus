@@ -17,8 +17,8 @@
 - **Answers that change (only these):** a run whose value is a number (0, 12) or a boolean is text for report-a11y (a
   Tab stop, the alt-text note) and is drawn by page-preview. Two paragraphs, an empty paragraph, spaces around: each
   caller's answer as before. Anything else in a golden, twin or Desktop-measured test: stop, "## For the owner".
-- **State:** step 3 (the three engines read it; theme-generator.js loads it first).
-- **Resume:** step 4.
+- **State:** step 4 (the parity test: dd2t 161 checks; red with report-a11y's old textOf: 157 of 161).
+- **Resume:** step 5.
 
 ## The rule
 `paragraphTexts(paragraphs)`: a list, one text per paragraph that is an object (a paragraph that is not one is
