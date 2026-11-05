@@ -10,6 +10,10 @@
 //          matrices chosen flat or refused, the kinds that cannot mirror, a card grid, a flip card, a field parameter's
 //          slicer, bar lists, a badge, legends, a running calculation, wide tables, a picture page, labels by id and by
 //          words, the copy in both languages, and no model; byte for byte as on ca3a1b73 (fixtures/fn1c-plans.json)
+//   W1-W2  assets/js/pbip-page.js write: every file and the whole result of four builds of the shared writer (as sp28
+//          builds), with what no other build has: a designed header grown by a second row of page tabs, two pages of one
+//          name with their tabs in two rows, report texts without the groups' names; byte for byte as on ca3a1b73
+//          (fixtures/fn1c-builds.json)
 //   node test-0.3.2-fn1c.mjs            (--record writes the fixture: only on the base, never to make a split pass)
 import './fixtures/sp1/seeded-random.mjs';
 import fs from 'node:fs';
@@ -17,8 +21,9 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
-const HERE = path.dirname(fileURLToPath(import.meta.url)), FIX = path.join(HERE, 'fixtures', 'fn1c-shadow.json'), FIX2 = path.join(HERE, 'fixtures', 'fn1c-plans.json');
+const HERE = path.dirname(fileURLToPath(import.meta.url)), FIX = path.join(HERE, 'fixtures', 'fn1c-shadow.json'), FIX2 = path.join(HERE, 'fixtures', 'fn1c-plans.json'), FIX3 = path.join(HERE, 'fixtures', 'fn1c-builds.json');
 const RECORD = process.argv.includes('--record');
 const problems = []; let checks = 0;
 const chk = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
@@ -150,7 +155,31 @@ try {
   Object.entries(runs).forEach(([k, P]) => { plans[k] = Object.fromEntries(Object.entries(one(P)).map(([x, t]) => [x, digest(t)])); plans[k].size = one(P).answer.length; });
 } finally { fs.rmSync(ROOT2, { recursive: true, force: true }); }
 
-if (RECORD) { fs.writeFileSync(FIX, JSON.stringify(got, null, 1) + '\n'); fs.writeFileSync(FIX2, JSON.stringify(plans, null, 1) + '\n'); console.log('recorded ' + Object.keys(got).length + ' shadows, ' + Object.keys(plans).length + ' plans'); process.exit(0); }
+// ---- the report page writer: four builds (sp28's way, a made-up model) ----
+const builds = {};
+{
+  const require = createRequire(import.meta.url), Px = require('../assets/js/pbip-export.js'), E = require('../assets/js/design-engine.js');
+  const T = 'Sales', M = (m, x) => Object.assign({ t: T, m }, x || {}), C = (c, x, t) => Object.assign({ t: t || T, c }, x || {});
+  const bind = { kpis: [M('Total Sales', { wholeFormat: '#,0' }), M('Orders'), M('Margin %', { pct: true, pctFormat: '0.0%' })], measure: M('Total Sales'), date: C('Month Name', { sortBy: { t: 'Calendar', c: 'Month Number' } }, 'Calendar'),
+    cats: { bar: C('City'), column: C('Channel'), donut: C('Segment'), funnel: C('Stage'), treemap: C('Product'), map: C('City') }, catPool: [C('City'), C('Channel'), C('Segment')],
+    table: [C('City'), M('Total Sales'), M('Orders')], slicers: [C('City'), C('Channel'), C('Segment')], tip: { card: M('Total Sales'), cat: C('Segment'), y: M('Orders') } };
+  // names: six designed pages, long names (two of them the same), so the tabs take two rows and the header grows
+  const NAMES = ['Executive summary of the year', 'Regional performance by city', 'Regional performance by city', 'Channel and segment detail', 'Products and their returns', 'Notes and definitions'];
+  const run = (lang, o) => { const d = E.fresh(); if (lang === 'ar') d.font = 'Tahoma'; d.layout = Object.assign({}, d.layout, o.layout || {}); E.repairState(d);
+    const sp = E.projectPages(d.layout, lang, { second: false, panel: !!o.panel })[0];
+    const pages = (o.names || NAMES).map((name) => ({ name, page: sp.page, slots: sp.slots, panel: sp.panel, png: new Uint8Array([1, 2]), grow: true }));
+    const texts = Object.assign({}, E.REPORT_TEXTS[lang], o.texts || {});
+    return Px.build(Object.assign({ name: 'FN1C', title: 'FN1C', pageName: pages[0].name, lang, rtl: lang === 'ar', font: d.font, ui: d.ui, theme: E.buildTheme(d, lang), sample: false, model: { byPath: 'M.SemanticModel' }, bind, texts, pages }, o.more || {})); };
+  const RUNS = { w1: () => run('en', {}), w2: () => run('ar', { panel: true, names: NAMES.map((n, i) => 'صفحة التقرير الطويلة رقم ' + (i % 5 + 1)) }),
+    w3: () => run('en', { texts: { kpis: '', header: '', filters: '' }, layout: { filters: true, fpos: 'start' } }), w4: () => run('en', { layout: { preset: 'analysis', page: '1920x1080' }, names: NAMES.slice(0, 4) }) };
+  for (const [k, f] of Object.entries(RUNS)) {
+    let r; try { r = f(); } catch (e) { r = { threw: String(e && e.message || e) }; }
+    const files = (r.files || []).map((x) => x.path + '\0' + digest(typeof x.data === 'string' ? x.data : Buffer.from(x.data || []).toString('base64'))).join('\n'), rest = Object.assign({}, r); delete rest.files; delete rest.zip;
+    builds[k] = { files: digest(files), n: (r.files || []).length, result: digest(JSON.stringify(rest)), tabRows: (r.tabRows || []).length, headerGrew: (r.headerGrew || []).length };
+  }
+}
+
+if (RECORD) { fs.writeFileSync(FIX, JSON.stringify(got, null, 1) + '\n'); fs.writeFileSync(FIX2, JSON.stringify(plans, null, 1) + '\n'); fs.writeFileSync(FIX3, JSON.stringify(builds, null, 1) + '\n'); console.log('recorded ' + Object.keys(got).length + ' shadows, ' + Object.keys(plans).length + ' plans'); process.exit(0); }
 const want = JSON.parse(fs.readFileSync(FIX, 'utf8'));
 chk(Object.keys(got).length === Object.keys(want).length && Object.keys(want).length === 25, `H1. the 25 recorded cases are made (got ${Object.keys(got).length})`);
 for (const c of Object.keys(want)) {
@@ -164,6 +193,12 @@ for (const k of Object.keys(wantP)) {
   const g = plans[k] || {};
   chk(g.answer === wantP[k].answer && g.size === wantP[k].size, `P2 ${k}. the plan's answer, byte for byte as on ca3a1b73 (${g.size} characters, recorded ${wantP[k].size})`);
   chk(g.texts === wantP[k].texts && g.labels === wantP[k].labels && g.rest === wantP[k].rest, `P3 ${k}. its texts, labels, what stays English and the terminology sheet as on ca3a1b73`);
+}
+const wantB = JSON.parse(fs.readFileSync(FIX3, 'utf8'));
+chk(Object.keys(builds).length === 4 && Object.keys(wantB).length === 4 && wantB.w1.headerGrew > 0 && wantB.w1.tabRows > 0, `W1. the 4 recorded builds are made, a header grown and tabs in two rows among them (got ${JSON.stringify(builds.w1)})`);
+for (const k of Object.keys(wantB)) {
+  const g = builds[k] || {};
+  chk(g.files === wantB[k].files && g.n === wantB[k].n && g.result === wantB[k].result, `W2 ${k}. every file and the whole result of the build, byte for byte as on ca3a1b73`);
 }
 console.log(problems.length ? `FAIL  fn1c  ${checks} checks, ${problems.length} failed\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  fn1c  ${checks} checks`);
 process.exit(problems.length ? 1 : 0);

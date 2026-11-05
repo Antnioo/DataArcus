@@ -1,0 +1,30 @@
+{
+ "w1": {
+  "files": "4f914644cd8ed2bccf9d5264a506cfd1a22b2f2f2540184ed1253e3606099eaa",
+  "n": 275,
+  "result": "bc364e53bdf5508705cfc8bcdc7efc17bbde8c07023e0fb1d77a2ee730ce8f09",
+  "tabRows": 5,
+  "headerGrew": 6
+ },
+ "w2": {
+  "files": "c45793569418e5b4cbb355944c16e3f3f2fcb6fb477d6555d32886925b7b696c",
+  "n": 275,
+  "result": "38a554389aa4a55ae88706fcf45da9b636fbf604ded549ebd21d472a966166a4",
+  "tabRows": 5,
+  "headerGrew": 6
+ },
+ "w3": {
+  "files": "6619fc8786b99ea9927c7115435660611fd962b255656596cea6c3ca3e4ba5fc",
+  "n": 348,
+  "result": "d34efd5ba466b7de58fb8f3274c58adb95d3915c67a0276bf1fd0122c553e41b",
+  "tabRows": 5,
+  "headerGrew": 6
+ },
+ "w4": {
+  "files": "f1122f492e0e2ebea66aae2aea829e21e519a4f69e6da83642b1b3b1b5cc3f70",
+  "n": 147,
+  "result": "07ae0851faa0646d0124aa5caf5853a5e2a3b5feacf2f937495c4af8ca713aef",
+  "tabRows": 0,
+  "headerGrew": 0
+ }
+}
