@@ -24,6 +24,8 @@ package's manifest; this file says what is in it.
   report (a width the picture columns could not read no longer stops them).
 - **The site now asks which model, as the MCP does:** choose a folder with two models side by side and the page names both
   and asks you to choose the model's own folder, instead of quietly using the first one by name.
+- **The theme generator's Arabic message for two models:** a folder with two models side by side now reads «نموذجين»
+  instead of «2 نماذج»; three or more keep «نماذج», and the English sentence is the same.
 - **The Arabic twin, a visual in a broken group:** a visual inside a group whose size is not a usable number (a width
   of 0, below 0, or text) is now mirrored, kept on its table and given room for its button inside its page, the same
   frame every step uses; before, one step could place it in the broken group and another in the page.
