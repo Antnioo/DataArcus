@@ -9,7 +9,7 @@
   key or file byte changes. FN1A's method: steps are file-level functions given one context object.
 - **Commits:** plan e5a064b4; shadow pin cc24b392; shadowModel 389bde79; planTwin 11bd7006; write ba9f84a7 (with its
   build:min stamps); CHANGELOG 28429a64; the twin pin 9fc91ee3, 79855dab, ff134b83, 648312f0; the writer pin 9bf4ffe7,
-  5f8e87bc.
+  5f8e87bc, 62b6910b, 430e9588; integration merged in once 5024d134 (LG1); the contract ledger bf8fd809.
 - **Function sizes (my measure, `espree`, first to last line, nested functions inside their parent; the gate's
   `ops/gate/funcsize.py` is not in DataArcus):** write 327 -> 14, planTwin 321 -> 17, shadowModel 212 -> 12. Every new
   step 80 or fewer: the largest are tablesStep 73, phonePart 57, rowsStep 57, labelsStep 52, visualsPart 51,
@@ -21,11 +21,11 @@
   MCP `npm test -- report twin model` "144 suites passed"; website pbip 111, sp7 3, sp13 3. **Got** on the split:
   MCP "145 suites passed" (the 144 with the same check counts, suite by suite, plus the new fn1c), website pbip 111,
   sp7 3, sp13 3. No fixture re-recorded (sp7-reports.json, sp11/sp26/sp40-twins.json, sp28-builds.json unchanged).
-  New suite fn1c 69 checks (its three fixtures recorded on ca3a1b73 only, then green on every split commit). Lint 0;
+  New suite fn1c 74 checks (its three fixtures recorded on ca3a1b73 only, then green on every split commit). Lint 0;
   site config, check-min (stamps), csp, check-modules, agent-memory, changelog-words, result-lines pass.
 - **Characterisation, red-proven on ca3a1b73:** 111 mutants (shadow 22, twin 45, page 44), one or more per step, each
-  in a git worktree of the base; which suite turned red: below. Every part no suite turned red got a check in fn1c,
-  red on ca3a1b73 under that mutant first.
+  in a git worktree of the base; which suite turned red: below. 106 red: 62 on an existing suite, 44 on fn1c only
+  (each red on ca3a1b73 under its mutant first). 5 page mutants red nowhere (one equivalent, four not reached).
 - **State:** CI_PENDING (see "CI" below).
 - **Resume:** CI on the branch; then DONE.
 
@@ -41,13 +41,24 @@
   modelStep; the answer is built in shadowModel.
 
 ## The mutants and what caught them (ids in mcp/work's scratch lists, one change each)
-- **shadow (S1-S22):** r1-see-the-result 3 (S3, S5, S20); the other 19 no suite: fn1c H1-H3 (all 22 red there).
-- **twin (T1-T46, 45):** sp40 22; twin area 4 (vc1 T10, mp1e T14, language-toggle and glass-twin T28, sq4 T36); 19
+- **shadow (S1-S22):** r1-see-the-result 3 (S3, S5, S20); the other 19 no suite (nor sq14, dd2n, pb1): fn1c H1-H3
+  (all 22 red there).
+- **twin (T1-T46, 45):** sp40 24; twin area 4 (vc1 T10, mp1e T14, language-toggle and glass-twin T28, sq4 T36); 17
   no suite (the plan's said lines for shapes no fixture has: a refused flat matrix, labelFrom, mixed titles, picture
   pages kept, bars beside names, kept positions, matrix choices, DAX library, flip faces, field parameter choices,
   hidden-name bars, no model, wide tables, legends, title measures not translated, timeRightToLeft false, the flat
-  table's loss): fn1c P1-P3 (all 19 red there).
-- **page (P1-P44):** see "Page mutants" below.
+  table's loss): fn1c P1-P3 (all 17 red there).
+- **page (P1-P44):** sp28 28; website pbip 1 (P8, the dropped line chart's gave); MCP sp13 1 (P15, noPageButtons);
+  report area 1 (P32, story-titles: the Top N alt text); 8 no suite: fn1c W1-W2 (P6 a page's tab rows told once,
+  P9 the header grown by, P12 the groups' default names, P17 the fourth colour key, P19 a second "No data" name, P27
+  a same title numbered, P33 the Count field's name, P39 a renamed title's shortened entry; each red there).
+- **page, red nowhere (5; also test.mjs, the core suite, 1594 checks green under each):** P34 (the phone's positions
+  with two decimals) is equivalent today: every phone position is a whole or half number (tab widths are ceil'd,
+  cards 157.5). P28 (a same title over two columns, numbered) and P29 (a renamed title's alt text with the full
+  names): every chart title now carries its column (story titles), so two equal titles over different columns do
+  not occur, and the alt sentence with full names equals the one renamed. P41 (the filter panel needs a logo) and
+  P42 (the panel only with its Filters button): the header plan draws the Filters button exactly when there is a
+  logo, so neither condition differs today. No check added for these five: no input I could build reaches them.
 
 ## Decisions I made
 - The steps are written by a script from the old line ranges (each moved line byte-identical); each step's inputs
@@ -75,7 +86,7 @@ none
 
 ## Risky changes
 none: no security policy, approval step, file writing, answer, network or process change (the writer's files and the
-twin's plan are pinned byte for byte); no test loses a check (one suite added, fn1c 69).
+twin's plan are pinned byte for byte); no test loses a check (one suite added, fn1c 74).
 
 ## For the laptop
 none
