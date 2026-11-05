@@ -83,7 +83,8 @@ try {
 
   // ---------- after the move (SP8): the picker is field-picker-ui.js's; the website loads it before pbip-bind ----------
   const Picker = require('../assets/js/field-picker-ui.js'), read = (f) => fs.readFileSync(path.join(REPO, 'assets', 'js', f), 'utf8');
-  const bindSrc = read('pbip-bind.js'), ui = read('field-picker-ui.js');
+  // (DD2H) the one pure file it may require: the HTML escape's one home
+  const bindSrc = read('pbip-bind.js'), ui = read('field-picker-ui.js').replace("require('./html-escape.js')", '');
   let drawn = 0; const real = Picker.render;
   try { Picker.render = (...a) => { drawn++; return real(...a); }; Bind.renderPicker(fakeEl(), [{ name: 'T', columns: [{ name: 'C', dataType: 'string' }], measures: [{ name: 'M', expression: '1' }] }], Bind.suggest([{ name: 'T', columns: [{ name: 'C', dataType: 'string' }], measures: [{ name: 'M', expression: '1' }] }], 1, { lang: 'en' }), (en) => en); } finally { Picker.render = real; }
   chk(() => drawn === 1 && !/<optgroup|<select|tg-bind-row|daPick|addEventListener/.test(bindSrc) && Object.keys(Picker).join() === 'render',
