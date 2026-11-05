@@ -126,11 +126,15 @@ if (P) {
       const design = planLayout({ layout: c.layout, lang: c.lang }).design;
       const pv = planPreview({ m, tables: sc.tables, design, lang: c.lang, second: c.second !== false });
       const pv2 = planPreview({ m, tables: sc.tables, design, lang: c.lang, second: c.second !== false });
-      chk(() => pv && Array.isArray(pv.pages) && pv.pages.length === c.pages, () => `P-08 ${c.model}. ${c.pages} planned page(s) to preview: ${JSON.stringify(pv && pv.pages && pv.pages.map((p) => p.name))}`);
+      // (0.3.2 TP1, D-1105-17) planPreview gives the tooltip pages too, after the report's pages: counted apart
+      const rp = pv && Array.isArray(pv.pages) ? pv.pages.filter((p) => !p.tooltip) : null;
+      chk(() => rp && rp.length === c.pages, () => `P-08 ${c.model}. ${c.pages} planned page(s) to preview: ${JSON.stringify(pv && pv.pages && pv.pages.map((p) => p.name))}`);
       if (!pv || !pv.pages) continue;
+      const tp = pv.pages.slice(rp.length);
+      chk(() => tp.every((p) => p.tooltip && p.w > 0 && p.w < rp[0].w && p.h < rp[0].h && boxes(P.render(p, { lang: c.lang })).length === p.visuals.length && p.visuals.length > 0), () => `P-08 ${c.model}. the tooltip pages after the report's pages, each at its own size with every visual drawn: ${JSON.stringify(pv.pages.map((p) => [p.name, !!p.tooltip, p.w, p.h, p.visuals.length]))}`);
       const svgs = pv.pages.map((p) => P.render(p, { lang: c.lang })), svgs2 = pv2.pages.map((p) => P.render(p, { lang: c.lang }));
       chk(() => svgs.join() === svgs2.join(), () => `P-08 ${c.model}. the same plan gives the same pictures`);
-      pv.pages.forEach((p, k) => {
+      rp.forEach((p, k) => {
         const s = svgs[k], bx = boxes(s), fl = flagsOf(s);
         chk(() => p.visuals.length >= 4 && bx.length === p.visuals.length, () => `P-08 ${c.model} page ${k + 1}. every visual drawn: ${bx.length} of ${p.visuals.length}`);
         chk(() => bx.every((q) => (q.x >= -1 && q.y >= -1 && q.x + q.w <= p.w + 1 && q.y + q.h <= p.h + 1) || fl.some((f) => f.i === q.i && f.kind === 'cut')), () => `P-08 ${c.model} page ${k + 1}. every box inside the ${p.w}x${p.h} page unless flagged "cut off": ${JSON.stringify(bx.filter((q) => q.x < -1 || q.y < -1 || q.x + q.w > p.w + 1 || q.y + q.h > p.h + 1))}`);

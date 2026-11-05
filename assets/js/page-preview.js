@@ -483,7 +483,9 @@
    *  out. A card with no field and no title, or a text box with no text, is a panel (the writer's panel behind a chart,
    *  the header band, the filter rail). The visuals in their drawing
    *  order (z, then place: the writer's names are random, so they never decide it). opts: { rtl, colors, picture (GD2:
-   *  bytes -> a URL for a glass page's picture, or null) }. */
+   *  bytes -> a URL for a glass page's picture, or null), tooltips (0.3.2 TP1, D-1105-17: true also gives the tooltip
+   *  pages, after the shown pages in page order, each at its own size and marked tooltip: true; the approval page draws
+   *  them, the website's preview does not ask) }. */
   function fromFiles(files, opts) {
     const o = opts || {}, by = new Map(), res = [];
     // (GD2) the page pictures: opts.picture(bytes) gives a picture's URL for the preview when it is the glass look's (the
@@ -509,7 +511,9 @@
       const e = (((pj.objects || {}).background) || []).find((x) => x && x.properties && x.properties.image), nm = e ? lit(((e.properties.image || {}).image || {}).name) : null;
       const url = nm && pics.has(nm) ? o.picture(pics.get(nm)) : null;
       return url ? { url: String(url), t: glassT, rim: typeof rim === 'string' ? rim : null } : null; };
-    return order.map((id) => ({ id, pj: json(`${id}/page.json`) })).filter((p) => p.pj && p.pj.type !== 'Tooltip' && p.pj.visibility !== 'HiddenInViewMode').map(({ id, pj }) => {
+    // (TP1) the one place the drawn pages are chosen: the shown pages, then (opts.tooltips) the tooltip pages
+    const all = order.map((id) => ({ id, pj: json(`${id}/page.json`) })).filter((p) => p.pj), isTip = (p) => p.pj.type === 'Tooltip';
+    return all.filter((p) => !isTip(p) && p.pj.visibility !== 'HiddenInViewMode').concat(o.tooltips === true ? all.filter(isTip) : []).map(({ id, pj }) => {
       const list = [...by.keys()].filter((k) => k.startsWith(id + '/visuals/') && /\/visual\.json$/.test(k)).map((k) => json(k)).filter(Boolean)
         .sort((a, b) => ((+(a.position || {}).z || 0) - (+(b.position || {}).z || 0)) || (+(a.position || {}).y || 0) - (+(b.position || {}).y || 0) || (+(a.position || {}).x || 0) - (+(b.position || {}).x || 0));
       const byName = new Map(list.map((j) => [String(j.name), j]));
@@ -526,7 +530,7 @@
           type !== 'textbox' && shortened(title, altOf(j)) ? { titleCut: true } : {},
           (/^(card|cardVisual|multiRowCard)$/.test(type) && !hasFields(j) || type === 'textbox') && !title ? { panel: true } : {});
       }).filter(Boolean);
-      return Object.assign({ id, name: String(pj.displayName || id), w: +pj.width || 0, h: +pj.height || 0, rtl: !!o.rtl, colors: o.colors || null, visuals }, glassOf(pj) ? { glass: glassOf(pj) } : {});
+      return Object.assign({ id, name: String(pj.displayName || id), w: +pj.width || 0, h: +pj.height || 0, rtl: !!o.rtl, colors: o.colors || null, visuals }, glassOf(pj) ? { glass: glassOf(pj) } : {}, pj.type === 'Tooltip' ? { tooltip: true } : {});
     });
   }
 

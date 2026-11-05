@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **The approval page draws the tooltip pages too:** its preview now shows a picture of each tooltip page the click
+  writes, after the report's pages, at the tooltip page's own size and captioned as a tooltip page. The preview still
+  draws at most 12 pictures: the report's pages come first, and any tooltip page left out is counted.
 - **The approval page's options in plain words:** the page no longer shows a code word, an input's key, a theme key or
   Power BI's visual type keys: a redesign names each visual's kind ("button", "column chart", "table") and each theme
   colour it changes ("text colour"), and the card look says to ask for the plain look.

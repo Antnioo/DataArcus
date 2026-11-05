@@ -17,6 +17,7 @@
 //   B2k R1's language buttons: the text colour set (a page tab's look, or the plain button's own colour with its
 //       container off); B2l the button in its page's Tab order (it adds no pair against the reading order)
 //   B3e V1's pictures: the approval page draws each English page beside its Arabic page (2 report pages: 2 pairs)
+//   B3f (0.3.2 TP1) then its tooltip pages, both halves, one by one, captioned as tooltip pages
 // Fixture: the golden model (mcp/test-models/large-synthetic, made up).   node test-0.3.1-bilingual-report.mjs
 import './test-env.mjs';
 import fs from 'node:fs';
@@ -120,8 +121,11 @@ try {
       () => `B3a. the approval page shows both halves (pairs, buttons, sync, the terminology sheet): ${txt.slice(0, 500)}`);
     B.__files = +((txt.match(/(\d+) files:/) || [])[1] || 0);
     chk(() => B.__files >= 180 && /Pages \(8\)/.test(txt) && /Phone layouts/.test(txt) && /Project file \(1\)/.test(txt), () => `B3b. every file grouped and counted (8 pages): ${(txt.match(/\d+ files:.{0,300}/) || [''])[0]}`);
-    // (V1) each English report page drawn beside its Arabic page (tooltip pages are not drawn)
-    const figs = (html.match(/<figure>/g) || []).length, caps = [...html.matchAll(/<figcaption[^>]*>([^:<]*):/g)].map((x) => x[1].trim());
+    // (V1) each English report page drawn beside its Arabic page; (0.3.2 TP1) the tooltip pages after the pairs, one by one
+    const figs = (html.match(/<figure>/g) || []).length, allCaps = [...html.matchAll(/<figcaption[^>]*>([^:<]*):/g)].map((x) => x[1].trim()), caps = allCaps.filter((c) => !/^Tooltip page /.test(c));
+    const tipFigs = (html.match(/<figure class="tip"/g) || []).length;
+    chk(() => tipFigs > 0 && allCaps.slice(caps.length).join('|') === Array.from({ length: tipFigs }, (_, i) => `Tooltip page ${i + 1}`).join('|'),
+      () => `B3f. (TP1) then each tooltip page of both halves, one by one, captioned as a tooltip page: ${tipFigs} tooltip figures, captions ${JSON.stringify(allCaps)}`);
     chk(() => (html.match(/class="pair"/g) || []).length === 2 && figs === 4 && caps.join('|') === 'English page 1|Arabic page 1|English page 2|Arabic page 2',
       () => `B3e. the approval page draws 2 page pairs (4 pictures, English beside Arabic): ${figs} figures, captions ${JSON.stringify(caps)}`);
     if (url) { await req(url, 'POST', 'decision=approve'); await w.call('approve_plan', { planId: pid }); } }

@@ -96,7 +96,8 @@ try {
   const built = get(() => reportRun(withLookDefaults({ path: 'nom/M.SemanticModel', name: 'Counts', lang: 'en', design }), 'build'));
   chk(() => built && Array.isArray(built.files) && built.files.length > 10, () => `R1-S3a. a model with no measure gets create_report's counts report built: ${JSON.stringify(built && built.threw)}`);
   const pv = built && built.files ? get(() => PL.planPreview({ m, tables: m.tables, design, lang: 'en', second: true, files: built.files })) : null;
-  chk(() => pv && pv.from !== 'slots' && pv.pages && pv.pages.length === 2, () => `R1-S3b. its picture is the written pages: ${JSON.stringify(pv && { from: pv.from, n: (pv.pages || []).length })}`);
+  // (0.3.2 TP1, D-1105-17) the tooltip pages it writes are drawn too, after its 2 report pages
+  chk(() => pv && pv.from !== 'slots' && pv.pages && pv.pages.filter((p) => !p.tooltip).length === 2 && pv.pages.slice(2).every((p) => p.tooltip), () => `R1-S3b. its picture is the written pages (2 report pages, then its tooltip pages): ${JSON.stringify(pv && { from: pv.from, pages: (pv.pages || []).map((p) => [p.name, !!p.tooltip]) })}`);
   const pl = fs.readFileSync(path.join(HERE, 'tools/plan_layout.mjs'), 'utf8'), tg = generatorSource();   // (0.3.2 SP31: the page and its modules)
   chk(() => /previewOf\(exact \? exact\.files : null\)/.test(pl) && /PV\.fromFiles\(files,/.test(tg) && !/fromSlots/.test(tg), () => 'R1-S3c. plan_layout draws the exact artifact\'s files; the website\'s Preview draws the download\'s files (no fromSlots on the website)');
 }

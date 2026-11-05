@@ -78,8 +78,11 @@ export async function approvalWindow({ check, ROOT, fs = fs0 }) {
     chk(() => /Second page[\s\S]*no/.test(page.t) && /Executive summary/.test(page.t), () => 'W-02. the page shows the layout and options');
 
     // ---------- W-09: the preview of the planned page, above Approve ----------
-    const svgs = (t) => [...t.matchAll(/<svg\b[\s\S]*?<\/svg>/g)].map((m) => m[0]);
-    const pics = svgs(page.t);
+    // (0.3.2 TP1, D-1105-17) the report pages' pictures; the tooltip pages' are drawn after them, in figures of class "tip"
+    const figs = (t) => [...t.matchAll(/<figure([^>]*)>(<svg\b[\s\S]*?<\/svg>)/g)];
+    const svgs = (t) => figs(t).filter((m) => !/class="tip"/.test(m[1])).map((m) => m[2]);
+    const pics = svgs(page.t), tipAt = figs(page.t).findIndex((m) => /class="tip"/.test(m[1]));
+    chk(() => tipAt > 0 && figs(page.t).slice(tipAt).every((m) => /class="tip"/.test(m[1])), () => `W-09. the tooltip pages drawn after the report's pages (TP1): ${figs(page.t).map((m) => m[1] || 'page').join(', ')}`);
     chk(() => pics.length === 1 && page.t.indexOf('<svg') < page.t.indexOf('Approve</button>') && /class="card preview"/.test(page.t), () => `W-09. one picture of the planned page, above Approve: ${pics.length} picture(s)`);
     chk(() => pics.every((x) => /data-kind="card"/.test(x) && /data-kind="(bar|column|line)"/.test(x) && />preview<\/text>/.test(x)), () => 'W-09. the picture draws the plan\'s cards and charts and says "preview"');
     chk(() => !/<script/i.test(page.t) && pics.join('').includes('Sales &lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;more&quot;'), () => 'W-09. the title in the picture is escaped text (no markup from it)');
