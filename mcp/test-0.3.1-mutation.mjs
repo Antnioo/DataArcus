@@ -201,7 +201,7 @@ function runGuard(copy, guard) {
     child.on('close', (code, signal) => {
       clearTimeout(timer);
       const result = outText.trim().split('\n').filter((l) => /^(PASS|FAIL|SKIP) {2}/.test(l)).pop() || outText.trim().split('\n').pop() || '';
-      resolve({ failed: signal !== 'SIGKILL' && (code !== 0 || /^FAIL/.test(result)), timedOut: signal === 'SIGKILL', result: result.slice(0, 160), seconds: (Date.now() - t) / 1000 });
+      resolve({ failed: signal !== 'SIGKILL' && (code !== 0 || /^FAIL/.test(result)), timedOut: signal === 'SIGKILL', result: result.slice(0, 160), failLines: outText.split('\n').filter((l) => /^FAIL/.test(l)).slice(0, 5).map((l) => l.slice(0, 200)), seconds: (Date.now() - t) / 1000 });
     });
   });
 }
@@ -239,7 +239,13 @@ async function pool(jobs, work) {
   await Promise.all(copies.map(async (copy) => { while (next < jobs.length) { const j = jobs[next++]; await work(copy, j); } }));
 }
 await pool(guards, async (copy, g) => { const r = await runGuard(copy, g); baseline.set(g, r); });
-for (const g of guards) { const r = baseline.get(g); ok(!r.failed && !r.timedOut, r.timedOut ? `baseline: ${g} timed out on the unmutated copy (${GUARD_TIMEOUT / 1000}s): a pass by it would mean nothing` : `baseline: ${g} fails on the unmutated copy (${r.result}): a kill by it would mean nothing`); }
+for (const g of guards) {
+  const r = baseline.get(g);
+  if (!ok(!r.failed && !r.timedOut, r.timedOut ? `baseline: ${g} timed out on the unmutated copy (${GUARD_TIMEOUT / 1000}s): a pass by it would mean nothing` : `baseline: ${g} fails on the unmutated copy (${r.result}): a kill by it would mean nothing`)) {
+    // (FL1, B-379: name the failing checks so the next flake names itself)
+    for (const l of (r.failLines || [])) console.log(`  ${g}: ${l}`);
+  }
+}
 const badBaseline = new Set(guards.filter((g) => baseline.get(g).failed || baseline.get(g).timedOut));
 await pool(mutants, async (copy, m) => {
   const a = apply(copy, m);
