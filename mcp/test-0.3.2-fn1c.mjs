@@ -5,14 +5,20 @@
 //          a many-to-many relationship, sort-by columns, a calculated column a relationship needs, an Arabic model,
 //          what is left out; a second one: an Arabic culture with English names, text sorted by text and by a key,
 //          names that make the same file name), in both forms (m, dax) and with other row counts, byte for byte (fixtures/fn1c-shadow.json)
+//   P1-P3  lib/twin-plan.mjs planTwin: the whole plan (its answer, texts, labels, what stays English, the terminology
+//          sheet) of five runs over a made-up project with the shapes the plan says a line for (fixtures/fn1c-twin.mjs):
+//          matrices chosen flat or refused, the kinds that cannot mirror, a card grid, a flip card, a field parameter's
+//          slicer, bar lists, a badge, legends, a running calculation, wide tables, a picture page, labels by id and by
+//          words, the copy in both languages, and no model; byte for byte as on ca3a1b73 (fixtures/fn1c-plans.json)
 //   node test-0.3.2-fn1c.mjs            (--record writes the fixture: only on the base, never to make a split pass)
+import './fixtures/sp1/seeded-random.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
-const HERE = path.dirname(fileURLToPath(import.meta.url)), FIX = path.join(HERE, 'fixtures', 'fn1c-shadow.json');
+const HERE = path.dirname(fileURLToPath(import.meta.url)), FIX = path.join(HERE, 'fixtures', 'fn1c-shadow.json'), FIX2 = path.join(HERE, 'fixtures', 'fn1c-plans.json');
 const RECORD = process.argv.includes('--record');
 const problems = []; let checks = 0;
 const chk = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
@@ -100,7 +106,7 @@ relationships: [
   { name: 'stock', fromTable: 'Items', fromColumn: 'Item Key', toTable: 'Item Stock', toColumn: 'Item Key' },
   { name: 'moves', fromTable: 'Moves', fromColumn: 'Day', toTable: 'Calendar', toColumn: 'Date' }] } };
 
-const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-fn1c-'));
+const ROOT = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-fn1c-')));
 const got = {};
 try {
   const cp = (from, to) => fs.cpSync(path.join(HERE, from), path.join(ROOT, to), { recursive: true });
@@ -117,15 +123,46 @@ try {
     const sh = shadowModel(tm, opts);
     got[k + '/' + o] = { files: digest(sh.files), tables: digest(sh.tables), guessed: digest(sh.guessed), notes: digest(sh.notes), n: sh.files.length };
   }
-} finally { fs.rmSync(ROOT, { recursive: true, force: true }); }
+} catch (e) { fs.rmSync(ROOT, { recursive: true, force: true }); throw e; }
 
-if (RECORD) { fs.writeFileSync(FIX, JSON.stringify(got, null, 1) + '\n'); console.log('recorded ' + Object.keys(got).length + ' cases'); process.exit(0); }
+// ---- the twin's plan: five runs over the made-up project ----
+const plans = {};
+const ROOT2 = fs.realpathSync.native(ROOT);   // (the working folder the model reader took first)
+try {
+  const F = await import('./fixtures/fn1c-twin.mjs');
+  const { planTwin } = await import('./lib/twin-plan.mjs');
+  const norm = (x) => JSON.stringify(x, (k, v) => (Buffer.isBuffer(v) || v instanceof Uint8Array ? 'bytes:' + digest(Buffer.from(v).toString('base64')) : v instanceof Map ? [...v] : v instanceof Set ? [...v] : typeof v === 'function' ? 'fn' : v))
+    .split(ROOT2).join('<ROOT>').split(JSON.stringify(ROOT2).slice(1, -1)).join('<ROOT>');
+  const one = (P) => ({ answer: norm(P.answer), texts: norm(P.texts), labels: norm(P.labels), rest: norm({ mixedTitles: P.mixedTitles, textsUnknown: P.textsUnknown, notTranslated: P.notTranslated, termRows: P.termRows, addedVisuals: P.addedVisuals, same: P.same, outBase: P.outBase, month: P.month, names: P.names, terms: P.terms, modelPrint: P.modelPrint }) });
+  const ID = '00000000-0000-4000-8000-0000000000f1', pb = (d) => path.join(d, 'Twin Sales.pbip');
+  const a = F.makeProject(path.join(ROOT2, 'twin-a')), b = F.noModel(F.makeProject(path.join(ROOT2, 'twin-b')));
+  const r1 = planTwin({ path: pb(a), logicalId: ID, matrixAsTable: ['mGrouped', 'p4more/mCols', 'nothere'] });
+  // labels: every text an Arabic of its own but the page buttons (they take their page's), and a text by its words
+  const labels = {}; r1.texts.forEach((t, i) => { if (t.kind !== 'button' && i % 5 !== 4) labels[t.id] = 'نص عربي ' + (i + 1); }); labels.unknownId = 'x';
+  const runs = {
+    r1,
+    r2: planTwin({ path: pb(a), logicalId: ID, into: 'same', timeRightToLeft: false, waterfallRtl: 'mirror', arabicMonth: false }),
+    r3: planTwin({ path: pb(a), logicalId: ID, labels, textLabels: { 'Back to start': 'العودة إلى البداية', 'Not a text here': 'لا' }, textsFrom: 3, termsFrom: 1 }),
+    r4: planTwin({ path: pb(b), logicalId: ID, mirrorPicturePages: true }),
+    r5: planTwin({ path: pb(a), logicalId: ID, labels, into: 'same', tabsShown: 'ar', flipPictures: true }),
+  };
+  Object.entries(runs).forEach(([k, P]) => { plans[k] = Object.fromEntries(Object.entries(one(P)).map(([x, t]) => [x, digest(t)])); plans[k].size = one(P).answer.length; });
+} finally { fs.rmSync(ROOT2, { recursive: true, force: true }); }
+
+if (RECORD) { fs.writeFileSync(FIX, JSON.stringify(got, null, 1) + '\n'); fs.writeFileSync(FIX2, JSON.stringify(plans, null, 1) + '\n'); console.log('recorded ' + Object.keys(got).length + ' shadows, ' + Object.keys(plans).length + ' plans'); process.exit(0); }
 const want = JSON.parse(fs.readFileSync(FIX, 'utf8'));
 chk(Object.keys(got).length === Object.keys(want).length && Object.keys(want).length === 25, `H1. the 25 recorded cases are made (got ${Object.keys(got).length})`);
 for (const c of Object.keys(want)) {
   const g = got[c] || {};
   chk(g.files === want[c].files && g.n === want[c].n, `H2 ${c}. the shadow's files, byte for byte as on ca3a1b73`);
   chk(g.tables === want[c].tables && g.guessed === want[c].guessed && g.notes === want[c].notes, `H3 ${c}. its tables, guesses and notes as on ca3a1b73`);
+}
+const wantP = JSON.parse(fs.readFileSync(FIX2, 'utf8'));
+chk(Object.keys(plans).length === 5 && Object.keys(wantP).length === 5, `P1. the 5 recorded plans are made (got ${Object.keys(plans).length})`);
+for (const k of Object.keys(wantP)) {
+  const g = plans[k] || {};
+  chk(g.answer === wantP[k].answer && g.size === wantP[k].size, `P2 ${k}. the plan's answer, byte for byte as on ca3a1b73 (${g.size} characters, recorded ${wantP[k].size})`);
+  chk(g.texts === wantP[k].texts && g.labels === wantP[k].labels && g.rest === wantP[k].rest, `P3 ${k}. its texts, labels, what stays English and the terminology sheet as on ca3a1b73`);
 }
 console.log(problems.length ? `FAIL  fn1c  ${checks} checks, ${problems.length} failed\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  fn1c  ${checks} checks`);
 process.exit(problems.length ? 1 : 0);
