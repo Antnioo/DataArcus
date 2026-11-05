@@ -35,7 +35,50 @@
   const CAP = { high: 30, medium: 20, low: 10, info: 0 };
 
   // ---------- 6. analysis ----------
+  // (0.3.2 FN1D) in named steps, each given the context ah (the model, its index, the graph and what earlier steps
+  // found) in the old order; analyze builds the answer
   function analyze(modelJson, report) {
+    const ah = graphStep(modelJson);
+    rootsStep(ah, report);
+    reachStep(ah);
+    rulesStep(ah);
+    scoreStep(ah);
+    const { tables, measures } = docsStep(ah);
+    const { M, userTables, autoDateTables, allMeasures, rep, sources, findings, skipped, overall, catScore } = ah;
+    const userCols = userTables.reduce((a, t) => a + t.columns.filter((c) => c.kind !== 'rowNumber').length, 0);
+    return {
+      version: 1,
+      stats: {
+        tables: userTables.length, autoDateTables: autoDateTables.length,
+        columns: userCols,
+        calcColumns: userTables.reduce((a, t) => a + t.columns.filter((c) => c.kind === 'calculated').length, 0),
+        measures: allMeasures.length, relationships: M.relationships.length,
+        activeRelationships: M.relationships.filter((r) => r.active).length,
+        roles: M.roles.length, calcGroups: M.tables.filter((t) => t.calcGroup).length,
+        calcTables: userTables.filter((t) => t.isCalcTable).length,
+        modes: uniq(userTables.map((t) => t.mode)),
+        compatibilityLevel: M.compatibilityLevel, culture: M.culture,
+        pages: rep ? rep.pages : null, visuals: rep ? rep.visuals : null, reportFormat: rep ? rep.format : null,
+        sources: Array.from(sources.entries()).map(([k, v]) => ({ name: k, count: v })).sort((a, b) => b.count - a.count),
+        unusedColumns: rep ? (findings.find((f) => f.id === 'UNUSED_COL') || { items: [] }).items.length : null,
+        unusedMeasures: rep ? (findings.find((f) => f.id === 'UNUSED_MEASURE') || { items: [] }).items.length : null
+      },
+      score: { overall, perf: catScore.perf, maint: catScore.maint, bp: catScore.bp },
+      findings,
+      // questions for the user, never findings: not in the score (section 7: health-confirm.js)
+      confirm: pleaseConfirm(M, { userTables }),
+      skipped,
+      tables,
+      measures,
+      relationships: M.relationships,
+      roles: M.roles.map((r) => ({ name: r.name, tables: r.permissions.map((p) => p.table) })),
+      pageNames: rep ? rep.pageNames : [],
+      rawTables: (((modelJson || {}).model || modelJson || {}).tables || []).filter((t) => t && t.name != null).map((t) => ({ name: String(t.name), isHidden: !!t.isHidden, dataCategory: t.dataCategory, columns: t.columns || [], measures: t.measures || [] }))
+    };
+  }
+
+  // the normalised model, its index, the auto date tables and the dependency graph from DAX and the model
+  function graphStep(modelJson) {
     const M = normalizeModel(modelJson);
     const IX = buildIndex(M);
     const deps = new Map();   // node -> Set(nodes it depends on)
@@ -78,7 +121,12 @@
       const cols = t.columns.filter((c) => c.kind !== 'rowNumber');
       if (t.measures.length && cols.length === 1) addDeps(K.t(t.name), [K.c(t.name, cols[0].name)]);
     });
+    return { M, IX, deps, styleByMeasure, autoDateTables, autoSet, userTables };
+  }
 
+  // the roots: the report's use (per visual too), its broken references, the relationships, security, calculation groups
+  function rootsStep(ah, report) {
+    const { M, IX } = ah;
     // roots: report, relationships, security
     const roots = new Set();
     const rep = analyzeReport(report);
@@ -128,7 +176,12 @@
     M.relationships.forEach((r) => { roots.add(K.c(r.fromTable, r.fromColumn)); roots.add(K.c(r.toTable, r.toColumn)); });
     M.roles.forEach((ro) => ro.permissions.forEach((p) => { roots.add(K.t(p.table)); daxRefs(p.filter, p.table, IX).refs.forEach((x) => roots.add(x)); }));
     M.tables.forEach((t) => { if (t.calcGroup) roots.add(K.t(t.name)); });
+    Object.assign(ah, { roots, rep, reportUse, vis, broken });
+  }
 
+  // what the roots reach, the used-by edges, the measures' depth
+  function reachStep(ah) {
+    const { M, roots, deps } = ah;
     // reachability
     const used = new Set();
     const stack = Array.from(roots);
@@ -161,7 +214,11 @@
 
     const allMeasures = [];
     M.tables.forEach((t) => t.measures.forEach((ms) => allMeasures.push(ms)));
+    Object.assign(ah, { used, usedBy, depth, allMeasures });
+  }
 
+  function rulesStep(ah) {
+    const { M, IX, rep, used, vis, broken, styleByMeasure, userTables, autoDateTables, allMeasures, depth } = ah;
     // ---- the rules (health-rules.js): the model, its index, the report's use and the graph in; findings out ----
     const mQueries = [];
     userTables.forEach((t) => t.partitions.forEach((p) => { if (p.sourceType === 'm' && p.expression) mQueries.push({ name: t.name, expr: p.expression }); }));
@@ -173,7 +230,11 @@
     });
     const chainDepths = allMeasures.map((ms) => depth(K.m(ms.name), new Set()));
     const { findings, skipped } = runRules(Object.freeze({ M, IX, report: rep, used, vis, broken, styleByMeasure, userTables, autoDateTables, allMeasures, mQueries, chainDepths }));
+    Object.assign(ah, { mQueries, sources, findings, skipped });
+  }
 
+  function scoreStep(ah) {
+    const { M, allMeasures, userTables, mQueries, findings } = ah;
     // ---- scores ----
     const catScore = { perf: 100, maint: 100, bp: 100 };
     // Rules that apply to many objects are judged by the share of objects affected, so a large model is not punished for being large.
@@ -206,8 +267,12 @@
     const overall = sc.overall;
     const sevRank = { high: 0, medium: 1, low: 2, info: 3 };
     findings.sort((a, b) => sevRank[a.sev] - sevRank[b.sev] || b.penalty - a.penalty || b.items.length - a.items.length);
+    Object.assign(ah, { catScore, overall });
+  }
 
-    // ---- documentation data ----
+  // ---- the documentation's measures and tables ----
+  function docsStep(ah) {
+    const { M, IX, deps, rep, used, usedBy, vis, reportUse, depth, allMeasures, autoSet } = ah;
     const mDeps = (ms) => Array.from(deps.get(K.m(ms.name)) || []).filter((x) => !x.startsWith('t:') || x !== K.t(ms.table));
     const nice = (node) => {
       if (node.startsWith('m:')) { const x = IX.measures.get(node.slice(2)); return x ? { type: 'measure', name: x.m.name, table: x.table.name } : null; }
@@ -249,36 +314,7 @@
         refs: reportUse.columns.get(lc(t.name) + '|' + lc(c.name)) || 0
       }))
     }));
-    const userCols = userTables.reduce((a, t) => a + t.columns.filter((c) => c.kind !== 'rowNumber').length, 0);
-    return {
-      version: 1,
-      stats: {
-        tables: userTables.length, autoDateTables: autoDateTables.length,
-        columns: userCols,
-        calcColumns: userTables.reduce((a, t) => a + t.columns.filter((c) => c.kind === 'calculated').length, 0),
-        measures: allMeasures.length, relationships: M.relationships.length,
-        activeRelationships: M.relationships.filter((r) => r.active).length,
-        roles: M.roles.length, calcGroups: M.tables.filter((t) => t.calcGroup).length,
-        calcTables: userTables.filter((t) => t.isCalcTable).length,
-        modes: uniq(userTables.map((t) => t.mode)),
-        compatibilityLevel: M.compatibilityLevel, culture: M.culture,
-        pages: rep ? rep.pages : null, visuals: rep ? rep.visuals : null, reportFormat: rep ? rep.format : null,
-        sources: Array.from(sources.entries()).map(([k, v]) => ({ name: k, count: v })).sort((a, b) => b.count - a.count),
-        unusedColumns: rep ? (findings.find((f) => f.id === 'UNUSED_COL') || { items: [] }).items.length : null,
-        unusedMeasures: rep ? (findings.find((f) => f.id === 'UNUSED_MEASURE') || { items: [] }).items.length : null
-      },
-      score: { overall, perf: catScore.perf, maint: catScore.maint, bp: catScore.bp },
-      findings,
-      // questions for the user, never findings: not in the score (section 7: health-confirm.js)
-      confirm: pleaseConfirm(M, { userTables }),
-      skipped,
-      tables,
-      measures,
-      relationships: M.relationships,
-      roles: M.roles.map((r) => ({ name: r.name, tables: r.permissions.map((p) => p.table) })),
-      pageNames: rep ? rep.pageNames : [],
-      rawTables: (((modelJson || {}).model || modelJson || {}).tables || []).filter((t) => t && t.name != null).map((t) => ({ name: String(t.name), isHidden: !!t.isHidden, dataCategory: t.dataCategory, columns: t.columns || [], measures: t.measures || [] }))
-    };
+    return { tables, measures };
   }
 
   // ---------- 7. "Please confirm": the questions and their evidence, apart from the score: health-confirm.js (0.3.2 SP27) ----------

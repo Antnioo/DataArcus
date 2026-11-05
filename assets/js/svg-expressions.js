@@ -68,8 +68,10 @@
     return (neg ? '-' : '') + s;
   }
 
-  // JS evaluation. BLANK is null and follows DAX: BLANK + BLANK is BLANK, BLANK + 5 is 5,
-  // BLANK * 5 and BLANK / 5 are BLANK, and comparisons treat BLANK as 0.
+  // JS evaluation. BLANK is null and follows DAX as Power BI Desktop answers it (2.159.1231.0, measured 5 Nov in the DAX query
+  // view, lab/look032 B; CONTRACTS.md blank): BLANK + BLANK is BLANK, BLANK + 5 is 5, BLANK * 5 and BLANK / 5 are BLANK,
+  // comparisons treat BLANK as 0. DIVIDE ( a, b ) is BLANK for a BLANK or 0 divisor. The operator a / b never errors: 5 / BLANK and
+  // 5 / 0 are Infinity, 0 / 0 is NaN, BLANK / BLANK is BLANK (JavaScript's Infinity and NaN).
   function evalNode(n, env) {
     const z = (x) => (x == null ? 0 : x);
     switch (n.k) {
@@ -87,7 +89,7 @@
           case '+': return a == null && b == null ? null : z(a) + z(b);
           case '-': return a == null && b == null ? null : z(a) - z(b);
           case '*': return a == null || b == null ? null : a * b;
-          case '/': if (!b) throw new Error('DIV0'); return a == null ? null : a / b;
+          case '/': return a == null ? null : a / z(b);
           case '<': return z(a) < z(b);
           case '<=': return z(a) <= z(b);
           case '>': return z(a) > z(b);
@@ -100,7 +102,7 @@
       case 'fn': {
         const v = n.args.map((x) => evalNode(x, env));
         switch (n.f) {
-          case 'DIVIDE': return (v[0] == null || v[1] == null || v[1] === 0) ? null : v[0] / v[1];
+          case 'DIVIDE': return (v[0] == null || v[1] == null || v[1] === 0) ? null : v[0] / v[1];   // BLANK for a BLANK or 0 divisor
           case 'COALESCE': return v[0] == null ? v[1] : v[0];
           case 'MIN': return Math.min(z(v[0]), z(v[1]));
           case 'MAX': return Math.max(z(v[0]), z(v[1]));
@@ -144,7 +146,19 @@
     throw new Error('node ' + n.k);
   }
 
-  const api = Object.freeze({ N: Object.freeze(N), ESCAPES: ESCAPES, formatNumber: formatNumber, evalNode: evalNode });
+  // the formula kinds of a design's values (ratio, diff, % change) as trees: the compiler prints them as DAX, the designer's values
+  // panel runs them here, so the results beside the inputs are the compiled measure's (0.3.2 DD2Z)
+  const VALUE_NODES = Object.freeze({
+    ratio: (a, b) => N.fn('DIVIDE', [a, b]),
+    diff: (a, b) => N.op('-', a, b),
+    pct: (a, b) => N.fn('DIVIDE', [N.op('-', a, b), b])
+  });
+  // a formula kind on two numbers (null is BLANK): its result
+  function evalValueKind(kind, a, b) {
+    const leaf = (v) => (v == null ? N.blank() : N.num(v));
+    return evalNode(VALUE_NODES[kind](leaf(a), leaf(b)), { vars: {}, measures: {} });
+  }
+  const api = Object.freeze({ N: Object.freeze(N), ESCAPES: ESCAPES, formatNumber: formatNumber, evalNode: evalNode, VALUE_NODES: VALUE_NODES, evalValueKind: evalValueKind });
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.SVGKPIExpr = api;
 })(typeof self !== 'undefined' ? self : this);

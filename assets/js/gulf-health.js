@@ -141,6 +141,34 @@
   // opts: { country: 'uae' (default) | 'ksa' | 'qat' | 'kwt' | 'bhr' | 'omn', weekend: 'shj' (a rule of WEEKEND_RULES; the
   // country's weekend otherwise), asOf: 'YYYY-MM-DD' (default today), maxItems: 15 }
   function analyze(model, opts) {
+    // (0.3.2 FN1D) the checks in named steps, each given the context gh (the options, the texts and what earlier steps
+    // read), adding to its findings and cantTell in the old order
+    const gh = setupStep(opts), { add, out } = gh;
+    readCalendarStep(gh, model);
+    const { cal } = gh;
+
+    if (!cal) {
+      add('GC_NO_CALENDAR', 'medium',
+        ['No calendar table', 'Without one there is nowhere for Hijri dates, Ramadan and Eid or the weekend, so every comparison falls back to Gregorian months.', 'Add one from the DataArcus Calendar Generator (Hijri dates, announced Ramadan and Eid, your country\'s weekend), then mark it as a date table (fixes.calendarGenerator).'],
+        ['لا يوجد جدول تاريخ', 'بدونه لا مكان للتاريخ الهجري ولا لرمضان والعيد ولا لعطلة نهاية الأسبوع، فتعود كل مقارنة إلى الأشهر الميلادية.', 'أضف جدولًا من مولّد التقويم في DataArcus (التاريخ الهجري، وتواريخ رمضان والعيد المعلنة، وعطلة دولتك)، ثم علّمه كجدول تاريخ (fixes.calendarGenerator).'], []);
+      out.fixes = gulfFixes(gh, null, null);
+      return out;
+    }
+
+    columnsStep(gh);
+    weekendStep(gh);
+    datesStep(gh);
+    rangeStep(gh);
+
+    const { findings, kind, range, hijri, endsEarly, lacks } = gh;
+    const ORDER = { high: 0, medium: 1, low: 2, info: 3 };
+    findings.sort((a, b) => ORDER[a.level] - ORDER[b.level]);
+    out.fixes = gulfFixes(gh, { kind, range, hijri, endsEarly, calendarFindings: findings.some((f) => f.id !== 'GC_NO_MEASURES') }, lacks);
+    return out;
+  }
+
+  // the options, the country and the weekend rule, the texts every step says, and the answer's frame
+  function setupStep(opts) {
     const o = opts || {}, code = Object.prototype.hasOwnProperty.call(COUNTRIES, o.country) ? o.country : 'uae', C = COUNTRIES[code];
     // (0.3.1 SQ7, GC-S4) the weekend compared: a rule that is not a country (Sharjah's government) when asked, else the
     // country's; the dates are still the country's
@@ -173,7 +201,11 @@
         : { with: 'umm-al-qura', note: NONE + ', so its dates are compared with the Umm al-Qura calendar' + (ownDates.length ? ' (a date on one of those days is not a difference)' : '') + '. A date that differs is only a note, not an error: ' + CHECK + '.' },
       calendar: null, findings, cantTell
     };
+    return { code, C, rule, W, wCode, wSaid, asOf, max, findings, cantTell, add, uaeDates, SAME, CHECK, ownStart, NONE, NONE_AR, out };
+  }
 
+  function readCalendarStep(gh, model) {
+    const { asOf } = gh;
     // the next Ramadan that has not ended by asOf
     let nextRamadan = null;
     GD.events.forEach((e) => { const end = e.fitr ? T(e.fitr) - DAY : T(e.ramadan) + 29 * DAY; if (!nextRamadan && end >= asOf) nextRamadan = { hijriYear: e.hijriYear, start: T(e.ramadan), end }; });
@@ -181,15 +213,12 @@
     const measures = tablesOf(model).reduce((l, t) => l.concat((t.measures || []).map((m) => String(m.name))), []);
     const lacks = MEASURES.filter((sfx) => !measures.some((n) => { const a = n.toLowerCase(), b = sfx.toLowerCase(); return a.endsWith(b) && !(sfx === 'Last Ramadan' && a.endsWith('vs last ramadan')); }));
     const anyGulfMeasure = measures.some((n) => NAMES.ramadan.test(n) || NAMES.eid.test(n));
+    Object.assign(gh, { nextRamadan, cal, lacks, anyGulfMeasure });
+  }
 
-    if (!cal) {
-      add('GC_NO_CALENDAR', 'medium',
-        ['No calendar table', 'Without one there is nowhere for Hijri dates, Ramadan and Eid or the weekend, so every comparison falls back to Gregorian months.', 'Add one from the DataArcus Calendar Generator (Hijri dates, announced Ramadan and Eid, your country\'s weekend), then mark it as a date table (fixes.calendarGenerator).'],
-        ['لا يوجد جدول تاريخ', 'بدونه لا مكان للتاريخ الهجري ولا لرمضان والعيد ولا لعطلة نهاية الأسبوع، فتعود كل مقارنة إلى الأشهر الميلادية.', 'أضف جدولًا من مولّد التقويم في DataArcus (التاريخ الهجري، وتواريخ رمضان والعيد المعلنة، وعطلة دولتك)، ثم علّمه كجدول تاريخ (fixes.calendarGenerator).'], []);
-      out.fixes = fixes(null, null);
-      return out;
-    }
-
+  // what the calendar holds (the generator's DAX read, its columns), then the columns it lacks
+  function columnsStep(gh) {
+    const { cal, add, out } = gh;
     const gen = readGenerated(exprOf(cal)), names = colNames(cal).concat(gen ? gen.columns : []);
     const kind = gen ? 'dataarcus-dax' : exprOf(cal) != null ? 'dax' : 'imported';
     const cols = { hijriYear: has(names, NAMES.hijriYear), hijriMonth: has(names, NAMES.hijriMonthNumber) || has(names, NAMES.hijriMonth), hijriDay: has(names, NAMES.hijriDay), ramadan: has(names, NAMES.ramadan), eid: has(names, NAMES.eid),
@@ -210,7 +239,11 @@
         ['لا توجد أعمدة لرمضان أو العيد', 'بدون Is Ramadan وRamadan Day وعلامات العيد لا يمكن مقارنة رمضان يومًا بيوم ولا تصفية العيد.', 'أضفها (fixes.calendarGenerator).'],
         ['Is Ramadan', 'Ramadan Day', 'Is Eid al-Fitr', 'Is Eid al-Adha'].map((c) => ({ missingColumn: c })));
     }
+    Object.assign(gh, { gen, kind, cols, hijri, range });
+  }
 
+  function weekendStep(gh) {
+    const { cols, gen, range, cal, cantTell, wSaid, wCode, max, add, W, rule, C } = gh;
     // --- the weekend against the country's rule ---
     if (cols.weekend) {
       if (!gen) cantTell.push({ check: 'weekend', why: 'Which days ' + cal.name + '[' + cols.weekend + '] marks is in the data, not in the model files, so it is not compared with ' + wSaid + '.' });
@@ -229,7 +262,10 @@
         }
       }
     }
+  }
 
+  function datesStep(gh) {
+    const { hijri, gen, range, cal, cols, cantTell, uaeDates, ownStart, add, code, C, SAME, CHECK, NONE, NONE_AR } = gh;
     // --- Ramadan and Eid dates ---
     if (hijri) {
       if (!gen || !gen.months.length || !range) cantTell.push({ check: 'dates', why: 'The dates of Ramadan and Eid in ' + cal.name + ' are in the data, not in the model files, so they are not compared with the ' + (uaeDates ? 'announced dates' : 'Umm al-Qura calendar') + '; nor whether future dates are marked as estimates.' });
@@ -273,7 +309,11 @@
         }
       }
     }
+  }
 
+  // the range against the next Ramadan, and the measures
+  function rangeStep(gh) {
+    const { range, nextRamadan, cal, cantTell, add, hijri, anyGulfMeasure, lacks } = gh;
     // --- the range against the next Ramadan ---
     let endsEarly = false;
     if (range && nextRamadan && range.end < nextRamadan.end) {
@@ -290,39 +330,36 @@
         ['No Ramadan or Eid measures', 'Last Ramadan, vs Last Ramadan % and the Eid windows compare like with like.', 'Add them (fixes.measureBuilder).'],
         ['لا توجد مقاييس لرمضان أو العيد', 'مقاييس رمضان الماضي ونسبة التغير وفترات العيد تقارن كل موسم بنظيره.', 'أضفها (fixes.measureBuilder).'], lacks.map((m) => ({ missingMeasure: m })));
     }
+    gh.endsEarly = endsEarly;
+  }
 
-    const ORDER = { high: 0, medium: 1, low: 2, info: 3 };
-    findings.sort((a, b) => ORDER[a.level] - ORDER[b.level]);
-    out.fixes = fixes({ kind, range, hijri, endsEarly, calendarFindings: findings.some((f) => f.id !== 'GC_NO_MEASURES') }, lacks);
-    return out;
-
-    // The fixes: the website tools and the exact settings to pick. No DAX is returned, and nothing is applied.
-    function fixes(c, missingMeasures) {
-      const f = {};
-      if (!c || c.calendarFindings) {
-        const last = c && c.range ? (c.endsEarly ? new Date(nextRamadan.end).getUTCFullYear() + '-12-31' : iso(c.range.end)) : null;
-        f.calendarGenerator = {
-          tool: TOOLS.calendar,
-          settings: {
-            firstDate: c && c.range ? iso(c.range.start) : 'the first date of your data (or of your calendar today)',
-            lastDate: last || 'the last date of your calendar today' + (nextRamadan ? ', and not before ' + iso(nextRamadan.end) + ' (the end of Ramadan ' + nextRamadan.hijriYear + ')' : ''),
-            weekend: W.weekendOption,
-            hijriDates: 'on ("Hijri dates, Ramadan and Eid")',
-            announcedDates: code === 'uae' ? 'on' : code === 'ksa' ? 'on: "Announced Ramadan and Eid dates (UAE)" gives ' + SAME
-              : 'your choice: "Announced Ramadan and Eid dates (UAE)" moves Ramadan and Eid to the UAE\'s announced dates. ' + NONE + ': where a date differs from Umm al-Qura, ' + CHECK
-          },
-          then: 'Copy the table\'s DAX from the page. Save a copy of your file first. In Power BI Desktop add it as a new table (Modeling > New table)' + (c ? ', or replace your calendar table\'s DAX with it, then check its relationships, its sort-by columns and "Mark as date table"' : ', mark it as a date table and relate it to your dates') + '. DataArcus changes nothing in your model.'
-        };
-      }
-      if (missingMeasures && missingMeasures.length && (!c || c.hijri || c.calendarFindings)) {
-        f.measureBuilder = {
-          tool: TOOLS.measures,
-          tick: missingMeasures,
-          needs: 'The calendar\'s Hijri Year, Hijri Month Number and Hijri Day columns' + (c && c.hijri ? '' : ' (add them first: fixes.calendarGenerator)') + '. Give the page your base measure and your calendar table\'s name, tick these measures, and copy the script into DAX query view.'
-        };
-      }
-      return f;
+  // The fixes: the website tools and the exact settings to pick. No DAX is returned, and nothing is applied.
+  function gulfFixes(gh, c, missingMeasures) {
+    const { nextRamadan, W, code, SAME, NONE, CHECK } = gh;
+    const f = {};
+    if (!c || c.calendarFindings) {
+      const last = c && c.range ? (c.endsEarly ? new Date(nextRamadan.end).getUTCFullYear() + '-12-31' : iso(c.range.end)) : null;
+      f.calendarGenerator = {
+        tool: TOOLS.calendar,
+        settings: {
+          firstDate: c && c.range ? iso(c.range.start) : 'the first date of your data (or of your calendar today)',
+          lastDate: last || 'the last date of your calendar today' + (nextRamadan ? ', and not before ' + iso(nextRamadan.end) + ' (the end of Ramadan ' + nextRamadan.hijriYear + ')' : ''),
+          weekend: W.weekendOption,
+          hijriDates: 'on ("Hijri dates, Ramadan and Eid")',
+          announcedDates: code === 'uae' ? 'on' : code === 'ksa' ? 'on: "Announced Ramadan and Eid dates (UAE)" gives ' + SAME
+            : 'your choice: "Announced Ramadan and Eid dates (UAE)" moves Ramadan and Eid to the UAE\'s announced dates. ' + NONE + ': where a date differs from Umm al-Qura, ' + CHECK
+        },
+        then: 'Copy the table\'s DAX from the page. Save a copy of your file first. In Power BI Desktop add it as a new table (Modeling > New table)' + (c ? ', or replace your calendar table\'s DAX with it, then check its relationships, its sort-by columns and "Mark as date table"' : ', mark it as a date table and relate it to your dates') + '. DataArcus changes nothing in your model.'
+      };
     }
+    if (missingMeasures && missingMeasures.length && (!c || c.hijri || c.calendarFindings)) {
+      f.measureBuilder = {
+        tool: TOOLS.measures,
+        tick: missingMeasures,
+        needs: 'The calendar\'s Hijri Year, Hijri Month Number and Hijri Day columns' + (c && c.hijri ? '' : ' (add them first: fixes.calendarGenerator)') + '. Give the page your base measure and your calendar table\'s name, tick these measures, and copy the script into DAX query view.'
+      };
+    }
+    return f;
   }
 
   return { analyze, hasGulfColumns, findCalendar, readGenerated, weekendRule, countryWeekend, COUNTRIES, WEEKEND_RULES, MEASURES };

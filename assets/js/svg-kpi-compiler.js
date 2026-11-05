@@ -74,9 +74,9 @@
   const VALUE_KINDS = {
     measure: (v) => N.measure(v.measure),
     column: (v) => N.colval(v._col),
-    ratio: (v, R) => N.fn('DIVIDE', [R(v.a), R(v.b)]),
-    diff: (v, R) => N.op('-', R(v.a), R(v.b)),
-    pct: (v, R) => N.fn('DIVIDE', [N.op('-', R(v.a), R(v.b)), R(v.b)])
+    ratio: (v, R) => X.VALUE_NODES.ratio(R(v.a), R(v.b)),
+    diff: (v, R) => X.VALUE_NODES.diff(R(v.a), R(v.b)),
+    pct: (v, R) => X.VALUE_NODES.pct(R(v.a), R(v.b))
   };
   // DAX variable names come from the value labels (_Sales_LY), falling back to the id for non-Latin labels
   const slug = (s) => String(s || '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40);

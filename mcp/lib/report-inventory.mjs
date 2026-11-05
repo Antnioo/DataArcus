@@ -81,7 +81,6 @@ const hex = (c) => (typeof c === 'string' && /^#[0-9a-f]{3,8}$/i.test(c) ? c.toL
 // (0.3.2 DD2T) a text box's text: its paragraphs' texts (assets/js/text-runs.js), on one line: " / " between, trimmed
 const textOf = (j) => TR.paragraphTexts(plain(((j.visual || {}).objects || {}).general).paragraphs).join(' / ').trim();
 // Power BI's own visuals and slicers: Microsoft's catalog (assets/js/visual-types.js); a custom visual's type is its id
-const SLICERS = new RegExp('^(' + VT.SLICER_TYPES.join('|') + ')$');
 export const typeName = (t) => (t === 'group' || VT.isNative(t) ? t : 'custom ' + safeName(t));
 // a custom visual's type: the one test (the cross-review's duplicates, 11 Oct: check_report used its own regex)
 export const isCustom = (t) => VT.isCustom(t);
@@ -186,7 +185,7 @@ export function inventory(src, reportName, opts) {
       const imgs = imagesIn([o, vco]); if (imgs.length) { imgs.forEach((n) => flag('image', n, vrel)); x.images = imgs.map(safeName); }
       x.sort = entries(((v.query || {}).sortDefinition || {}).sort).map((s) => ({ field: fieldOf(s.field), dir: /desc/i.test(String(s.direction || '')) ? 'desc' : 'asc' }));
       x.filters = safeFilters(j.filterConfig);
-      if (SLICERS.test(x.type)) x.slicer = true;
+      if (VT.isSlicer(x.type)) x.slicer = true;
       if (x.type === 'textbox') { const tx = textOf(j); if (tx) { x.rawText = tx; x.text = safeText(tx); flag('textbox', tx, vrel); } }
       const link = plain(vco.visualLink), ltype = litStr(link.type);
       if (ltype && (litBool(link.show) === true || x.type === 'actionButton')) {

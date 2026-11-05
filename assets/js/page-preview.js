@@ -33,7 +33,7 @@
     [/^(donutChart|pieChart)$/, 'donut'],
     [/^(card|cardVisual|multiRowCard|kpi)$/, 'card'],
     [/^(tableEx|pivotTable)$/, 'table'],
-    [/^(slicer|advancedSlicerVisual|listSlicer|textSlicer)$/, 'slicer'],
+    [{ test: VT.isSlicer }, 'slicer'],
     [/^textbox$/, 'text'],
     [/^image$/, 'image'],
     [/^(actionButton|pageNavigator|bookmarkNavigator)$/, 'button'],
