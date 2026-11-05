@@ -26,3 +26,20 @@
    mutant, green without.
 4. The 10 mutants in test-0.3.1-mutation.mjs (a comment naming D-1104-14 and B-329); PASS with 86 mutants.
 5. merge origin/integration/0.3.2 once if it moved, `npm run build:min`, every check, tests.yml on this branch.
+
+## Step 2: each mutant by hand (the harness's copy, `DA_MUTATION_ALL=1`, every guard; base cd7392f)
+| Mutant | Killed by (every guard run) |
+|---|---|
+| AH-host | test-0.3.2-sp44 (H1 wrongHost), test-approval (W-03 rebound Host) |
+| AH-link | test-0.3.2-sp44 by V2 only (the source text of the pattern): no behaviour; L8 added (step 3) |
+| AH-expiry | test-0.3.2-sp44 (L1), test-approval (W-07) |
+| AH-method | test-0.3.2-sp44 (H1 wrongMethod: a PUT approved) |
+| AH-origin | test-0.3.2-sp44 (H1 wrongOrigin), test-approval (W-03) |
+| AH-body | test-0.3.2-sp44 (L5: the 70,000-byte body decided) |
+| AH-once | test-0.3.2-sp44 (H1 secondClick), test-approval (W-04 the later "Not now") |
+| AH-revoke | test-0.3.2-sp44 (L2: the old link opens the new window) |
+| RD-scrub | test-0.3.2-sp41 (X1, K answers) |
+| RD-mask | none (sp41, check, tb2 pass): X2 added (step 3) |
+test-approval-hardening and test-z kill none of the AH mutants (they reach the gate in plans.mjs, not the HTTP side).
+test-0.3.0-sweep-s1 can't be a guard: on the copy it fails its baseline (it runs `scripts/check-literal-requires.mjs`,
+which the copy does not hold); left out of RD's guards.
