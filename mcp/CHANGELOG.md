@@ -5,6 +5,7 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **Several models in one folder, said in Arabic:** when a folder holds several models at the same level and the folder or a model name is in Arabic, the reading tools now say so in Arabic («نموذجين» for two, «N نماذج» for three or more); the English message is unchanged.
 - **A text box that holds only a number is text:** a text box that holds only a number, such as 0, is now seen as text by
   the accessibility check (it keeps its Tab stop and gets its alt text) and drawn in the preview, as the report check and
   read_report already read it.
