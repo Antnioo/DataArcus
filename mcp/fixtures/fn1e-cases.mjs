@@ -129,7 +129,7 @@ export function disclosureCases() {
       { visual: 'v3', type: 'tableEx', text: [{ class: 'title', property: 'fontFamily', from: 'Arial', to: 'Segoe UI' }, { class: 'label', property: 'fontSize', from: '9', to: 'the theme\'s' }, { class: 'zz', property: 'bold', from: 'true', to: 'true' },
         { class: 'zz', property: 'italic', from: 'x', to: 'x' }, { class: 'header', property: 'other', from: 'a', to: 'b' }], overlays: [{ visual: 'o3', type: 'card' }] },
       { visual: 'v4', type: 'lineChart', from: { x: 50, y: 50, w: 100, h: 100 }, to: { x: 20, y: 80, w: 90, h: 90 }, text: [{ class: 'title', property: 'fontSize', from: '12', to: '12' }, { class: 'title', property: 'fontSize', from: '14', to: '14' }, { class: 'label', property: 'fontFamily', from: 'the theme\'s', to: 'the theme\'s' }] },
-      { visual: 'v5', type: 'pieChart', from: { x: 5, y: 5, w: 5, h: 5 }, to: { x: 5, y: 5, w: 5, h: 50 } }],
+      { visual: 'v5', type: 'pieChart', from: { x: 5, y: 5, w: 5, h: 5 }, to: { x: 5, y: 5, w: 5, h: 50 }, text: [{ class: 'title', property: 'fontSize', from: '12', to: '12' }] }],
     notChanged: [{ visual: 'n1', type: 'image', why: 'a picture' }, { visual: 'n2', type: 'card', why: 'on a tooltip page', overlays: [{ visual: 'o4', type: 'shape', from: { x: 1 }, to: { x: 2, y: 2, w: 2, h: 2 } }] }] },
     { page: 'Tips', why: 'a tooltip page', notChanged: [{ visual: 'n3', type: 'card', why: 'a tooltip page' }, { visual: 'n4', type: 'card', why: 'its own' }] }, { page: 'Empty' }],
     theme: { file: 'theme.json', tokens: { dataColors: ['#111111', '#222222'], foreground: '#333333', tableAccent: 'blue', zz: 5 } },

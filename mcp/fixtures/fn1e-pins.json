@@ -1147,56 +1147,56 @@
    "len": 849
   },
   "D redesign full": {
-   "sha": "2ea0ad53f6260b19460803fd55b2401d8fc0241c429474109f033b59e457f9b7",
-   "len": 4504
+   "sha": "dcc980c19f5bbce98e1ca4c1c981f0f95023851c1a9e2fd5a5ded3c9500e8be2",
+   "len": 4683
   },
   "D redesign no theme": {
-   "sha": "335b88c6d94735e3d1243cad196ea93e0feb749d46efa920e0b8bfe740148bc8",
-   "len": 4245
+   "sha": "8210992f899d6299117159dda9976ad8a7df1c854ee61d6f28ded5e75aefe8f3",
+   "len": 4424
   },
   "D redesign theme no tokens": {
-   "sha": "335b88c6d94735e3d1243cad196ea93e0feb749d46efa920e0b8bfe740148bc8",
-   "len": 4245
+   "sha": "8210992f899d6299117159dda9976ad8a7df1c854ee61d6f28ded5e75aefe8f3",
+   "len": 4424
   },
   "D redesign text mode most": {
-   "sha": "8858fd69e3e368b1a2f8f928d1bb5494ae3635b4302454fac90d59dd0cdbd4bc",
-   "len": 4519
+   "sha": "e8baa924207cdd283d1f4caf351f7864c10419ca58d781ce5990320efb020bd5",
+   "len": 4698
   },
   "D redesign no text": {
-   "sha": "365a0cb4c501d8993e0034555edfc4fffdd22f3c060d175465c81d6bff5e581a",
-   "len": 3945
+   "sha": "09a9bb9557054e26bac2522c25380a440bf8e750dae4d0ccab654ae003afa1e0",
+   "len": 4124
   },
   "D redesign text set not a list": {
-   "sha": "365a0cb4c501d8993e0034555edfc4fffdd22f3c060d175465c81d6bff5e581a",
-   "len": 3945
+   "sha": "09a9bb9557054e26bac2522c25380a440bf8e750dae4d0ccab654ae003afa1e0",
+   "len": 4124
   },
   "D redesign no kept list": {
-   "sha": "2975ceadd454ebc8fd8e6cff7cf50b8d4f53a3a6eb57d75788b482dc21afdf01",
-   "len": 4335
+   "sha": "8b36da6f874ae066d9e1928885dc54192bc7106f10dda7e2f709e5c69d71178c",
+   "len": 4514
   },
   "D redesign no themeStyles": {
-   "sha": "c0dbbde1a00dc6e4cd24c89e82089d619fd562c036478baefb9b1b70109327ed",
-   "len": 4463
+   "sha": "35e92e110e002d942fcadff0b20b3f346044cce4d99ab6de3bb5d91101014891",
+   "len": 4642
   },
   "D redesign not copied": {
-   "sha": "8208708fb45ce7ab449aebb8ff9e05890227da70f8fe9680cd319847df188db0",
-   "len": 4185
+   "sha": "b35311812215d248c794fb0ae4e4097653f318e989a98ad2220a01856e958a64",
+   "len": 4364
   },
   "D redesign no outputs": {
-   "sha": "8f4459730ed600de3b8e5cccb91250e982784b86efd1450dc4854993d7ccfd5a",
-   "len": 4074
+   "sha": "7b729a4d1e248c84b2cd70adcdcac3878c2d8c6c9f88af6e749417f27030a97b",
+   "len": 4253
   },
   "D redesign no pages": {
    "sha": "d07b85a6851c76089af54cd98ba0d90f96376671ec7dcf5e113faba816921c16",
    "len": 2940
   },
   "D redesign keptAsIs ones": {
-   "sha": "ab7941e2062e3bf8753ed81b1993d025bf321c31e231afb4d447fe4783807b57",
-   "len": 4530
+   "sha": "7ec8c828c09365e9d2d2b81e975a84fa7e60cbb1aa111588039fc27430d4e6f5",
+   "len": 4709
   },
   "D redesign no original": {
-   "sha": "045fe0a5ca06b4d00c0d143097f4c2f8b7fad8bd76d380a3d2beb16a4695e642",
-   "len": 4494
+   "sha": "afb981d20d4c1917a9fb7254f0a099a7c88b7ea40d3140ca0192fca1f639d2b3",
+   "len": 4673
   },
   "D redesign empty": {
    "sha": "367e31ce6a2c5b38aeb3099c18435f047606b235c67a6d617dd739a65608e3cc",
