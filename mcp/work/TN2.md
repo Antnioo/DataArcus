@@ -9,20 +9,35 @@
   «القطاع العام», «Sales العام».
 - **Expected checks:** dd1a 311 -> 319; every other suite's number as before; lint 0; mutation 76/76.
 - **Not in scope:** any other word, the four callers, any other file.
-- **State:** planned.
-- **Resume:** start at commit 2.
+- **State:** code and pins done; full run and CI below.
+- **Resume:** run the full suites, then CI.
 
-## Before -> after (each name)
-(filled after the rule)
+## Before -> after (each name; isTimeName)
+| name | before | after |
+|---|---|---|
+| «العام» | true | true |
+| «العام المالي» | true | true |
+| «عام 2024» | true | true |
+| «عام» | true | true |
+| «المدير العام» | true | false |
+| «الرصيد العام» | true | false |
+| «القطاع العام» | true | false |
+| «Sales العام» | true | false |
 
 ## Decisions I made
-none yet
+- The 8 pins are their own U1 line in dd1a (isTimeName only), so dd1a grows 311 -> 319 as the brief says. Adding them
+  to the shared name lists would also run the four places on them (+27 more checks, 346): not done, the brief says
+  "nothing else moves". Red: with the old rule 4 of the 8 fail (315 of 319).
+- WORK.md was 3,197 characters; TN2 was added to its DD1A list and three words trimmed elsewhere to stay under 3,200.
+- `npm ci` in the repo root was needed for the build (terser); no lock file changed.
+- The sitemap lastmod did not move (checked after unshallowing the clone).
 
 ## For the owner
 none
 
 ## Risky changes
-none
+none: one condition in one function; the four callers read it unchanged. A name with «عام» as a later word and no other
+time word («القطاع العام») is no longer a time name, which is the decided rule.
 
 ## Seen, not in scope
-none yet
+- The P parity names in dd1a do not include the 8 TN2 names; adding them is +27 checks.

@@ -14,7 +14,8 @@ package's manifest; this file says what is in it.
 - **One answer to "is this column a date part?":** the Arabic twin, the approval preview, the report writer and the
   report check now read a column's name the same way (OrderDate, FiscalYear, Qtr, FY, a bare «شهر» or «هجري» are time
   in all four), so a twin chart by fiscal year now keeps its time axis as a time axis, and the preview's time arrow and
-  the check's time-axis notes agree with it.
+  the check's time-axis notes agree with it. «المدير العام» (general manager) is not a date part, while «العام المالي»
+  (the fiscal year) still is: «عام» counts as time only as the first word of a name.
 - **The health check now finds the sort column the report writer finds:** a month or day name whose number column has
   no type in the model files is now sorted by that number column in the fix script, as the report writer sorts it,
   instead of the script adding a second number column of its own.

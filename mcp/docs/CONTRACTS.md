@@ -111,6 +111,8 @@ page-preview `TIME_NAME`, pbip-query `TIME_WORDS` and `wordsOf`, layout-check `T
 dd1a's P runs the four on the 24 names and 26 more: one answer each. The probe: one answer on all 24 inputs. The
 "Today" table above is the ledger's snapshot before DD1A.
 
+**Since TN2 (5 Nov; the owner D-1105-04):** «عام» / «العام» is a time word only as the first word of a name («العام المالي», «عام 2024»), never after another word («المدير العام», «القطاع العام»); every other word as before.
+
 ## 1b-text What text does a literal hold?
 
 **One place:** assets/js/pbir-values.js litText (test mcp/test-0.3.2-dd1b.mjs).

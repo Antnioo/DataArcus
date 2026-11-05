@@ -38,6 +38,9 @@ const MORE_TRUE = ['FYTotal', 'WeekNum', 'Month2024', 'Month-Year', 'fiscal_peri
 LEDGER.forEach(([n, want]) => chk(() => T.isTimeName(n) === want, () => `U1 isTimeName(${JSON.stringify(n)}) = ${T.isTimeName(n)}, the rule says ${want}`));
 FALSE_CASES.forEach((n) => chk(() => T.isTimeName(n) === false, () => `U1 isTimeName(${JSON.stringify(n)}) is true: not a time name`));
 MORE_TRUE.forEach((n) => chk(() => T.isTimeName(n) === true, () => `U1 isTimeName(${JSON.stringify(n)}) is false: a time name`));
+// TN2 (owner D-1105-04): «عام» / «العام» is time only as the FIRST word of a name, never after another word
+[['العام', true], ['العام المالي', true], ['عام 2024', true], ['عام', true], ['المدير العام', false], ['الرصيد العام', false],
+  ['القطاع العام', false], ['Sales العام', false]].forEach(([n, want]) => chk(() => T.isTimeName(n) === want, () => `U1 TN2 isTimeName(${JSON.stringify(n)}) = ${T.isTimeName(n)}, the rule says ${want}`));
 
 // ---- U2: the words ----
 const WORDS = [['OrderDate', 'order date'], ['FYTotal', 'fy total'], ['Month_Name', 'month name'], ['Month-Year', 'month year'],
