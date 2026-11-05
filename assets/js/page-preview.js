@@ -13,6 +13,8 @@
   // the HTML escape: html-escape.js htmlEsc, its one home (0.3.2 DD2H; the page loads it first, Node requires it)
   const HE = typeof module !== 'undefined' && module.exports ? require('./html-escape.js') : root.DAHtmlEscape;
   const esc = HE.htmlEsc;
+  // the bar charts: visual-types.js isBar, their one home (0.3.2 DD2V; the page loads it first, Node requires it)
+  const VT = typeof module !== 'undefined' && module.exports ? require('./visual-types.js') : root.DAVisualTypes;
   // (control and format characters out of a name: they could reorder what the picture shows)
   const clean = (s) => String(s == null ? '' : s).replace(/[\u0000-\u001F\u007F-\u009F​-‏‪-‮⁦-⁩﻿]/g, '').trim();
   const n = (v) => String(Math.round((+v || 0) * 10) / 10);
@@ -20,8 +22,8 @@
 
   // Power BI's visual types, by the shape the preview draws for them
   const KIND = [
-    [/^(barChart|clusteredBarChart|stackedBarChart|hundredPercentStackedBarChart)$/, 'bar'],
-    [/^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|waterfallChart|ribbonChart)$/, 'column'],
+    [{ test: VT.isBar }, 'bar'],
+    [/^(columnChart|clusteredColumnChart|hundredPercentStackedColumnChart|waterfallChart|ribbonChart)$/, 'column'],
     [/^(lineChart|areaChart|stackedAreaChart|hundredPercentStackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/, 'line'],
     [/^(donutChart|pieChart)$/, 'donut'],
     [/^(card|cardVisual|multiRowCard|kpi)$/, 'card'],
@@ -445,13 +447,13 @@
     // (0.3.0 L2) the button slicer's buttons (its one row's columns, else 3) and a chart's dotted or hidden gridlines
     if (type === 'advancedSlicerVisual') out.pills = Math.max(1, Math.min(8, numOf(props(ob.layout).columnCount) || 3));
     // (0.3.1 FX5) the bars' thickness the writer set: a bar or column chart's equal inner and outer padding (a percent)
-    if (/^(barChart|clusteredBarChart|stackedBarChart|hundredPercentStackedBarChart|columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) {
+    if (VT.isBar(type) || /^(columnChart|clusteredColumnChart|hundredPercentStackedColumnChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) {
       const ca = props(ob.categoryAxis); if (numOf(ca.innerPadding) > 0 && numOf(ca.innerPadding) === numOf(ca.outerPadding)) out.band = numOf(ca.innerPadding);
     }
     { const va = props(ob.valueAxis); if (boolOf(va.gridlineShow) === false) out.grid = 'none'; else if (strOf(va.gridlineStyle) === 'dotted') out.grid = 'dotted'; }
     // (L1) a line's look as written: smooth, and a dot on each point (lineStyles, the entry with no selector)
     if (/^(lineChart|areaChart|stackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) { const st = props(ob.lineStyles); if (strOf(st.lineChartType) === 'smooth') out.smooth = true; if (boolOf(st.showMarker) === true) out.markers = true; }
-    if (/^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|lineChart|areaChart|stackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) {
+    if (/^(columnChart|clusteredColumnChart|hundredPercentStackedColumnChart|lineChart|areaChart|stackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) {
       const c = (((qs.Category || {}).projections) || []).find((x) => x && x.field);
       if (c) { out.category = nameOfProj(c); out.labelSize = numOf(props(ob.categoryAxis).fontSize) || +th1(theme, type, 'categoryAxis', 'fontSize') || +(tc.label || {}).fontSize || 9; }
       const td = c ? timeDirOf(vis, c) : null; if (td) out.timeDir = td;

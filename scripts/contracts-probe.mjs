@@ -248,6 +248,13 @@ const TYPES = ['tableEx', 'pivotTable', 'table', 'matrix', 'accessibleTable', 's
 const mpKind = async (t, get) => (await get())({ visual: { visualType: t } });
 const ppKind = async (t, get) => (await get())({ type: t });
 
+// a page of two visuals for page-picture.mjs newOverlaps: a visual of type `table` and one of type `bar` overlap on the
+// English page and on the Arabic page, the bar's axis turned only on the Arabic one: 'barsTurned' when the first keeps its
+// grid and the second is a bar chart
+const turnedBars = (table, bar) => {
+  const v = (name, t, x, w, turned) => ({ name, position: { x, y: 0, width: w, height: 100 }, visual: { visualType: t, objects: turned ? { valueAxis: [{ properties: { invertAxis: { expr: { Literal: { Value: 'true' } } } } }] } : {} } });
+  return [[v('t', table, 0, 100), v('b', bar, 0, 60)], [v('t', table, 0, 100), v('b', bar, 0, 60, true)]];
+};
 const BOXES = [
   { label: 'apart', a: [0, 0, 100, 100], b: [200, 0, 100, 100] },
   { label: 'touching edges', a: [0, 0, 100, 100], b: [100, 0, 100, 100] },
@@ -511,7 +518,7 @@ export const FAMILIES = [
   { id: 'grid', title: 'Does this visual keep its grid left to right?', question: 'a visual type: a table or a matrix, whose columns Desktop keeps left to right in the twin',
     inputs: TYPES, places: [
       P('assets/js/mirror-policy.js', 'keepsGridLtr', 'inner', async (x, get) => (await get())({ visual: { visualType: x.t } })),
-      P('mcp/lib/page-picture.mjs', 'TABLES', 'source', async (x, get) => (await get()).has(x.t)),
+      P('mcp/lib/page-picture.mjs', 'newOverlaps', 'export', async (x, get) => { const r = (await get())(...turnedBars(x.t, 'barChart')); return { v: r.length === 1 && r[0].why === 'barsTurned', note: r.map((o) => o.why).join() }; }),
     ] },
   { id: 'vt-slicer', title: 'Is this visual a slicer?', question: 'a visual type: is it a slicer (a visual that filters the page by its field)?',
     inputs: TYPES, places: [
@@ -525,8 +532,9 @@ export const FAMILIES = [
     inputs: TYPES, places: [
       P('assets/js/mirror-policy.js', 'kindOf', 'inner', async (x, get) => { const k = await mpKind(x.t, get); return { v: k === 'bar', note: k }; }),
       P('assets/js/page-preview.js', 'kindOf', 'inner', async (x, get) => { const k = await ppKind(x.t, get); return { v: k === 'bar', note: k }; }),
-      P('assets/js/layout-check.js', 'BARS', 'inner', async (x, get) => (await get()).test(x.t)),
-      P('mcp/lib/page-picture.mjs', 'BARS', 'source', async (x, get) => (await get()).test(x.t)),
+      P('assets/js/visual-types.js', 'isBar', 'export', async (x, get) => (await get())(x.t)),
+      P('assets/js/layout-check.js', 'placeOf', 'export', async (x, get) => (await get())({ type: x.t }) === 'the bar chart'),
+      P('mcp/lib/page-picture.mjs', 'newOverlaps', 'export', async (x, get) => { const r = (await get())(...turnedBars('tableEx', x.t)); return { v: r.length === 1 && r[0].why === 'barsTurned', note: r.map((o) => o.why).join() }; }),
     ] },
   { id: 'canon', title: 'What is the canonical text of a plan?', question: 'a value: its JSON with keys sorted and undefined left out (the text a digest is taken of)',
     inputs: CANON, places: [
