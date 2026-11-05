@@ -15,8 +15,8 @@
 - **Expected checks:** dd2z new; CONTRACTS.md 28 of 28 families in one place; only filterSlicer's answer changes in
   visual-types/report-inventory (read_report, check_report); sp16's recorded D21 line ("evaluator threw DIV0") changes on purpose;
   every other suite's number unchanged; lint 0.
-- **State:** code done; CI running (see the last line when green).
-- **Resume:** none if the last line says CI green; else `gh run list --workflow tests.yml --branch fix/0.3.2-dd2z`.
+- **State:** DONE (CI green on Linux and Windows; macOS runs where the reviewer merges).
+- **Resume:** none; the reviewer reads and merges.
 
 ## Copies before -> after
 | place | before | after |
@@ -70,3 +70,4 @@ none
 ## Lessons for the reviewer
 - The brief's "red where today's places disagree": the blank family disagreed only on `/`; DIVIDE and the editor already matched, and the ring was already "0%", so those cases are pins.
 - A new probe input shape needed three small probe changes (`applies`, Infinity in `show`, a place loader per kind): the probe's 8-input minimum made 14 inputs the natural size.
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/42105671302 on 21ddb7e2643407891db75195258bffdae1804f3e
