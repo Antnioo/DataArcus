@@ -61,15 +61,12 @@
   // report from its context c (see build)
   const kit = (c) => V.look({ theme: { o: c.o, u: c.u, font: c.font, edge: c.edge, W: c.W }, direction: { align: c.align, rtl: c.rtl } });
 
-  // One report page: its page.json, and every visual in reading order (visual.json, and mobile.json for the phone)
-  function write(c, pg, pageIndex) {
-    const {
-      B, bound, CONTINUOUS, D, GRAD, GRAD2, GRID, LABEL, MIRROR, NODATA, PAGES, SLICER_TEXT, SOLID, TITLE, W, add, align, kindChanges, base, bookmarks,
-      buttonH, charW, chartColors, def, edge, extFile, font, frame, freeExt, headed, headerGrew, lang, leftOut, logoFile, noData, noDataSkipped,
-      noPageButtons, o, own, pageFilters, paneObjects, pt, resetFill, resetFit, resetIcon, resetLook, resetTip, resetW, ringsSmall, rowLabelSkipped,
-      rowLabels, rtl, same, slicerH, svgDone, svgSizes, tabRows, textbox, tip, tipFor, tipName, titleFit, titles, trend, u,
-      extMeasure, extField, topSet, topN, notBlank, lastMonths, byMonthStart
-    } = c;
+  // write's steps, called in order, each given the report's context c and the page's pc (it adds what a later step reads;
+  // pc.z: the next visual's z and tab order)
+  // the page.json
+  function pagePart(c, pc) {
+    const { D, add, base, pageFilters, paneObjects, u } = c;
+    const { pg } = pc;
     const pageName = pg.id, filters = pageFilters();
     add(D + '/pages/' + pageName + '/page.json', json(Object.assign({
       $schema: SCHEMA.page, name: pageName, displayName: pg.name || base, displayOption: 'FitToPage', width: pg.page.w, height: pg.page.h,
@@ -80,6 +77,11 @@
       }, paneObjects)
     }, filters.length ? { filterConfig: { filters } } : {})));
 
+    Object.assign(pc, { pageName });
+  }
+  // the page's lists and how a visual is added: the builders' notes (take), a container, the navigation's items
+  function kitPart(c, pc) {
+    const { bookmarks, leftOut, tabRows } = c;
     // visuals, in reading order: z and tab order follow it, so keyboard users move through the page the way it reads
     const visuals = [], mob = [], slicerNames = [];
     // (0.3.2 SP28) the look the page's visuals are written with (the kit's), each written slot's place in the planned page
@@ -108,14 +110,14 @@
     const placeNav = (out) => {
       out.items.forEach((it) => {
         if (it.draw) { refs[it.draw] = rnd(); return; }
-        if (it.zAtLeast) z = Math.max(z, it.zAtLeast);
+        if (it.zAtLeast) pc.z = Math.max(pc.z, it.zAtLeast);
         if (it.link) { const p = it.visual.visualContainerObjects.visualLink[0].properties; p.bookmark = str(refs[p.bookmark.ref]); }
-        const v = container({ name: it.nameRef ? refs[it.nameRef] : undefined, x: it.x, y: it.y, w: it.w, h: it.h, z, hidden: it.hidden, kind: it.kind, groupKey: it.groupKey, group: it.group,
+        const v = container({ name: it.nameRef ? refs[it.nameRef] : undefined, x: it.x, y: it.y, w: it.w, h: it.h, z: pc.z, hidden: it.hidden, kind: it.kind, groupKey: it.groupKey, group: it.group,
           parent: it.parentRef ? refs[it.parentRef] : it.parent, noPhone: it.noPhone, of: it.ofRef ? refs[it.ofRef] : undefined, visual: it.visual });
         if (it.ref) refs[it.ref] = v.name;
         if (it.nameRef) refs[it.nameRef] = v.name;
         if (it.slicer) slicerNames.push(v.name);
-        z += 1000;
+        pc.z += 1000;
       });
       (out.bookmarks || []).forEach((b) => { const r = {};
         Object.keys(b).forEach((key) => { r[key] = key === 'name' || key === 'group' ? refs[b[key]] : key === 'targets' ? (b[key] === 'slicers' ? slicerNames.slice() : b[key].map((t) => refs[t])) : b[key]; });
@@ -125,6 +127,13 @@
       if (d.tabRows && !tabRows.some((x) => x.page === d.tabRows.page)) tabRows.push(d.tabRows);
     };
 
+    Object.assign(pc, { visuals, mob, look, SLOT_PLAN, bands, take, container, refs, placeNav });
+  }
+  // the slots the page really gets, the kind each is written as, the reading order, the groups' boxes, the KPI row, the slicers
+  function slotsPart(c, pc) {
+    const { B, LABEL, W, base, edge, font, headerGrew, kindChanges, leftOut, o, own, rtl, u } = c;
+    const { SLOT_PLAN, look, pageIndex, take } = pc;
+    let { pg } = pc;
     // 0.2.9, audit 2's A2-3: the slots this page really gets, by the design engine's fitSlots with what the writer measures
     // (fitOf): a line chart's room given away on a model with no time axis (told in leftOut with gave; a hand-placed page
     // keeps the caller's positions), the header one row of tabs taller, the filter rail as high as its slicers and Reset
@@ -141,7 +150,7 @@
     const groups = {};
     const groupOf = (kind) => (kind === 'title' || kind === 'logo' ? 'header' : kind === 'kpi' ? 'kpis' : kind === 'slicer' ? 'filters' : null);
     const GROUP_NAMES = { header: W.header || 'Header', kpis: W.kpis || 'KPI cards', filters: W.filters || 'Filters' };
-    let z = 1000, kpiIndex = 0;
+    pc.z = 1000; let kpiIndex = 0;
     // the KPI cards' row: one title size and one value size (pbip-visuals.js kpiRow)
     const row = V.kpiRow({ look, theme: { o, W, font }, binding: { B }, page: { pg }, slots: sorted });
     const fitted = new Map();   // round 22: each chart's full title and the room it was fitted to (pbip-visuals.js visual)
@@ -158,8 +167,15 @@
       if (g && !groups[g]) groups[g] = { name: rnd(), x0: s.x, y0: s.y, x1: s.x + s.w, y1: s.y + s.h, z: 0 };
       if (g) { const G = groups[g]; G.x0 = Math.min(G.x0, s.x); G.y0 = Math.min(G.y0, s.y); G.x1 = Math.max(G.x1, s.x + s.w); G.y1 = Math.max(G.y1, s.y + s.h); }
     });
+    Object.assign(pc, { tabsLayout, sorted, groups, groupOf, GROUP_NAMES, kpiIndex, row, fitted, slicerVisual,
+      stackHeights, catPlan, chartTitles, charts, pg });
+  }
+  // the groups, under their visuals, and their panels on a solid design
+  function groupsPart(c, pc) {
+    const { SOLID } = c;
+    const { GROUP_NAMES, container, groups, pg } = pc;
     // groups sit under their visuals in the layer order
-    Object.keys(groups).forEach((g) => { const G = groups[g]; G.z = z; z += 1000;
+    Object.keys(groups).forEach((g) => { const G = groups[g]; G.z = pc.z; pc.z += 1000;
       // in a solid design the theme would draw a band behind the whole group, square and without a shadow (a group
       // has neither a border nor a shadow), so no group draws one: the KPI cards each have their own panel, and the
       // header and the filter rail get a panel behind them (below)
@@ -176,6 +192,12 @@
         container({ x: bx, y: by, w: G.x1 + dx - bx, h: G.y1 + dy - by, z: G.z - 500, kind: 'band', noPhone: true, visual: V.emptyPanel() });
       } });
 
+  }
+  // the header's plan: the page navigation between the title and the logo
+  function headPart(c, pc) {
+    const { LABEL, PAGES, W, base, buttonH, charW, def, frame, noPageButtons, pt, resetFill, resetIcon, resetLook,
+      resetTip, rtl, textbox } = c;
+    const { pg, slicerVisual, stackHeights, tabsLayout } = pc;
     // page navigation between the title and the logo, when the report has more than one page
     const title = pg.slots.find((s) => s.kind === 'title'), logo = pg.slots.find((s) => s.kind === 'logo');
     const panel = pg.panel && title && logo ? pg.panel : null, k = pg.page.h / 1080;
@@ -186,6 +208,17 @@
       direction: { rtl }, tabs: tabsLayout });
     head.diagnostics.noPageButtons.forEach((x) => noPageButtons.push(x));
 
+    Object.assign(pc, { title, panel, k, navLook, head });
+  }
+  // each slot's visual in the reading order, the filter slot's slicers and the page buttons after the title
+  function visualsPart(c, pc) {
+    const { B, CONTINUOUS, GRAD, GRAD2, GRID, LABEL, MIRROR, NODATA, PAGES, SLICER_TEXT, W, align, base,
+      byMonthStart, chartColors, extFile, extMeasure, font, freeExt, lang, lastMonths, logoFile, noData,
+      noDataSkipped, notBlank, o, own, resetFit, resetW, ringsSmall, rowLabelSkipped, rowLabels, rtl, slicerH,
+      svgDone, svgSizes, topN, topSet, u } = c;
+    const { SLOT_PLAN, bands, catPlan, chartTitles, charts, container, fitted, groupOf, groups, head, k, look,
+      navLook, pageIndex, pageName, pg, placeNav, row, sorted, take, title } = pc;
+    let { kpiIndex } = pc;
     sorted.forEach((s) => {
       const g = groupOf(s.kind), parent = g ? groups[g].name : null;
       if (s.kind === 'slicer') {
@@ -215,19 +248,25 @@
         const { ent, expression, want } = r.noData, other = (n) => noData.some((x) => x.t === ent && x.m === n && x.expression !== expression);
         let nm = freeExt(ent, want); for (let k = 2; other(nm); k++) nm = freeExt(ent, want + ' (' + k + ')');
         if (!noData.some((x) => x.t === ent && x.m === nm)) noData.push({ t: ent, m: nm, expression });
-        container({ x: s.x, y: box.y, w: s.w, h: box.h, z: z - 500, parent, kind: 'nodata', noPhone: true, visual: V.noDataCard({ look: { LABEL }, theme: { u }, ent, nm, tableH }) });
+        container({ x: s.x, y: box.y, w: s.w, h: box.h, z: pc.z - 500, parent, kind: 'nodata', noPhone: true, visual: V.noDataCard({ look: { LABEL }, theme: { u }, ent, nm, tableH }) });
       }
       // (S3 + N6) a table shorter than its slot on a solid theme: the panel at the slot's height behind it
-      if (r.panel) container({ x: s.x, y: box.y, w: s.w, h: box.h, z: z - 500, parent, kind: 'panel', noPhone: true, visual: V.emptyPanel() });
-      const v = container({ x: s.x, y: box.y, w: s.w, h: tableH || box.h, z, parent, visual, kind: s.kind });
+      if (r.panel) container({ x: s.x, y: box.y, w: s.w, h: box.h, z: pc.z - 500, parent, kind: 'panel', noPhone: true, visual: V.emptyPanel() });
+      const v = container({ x: s.x, y: box.y, w: s.w, h: tableH || box.h, z: pc.z, parent, visual, kind: s.kind });
       if (r.filters && r.filters.length) v.filterConfig = { filters: r.filters };
       if (CHARTS.includes(s.kind)) charts.push({ v, hov });
-      z += 1000;
+      pc.z += 1000;
       // the page buttons after the title in the reading order, and the Filters button (pbip-navigation.js pageButtons)
       if (s.kind === 'title') placeNav(N.pageButtons({ plan: head, slots: { title }, pages: { PAGES, base, name: pg.name, pageIndex }, theme: { u, W, font, LABEL },
         metrics: { k }, direction: { rtl }, look: navLook, parent: groups.header.name }));
     });
 
+  }
+  // the slide-in filter panel, and each chart's tooltip page
+  function tipsPart(c, pc) {
+    const { B, LABEL, PAGES, SLICER_TEXT, W, base, buttonH, charW, edge, font, own, pt, resetFit, resetW, rtl,
+      same, slicerH, tip, tipFor, tipName, trend, u } = c;
+    const { charts, k, navLook, pageName, panel, pg, placeNav, refs } = pc;
     // slide-in filter panel (pbip-navigation.js filterPanel): over the page, its two bookmarks drawn with the Filters button
     if (panel && refs.open) placeNav(N.filterPanel({ slots: { panel }, pages: { PAGES, base, name: pg.name, id: pageName }, theme: { u, W, font, LABEL, SLICER_TEXT, edge },
       metrics: { k, pt, charW, buttonH, slicerH, resetW, resetFit }, direction: { rtl }, binding: { B, own }, look: navLook }));
@@ -246,6 +285,11 @@
     };
     charts.forEach((c) => { const sec = tipSection(c.hov); if (sec) c.v.visual.visualContainerObjects.visualTooltip = obj({ show: bool(true), type: str('Canvas'), section: str(sec) }); });
 
+  }
+  // the phone layout
+  function phonePart(c, pc) {
+    const { font, rtl } = c;
+    const { groups, mob } = pc;
     // phone layout: Power BI's phone canvas is 323 points wide. Cards go two per row (158 x 100), charts and
     // tables full width, slicers and buttons as short full-width rows, in the reading order of the page.
     const PW = 323, GAP = 8, SIZE = { title: 56, nav: 44, logo: 56, kpi: 100, card: 100, slicer: 64, button: 40, text: 120, table: 270, gauge: 180, donut: 220, map: 220, treemap: 220 };
@@ -298,10 +342,15 @@
     });
     // text on the phone: each visual's own sizes in mobile.json (pbip-visuals.js phoneLook)
     const kindOf = {}; mob.forEach((m) => { kindOf[m.v.name] = m.kind; });
+    Object.assign(pc, { pos, kindOf });
+  }
+  // charts of a page whose titles would be the same, told apart
+  function sameTitlesPart(c, pc) {
+    const { TITLE, W, rtl, titleFit, titles } = c;
+    const { fitted, visuals } = pc;
     // Round 20 (golden task 7, the owner's (a), 7 Oct 2026: on the Arabic page of a model without measures three charts
     // were all titled "عدد Order Id"): charts of a page whose titles would be the same each get their grouping column
     // in brackets, "عدد Order Id (Region)", English and Arabic alike; a title that is already its own is not changed
-    {
       const tOf = (v) => { const t = ((v.visual.visualContainerObjects || {}).title || [])[0], x = t && t.properties && t.properties.text; return x && x.expr && x.expr.Literal ? String(x.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") : null; };
       // (round 22, the code review's e and h, and seen in Desktop on 7 Oct, "Total Sales by City (City)" twice: the
       // titles are compared in full, not as shortened; charts by the same column are left alone, a bracket would only
@@ -345,6 +394,12 @@
         const two = nth[c] > 1 && alt(nth[c]);
         rename(v, k, prefix(v) + (two ? alt(nth[c]) + ' (' + c + ')' : k + ' (' + c + (nth[c] > 1 ? ' ' + nth[c] : '') + ')'),
           prefix(v) + (two ? (altOf(nth[c]) || alt(nth[c])) + ' (' + c + ')' : fullCore() + ' (' + c + (nth[c] > 1 ? ' ' + nth[c] : '') + ')')); }); });
+    Object.assign(pc, { TOPPED });
+  }
+  // a chart cut to its Top N: its title from a report-level measure
+  function topTitlesPart(c, pc) {
+    const { TITLE, extField, lang, titleFit, titles, topSet } = c;
+    const { TOPPED, fitted, visuals } = pc;
       // (design round 8, the re-score's N2 and N3: "Top 8:" stood over charts of 2, 4 or 6 bars, and a chart that left
       // categories out did not say how many there were) a chart cut to its Top N takes its title from a report-level
       // measure: "Top N of M: <title>" when more than N of its categories have a value under the page's filters (M counted
@@ -367,7 +422,11 @@
         ['wrapped', 'shortened'].forEach((md) => { const i = titles[md].indexOf(f.entry); if (i >= 0) titles[md].splice(i, 1); });
         f.entry = plain.mode !== 'one' ? { page: f.page, title: core, shown: plain.shown } : null; if (f.entry) titles[plain.mode].push(f.entry);
         if ((plain.mode !== 'one' && !plain.one) || (long.mode !== 'one' && !long.one)) tp.titleWrap = bool(true); else delete tp.titleWrap; });
-    }
+  }
+  // what each written visual shows (bound), and the visual.json and mobile.json files
+  function filesPart(c, pc) {
+    const { D, add, base, bound, font, headed, o, rowLabels, u } = c;
+    const { bands, kindOf, look, mob, pageName, pg, pos, visuals } = pc;
     // 0.2.9, audit 6's A6-12: what each written visual shows, in the page's order, for the caller's answer: its fields as
     // Table[Field] (a measure or a column) or Sum(Table[Field]) (a column the visual sums or counts), its roles in order; the
     // helpers are not fields (the Tooltips' sort, the hidden-header order column, the report's own measures: row labels,
@@ -388,6 +447,22 @@
         position: { x: +p.x.toFixed(1), y: +p.y.toFixed(1), z: v.position.z, width: +p.w.toFixed(1), height: +p.h.toFixed(1), tabOrder: v.position.tabOrder } },
         v.visual ? V.phoneLook({ look, theme: { u, font }, known: { rowLabels }, kind: kindOf[v.name], band: bands.get(v.visual) }, v, p) : {})));
     });
+  }
+
+  // One report page: its page.json, and every visual in reading order (visual.json, and mobile.json for the phone)
+  function write(c, pg, pageIndex) {
+    const pc = { pg, pageIndex };
+    pagePart(c, pc);
+    kitPart(c, pc);
+    slotsPart(c, pc);
+    groupsPart(c, pc);
+    headPart(c, pc);
+    visualsPart(c, pc);
+    tipsPart(c, pc);
+    phonePart(c, pc);
+    sameTitlesPart(c, pc);
+    topTitlesPart(c, pc);
+    filesPart(c, pc);
   }
 
   // The tooltip pages (the card and the bar chart by category, and the trend by month); returns six, the trend kept to

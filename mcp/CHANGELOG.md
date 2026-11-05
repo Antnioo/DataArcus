@@ -83,6 +83,9 @@ package's manifest; this file says what is in it.
 - **Inside the Theme Generator's downloads, the site's navigation and the SVG KPI Designer's panels, in smaller
   steps:** each is made by short named steps instead of one long function; every download, menu, counter, panel and
   click is what it was before.
+- **Inside the report page writer, the Arabic twin's plan and the shadow model, in smaller steps:** each is made by
+  short named steps instead of one long function; every file written, every line of the twin's plan and every shadow
+  model file is byte for byte what it was before.
 - **Inside the report writer:** each visual of a report page (the title and logo, the cards, the charts, the tables
   and the slicers, and their phone layout) is made in files of their own; every report, on the website and from the MCP,
   is byte for byte what it was before.
