@@ -330,6 +330,16 @@ export default async function ({ browser, url }) {
     check(!!GH && other !== model && days(other, 'uae') === 'cannot tell', `gulf-health on another form of Is Weekend: ${GH ? days(other, 'uae') : 'no gulf-health.js'} (want "cannot tell")`);
   }
 
+  // ---------- 7b. HJ1 (D-1105-16): the no-Hijri finding's Arabic is the owner's approved text, word for word ----------
+  {
+    const GHA = require('../../assets/js/gulf-health.js');
+    const m = { model: { tables: [{ name: 'Calendar', columns: [{ name: 'Date', dataType: 'dateTime' }], partitions: [] }] } };
+    const f = GHA.analyze(m, { country: 'uae', asOf: '2026-10-03' }).findings.find((x) => x.id === 'GC_NO_HIJRI');
+    check(!!f && f.title === 'The calendar has no Hijri dates', `GC_NO_HIJRI English title: ${f && f.title}`);
+    check(!!f && f.ar.title === 'التقويم لا يحتوي على تواريخ هجرية', `GC_NO_HIJRI Arabic title: ${f && f.ar.title}`);
+    check(!!f && f.ar.why === 'يتحرك رمضان والعيد نحو 11 يومًا كل عام، ومن دون السنة الهجرية والشهر الهجري واليوم الهجري، لا يستطيع التقرير إلا مقارنة الأشهر الميلادية، فيخلط رمضان بالأيام العادية.', `GC_NO_HIJRI Arabic sentence: ${f && f.ar.why}`);
+  }
+
   // ---------- 8. The Calendar Generator reads right in Arabic (live-site reports of 2026-10-04) ----------
   // every option of every drop-down fits its box, in both languages, from phone to wide desktop
   for (const lang of ['en', 'ar']) for (const w of [1440, 1280, 1024, 992, 768, 390]) {

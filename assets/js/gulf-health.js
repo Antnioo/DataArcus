@@ -203,7 +203,7 @@
       const missing = [['Hijri Year', cols.hijriYear], ['Hijri Month Number', cols.hijriMonth], ['Hijri Day', cols.hijriDay]].filter((x) => !x[1]).map((x) => ({ missingColumn: x[0] }));
       add('GC_NO_HIJRI', 'medium',
         ['The calendar has no Hijri dates', 'Ramadan and Eid move about 11 days a year; without the Hijri year, month and day a report can only compare Gregorian months, which mixes Ramadan with ordinary days.', 'Add Hijri Year, Hijri Month Number and Hijri Day (fixes.calendarGenerator).'],
-        ['التقويم بلا تاريخ هجري', 'يتحرك رمضان والعيد نحو 11 يومًا كل عام، وبدون السنة والشهر واليوم الهجري لا يقارن التقرير إلا الأشهر الميلادية، فيخلط رمضان بالأيام العادية.', 'أضف Hijri Year وHijri Month Number وHijri Day (fixes.calendarGenerator).'], missing);
+        ['التقويم لا يحتوي على تواريخ هجرية', 'يتحرك رمضان والعيد نحو 11 يومًا كل عام، ومن دون السنة الهجرية والشهر الهجري واليوم الهجري، لا يستطيع التقرير إلا مقارنة الأشهر الميلادية، فيخلط رمضان بالأيام العادية.', 'أضف Hijri Year وHijri Month Number وHijri Day (fixes.calendarGenerator).'], missing);
     } else if (!cols.ramadan && !cols.eid) {
       add('GC_NO_FLAGS', 'low',
         ['No Ramadan or Eid columns', 'Without Is Ramadan, Ramadan Day and the Eid flags, Ramadan can\'t be compared day by day and Eid can\'t be filtered.', 'Add them (fixes.calendarGenerator).'],
