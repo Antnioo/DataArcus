@@ -355,6 +355,8 @@ ledger's snapshot before DD1B.
 
 ## 1f Is this text Arabic?
 
+**One place:** assets/js/arabic-script.js hasArabic (test mcp/test-0.3.2-dd1f.mjs).
+
 **Question:** a text: does it hold an Arabic letter (the test that sends it the Arabic way)?
 
 **Newest copy:** the broad test (text-measure.js `ARABIC`, field-catalog.js `AR_SCRIPT`); dax-functions.mjs `storyLang` is a later, narrower copy. Verified: a presentation form (U+FEFB, U+FDF2; the audit's U+FE8E is the same block) reads English there.
@@ -385,6 +387,17 @@ All seven count Arabic-Indic digits and the Arabic question mark as Arabic, and 
 Whether digits and punctuation alone make a text Arabic is a second question the reviewer and the owner decide.
 
 **The test that will pin it:** the probe's 11 texts (family `1f`).
+
+**Since DD1F (5 Nov; the reviewer's call under D-1104-15):** the decided answer above, in one place:
+`assets/js/arabic-script.js` (`ARABIC`, group A's class, one regex, no g flag; `hasArabic`, null and undefined are no
+text). text-measure.js `ARABIC` and pbip-query.js `AR_LETTERS` are its `ARABIC` itself, still exported (pbip-bidi,
+pbip-tooltip, pbip-page and visual-gallery read them); field-catalog `langOf`, report-rules `headerNeed`, dax-functions
+`storyLang` (its `lang === 'ar'` half stays), report-bind `arName` and twin-plan's `arOf` call `hasArabic` (and so does
+planTwin's auto sentence label, the same function). `AR_SCRIPT`, `AR_LETTER` and `AR_COL` are gone. Changed: report-rules
+reads U+0750 and U+08A0 as Arabic; pbip-query, storyLang, report-bind and twin-plan read U+FEFB, U+FDF2, U+0750 and
+U+08A0 as Arabic. Digits, the question mark and a direction mark alone: as before. The probe: all 7 answer the same on
+all 11 texts; mcp/test-0.3.2-dd1f.mjs pins them and null, undefined and a number. The "Today" table above is the
+ledger's snapshot before DD1F.
 
 ## grid Does this visual keep its grid left to right?
 
