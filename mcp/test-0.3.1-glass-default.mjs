@@ -115,7 +115,7 @@ try {
       () => `R1-${nm}. plan_layout's look: ${want}${nm === 'pale' ? ', and why' : ''}: ${cut(pl.err ? pl.t : pj.look)}`);
     if (!id) continue;
     const html = await approve(id);
-    chk(() => /Card look/.test(html) && (nm === 'default' ? /Glass look \(default\)/.test(html) && /chart\.look &quot;auto&quot;|chart\.look "auto"/.test(html) : nm === 'plain' ? /Plain, as asked/.test(html) : /glass can(&#39;|&#x27;|')t keep everything readable/.test(html)),
+    chk(() => /Card look/.test(html) && (nm === 'default' ? /Glass look \(default\)/.test(html) && /plain cards: ask for the plain look/.test(html) && !/chart\.look/.test(html) : nm === 'plain' ? /Plain, as asked/.test(html) : /glass can(&#39;|&#x27;|')t keep everything readable/.test(html)),
       () => `R2-${nm}. the approval page's "Card look" row: ${cut((html.match(/Card look.{0,300}/) || [''])[0])}`);
     chk(() => (want === 'glass' ? /Page backgrounds \(the glass look(&#39;|&#x27;|')s soft picture/ : /Page backgrounds \(blank, see-through/).test(html),
       () => `R2b-${nm}. the approval page lists the page backgrounds as what they are (${want === 'glass' ? 'the glass look\'s soft picture' : 'blank, see-through'}): ${cut((html.match(/Page backgrounds.{0,120}/) || [''])[0])}`);

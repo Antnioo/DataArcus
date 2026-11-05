@@ -46,7 +46,9 @@ const EXACT = {
   'yes: the rates whose target the model names': 'نعم: النسب التي يحدد النموذج هدفها',
   'each bar fades by its value; a chart by a second category field gets a second colour, the same on every page': 'يتدرّج لون كل شريط حسب قيمته؛ والمخطط حسب حقل فئة ثانٍ يأخذ لونًا ثانيًا، هو نفسه في كل الصفحات',
   'one colour for every bar': 'لون واحد لكل الأشرطة',
-  'Glass look (default): see-through cards over a soft page picture made from the theme\'s colours (Power BI has no blur behind a visual); plain: chart.look "auto"': 'الشكل الزجاجي (الافتراضي): بطاقات شفافة فوق صورة ناعمة للصفحة مصنوعة من ألوان السمة (لا يوفّر Power BI تمويهًا خلف المرئي)؛ وللشكل العادي: «chart.look = auto»',
+  'Glass look (default): see-through cards over a soft page picture made from the theme\'s colours (Power BI has no blur behind a visual); plain cards: ask for the plain look': 'الشكل الزجاجي (الافتراضي): بطاقات شفافة فوق صورة ناعمة للصفحة مصنوعة من ألوان السمة (لا يوفّر Power BI تمويهًا خلف المرئي)؛ وللبطاقات العادية: اطلب الشكل العادي',
+  // (0.3.2 PL1) the "More" options in words (DRAFT for the owner, mcp/work/PL1.md)
+  'Page filters': 'فلاتر الصفحات', 'Sentence in the text box': 'الجملة في مربع النص', 'Chart subtitles': 'العناوين الفرعية للمخططات', 'Small pictures in table rows': 'صور صغيرة في صفوف الجدول', 'Small pictures beside KPI cards': 'صور صغيرة بجانب بطاقات المؤشرات',
   'Glass look, as asked: see-through cards over a soft page picture made from the theme\'s colours': 'الشكل الزجاجي، كما طلبت: بطاقات شفافة فوق صورة ناعمة للصفحة مصنوعة من ألوان السمة',
   'Plain, as asked: Power BI\'s own cards': 'الشكل العادي، كما طلبت: بطاقات Power BI نفسها',
   // the twin, the copy, the report in both languages
