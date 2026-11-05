@@ -26,7 +26,8 @@
   G4, G5, G6), green after the fix 20 of 20. First CI run (42008846072 on 29a3f8c) red: the first fix also wrapped
   texts that read the same either way, which broke 4 byte-for-byte records (below); narrowed, they pass. Full runs:
   see "Checks".
-- **Resume:** steps 1 to 4 done; the last merge, build:min, checks and tests.yml remain.
+- **Resume:** steps 1 to 4 done; integration (cdc09a88, AR4) merged once, build:min, checks, CI. **State: DONE.**
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42018097401 on 6744c983
 
 ## What changed (before -> after)
 `assets/js/page-preview.js` `render()`: a new `asWritten(t)` beside `fit()`, applied to every drawn text (a text box's
