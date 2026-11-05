@@ -13,9 +13,10 @@
   dd1f new (about 15 unit + 7 x 15 parity + source checks); sp30 the same number (K2 widened, not added); every other
   suite's number unchanged; mutation 76/76; lint 0; check-contracts, check-modules --strict green.
 - **Got:** 7 tests -> 1 module; probe 1f: 1 group, 0 of 11 disagree; dd1f 137 checks (16 unit, 1 + 105 parity, 15
-  source); sp30 21 as before; the full-run numbers: see "Tests before -> after".
+  source); sp30 21 as before. Full run, 5 shards side by side: base 204 suites -> 205 (dd1f added), every other
+  suite's number the same; mutation 76/76 killed; website suites 42/42; lint 0; contracts, modules --strict green.
 - **Red proof:** report-bind's old `AR_COL` put back (the line and its call): dd1f 132 of 137 (4 P, 1 S). Not committed.
-- **State:** code done; the full run, the merge and CI below.
+- **State:** code done; integration/0.3.2 did not move (128285e): no merge; CI below.
 - **Resume:** the DONE steps (merge once if integration moved, build:min, every check, tests.yml).
 
 ## Tests before -> after (each place; the probe's 11 texts)
