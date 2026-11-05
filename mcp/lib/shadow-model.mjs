@@ -94,7 +94,9 @@ function derivedFor(rule, type) {
 }
 
 // ---- TMDL text ----
-const q = (n) => (/^[A-Za-z_][A-Za-z0-9_]*$/.test(String(n)) ? String(n) : "'" + String(n).replace(/'/g, "''") + "'");
+// a TMDL name: the one rule, assets/js/tmdl-name.js (0.3.2 DD2N)
+const require = createRequire(import.meta.url);
+const q = require('../../assets/js/tmdl-name.js').tmdlName;
 const ref = (t, c) => q(t) + '.' + q(c);
 const val = (v) => { const s = String(v); return /"/.test(s) || s !== s.trim() || /^'/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
 const T1 = '\t', T2 = '\t\t', T3 = '\t\t\t', T4 = '\t\t\t\t';

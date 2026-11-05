@@ -12,12 +12,14 @@
   const FM = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./field-meaning.js') : root.DataArcusFieldMeaning;
   // the sort-column rule (0.3.2 DD1H): sort-column.js, its one home; the page loads it before this file
   const SC = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./sort-column.js') : root.DASortColumn;
+  // the TMDL name rule (0.3.2 DD2N): tmdl-name.js, its one home; the page loads it before this file
+  const TN = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./tmdl-name.js') : root.DATmdlName;
   const TAB = '\t';
   const ind = (n) => TAB.repeat(n);
   const text = (v) => (Array.isArray(v) ? v.join('\n') : v == null ? '' : String(v));
 
-  // Names: quote unless plain; escape single quotes by doubling
-  const name = (n) => (/^[A-Za-z_][A-Za-z0-9_-]*$/.test(n) ? n : "'" + String(n).replace(/'/g, "''") + "'");
+  // Names: bare when plain, else in single quotes with ' doubled (a hyphen is quoted): tmdl-name.js
+  const name = TN.tmdlName;
   // Single-line property values; refuse values that would break the line
   const safeValue = (v) => typeof v === 'string' && !/[\r\n]/.test(v);
   // TMDL strips leading and trailing double quotes and whitespace from a property value, so a value with either

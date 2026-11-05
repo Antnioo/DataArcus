@@ -42,8 +42,8 @@ export const WHYS_AR = {
 const SKIP = { has: ['the model already has this culture: the script would replace its translations, so it is left out', 'النموذج فيه هذه الثقافة من قبل: السكربت سيستبدل ترجماتها، فتُترك'],
   own: ['the model\'s own culture: its names are the model\'s', 'ثقافة النموذج نفسه: أسماؤه هي أسماء النموذج'] };
 
-// TMDL names quoted as every script of DataArcus writes them; a value quoted when it starts or ends with a space or holds "
-const q = (n) => (/^[A-Za-z_][A-Za-z0-9_]*$/.test(n) ? n : "'" + String(n).replace(/'/g, "''") + "'");
+// TMDL names: the one rule, assets/js/tmdl-name.js (0.3.2 DD2N); a value quoted when it starts or ends with a space or holds "
+const q = require('../../assets/js/tmdl-name.js').tmdlName;
 const v = (s) => (/^\s|\s$|"/.test(s) ? '"' + String(s).replace(/"/g, '""') + '"' : String(s));
 
 /** The script. raw: the model's definition (model.bim's shape: { model: { name, culture, tables, cultures } });

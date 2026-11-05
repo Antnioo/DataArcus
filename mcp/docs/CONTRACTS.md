@@ -51,7 +51,7 @@ How it is kept true:
 | [contrast What is the contrast of two colours?](#contrast-what-is-the-contrast-of-two-colours) | 3 | 0 of 9 | generate_theme, the writer, the SVG KPIs | equal |
 | [xml How is a text escaped for XML (SVG)?](#xml-how-is-a-text-escaped-for-xml-svg) | 2 | 0 of 10 | the SVG KPIs, the flip cards | equal |
 | [html How is a text escaped for HTML?](#html-how-is-a-text-escaped-for-html) | 9 | 3 of 10 | the website's pages, the approval window | equal by the audit; the probe differs (null, `'`) |
-| [tmdl-name How is a name written in TMDL?](#tmdl-name-how-is-a-name-written-in-tmdl) | 6 | 1 of 9 | check_model_health's fix scripts, the measure builder page, the twin's model, create_report's sample | equal by the audit; the probe differs (`Sales-2024`) |
+| [tmdl-name How is a name written in TMDL?](#tmdl-name-how-is-a-name-written-in-tmdl) | 7 | 0 of 9 | check_model_health's fix scripts, the measure builder page, the twin's model, create_report's sample | equal (one place: `tmdl-name.js`) |
 | [decode What text do the bytes of a Power BI file hold?](#decode-what-text-do-the-bytes-of-a-power-bi-file-hold) | 4 | 0 of 10 | every model read (the MCP and the website) | one place since DD2D: `assets/js/model-file.js` `decodeText` |
 | [limits How large may a model file be?](#limits-how-large-may-a-model-file-be) | 4 | 0 of 8 | every model read (the MCP and the website) | one place since DD2D: `assets/js/model-file.js` `LIMITS` |
 | [text-runs What text does a text box hold?](#text-runs-what-text-does-a-text-box-hold) | 4 | 4 of 9 | check_report, read_report, the preview | equal by the audit for two; the probe splits them in two pairs |
@@ -759,30 +759,39 @@ places are MCP only).
 
 ## tmdl-name How is a name written in TMDL?
 
+**One place:** assets/js/tmdl-name.js tmdlName (test mcp/test-0.3.2-dd2n.mjs).
+
 **Question:** a table or column name: as TMDL writes it (bare, or in single quotes with `'` doubled).
 
-**Newest copy:** equal by the audit; **the probe disagrees** on a name with a hyphen.
+**Newest copy:** equal by the audit; the probe disagreed on a name with a hyphen (until DD2N).
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/model-health-tmdl.js` `name` | [engines](MODULES.md#the-website-engines) | check_model_health's fix scripts, the health check page |
-| `assets/js/measure-builder.js` `tName` | [pages](MODULES.md#the-browser-pages-own-scripts) | the DAX measure builder page |
-| `mcp/lib/model-culture.mjs` `q` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's Arabic names in the model (create_arabic_twin) |
-| `mcp/lib/sample-project.mjs` `name` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | create_report's sample project |
-| `mcp/lib/shadow-model.mjs` `q` | [helpers](MODULES.md#the-mcp-what-leaves-the-server-and-the-tools-helpers) | a test only (MODULES.md: used by none) |
-| `mcp/lib/twin-model.mjs` `tmdlName` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's measures |
+| `assets/js/tmdl-name.js` `tmdlName` | [engines](MODULES.md#the-website-engines) | the one place (DD2N): every place below reads it |
+| `assets/js/model-health-tmdl.js` `name` | [engines](MODULES.md#the-website-engines) | check_model_health's fix scripts, the health check page (reads tmdl-name.js: require, or the page loads it first) |
+| `assets/js/measure-builder.js` `tName` | [pages](MODULES.md#the-browser-pages-own-scripts) | the DAX measure builder page (reads window.DATmdlName; the page loads it first) |
+| `mcp/lib/model-culture.mjs` `q` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's Arabic names in the model (create_arabic_twin; reads tmdl-name.js) |
+| `mcp/lib/sample-project.mjs` `name` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | create_report's sample project (reads tmdl-name.js) |
+| `mcp/lib/shadow-model.mjs` `q` | [helpers](MODULES.md#the-mcp-what-leaves-the-server-and-the-tools-helpers) | a test only (MODULES.md: used by none; reads tmdl-name.js) |
+| `mcp/lib/twin-model.mjs` `tmdlName` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's measures (reads tmdl-name.js) |
 
-**Today** (A: model-health-tmdl name, measure-builder tName; B: model-culture q, sample-project name, shadow-model q,
-twin-model tmdlName):
+**Today:** all 7 answer the same on all 9 inputs.
+
+**Before DD2N** (A: model-health-tmdl name, measure-builder tName; B: model-culture q, sample-project name,
+shadow-model q, twin-model tmdlName):
 
 | input | A | B |
 |---|---|---|
 | Sales-2024 | "Sales-2024" | "'Sales-2024'" |
 
-**Decided answer:** proposed: B's (a hyphen is quoted; quoting a name that needs none is always read the same), unless a
-Desktop look shows TMDL takes `Sales-2024` bare. The reviewer and the owner decide.
+**Decided answer:** B's (a hyphen is quoted; quoting a name that needs none is always read the same by TMDL, a bare
+hyphen is the risky side, so no Desktop look is needed): the reviewer's call under D-1104-15.
 
-**The test that will pin it:** the probe's 9 names (family `tmdl-name`).
+**The test that will pin it:** the probe's 9 names (family `tmdl-name`); `mcp/test-0.3.2-dd2n.mjs` pins them and 4 more.
+
+**Since DD2N (5 Nov):** one copy everywhere: `assets/js/tmdl-name.js` `tmdlName` (`String(n)` first, so a number is
+safe). Changed: a table or column name with a hyphen in the health check's fix scripts and the measure builder's TMDL
+is now quoted (`'Sales-2024'`). The probe: one answer on all 9 inputs.
 
 ## limits How large may a model file be?
 

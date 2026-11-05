@@ -46,7 +46,9 @@ function calendarRows() {
 }
 
 // ---------- the TMDL ----------
-const name = (s) => (/^[A-Za-z_][A-Za-z0-9_]*$/.test(s) ? s : `'${s.replace(/'/g, "''")}'`);
+// a TMDL name: the one rule, assets/js/tmdl-name.js (0.3.2 DD2N)
+const require = createRequire(import.meta.url);
+const name = require('../../assets/js/tmdl-name.js').tmdlName;
 const col = (c, type, more) => [`\tcolumn ${name(c)}`, `\t\tdataType: ${type}`].concat(more || [], [`\t\tsourceColumn: ${c}`, '']);
 // an import partition of typed rows (M's #table with a type: untyped, every column loads as text on Refresh)
 const partition = (t, typeRow, rows) => [`\tpartition ${name(t)} = m`, '\t\tmode: import', '\t\tsource = ```', '\t\t\t\tlet',

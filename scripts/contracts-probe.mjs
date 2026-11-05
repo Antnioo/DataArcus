@@ -587,8 +587,9 @@ export const FAMILIES = [
     ] },
   { id: 'tmdl-name', title: 'How is a name written in TMDL?', question: "a table or column name: as TMDL writes it (bare, or in single quotes with ' doubled)",
     inputs: TNAMES, places: [
+      P('assets/js/tmdl-name.js', 'tmdlName', 'export', esc1n()),
       P('assets/js/model-health-tmdl.js', 'name', 'inner', esc1n()),
-      P('assets/js/measure-builder.js', 'tName', 'source', esc1n()),
+      P('assets/js/measure-builder.js', 'tName', 'source', async (x, get) => (await get({ window: { DATmdlName: createRequire(abs('assets/js/tmdl-name.js'))('./tmdl-name.js') } }))(x.n)),   // (DD2N) the page's window
       P('mcp/lib/model-culture.mjs', 'q', 'source', esc1n()),
       P('mcp/lib/sample-project.mjs', 'name', 'source', esc1n()),
       P('mcp/lib/shadow-model.mjs', 'q', 'source', esc1n()),
