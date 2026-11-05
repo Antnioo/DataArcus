@@ -15,7 +15,7 @@
  * site-analytics.js, from the events and the clicks it hears.
  */
 window.SiteNavigation = (() => {
-  const init = () => {
+  function facadePart(nav) {
     // --- Showcases: the live Power BI report (about 6 MB) loads when the visitor clicks its preview (audit AUD-020);
     //     the iframe gets the preview's alt text as its title and takes the focus; analytics hears of it by the event
     //     'dataarcus:embed' (the dashboard's title only) and counts it once
@@ -29,7 +29,9 @@ window.SiteNavigation = (() => {
         document.dispatchEvent(new CustomEvent('dataarcus:embed', { detail: { dashboard: document.title.replace(/\s*-\s*DataArcus\s*$/, '') } }));
       });
     });
+  }
 
+  function effectsPart(nav) {
     /**
      * 1. Initialization & Core Setup
      * Handles the initial setup of the page, including the loading screen,
@@ -91,8 +93,9 @@ window.SiteNavigation = (() => {
     if (yearElement) {
       yearElement.textContent = new Date().getFullYear();
     }
+  }
 
-
+  function navbarPart(nav) {
   /**
      * 2. Navigation & Scrolling
      * ==================================================================
@@ -126,7 +129,11 @@ window.SiteNavigation = (() => {
         }, 0);
       });
     }
+    Object.assign(nav, { navbar });
+  }
 
+  function topOffsetPart(nav) {
+    const { navbar } = nav;
     // Top offset: measure what covers the top of the screen and publish it as CSS
     // variables (see :root in style.css). In-page links then scroll natively:
     // the browser's scroll-padding-top keeps targets below the navbar and pinned bars.
@@ -156,7 +163,11 @@ window.SiteNavigation = (() => {
       const navmenu = document.querySelector('#navmenu');
       if (navmenu && navmenu.classList.contains('show') && window.bootstrap) bootstrap.Collapse.getOrCreateInstance(navmenu, { toggle: false }).hide();
     });
+    Object.assign(nav, { root });
+  }
 
+  function hashArrivalPart(nav) {
+    const { root } = nav;
     // Arriving with #section in the address: images and translations can still move the
     // target after the browser's jump, so keep it in place until the page settles
     // (at most 2.5 s, and never after the visitor scrolls themselves). Then smooth scrolling starts.
@@ -173,8 +184,9 @@ window.SiteNavigation = (() => {
     } else {
       root.classList.add('smooth-scroll');
     }
+  }
 
-
+  function countersPart(nav) {
     /**
      * 3. Dynamic Animations & Effects
      * Controls animations that respond to user interaction or visibility,
@@ -241,9 +253,9 @@ window.SiteNavigation = (() => {
     }
 
     // Scroll-in animations come from AOS only (data-aos attributes, section 1)
+  }
 
-
-
+  function menuPart(nav) {
     /**
      * 4. Component-Specific Interactions
      * Manages hover and interaction effects for various components like cards and buttons.
@@ -294,7 +306,9 @@ window.SiteNavigation = (() => {
         }
       }
     });
+  }
 
+  function blogPart(nav) {
     // Blog page functionality
     const blogSearch = document.getElementById('blogSearch');
     const filterButtons = document.querySelectorAll('[data-filter]');
@@ -352,6 +366,12 @@ window.SiteNavigation = (() => {
         });
       });
     }
+  }
+
+  const init = () => {
+    // the page's parts, in the order they always ran; navbar and root are shared through nav
+    const nav = {};
+    [facadePart, effectsPart, navbarPart, topOffsetPart, hashArrivalPart, countersPart, menuPart, blogPart].forEach((step) => step(nav));
   };
 
   // 8. WhatsApp Button: a small floating chat button on every page; the pre-filled message follows the page
