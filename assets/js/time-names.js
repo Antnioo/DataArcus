@@ -5,7 +5,7 @@
  *                     "_", "-", spaces, digits and marks; the Arabic article «ال» taken off a word of 3 letters or more
  *                     (التاريخ -> تاريخ); Arabic short vowels and the tatweel dropped, «أ إ آ» read as «ا» (اسبوع = أسبوع)
  *   isTimeName(name)  true when one of its words is in TIME_WORDS (whole words only: Holiday, Today, Candidate are not)
- *                     «عام» (year, and also "general") counts only as the FIRST word of a name («العام المالي», «عام 2024»),
+ *                     «عام» (year, and also "general") counts only as the FIRST word of a name («العام», «عام 2024»),
  *                     never after another word («المدير العام», «القطاع العام»): an Arabic adjective follows its noun
  *                     (owner D-1105-04, TN2). «أعوام» (only "years") counts anywhere.
  *   TIME_WORDS        the one list: date, day, weekday, week, month, quarter, qtr, year, yr, fy, period, hijri and
