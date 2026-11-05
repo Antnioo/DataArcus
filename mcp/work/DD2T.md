@@ -11,14 +11,14 @@
   page-preview.js read it, loaded first in theme-generator.js (BUILDER, loadPreview), `npm run build:min`; 4 the parity
   test (every place, every input); 5 CONTRACTS.md, MODULES.md, CHANGELOG, WORK.md. Then merge integration once if it
   moved, `npm run build:min`, every check, `gh workflow run tests.yml`, wait.
-- **Expected checks:** 4 readers -> 1 (2 joins, each named at its caller). dd2t about 50 checks after step 1, about 110
+- **Expected checks:** 4 readers -> 1 (2 joins, each named at its caller). dd2t about 50 checks after step 1, about 110 (got 73 and 161)
   after step 4 (exact numbers in Results). Every other suite's number unchanged; mutation 76/76; lint 0;
   check-contracts, check-modules --strict green; same-shape groups go down (4 copies of the runs reader -> 0).
 - **Answers that change (only these):** a run whose value is 0 (or false) is text for report-a11y (a Tab stop, its alt
   text) and is drawn by page-preview (12 already was). Two paragraphs, an empty paragraph, spaces around: each caller's
   answer as before. No golden, twin or Desktop-measured test changed its answer.
-- **State:** step 5 (the ledger, the probe, MODULES.md, CHANGELOG, WORK.md); the full run next.
-- **Resume:** the full run, the merge if integration moved, CI.
+- **State:** every step done, merged once (e1f27aa6), every check green here; CI run 41967177820.
+- **Resume:** none once CI is green; the reviewer reads and merges.
 
 ## The rule
 `paragraphTexts(paragraphs)`: a list, one text per paragraph that is an object (a paragraph that is not one is
@@ -95,3 +95,19 @@ none (no golden, twin or Desktop-measured test changed its answer).
   caller with the probe's loaders; four places that disagree on purpose would keep the family "disagreeing" for ever.
 
 ## Results
+- Base (e1015660, before any change): MCP as CI's 5 shards side by side, all exit 0 (205 result lines).
+- On 414ee826 (step 5): the same 5 shards, all exit 0; every suite's number as on the base, plus dd2t 161 (new);
+  mutation 76/76 killed; twin-fuzz 185. The website `npm test` there: pbip and sp31 red (the preview loader, see
+  Lessons), fixed in 34591481: pbip 111, sp31 17 PASS.
+- Merged origin/integration/0.3.2 once at 023af77b (DD2C, DD1F) in e1f27aa6; conflicts only in stamped files and the
+  shared docs (both sides kept), `npm run build:min`. On e1f27aa6: MCP 5 shards all exit 0, every number as on 414ee826
+  but integration's own suites (dd1f 137 and dd2c 48 new, dd1g 35 -> 39); dd2t 161, mutation 76/76, glass-tables 113 and
+  sp6 13 (the clone unshallowed). Website `npm test`: all 42 passed. Lint 0; check-min, stamps 1553; check-contracts
+  PASS 705 (28 families, 98 places); contracts-probe text-runs 1 place, 0 of 9; check-modules --strict PASS 1139;
+  agent-memory, result-lines, literal requires, changelog-words, site config, sitemap-lastmod, whats-new, arabic-terms
+  PASS.
+- Integration moved again (a02f6f00, DD2K) after the one merge: not merged (L-1103-04, never chase it).
+- The merge commit's message ends with git's "# Conflicts" list after the two trailer lines (`--no-edit` kept it); a
+  force push to fix it was refused here, so it stays: the reviewer's call.
+- Red proof (dd2t P and S): report-a11y's old `textOf` put back in the file for one run: FAIL 157 of 161 (the run with
+  0, the run with false, a null paragraph " A", and S: it reads the runs itself); the file restored.
