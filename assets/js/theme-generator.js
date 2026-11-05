@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // (0.3.2 DD1B: the preview reads its literals with pbir-values.js, DD1A: its time names with time-names.js, DD2T:
   // a text box's paragraphs with text-runs.js, each
   // loaded first unless the builder or the page already did)
-  const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : (window.DAPbirValues ? Promise.resolve() : loadScript('../assets/js/pbir-values.min.js?v=57e0aebe7cdf')).then(() => (window.DATimeNames ? null : loadScript('../assets/js/time-names.min.js?v=8d0c82e5e062')).then(() => (window.DATextRuns ? null : loadScript('../assets/js/text-runs.min.js?v=047b2eda2154')))).then(() => loadScript('../assets/js/page-preview.min.js?v=2a2276221fe1')).then(() => window.DAPagePreview));
+  const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : (window.DAPbirValues ? Promise.resolve() : loadScript('../assets/js/pbir-values.min.js?v=57e0aebe7cdf')).then(() => (window.DATimeNames ? null : loadScript('../assets/js/time-names.min.js?v=8d0c82e5e062'))).then(() => (window.DATextRuns ? null : loadScript('../assets/js/text-runs.min.js?v=047b2eda2154'))).then(() => loadScript('../assets/js/page-preview.min.js?v=2a2276221fe1')).then(() => window.DAPagePreview));
   const MODEL_WORKER = '/assets/js/model-health-worker.min.js?v=fc2b56cc6b5a';
 
   // ---------- the downloads, the visual backgrounds and the reminder (theme-download-ui.js, 0.3.2 SP31) ----------

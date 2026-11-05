@@ -86,6 +86,9 @@ none (no golden, twin or Desktop-measured test changed its answer).
   the runs).
 
 ## Lessons for the reviewer
+- A loader chain edited by hand is only proven in the browser: my first step 3 put the new `.then` inside the
+  time-names arrow (`null.then` when time-names was already on the page), so the theme generator's preview drew
+  nothing; every Node suite passed, the website's pbip and sp31 caught it (fixed in its own commit).
 - "A number value reads as ''" was true for 0 only: `(r && r.value) || ''` keeps 12. A made-up input of each falsy
   value (0, false, '', null) shows the real difference faster than the type.
 - A one-place family whose callers differ by design (the join) fits the probe as one place plus a suite that runs each
