@@ -333,7 +333,7 @@ snapshot before DD1C.
 | `assets/js/report-rules.js` `widthOf` (in `tableHeaders`) | [engines](MODULES.md#the-website-engines) | check_report (a header cut), the twin's header fitting |
 | `mcp/lib/dax-functions.mjs` `widthOf` (in `fitPictures`) | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | create_report (a table's picture columns) |
 | `mcp/lib/twin-text-fit.mjs` `widthOf` (in `fitHeaders`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a header widened) |
-| `mcp/lib/twin-plan.mjs` `own` (in `planTwin`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's answer (a wide table named) |
+| `mcp/lib/twin-plan.mjs` `own` (in `tablesStep`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's answer (a wide table named) |
 | `mcp/lib/twin-geometry.mjs` `strip` (in `underGrids`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a matrix's row headers) |
 
 **Today** (A: report-rules widthOf, twin-text-fit widthOf, twin-plan own, twin-geometry strip; B: dax-functions
@@ -371,7 +371,7 @@ ledger's snapshot before DD1B.
 | `assets/js/pbip-query.js` `AR_LETTERS` | [engines](MODULES.md#the-website-engines) | the writer (titles in Arabic); since DD1F arabic-script.js's `ARABIC` itself, exported |
 | `mcp/lib/dax-functions.mjs` `storyLang` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | create_report (the story sentence's language); since DD1F calls `hasArabic`; its `lang === 'ar'` half stays |
 | `mcp/lib/report-bind.mjs` `arName` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | create_report (an Arabic column name); since DD1F calls `hasArabic`; `AR_COL` went |
-| `mcp/lib/twin-plan.mjs` `arOf` (in `planTwin`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's answer (labels already in Arabic); since DD1F is `hasArabic` |
+| `mcp/lib/twin-plan.mjs` `arOf` (in `labelsStep`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's answer (labels already in Arabic); since DD1F is `hasArabic` |
 
 **Today** (A: text-measure ARABIC, field-catalog AR_SCRIPT; B: report-rules AR_LETTER; C: pbip-query AR_LETTERS,
 dax-functions storyLang, report-bind AR_COL, twin-plan arOf):

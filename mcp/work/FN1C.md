@@ -60,6 +60,8 @@
   of ca3a1b73 only), not text checks: a mutant anywhere in what the three functions return turns them red.
 - fn1c's twin project is built by a helper, `mcp/fixtures/fn1c-twin.mjs` (twin-project plus two pages of shapes and
   three picture pages, PNGs made with zlib), as fixtures/twin-runs.mjs is for sp11; the writer's builds follow sp28's.
+- The contract ledger names the step each probed name lives in now (CONTRACTS.md: `own` in tablesStep, `arOf` in
+  labelsStep; contracts-probe.mjs `within` the same): the probe still runs the same code.
 - No new module: MODULES.md unchanged (the interfaces are the same). `ops/gate/samejob.py` is not in DataArcus: no
   helper was written, only the steps of each function.
 
@@ -84,6 +86,10 @@ none
 - sp11/sp26/sp40 pin the twin's plan only for their fixtures: 19 of the plan's said lines had no fixture at all.
 
 ## Lessons for the reviewer
+- A split that moves code out of a named function updates the contract ledger in the same commit: CONTRACTS.md names
+  `own` and `arOf` "in planTwin" and scripts/contracts-probe.mjs runs them `within` it (now tablesStep, labelsStep).
+  The area runs do not run test-contracts or check-contracts: every website-checks step runs before CI (CI 42085725536
+  was red there on 25dc3785).
 - A test file copied into a worktree that is not in its tests.json makes `run-tests.mjs` refuse to start: an area run
   used as a mutant's catch-all then reads red for every mutant. Copy tests.json with the test.
 - A background command stops at 30 minutes by default: mutant runs need the 2-hour limit.

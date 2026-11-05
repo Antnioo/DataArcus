@@ -501,7 +501,7 @@ export const FAMILIES = [
       P('assets/js/report-rules.js', 'widthOf', 'source', async (x, get) => (await get({ o: { columnWidth: x.cw } }))('T.a'), { within: 'tableHeaders' }),
       P('mcp/lib/dax-functions.mjs', 'widthOf', 'source', async (x, get) => (await get({ cw: x.cw }))({ queryRef: 'T.a' }), { within: 'fitPictures' }),
       P('mcp/lib/twin-text-fit.mjs', 'widthOf', 'source', async (x, get) => (await get({ o: { columnWidth: x.cw } }))('T.a'), { within: 'fitHeaders' }),
-      P('mcp/lib/twin-plan.mjs', 'own', 'source', async (x, get) => (await get({ cw: x.cw }))('T.a'), { within: 'planTwin', after: 'const longestWord' }),
+      P('mcp/lib/twin-plan.mjs', 'own', 'source', async (x, get) => (await get({ cw: x.cw }))('T.a'), { within: 'tablesStep', after: 'const longestWord' }),
       P('mcp/lib/twin-geometry.mjs', 'strip', 'source', async (x, get) => (await get())(tableOf(x)), { within: 'underGrids' }),
     ] },
   { id: '1f', title: 'Is this text Arabic?', question: 'a text: does it hold an Arabic letter (the test that sends it the Arabic way)?',
@@ -513,7 +513,7 @@ export const FAMILIES = [
       P('assets/js/pbip-query.js', 'AR_LETTERS', 'export', async (x, get) => (await get()).test(x.s)),
       P('mcp/lib/dax-functions.mjs', 'storyLang', 'export', async (x, get) => (await get())(x.s, 'ar') === 'ar'),
       P('mcp/lib/report-bind.mjs', 'arName', 'export', async (x, get) => (await get())('W', 'E')(x.s).startsWith('W ')),
-      P('mcp/lib/twin-plan.mjs', 'arOf', 'source', async (x, get) => (await get())(x.s), { within: 'planTwin' }),
+      P('mcp/lib/twin-plan.mjs', 'arOf', 'source', async (x, get) => (await get())(x.s), { within: 'labelsStep' }),
     ] },
   { id: 'grid', title: 'Does this visual keep its grid left to right?', question: 'a visual type: a table or a matrix, whose columns Desktop keeps left to right in the twin',
     inputs: TYPES, places: [
