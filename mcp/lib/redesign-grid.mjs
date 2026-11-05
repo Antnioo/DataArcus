@@ -4,10 +4,12 @@
 // overlays, set on the items by unitsOf) and the grid's positions out (gridPage: { plan, why, gap, margins }). No file
 // is read or written here; the allowlist, the patches, the copy and its check stay in lib/redesign.mjs.
 import { safeName, isCustom } from './read-report.mjs';
+// two boxes overlapping by more than a rounding: box-overlap.mjs `overlaps`, its one home (DD2O, D-1104-12); it reads
+// these { w, h } boxes as they are, and `overlap` stays exported under its name (the same function)
+import { overlaps as overlap } from './box-overlap.mjs';
 const TABLES = ['tableEx', 'pivotTable'];
 const box = (v) => ({ x: Math.round(v.x * 10) / 10, y: Math.round(v.y * 10) / 10, w: Math.round(v.w * 10) / 10, h: Math.round(v.h * 10) / 10 });
 const shownBox = (b) => ({ x: Math.round(b.x), y: Math.round(b.y), w: Math.round(b.w), h: Math.round(b.h) });
-const overlap = (a, b) => a.x < b.x + b.w - 0.5 && b.x < a.x + a.w - 0.5 && a.y < b.y + b.h - 0.5 && b.y < a.y + a.h - 0.5;
 
 // ---- 0.3.0 D4: a visual laid over another is one unit with it (the laptop's rc.1/rc.2 proof on the lab's "Dense Ops":
 // the "No data" cards took slots of their own and stood beside their charts, which were squeezed). By geometry and
