@@ -361,13 +361,13 @@ ledger's snapshot before DD1B.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/text-measure.js` `ARABIC` | [engines](MODULES.md#the-website-engines) | every measured text width (the writer, the rules, the twin) |
-| `assets/js/field-catalog.js` `AR_SCRIPT` | [engines](MODULES.md#the-website-engines) | the field picker (the website, suggest_fields) |
-| `assets/js/report-rules.js` `AR_LETTER` | [engines](MODULES.md#the-website-engines) | check_report (an Arabic header's share), the twin's header fitting |
-| `assets/js/pbip-query.js` `AR_LETTERS` | [engines](MODULES.md#the-website-engines) | the writer (titles in Arabic) |
-| `mcp/lib/dax-functions.mjs` `storyLang` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | create_report (the story sentence's language) |
-| `mcp/lib/report-bind.mjs` `AR_COL` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | create_report (an Arabic column name) |
-| `mcp/lib/twin-plan.mjs` `arOf` (in `planTwin`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's answer (labels already in Arabic) |
+| `assets/js/text-measure.js` `ARABIC` | [engines](MODULES.md#the-website-engines) | every measured text width (the writer, the rules, the twin); since DD1F arabic-script.js's `ARABIC` itself, exported |
+| `assets/js/field-catalog.js` `langOf` | [engines](MODULES.md#the-website-engines) | the field picker (the website, suggest_fields); since DD1F calls `hasArabic`; `AR_SCRIPT` went |
+| `assets/js/report-rules.js` `headerNeed` | [engines](MODULES.md#the-website-engines) | check_report (an Arabic header's share), the twin's header fitting (calls `hasArabic`; `AR_LETTER` went) |
+| `assets/js/pbip-query.js` `AR_LETTERS` | [engines](MODULES.md#the-website-engines) | the writer (titles in Arabic); since DD1F arabic-script.js's `ARABIC` itself, exported |
+| `mcp/lib/dax-functions.mjs` `storyLang` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | create_report (the story sentence's language); since DD1F calls `hasArabic`; its `lang === 'ar'` half stays |
+| `mcp/lib/report-bind.mjs` `arName` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | create_report (an Arabic column name); since DD1F calls `hasArabic`; `AR_COL` went |
+| `mcp/lib/twin-plan.mjs` `arOf` (in `planTwin`) | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's answer (labels already in Arabic); since DD1F is `hasArabic` |
 
 **Today** (A: text-measure ARABIC, field-catalog AR_SCRIPT; B: report-rules AR_LETTER; C: pbip-query AR_LETTERS,
 dax-functions storyLang, report-bind AR_COL, twin-plan arOf):
