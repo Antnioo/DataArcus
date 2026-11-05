@@ -348,6 +348,8 @@
   const txt = (d) => (typeof d === 'string' ? d : new TextDecoder().decode(d));
   // a literal's text, number and true or false, a column's set width: pbir-values.js, their one home (0.3.2 DD1B)
   const PV = typeof module !== 'undefined' && module.exports ? require('./pbir-values.js') : root.DAPbirValues;
+  // a text box's paragraphs: one text each, text-runs.js, their one home (0.3.2 DD2T)
+  const TR = typeof module !== 'undefined' && module.exports ? require('./text-runs.js') : root.DATextRuns;
   const lit = PV.litText;
   // a visual's title as Desktop shows it: its text, or what the report measure a Top N title is made by shows when every
   // category shows (D5: the measure's NAME is made unique, "Title: X (2)"; its DAX returns "X": the writer's
@@ -360,7 +362,8 @@
     const m = p.text && p.text.expr && p.text.expr.Measure; if (!(m && /^Title: /.test(String(m.Property || '')))) return '';
     const by = ext && ext.get(String(m.Property)); return by != null ? by : String(m.Property).slice(7);
   };
-  const textOf = (j) => ((((j.visual || {}).objects || {}).general || [])[0] || { properties: {} }).properties.paragraphs ? j.visual.objects.general[0].properties.paragraphs.map((p) => (p.textRuns || []).map((r) => String(r.value || '')).join('')).join(' ') : '';
+  // a text box's text as drawn: its first general entry's paragraphs' texts with " " between
+  const textOf = (j) => { const ps = ((((j.visual || {}).objects || {}).general || [])[0] || { properties: {} }).properties.paragraphs; return TR.paragraphTexts(ps).join(' '); };
   // J12: what Desktop draws from a visual's own settings (else the theme's): its title's size, font, weight, side, wrap and
   // padding; a text box's and a button's text and size; a card's value side; a table's columns and header size; a
   // chart's category and label size. Settings only, never a value.

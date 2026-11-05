@@ -38,6 +38,8 @@
   const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
   // a literal's text, number and true or false, a column's set width: pbir-values.js, their one home (0.3.2 DD1B)
   const PV = node ? require('./pbir-values.js') : root.DAPbirValues;
+  // a text box's paragraphs: one text each, text-runs.js, their one home (0.3.2 DD2T)
+  const TR = node ? require('./text-runs.js') : root.DATextRuns;
   const strOf = PV.litText;
   const entries = (l) => (Array.isArray(l) ? l : []);
   const plain = (l) => entries(l).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e && e.properties && typeof e.properties === 'object' ? e.properties : {}), {});
@@ -191,7 +193,8 @@
 
   // ---- the writer's pass ----
   const VISUAL = /(?:^|\/)definition\/pages\/([^/]+)\/visuals\/([^/]+)\/visual\.json$/, PAGE = /(?:^|\/)definition\/pages\/([^/]+)\/page\.json$/;
-  const textOf = (vis) => entries(plain(((vis.objects) || {}).general).paragraphs).map((p) => entries(p && p.textRuns).map((r) => String((r && r.value) || '')).join('')).join(' ');
+  // a text box's text, to test for text (an empty one is no Tab stop) and for its alt text: its paragraphs' texts with " " between
+  const textOf = (vis) => TR.paragraphTexts(plain(((vis.objects) || {}).general).paragraphs).join(' ');
   const altOf = (holder) => { const g = plain(((holder || {}).visualContainerObjects || {}).general); return g.altText; };
   const setAlt = (vis, text) => {
     const vco = vis.visualContainerObjects = vis.visualContainerObjects || {};
