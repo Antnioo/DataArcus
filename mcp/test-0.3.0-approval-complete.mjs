@@ -16,6 +16,8 @@ import './test-env.mjs';
 //      names every page the click writes (the tooltip pages too) and, page by page, every visual by its kind, counted,
 //      the slicers by field, the buttons by where they go, the charts by their field (read back from the written
 //      files here); no "Other visuals: chosen by DataArcus" with nothing listed; the changed kind names its page
+//   A10 (0.3.2 PL1, E1 round 5 finding 6: option labels read as jargon) the options in plain words, English and Arabic:
+//      no input key, no chart.look, no visual type key or theme key on the report or redesign page (in process)
 //   node test-0.3.0-approval-complete.mjs
 import fs from 'node:fs';
 import os from 'node:os';
@@ -220,6 +222,38 @@ try {
 } finally {
   await w.close();
   try { fs.rmSync(ROOT, { recursive: true, force: true }); } catch (e) { /* a temp folder */ }
+}
+
+// ---------- A10: the options in plain words, no code word (0.3.2 PL1, E1 round 5 finding 6), in process ----------
+{
+  const Approval = await import('./lib/approval-window.mjs');
+  const labels = (h) => [...h.matchAll(/<td class="k"[^>]*>([\s\S]*?)<\/td>/g)].map((m) => m[1]).filter((x) => !/<code/.test(x)).map((x) => unesc(x.replace(/<[^>]+>/g, '')).trim());
+  const plan = { id: 'plan-pl1000000001', kind: 'report', writes: ['the report "Service Pages.Report"'] };
+  const KEYS = ['pageFilters', 'text', 'subtitles', 'svgColumns', 'svgCards'];
+  for (const lang of ['en', 'ar']) {
+    const cr = { name: 'Service Pages', lang, design: { layout: {} }, pageFilters: [{ field: 'Work Orders[Status]', values: ['Open'] }], text: 'Open orders fell this month.',
+      subtitles: { trend: 'Work orders by month' }, svgColumns: [{ label: 'Progress', design: { w: 80, h: 16, values: [], layers: [] } }], svgCards: [{ card: 1, design: { w: 40, h: 40, values: [], layers: [] } }] };
+    const H = Approval.approvalHtml(plan, Approval.summary('report', { pins: { create_report: cr }, look: { look: 'glass', chosenBy: 'default' } })), L = labels(H);
+    chk(() => !/chart\.look/.test(unesc(H)) && (lang === 'ar' ? /اطلب الشكل العادي/ : /ask for the plain look/).test(unesc(H)), () => `A10-1 ${lang}. the card look says how to get plain cards in words, never chart.look: ${unesc(H).slice(unesc(H).indexOf(lang === 'ar' ? 'شكل البطاقات' : 'Card look'), unesc(H).indexOf(lang === 'ar' ? 'شكل البطاقات' : 'Card look') + 400)}`);
+    chk(() => KEYS.every((k) => !L.includes(k)), () => `A10-2 ${lang}. no option is named by its input key: ${JSON.stringify(L.filter((x) => KEYS.includes(x)))}`);
+    const want = lang === 'ar' ? ['فلاتر الصفحات', 'الجملة في مربع النص', 'العناوين الفرعية للمخططات', 'صور صغيرة في صفوف الجدول', 'صور صغيرة بجانب بطاقات المؤشرات']
+      : ['Page filters', 'Sentence in the text box', 'Chart subtitles', 'Small pictures in table rows', 'Small pictures beside KPI cards'];
+    chk(() => want.every((w) => L.includes(w)), () => `A10-3 ${lang}. each such option in plain words: missing ${JSON.stringify(want.filter((w) => !L.includes(w)))} in ${JSON.stringify(L)}`);
+  }
+  const v = (visual, type, extra) => Object.assign({ visual, type, fields: ['Work Orders[Department]'], place: '40,90 300x140' }, extra || {});
+  const shown = { original: 'Service', newReport: 'Service redesigned.Report', keptAsIs: { pages: 1 },
+    text: { mode: 'common', set: [], boldItalic: 'kept', theme: 'not changed', removed: 0, untouched: [v('btnGo', 'actionButton', { page: 'Overview', why: 'a button: its text kept as it is' })] },
+    theme: { file: 'service-theme.json', tokens: { dataColors: ['#0f766e', '#2563eb'], foreground: '#1f2937', background: '#ffffff', tableAccent: '#0f766e', good: '#059669', neutral: '#d97706', bad: '#dc2626' } },
+    pages: [{ page: 'Overview', changes: [v('colDept', 'clusteredColumnChart', { from: { x: 40, y: 250, w: 600, h: 430 }, to: { x: 40, y: 246, w: 602, h: 430 } })],
+      notChanged: [v('btnGo', 'actionButton', { why: 'a button: kept where it is' }), v('tblOrders', 'tableEx', { why: 'kept' }), v('nav', 'pageNavigator', { why: 'kept' }), v('slDept', 'slicer', { why: 'kept' }), v('note', 'textbox', { why: 'kept' }), v('gauge', 'custom acmeGauge0123456789ABCDEF', { why: 'a custom visual: copied as it is' })] }] };
+  const R = labels(Approval.approvalHtml({ id: 'plan-pl1000000002', kind: 'redesign', writes: [] }, Approval.summary('redesign', { shown })));
+  const TYPES = /\((actionButton|clusteredColumnChart|tableEx|pageNavigator|textbox|custom acmeGauge)\b/;
+  chk(() => R.length && !R.some((x) => TYPES.test(x)), () => `A10-4. no redesign row names a visual by its type key: ${JSON.stringify(R.filter((x) => TYPES.test(x)))}`);
+  const RW = ['Overview: btnGo (button', 'Overview: colDept (column chart of', 'Overview: tblOrders (table of', 'Overview: nav (page navigator of', 'Overview: slDept (slicer of', 'Overview: note (text box of', 'Overview: gauge (custom visual acmeGauge0123456789ABCDEF of'];
+  chk(() => RW.every((w) => R.some((x) => x.startsWith(w))), () => `A10-5. each visual's kind in words: missing ${JSON.stringify(RW.filter((w) => !R.some((x) => x.startsWith(w))))} in ${JSON.stringify(R)}`);
+  const TK = /: (dataColors|foreground|background|tableAccent|good|neutral|bad)$/;
+  const TW = ['data colours', 'text colour', 'background colour', 'table accent colour', 'colour for good results', 'colour for neutral results', 'colour for bad results'].map((w) => `Theme service-theme.json: ${w}`);
+  chk(() => !R.some((x) => TK.test(x)) && TW.every((w) => R.includes(w)), () => `A10-6. the theme's changes in words, never its keys: ${JSON.stringify(R.filter((x) => /^Theme /.test(x)))}`);
 }
 
 if (problems.length) { console.log(`FAIL  approval-complete  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }

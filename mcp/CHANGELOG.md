@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **The approval page's options in plain words:** the page no longer shows a code word, an input's key, a theme key or
+  Power BI's visual type keys: a redesign names each visual's kind ("button", "column chart", "table") and each theme
+  colour it changes ("text colour"), and the card look says to ask for the plain look.
 - **The approval page names every visual, slicer and button the click writes:** a new report's approval page lists each
   page it writes, the tooltip pages too, and on it every visual by kind and count, each slicer by its field, each button
   by where it goes and each chart by the field it groups by; a chart written as another kind says which page it is on.
