@@ -16,6 +16,8 @@ import { safeName } from './read-report.mjs';
 import { isObj, pageOf } from './twin-read.mjs';
 import { posOf } from './twin-visuals.mjs';
 import { pageBoxes } from './page-picture.mjs';
+// the area two boxes share: box-overlap.mjs, its one home (DD2O, D-1104-12)
+import { overlapArea } from './box-overlap.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
@@ -47,6 +49,8 @@ function keepInside(en, tw) {
   put(tv.visualContainerObjects, 'padding', ev.visualContainerObjects);
 }
 const GRID_CHARTS = /^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|lineChart|areaChart|stackedAreaChart|hundredPercentStackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart|ribbonChart)$/;
+// a chart lands on a visual when their boxes share more than this area (px²): less is a rounding at an edge
+const LANDS_ON_MIN = 4;
 // the first visual (by name) the chart j would newly cover at x: one it does not overlap in English (boxes on the page,
 // groups added; a heatmap's names table, extra, as its matrix)
 function landsOn(pg, r, extra, j, x) {
@@ -60,11 +64,10 @@ function landsOn(pg, r, extra, j, x) {
     const en = boxes(pg.visuals.map((v) => v.json)), ar = boxes(r.visuals.concat((extra || []).map((e) => e.json))), me = String(ct.name);
     const fromOf = new Map((extra || []).map((e) => [String(e.json.name), e.from])), a = ar.get(me), e0 = en.get(me);
     if (!a || !e0) return null;
-    const meet = (p, q) => Math.max(0, Math.min(p.x + p.w, q.x + q.w) - Math.max(p.x, q.x)) * Math.max(0, Math.min(p.y + p.h, q.y + q.h) - Math.max(p.y, q.y));
     for (const [n, b] of [...ar].sort((u, v) => (u[0] < v[0] ? -1 : 1))) {
-      if (n === me || meet(a, b) <= 4) continue;
+      if (n === me || overlapArea(a, b) <= LANDS_ON_MIN) continue;
       const eb = en.get(fromOf.has(n) ? String(fromOf.get(n)) : n);
-      if (!eb || meet(e0, eb) <= 0) return safeName(String(n));
+      if (!eb || overlapArea(e0, eb) <= 0) return safeName(String(n));
     }
     return null;
   } finally { posOf(ct).x = was; }
@@ -131,7 +134,8 @@ export const boxOk = (v) => isObj(v) && isObj(v.position) && ['x', 'y', 'width',
 const titleAlign = (v) => { const t = isObj(v) && isObj(v.visual) && isObj(v.visual.visualContainerObjects) && Array.isArray(v.visual.visualContainerObjects.title) ? v.visual.visualContainerObjects.title.find((e) => isObj(e) && !e.selector && isObj(e.properties)) : null;
   return t && litBool(t.properties.show) !== false ? String(litText(t.properties.alignment) || 'left').toLowerCase() : null; };
 const titleTurns = (en, ar) => { const a = titleAlign(en), b = titleAlign(ar); return a != null && b === 'right' && a !== 'right'; };
-const overlapOf = (a, b) => Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
+// a small visual sits on a box when they share this share of the small visual's box or more (half)
+const ON_HOST = 0.5;
 export function badgesWithText(pg, r) {
   const en = new Map(pg.visuals.filter((v) => isObj(v.json)).map((v) => [String(v.json.name), v.json])), ar = new Map((r.visuals || []).filter(isObj).map((v) => [String(v.name), v]));
   const within = (b0, t0, t1) => Mirror.round(t1.position.x + t0.position.width - (b0.position.x - t0.position.x) - b0.position.width);
@@ -140,13 +144,13 @@ export function badgesWithText(pg, r) {
     if (![h0, b0, h1, b1].every(boxOk)) return;
     const sib = [...en.entries()].filter(([n, v]) => n !== String(u.visual) && n !== String(u.host) && boxOk(v) && boxOk(ar.get(n)) && String(v.parentGroupName || '') === String(b0.parentGroupName || '') && !v.visualGroup);
     // a text box under it whose text turns right
-    const t = sib.find(([, v]) => Mirror.kindOf(v) === 'textbox' && textTurns(v) && overlapOf(v.position, b0.position) >= b0.position.width * b0.position.height / 2);
+    const t = sib.find(([, v]) => Mirror.kindOf(v) === 'textbox' && textTurns(v) && overlapArea(v.position, b0.position) >= b0.position.width * b0.position.height * ON_HOST);
     const moved = (x, rule) => { if (x !== b1.position.x) { b1.position.x = x; (r.moved = r.moved || []).push({ visual: String(u.visual), rule }); } };
     if (t) { moved(within(b0, t[1], ar.get(t[0])), 'a small visual on a text box: to its other end with the text'); return; }
     // its host's text or title turns right
     if ((Mirror.kindOf(h0) === 'textbox' && textTurns(h0)) || titleTurns(h0, h1)) { moved(within(b0, h0, h1), 'a small visual on a visual whose text or title turns right: to its other end'); return; }
     // kept, it would lie on another visual it did not touch in English
-    if (sib.some(([n, v]) => overlapOf(ar.get(n).position, b1.position) > 0 && overlapOf(v.position, b0.position) <= 0)) moved(within(b0, h0, h1), 'a small visual kept on its host would cover another: mirrored on its own');
+    if (sib.some(([n, v]) => overlapArea(ar.get(n).position, b1.position) > 0 && overlapArea(v.position, b0.position) <= 0)) moved(within(b0, h0, h1), 'a small visual kept on its host would cover another: mirrored on its own');
   });
 }
 // (0.3.1 MP1c, laptop part 7: ER's weekday bars over the heatmap's row headers; Call Center's small bar chart over the
@@ -164,7 +168,7 @@ export function aroundTables(pg, r, opts) {
   list.filter((m) => boxOk(m) && Policy.keepsGridLtr(m) && arAt.has(String(m.name))).forEach((m0) => {
     const m1 = r.visuals[arAt.get(String(m0.name))];
     list.filter((v) => v !== m0 && boxOk(v) && !v.visualGroup && String(v.parentGroupName || '') === String(m0.parentGroupName || '') && arAt.has(String(v.name))).forEach((v0) => {
-      const i = arAt.get(String(v0.name)), v1 = r.visuals[i], a = v0.position, b = m0.position, ov = overlapOf(a, b); if (!ov || !boxOk(v1) || !boxOk(m1)) return;
+      const i = arAt.get(String(v0.name)), v1 = r.visuals[i], a = v0.position, b = m0.position, ov = overlapArea(a, b); if (!ov || !boxOk(v1) || !boxOk(m1)) return;
       if (Mirror.kindOf(v0) === 'bar' && ov >= a.width * a.height * 0.75 && Number.isFinite(a.z) && Number.isFinite(b.z) && a.z > b.z) {
         // (DD1C) an unknown frame (no valid group, a page width not a number): never kept with a guess, left as mirrored
         if (!Number.isFinite(widthOf(v0))) return;
@@ -185,7 +189,7 @@ export function aroundTables(pg, r, opts) {
       // matrix, lies under or behind it, or touches only its top or bottom edge
       const p1 = v1.position, q1 = m1.position, ow = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x), oh = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
       const margin = a.x > b.x + b.width / 2 && a.x + a.width > b.x + b.width && ow > 0 && ow <= a.width / 3 && ow <= b.width / 4 && oh >= a.height / 2;
-      if (margin && overlapOf(p1, q1) > 0 && p1.x < q1.x) { p1.width = Mirror.round(q1.x - p1.x); (r.moved = r.moved || []).push({ visual: String(v0.name), rule: 'in a matrix\'s side margin: narrowed off its row headers' }); }
+      if (margin && overlapArea(p1, q1) > 0 && p1.x < q1.x) { p1.width = Mirror.round(q1.x - p1.x); (r.moved = r.moved || []).push({ visual: String(v0.name), rule: 'in a matrix\'s side margin: narrowed off its row headers' }); }
     });
   });
 }
@@ -232,7 +236,7 @@ export function iconRoom(visuals, moved) {
     if (!ps.length || !ps.every((pa) => isObj(pa) && pa.horizontalTextAlignment === 'right')) return;
     const tp = t.position;
     list.forEach((i) => {
-      const ip = i.position; if (i === t || String(i.parentGroupName || '') !== String(t.parentGroupName || '') || ip.width > tp.width / 3 || ip.height > tp.height * 1.5 || overlapOf(ip, tp) < ip.width * ip.height / 2) return;
+      const ip = i.position; if (i === t || String(i.parentGroupName || '') !== String(t.parentGroupName || '') || ip.width > tp.width / 3 || ip.height > tp.height * 1.5 || overlapArea(ip, tp) < ip.width * ip.height * ON_HOST) return;
       const w = ip.x - ICON_GAP - tp.x;
       if (!(ip.x + ip.width / 2 > tp.x + tp.width * 3 / 4 && w >= 10 && w < tp.width)) return;
       if (ps.filter((pa) => runText(pa).trim()).length > 1) { titleRoom(ps, tp.width - w); return; }

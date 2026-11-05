@@ -13,6 +13,8 @@ import zlib from 'node:zlib';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { lru } from './small-cache.mjs';
+// the area two boxes share: box-overlap.mjs, its one home (DD2O, D-1104-12)
+import { overlapArea } from './box-overlap.mjs';
 
 // (0.3.2 DD2P) the PNG chunk, the big-endian four bytes (written and read) and the CRC-32: png-bytes.js; the small cache:
 // small-cache.mjs
@@ -340,7 +342,8 @@ export function pageBoxes(visuals) {
   });
   return out;
 }
-const meets = (a, b) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+// a pair overlaps on a page when the boxes share more than this area (px²): less is a rounding at an edge
+const NEW_OVERLAP_MIN = 4;
 /** Pairs of visuals that overlap on the Arabic page and did not on the English one: [{ visuals: [a, b], why: 'new' }];
  *  (0.3.1 MP1c, laptop part 7: ER's weekday bars on the heatmap's row headers, Call Center's bar chart over the ratings
  *  table, both "none" here as they overlapped in English too) also a pair that overlapped in English when the overlap
@@ -354,9 +357,9 @@ export function newOverlaps(enVisuals, arVisuals) {
   const en = pageBoxes(enVisuals), ar = pageBoxes(arVisuals), names = [...ar.keys()].filter((n) => en.has(n)).sort(), out = [];
   const byEn = new Map((enVisuals || []).filter((v) => v && v.name != null).map((v) => [String(v.name), v])), byAr = new Map((arVisuals || []).filter((v) => v && v.name != null).map((v) => [String(v.name), v]));
   for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) {
-    const a = names[i], b = names[j], e = meets(en.get(a), en.get(b)), r = meets(ar.get(a), ar.get(b));
-    if (r > 4 && e <= 0) { out.push({ visuals: [a, b], why: 'new' }); continue; }
-    if (r <= 4 || e <= 0) continue;
+    const a = names[i], b = names[j], e = overlapArea(en.get(a), en.get(b)), r = overlapArea(ar.get(a), ar.get(b));
+    if (r > NEW_OVERLAP_MIN && e <= 0) { out.push({ visuals: [a, b], why: 'new' }); continue; }
+    if (r <= NEW_OVERLAP_MIN || e <= 0) continue;
     const m = [a, b].find((n) => MATRIX.has(typeOfV(byEn.get(n)))), o = m === a ? b : a;
     if (m) { const E = en.get(m), A = ar.get(m); if (midX(en.get(o), E) > E.x + E.w / 2 && midX(ar.get(o), A) < A.x + A.w / 2) { out.push({ visuals: [a, b], why: 'rowHeaders' }); continue; } }
     const t = [a, b].find((n) => TABLES.has(typeOfV(byEn.get(n)))), c = t === a ? b : a;

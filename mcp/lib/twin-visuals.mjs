@@ -14,7 +14,8 @@ export const clone = (o) => (o === undefined ? undefined : JSON.parse(JSON.strin
 export const Lv = (v) => ({ expr: { Literal: { Value: v } } }), Ls = (t) => Lv("'" + String(t).replace(/'/g, "''") + "'");
 const linkOf = (v) => { const vco = isObj(v) && isObj(v.visual) && isObj(v.visual.visualContainerObjects) ? v.visual.visualContainerObjects : {}; return (Array.isArray(vco.visualLink) ? vco.visualLink : []).find((e) => isObj(e) && isObj(e.properties) && !e.selector) || null; };
 export const isPageBtn = (v) => typeOf(v) === 'actionButton' && litText((linkOf(v) || { properties: {} }).properties.type) === 'PageNavigation';
-export const overlaps = (a, b) => a.x < b.x + b.width - 0.5 && b.x < a.x + a.width - 0.5 && a.y < b.y + b.height - 0.5 && b.y < a.y + a.height - 0.5;
+// two boxes overlapping by more than a rounding: box-overlap.mjs, its one home (DD2O, D-1104-12); re-exported, the same function
+export { overlaps } from './box-overlap.mjs';
 export const holdsBox = (a, b) => a.x <= b.x + 0.5 && a.x + a.width >= b.x + b.width - 0.5 && a.y <= b.y + 0.5 && a.y + a.height >= b.y + b.height - 0.5;
 // a visual's box on the page (a grouped visual's position is relative to its group, groups inside groups too)
 export const absBox = (visuals, v) => { const p = posOf(v); if (!p) return null; let x = p.x, y = p.y, g = v; for (let n = 0; g && g.parentGroupName != null && n < 20; n++) { g = visuals.find((u) => isObj(u) && u.name === g.parentGroupName); const q = g && posOf(g); if (!q) break; x += q.x; y += q.y; } return { x, y, width: p.width, height: p.height }; };

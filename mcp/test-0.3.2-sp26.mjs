@@ -70,10 +70,10 @@ if (fs.existsSync(path.join(HERE, 'lib', 'twin-geometry.mjs'))) {
     && calls.every((i, k) => i > 0 && (k === 0 || i > calls[k - 1])),
   () => `M1 twin-pages.mjs defines none of ${GEOM.join(', ')} or their helpers, imports them from twin-geometry.mjs (keptAtMirrorLine re-exported) and calls them in the base's order (badges, tables, names, grids, indentation, buttons, text boxes, icon room, keepSize, the phone's indentation): ${JSON.stringify(calls)}`);
   chk(() => !/^(let|var) /m.test(geo) && !/node:fs|readFileSync|writeFileSync|process\.|globalThis|Date\.now|Math\.random/.test(geo)
-    && [...geo.matchAll(/^import .* from '([^']+)';$/gm)].map((m) => m[1]).every((m) => ['./read-report.mjs', './twin-read.mjs', './twin-visuals.mjs', './page-picture.mjs', 'node:module'].includes(m))
+    && [...geo.matchAll(/^import .* from '([^']+)';$/gm)].map((m) => m[1]).every((m) => ['./read-report.mjs', './twin-read.mjs', './twin-visuals.mjs', './page-picture.mjs', './box-overlap.mjs', 'node:module'].includes(m))
     && /require\('\.\.\/\.\.\/assets\/js\/mirror-policy\.js'\)/.test(geo) && /Policy\.keepsGridLtr\(/.test(geo)
     && !/'matrix'[^;\n]*\|\|[^;\n]*'table'|'table'[^;\n]*\|\|[^;\n]*'matrix'/.test(geo),
-  () => 'M2 twin-geometry.mjs holds no module state (no top-level let or var) and does no IO (no fs, process, clock or randomness); it imports only read-report, twin-read, twin-visuals, page-picture and the engines, and reads the kinds that keep left to right from mirror-policy.js (keepsGridLtr), with no list of its own');
+  () => 'M2 twin-geometry.mjs holds no module state (no top-level let or var) and does no IO (no fs, process, clock or randomness); it imports only read-report, twin-read, twin-visuals, page-picture, box-overlap (DD2O) and the engines, and reads the kinds that keep left to right from mirror-policy.js (keepsGridLtr), with no list of its own');
 }
 
 fs.rmSync(ROOT, { recursive: true, force: true });

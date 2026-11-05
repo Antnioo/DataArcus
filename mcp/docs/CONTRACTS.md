@@ -46,8 +46,8 @@ How it is kept true:
 | [png-chunk What bytes make a PNG chunk?](#png-chunk-what-bytes-make-a-png-chunk) | 1 | 0 of 8 | every PNG written | one place since DD2P: `assets/js/png-bytes.js` `pngChunk` |
 | [u32 What number do four bytes hold?](#u32-what-number-do-four-bytes-hold) | 1 | 0 of 8 | the twin's and the glass's PNG reads | one place since DD2P: `assets/js/png-bytes.js` `u32` |
 | [lru What does a small cache keep?](#lru-what-does-a-small-cache-keep) | 1 | 0 of 8 | the twin's pictures, the glass | one place since DD2P: `mcp/lib/small-cache.mjs` `lru` |
-| [overlap Do these two boxes overlap?](#overlap-do-these-two-boxes-overlap) | 2 | 0 of 9 | the twin, the redesign | equal |
-| [overlap-area How much do two boxes overlap?](#overlap-area-how-much-do-two-boxes-overlap) | 2 | 0 of 9 | the twin | equal |
+| [overlap Do these two boxes overlap?](#overlap-do-these-two-boxes-overlap) | 1 | 0 of 9 | the twin, the redesign | one place since DD2O: `mcp/lib/box-overlap.mjs` `overlaps` |
+| [overlap-area How much do two boxes overlap?](#overlap-area-how-much-do-two-boxes-overlap) | 1 | 0 of 9 | the twin | one place since DD2O: `mcp/lib/box-overlap.mjs` `overlapArea` |
 | [contrast What is the contrast of two colours?](#contrast-what-is-the-contrast-of-two-colours) | 3 | 0 of 9 | generate_theme, the writer, the SVG KPIs | equal |
 | [xml How is a text escaped for XML (SVG)?](#xml-how-is-a-text-escaped-for-xml-svg) | 2 | 0 of 10 | the SVG KPIs, the flip cards | equal |
 | [html How is a text escaped for HTML?](#html-how-is-a-text-escaped-for-html) | 9 | 3 of 10 | the website's pages, the approval window | equal by the audit; the probe differs (null, `'`) |
@@ -501,39 +501,54 @@ function. The "Today" line above is the ledger's snapshot before DD2P (5 places)
 
 ## overlap Do these two boxes overlap?
 
+**One place:** mcp/lib/box-overlap.mjs overlaps (test mcp/test-0.3.2-dd2o.mjs).
+
 **Question:** two boxes on a page: do they overlap by more than a rounding (half a pixel each way)?
 
 **Newest copy:** equal (the audit and the probe).
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `mcp/lib/twin-visuals.mjs` `overlaps` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a button widened over no visual) |
-| `mcp/lib/redesign-grid.mjs` `overlap` | [redesign](MODULES.md#the-mcp-the-redesign) | create_report's redesign (the grid) |
+| `mcp/lib/box-overlap.mjs` `overlaps` | [helpers](MODULES.md#the-mcp-what-leaves-the-server-and-the-tools-helpers) | the one place (DD2O): the twin (twin-copy.mjs, twin-text-fit.mjs through twin-visuals.mjs: a button widened over no visual) and create_report's redesign (redesign-grid.mjs: the grid, never a new overlap) |
 
-**Today:** both answer the same on all 9 pairs.
+**Today:** both old copies answered the same on all 9 pairs.
 
-**Decided answer:** today's; one copy.
+**Decided answer:** today's; one copy (Phase 2).
 
-**The test that will pin it:** the probe's 9 pairs (family `overlap`; the same 9 pin `overlap-area`).
+**The test that pins it:** `mcp/test-0.3.2-dd2o.mjs` (13 pairs pinned on both box shapes; the old copies, from the base's
+source, beside the one place: one answer each; twin-visuals.mjs `overlaps` and redesign-grid.mjs `overlap` are the
+same function) and the probe's 9 pairs (family `overlap`; the same 9 pin `overlap-area`).
+
+**Since DD2O (5 Nov):** one test: box-overlap.mjs `overlaps`, on `{ x, y, width, height }` or `{ x, y, w, h }` (the size
+read as `width`, or `w` when `width` is undefined). twin-visuals.mjs re-exports it; redesign-grid.mjs imports it as
+`overlap` (its copy gone, the name still exported). Neither is a place any more: both are box-overlap.mjs `overlaps`.
 
 ## overlap-area How much do two boxes overlap?
 
-**Question:** two boxes on a page: the area they share. Each caller reads it its own way: twin-geometry.mjs as more
-than 0 (or half the box), page-picture.mjs `newOverlaps` as more than 4 px².
+**One place:** mcp/lib/box-overlap.mjs overlapArea (test mcp/test-0.3.2-dd2o.mjs).
+
+**Question:** two boxes on a page: the area they share. Each caller reads it against its own threshold, a named
+constant there: twin-geometry.mjs as more than 0, `ON_HOST` (half the small visual's box) or `LANDS_ON_MIN` (4 px²),
+page-picture.mjs `newOverlaps` as more than `NEW_OVERLAP_MIN` (4 px²).
 
 **Newest copy:** equal (the audit and the probe).
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `mcp/lib/twin-geometry.mjs` `overlapOf` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin (a small visual kept on its host) |
-| `mcp/lib/page-picture.mjs` `meets` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's answer (new overlaps) |
+| `mcp/lib/box-overlap.mjs` `overlapArea` | [helpers](MODULES.md#the-mcp-what-leaves-the-server-and-the-tools-helpers) | the one place (DD2O): the twin (twin-geometry.mjs: a small visual kept on its host, a chart that would land on another, a visual in a matrix's margin) and the twin's answer (page-picture.mjs `newOverlaps`: new overlaps) |
 
-**Today:** both answer the same on all 9 pairs. A 0.4 px overlap 100 px high is 40 px² here and no overlap for
-`overlap`; a zero-width box is 0 here and an overlap there: the two are different questions (see "Not one question").
+**Today:** both old copies answered the same on all 9 pairs. A 0.4 px overlap 100 px high is 40 px² here and no
+overlap for `overlap`; a zero-width box is 0 here and an overlap there: the two are different questions (see "Not one
+question").
 
 **Decided answer:** today's; one copy, each caller's threshold a named constant.
 
-**The test that will pin it:** the probe's 9 pairs (family `overlap-area`).
+**The test that pins it:** `mcp/test-0.3.2-dd2o.mjs` (13 pairs pinned on both box shapes; the old copies, from the base's
+source, beside the one place: one answer each) and the probe's 9 pairs (family `overlap-area`).
+
+**Since DD2O (5 Nov):** one area: box-overlap.mjs `overlapArea`. twin-geometry.mjs `overlapOf` and page-picture.mjs
+`meets` are gone, and so is a third copy the ledger did not list (twin-geometry.mjs `meet`, inside `landsOn`, the same
+line on `{ w, h }` boxes); their callers read `overlapArea`.
 
 ## contrast What is the contrast of two colours?
 
@@ -897,8 +912,9 @@ ledger does not add it again.
 - `assets/js/report-a11y.js` `readingOrder` and `mcp/lib/twin-texts.mjs` `readingOrder`: the Tab order a reader meets
   (rows, right to left in a right-to-left report) and the order the twin lists the English report's texts in; CL1's
   first probe had them as one family ("order", 5 of 8 inputs apart): two questions (the audit).
-- `mcp/lib/twin-geometry.mjs` `overlapOf` and `mcp/lib/twin-visuals.mjs` `overlaps`: an area and a tolerant yes or no,
-  two questions (`overlap-area`, `overlap`) (the audit).
+- `mcp/lib/box-overlap.mjs` `overlapArea` and `mcp/lib/box-overlap.mjs` `overlaps`: an area and a tolerant yes or no,
+  two questions (`overlap-area`, `overlap`) (the audit; before DD2O twin-geometry.mjs `overlapOf` and twin-visuals.mjs
+  `overlaps`; one file since DD2O, two functions).
 - `assets/js/png-bytes.js` `u32` and `assets/js/png-bytes.js` `be32`: reading four bytes and writing them (the audit; one
   file since DD2P, two functions).
 - `assets/js/pbip-export.js` `PBI_LITERAL`: a quoted token kept as written, like terminology.mjs's and text-format.mjs's
