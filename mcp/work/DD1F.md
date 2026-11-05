@@ -16,8 +16,11 @@
   source); sp30 21 as before. Full run, 5 shards side by side: base 204 suites -> 205 (dd1f added), every other
   suite's number the same; mutation 76/76 killed; website suites 42/42; lint 0; contracts, modules --strict green.
 - **Red proof:** report-bind's old `AR_COL` put back (the line and its call): dd1f 132 of 137 (4 P, 1 S). Not committed.
-- **State:** code done; integration/0.3.2 did not move (128285e): no merge; CI below.
-- **Resume:** the DONE steps (merge once if integration moved, build:min, every check, tests.yml).
+- **Merge:** integration/0.3.2 moved to e1015660 (DD2O) just before CI: merged once (5ceff560, WORK.md's line joined),
+  `npm run build:min` (nothing to change); the full run again: 206 suites, only dd2o new; mutation 76/76.
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/41955301250 on 5ceff560
+- **State:** DONE (Linux and Windows; macOS runs where the reviewer merges).
+- **Resume:** none once CI is green; the reviewer reads and merges.
 
 ## Tests before -> after (each place; the probe's 11 texts)
 | place | before | after | answers false -> true |
@@ -68,3 +71,5 @@ mcp/tools/plan_layout.mjs:136, 158, 302, 313. 13 files (tests in mcp/test.mjs le
   green. Move the probe and the ledger in the same commit as the rename.
 - Step 1's .min.js was staged before `npm run build:min` wrote it (check-min reads `git ls-files`): it carried a
   placeholder until step 2; nothing loaded it in between. Stage a new .min.js, then build, then stage again.
+- I read integration as not moved, then DD2O landed before the run started: the first CI run (41954169208) was
+  cancelled and the merge made. Fetch integration right before `gh workflow run`, not a step earlier.
