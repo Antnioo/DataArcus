@@ -453,7 +453,7 @@ const blankByCompiler = async (x, get) => {
 };
 const blankByEditor = async (x, get) => {
   const values = [{ id: 'a', kind: 'measure', measure: 'A' }, { id: 'b', kind: 'measure', measure: 'B' }, { id: 'r', kind: x.o === '-' ? 'diff' : 'ratio', a: 'a', b: 'b' }];
-  return (await get({ S: { design: { values } }, samples: () => ({ A: x.a, B: x.b }) }))().r;
+  return (await get({ S: { design: { values } }, samples: () => ({ A: x.a, B: x.b }), root: { SVGKPIExpr: createRequire(import.meta.url)('../assets/js/svg-expressions.js') } }))().r;
 };
 const editorTakes = (x) => x.o === 'DIVIDE' || x.o === '-';
 
