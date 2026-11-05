@@ -23,8 +23,30 @@
   'use strict';
   // the HTML escape: html-escape.js htmlEsc, its one home (0.3.2 DD2H; the page loads it first, Node requires it)
   const HE = typeof module !== 'undefined' && module.exports ? require('./html-escape.js') : root.DAHtmlEscape;
+  // the categories, severities and the Fix plan's kinds: data, one copy for every step below
+  const CAT = {
+    perf: { en: 'Performance', ar: 'الأداء', icon: 'bi-lightning-charge' },
+    maint: { en: 'Maintainability', ar: 'سهولة الصيانة', icon: 'bi-tools' },
+    bp: { en: 'Best practice', ar: 'أفضل الممارسات', icon: 'bi-patch-check' }
+  };
+  const SEVL = { high: ['High', 'عالية'], medium: ['Medium', 'متوسطة'], low: ['Low', 'منخفضة'], info: ['Info', 'معلومة'] };
+  const BPA_L = ['Microsoft Best Practice Analyzer rule', 'قاعدة Best Practice Analyzer من Microsoft'];
+  const QUICK = new Set(['DATE_NOT_MARKED', 'MONTH_SORT', 'SUMMARIZE_KEYS', 'FK_VISIBLE', 'UNUSED_COL', 'UNUSED_MEASURE']);
+  const EXPERT = new Set(['FILTER_TABLE', 'FILTER_MEASURE', 'BIDI', 'M2M', 'DEEP_CHAIN', 'LONG_MEASURE', 'CALC_COLS', 'STRING_KEYS', 'LONG_M', 'HARDCODED_PATH', 'NO_RLS']);
+  // (0.3.2 FN1A) the view is built by named steps, each one part of the page; each step's code is the code it was
+  // inside create, moved. v: the view's context (app, host, the state S, $) that each step adds its functions to.
   function create(app, host) {
     const S = host.state, $ = (id) => document.getElementById(id);
+    const v = { app, host, S, $ };
+    [textKit, confirmPart, panels, resultPart, issuesTab, listTabs, tmdlPart, fixTab, measuresTab, docsTab].forEach((step) => step(v));
+    const { render, loading, setStep, showError, score, qRehash, cardText, isAr, L, num, esc, rt, grade, RULES } = v;
+    return { render, loading, setStep, showError, score, rehashAnswers: qRehash, cardText,
+      text: { isAr, L, num, esc, rt, grade, RULES } };
+  }
+
+  // the language helpers, the rules' texts and sources, copy and the toast, the score card's text
+  function textKit(v) {
+    const { S, $ } = v;
     const isAr = () => document.documentElement.lang === 'ar';
     const L = (en, ar) => (isAr() ? ar : en);
     const esc = HE.htmlEsc;
@@ -32,18 +54,10 @@
     const bdi = (x) => '<bdi dir="ltr">' + esc(x) + '</bdi>';
     const RULES = () => (window.MHEngine && window.MHEngine.RULES) || {};
     const score = () => (window.MHEngine && window.MHEngine.scoreFrom ? window.MHEngine.scoreFrom(S.result.findings, S.ignored) : S.result.score);
-
-    const CAT = {
-      perf: { en: 'Performance', ar: 'الأداء', icon: 'bi-lightning-charge' },
-      maint: { en: 'Maintainability', ar: 'سهولة الصيانة', icon: 'bi-tools' },
-      bp: { en: 'Best practice', ar: 'أفضل الممارسات', icon: 'bi-patch-check' }
-    };
-    const SEVL = { high: ['High', 'عالية'], medium: ['Medium', 'متوسطة'], low: ['Low', 'منخفضة'], info: ['Info', 'معلومة'] };
     const grade = (s) => (s >= 85 ? [L('Excellent', 'ممتاز'), '#22c55e'] : s >= 70 ? [L('Good', 'جيد'), '#84cc16'] : s >= 50 ? [L('Needs work', 'يحتاج تحسين'), '#f59e0b'] : [L('At risk', 'في خطر'), '#ef4444']);
     const rt = (id) => { const r = RULES()[id]; return r ? (isAr() ? r.ar : r.en) : [id, '', '']; };
     // where a rule comes from (the engine's RULES[id].source): Microsoft Learn, a Best Practice Analyzer rule, or our own
     const srcOf = (id) => (RULES()[id] || {}).source || null;
-    const BPA_L = ['Microsoft Best Practice Analyzer rule', 'قاعدة Best Practice Analyzer من Microsoft'];
     const srcHtml = (id) => {
       const s = srcOf(id); if (!s) return '';
       const says = esc(isAr() ? s.says.ar : s.says.en), ext = ' target="_blank" rel="noopener noreferrer"';
@@ -53,7 +67,28 @@
       return '<p class="mh-src"><i class="bi ' + (s.kind === 'dataarcus' ? 'bi-person-check' : 'bi-book') + '"></i> ' + head + ': ' + says + (s.bpa ? ' (' + bpa(s.bpa) + ')' : '') + '</p>';
     };
     // (the same in English, for the CSV and the documentation: health-downloads.js, 0.3.2 SP24)
+    function copy(txt) {
+      const done = () => toast(L('Copied', 'تم النسخ'));
+      if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, () => fallback());
+      else fallback();
+      function fallback() { const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); done(); } catch (e) { /* ignore */ } t.remove(); }
+    }
+    let tt;
+    function toast(msg) {
+      let t = $('mhToast');
+      if (!t) { t = document.createElement('div'); t.id = 'mhToast'; t.className = 'mh-toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+      t.textContent = msg; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 1800);
+    }
+    // the score card's lines, listed for screen readers under the card's button
+    function cardText(lines, rtl) {
+      const list = $('mhCardText');
+      if (list) { list.setAttribute('dir', rtl ? 'rtl' : 'ltr'); list.innerHTML = lines.map((t) => '<li>' + esc(t) + '</li>').join(''); }
+    }
+    Object.assign(v, { isAr, L, esc, num, bdi, RULES, score, grade, rt, srcHtml, copy, cardText });
+  }
 
+  function confirmPart(v) {
+    const { host, S, isAr, L, esc, num, bdi } = v;
     // "Please confirm": the engine's questions about possible calculation mistakes (S.result.confirm), never findings and never in
     // the score. Each can be dismissed for this browser session
     // the page keeps the dismissed ones for this browser session
@@ -93,6 +128,13 @@
           (c.evidence ? '<pre class="mh-dax mh-qdax" dir="ltr"><code>' + esc(c.evidence) + '</code></pre>'
             : c.relationship ? '<p class="mh-qrel">' + L('Relationship', 'العلاقة') + ': ' + bdi(c.obj) + ' · ' + L('unused column', 'العمود غير المستخدم') + ': ' + bdi(c.relationship.fromTable + '[' + c.relationship.candidateColumn + ']') + '</p>' : '') + '</div>').join('') + answeredHtml(answered, stale) + '</section>';
     };
+    Object.assign(v, { qMem, qRehash, confirmHtml });
+  }
+
+  // loading, a step, an error, and the views: the drop zone, a model read in part, the result
+  function panels(v) {
+    const { app, host, S, $, isAr, L, esc, num, bdi, RULES } = v;
+    const renderResult = () => v.renderResult(); // drawn by a later step
     function loading(name) {
       app.innerHTML = '<div class="mh-panel mh-loading"><div class="mh-spin"></div><div><b>' + esc(name) + '</b><div class="mh-note" id="mhStep">' + L('Reading the file in your browser…', 'قراءة الملف داخل متصفحك…') + '</div></div></div>';
     }
@@ -151,7 +193,12 @@
       drop.addEventListener('drop', (e) => host.pick(e.dataTransfer.files[0]));
       $('mhSample').onclick = () => host.sample();
     }
+    Object.assign(v, { loading, setStep, showError, render });
+  }
 
+  // the result: the score ring and bars, the file bar, the score card, the tabs (each tab is drawn by its own step)
+  function resultPart(v) {
+    const { app, host, S, $, isAr, L, num, bdi, score, grade, rt, render } = v;
     const ring = (score, size) => {
       const [g, col] = grade(score), r = 44, c = 2 * Math.PI * r;
       return '<div class="mh-ring" style="width:' + size + 'px;height:' + size + 'px"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="' + r + '" class="bg"/><circle cx="50" cy="50" r="' + r + '" class="fg" style="stroke:' + col + ';stroke-dasharray:' + c + ';stroke-dashoffset:' + c * (1 - score / 100) + '"/></svg><div><b>' + score + '</b><span>' + g + '</span></div></div>';
@@ -191,9 +238,13 @@
       };
       app.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => { S.tab = b.dataset.tab; host.track('mh_tab', { tab: S.tab }); renderResult(); });
       app.querySelectorAll('[data-jump]').forEach((b) => b.onclick = () => { S.tab = 'issues'; S.filt.cat = 'all'; renderResult(); const el = document.querySelector('[data-rule="' + b.dataset.jump + '"]'); if (el) { el.open = true; el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } });
-      ({ issues: tIssues, fix: tFix, unused: tUnused, measures: tMeasures, tables: tTables, rels: tRels, docs: tDocs })[S.tab]();
+      ({ issues: v.tIssues, fix: v.tFix, unused: v.tUnused, measures: v.tMeasures, tables: v.tTables, rels: v.tRels, docs: v.tDocs })[S.tab]();
     }
+    Object.assign(v, { renderResult });
+  }
 
+  function issuesTab(v) {
+    const { host, S, $, isAr, L, esc, num, bdi, RULES, score, rt, srcHtml, qMem, confirmHtml, renderResult } = v;
     // an item's own advice (a rule's variants, such as FILTER_TABLE's VAR), in the page's language; else its detail
     const variantText = (v) => { const r = Object.values(RULES()).find((x) => x.variants && x.variants[v]); return r ? (isAr() ? r.variants[v].ar : r.variants[v].en) : ''; };
     const itemList = (items, limit) => {
@@ -252,7 +303,12 @@
         host.track('mh_download', { kind: 'csv' });
       };
     }
+    Object.assign(v, { tIssues });
+  }
 
+  // the Unused, Tables and Relationships tabs
+  function listTabs(v) {
+    const { host, S, $, L, esc, num, bdi, copy, renderResult } = v;
     function tUnused() {
       const el = $('mhTab');
       if (!S.result.meta.hasReport) { el.innerHTML = '<div class="mh-panel mh-note">' + L('Unused items need the report pages. Use a .pbit file.', 'فحص العناصر غير المستخدمة يحتاج صفحات التقرير. استخدم ملف .pbit.') + '</div>'; return; }
@@ -280,9 +336,56 @@
       });
     }
 
+    function tTables() {
+      const el = $('mhTab');
+      const modeL = (t) => (t.auto ? L('Auto date', 'تاريخ تلقائي') : t.isCalcTable ? L('DAX table', 'جدول DAX') : (t.mode === 'directLake' ? 'Direct Lake' : t.mode === 'directQuery' ? 'DirectQuery' : t.mode === 'dual' ? 'Dual' : 'Import'));
+      el.innerHTML = '<div class="mh-panel"><div class="mh-tscroll"><table class="mh-table"><thead><tr><th>' + L('Table', 'الجدول') + '</th><th>' + L('Type', 'النوع') + '</th><th>' + L('Columns', 'الأعمدة') + '</th><th>' + L('Measures', 'المقاييس') + '</th>' + (S.result.meta.hasReport ? '<th>' + L('Unused columns', 'أعمدة غير مستخدمة') + '</th>' : '') + '</tr></thead><tbody>' +
+        S.result.tables.filter((t) => !t.auto).map((t) => '<tr data-t="' + esc(t.name) + '"><td><b>' + bdi(t.name) + '</b>' + (t.hidden ? ' <i class="bi bi-eye-slash mh-dim"></i>' : '') + (t.markedDate ? ' <span class="mh-badge">' + L('date table', 'جدول تاريخ') + '</span>' : '') + (t.used === false ? ' <span class="mh-badge off">' + L('unused', 'غير مستخدم') + '</span>' : '') + '</td><td>' + modeL(t) + '</td><td>' + num(t.columns.length) + '</td><td>' + num(t.measures) + '</td>' + (S.result.meta.hasReport ? '<td>' + (() => { const u = t.columns.filter((c) => c.used === false).length; return u ? '<span class="mh-unum">' + num(u) + '</span>' : '0'; })() + '</td>' : '') + '</tr>' +
+          '<tr class="mh-cols" hidden><td colspan="5"><div class="mh-tags">' + t.columns.map((c) => '<code class="' + (c.used === false ? 'off' : '') + (c.kind === 'calculated' ? ' calc' : '') + '" title="' + esc(c.dataType + (c.kind === 'calculated' ? ' · calculated' : '') + (c.hidden ? ' · hidden' : '')) + '">' + esc(c.name) + ' <small>' + esc(c.dataType) + '</small></code>').join('') + '</div></td></tr>').join('') +
+        '</tbody></table></div><p class="mh-note mt-2">' + L('Click a table to see its columns. Faded = unused, dashed = calculated column.', 'اضغط على جدول لرؤية أعمدته. الباهت = غير مستخدم، والمنقط = عمود محسوب.') + '</p></div>';
+      el.querySelectorAll('tr[data-t]').forEach((tr) => tr.onclick = () => { const n = tr.nextElementSibling; n.hidden = !n.hidden; tr.classList.toggle('open', !n.hidden); });
+    }
+
+    function tRels() {
+      const el = $('mhTab');
+      el.innerHTML = '<div class="mh-panel"><div class="mh-tscroll"><table class="mh-table"><thead><tr><th>' + L('From (many side)', 'من (جهة many)') + '</th><th></th><th>' + L('To (one side)', 'إلى (جهة one)') + '</th><th>' + L('Cardinality', 'نوع العلاقة') + '</th><th>' + L('Filter', 'التصفية') + '</th><th>' + L('Active', 'نشطة') + '</th></tr></thead><tbody>' +
+        S.result.relationships.map((r) => {
+          const card = (r.fromCard === 'many' ? '*' : '1') + ':' + (r.toCard === 'many' ? '*' : '1');
+          return '<tr class="' + (r.active ? '' : 'mh-dimrow') + '"><td dir="ltr"><code>' + esc(r.fromTable) + '[' + esc(r.fromColumn) + ']</code></td><td>' + (r.cross === 'bothDirections' ? '<i class="bi bi-arrow-left-right text-warning"></i>' : '<i class="bi bi-arrow-left"></i>') + '</td><td dir="ltr"><code>' + esc(r.toTable) + '[' + esc(r.toColumn) + ']</code></td><td>' + (card === '*:*' ? '<span class="mh-badge off">*:*</span>' : card) + '</td><td>' + (r.cross === 'bothDirections' ? '<span class="text-warning">' + L('Both', 'اتجاهين') + '</span>' : L('Single', 'اتجاه واحد')) + '</td><td>' + (r.active ? '<i class="bi bi-check-lg text-success"></i>' : '<span class="mh-dim">' + L('inactive', 'غير نشطة') + '</span>') + '</td></tr>';
+        }).join('') + '</tbody></table></div></div>';
+    }
+    Object.assign(v, { tUnused, tTables, tRels });
+  }
+
+  // the Fix plan's TMDL panel
+  function tmdlPart(v) {
+    const { L, esc, num } = v;
+    function tmdlPanel(tm) {
+      if (!tm || (!(tm.fixes && tm.fixes.script) && !(tm.move && tm.move.script) && !tm.formats && !tm.dates.length)) return '';
+      const btn = (k, label, n) => '<button type="button" class="btn btn-accent btn-sm" data-script="' + k + '"><i class="bi bi-clipboard"></i> ' + label + ' <small>(' + num(n) + ')</small></button>';
+      let h = '<div class="mh-panel mt-4 mh-premium"><div class="mh-h"><b><i class="bi bi-stars"></i> ' + L('Apply in Power BI Desktop, no install', 'طبّق داخل Power BI Desktop بدون تثبيت أي أداة') + '</b><span class="mh-prem cap-pill">' + L('Premium preview', 'نسخة مميزة تجريبية') + '</span></div>' +
+        '<p class="mh-note">' + L('TMDL scripts that run in Power BI Desktop\'s own TMDL view. Each object is written out in full, the way Power BI writes it, with only the fix changed.', 'سكربتات TMDL تعمل داخل TMDL view في Power BI Desktop نفسه. كل عنصر مكتوب بالكامل بنفس طريقة Power BI مع تغيير الإصلاح فقط.') + '</p>' +
+        '<ol class="mh-steps"><li>' + L('Export a fresh .pbit of the exact file you will change, and check it here.', 'صدّر ملف .pbit جديدًا من نفس الملف الذي ستعدّله وافحصه هنا.') + '</li><li>' + L('In Power BI Desktop open TMDL view, add a new tab and paste the script.', 'في Power BI Desktop افتح TMDL view وأضف تبويبًا جديدًا والصق السكربت.') + '</li><li>' + L('Click <b>Preview</b> and read the diff: only the listed properties should change.', 'اضغط <b>Preview</b> وراجع الفروقات: يجب أن تتغير الخصائص المذكورة فقط.') + '</li><li>' + L('Click <b>Apply</b>, check your report, then save.', 'اضغط <b>Apply</b> وراجع تقريرك ثم احفظ.') + '</li></ol>' +
+        '<div class="mh-sbtns">' + (tm.fixes && tm.fixes.script ? btn('tmdl:fixes', L('Copy quick fixes', 'نسخ الإصلاحات السريعة'), tm.fixes.count) : '') + (tm.move && tm.move.script ? btn('tmdl:move', L('Copy: move unused measures', 'نسخ: نقل المقاييس غير المستخدمة'), tm.move.count) : '') + (tm.formats && tm.formats.script ? btn('tmdl:formats', L('Copy: right number formats', 'نسخ: تنسيقات الأرقام الصحيحة'), tm.formats.count) : '') + '</div>';
+      if (tm.formats) h += '<span class="tg-label mt-3">' + L('Number and date formats', 'تنسيقات الأرقام والتواريخ') + '</span><p class="mh-note">' + L('A ratio shows as 0.0%, a count or whole number as #,0, money in its own currency format, other numbers as #,0.00, a date as dd mmm yyyy. Formats already right are left alone.', 'النسبة تظهر بتنسيق 0.0%، والعدد أو الرقم الصحيح بتنسيق #,0، والمبالغ بتنسيق عملتها نفسه، وبقية الأرقام بتنسيق #,0.00، والتاريخ بتنسيق dd mmm yyyy. التنسيقات الصحيحة تبقى كما هي.') + '</p><ul class="mh-manual mh-formats">' +
+        tm.formats.items.concat(tm.formats.byHand).slice(0, 50).map((i) => '<li dir="auto">' + esc(i.object + ': ' + (i.from || L('no format', 'بلا تنسيق')) + ' → ' + i.to) + '</li>').join('') + '</ul>' + (tm.formats.more ? '<p class="mh-help">' + L(num(tm.formats.more) + ' more: apply this script, then check again.', num(tm.formats.more) + ' أخرى: طبّق هذا السكربت ثم افحص مجددًا.') + '</p>' : '');
+      const manual = [];
+      tm.dates.forEach((d) => manual.push(L('Mark ' + d.table + ' as a date table (Table tools > Mark as date table > ' + d.column + ')', 'علّم ' + d.table + ' كجدول تاريخ (Table tools > Mark as date table > ' + d.column + ')')));
+      tm.notes.forEach((n) => manual.push(n));
+      if (tm.fixes) tm.fixes.manual.forEach((m) => {
+        const what = m.set && m.set.isHidden ? L('hide it', 'أخفِه') : m.set && m.set.summarizeBy ? L('set Summarization to Don\'t summarize', 'اضبط Summarization على Don\'t summarize') : m.set && m.set.sortByColumn ? L('sort by ' + m.set.sortByColumn, 'رتّبه حسب ' + m.set.sortByColumn) : L('change by hand', 'غيّره يدويًا');
+        manual.push(m.table + '[' + m.column + ']: ' + what + (m.reason === 'daxTable' ? L(' (column of a DAX table, TMDL cannot change it alone)', ' (عمود في جدول DAX لا يمكن لـ TMDL تعديله منفردًا)') : ''));
+      });
+      if (tm.move) tm.move.manual.forEach((m) => manual.push('[' + m + ']: ' + L('move by hand', 'انقله يدويًا')));
+      if (manual.length) h += '<span class="tg-label mt-3">' + L('Do these by hand', 'نفّذ هذه يدويًا') + '</span><ul class="mh-manual">' + manual.map((x) => '<li dir="auto">' + esc(x) + '</li>').join('') + '</ul>';
+      return h + '<p class="mh-help mt-2">' + L('Preview feature: always use Preview before Apply, and keep a copy of your file. Tell us if a script fails: hello@dataarcus.com', 'ميزة تجريبية: استخدم Preview دائمًا قبل Apply واحتفظ بنسخة من ملفك. أخبرنا إن فشل سكربت: hello@dataarcus.com') + '</p></div>';
+    }
+    Object.assign(v, { tmdlPanel });
+  }
+
+  function fixTab(v) {
+    const { host, S, $, isAr, L, esc, num, bdi, score, rt, copy, tmdlPanel } = v;
     // ---------- Fix plan: safe order, quick-fixes script, cleanup scripts, expert items ----------
-    const QUICK = new Set(['DATE_NOT_MARKED', 'MONTH_SORT', 'SUMMARIZE_KEYS', 'FK_VISIBLE', 'UNUSED_COL', 'UNUSED_MEASURE']);
-    const EXPERT = new Set(['FILTER_TABLE', 'FILTER_MEASURE', 'BIDI', 'M2M', 'DEEP_CHAIN', 'LONG_MEASURE', 'CALC_COLS', 'STRING_KEYS', 'LONG_M', 'HARDCODED_PATH', 'NO_RLS']);
     // the plan's data and scripts (quick edits, the cleanup, the Tabular Editor, Power Query and TMDL scripts):
     // health-fix-plan.js (0.3.2 SP32); the copy buttons give plan.scripts[key]
     const fixPlan = () => window.MHFixPlan.plan({ result: S.result, ignored: S.ignored, lang: isAr() ? 'ar' : 'en', tmdl: window.MHTmdl || null });
@@ -327,27 +430,6 @@
       el.querySelectorAll('[data-expert]').forEach((a) => a.addEventListener('click', () => host.track('mh_expert_click', { rule: a.dataset.expert, score: score().overall })));
     }
 
-    function tmdlPanel(tm) {
-      if (!tm || (!(tm.fixes && tm.fixes.script) && !(tm.move && tm.move.script) && !tm.formats && !tm.dates.length)) return '';
-      const btn = (k, label, n) => '<button type="button" class="btn btn-accent btn-sm" data-script="' + k + '"><i class="bi bi-clipboard"></i> ' + label + ' <small>(' + num(n) + ')</small></button>';
-      let h = '<div class="mh-panel mt-4 mh-premium"><div class="mh-h"><b><i class="bi bi-stars"></i> ' + L('Apply in Power BI Desktop, no install', 'طبّق داخل Power BI Desktop بدون تثبيت أي أداة') + '</b><span class="mh-prem cap-pill">' + L('Premium preview', 'نسخة مميزة تجريبية') + '</span></div>' +
-        '<p class="mh-note">' + L('TMDL scripts that run in Power BI Desktop\'s own TMDL view. Each object is written out in full, the way Power BI writes it, with only the fix changed.', 'سكربتات TMDL تعمل داخل TMDL view في Power BI Desktop نفسه. كل عنصر مكتوب بالكامل بنفس طريقة Power BI مع تغيير الإصلاح فقط.') + '</p>' +
-        '<ol class="mh-steps"><li>' + L('Export a fresh .pbit of the exact file you will change, and check it here.', 'صدّر ملف .pbit جديدًا من نفس الملف الذي ستعدّله وافحصه هنا.') + '</li><li>' + L('In Power BI Desktop open TMDL view, add a new tab and paste the script.', 'في Power BI Desktop افتح TMDL view وأضف تبويبًا جديدًا والصق السكربت.') + '</li><li>' + L('Click <b>Preview</b> and read the diff: only the listed properties should change.', 'اضغط <b>Preview</b> وراجع الفروقات: يجب أن تتغير الخصائص المذكورة فقط.') + '</li><li>' + L('Click <b>Apply</b>, check your report, then save.', 'اضغط <b>Apply</b> وراجع تقريرك ثم احفظ.') + '</li></ol>' +
-        '<div class="mh-sbtns">' + (tm.fixes && tm.fixes.script ? btn('tmdl:fixes', L('Copy quick fixes', 'نسخ الإصلاحات السريعة'), tm.fixes.count) : '') + (tm.move && tm.move.script ? btn('tmdl:move', L('Copy: move unused measures', 'نسخ: نقل المقاييس غير المستخدمة'), tm.move.count) : '') + (tm.formats && tm.formats.script ? btn('tmdl:formats', L('Copy: right number formats', 'نسخ: تنسيقات الأرقام الصحيحة'), tm.formats.count) : '') + '</div>';
-      if (tm.formats) h += '<span class="tg-label mt-3">' + L('Number and date formats', 'تنسيقات الأرقام والتواريخ') + '</span><p class="mh-note">' + L('A ratio shows as 0.0%, a count or whole number as #,0, money in its own currency format, other numbers as #,0.00, a date as dd mmm yyyy. Formats already right are left alone.', 'النسبة تظهر بتنسيق 0.0%، والعدد أو الرقم الصحيح بتنسيق #,0، والمبالغ بتنسيق عملتها نفسه، وبقية الأرقام بتنسيق #,0.00، والتاريخ بتنسيق dd mmm yyyy. التنسيقات الصحيحة تبقى كما هي.') + '</p><ul class="mh-manual mh-formats">' +
-        tm.formats.items.concat(tm.formats.byHand).slice(0, 50).map((i) => '<li dir="auto">' + esc(i.object + ': ' + (i.from || L('no format', 'بلا تنسيق')) + ' → ' + i.to) + '</li>').join('') + '</ul>' + (tm.formats.more ? '<p class="mh-help">' + L(num(tm.formats.more) + ' more: apply this script, then check again.', num(tm.formats.more) + ' أخرى: طبّق هذا السكربت ثم افحص مجددًا.') + '</p>' : '');
-      const manual = [];
-      tm.dates.forEach((d) => manual.push(L('Mark ' + d.table + ' as a date table (Table tools > Mark as date table > ' + d.column + ')', 'علّم ' + d.table + ' كجدول تاريخ (Table tools > Mark as date table > ' + d.column + ')')));
-      tm.notes.forEach((n) => manual.push(n));
-      if (tm.fixes) tm.fixes.manual.forEach((m) => {
-        const what = m.set && m.set.isHidden ? L('hide it', 'أخفِه') : m.set && m.set.summarizeBy ? L('set Summarization to Don\'t summarize', 'اضبط Summarization على Don\'t summarize') : m.set && m.set.sortByColumn ? L('sort by ' + m.set.sortByColumn, 'رتّبه حسب ' + m.set.sortByColumn) : L('change by hand', 'غيّره يدويًا');
-        manual.push(m.table + '[' + m.column + ']: ' + what + (m.reason === 'daxTable' ? L(' (column of a DAX table, TMDL cannot change it alone)', ' (عمود في جدول DAX لا يمكن لـ TMDL تعديله منفردًا)') : ''));
-      });
-      if (tm.move) tm.move.manual.forEach((m) => manual.push('[' + m + ']: ' + L('move by hand', 'انقله يدويًا')));
-      if (manual.length) h += '<span class="tg-label mt-3">' + L('Do these by hand', 'نفّذ هذه يدويًا') + '</span><ul class="mh-manual">' + manual.map((x) => '<li dir="auto">' + esc(x) + '</li>').join('') + '</ul>';
-      return h + '<p class="mh-help mt-2">' + L('Preview feature: always use Preview before Apply, and keep a copy of your file. Tell us if a script fails: hello@dataarcus.com', 'ميزة تجريبية: استخدم Preview دائمًا قبل Apply واحتفظ بنسخة من ملفك. أخبرنا إن فشل سكربت: hello@dataarcus.com') + '</p></div>';
-    }
-
     // Ready-to-paste cleanup: Power Query steps for unused source columns, Tabular Editor scripts for unused measures
     let scripts = {};
     function cleanupHtml(plan) {
@@ -368,7 +450,11 @@
       if (kept.length) html += '<span class="tg-label mt-3">' + L('Unused, but kept for now', 'غير مستخدمة لكن أُبقيت الآن') + '</span><p class="mh-note">' + L('Removing these now would break something that stays, so the scripts above leave them. Check again after the cleanup.', 'حذفها الآن يكسر شيئًا باقيًا في النموذج، لذلك لا تحذفها السكربتات أعلاه. افحص مرة أخرى بعد التنظيف.') + '</p><ul class="mh-manual mh-kept">' + kept.map((x) => '<li dir="auto"><code>' + esc(x.t) + '[' + esc(x.c) + ']</code> ' + esc(x.why) + '</li>').join('') + '</ul>';
       return html + '</div>';
     }
+    Object.assign(v, { tFix });
+  }
 
+  function measuresTab(v) {
+    const { S, $, L, esc, num, bdi } = v;
     // Measure dependency tree (measures only), capped so huge models stay readable
     function chainTree(name) {
       const byName = new Map(S.result.measures.map((m) => [m.name.toLowerCase(), m]));
@@ -421,26 +507,11 @@
       el.querySelectorAll('[data-ms]').forEach((b) => b.onclick = () => { S.msOpen = b.dataset.ms; tMeasures(); if (window.innerWidth < 992) { const d = el.querySelector('.mh-mdetail'); if (d) d.scrollIntoView({ behavior: 'smooth', block: 'start' }); } });
       const on = el.querySelector('.mh-mrow.on'); if (on) on.scrollIntoView({ block: 'nearest' });
     }
+    Object.assign(v, { tMeasures });
+  }
 
-    function tTables() {
-      const el = $('mhTab');
-      const modeL = (t) => (t.auto ? L('Auto date', 'تاريخ تلقائي') : t.isCalcTable ? L('DAX table', 'جدول DAX') : (t.mode === 'directLake' ? 'Direct Lake' : t.mode === 'directQuery' ? 'DirectQuery' : t.mode === 'dual' ? 'Dual' : 'Import'));
-      el.innerHTML = '<div class="mh-panel"><div class="mh-tscroll"><table class="mh-table"><thead><tr><th>' + L('Table', 'الجدول') + '</th><th>' + L('Type', 'النوع') + '</th><th>' + L('Columns', 'الأعمدة') + '</th><th>' + L('Measures', 'المقاييس') + '</th>' + (S.result.meta.hasReport ? '<th>' + L('Unused columns', 'أعمدة غير مستخدمة') + '</th>' : '') + '</tr></thead><tbody>' +
-        S.result.tables.filter((t) => !t.auto).map((t) => '<tr data-t="' + esc(t.name) + '"><td><b>' + bdi(t.name) + '</b>' + (t.hidden ? ' <i class="bi bi-eye-slash mh-dim"></i>' : '') + (t.markedDate ? ' <span class="mh-badge">' + L('date table', 'جدول تاريخ') + '</span>' : '') + (t.used === false ? ' <span class="mh-badge off">' + L('unused', 'غير مستخدم') + '</span>' : '') + '</td><td>' + modeL(t) + '</td><td>' + num(t.columns.length) + '</td><td>' + num(t.measures) + '</td>' + (S.result.meta.hasReport ? '<td>' + (() => { const u = t.columns.filter((c) => c.used === false).length; return u ? '<span class="mh-unum">' + num(u) + '</span>' : '0'; })() + '</td>' : '') + '</tr>' +
-          '<tr class="mh-cols" hidden><td colspan="5"><div class="mh-tags">' + t.columns.map((c) => '<code class="' + (c.used === false ? 'off' : '') + (c.kind === 'calculated' ? ' calc' : '') + '" title="' + esc(c.dataType + (c.kind === 'calculated' ? ' · calculated' : '') + (c.hidden ? ' · hidden' : '')) + '">' + esc(c.name) + ' <small>' + esc(c.dataType) + '</small></code>').join('') + '</div></td></tr>').join('') +
-        '</tbody></table></div><p class="mh-note mt-2">' + L('Click a table to see its columns. Faded = unused, dashed = calculated column.', 'اضغط على جدول لرؤية أعمدته. الباهت = غير مستخدم، والمنقط = عمود محسوب.') + '</p></div>';
-      el.querySelectorAll('tr[data-t]').forEach((tr) => tr.onclick = () => { const n = tr.nextElementSibling; n.hidden = !n.hidden; tr.classList.toggle('open', !n.hidden); });
-    }
-
-    function tRels() {
-      const el = $('mhTab');
-      el.innerHTML = '<div class="mh-panel"><div class="mh-tscroll"><table class="mh-table"><thead><tr><th>' + L('From (many side)', 'من (جهة many)') + '</th><th></th><th>' + L('To (one side)', 'إلى (جهة one)') + '</th><th>' + L('Cardinality', 'نوع العلاقة') + '</th><th>' + L('Filter', 'التصفية') + '</th><th>' + L('Active', 'نشطة') + '</th></tr></thead><tbody>' +
-        S.result.relationships.map((r) => {
-          const card = (r.fromCard === 'many' ? '*' : '1') + ':' + (r.toCard === 'many' ? '*' : '1');
-          return '<tr class="' + (r.active ? '' : 'mh-dimrow') + '"><td dir="ltr"><code>' + esc(r.fromTable) + '[' + esc(r.fromColumn) + ']</code></td><td>' + (r.cross === 'bothDirections' ? '<i class="bi bi-arrow-left-right text-warning"></i>' : '<i class="bi bi-arrow-left"></i>') + '</td><td dir="ltr"><code>' + esc(r.toTable) + '[' + esc(r.toColumn) + ']</code></td><td>' + (card === '*:*' ? '<span class="mh-badge off">*:*</span>' : card) + '</td><td>' + (r.cross === 'bothDirections' ? '<span class="text-warning">' + L('Both', 'اتجاهين') + '</span>' : L('Single', 'اتجاه واحد')) + '</td><td>' + (r.active ? '<i class="bi bi-check-lg text-success"></i>' : '<span class="mh-dim">' + L('inactive', 'غير نشطة') + '</span>') + '</td></tr>';
-        }).join('') + '</tbody></table></div></div>';
-    }
-
+  function docsTab(v) {
+    const { host, S, $, L, bdi } = v;
     function tDocs() {
       const el = $('mhTab');
       el.innerHTML = '<div class="row g-4"><div class="col-md-6 col-xxl-3"><div class="mh-panel mh-doc"><i class="bi bi-filetype-html"></i><b>' + L('Full documentation', 'توثيق كامل') + '</b><p class="mh-note">' + L('One HTML page with the health score, every issue, all tables and columns, every measure with its DAX and dependencies, and the relationships. Opens in any browser and prints to PDF.', 'صفحة HTML واحدة فيها التقييم وكل المشاكل وكل الجداول والأعمدة وكل مقياس بصيغته واعتماداته والعلاقات. تفتح في أي متصفح ويمكن طباعتها PDF.') + '</p><button type="button" class="btn btn-accent" data-doc="html"><i class="bi bi-download"></i> ' + L('Download HTML', 'تحميل HTML') + '</button></div></div>' +
@@ -457,26 +528,7 @@
         host.track('mh_download', { kind: b.dataset.doc });
       });
     }
-    function copy(txt) {
-      const done = () => toast(L('Copied', 'تم النسخ'));
-      if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, () => fallback());
-      else fallback();
-      function fallback() { const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); done(); } catch (e) { /* ignore */ } t.remove(); }
-    }
-    let tt;
-    function toast(msg) {
-      let t = $('mhToast');
-      if (!t) { t = document.createElement('div'); t.id = 'mhToast'; t.className = 'mh-toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
-      t.textContent = msg; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 1800);
-    }
-    // the score card's lines, listed for screen readers under the card's button
-    function cardText(lines, rtl) {
-      const list = $('mhCardText');
-      if (list) { list.setAttribute('dir', rtl ? 'rtl' : 'ltr'); list.innerHTML = lines.map((t) => '<li>' + esc(t) + '</li>').join(''); }
-    }
-
-    return { render, loading, setStep, showError, score, rehashAnswers: qRehash, cardText,
-      text: { isAr, L, num, esc, rt, grade, RULES } };
+    Object.assign(v, { tDocs });
   }
 
   root.MHView = { create };
