@@ -159,7 +159,7 @@ const engine = code('design-engine.js');
 const pure = (src, own) => { const bad = [];
   if (/\b(document|window|localStorage|sessionStorage|navigator|location|indexedDB|fetch|XMLHttpRequest|setTimeout|Date\.now|Math\.random)\b/.test(src)) bad.push('a browser or clock global');
   if (/^ {2}let /m.test(src)) bad.push('a module-level let');
-  const roots = (src.match(/\broot\.\w+/g) || []).filter((r) => r !== own && !/^root\.(DataArcusTextMeasure|DAColours|DAMetrics)$/.test(r)); if (roots.length) bad.push('reads ' + roots.join(', '));
+  const roots = (src.match(/\broot\.\w+/g) || []).filter((r) => r !== own && !/^root\.(DataArcusTextMeasure|DAColours|DAMetrics|DAPngBytes)$/.test(r)); if (roots.length) bad.push('reads ' + roots.join(', '));
   return bad; };
 const METRICS = ['M', 'G', 'HH', 'PAGES', 'DEFAULT_PAGE', 'LIM', 'within', 'fitCustom', 'page', 'pw', 'toPage', 'boxOf', 'T', 'label', 'LAYOUTS', 'RTL_LANGS', 'rtl', 'SMALL_PAGE', 'smallPage', 'isSmall', 'fitLayout',
   'TABLE_NEED', 'tableWeight', 'RANGE', 'rangeOf', 'clampTo', 'CATEGORY_KINDS', 'CATEGORY_FIT', 'categoryFit', 'noTimeOf', 'LAYOUT_PREVIEW', 'isPreview', 'hasMain', 'hasSplit', 'sizes', 'computeSlots', 'imageSize', 'pngSize',
