@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **A text box that holds only a number is text:** a text box that holds only a number, such as 0, is now seen as text by
+  the accessibility check (it keeps its Tab stop and gets its alt text) and drawn in the preview, as the report check and
+  read_report already read it.
 - **One answer to "is this text Arabic?":** a title or a name typed with Arabic presentation forms (such as «ﻻ») or
   with letters from the Arabic supplement is now treated as Arabic everywhere: the report writer joins it with «حسب»,
   create_report writes its story sentence and its count word in Arabic, the Arabic twin reads it as already Arabic, and

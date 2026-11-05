@@ -12,6 +12,8 @@
   const Rules = () => (node ? require('./report-rules.js') : root.DARules);
   // a literal's text, number and true or false, a column's set width: pbir-values.js, their one home (0.3.2 DD1B)
   const PV = node ? require('./pbir-values.js') : root.DAPbirValues;
+  // a text box's paragraphs: one text each, text-runs.js, their one home (0.3.2 DD2T)
+  const TR = node ? require('./text-runs.js') : root.DATextRuns;
 
   // ---------- the design lint (from mcp/lib/design-lint.mjs, unchanged in what it finds) ----------
   // LAYER checks (0.2.9 item 11): the design lint. It reads the reading layer's inventory (lib/read-report.mjs) and,
@@ -199,7 +201,8 @@
     const top = f.type === 'TopN' ? (/"Top":\s*(\d+)/.exec(s) || /"Value":"(\d+)L"/.exec(s) || [])[1] : null;
     return Object.assign({ field, type: String(f.type || 'unknown').replace(/[^A-Za-z]/g, '').slice(0, 30) || 'unknown', set: !!f.filter }, notBlank ? { notBlank: true } : {}, top ? { top: +top } : {});
   }); } catch (e) { return []; } };
-  const textOf = (j) => { const ps = plain(((j.visual || {}).objects || {}).general).paragraphs; return (Array.isArray(ps) ? ps : []).filter((q) => q && typeof q === 'object').map((q) => entries(q.textRuns).map((r) => String(r.value == null ? '' : r.value)).join('')).join(' / ').trim(); };
+  // a text box's text on one line: its paragraphs' texts with " / " between, trimmed (the placeholder and empty-box rules)
+  const textOf = (j) => TR.paragraphTexts(plain(((j.visual || {}).objects || {}).general).paragraphs).join(' / ').trim();
   const txt = (d) => (typeof d === 'string' ? d : new TextDecoder().decode(d));
 
   function inventoryOf(files, opts) {

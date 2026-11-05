@@ -615,12 +615,10 @@ export const FAMILIES = [
       P('assets/js/model-import-browser.js', 'LIMITS', 'export', limitOf),
       P('mcp/lib/model.mjs', 'PBIT_LIMITS', 'export', limitOf),
     ] },
-  { id: 'text-runs', title: 'What text does a text box hold?', question: "a text box's paragraphs: their runs' text, as one line",
+  // (DD2T) one reader of the runs; each caller's textOf joins its texts itself (" / " and trimmed, or " "): test dd2t
+  { id: 'text-runs', title: 'What text does a text box hold?', question: "a text box's paragraphs: one text per paragraph, its runs' text",
     inputs: BOXTEXTS, places: [
-      P('assets/js/layout-check.js', 'textOf', 'inner', async (x, get) => (await get())(x.j)),
-      P('mcp/lib/report-inventory.mjs', 'textOf', 'source', async (x, get) => (await get())(x.j)),
-      P('assets/js/report-a11y.js', 'textOf', 'inner', async (x, get) => (await get())(x.j.visual)),
-      P('assets/js/page-preview.js', 'textOf', 'inner', async (x, get) => (await get())(x.j)),
+      P('assets/js/text-runs.js', 'paragraphTexts', 'export', async (x, get) => (await get())((((x.j.visual.objects || {}).general || [])[0] || { properties: {} }).properties.paragraphs)),
     ] },
   { id: 'blank', title: 'What is BLANK minus or divided by a number?', question: 'a - b and a / b with BLANK (null), as DAX answers them',
     inputs: BLANKS, places: [

@@ -50,6 +50,9 @@ const AX = createRequire(import.meta.url)('../../assets/js/axis-units.js');
 // (0.3.2 DD1B) a literal's text, number and true or false: assets/js/pbir-values.js, their one home; handed on to
 // report-inventory.mjs as VT is (its imports stay ./read-report.mjs, ./visual-meaning.mjs and node:path: sp42 P4)
 const PV = createRequire(import.meta.url)('../../assets/js/pbir-values.js');
+// (0.3.2 DD2T) a text box's paragraphs: one text each, assets/js/text-runs.js, their one home; handed on to
+// report-inventory.mjs as PV is (sp42 P4)
+const TR = createRequire(import.meta.url)('../../assets/js/text-runs.js');
 // Power BI's own visuals: their kind
 const BUILTIN_KIND = {
   lineClusteredColumnComboChart: 'combo', lineStackedColumnComboChart: 'combo',
@@ -401,4 +404,4 @@ export function replacementsOf(inv, opts) {
   }));
   return out;
 }
-export { VT, PV };
+export { VT, PV, TR };

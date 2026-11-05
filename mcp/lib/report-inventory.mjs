@@ -13,7 +13,7 @@
 // No state: the answer comes from the source alone.
 import path from 'node:path';
 import { INSTRUCTION, LONG_TEXT, Linked, REPORT_LIMITS, safeName, safeText, TooBig } from './read-report.mjs';
-import { meaningInReport, VT, PV } from './visual-meaning.mjs';
+import { meaningInReport, VT, PV, TR } from './visual-meaning.mjs';
 
 // ---- reading a visual's parts ----
 // (0.3.2 DD1B) read-only, the value as shown (12D -> "12"), its number and its true or false: assets/js/pbir-values.js
@@ -78,7 +78,8 @@ function filtersOf(cfg) {
 }
 export const filterText = (f) => `${refOf(f.field)} (${f.notBlank ? 'not blank' : f.top ? 'top ' + f.top : f.type + (f.set ? ', set' : ', empty')})`;
 const hex = (c) => (typeof c === 'string' && /^#[0-9a-f]{3,8}$/i.test(c) ? c.toLowerCase() : null);
-const textOf = (j) => { const ps = plain(((j.visual || {}).objects || {}).general).paragraphs; return (Array.isArray(ps) ? ps : []).filter((p) => p && typeof p === 'object').map((p) => entries(p.textRuns).map((r) => String(r.value == null ? '' : r.value)).join('')).join(' / ').trim(); };
+// (0.3.2 DD2T) a text box's text: its paragraphs' texts (assets/js/text-runs.js), on one line: " / " between, trimmed
+const textOf = (j) => TR.paragraphTexts(plain(((j.visual || {}).objects || {}).general).paragraphs).join(' / ').trim();
 // Power BI's own visuals and slicers: Microsoft's catalog (assets/js/visual-types.js); a custom visual's type is its id
 const SLICERS = new RegExp('^(' + VT.SLICER_TYPES.join('|') + ')$');
 export const typeName = (t) => (t === 'group' || VT.isNative(t) ? t : 'custom ' + safeName(t));
