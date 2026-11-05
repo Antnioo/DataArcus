@@ -3,7 +3,7 @@
 - **Base:** fix/0.3.2-pf1 from origin/integration/0.3.2 (12d9d30c). Push only it; no merge but integration once before the last CI, no PR.
 - **Scope:** B-381: create_report drops planFields.measure when planFields.kpis is an empty list (no KPI cards): every chart and table shows "Sum of Amount". Cause and fix in mcp/lib/report-bind.mjs fieldBinding (its one place). B-380: create_arabic_twin with timeRightToLeft false says "categories right to left" for column and line charts over time it keeps left to right. Cause in assets/js/mirror-charts.js chartsOf (kind "column" kept), sentence in assets/js/report-mirror.js KIND_WHAT (a new kind "columnTime", as "waterfallTime" is for waterfalls).
 - **Expected checks:** new suites pf1 (area report, 21 checks, red on 12d9d30c first: 16 of 21) and pf1t (area twin, 13 checks, red on 12d9d30c first: 7 of 13); sp10 113 and sp39 96 unchanged in number, their recorded kind moved on purpose (below); every other suite unchanged.
-- **Resume:** code done (ac54711f), integration merged once (335c8778); CI run 42114092708 on the branch.
+- **Resume:** done. CI green: https://github.com/Antnioo/DataArcus/actions/runs/42116688415 on f3655c91 (the first run, 42114092708, was red: fn1c, re-recorded on purpose; sp6, green on the rerun)
 
 ## The plan
 1. B-381, pinned first (L-1105-09): a made-up model "Time Lab" (Sales: FiscalYear, Qtr, Amount, measure Total Sales; «المبيعات»: «شهر» sorted by «رقم الشهر», «المبلغ», measure «إجمالي المبيعات»; no relationship), the brief's plan_layout input (exec, kpis 0, no filters, planFields measure, timeAxis, category, category2, and the swapped run) with planFields.kpis [] (no cards), plan -> approve -> create_report; every written value projection is Sales[Total Sales] (red on the base: 0 Total Sales, 11 Sum(Sales.Amount), the laptop's count). Each other key (kpis, timeAxis, category, category2, table, slicers) checked written as given.
@@ -54,6 +54,6 @@ none
 
 ## Lessons for the reviewer
 - fn1c pins the twin plan's whole answer (r2: timeRightToLeft false) but sits outside the twin area: a change to KIND_WHAT should run fn1c too (it went red in CI, not in my area runs).
-- CI run 42114092708: sp6 (website, shard 2) said the plain preview differs at equal size (43517 bytes); it passed locally 3 of 3 and failed in no other recent run. Watched on the next run.
+- CI run 42114092708: sp6 (website, shard 2) said the plain preview differs at equal size (43517 bytes); it passed locally 3 of 3 and failed in no other recent run. Green on the next run (42116688415): a flake, not this change.
 - The brief's "kpis: 0" hid the trigger: the bug needs planFields.kpis [] (or all text measures); top-level kpis 0 alone writes Total Sales. A brief that pins an eval input should copy the lab driver's exact JSON.
 - sp10's fixture predates DD1A; a re-record moves DD1A's overlay entries too, so a kind change must be patched field by field.
