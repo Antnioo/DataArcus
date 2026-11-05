@@ -10,6 +10,7 @@ package's manifest; this file says what is in it.
   by where it goes and each chart by the field it groups by; a chart written as another kind says which page it is on.
 - **No time axis when the person asks for none:** plan_layout and create_report take `timeAxis: "none"` in the plan's
   fields: the report gets no trend chart, no month tooltip and no date slicer DataArcus would add, and the plan says so.
+- **Several models in one folder, said in Arabic:** when a folder holds several models at the same level and the folder or a model name is in Arabic, the reading tools now say so in Arabic («نموذجين» for two, «N نماذج» for three or more); the English message is unchanged.
 - **A text box that holds only a number is text:** a text box that holds only a number, such as 0, is now seen as text by
   the accessibility check (it keeps its Tab stop and gets its alt text) and drawn in the preview, as the report check and
   read_report already read it.
