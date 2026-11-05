@@ -9,7 +9,8 @@ const require = createRequire(import.meta.url);
  *  approval page draws them: the shared renderer's pages (assets/js/page-preview.js fromFiles, as the report's preview),
  *  read from the exact files the plan keeps and writeTwin writes (0.3.1 K2: kept, twinTree's files, or the bilingual report's
  *  exact files; paths from the project folder). A page hidden in the tabs is drawn too (the copy hides one language);
- *  tooltip pages are not, as on the report's page. Each Arabic page is drawn right to left (a page kept left to right for
+ *  (0.3.2 TP1, D-1105-17) the tooltip pages too, after the others, marked tooltip (never in pairs: drawn one by one).
+ *  Each Arabic page is drawn right to left (a page kept left to right for
  *  its picture stays so), the copy's English pages left to right. From the plan only: types, positions, sizes, titles,
  *  field names, the theme's colours; never a value.
  *  Returns { lang: 'ar', pages, pairs? ([[english, arabic]] indexes into pages, the copy's) } or null. */
@@ -29,7 +30,7 @@ export function twinPreview(P, kept) {
     if (R.theme) files.push({ path: 'StaticResources/RegisteredResources/theme.json', data: json(R.theme) });
     const T = R.theme || {}, pg0 = isObj(T.visualStyles) && isObj(T.visualStyles.page) && isObj(T.visualStyles.page['*']) && Array.isArray(T.visualStyles.page['*'].background) ? T.visualStyles.page['*'].background[0] : null;
     const colors = { background: pg0 && pg0.color && pg0.color.solid ? pg0.color.solid.color : undefined, card: T.background, ink: T.foreground, accent: Array.isArray(T.dataColors) ? T.dataColors[0] : undefined };
-    const pages = Preview.fromFiles(files, { colors, picture: (bytes) => glassPreviewUrl(bytes) });
+    const pages = Preview.fromFiles(files, { colors, picture: (bytes) => glassPreviewUrl(bytes), tooltips: true });
     // which pages are Arabic: the twin's all (but those kept left to right), the copy's its pairs' Arabic pages
     const ltrIds = new Set(R.pages.filter((pg) => P.keepLtr(pg)).map((pg) => String(pg.id)));
     const arIds = P.copy ? new Map(P.copy.pairs.map((x) => [String(x.arabic.id), String(x.english.id)])) : null;
@@ -42,7 +43,7 @@ export function twinPreview(P, kept) {
       return { page: String(name != null ? name : pg.id).slice(0, 80), ...(L['page:' + pg.id] != null ? { pageAr: String(L['page:' + pg.id]).slice(0, 80) } : {}), visual: String(v.json.name).slice(0, 80), ...(t ? { title: t.slice(0, 80) } : {}), ...(L['title:' + pg.id + '/' + v.json.name] != null ? { titleAr: String(L['title:' + pg.id + '/' + v.json.name]).slice(0, 80) } : {}) }; })).slice(0, 30);
     if (!P.copy) return Object.assign({ lang: 'ar', pages }, asTables.length ? { asTables } : {});
     const at = new Map(pages.map((p, i) => [p.id, i]));
-    const pairs = P.copy.pairs.filter((x) => at.has(String(x.english.id)) && at.has(String(x.arabic.id))).map((x) => [at.get(String(x.english.id)), at.get(String(x.arabic.id))]);
+    const pairs = P.copy.pairs.filter((x) => at.has(String(x.english.id)) && at.has(String(x.arabic.id)) && !pages[at.get(String(x.english.id))].tooltip).map((x) => [at.get(String(x.english.id)), at.get(String(x.arabic.id))]);
     return Object.assign({ lang: 'ar', pages, pairs }, asTables.length ? { asTables } : {});
   } catch (e) { return null; }   // (a shape not expected: the approval page shows the plan without its pictures)
 }

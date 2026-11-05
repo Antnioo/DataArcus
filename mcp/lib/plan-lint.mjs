@@ -130,8 +130,9 @@ export function planPreview(a) {
     let slots = p.slots; p.slots.filter((s) => s.kind === 'text' && !s.text).forEach((t) => { slots = absorb(slots.filter((s) => s !== t), t); });
     return Preview.fromSlots(slots, p.page, { name: p.name, rtl, colors }); }), from: 'slots' };
   // (0.3.1 GD2) a glass page drawn on a small copy of its picture (glass-picture.mjs), the approval page's only
-  const files = inReport(b.r), pages = Preview.fromFiles(files, { rtl, colors, picture: (bytes) => glassPreviewUrl(bytes) });
-  const inv = inventory(memorySource(files), 'the planned report'), shown = inv.pages.filter((p) => p.kind !== 'Tooltip' && !p.hidden);
+  // (0.3.2 TP1, D-1105-17) the tooltip pages the click writes too, after the shown pages (fromFiles' order), each flagged
+  const files = inReport(b.r), pages = Preview.fromFiles(files, { rtl, colors, picture: (bytes) => glassPreviewUrl(bytes), tooltips: true });
+  const inv = inventory(memorySource(files), 'the planned report'), shown = inv.pages.filter((p) => p.kind !== 'Tooltip' && !p.hidden).concat(inv.pages.filter((p) => p.kind === 'Tooltip'));
   pages.forEach((p, k) => {
     const ip = shown[k]; if (!ip) return;
     const found = lint(inv, a.m.tables, null, { pages: [ip.n] }).findings.filter((f) => FLAG_OF[f.rule]), flags = [];
