@@ -25,7 +25,6 @@
   const COLUMN = Object.freeze(['columnChart', 'clusteredColumnChart', 'hundredPercentStackedColumnChart', 'lineChart', 'areaChart', 'stackedAreaChart', 'hundredPercentStackedAreaChart', 'lineClusteredColumnComboChart', 'lineStackedColumnComboChart', 'ribbonChart']);
   // (a waterfall's steps follow its category order: the sort reverses them; its category axis has no invertAxis)
   const WATERFALL = Object.freeze(['waterfallChart']);
-  const BAR = Object.freeze(['barChart', 'clusteredBarChart', 'hundredPercentStackedBarChart']);
   const SLICER = Object.freeze(['slicer', 'advancedSlicerVisual', 'listSlicer', 'textSlicer']);
   // visuals with nothing that has a side (the labs and round 13: they move only). Any other Power BI visual (a scatter
   // chart, a decomposition tree...) is 'other': it moves only too, but the plan says no setting is proven
@@ -35,6 +34,8 @@
   // type at all is treated as custom too: moved only
   const VT = typeof module !== 'undefined' && module.exports ? require('./visual-types.js') : root.DAVisualTypes;
   const isCustom = (type) => !type || VT.isCustom(type);
+  // the bar charts: visual-types.js, their one home (0.3.2 DD2V)
+  const BAR = VT.BAR_TYPES;
   // json: a visual.json. Its kind, the name every rule of the twin is keyed by
   function kindOf(json) {
     if (!isObj(json)) return 'unreadable';
@@ -129,7 +130,7 @@
   const titled = (kind) => TITLED.includes(kind);
   // (0.3.1 MP1c, MP1d: laptop parts 7 and 8) a matrix keeps its row headers at its left, and Desktop keeps a table's
   // columns at its left edge in the twin: both stay left to right inside their mirrored box. (B-284: the one home of
-  // this rule; mcp/lib/twin-pages.mjs staysLtr and mcp/lib/page-picture.mjs TABLES still hold their own copies)
+  // this rule; mcp/lib/twin-pages.mjs staysLtr and mcp/lib/page-picture.mjs reads this one since DD2V)
   const keepsGridLtr = (json) => { const k = kindOf(json); return k === 'matrix' || k === 'table'; };
 
   const api = Object.freeze({ isObj, lit, strOf, entries, projections, first,

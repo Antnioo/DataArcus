@@ -45,7 +45,6 @@
   };
 
   const CHARTS = /^(lineChart|areaChart|stackedAreaChart|columnChart|clusteredColumnChart|barChart|clusteredBarChart|stackedBarChart|stackedColumnChart|hundredPercentStacked\w+|line\w*ComboChart|ribbonChart|waterfallChart)$/;
-  const BARS = /^(barChart|clusteredBarChart|stackedBarChart|hundredPercentStackedBarChart)$/;
   const DATA = /Chart$|^tableEx$|^pivotTable$|^treemap$|^funnel$|^gauge$|^map$|^filledMap$|^azureMap$/;
   // (A4-9, audit 4: a time-like name by its whole words, never inside another word: "Candidate" and "Update Status" are
   // not dates; "OrderDate", "Month-Year", "fiscal_period", «الشهر» are. 0.3.2 DD1A: the words and the one list are
@@ -130,7 +129,7 @@
             add('TABLE_WIDTHS_TOO_WIDE', 'medium', p, x, `the set column widths add up to ${Math.round(widths)} in a table ${x.w} wide`, `bring the widths down to ${Math.round(x.w - 36)} in all, or widen the table`, false);
         }
         // (c) bar labels (O-4): the axis share of the width at the label size the visual or the theme sets
-        if (BARS.test(x.type) && cat.length) {
+        if (VT.isBar(x.type) && cat.length) {
           const share = (x.format && x.format.axisShare) || V('AXIS_SHARE'), pt = (x.format && x.format.axisFontSize) || inv.theme.labelSize || 10;
           const fit = Math.floor(x.w * share / 100 / pxPerChar(pt)), f = cat[cat.length - 1];
           if (isText(f) && fit < V('BAR_FIT_WARN')) add('BAR_LABELS_MAY_BE_CUT', fit < V('BAR_FIT_HIGH') ? 'high' : 'medium', p, x, `about ${fit} characters of a category name fit (visual ${x.w} wide, category axis share ${share}, label ${pt} pt); ${refOf(f)} is text, so longer names are cut with "..."`,
@@ -286,7 +285,7 @@
   // and the third of the page its middle is in: "the bar chart, top left of the page". Never its title or any text of
   // the report (the owner's decision R5: type and place only); a custom or unknown type is "a visual". x: { type, x, y,
   // w, h }; page: { w, h } (without its size, the kind alone)
-  const KINDS = [[/^(barChart|clusteredBarChart|stackedBarChart|hundredPercentStackedBarChart)$/, 'bar chart'], [/^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart)$/, 'column chart'],
+  const KINDS = [[{ test: VT.isBar }, 'bar chart'], [/^(columnChart|clusteredColumnChart|hundredPercentStackedColumnChart)$/, 'column chart'],
     [/^(lineChart|areaChart|stackedAreaChart|hundredPercentStackedAreaChart)$/, 'line chart'], [/ComboChart$/, 'combo chart'], [/^waterfallChart$/, 'waterfall chart'], [/^(donutChart|pieChart)$/, 'donut chart'],
     [/^scatterChart$/, 'scatter chart'], [/^tableEx$/, 'table'], [/^pivotTable$/, 'matrix'], [/^(card|cardVisual|multiRowCard)$/, 'card'], [/^kpi$/, 'KPI'], [/^gauge$/, 'gauge'],
     [/^(map|filledMap|azureMap|shapeMap)$/, 'map'], [/^treemap$/, 'treemap'], [/^funnel$/, 'funnel'], [/^ribbonChart$/, 'ribbon chart'], [/^slicer$|Slicer$/, 'slicer'], [/^textbox$/, 'text box'], [/^actionButton$/, 'button'],
