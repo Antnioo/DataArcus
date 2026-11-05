@@ -5,6 +5,12 @@
 //   U1-U52   the module on 13 pairs (the contract probe's 9, then a zero-width box apart, a box exactly 0.5 px over,
 //            touching corners, two zero-size boxes at one point): overlaps and overlapArea, each on both box shapes
 //            ({ x, y, width, height } and { x, y, w, h }), each answer pinned (52 checks)
+//   P1-P26   the parity: the five old copies, run from the base's source (git show ae8c173: each definition read from the
+//            file as scripts/contracts-probe.mjs reads a nested name), and the one place on every pair: one answer per
+//            pair per question. overlap: twin-visuals overlaps and redesign-grid overlap (base), box-overlap overlaps on
+//            both shapes, twin-visuals overlaps and redesign-grid overlap now; overlap-area: twin-geometry overlapOf,
+//            page-picture meets and twin-geometry meet in landsOn (base), box-overlap overlapArea on both shapes. The
+//            answers compared as text, unrounded (26 checks)
 //   S1-S11   one job, one place: no other file in mcp/lib or mcp/tools holds the tolerant test or the area (box-diff.mjs's
 //            iou, research code that the server never loads, is a ratio over the union: named, not counted); the four
 //            callers import box-overlap.mjs; twin-visuals.mjs and redesign-grid.mjs export its overlaps itself (the
@@ -13,6 +19,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import { overlaps, overlapArea } from './lib/box-overlap.mjs';
 import * as TV from './lib/twin-visuals.mjs';
 import * as RG from './lib/redesign-grid.mjs';
@@ -48,6 +55,37 @@ BOXES.forEach((x) => [['{width, height}', wh], ['{w, h}', xywh]].forEach(([shape
   chk(() => o === x.overlap, () => `U${un + 1}. overlaps, ${x.label}, ${shape}: ${x.overlap} pinned, got ${o}`); un++;
   chk(() => r2(a) === x.area, () => `U${un + 1}. overlapArea, ${x.label}, ${shape}: ${x.area} pinned, got ${a}`); un++;
 }));
+
+// ---------- P: the old copies (the base's source) and the one place, one answer per input per question ----------
+const BASE = process.env.DD2O_BASE || 'ae8c173';
+const baseSrc = new Map();
+const baseOf = (f) => { if (!baseSrc.has(f)) baseSrc.set(f, execFileSync('git', ['show', `${BASE}:${f}`], { cwd: REPO, maxBuffer: 1 << 26 }).toString('utf8').replace(/\r\n/g, '\n')); return baseSrc.get(f); };
+// one definition `const name = ...;` read from a source (as test-0.3.2-dd2p.mjs and scripts/contracts-probe.mjs read a
+// nested name): from its name to the ';' where its brackets close, the one inside `within` when given
+function definition(src, name, within) {
+  let from = 0;
+  if (within) { from = src.search(new RegExp(`(?:const|function)\\s+${within}\\b`)); if (from < 0) throw new Error(`${within} is not in the base's source`); }
+  const at = src.indexOf(`const ${name} =`, from);
+  if (at < 0) throw new Error(`${name} is not in the base's source`);
+  let depth = 0;
+  for (let i = at; i < src.length; i++) {
+    const c = src[i];
+    if ('([{'.includes(c)) depth++; else if (')]}'.includes(c)) depth--; else if (c === ';' && depth === 0) return src.slice(at, i + 1);
+  }
+  throw new Error(`${name}: no end`);
+}
+const old = (file, name, within, mk) => { let f; try { f = new Function('"use strict";\n' + definition(baseOf(file), name, within) + `\nreturn ${name};`)(); } catch (e) { f = () => { throw e; }; } return [`${file} ${name} (base)`, f, mk]; };
+const OVERLAP_OLD = [old('mcp/lib/twin-visuals.mjs', 'overlaps', null, wh), old('mcp/lib/redesign-grid.mjs', 'overlap', null, xywh)];
+const AREA_OLD = [old('mcp/lib/twin-geometry.mjs', 'overlapOf', null, wh), old('mcp/lib/page-picture.mjs', 'meets', null, xywh), old('mcp/lib/twin-geometry.mjs', 'meet', 'landsOn', xywh)];
+const OVERLAP_NOW = [['box-overlap.mjs overlaps {width, height}', overlaps, wh], ['box-overlap.mjs overlaps {w, h}', overlaps, xywh], ['twin-visuals.mjs overlaps (now)', TV.overlaps, wh], ['redesign-grid.mjs overlap (now)', RG.overlap, xywh]];
+const AREA_NOW = [['box-overlap.mjs overlapArea {width, height}', overlapArea, wh], ['box-overlap.mjs overlapArea {w, h}', overlapArea, xywh]];
+const answer = (f, mk, x) => { try { return String(f(mk(x.a), mk(x.b))); } catch (e) { return 'throws ' + e.message; } };
+let pn = 0;
+const parity = (q, x, places) => {
+  const got = places.map(([who, f, mk]) => [who, answer(f, mk, x)]), one = new Set(got.map((g) => g[1])).size === 1;
+  chk(() => one, () => `P${pn}. ${q}, ${x.label}: one answer from every place: ${got.map(([w, a]) => w + ' ' + a.slice(0, 40)).join('; ')}`);
+};
+BOXES.forEach((x) => { pn++; parity('overlap', x, OVERLAP_OLD.concat(OVERLAP_NOW)); pn++; parity('overlap-area', x, AREA_OLD.concat(AREA_NOW)); });
 
 // ---------- S: one job, one place ----------
 {

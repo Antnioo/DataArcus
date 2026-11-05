@@ -17,7 +17,8 @@
 - **Expected checks:** dd2o passes (new: units, parity, one place); every other suite's number as on the base (the base
   run, 5 shards locally, in "Numbers"); mutation 76/76; `npm run lint` 0; check-contracts, check-modules --strict,
   check-agent-memory, check-result-lines green; the probe one answer per input for overlap and overlap-area.
-- **State:** plan pushed. **Resume:** step 1.
+- **State:** steps 1-3 pushed (module, callers, parity); step 4 and the full run next.
+- **Resume:** step 4 (the probe's --md, the docs), then the full run, the merge and CI.
 
 ## Plan (one commit each, every suite green between them)
 1. `mcp/lib/box-overlap.mjs` and `mcp/test-0.3.2-dd2o.mjs` (one line in tests.json beside dd2p): the probe's 9 pairs
@@ -41,3 +42,10 @@
 | one inside the other | true | 400 |
 | the same box | true | 10000 |
 | a zero-width box inside | true | 0 |
+
+## Parity and the red proof (step 3)
+dd2o P1-P26 run the five old copies from ae8c173's source beside box-overlap.mjs (and twin-visuals `overlaps`,
+redesign-grid `overlap` now): one answer per pair per question, compared unrounded. Red proof (not committed): a copy
+of the test whose base source of redesign-grid.mjs had ` - 0.5` removed (`baseSrc.set(...)` with
+`.replace(/ - 0\.5/g, '')` before `old(...)`) fails P5 (0.4 px overlap: base redesign true, every other place false)
+and P21 (exactly 0.5 px over): `FAIL  dd2o  87 of 89 checks`.
