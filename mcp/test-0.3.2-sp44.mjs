@@ -21,6 +21,7 @@
 //   L5  a POST body over 1,000 characters is cut off (the connection destroyed), nothing decided
 //   L6  wait() answers the click; state() before and after
 //   L7  approvalHtml is the page the server serves for the same plan
+//   L8  (SM1) the link is exactly /approve/<secret>: a path after or before the secret answers "no longer valid"
 //   after each move: V1 approval-view.mjs is pure (no node:http, crypto or child_process, no module state, never the
 //   secret, the Host, the Origin or a decision); V2 approval-http.mjs alone holds node:http, node:crypto, the secret,
 //   the Host and Origin checks and the call of the decision callback; approval-window.mjs keeps open, wait, state,
@@ -135,7 +136,8 @@ const linkLog = (log) => () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8'
     }
   } finally { await w.close(); }
 }
-// ---------- L1-L7: in process ----------
+// ---------- L1-L8: in process ----------
+const L8 = {};   // (SM1: not in the recorded fixture)
 const Approval = await import('./lib/approval-window.mjs');
 {
   const log = path.join(ROOT, 'links-in.txt'), links = linkLog(log);
@@ -183,8 +185,14 @@ const Approval = await import('./lib/approval-window.mjs');
       const click = await ask(url, 'POST', { body: 'decision=decline', headers: form(new URL(url).origin) }), d = await wp;
       L.l6 = JSON.stringify({ st0, st1, click: rec(click, [s]), d, st2: Approval.state('plan-l6'), again: await Approval.wait('plan-l6', 10), none: Approval.state('plan-none'), noneWait: await Approval.wait('plan-none', 10) });
       L.l7page = norm(page.t, [s]); L.l7html = norm(Approval.approvalHtml(plan('plan-l6'), show('plan-l6')), []); }
+    // L8 (0.3.2 SM1, B-329: AH-link was killed by V2's source text only): the link's path is exactly /approve/<secret>;
+    // the secret with a path after it, before it, or a query's path, answers "no longer valid" and decides nothing
+    { const { url } = await openAt('plan-l8', far()), u = new URL(url), s = sec(url), o = u.origin, h = form(o);
+      const tries = [`${o}/approve/${s}/x`, `${o}/x/approve/${s}`, `${o}/approve/${s}/`, `${o}/a/approve/${s}`];
+      L8.got = []; for (const t of tries) { L8.got.push((await ask(t, 'GET')).code, (await ask(t, 'POST', { body: 'decision=approve', headers: h })).code); }
+      L8.right = (await ask(url, 'GET')).code; L8.state = Approval.state('plan-l8'); }
   } catch (e) { setup.push('in process: ' + String(e && e.stack || e).slice(0, 300)); }
-  ['plan-l1', 'plan-l2', 'plan-l3', 'plan-l4', 'plan-l5', 'plan-l6'].forEach((id) => Approval.close(id));
+  ['plan-l1', 'plan-l2', 'plan-l3', 'plan-l4', 'plan-l5', 'plan-l6', 'plan-l8'].forEach((id) => Approval.close(id));
 }
 
 const recordOf = (g) => Object.fromEntries(Object.entries(got[g]).map(([k, v]) => [k, { sha256: sha(v), length: v.length }]));
@@ -208,6 +216,7 @@ PLANS.forEach(([k]) => chk(() => same('pages', k) && same('answers', k), () => `
   ['l4', 'L4. open again without reopen, with reopen, after the decision'], ['l5', 'L5. a long body is cut off, nothing decided'], ['l6', 'L6. wait() answers the click; state() before and after']]
   .forEach(([k, what]) => chk(() => same('life', k), () => `${what}, as on the base: ${diff('life', k)} now ${String(got.life[k]).slice(0, 400)}`));
 chk(() => same('life', 'l7page') && same('life', 'l7html') && got.life.l7page === got.life.l7html, () => `L7. approvalHtml is the page the server serves, as on the base: ${diff('life', 'l7page')} ${diff('life', 'l7html')}`);
+chk(() => L8.got && L8.got.length === 8 && L8.got.every((c) => c === 404) && L8.right === 200 && L8.state && L8.state.decided === null, () => `L8. a path after or before the secret answers "no longer valid" and decides nothing: ${JSON.stringify(L8)}`);
 
 // ---------- after each move ----------
 const src = (f) => fs.readFileSync(LIB(f), 'utf8'), codeOf = (t) => t.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
