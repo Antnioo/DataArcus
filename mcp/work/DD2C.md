@@ -18,8 +18,8 @@
   unchanged (r4a, j14-exact, the twin artifact: no expected answer moves); mutation 76/76; the probe's canon table:
   1 place, 0 of 10 differ (was 2 places, equal); samejob.py is the reviewer's (not in this repo): its same-shape
   groups go DOWN by one, not countable here.
-- **State:** step 1 done (canon.mjs, dd2c 27 checks).
-- **Resume:** step 2.
+- **State:** step 2 done (artifact.mjs and plans.mjs import canon; the probe and the ledger table: 1 place).
+- **Resume:** step 3.
 
 ## The answers (before, measured on the base 128285e; after: the same, pinned in dd2c)
 The probe's 10 values, canon(v): `{"a":2,"b":1}`, `{"b":1}`, `null` (undefined at the top), `null`, `[3,1,2]`,

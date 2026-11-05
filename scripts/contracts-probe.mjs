@@ -527,8 +527,7 @@ export const FAMILIES = [
     ] },
   { id: 'canon', title: 'What is the canonical text of a plan?', question: 'a value: its JSON with keys sorted and undefined left out (the text a digest is taken of)',
     inputs: CANON, places: [
-      P('mcp/lib/artifact.mjs', 'canon', 'source', async (x, get) => (await get())(x.v)),
-      P('mcp/lib/plans.mjs', 'canon', 'source', async (x, get) => (await get())(x.v)),
+      P('mcp/lib/canon.mjs', 'canon', 'export', async (x, get) => (await get())(x.v)),
     ] },
   { id: 'crc', title: 'What is the CRC-32 of these bytes?', question: 'bytes: their CRC-32 (the PNG and ZIP checksum)',
     inputs: BYTES, places: [
