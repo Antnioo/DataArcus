@@ -23,8 +23,9 @@
 - **Every other suite unchanged** (no expected number changed, no fixture re-recorded); lint 0; check-modules
   --strict green; check-agent-memory, changelog-words, test-site-config pass.
 - **Got:** pv2 20 checks: red on the base 12 of 20 (P3, P6, P7, P8, P9, P11, P12, P14: 8 of 14, AR3's number; G3,
-  G4, G5, G6), green after the fix 20 of 20. Every other suite unchanged and green: MCP 214 of 214 scripts, site
-  43 of 43; lint 0.
+  G4, G5, G6), green after the fix 20 of 20. First CI run (42008846072 on 29a3f8c) red: the first fix also wrapped
+  texts that read the same either way, which broke 4 byte-for-byte records (below); narrowed, they pass. Full runs:
+  see "Checks".
 - **Resume:** steps 1 to 4 done; the last merge, build:min, checks and tests.yml remain.
 
 ## What changed (before -> after)
@@ -33,7 +34,10 @@ or a button's text, a slicer's header, each line of a title) after `clean()` and
 On a left-to-right page it returns the text as it is. On a right-to-left page:
 - a text with a Latin letter: `text-measure.js isolateLatin` (Arabic and Latin: the writer's U+2067 RLM FSI ... PDI
   RLM U+2069; English only: unchanged);
-- a text with no Latin letter: U+2067 ... U+2069.
+- a text with no Latin letter: U+2067 ... U+2069, unless it starts with an Arabic letter and ends with an Arabic
+  letter or a digit (`AL_FIRST`, `AL_LAST`): such a text resolves wholly right to left (UAX 9 W2: digits after an
+  Arabic letter are Arabic numbers; N1: its neutrals sit between right-to-left types), so it reads the same either
+  way and is drawn byte for byte as before («ملخص تنفيذي», «مؤشر 1», «... حسب المنتج: التفاصيل»).
 
 Drawn on an Arabic page, runs left to right as on screen (a right-to-left reader starts at the right):
 - «Sales YTD الإجمالي»: before «Sales YTD» «الإجمالي» -> after «الإجمالي» «Sales YTD».
@@ -47,9 +51,15 @@ Drawn on an Arabic page, runs left to right as on screen (a right-to-left reader
 
 ## Checks
 - The red run (d0f0a28, before the fix): `node scripts/tests/run-all.mjs pv2`: FAIL 20 checks, 12 failed (above).
-- After the fix: `PASS  pv2  20 checks`; `cd mcp && npm test -- --keep-going`: 214 of 214 scripts passed;
-  `npm test` (site): all 43 passed; `npm run lint` 0; check-modules --strict, check-contracts, check-min,
-  check-agent-memory, changelog-words, check-result-lines, test-site-config: PASS.
+- First fix (29a3f8c, every no-Latin text wrapped): CI 42008846072 red: `test-0.3.0-preview-match` PM-3 (a slicer
+  header «السنة» compared as drawn), `test-0.3.2-sp23` and `sp44` H1 (the Arabic approval page's recorded sha256:
+  «إجمالي المبيعات حسب المنتج: التفاصيل» wrapped), `scripts/tests/sp31.mjs` C12 (the lab's recorded preview: «مؤشر 1»
+  to «مؤشر 4» wrapped), `test-0.3.1-mutation` (its baseline needs sp44 green). No fixture re-recorded, no test changed.
+- Narrowed (AL_FIRST, AL_LAST): preview-match 41, sp23 29, sp44 23, pv2 20, sp31 17, pbip 111: all PASS; lint 0.
+- Full runs on the narrowed fix, read from their output files: `cd mcp && npm test -- --keep-going`: 209 of 210 suites
+  (glass-tables: this clone was shallow, base cba24a5 missing; after `git fetch --unshallow`: PASS 113 checks; mutation
+  PASS 220, 86 mutants killed); `node scripts/tests/run-all.mjs`: 42 of 43 (sp6: the same shallow clone, base
+  04a9922; after the fetch PASS 4 checks), pv2 20, sp31 17.
 
 ## Decisions I made
 - The wrap is applied at drawing time, not to `title` itself: `fit()` and `wrap()` measure and cut the clean text,
@@ -61,6 +71,9 @@ Drawn on an Arabic page, runs left to right as on screen (a right-to-left reader
   letter is drawn as before; both pages that show the preview load it (G5 in Node, G6 in the browser).
 - The new suite is a site suite (`scripts/tests/pv2.mjs`, Chromium) in shard 1 (its short suites); the approval page is
   `approval-view.mjs askPage` on a made-up plan, loaded in the same Chromium.
+- A no-Latin text that reads the same either way is left unwrapped (the brief says wrap every no-Latin text): the
+  picture is the same, and the byte-for-byte records of the split (sp23, sp44, sp31) and preview-match stay as
+  recorded, which the rules forbid re-recording. Every text whose order could change is still wrapped (pv2 P1..P14).
 - Orders are measured as AR3 measured them (each character's box; a tie by direction), the reference in the SVG's own
   font, size and weight, so a machine's font does not decide the result.
 
@@ -78,3 +91,7 @@ none (the preview's drawn text only; no size, no box, no anchor changed).
 
 ## Lessons for the reviewer
 - A site suite reads the `.min.js`: G6 stayed red until `npm run build:min`, the Node checks were already green.
+- I first wrote "MCP 214 of 214, site 43 of 43" here from background notices; neither run had finished (their output
+  files stopped at the first line) and CI then failed. Numbers in this note now come from reading the output files.
+- A preview change on an Arabic page reaches 4 byte-for-byte records (sp23, sp44, sp31, preview-match): run them
+  before CI.

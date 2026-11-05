@@ -18,6 +18,11 @@
   // (control and format characters out of a name: they could reorder what the picture shows)
   const clean = (s) => String(s == null ? '' : s).replace(/[\u0000-\u001F\u007F-\u009F​-‏‪-‮⁦-⁩﻿]/g, '').trim();
   const n = (v) => String(Math.round((+v || 0) * 10) / 10);
+  // (PV2) a text with no Latin letter that starts with an Arabic letter and ends with one or with a digit resolves wholly
+  // right to left (UAX 9: its digits after an Arabic letter are Arabic numbers, W2; its neutrals sit between right-to-left
+  // types, N1), so it reads the same in either paragraph
+  const AL_FIRST = /^[\u0621-\u064A\u066E-\u06D3\u06D5\u06FA-\u06FC\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFB\uFE70-\uFEFC]/;
+  const AL_LAST = /[0-9\u0660-\u0669\u06F0-\u06F9\u0621-\u065F\u066E-\u06D5\u06FA-\u06FC\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFB\uFE70-\uFEFC]$/;
   const hex = (c, d) => (/^#[0-9a-f]{6}$/i.test(String(c || '')) ? String(c) : d);
 
   // Power BI's visual types, by the shape the preview draws for them
@@ -250,13 +255,14 @@
     const fit = (t, pt, room, bold, f) => { if (tw(t, pt, bold, f) <= room) return t; let k = t.length; while (k > 1 && tw(t.slice(0, k) + '…', pt, bold, f) > room) k--; return t.slice(0, k) + '…'; };
     // (0.3.2 PV2, AR3: 8 of 14 mixed labels drawn in another order than the report writes them) on a right-to-left page
     // each shown text is drawn as the writer writes it: after clean() (which keeps refusing a name's own marks) and after
-    // fit() and wrap() cut it, text-measure.js isolateLatin (U+2067 ... U+2069 round a text with a Latin letter), or
-    // U+2067 ... U+2069 round a text with no Latin letter; an English-only text stays as it is. The SVG keeps
-    // direction="ltr" and every anchor; the marks are 0 wide (textWidth counts them so)
+    // fit() and wrap() cut it, text-measure.js isolateLatin (U+2067 ... U+2069 round a text with a Latin letter); a text
+    // with no Latin letter in U+2067 ... U+2069 unless it reads the same either way (AL_FIRST, AL_LAST: not a leading
+    // digit, a last «%» or «…»); an English-only text as it is. The SVG keeps direction="ltr" and every anchor; the marks
+    // are 0 wide (textWidth counts them so)
     const asWritten = (t) => {
       if (!rtl || !t) return t;
       if (/[A-Za-z]/.test(t)) { const M = measure(); return M && M.isolateLatin ? M.isolateLatin(t) : t; }
-      return '\u2067' + t + '\u2069';
+      return AL_FIRST.test(t) && AL_LAST.test(t) ? t : '\u2067' + t + '\u2069';
     };
     const order = vs.map((v, i) => i).sort((a, b) => ((+vs[a].z || 0) - (+vs[b].z || 0)) || a - b);
     const font = `font-family="'Segoe UI', Tahoma, Arial, sans-serif"`;
