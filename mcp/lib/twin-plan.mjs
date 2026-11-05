@@ -174,7 +174,7 @@ export function planTwin(a) {
   const fieldAr = new Map(texts.filter((t) => t.kind === 'field').map((t) => [String(t.rawId).slice('field:'.length), labels[t.id]]));
   // (TB1) a visual's own name for a field: its own label, else no Arabic draft from the field's
   const ownAr = new Map(texts.filter((t) => t.kind === 'visualField').map((t) => [t.rawId.slice('fieldAt:'.length), labels[t.id]]));
-  texts.forEach((t) => { if (!t.auto) return; const d = autoSentence(t.auto, (x) => { const k = t.auto.where + '/' + x.ref, v = ownAr.has(k) ? ownAr.get(k) : fieldAr.get(x.ref); return v != null && /[\u0600-\u06FF]/.test(v) ? String(v).trim() : null; }, true); if (d) t.draftArabic = d; });
+  texts.forEach((t) => { if (!t.auto) return; const d = autoSentence(t.auto, (x) => { const k = t.auto.where + '/' + x.ref, v = ownAr.has(k) ? ownAr.get(k) : fieldAr.get(x.ref); return hasArabic(v) ? String(v).trim() : null; }, true); if (d) t.draftArabic = d; });
   T.statuses();
   texts.forEach((t) => { if (labels[t.id] != null) t.label = labels[t.id]; });
   // (TB1) an approved title that changed with the selection: said, it is now a fixed title
