@@ -20,8 +20,8 @@
   checker report twin` and the approval suites (sp23, sp44, test-0.3.0-approval-disclosure, approval-complete), sp18,
   sp37, sp41, sp42; no fixture re-recorded; one suite added (fn1e). Lint 0; test-contracts, check-modules, result-lines,
   changelog-words, agent-memory pass.
-- **State:** PLAN.
-- **Resume:** the pin suite (step 2).
+- **State:** the three splits pushed (fn1e green on each); mutants running in worktrees of f6bf9fac.
+- **Resume:** finish the mutants (scratch lists), add fn1e cases for survivors (recorded on f6bf9fac), then step 7.
 
 ## The parts and the steps (line ranges on f6bf9fac)
 - **summaryOf** (approval-disclosure.mjs 219-520), context `sc` ({ kind, d, pins, sections, val, files }):
