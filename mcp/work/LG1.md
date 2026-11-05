@@ -24,7 +24,8 @@
   the three schemas take `lang` en|ar optional and read_report's does not. Red first on the base: 8 of 12 failed on ca3a1b73
   (the six `lang` answers and the two schema checks; the strict inputs refused an unknown `lang`).
   ar4 stays 10; every other suite unchanged; sp42 and the pinned fixtures unchanged; lint 0.
-- **Resume:** plan pushed; next the red test, then the change, CHANGELOG, merge integration once, area runs, tests.yml, wait.
+- **Resume:** DONE. Integration had not moved (no merge needed). Area runs: arabic 17, core 11, model 28 suites
+  passed; the 35 sp suites PASS; lint 0. CI green: https://github.com/Antnioo/DataArcus/actions/runs/42063454494 on b8bc8aff3d161c64278fd789cfb06f1f1a78682e
 
 ## Plan
 1. Red test `test-0.3.2-lg1.mjs` on the base. 2. `readLangInput` in tool-inputs.mjs (optional, no default: absent
