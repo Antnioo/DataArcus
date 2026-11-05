@@ -600,6 +600,8 @@ svg-kpi-compiler.js `contrastOf`); their own copies are gone. The 3:1 and 4.5:1 
 
 **Question:** a text: the same text safe inside an XML attribute or element (`&`, `<`, `>`, `'`, `"`).
 
+**One place:** assets/js/svg-escape.js xmlEsc (test mcp/test-0.3.2-dd2x.mjs).
+
 **Newest copy:** equal (the audit and the probe).
 
 | place | MODULES.md | who sees it |
