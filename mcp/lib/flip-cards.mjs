@@ -16,6 +16,7 @@ import { besideSaid } from './plain-words.mjs';   // (0.3.1 R4A, T-9: the folder
 const require = createRequire(import.meta.url);
 // a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
 const { litText, litNumber } = require('../../assets/js/pbir-values.js');
+const SvgEscape = require('../../assets/js/svg-escape.js');
 const Fix = require('../../assets/js/model-health-tmdl.js'), Pbip = require('../../assets/js/pbip-export.js');
 const dax = Pbip.daxNames;
 
@@ -39,7 +40,8 @@ const W = {
 };
 
 // ---- text for the picture: XML-escaped, then every %, # and " and every non-ASCII character URL-encoded (a data URL) ----
-const xml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&apos;').replace(/"/g, '&quot;');
+// the XML escape: assets/js/svg-escape.js xmlEsc, its one home (DD2X); xml stays as the local name
+const xml = SvgEscape.xmlEsc;
 export const enc = (s) => String(s).replace(/[%#"]|[^\x20-\x7E]/gu, (c) => encodeURIComponent(c));
 // a DAX string of static picture text (no double quote is left after enc)
 const lt = (s) => dax.string(enc(s));
