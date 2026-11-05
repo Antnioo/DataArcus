@@ -22,7 +22,8 @@
 - **Expected checks:** a new suite `PASS  pb1  9 checks`; every other suite's number as on the base; lint 0;
   check-agent-memory, check-modules --strict, check-result-lines green. No CHANGELOG line.
 - **Found:** no real bug: all 9 green on the fixed seeds and on 13 more seeds by hand. Red proof: 7 of 7 (below).
-- **State:** DONE once the CI line is below.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41996195672 on 59be953f7eee5a6079e19796d13474e42efc6206
+- **State:** DONE (Linux and Windows CI; local 210 of 210 suites).
 - **Resume:** the reviewer reads and merges.
 
 ## Plan (one commit each)
