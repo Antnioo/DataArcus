@@ -5,20 +5,20 @@ import { loadModel, unreadableOf, kpisOf } from '../lib/model.mjs';
 import { namedTables, isLarge, largeSummary, fullAnswer } from '../lib/scope.mjs';
 import { UNTRUSTED } from '../lib/agent-text.mjs';
 import { text, compact, safe } from '../lib/tool-answer.mjs';
-import { READS, modelPath, strictInputs } from '../lib/tool-inputs.mjs';
+import { READS, modelPath, readLangInput, strictInputs } from '../lib/tool-inputs.mjs';
 import { LIMITS } from '../lib/tool-limits.mjs';
 import { hiddenOf } from '../lib/hidden-names.mjs';
 
 export function register(server, ctx) {
   server.registerTool('read_model', {
     title: 'Read a Power BI model',
-    description: 'Lists the tables, visible columns (with types), measures (with formats) and date tables of a model, without changing it.' + UNTRUSTED + ' A large model (a full list over 40,000 characters) gets a summary first: counts, the date tables, the areas (measure display folders), the tables with measures and the other tables\' names; ask for the tables you need with tables.',
-    inputSchema: strictInputs('read_model', { path: modelPath, tables: z.array(z.string()).min(1).max(LIMITS.tables).optional().describe('Only these tables, in full (names as read_model lists them). For a large model, after its summary') }), annotations: READS
+    description: 'Lists the tables, visible columns (with types), measures (with formats) and date tables of a model, without changing it.' + UNTRUSTED + ' A large model (a full list over 40,000 characters) gets a summary first: counts, the date tables, the areas (measure display folders), the tables with measures and the other tables\' names; ask for the tables you need with tables. Pass lang "ar" when the user writes in Arabic.',
+    inputSchema: strictInputs('read_model', { path: modelPath, tables: z.array(z.string()).min(1).max(LIMITS.tables).optional().describe('Only these tables, in full (names as read_model lists them). For a large model, after its summary'), lang: readLangInput }), annotations: READS
   }, safe(async ({ path: p, tables }) => {
     // (AU47) a definition file that could not be read fully is named first, before the part that was read
     const m = loadModel(p), first = unreadableOf(m);
     // (SQ15a) each KPI and its target: a measure, or "an expression" (its text never)
     if (tables) return text(Object.assign({}, first, namedTables(m, tables, hiddenOf(m)), kpisOf(m), hiddenOf(m)));
     return isLarge(m) ? compact(Object.assign({}, first, largeSummary(m), kpisOf(m), hiddenOf(m))) : text(Object.assign({}, first, fullAnswer(m), kpisOf(m), hiddenOf(m)));
-  }));
+  }, { lang: true }));
 }
