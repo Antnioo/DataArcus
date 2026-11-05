@@ -4,11 +4,8 @@
 //   L1-L6   luminance on 6 colours
 //   M1-M2   the module is the same as .min.js; it never throws on a non-text
 //   node test-0.3.2-dd2k.mjs
-import path from 'node:path';
 import { createRequire } from 'node:module';
-import { fileURLToPath } from 'node:url';
 
-const HERE = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 const Contrast = require('../assets/js/contrast.js');
 const problems = []; let checks = 0;
