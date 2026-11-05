@@ -183,7 +183,12 @@ const VT_WORDS = { clusteredBarChart: ['bar chart', 'bar charts', 'مخططات 
   pieChart: ['pie chart', 'pie charts', 'مخططات دائرية'], lineClusteredColumnComboChart: ['combo chart', 'combo charts', 'مخططات مركبة'], waterfallChart: ['waterfall', 'waterfalls', 'مخططات شلالية'], cardVisual: ['card', 'cards', 'بطاقات'], card: ['card', 'cards', 'بطاقات'],
   multiRowCard: ['multi-row card', 'multi-row cards', 'بطاقات متعددة الصفوف'], kpi: ['KPI visual', 'KPI visuals', 'مرئيات KPI'], tableEx: ['table', 'tables', 'جداول'], pivotTable: ['matrix', 'matrices', 'مصفوفات'], textbox: ['text box', 'text boxes', 'مربعات نص'],
   shape: ['shape', 'shapes', 'أشكال'], image: ['image', 'images', 'صور'], group: ['group', 'groups', 'مجموعات مرئيات'], map: ['map', 'maps', 'خرائط'], filledMap: ['filled map', 'filled maps', 'خرائط ملونة'], scatterChart: ['scatter chart', 'scatter charts', 'مخططات مبعثرة'],
-  gauge: ['gauge', 'gauges', 'مقاييس دائرية'], treemap: ['treemap', 'treemaps', 'مخططات شجرية'], funnel: ['funnel', 'funnels', 'مخططات قمعية'], ribbonChart: ['ribbon chart', 'ribbon charts', 'مخططات شريطية متدفقة'] };
+  gauge: ['gauge', 'gauges', 'مقاييس دائرية'], treemap: ['treemap', 'treemaps', 'مخططات شجرية'], funnel: ['funnel', 'funnels', 'مخططات قمعية'], ribbonChart: ['ribbon chart', 'ribbon charts', 'مخططات شريطية متدفقة'],
+  // (0.3.2 PL1) the kinds a redesign's rows name too (the page list counts slicers and buttons on their own)
+  slicer: ['slicer', 'slicers', 'مقسمات'], advancedSlicerVisual: ['slicer', 'slicers', 'مقسمات'], actionButton: ['button', 'buttons', 'أزرار'], pageNavigator: ['page navigator', 'page navigators', 'أدوات التنقل بين الصفحات'],
+  bookmarkNavigator: ['bookmark navigator', 'bookmark navigators', 'أدوات التنقل بين الإشارات المرجعية'] };
+// (0.3.2 PL1, E1 round 5: a visual by Power BI's type key) one visual's kind in words; a custom visual by its id
+const kindSaid = (t) => { const s = String(t || ''), m = /^custom (.+)$/.exec(s); return m ? `custom visual ${m[1]}` : VT_WORDS[s] ? VT_WORDS[s][0] : s; };
 const nOf = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 function pagesSection(PW) {
   const rows = PW.map((x) => {
@@ -318,7 +323,7 @@ function summaryOf(kind, data) {
     cc.forEach((c) => look.push(['The first data colour, made readable', `approved colour ${String(c.from)} -> written colour ${String(c.to)}: contrast ${c.contrast}:1 against the visuals' background ${String(d.colours.card || '')}, needs 3:1 for a data colour${own(c)} (the 3:1 contrast for graphics of WCAG 2.1, criterion 1.4.11; the hue is kept)`]));
     // (0.3.1 GD1) the cards' look: glass by default, plain where glass can't keep the text readable (and why), or as asked
     const lk = d.look && typeof d.look === 'object' ? d.look : null;
-    if (lk) look.unshift(['Card look', lk.look === 'glass' ? (lk.chosenBy === 'default' ? 'Glass look (default): see-through cards over a soft page picture made from the theme\'s colours (Power BI has no blur behind a visual); plain: chart.look "auto"' : 'Glass look, as asked: see-through cards over a soft page picture made from the theme\'s colours')
+    if (lk) look.unshift(['Card look', lk.look === 'glass' ? (lk.chosenBy === 'default' ? 'Glass look (default): see-through cards over a soft page picture made from the theme\'s colours (Power BI has no blur behind a visual); plain cards: ask for the plain look' : 'Glass look, as asked: see-through cards over a soft page picture made from the theme\'s colours')
       : Array.isArray(lk.glassFailed) ? `Plain: with these colours glass can't keep everything readable (${lk.glassFailed.map((c) => `${String(c.check || '')}${c.ratio != null ? ` ${(Math.floor(+c.ratio * 10) / 10).toFixed(1)}:1, needs ${+c.min}:1` : ''}`).join('; ')}), so the cards are solid` : 'Plain, as asked: Power BI\'s own cards']);
     if (bars) look.unshift([LK.chartColors, bars === 'gradient' ? 'each bar fades by its value; a chart by a second category field gets a second colour, the same on every page' : 'one colour for every bar']);
     sections.push({ heading: 'Look and options', rows: look });
@@ -342,7 +347,9 @@ function summaryOf(kind, data) {
     if (gl.length) sections.push({ heading: 'Visual gallery', rows: gl.map((g) => [`${GN[g.kind] || 'A gallery visual'}${g.title ? `: ${cut(g.title, 80)}` : ''}`, `written as ${g.written === g.kind ? (GN[g.kind] || g.kind).toLowerCase() : String(g.written)}: ${String(g.why || '')}`])
       .concat([['Preview', 'the preview draws a waterfall and small multiples as a column-chart placeholder, a combo as a line-chart placeholder']]) });
     const other = ['pageFilters', 'text', 'subtitles', 'svgColumns', 'svgCards'].filter((k) => p[k] !== undefined && p[k] !== null);
-    if (other.length) sections.push({ heading: 'More', rows: other.map((k) => [k, val(p[k])]) });
+    // (0.3.2 PL1, E1 round 5: an option by its input key) each in plain words
+    const MORE = { pageFilters: 'Page filters', text: 'Sentence in the text box', subtitles: 'Chart subtitles', svgColumns: 'Small pictures in table rows', svgCards: 'Small pictures beside KPI cards' };
+    if (other.length) sections.push({ heading: 'More', rows: other.map((k) => [MORE[k], val(p[k])]) });
     // (0.3.1 X2) a report in English and Arabic: both halves, as the twin's EN-AR page shows them
     if (d.bilingual && typeof d.bilingual === 'object') languagesSections(d.bilingual, sections, 1);
     // (0.3.1 SQ10, K2-S1) what stays English or unmirrored in its Arabic half, in one line, as the twin's page says it
@@ -371,6 +378,8 @@ function summaryOf(kind, data) {
   // dropped) a redesign's page lists every change (page, visual, from, to), every visual not changed with why, and what
   // is copied as it is
   if (kind === 'redesign') {
+    // (0.3.2 PL1, E1 round 5: a theme change by the theme file's key) each colour the restyle changes, in words
+    const THEME_KEYS = { dataColors: 'data colours', foreground: 'text colour', background: 'background colour', tableAccent: 'table accent colour', good: 'colour for good results', neutral: 'colour for neutral results', bad: 'colour for bad results' };
     // (ST1, R4A-S4) a text setting in plain words: "font", "text size", "title font" (the visual's own property names
     // are text-format.mjs's: fontFamily, fontSize, textSize, titleFontFamily, titleFontSize, bold, italic...)
     const plainProp = (p) => { const s = String(p || ''), w = /family/i.test(s) ? 'font' : /size/i.test(s) ? 'text size' : /bold/i.test(s) ? 'bold' : /italic/i.test(s) ? 'italic' : s; return /^title/.test(s) && w !== s ? 'title ' + w : w; };
@@ -382,7 +391,7 @@ function summaryOf(kind, data) {
       const size = [dw ? `${r(Math.abs(dw))} ${dw > 0 ? 'wider' : 'narrower'}` : null, dh ? `${r(Math.abs(dh))} ${dh > 0 ? 'taller' : 'shorter'}` : null].filter(Boolean);
       return [out.length ? `moves ${out.join(' and ')}` : 'stays in place', size.length ? size.join(' and ') : null].filter(Boolean).join(', ') + ` (now ${r(b.w)} x ${r(b.h)}, its top left corner at ${r(b.x)}, ${r(b.y)})`; };
     // (R6, F08: a visual by its kind, fields and place, never its title text)
-    const of = (c) => `${cut(c.type, 40)}${Array.isArray(c.fields) && c.fields.length ? ` of ${c.fields.join(', ')}` : ''}${c.place ? ` at ${c.place}` : ''}`;
+    const of = (c) => `${cut(kindSaid(c.type), 60)}${Array.isArray(c.fields) && c.fields.length ? ` of ${c.fields.join(', ')}` : ''}${c.place ? ` at ${c.place}` : ''}`;
     // (0.3.0 D4) a unit on one line: the visuals laid on it, each by its kind and fields, and where it goes with it
     const overlaid = (c) => (Array.isArray(c.overlays) && c.overlays.length ? `with what lies on it, ${c.from || c.overlays.some((o) => o.from) ? 'moved' : 'kept'} with it: ${c.overlays.map((o) => `${cut(o.visual, 60)} (${of(Object.assign({}, o, { place: null }))})${o.from ? ` to ${at(o.to)}` : ''}`).join('; ')}` : null);
     // (0.3.1 CS1) a visual's own text settings removed, each: class, property, from -> the text set's value
@@ -399,14 +408,14 @@ function summaryOf(kind, data) {
     };
     const changes = pages.flatMap((p) => (p.changes || []).map((c) => [`${cut(p.page, 60)}: ${cut(c.visual, 60)} (${of(c)})`,
       [c.from ? moved(c.from, c.to) : null, c.narrower ? cut(c.narrower, 200) : null, c.title && typeof c.title === 'object' ? `its title becomes "${String(c.title.to)}"` : null, textOf(c), overlaid(c)].filter(Boolean).join('; ')]));
-    if (S.theme && S.theme.tokens) Object.entries(S.theme.tokens).forEach(([k, v]) => changes.push([`Theme ${cut(S.theme.file, 60)}: ${k}`, Array.isArray(v) ? { swatches: v.map((c) => ['', String(c)]) } : /^#[0-9a-f]{6}$/i.test(String(v)) ? { swatches: [['', String(v)]] } : val(v)]));
+    if (S.theme && S.theme.tokens) Object.entries(S.theme.tokens).forEach(([k, v]) => changes.push([`Theme ${cut(S.theme.file, 60)}: ${THEME_KEYS[k] || k}`, Array.isArray(v) ? { swatches: v.map((c) => ['', String(c)]) } : /^#[0-9a-f]{6}$/i.test(String(v)) ? { swatches: [['', String(v)]] } : val(v)]));
     const notChanged = pages.flatMap((p) => (p.why ? [[`${cut(p.page, 60)} (the whole page)`, cut(p.why, 200)]] : []).concat((p.notChanged || []).filter((x) => !(p.why && /tooltip page/.test(x.why))).map((x) => [`${cut(p.page, 60)}: ${cut(x.visual, 60)} (${of(x)})`, [cut(x.why, 200), overlaid(x)].filter(Boolean).join('; ')])));
     const n = (k, one, many) => (K[k] ? [[many[0].toUpperCase() + many.slice(1), `${K[k]} ${K[k] === 1 ? one : many}`]] : []);
     sections.push({ heading: 'Report', rows: [['Original', S.original || ''], ['New report', S.newReport || ''], ['Method', 'a copy of the original, file for file, with only the changes below']].map(([k, v]) => [k, val(v)]) });
     // (0.3.1 CS1) the one text set, before the changes
     if (S.text && Array.isArray(S.text.set)) sections.push({ heading: `Text set (${S.text.mode === 'theme' ? 'the theme\'s own' : 'what most visuals already show'})`, rows: S.text.set.map((x) => [cut(x.what || TEXT_CLASSES[x.class] || 'text', 80), `${cut(x.font, 60)}, ${cut(x.size, 20)}`])
       .concat([['Bold and italic', cut(S.text.boldItalic, 200)], ['Theme', cut(S.text.theme, 300)], ['Settings removed', `${S.text.removed} (each listed under Changes, with its visual)`]], (S.text.kept || []).map((k) => [`${cut(k.page, 60)}: ${cut(k.visual, 60)} ${cut(plainProp(k.property), 30)}`, cut(k.why, 120)]),
-        (S.text.untouched || []).map((k) => [`${cut(k.page, 60)}: ${cut(k.visual, 60)} (${cut(k.type, 40)})`, `text untouched: ${cut(k.why, 160)}`]), S.text.themeStyles ? [['The theme\'s own visual styles', cut(S.text.themeStyles, 300)]] : []).map(([k, v]) => [k, val(v)]) });
+        (S.text.untouched || []).map((k) => [`${cut(k.page, 60)}: ${cut(k.visual, 60)} (${cut(kindSaid(k.type), 60)})`, `text untouched: ${cut(k.why, 160)}`]), S.text.themeStyles ? [['The theme\'s own visual styles', cut(S.text.themeStyles, 300)]] : []).map(([k, v]) => [k, val(v)]) });
     sections.push({ heading: `Changes (${changes.length})`, rows: changes });
     sections.push({ heading: `Not changed (${notChanged.length})`, rows: notChanged });
     sections.push({ heading: 'Kept as it is', rows: [].concat(n('pages', 'page', 'pages'), n('bookmarks', 'bookmark', 'bookmarks'), n('buttons', 'button', 'buttons'), n('reportFilters', 'report filter', 'report filters'), n('pageFilters', 'page filter', 'page filters'),

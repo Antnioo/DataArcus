@@ -247,7 +247,7 @@ try {
     pages: [{ page: 'Overview', changes: [v('colDept', 'clusteredColumnChart', { from: { x: 40, y: 250, w: 600, h: 430 }, to: { x: 40, y: 246, w: 602, h: 430 } })],
       notChanged: [v('btnGo', 'actionButton', { why: 'a button: kept where it is' }), v('tblOrders', 'tableEx', { why: 'kept' }), v('nav', 'pageNavigator', { why: 'kept' }), v('slDept', 'slicer', { why: 'kept' }), v('note', 'textbox', { why: 'kept' }), v('gauge', 'custom acmeGauge0123456789ABCDEF', { why: 'a custom visual: copied as it is' })] }] };
   const R = labels(Approval.approvalHtml({ id: 'plan-pl1000000002', kind: 'redesign', writes: [] }, Approval.summary('redesign', { shown })));
-  const TYPES = /\((actionButton|clusteredColumnChart|tableEx|pageNavigator|slicer|textbox|custom acmeGauge)\b/;
+  const TYPES = /\((actionButton|clusteredColumnChart|tableEx|pageNavigator|textbox|custom acmeGauge)\b/;
   chk(() => R.length && !R.some((x) => TYPES.test(x)), () => `A10-4. no redesign row names a visual by its type key: ${JSON.stringify(R.filter((x) => TYPES.test(x)))}`);
   const RW = ['Overview: btnGo (button', 'Overview: colDept (column chart of', 'Overview: tblOrders (table of', 'Overview: nav (page navigator of', 'Overview: slDept (slicer of', 'Overview: note (text box of', 'Overview: gauge (custom visual acmeGauge0123456789ABCDEF of'];
   chk(() => RW.every((w) => R.some((x) => x.startsWith(w))), () => `A10-5. each visual's kind in words: missing ${JSON.stringify(RW.filter((w) => !R.some((x) => x.startsWith(w))))} in ${JSON.stringify(R)}`);
