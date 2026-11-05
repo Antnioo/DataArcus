@@ -103,7 +103,12 @@ const REPORT_EDITS = [
   ['flipCards none', 'flipCards', { cards: [] }], ['flip no pbip', 'outputs', ['a.json', 'Retail - flip cards.tmdl', 'x.png']],
   ['statusIcons bare', 'statusIcons', { columns: [{ page: 'p'.repeat(70), measure: 'm'.repeat(130), way: 'target' }] }],
   ['terminology empty', 'terminology', []], ['gulfDates empty', 'gulfDates', []], ['notTranslated empty', 'notTranslated', []], ['alreadyThere empty', 'alreadyThere', []],
-  ['waterfallRtl long', 'waterfallRtl', [{ page: 'p'.repeat(70), title: 't'.repeat(90), written: 'mirror', what: 'w' }]]
+  ['waterfallRtl long', 'waterfallRtl', [{ page: 'p'.repeat(70), title: 't'.repeat(90), written: 'mirror', what: 'w' }]],
+  // (the edges the mutants showed) a kind with a said and a why, its said in arOf's words; a falsy smoothLines; a slicer
+  // style, an axes answer and a glass choice that are none of the named ones
+  ['kinds said and why', 'kinds', [{ role: 'R', from: 'bar', to: 'column', said: 'A bar chart, not columns: 12 months would be cut or slanted under columns.', why: '42 px a category' }, { from: 'column', to: 'bar', said: 'odd words', why: 'w2' }]],
+  ['smoothLines 0', 'pins.create_report.smoothLines', 0], ['slicerStyle other', 'pins.create_report.slicerStyle', 'zz'],
+  ['sharedAxes other answer', 'pins.create_report.sharedAxes', [{ measures: ['A', 'B'], answer: 'zz' }, { answer: 'separate' }]], ['look glass other', 'look', { look: 'glass', chosenBy: 'zz' }]
 ];
 export function disclosureCases() {
   const C = [];
@@ -113,6 +118,7 @@ export function disclosureCases() {
   C.push(['report Arabic', 'report', ar()]);
   REPORT_KEYS.forEach((k) => C.push([`report Arabic without ${k}`, 'report', del(ar(), k)]));
   REPORT_EDITS.forEach(([n, p, v]) => { C.push([`report ${n}`, 'report', set(reportData(), p, v)]); C.push([`report Arabic ${n}`, 'report', set(ar(), p, v)]); });
+  C.push(['report customVisuals alone', 'report', set(del(reportData(), 'customVisualsShown'), 'customVisuals', [{ from: 'Gantt', to: 'table' }])]);
   C.push(['report empty', 'report', {}], ['report null', 'report', null], ['report name only', 'report', { pins: { create_report: { name: 'Only' } } }],
     ['report design only', 'report', { pins: { create_report: { design: { layout: {} } } } }], ['report pages only', 'report', { pins: { create_report: { pages: [] } } }]);
   // the redesign
@@ -122,7 +128,7 @@ export function disclosureCases() {
       { visual: 'v2', type: 'custom aBulletChart', from: { x: 0, y: 0, w: 10, h: 10 }, to: { x: 0, y: 0, w: 10, h: 10 }, title: 'kept', overlays: [{ visual: 'o1', type: 'card', fields: ['Sales'], from: { x: 1 }, to: { x: 1, y: 2, w: 3, h: 4 } }, { visual: 'o2', type: 'shape' }] },
       { visual: 'v3', type: 'tableEx', text: [{ class: 'title', property: 'fontFamily', from: 'Arial', to: 'Segoe UI' }, { class: 'label', property: 'fontSize', from: '9', to: 'the theme\'s' }, { class: 'zz', property: 'bold', from: 'true', to: 'true' },
         { class: 'zz', property: 'italic', from: 'x', to: 'x' }, { class: 'header', property: 'other', from: 'a', to: 'b' }], overlays: [{ visual: 'o3', type: 'card' }] },
-      { visual: 'v4', type: 'lineChart', from: { x: 50, y: 50, w: 100, h: 100 }, to: { x: 20, y: 80, w: 90, h: 90 }, text: [{ class: 'title', property: 'fontSize', from: '12', to: '12' }] },
+      { visual: 'v4', type: 'lineChart', from: { x: 50, y: 50, w: 100, h: 100 }, to: { x: 20, y: 80, w: 90, h: 90 }, text: [{ class: 'title', property: 'fontSize', from: '12', to: '12' }, { class: 'title', property: 'fontSize', from: '14', to: '14' }, { class: 'label', property: 'fontFamily', from: 'the theme\'s', to: 'the theme\'s' }] },
       { visual: 'v5', type: 'pieChart', from: { x: 5, y: 5, w: 5, h: 5 }, to: { x: 5, y: 5, w: 5, h: 50 } }],
     notChanged: [{ visual: 'n1', type: 'image', why: 'a picture' }, { visual: 'n2', type: 'card', why: 'on a tooltip page', overlays: [{ visual: 'o4', type: 'shape', from: { x: 1 }, to: { x: 2, y: 2, w: 2, h: 2 } }] }] },
     { page: 'Tips', why: 'a tooltip page', notChanged: [{ visual: 'n3', type: 'card', why: 'a tooltip page' }, { visual: 'n4', type: 'card', why: 'its own' }] }, { page: 'Empty' }],
@@ -151,7 +157,7 @@ export function disclosureCases() {
   const TW = () => ({ labels: { t1: 'المبيعات', t2: 'الطلبات', t3: 'نص' }, names: { t1: 'Title "Sales"', t2: 'Card Orders' }, namesAr: { t1: 'العنوان' }, timeRightToLeft: true, arabicMonth: true,
     picturePages: 2, mirrorPicturePages: false, waterfalls: 1, waterfallRtl: 'native', matrixAsTable: Array.from({ length: 32 }, (_, i) => 'M' + i), matrices: 'kept as they are',
     terminology: [{ en: 'Sales', field: 'S[A]', ar: 'المبيعات', status: 'approved' }], notTranslated: [{ field: 'SKU', why: 'a code', whyAr: 'رمز' }, { field: 'Zone' }],
-    preview: { pages: [{ name: 'p' }], asTables: Array.from({ length: 31 }, (_, i) => (i === 0 ? { page: 'P', pageAr: 'ص', title: 'T', titleAr: 'ع', visual: 'v0' } : i === 1 ? { page: 'P', title: 'T', visual: 'v1' } : { page: 'P', visual: 'v' + i })) },
+    preview: { pages: [{ name: 'p' }], asTables: Array.from({ length: 31 }, (_, i) => (i === 0 ? { page: 'P', pageAr: 'ص', title: 'T', titleAr: 'ع', visual: 'v0' } : i === 1 ? { page: 'P', title: 'T', visual: 'v1' } : i === 2 ? { page: 'P', titleAr: 'عنوان', visual: 'v2' } : { page: 'P', visual: 'v' + i })) },
     added: Array.from({ length: 31 }, (_, i) => ({ page: 'P', name: 'weekdays ' + i, beside: 'heat ' + i })),
     orderCalculations: { visuals: Array.from({ length: 31 }, (_, i) => ({ visual: 'oc' + i, functions: i === 0 ? { RUNNINGSUM: 2, PREVIOUS: 1, zz: 3 } : i === 1 ? null : { RANK: 1, INDEX: 0 } })), count: 40, notListed: 9 },
     notFullyArabic: { en: 'A title stays English', ar: 'عنوان بالإنجليزية' }, outputs: ['x/Twin - Arabic calendar.tmdl', 'x/Twin.Report/definition/pages/p/page.json'] });
@@ -181,6 +187,7 @@ export function disclosureCases() {
   C.push(['calendar columns only', 'calendar', { pins: { add_gulf_calendar: O(IN, { arabicColumnsOnly: true }) }, outputs: ['m - Arabic calendar.tmdl'] }]);
   C.push(['calendar columns only Arabic', 'calendar', { pins: { add_gulf_calendar: O(IN, { arabicColumnsOnly: true, lang: 'ar' }) } }]);
   C.push(['theme inputs Arabic', 'theme', { pins: { generate_theme: { brand: '#123456', mode: 'dark', lang: 'ar' } } }]);
+  C.push(['theme colours text', 'theme', set(TH(), 'colours', 'red')], ['scripts two pins', 'scripts', { pins: { check_model_health: { path: 'a.SemanticModel' }, add_gulf_calendar: { maxItems: 3, lang: 'ar' } } }]);
   C.push(['another kind', 'zz', { pins: { other: { path: 'x', maxItems: 1 } }, outputs: ['a.json'] }], ['another kind empty', 'zz', {}], ['scripts no pins', 'scripts', { pins: {} }]);
   return C;
 }
@@ -292,6 +299,25 @@ export function meaningCases() {
   add('object and id hint', hv('barChartX', { category: [REGION], values: [SALES] }, { customObjects: ['line'] }));
   add('hint combo bar drill', hv('comboBarChartX', { category: [REGION, CITY], bars: [SALES], lines: [PCT] }));
   add('drill matrix', hv('matrixX', { rows: [REGION, CITY, col('G', 'Street')], values: [SALES] }));
+  // (the edges the mutants showed) date levels in a category role, a native matrix's rows, format objects on the visual,
+  // an object hint beside an id hint, a tooltip column, a network's unnamed value, two latitudes, a latitude alone, line
+  // values only, a percentage beside an unknown format, a time role with another language's level under a time hint, a
+  // KPI value beside a colour rule, a breakdown under a pie hint, a combo hint on unnamed roles, a time hint on a card
+  add('chart category levels', cv({ category: [YEAR, MONTH], values: [SALES] }));
+  add('native matrix two rows', V('pivotTable', { Rows: [REGION, CITY], Values: [SALES] }));
+  add('object hint on visual words', hv('aCustomVisual0123456789', { category: [REGION], values: [SALES] }, { customObjects: ['doughnutSettings'] }));
+  add('object hint over id hint', hv('barChartX', { category: [REGION], values: [SALES] }), O(T, { customObjects: ['donut'] }));
+  add('tooltip column', cv({ category: [REGION], values: [SALES], tooltips: [CITY, COST] }));
+  add('network unnamed value', cv({ source: [col('N', 'From')], target: [col('N', 'To')], zzq: [SALES] }));
+  add('map two latitudes', cv({ latitude: [col('G', 'Lat'), col('G', 'Lat2')], longitude: [col('G', 'Lon')], values: [SALES] }));
+  add('map latitude alone', cv({ latitude: [col('G', 'Lat')], values: [SALES] }));
+  add('chart lines only', cv({ category: [REGION], lines: [PCT] }));
+  add('chart percent and unknown', cv({ category: [REGION], values: [PCT, mea('S', 'Other')] }));
+  add('hint time other language level', hv('timelineVisualX', { time: [col('Cal', 'Monat', { level: 'Monat' })], values: [SALES] }));
+  add('chart kpi value and colour rule', cv({ category: [REGION], values: [SALES], indicator: [COST], colorRule: [PCT] }));
+  add('hint pie breakdown', hv('pieChartCustom0001', { category: [REGION], values: [SALES], breakdown: [CITY] }));
+  add('hint combo unnamed', hv('comboChartX', { qqq1: [REGION], zzz2: [SALES, mea('S', 'Other')] }));
+  add('hint time on a card', hv('timelineVisualX', { values: [SALES] }));
   add('no opts', cv({ category: [REGION], values: [SALES] }), null);
   add('null visual', null, T);
   return C;

@@ -1082,6 +1082,50 @@
    "sha": "11763111a3d9a859cbe3b8a871cf5814e73734277b6446e0d65eece6cd8f2da8",
    "len": 14160
   },
+  "D report kinds said and why": {
+   "sha": "a2357df294cdde03917e8c38564815dbeee593643942b5a1072c2a0b1d0ccc7c",
+   "len": 13270
+  },
+  "D report Arabic kinds said and why": {
+   "sha": "edb67b233f26547ca3a2d5f79ded0945f1da7abea80ff931d807b20812ac406c",
+   "len": 13888
+  },
+  "D report smoothLines 0": {
+   "sha": "0aa2d0ed09685a3d66820dc42014ebdcd492d770a90dcff4186d28b1b3411782",
+   "len": 13378
+  },
+  "D report Arabic smoothLines 0": {
+   "sha": "d691915a86921e8f748c8eb78c82cb5734ecb7b688a4f25e93b9b6359549c0eb",
+   "len": 14148
+  },
+  "D report slicerStyle other": {
+   "sha": "43cd3845ea2ea19a4e785f66aeb19acfc8c6fe1e2f1c2f76862d0955ab0850db",
+   "len": 13248
+  },
+  "D report Arabic slicerStyle other": {
+   "sha": "730b77d7aa8828665371fae5eec9367a62315a647253bce093c14bc7539cfd5b",
+   "len": 14018
+  },
+  "D report sharedAxes other answer": {
+   "sha": "6250666cd967e5b1ea6a5d8831940102b052467992fb3624de0c4e45de0ae39f",
+   "len": 13291
+  },
+  "D report Arabic sharedAxes other answer": {
+   "sha": "4869ee2ddaf2931eaa9b189f6261da48475c94bdda4c62c02b83fcc403a54cdb",
+   "len": 14061
+  },
+  "D report look glass other": {
+   "sha": "8742762aa2758323155dd7db00793daa45c13a791bd6317001c9a4f6bbff04bf",
+   "len": 13259
+  },
+  "D report Arabic look glass other": {
+   "sha": "f4c84bf9b18ad0570bff57f45921119c1dd2d0e484a1727d0895760822ced06c",
+   "len": 14029
+  },
+  "D report customVisuals alone": {
+   "sha": "9a4fc64951adf3b4d8f24f32fcb3fb398e45a5448a301d0e647b29455d11011c",
+   "len": 13023
+  },
   "D report empty": {
    "sha": "98df7d9f62f81091b6dbbec048adc3e4a836c2e48e683ed40763a399a80cadae",
    "len": 803
@@ -1103,56 +1147,56 @@
    "len": 849
   },
   "D redesign full": {
-   "sha": "ae46f9d8c286a5f06ecfe762b69488388f729d1603964687cc7f159f959b31de",
-   "len": 4407
+   "sha": "2ea0ad53f6260b19460803fd55b2401d8fc0241c429474109f033b59e457f9b7",
+   "len": 4504
   },
   "D redesign no theme": {
-   "sha": "a0df8974fb0dcc5b23a5e4bd6609fcdf80d31ec8bd8601b102aa876bb402cddc",
-   "len": 4148
+   "sha": "335b88c6d94735e3d1243cad196ea93e0feb749d46efa920e0b8bfe740148bc8",
+   "len": 4245
   },
   "D redesign theme no tokens": {
-   "sha": "a0df8974fb0dcc5b23a5e4bd6609fcdf80d31ec8bd8601b102aa876bb402cddc",
-   "len": 4148
+   "sha": "335b88c6d94735e3d1243cad196ea93e0feb749d46efa920e0b8bfe740148bc8",
+   "len": 4245
   },
   "D redesign text mode most": {
-   "sha": "bcb4cdcda4a4617a72dffe57449be7d9bf7f8ffb1a4bf5757be7556f67bb48eb",
-   "len": 4422
+   "sha": "8858fd69e3e368b1a2f8f928d1bb5494ae3635b4302454fac90d59dd0cdbd4bc",
+   "len": 4519
   },
   "D redesign no text": {
-   "sha": "d62f2c4b03708d5c02c86e0c6e6152fc5b9065bcb466677f5ebce8fcdb8418c6",
-   "len": 3848
+   "sha": "365a0cb4c501d8993e0034555edfc4fffdd22f3c060d175465c81d6bff5e581a",
+   "len": 3945
   },
   "D redesign text set not a list": {
-   "sha": "d62f2c4b03708d5c02c86e0c6e6152fc5b9065bcb466677f5ebce8fcdb8418c6",
-   "len": 3848
+   "sha": "365a0cb4c501d8993e0034555edfc4fffdd22f3c060d175465c81d6bff5e581a",
+   "len": 3945
   },
   "D redesign no kept list": {
-   "sha": "e3084dd264914667557507958a4f72c003b9fb13cb3eed20fdd7cc2268582e28",
-   "len": 4238
+   "sha": "2975ceadd454ebc8fd8e6cff7cf50b8d4f53a3a6eb57d75788b482dc21afdf01",
+   "len": 4335
   },
   "D redesign no themeStyles": {
-   "sha": "e8b20faf01531fc1ca3e915c2a7c12b5e5b490019ddcec84cc4a40100fea909c",
-   "len": 4366
+   "sha": "c0dbbde1a00dc6e4cd24c89e82089d619fd562c036478baefb9b1b70109327ed",
+   "len": 4463
   },
   "D redesign not copied": {
-   "sha": "9618479aa45326b3223f36c1051841f2ad453ed9c3274d943876bead7550d646",
-   "len": 4088
+   "sha": "8208708fb45ce7ab449aebb8ff9e05890227da70f8fe9680cd319847df188db0",
+   "len": 4185
   },
   "D redesign no outputs": {
-   "sha": "6471277d348a51d26a6dec93e26660ee51e03d78b458bb65df9361d8f48c4e4e",
-   "len": 3977
+   "sha": "8f4459730ed600de3b8e5cccb91250e982784b86efd1450dc4854993d7ccfd5a",
+   "len": 4074
   },
   "D redesign no pages": {
    "sha": "d07b85a6851c76089af54cd98ba0d90f96376671ec7dcf5e113faba816921c16",
    "len": 2940
   },
   "D redesign keptAsIs ones": {
-   "sha": "9dd1796944816ed0c38408d5dba5c52e05043fa8a5a504943b38a4bef228a690",
-   "len": 4433
+   "sha": "ab7941e2062e3bf8753ed81b1993d025bf321c31e231afb4d447fe4783807b57",
+   "len": 4530
   },
   "D redesign no original": {
-   "sha": "eb358705f40153f9dd2ae6efd96136b923bbe8b62e8962b578ba2a72bfc5c847",
-   "len": 4397
+   "sha": "045fe0a5ca06b4d00c0d143097f4c2f8b7fad8bd76d380a3d2beb16a4695e642",
+   "len": 4494
   },
   "D redesign empty": {
    "sha": "367e31ce6a2c5b38aeb3099c18435f047606b235c67a6d617dd739a65608e3cc",
@@ -1203,64 +1247,64 @@
    "len": 636
   },
   "D twin full": {
-   "sha": "d9f58df97e4a169b052b2ef82d84d20aa244432c48ef206b9710b7e7881fd75d",
-   "len": 33156
+   "sha": "4b582200a5b258cee0d692bb9b4c534b388592089a481e40ea7f8686f374d1f2",
+   "len": 33182
   },
   "D twin time left to right": {
-   "sha": "2244a3dbb04f8df0c3d49a6fa6a6393b5486e504eab3468aca8b7b07c11ff194",
-   "len": 33146
+   "sha": "d8aff20f4753d1d0acde05989e9c7cde709b0ad1708a024820b68aacf0d08af3",
+   "len": 33172
   },
   "D twin no month": {
-   "sha": "0dd585d200dcb6b1729c21c0ef43c75908159b5d8a4021eee94adcf06c08af74",
-   "len": 33032
+   "sha": "44f50f97dbc3809b4f2cae5158f7f99253b1850a2c6b5fd38ab2b711d409d73d",
+   "len": 33058
   },
   "D twin pictures": {
-   "sha": "823a822b2dadee808aba5a22dbcf44f26ea3cfa7948440af41efdd1cf9b1f361",
-   "len": 33137
+   "sha": "7f7f244561bc68875c3d36b3f7796cffc51c4a4c4d9b7a085fad58286afad42e",
+   "len": 33163
   },
   "D twin picture pages 0": {
-   "sha": "a89dc9b6643dc5c3a1d0e9d564ff0652ea2484f830282f756c2d2bec68d16596",
-   "len": 32956
+   "sha": "55622b2bc4b1a3c1ce37a316be002a4f028b8e4dbe949fa20862c5448a132668",
+   "len": 32982
   },
   "D twin picture pages mirrored": {
-   "sha": "bc85371c7151c1a2754ef1e76df4055eab157f879ac33e9f525873da2b45c9d4",
-   "len": 33130
-  },
-  "D twin picture pages unknown": {
-   "sha": "d9f58df97e4a169b052b2ef82d84d20aa244432c48ef206b9710b7e7881fd75d",
+   "sha": "eae427af2f762231849a8d599995f5da719f62a614c4c9d7a7ac47ea197c839b",
    "len": 33156
   },
+  "D twin picture pages unknown": {
+   "sha": "4b582200a5b258cee0d692bb9b4c534b388592089a481e40ea7f8686f374d1f2",
+   "len": 33182
+  },
   "D twin waterfalls 0": {
-   "sha": "1d684b502f933a331c939a9601b8d9b439403805f56ac31c6fef6499f48d392a",
-   "len": 32891
+   "sha": "ebf3c0a31f30f82e2d1157b2301c42b8973e5622f5b42e7321c7821c71eda311",
+   "len": 32917
   },
   "D twin waterfall mirror": {
-   "sha": "a2a1f876cf177b136fd12b0ec539cee27042d95199ae8c3430c1627909e1969a",
-   "len": 33220
+   "sha": "a901378854300f08856e3182f24dc781a4f2662099b346991fb17394bb20a8af",
+   "len": 33246
   },
   "D twin no matrices": {
-   "sha": "e7447bd2e1c848d29dbbd12c0d7503200ed91ca804644fc0e150dddf877715bd",
-   "len": 32782
+   "sha": "de3e3a4f732a3358d5b173a7e5cbfe303609e58aacdcebb4b0e482bfe92d421e",
+   "len": 32808
   },
   "D twin matrixAsTable empty": {
-   "sha": "4660e0682f5a7f88b7a7bfbfa6eb516e5d1150fbc3708ebef43802c8bb3c966d",
-   "len": 32580
+   "sha": "d4787d4e56eeb21f2114bed09e93ef3b3a0e8efdcb1ef4eae560149a9a38aeed",
+   "len": 32606
   },
   "D twin no labels": {
-   "sha": "17c0e15b6d5176c5b88a978f5ff43397a940513ffbf67327cbcfdc09c9620260",
-   "len": 33048
+   "sha": "fa1c4235b3839e41ac66520acf0a7e62b6a6e8fbc3b33c1ed72d5463a649c325",
+   "len": 33074
   },
   "D twin no names": {
-   "sha": "5396d361f735f1107babcb4cd1068fa890fbafc39318725fd169e9d2bcc9e733",
-   "len": 33148
+   "sha": "6e07a2d8979ff60ae9b433d3530a30baa5c74638c474aa8c40c53218fab97431",
+   "len": 33174
   },
   "D twin no terminology": {
-   "sha": "adb9a8fc577f59fa7c662b2847534ccfef14395ab7c226dbd2c6b32bba175039",
-   "len": 33055
+   "sha": "b41bc6710980a8ab086e8f913ccc057956848aedb22827b423eec05c24ff8ddc",
+   "len": 33081
   },
   "D twin no notTranslated": {
-   "sha": "38fc6c859ee21df857d46d9269aa19e652c8a78b8d0285ded493c44781f0ebe3",
-   "len": 33049
+   "sha": "ca6827c43a3dec4967a2a5fa6bdb0400732aa385ca3a7215c13ebab078cfbb3f",
+   "len": 33075
   },
   "D twin preview null": {
    "sha": "946f5c829da33a3d3914348292649b3ffb3c829ee5ec50a074d7102b40ad67aa",
@@ -1275,36 +1319,36 @@
    "len": 24021
   },
   "D twin oc none listed": {
-   "sha": "5fb677aeb0c10193109d63c16dbf28a2651d1b0b55684a40e781c295c5bd07bb",
-   "len": 23025
+   "sha": "de14cb5d4af02437e221e648b913074ae72562039fac14bb58a4edaf34383213",
+   "len": 23051
   },
   "D twin oc not a list": {
-   "sha": "a29eff8fdfc9c924771cb5cf690e766fe6226f19c0f073c2c1b2ae9a99e661f1",
-   "len": 22618
+   "sha": "46cbb8f2fcee9e2f10ee7134034dcd3aa2ace09bc7120b876a5b9afdc7863aba",
+   "len": 22644
   },
   "D twin oc empty": {
-   "sha": "a29eff8fdfc9c924771cb5cf690e766fe6226f19c0f073c2c1b2ae9a99e661f1",
-   "len": 22618
+   "sha": "46cbb8f2fcee9e2f10ee7134034dcd3aa2ace09bc7120b876a5b9afdc7863aba",
+   "len": 22644
   },
   "D twin no added": {
-   "sha": "8dacaf8cf44ac2aae37b2e3aeac0302b888fed2610089d12e89f7377db7510d9",
-   "len": 22856
+   "sha": "1de61919e71c064e16709c62c6bed16f7ea5776ec5f8a8ccdfee6d2be4d99bcf",
+   "len": 22882
   },
   "D twin nf no ar": {
-   "sha": "7b4c4f63c720883056da2e45630177777b8e5df6d33a8419312072eb01c111fc",
-   "len": 33120
+   "sha": "6b2cf6399ec9df22ac68a583ca8f7bec598948c164699213f48cc77605f77e85",
+   "len": 33146
   },
   "D twin nf no en": {
-   "sha": "74b3877967f2e64e9de505df479a8bfe50fe40af8a8aff877c7d8e94c339b8de",
-   "len": 33025
+   "sha": "192080d76ce15cbaa9679cd51ba68d685093845e4e3ccd8efb9b6f83f1ea7a0a",
+   "len": 33051
   },
   "D twin languages": {
-   "sha": "50e45552aad01502ff950ddcdad085447e468d775078dcc36d7e8ae5eef1ae74",
-   "len": 34070
+   "sha": "0798205b368f68c502cea947b577ce4730387a5a25b02f10ff8bcfdf303eaae1",
+   "len": 34096
   },
   "D twin no outputs": {
-   "sha": "d8f6d9e7ef7a71b066fc6ffe222357d47e14e864864cc796f4652d5b0d90a69a",
-   "len": 32960
+   "sha": "7d83180999313091fa1ee7e6491ce4d1d938aba8455054f1d5bee4e635921d87",
+   "len": 32986
   },
   "D twin empty": {
    "sha": "c7007b6ff4b00d298c8ec0545207de1ae354daf18380e2fd1d3200fdc3e82d34",
@@ -1385,6 +1429,14 @@
   "D theme inputs Arabic": {
    "sha": "c3343ef3918a05061814989d1f860c6443a77d0020c594923006799b97f51e77",
    "len": 989
+  },
+  "D theme colours text": {
+   "sha": "6d39e5a4c5f94e7a4424dc868cd3399b53da605298cc6bebb9977bbb3afe7fd7",
+   "len": 1107
+  },
+  "D scripts two pins": {
+   "sha": "d69ce81a01bfc9863263d4cd03001fb8e5cb9661e94c8fae786f082ddaaea3dd",
+   "len": 777
   },
   "D another kind": {
    "sha": "a0d136d76d7637756e003f614eb0fc40629ecf6c44bbfdffddb5fe1a40c9ac53",
@@ -1561,6 +1613,58 @@
   "C many findings, lint only": {
    "sha": "c1f640f3e5d9ec6a94d027e71b357e6d81e235363a970f1dd4a1e86fbbec7494",
    "len": 32203
+  },
+  "C a title reads like an instruction": {
+   "sha": "0327030899bbb5818ac370bfa46fc01a69cd5d8804525186a0a0cc6c20700ea8",
+   "len": 16747
+  },
+  "C a selector title reads like an instruction": {
+   "sha": "fa33be07231270c22ec2c73b5ccd413e132e4d57f1f196eaf05877bdc932db96",
+   "len": 16027
+  },
+  "C Arabic texts, Hebrew titles": {
+   "sha": "81ca4c8baf949699d28e9ed383ace80d9a4ce00f2cd91d57c72606f0f223d22a",
+   "len": 25258
+  },
+  "C DAX measures declared": {
+   "sha": "f44d8c3f962156d640bc71bcb0da1e22f9101c82f88868672d311be366959cba",
+   "len": 18906
+  },
+  "C a file named like an instruction": {
+   "sha": "379c71b93ee579fe2b836bb0a9a2e6935ce0b0ad648a8bef07aac7e727989cc8",
+   "len": 14487
+  },
+  "C a field parameter with a long name": {
+   "sha": "a168988943ab1941839e2e21cd614d71f384959e4a489dcbe1062c3715beb0e9",
+   "len": 19061
+  },
+  "C two unreadable files": {
+   "sha": "b1b78567a91ad2e0ee0afc7338d71535c3bc98c8ba97e82326ce675a7c99fd91",
+   "len": 14018
+  },
+  "C sizes and unreadable, cap 3": {
+   "sha": "6f29e597ea4b5219fd1c9ed947f250d7b03022f6050724fc099ba17b34e6af25",
+   "len": 10686
+  },
+  "C the lint cannot read it": {
+   "sha": "da641bbea7c708927ad29b91942c8992f9dd924fd98e207e6921cba0e2d968e7",
+   "len": 14639
+  },
+  "C many overlaps": {
+   "sha": "81a85f6a9d3ba9cca09db2f1755afebed5231e1c3a7369036a68d888620cd38f",
+   "len": 27389
+  },
+  "C many overlaps, lint only": {
+   "sha": "f007a3ddcb5f9250bdfb0fd00777e041ddb06b83afdb55294aeffab0e4a3ce05",
+   "len": 26008
+  },
+  "C one link": {
+   "sha": "e54bb47cd3dc4f911dfb29440c79249ffde31b958b7ad0dfb5ec092c33b57371",
+   "len": 14847
+  },
+  "C cut to the bone": {
+   "sha": "7c8dc8b9adb16fe26edbbd755459d87265dc3e8a04014fdab1fde21f2df8ce58",
+   "len": 72285
   },
   "M group": {
    "sha": "daa1c5c10bc8d927794068cc44e33eae6ccd5baa49606c1b0ce986966e133f2c",
@@ -1921,6 +2025,66 @@
   "M drill matrix": {
    "sha": "63107d6af5465898006e328b4ebdde5d7429cb244218a1e50c0debaef1c93761",
    "len": 954
+  },
+  "M chart category levels": {
+   "sha": "bc7c9b15c5ae697906d90843db4fa9dc4ae2bec37924450118b717ce5401711b",
+   "len": 854
+  },
+  "M native matrix two rows": {
+   "sha": "f1a806da09327441393a3710239f2f963e44f9a963d31e2f74e2783fc26d26cf",
+   "len": 417
+  },
+  "M object hint on visual words": {
+   "sha": "d1496960252305c8b6c422fb90bdb38e7398813ca42d58aa040b680f3eeeabb2",
+   "len": 514
+  },
+  "M object hint over id hint": {
+   "sha": "d1496960252305c8b6c422fb90bdb38e7398813ca42d58aa040b680f3eeeabb2",
+   "len": 514
+  },
+  "M tooltip column": {
+   "sha": "a32c6e07200a0ce5888803e8bbd303182434b98f6a1e0ed9b4129eb0ccc1f7d4",
+   "len": 562
+  },
+  "M network unnamed value": {
+   "sha": "3e0cb3fe9d55796450046c76c7713662ffb99345124a006042490b66683f00dd",
+   "len": 717
+  },
+  "M map two latitudes": {
+   "sha": "e9740f0743465b4e5bbaaeeb3a71ac222d7f0153e072f637881cacfe9d75b6ae",
+   "len": 809
+  },
+  "M map latitude alone": {
+   "sha": "36dd4059faa722d18495f1605105e353360e56403a2b3e51ca9d2098cb440f34",
+   "len": 418
+  },
+  "M chart lines only": {
+   "sha": "1be267186472366d8e59b66dd3c6cd01ce09b2dcc93bbdc2c9f4c304c6626949",
+   "len": 461
+  },
+  "M chart percent and unknown": {
+   "sha": "91d1015317ebea6668550fde457dc59a0fa675ae9e9a04d8b724b7374d973e9d",
+   "len": 508
+  },
+  "M hint time other language level": {
+   "sha": "a19b7bc73e2e02fdcb362cf49e1f96b2d95f78e8074a058b21d2a69e4fd62e6f",
+   "len": 543
+  },
+  "M chart kpi value and colour rule": {
+   "sha": "ab56c6b3159c7b02e25f26465ec29917227ffb1896099c7bf0d2d6a31c06ecf9",
+   "len": 685
+  },
+  "M hint pie breakdown": {
+   "sha": "2613e925afcb08b6b2a57613d8f63203ed1af14297cf550535854259751e2f6b",
+   "len": 623
+  },
+  "M hint combo unnamed": {
+   "sha": "5c18ce9526f41391fc1364273ef91273686a8af52b68053f57d15b080a7b86f1",
+   "len": 738
+  },
+  "M hint time on a card": {
+   "sha": "e34246f5a728e6a387102aa18dc3e7e7a128d40dc79761937e53f7eaa5d5a001",
+   "len": 480
   },
   "M no opts": {
    "sha": "f9952ec7471b25e6186726ab5db9b15b24c2436c8c76b8fc82679ed15f1b36aa",
