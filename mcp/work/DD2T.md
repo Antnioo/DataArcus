@@ -17,7 +17,8 @@
 - **Answers that change (only these):** a run whose value is 0 (or false) is text for report-a11y (a Tab stop, its alt
   text) and is drawn by page-preview (12 already was). Two paragraphs, an empty paragraph, spaces around: each caller's
   answer as before. No golden, twin or Desktop-measured test changed its answer.
-- **State:** every step done, merged once (e1f27aa6), every check green here; CI run 41967177820.
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/41967177820 on e1f27aa6
+- **State:** DONE (Linux and Windows; macOS runs where the reviewer merges).
 - **Resume:** none once CI is green; the reviewer reads and merges.
 
 ## The rule
