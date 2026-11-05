@@ -12,7 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const isAr = () => document.documentElement.lang === 'ar';
   const L = (en, ar) => (isAr() ? ar : en);
   const track = (name, params) => { if (typeof window.dataArcusTrack === 'function') window.dataArcusTrack(name, params || {}); };
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // the HTML escape: html-escape.js htmlEsc, its one home (0.3.2 DD2H; the page loads it before this file)
+  const esc = window.DAHtmlEscape.htmlEsc;
   const clone = (o) => JSON.parse(JSON.stringify(o));
   const r1 = (n) => Math.round(n * 10) / 10;
   const STORE = 'dataarcus-svg-kpi-v2', LIB = 'dataarcus-svg-kpi-library';

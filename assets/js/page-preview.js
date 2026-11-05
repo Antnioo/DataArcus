@@ -10,7 +10,9 @@
 // t (the cards' transparency, %), rim } (0.3.1 GD2: the glass look, drawn as written) }.
 (function (root) {
   'use strict';
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // the HTML escape: html-escape.js htmlEsc, its one home (0.3.2 DD2H; the page loads it first, Node requires it)
+  const HE = typeof module !== 'undefined' && module.exports ? require('./html-escape.js') : root.DAHtmlEscape;
+  const esc = HE.htmlEsc;
   // (control and format characters out of a name: they could reorder what the picture shows)
   const clean = (s) => String(s == null ? '' : s).replace(/[\u0000-\u001F\u007F-\u009F​-‏‪-‮⁦-⁩﻿]/g, '').trim();
   const n = (v) => String(Math.round((+v || 0) * 10) / 10);

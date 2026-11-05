@@ -6,7 +6,9 @@
  * (c) DataArcus. All rights reserved.
  */
 (function (root) {
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // the HTML escape: html-escape.js htmlEsc, its one home (0.3.2 DD2H; the page loads it first, Node requires it)
+  const HE = typeof module !== 'undefined' && module.exports ? require('./html-escape.js') : root.DAHtmlEscape;
+  const esc = HE.htmlEsc;
   const key = (x) => (x ? JSON.stringify([x.t, x.m != null ? 'm' : 'c', x.m != null ? x.m : x.c]) : '');
   // el: the picker's element; fields: the catalog's { measures, columns }; bind: the binding shown (its choices);
   // L(en, ar): the page's words; build(choices) -> binding and iso(name) (a field name keeps its own direction inside an

@@ -122,7 +122,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if ($('logoFile') && $('logoOut')) {
     const LOGO_SIDE = 128, LOGO_MAX = 5 * 1024 * 1024;
     let logoRes = null;
-    const esc = (x) => String(x).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+    // the HTML escape: html-escape.js htmlEsc, its one home (0.3.2 DD2H; the page loads it before this file)
+    const esc = window.DAHtmlEscape.htmlEsc;
     const pixelsOf = (file) => new Promise((resolve, reject) => {
       const src = URL.createObjectURL(file), img = new Image();
       img.onload = () => {
@@ -290,7 +291,8 @@ document.addEventListener('DOMContentLoaded', () => {
     : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('/assets/js/field-meaning.min.js?v=07343b7cf536'))
       .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=f4832d0d3ac0')))
       // (SP8: the picker's drawing is field-picker-ui.js's, which pbip-bind.js calls: loaded first)
-      .then(() => (window.DAFieldPicker ? null : loadScript('/assets/js/field-picker-ui.min.js?v=f4b057b17d4c')))
+      .then(() => (window.DAHtmlEscape ? null : loadScript('/assets/js/html-escape.min.js?v=b560fc5666ec')))   // (DD2H: the picker's escape)
+      .then(() => (window.DAFieldPicker ? null : loadScript('/assets/js/field-picker-ui.min.js?v=c74879eca806')))
       // (SP14: reading the chosen folder or file is model-import-browser.js's, which pbip-bind.js forwards to: loaded first; DD1G: which model folder it means is model-nearest.js's, loaded before it; DD2D: a file's text and the limits are model-file.js's, loaded before it too)
       .then(() => (window.DAModelFile ? null : loadScript('/assets/js/model-file.min.js?v=47bc00d4a4cb')))
       .then(() => (window.DAModelNearest ? null : loadScript('/assets/js/model-nearest.min.js?v=c6ffd3114120')))
@@ -312,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // (0.3.2 DD1B: the preview reads its literals with pbir-values.js, DD1A: its time names with time-names.js, DD2T:
   // a text box's paragraphs with text-runs.js, each
   // loaded first unless the builder or the page already did)
-  const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : (window.DAPbirValues ? Promise.resolve() : loadScript('../assets/js/pbir-values.min.js?v=57e0aebe7cdf')).then(() => (window.DATimeNames ? null : loadScript('../assets/js/time-names.min.js?v=8d0c82e5e062'))).then(() => (window.DATextRuns ? null : loadScript('../assets/js/text-runs.min.js?v=047b2eda2154'))).then(() => loadScript('../assets/js/page-preview.min.js?v=2a2276221fe1')).then(() => window.DAPagePreview));
+  const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : (window.DAPbirValues ? Promise.resolve() : loadScript('../assets/js/pbir-values.min.js?v=57e0aebe7cdf')).then(() => (window.DATimeNames ? null : loadScript('../assets/js/time-names.min.js?v=8d0c82e5e062'))).then(() => (window.DATextRuns ? null : loadScript('../assets/js/text-runs.min.js?v=047b2eda2154'))).then(() => (window.DAHtmlEscape ? null : loadScript('../assets/js/html-escape.min.js?v=b560fc5666ec'))).then(() => loadScript('../assets/js/page-preview.min.js?v=3ec302f6a71b')).then(() => window.DAPagePreview));
   const MODEL_WORKER = '/assets/js/model-health-worker.min.js?v=fc2b56cc6b5a';
 
   // ---------- the downloads, the visual backgrounds and the reminder (theme-download-ui.js, 0.3.2 SP31) ----------

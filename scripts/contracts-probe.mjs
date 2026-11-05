@@ -276,6 +276,8 @@ const ESCAPES = [
   { label: 'null', s: null }, { label: 'undefined', s: undefined }, { label: '12 (a number)', s: 12 },
 ];
 const esc1 = async (x, get) => (await get())(x.s);
+// (DD2H) a page-only script reads the escape from the page's window, where html-escape.js put it
+const escPage = async (x, get) => (await get({ window: { DAHtmlEscape: createRequire(abs('assets/js/html-escape.js'))('./html-escape.js') } }))(x.s);
 const esc1n = () => async (x, get) => (await get())(x.n);
 
 const BYTES = [
@@ -562,9 +564,9 @@ export const FAMILIES = [
       P('assets/js/health-downloads.js', 'esc', 'source', esc1),
       P('assets/js/health-view.js', 'esc', 'source', esc1),
       P('assets/js/page-preview.js', 'esc', 'inner', esc1),
-      P('assets/js/svg-kpi-designer.js', 'esc', 'source', esc1),
-      P('assets/js/theme-generator.js', 'esc', 'source', esc1),
-      P('assets/js/measure-builder.js', 'escapeHtml', 'source', esc1),
+      P('assets/js/svg-kpi-designer.js', 'esc', 'source', escPage),
+      P('assets/js/theme-generator.js', 'esc', 'source', escPage),
+      P('assets/js/measure-builder.js', 'escapeHtml', 'source', escPage),
       P('mcp/lib/approval-view.mjs', 'esc', 'source', esc1),
     ] },
   { id: 'decode', title: 'What text do the bytes of a Power BI file hold?', question: "a file's bytes: its text (UTF-16LE or UTF-8, a BOM or none)",
