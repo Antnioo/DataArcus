@@ -22,8 +22,10 @@
   green; lint 0; every other suite's number unchanged (model-health, sp30, sp32, sp42 and the golden tests: no
   expected answer moves; their made-up names have no hyphen); mutation 76/76; samejob.py is not in the repo (as DD1C,
   DD2D found): its same-shape groups cannot be counted here.
-- **State:** steps 1-5 committed and pushed; the full run and CI next.
-- **Resume:** the merge of origin/integration/0.3.2 (once), build:min, every check, tests.yml.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41943142925 on 7f384bfbb28fd1df26fc84c7783dfe68d31ce809
+- **State:** DONE. integration/0.3.2 moved to ae8c1734 (DD2P): merged in once (tests.json and WORK.md conflicts, both
+  lines kept). Local: MCP 202 of 202 (5 shards side by side; mutation 76/76; sp30 21, sp42 22), site 42 of 42.
+- **Resume:** none; the reviewer reads and merges.
 
 ## The answers that change (made-up inputs)
 | input | A before (health fix scripts, measure builder) | B before (MCP) | after (all) |
@@ -75,7 +77,14 @@ none (the one changed answer, a hyphen quoted, is the side TMDL always reads the
 - sample-project.mjs `name` on a number gives `'12'` where it threw (only reachable from a test: its names are fixed).
 
 ## Seen, not in scope
+- scripts/check-exam-outline.mjs could not read the live study guide's "Skills measured as of" heading (network page).
 - Other TMDL name writers outside the family (the brief's "Not in this job"): DAX names (`'Table'[Column]`, e.g.
   twin-model.mjs `daxCol`), M quoting, and the reader tmdl-model.js.
 
 ## Lessons for the reviewer
+- check-modules --strict refuses a page script in a "used by" cell when the script reads a window global (no require):
+  name the page's HTML instead (as gulf-measures.js's row does).
+- A caller kept as a one-line alias (`const q = require(...).tmdlName`) stays a probe place: the probe needs `require`
+  in the file (not `createRequire(import.meta.url)(...)` inline, which it cannot read from source).
+- samejob.py is not in the repo (as DD1C and DD2D found): its same-shape groups were not counted.
+- scripts/check-exam-outline.mjs reads a live Microsoft page and could not read its heading here: not this job.
