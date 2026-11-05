@@ -132,7 +132,7 @@ try {
   const F = await import('./fixtures/fn1c-twin.mjs');
   const { planTwin } = await import('./lib/twin-plan.mjs');
   const norm = (x) => JSON.stringify(x, (k, v) => (Buffer.isBuffer(v) || v instanceof Uint8Array ? 'bytes:' + digest(Buffer.from(v).toString('base64')) : v instanceof Map ? [...v] : v instanceof Set ? [...v] : typeof v === 'function' ? 'fn' : v))
-    .split(ROOT2).join('<ROOT>').split(JSON.stringify(ROOT2).slice(1, -1)).join('<ROOT>');
+    .split(JSON.stringify(ROOT2).slice(1, -1)).join('<ROOT>').split(ROOT2).join('<ROOT>').split('\\\\').join('/');   // (a Windows path's separators, as sp11's norm)
   const one = (P) => ({ answer: norm(P.answer), texts: norm(P.texts), labels: norm(P.labels), rest: norm({ mixedTitles: P.mixedTitles, textsUnknown: P.textsUnknown, notTranslated: P.notTranslated, termRows: P.termRows, addedVisuals: P.addedVisuals, same: P.same, outBase: P.outBase, month: P.month, names: P.names, terms: P.terms, modelPrint: P.modelPrint }) });
   const ID = '00000000-0000-4000-8000-0000000000f1', pb = (d) => path.join(d, 'Twin Sales.pbip');
   const a = F.makeProject(path.join(ROOT2, 'twin-a')), b = F.noModel(F.makeProject(path.join(ROOT2, 'twin-b')));
