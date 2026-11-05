@@ -18,6 +18,9 @@ import './test-env.mjs';
 //      files here); no "Other visuals: chosen by DataArcus" with nothing listed; the changed kind names its page
 //   A10 (0.3.2 PL1, E1 round 5 finding 6: option labels read as jargon) the options in plain words, English and Arabic:
 //      no input key, no chart.look, no visual type key or theme key on the report or redesign page (in process)
+//   A11 (TP1, D-1105-17: the preview also draws the tooltip pages) the Service model's two tooltip pages drawn after its
+//      report pages, each at its own size and captioned as a tooltip page (English and Arabic); within the cap of 12 the
+//      report's pages come first and the tooltip pages left out are counted (in process)
 //   node test-0.3.0-approval-complete.mjs
 import fs from 'node:fs';
 import os from 'node:os';
@@ -189,7 +192,7 @@ try {
         let buttons = 0; vs.forEach((v) => { const t = v.visualGroup ? 'group' : v.visual.visualType;
           if (t === 'slicer') { const pr = ((((v.visual.query || {}).queryState || {}).Values || {}).projections || [])[0], c = pr && pr.field && pr.field.Column; slicers.push(c ? `${c.Expression.SourceRef.Entity}[${c.Property}]` : '?'); }
           else if (t === 'actionButton') buttons++; else types[t] = (types[t] || 0) + 1; });
-        return { n: i + 1, name: pj.displayName, tooltip: pj.type === 'Tooltip', visuals: vs.length, types, slicers, buttons }; }); };
+        return { n: i + 1, name: pj.displayName, tooltip: pj.type === 'Tooltip', w: pj.width, h: pj.height, visuals: vs.length, types, slicers, buttons }; }); };
     const EN = { clusteredBarChart: ['bar chart', 'bar charts'], clusteredColumnChart: ['column chart', 'column charts'], lineChart: ['line chart', 'line charts'], cardVisual: ['card', 'cards'], tableEx: ['table', 'tables'], textbox: ['text box', 'text boxes'], shape: ['shape', 'shapes'], group: ['group', 'groups'] };
     const ARW = { clusteredBarChart: 'مخططات شريطية', clusteredColumnChart: 'مخططات عمودية', lineChart: 'مخططات خطية', cardVisual: 'بطاقات', tableEx: 'جداول', textbox: 'مربعات نص', shape: 'أشكال', group: 'مجموعات مرئيات' };
     const n1 = (n, w) => `${n} ${n === 1 ? w[0] : w[1]}`;
@@ -198,7 +201,7 @@ try {
       const p = await w.call('plan_layout', a), id = p.j && p.j.plan && p.j.plan.planId;
       chk(() => id, () => `A9 ${lang} setup. the service model's plan gets a plan id: ${short(p)}`);
       if (!id) continue;
-      const H = unesc((await pageOf(id, true)).html).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+      const raw = unesc((await pageOf(id, true)).html), H = raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
       const out = await w.call('create_report', { path: a.path, planId: id });
       chk(() => !out.err, () => `A9 ${lang} setup. the report is written after the click: ${short(out)}`);
       const pages = out.err ? [] : readBack(path.join(ROOT, 'svc', `Service ${lang}.Report`));
@@ -217,6 +220,14 @@ try {
       // (b) no heading or row that names nothing; (c) the kind written in place of another names its page
       chk(() => !/Other visuals chosen by DataArcus from the model(?!: every one is named below)/.test(H) && !/المرئيات الأخرى يختارها DataArcus من النموذج(?!: كلها مذكورة أدناه)/.test(H), () => `A9-3 ${lang}. "Other visuals: chosen by DataArcus" points to the list: ${H.slice(H.indexOf(lang === 'ar' ? 'المرئيات الأخرى' : 'Other visuals'), H.indexOf(lang === 'ar' ? 'المرئيات الأخرى' : 'Other visuals') + 200)}`);
       chk(() => (lang === 'ar' ? /في الصفحة 1 «ملخص تنفيذي»/.test(H.slice(H.indexOf('مكتوب بنوع آخر'))) : /on page 1 "Executive summary"/.test(H.slice(H.indexOf('Written as another kind')))), () => `A9-4 ${lang}. the chart written as another kind names its page: ${H.slice(H.indexOf(lang === 'ar' ? 'مكتوب بنوع آخر' : 'Written as another kind'), H.indexOf(lang === 'ar' ? 'مكتوب بنوع آخر' : 'Written as another kind') + 300)}`);
+      // A11 (TP1, D-1105-17): the preview draws each tooltip page the click writes, after the report pages, at its own size
+      const PV = raw.slice(raw.indexOf('class="card preview"')), figs = [...PV.matchAll(/<figure([^>]*)>(<svg[^>]*>)[\s\S]*?<figcaption[^>]*>([\s\S]*?)<\/figcaption><\/figure>/g)].map((m) => ({ attrs: m[1], svg: m[2], cap: m[3].replace(/<[^>]+>/g, '').trim() }));
+      const tips = pages.filter((x) => x.tooltip), reps = pages.filter((x) => !x.tooltip), tf = figs.slice(reps.length);
+      chk(() => tips.length === 2 && figs.length === reps.length + tips.length, () => `A11-1 ${lang}. one picture per page written, the ${tips.length} tooltip pages too: ${figs.length} pictures (${JSON.stringify(figs.map((f) => f.cap))})`);
+      chk(() => figs.slice(0, reps.length).every((f, i) => f.cap.startsWith(lang === 'ar' ? `الصفحة ${i + 1}: «${reps[i].name}»` : `Page ${i + 1}: ${reps[i].name}`)), () => `A11-2 ${lang}. the report pages first, as before: ${JSON.stringify(figs.map((f) => f.cap))}`);
+      chk(() => tips.every((x, i) => tf[i] && tf[i].cap.startsWith(lang === 'ar' ? `صفحة تلميح ${i + 1}: «${x.name}»` : `Tooltip page ${i + 1}: ${x.name}`)), () => `A11-3 ${lang}. then each tooltip page, captioned as one: ${JSON.stringify(tf.map((f) => f.cap))}`);
+      chk(() => tips.every((x, i) => tf[i] && new RegExp(`viewBox="0 0 ${x.w} ${x.h}" width="${x.w}" height="${x.h}"`).test(tf[i].svg) && /class="tip"/.test(tf[i].attrs)), () => `A11-4 ${lang}. each tooltip page at its own size (${tips.map((x) => `${x.w} x ${x.h}`).join(', ')}), not stretched to the report page's width: ${JSON.stringify(tf.map((f) => f.attrs + f.svg))}`);
+      chk(() => figs.slice(0, reps.length).every((f) => / width="800"/.test(f.svg) && !/class="tip"/.test(f.attrs)), () => `A11-5 ${lang}. the report pages drawn as before (800 wide): ${JSON.stringify(figs.slice(0, reps.length).map((f) => f.attrs + f.svg))}`);
     }
   }
 } finally {
@@ -254,6 +265,23 @@ try {
   const TK = /: (dataColors|foreground|background|tableAccent|good|neutral|bad)$/;
   const TW = ['data colours', 'text colour', 'background colour', 'table accent colour', 'colour for good results', 'colour for neutral results', 'colour for bad results'].map((w) => `Theme service-theme.json: ${w}`);
   chk(() => !R.some((x) => TK.test(x)) && TW.every((w) => R.includes(w)), () => `A10-6. the theme's changes in words, never its keys: ${JSON.stringify(R.filter((x) => /^Theme /.test(x)))}`);
+}
+
+// ---------- A11 (TP1): the tooltip pages inside the preview's cap; the report's pages come first (in process) ----------
+{
+  const V = await import('./lib/approval-view.mjs'), MAX = V.PREVIEW_PAGES_MAX;
+  const pg = (name, tooltip) => Object.assign({ name, w: tooltip ? 320 : 1280, h: tooltip ? 284 : 720, visuals: [{ type: 'cardVisual', x: 10, y: 10, w: 200, h: 100, title: 'Total' }] }, tooltip ? { tooltip: true } : {});
+  const page = (nr, nt, lang) => V.approvalHtml({ id: 'plan-tp1000000001', kind: 'report', writes: ['the report "Cap.Report"'] }, { title: 'Report', kind: 'report', lang: lang || 'en', sections: [], files: null,
+    previews: { lang: lang || 'en', pages: Array.from({ length: nr }, (_, i) => pg(`R${i + 1}`)).concat(Array.from({ length: nt }, (_, i) => pg(`T${i + 1}`, true))) } });
+  const caps = (h) => [...h.matchAll(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/g)].map((m) => unesc(m[1].replace(/<[^>]+>/g, '')).trim());
+  const a = page(MAX - 1, 3), ca = caps(a);
+  chk(() => MAX === 12 && ca.length === MAX && ca.filter((c) => /^Tooltip page /.test(c)).length === 1 && /^Tooltip page 1: T1/.test(ca[MAX - 1]) && /2 more tooltip pages not drawn here/.test(unesc(a)), () => `A11-6. 11 report pages and 3 tooltip pages: the 11 and 1 tooltip page drawn, 2 counted: ${JSON.stringify(ca)} ${unesc(a).match(/<p class="note">[^<]*/g)}`);
+  const b = page(MAX + 1, 2), cb = caps(b);
+  chk(() => cb.length === MAX && cb.every((c) => /^Page /.test(c)) && /1 more pages not drawn here|1 more page not drawn here/.test(unesc(b)) && /2 more tooltip pages not drawn here/.test(unesc(b)), () => `A11-7. 13 report pages and 2 tooltip pages: 12 report pages drawn (they win the cap), 1 page and 2 tooltip pages counted: ${JSON.stringify(cb)} ${unesc(b).match(/<p class="note">[^<]*/g)}`);
+  const c = page(2, 1, 'ar'), cc = caps(c);
+  chk(() => cc.length === 3 && /^صفحة تلميح 1: «T1»/.test(cc[2]), () => `A11-8. the Arabic caption (a draft for the owner): ${JSON.stringify(cc)}`);
+  const d = page(3, 0);
+  chk(() => !/class="tip"|Tooltip page|tooltip pages? not drawn/.test(d), () => 'A11-9. a plan with no tooltip page: no tooltip picture and no tooltip line');
 }
 
 if (problems.length) { console.log(`FAIL  approval-complete  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
