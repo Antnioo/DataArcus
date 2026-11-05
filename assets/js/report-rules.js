@@ -117,10 +117,11 @@
   // measure Desktop has drawn an Arabic header whole in (0.71 seen, 0.70 kept) it is cut, from there up to needW it MAY
   // be cut (lowW). Latin letters were measured on the safe side: a Latin header has no band (lowW = needW).
   const AR_HEADER_WHOLE = 0.7;
-  const AR_LETTER = /[\u0600-\u06FF\uFB50-\uFEFF]/;
+  // (0.3.2 DD1F: an Arabic letter is arabic-script.js's hasArabic, its one home; CONTRACTS.md 1f)
+  const AS = typeof module !== 'undefined' && module.exports ? require('./arabic-script.js') : root.DAArabicScript;
   function headerNeed(text, t, font, sc) {
     const w = textWidth()(text, t, true, font), pad = 24 * sc, needW = Math.ceil(w + pad);
-    return { needW, lowW: AR_LETTER.test(String(text)) ? Math.min(needW, Math.floor(AR_HEADER_WHOLE * w + pad)) : needW };
+    return { needW, lowW: AS.hasArabic(text) ? Math.min(needW, Math.floor(AR_HEADER_WHOLE * w + pad)) : needW };
   }
   // A table's columns with a set width (columnWidth, selector { metadata: queryRef }) and their header's need. json: the
   // visual.json; theme: the theme's JSON (its tableEx sizes) or null; font: the report's (its label's) font; sc: the
