@@ -13,6 +13,9 @@ package's manifest; this file says what is in it.
   by where it goes and each chart by the field it groups by; a chart written as another kind says which page it is on.
 - **No time axis when the person asks for none:** plan_layout and create_report take `timeAxis: "none"` in the plan's
   fields: the report gets no trend chart, no month tooltip and no date slicer DataArcus would add, and the plan says so.
+- **The person's language decides the several-models answer:** read_model, suggest_fields and check_model_health take
+  an optional `lang`: with `"ar"` the answer about several models in one folder is in Arabic even when the folder and
+  model names are English; with `"en"`, in English. Without it the names decide, as before.
 - **Several models in one folder, said in Arabic:** when a folder holds several models at the same level and the folder or a model name is in Arabic, the reading tools now say so in Arabic («نموذجين» for two, «N نماذج» for three or more); the English message is unchanged.
 - **Mixed Arabic and English titles in the preview, in the report's order:** on an Arabic page, the approval window's
   preview and the theme generator's preview now draw a title such as «Sales YTD الإجمالي» or «هامش الربح %» in the order
