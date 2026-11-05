@@ -14,8 +14,10 @@
   numbers with the redesign and report pages' hashes re-recorded (Changed on purpose, below); every other suite's
   number as on the base; lint 0; agent-memory, check-modules --strict, check-result-lines, changelog-words,
   test-site-config green. CHANGELOG: one plain line.
-- **State:** step 1.
-- **Resume:** step 2.
+- **Found:** code in labels: the card look's chart.look, 5 "More" rows by input key, a redesign's visual type and
+  theme keys. Fixed: approval-complete 45 -> 54 (A10, red on the base: 9 failed); sp23/sp44 4 pages each, on purpose.
+- **State:** the fix pushed; the full run and CI next.
+- **Resume:** merge origin/integration/0.3.2 once if it moved, build:min, full run, CI.
 
 ## Step 1: every option label the page shows today (base d0cabe5b)
 Report page, "Look and options" (`LK`, approval-disclosure.mjs): Visual gallery, Theme file, Logo, Colours, Bar
@@ -37,3 +39,59 @@ Redesign page: Report (Original, New report, Method), Text set, Changes, Not cha
 - "What each page holds" (AP1): a visual type VT_WORDS lacks (a page navigator) falls back to its key.
 Theme, calendar, scripts, sample pages: plain words; their "All inputs, as given (raw)" fold is the raw plan on
 purpose (code, left to right) and stays.
+
+## Steps 2-3: what changed (before -> after)
+- Red first: A10 in `test-0.3.0-approval-complete.mjs` on the base: `FAIL  approval-complete  54 checks, 9 failed`
+  (A10-1..3 English and Arabic, A10-4..6 the redesign); with the fix `PASS  approval-complete  54 checks`.
+- Card look (report page): "...; plain: chart.look "auto"" -> "...; plain cards: ask for the plain look".
+  Arabic, DRAFT for the owner: «...؛ وللشكل العادي: «chart.look = auto»» -> «...؛ وللبطاقات العادية: اطلب الشكل العادي».
+- "More" (report page), each row's name, before -> after, with its Arabic DRAFT for the owner:
+  `pageFilters` -> "Page filters" «فلاتر الصفحات»; `text` -> "Sentence in the text box" «الجملة في مربع النص»;
+  `subtitles` -> "Chart subtitles" «العناوين الفرعية للمخططات»; `svgColumns` -> "Small pictures in table rows"
+  «صور صغيرة في صفوف الجدول»; `svgCards` -> "Small pictures beside KPI cards" «صور صغيرة بجانب بطاقات المؤشرات».
+- Redesign rows (Text set, Changes, Not changed): the visual's kind from VT_WORDS (the one list, AP1's), e.g.
+  "btnDetails (actionButton ...)" -> "btnDetails (button ...)"; clusteredColumnChart -> column chart, lineChart -> line
+  chart, clusteredBarChart -> bar chart, tableEx -> table, pageNavigator -> page navigator, textbox -> text box,
+  "custom <id>" -> "custom visual <id>". VT_WORDS gains slicer, advancedSlicerVisual, actionButton, pageNavigator,
+  bookmarkNavigator (their Arabic, DRAFT for the owner: «مقسمات»، «أزرار»، «أدوات التنقل بين الصفحات»، «أدوات التنقل بين
+  الإشارات المرجعية»; shown only on AP1's Arabic page list when a page holds a navigator).
+- Redesign theme rows: "Theme <file>: dataColors / foreground / background / tableAccent / good / neutral / bad" ->
+  "data colours / text colour / background colour / table accent colour / colour for good results / colour for neutral
+  results / colour for bad results" (the redesign page's words are English: approval-ar.mjs has none of its rows).
+- Changed on purpose: sp23 and sp44 (`fixtures/sp23-approval.json`, `sp44-approval.json`), 4 pages each, re-recorded
+  with SP23_RECORD / SP44_RECORD after SP23_DUMP / SP44_DUMP of the base's and the branch's pages: report-en,
+  report-ar, report-hostile: 1 line each (the card look); redesign: 18 lines (the visual rows' kinds); nothing else
+  differs; every other entry (sp23 16 pages and prompts, the unit ones; sp44 the answers and life) unchanged; sp23 29
+  and sp44 23 checks as on the base. The sp23 and sp44 dumps of each page are the same bytes.
+- CHANGELOG [Unreleased]: one plain line. WORK.md: "PL1 (options in words)" (3,197 of 3,200 characters).
+
+## Decisions I made
+- A label is changed only where it shows code (a key, a type key, an engine option). Labels already in words stay,
+  among them Flip cards, Status icons, DAX function library (Power BI's own word), Visual gallery, Shared axes:
+  E1 round 5's transcripts are not in this clone, so I did not guess past what the code shows.
+- The redesign's kinds come from VT_WORDS (the one list), not a second map (D-1104-12); a type it lacks shows as is.
+- `lib/design.mjs`'s sayInPlan (what Claude reads, pinned by glass-default L1) keeps chart.look "auto": the agent
+  needs the key; only the person's page changed.
+- The "All inputs, as given (raw)" fold stays raw: it is the plan as given, on purpose (FX1).
+- My first A10-4 flagged "(slicer" (the key and the word are the same): fixed in the test before the fix's commit.
+
+## For the owner
+- Approve or change the Arabic DRAFTs above (the card look, the 5 "More" rows, 4 visual kinds).
+- E1 round 5 finding 7, two lines, DRAFT for you, not changed in code:
+  1. «التقويم بلا تاريخ هجري» -> «التقويم لا يحتوي على تواريخ هجرية» (English: "the calendar has no Hijri dates").
+  2. «وبدون السنة والشهر واليوم الهجري لا يقارن التقرير إلا الأشهر الميلادية» -> «ومن دون السنة الهجرية والشهر
+     الهجري واليوم الهجري، لا يستطيع التقرير إلا مقارنة الأشهر الميلادية» (English: "and without the Hijri year, month
+     and day, the report can only compare Gregorian months").
+
+## Risky changes
+none (words on the approval page only; nothing written, planned or gated changes).
+
+## Seen, not in scope
+- The Layout row shows "Filters: true" for filters "top" (a raw value; AP1's Seen too).
+- The "More" rows' values are the raw JSON (val), e.g. pageFilters' [{ field, values }].
+- Custom visuals replaced: "second option: ... key "<pick>"" names the input key to choose it; and a replacement's
+  line carries the type key beside its words ("clustered column charts (clusteredColumnChart)", 0.2.9v pins it).
+
+## Lessons for the reviewer
+- To check the re-record: SP23_DUMP the base and the branch and diff by `<tr>`: 21 lines, each a label named above.
+- A key that equals its plain word (slicer) is not jargon: a test of "no key" must leave those out.
