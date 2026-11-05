@@ -152,8 +152,9 @@ const Approval = await import('./lib/approval-window.mjs');
   const L = got.life, far = () => Date.now() + 60 * 60 * 1000;
   try {
     // L1
-    { const { o, url } = await openAt('plan-l1', Date.now() + 400), s = sec(url); secrets.push(s);
-      const before = await ask(url, 'GET'); await sleep(600);
+    { const until = Date.now() + 5000, { o, url } = await openAt('plan-l1', until), s = sec(url); secrets.push(s);
+      // (FL1, B-379: a life no slow runner reaches before the first GET; then wait until the clock is past it)
+      const before = await ask(url, 'GET'); while (Date.now() <= until + 50) await sleep(100);
       const after = await ask(url, 'GET'), click = await ask(url, 'POST', { body: 'decision=approve', headers: form(new URL(url).origin) }), t0 = Date.now(), wt = await Approval.wait('plan-l1', 80);
       L.l1 = JSON.stringify({ o, before: rec(before, [s]).code, after: rec(after, [s]), click: rec(click, [s]), wait: wt, waited: Date.now() - t0 >= 60, state: Approval.state('plan-l1') }); }
     // L2

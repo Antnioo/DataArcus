@@ -9,3 +9,30 @@
 1. Prove: add a temporary 500 ms delay before the first GET in L1 on the base; expect sp44 22/23 (the l1 line differs).
 2. Fix in the test: `openAt('plan-l1', Date.now() + 5000)`, then wait until `Date.now() > expiry + 50` before "after".
 3. Mutation: on a bad baseline print up to 5 FAIL lines of the guard.
+
+## Results
+- Cause proved: on edf2951b with `await sleep(500)` before L1's first GET, sp44 printed `FAIL  sp44  22/23 checks` (L1, page sha differs), as in CI. Red on edf2951b first.
+- Fix: window 5000 ms, wait until clock > expiry + 50 ms; with a 1500 ms delay before the first GET: `PASS  sp44  23 checks`; normal run 23 checks. test-approval `PASS  approval window  32 checks`.
+- Mutation: `PASS  mutation  225 checks (88 mutants, all killed ...)`. The FAIL-line print is not run on a real failing baseline (needs a flake).
+- No fixture changed.
+
+## CHANGELOG line
+none (tests only)
+
+## Decisions I made
+- Kept the real clock (approval-http reads Date.now(), no injected clock); used a long life.
+
+## For the owner
+none
+
+## Risky changes
+none
+
+## For the laptop
+none
+
+## Seen, not in scope
+- sp44's other windows already use one hour.
+
+## Lessons for the reviewer
+- A short real-time window in a test is a flake on a loaded runner; use seconds.
