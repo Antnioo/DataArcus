@@ -25,7 +25,7 @@
   browser (a PDF, an MCP check of the writer's order); harfbuzzjs only if a PDF job finds its PDF library's shaping
   wrong.
 - **Resume:** steps 1 to 4 done. **State: DONE.**
-- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41999456331 on 02cf571
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42001437405 on 55648a8
 
 ## What was found
 
@@ -102,6 +102,7 @@ a wrong form. Today's preview has no shaping code of its own: the browser shapes
   result line (PASS there). It is not in `mcp/tests.json`: lab only, not CI.
 - `mcp/WORK.md` not changed: the brief keeps every change in lab/rd/ar3 and this note; the reviewer adds the line.
 - `result.json` committed as this run's record (times vary run to run; the counts do not).
+- Integration moved to 2d5bbe4 (PB1) after my first green run (41999456331 on 02cf571): merged once (55648a8), CI rerun.
 
 ## For the owner
 - One question for the laptop list: the writer wraps only a text with a Latin letter, so «الهدف 12% مقابل الفعلي
