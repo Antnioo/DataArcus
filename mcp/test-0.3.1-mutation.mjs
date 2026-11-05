@@ -30,6 +30,9 @@ const GUARD_TIMEOUT = process.env.DA_MUTATION_GUARD_TIMEOUT ? +process.env.DA_MU
 const PL = 'mcp/lib/plans.mjs', MO = 'mcp/lib/model.mjs', WI = 'mcp/lib/write-io.mjs', FI = 'mcp/lib/files.mjs', CR = 'mcp/lib/check-report.mjs', CI = 'mcp/lib/check-impact.mjs', AD = 'mcp/lib/approval-disclosure.mjs', AV = 'mcp/lib/approval-view.mjs', MDI = 'mcp/lib/model-discovery.mjs', RI = 'mcp/lib/report-inventory.mjs';   // (0.3.2 SP23: what each approval page says moved to AD; SP41: each finding's kind moved to CI; SP42: discovery to MDI, the report inventory to RI; SP44: the approval page's HTML to AV)
 // (0.3.2 SP22) the untrusted-text screen and the shown names moved to model-names.mjs, the KPI list to model-metadata.mjs
 const MN = 'mcp/lib/model-names.mjs', MM = 'mcp/lib/model-metadata.mjs';
+// (0.3.2 SM1) the approval window's HTTP side and check_report's one redaction boundary, with the suites that guard them
+const AH = 'mcp/lib/approval-http.mjs', RD = 'mcp/lib/check-redact.mjs';
+const AHG = ['test-0.3.2-sp44.mjs', 'test-approval.mjs'], RDG = ['test-0.3.2-sp41.mjs'];   // (the suites that kill them, mcp/work/SM1.md)
 const MUTANTS = [
   // 1. the approval gate
   { id: 'G-unapproved', file: PL, edits: [["if (p.status !== 'approved') throw new Error(`Nothing was written: plan", "if (false) throw new Error(`Nothing was written: plan"]], guards: ['test-0.2.9.mjs', 'test-z.mjs', 'test-approval-hardening.mjs', 'test-audit6.mjs'] },
@@ -133,7 +136,19 @@ const MUTANTS = [
   { id: 'A-writesAr-esc', file: AV, edits: [['<li dir="auto">${isoText(named(WA[i]), true)}</li>', '<li dir="auto">${named(WA[i])}</li>']], guards: ['test-0.3.1-sq3.mjs'] },
   { id: 'A-prompt-notChecked', file: AD, edits: [['  if (nc.length) lines.push(cut(`Not checked before writing:', '  if (false) lines.push(cut(`Not checked before writing:']], guards: ['test-0.3.1-sq3.mjs'] },
   { id: 'A-pair-lang', file: AV, edits: [["fig(PP[e], `${W.enPage} ${i + 1}`, 'en')", 'fig(PP[e], `${W.enPage} ${i + 1}`)']], guards: ['test-0.3.1-sq3.mjs'] },
-  { id: 'C-fieldparam', file: CR, edits: [["rule: 'FIELD_PARAMETER_TITLE', severity: 'warning'", "rule: 'FIELD_PARAMETER_TITLE', severity: 'error'"]], guards: ['test-0.3.0-metric-switcher.mjs', 'test-0.3.0-check.mjs', 'test-0.3.1-checker.mjs'] }
+  { id: 'C-fieldparam', file: CR, edits: [["rule: 'FIELD_PARAMETER_TITLE', severity: 'warning'", "rule: 'FIELD_PARAMETER_TITLE', severity: 'error'"]], guards: ['test-0.3.0-metric-switcher.mjs', 'test-0.3.0-check.mjs', 'test-0.3.1-checker.mjs'] },
+  // 7. (0.3.2 SM1: the owner, D-1104-14 "add the security mutants to DD1 too", B-329) the approval window's HTTP checks,
+  // one mutant each, and check_report's redaction (mcp/work/SM1.md)
+  { id: 'AH-host', file: AH, edits: [['if (req.headers.host !== here) {', 'if (false) {']], guards: AHG },
+  { id: 'AH-link', file: AH, edits: [[String.raw`const m = /^\/approve\/([A-Za-z0-9_-]{20,64})$/.exec(`, String.raw`const m = /\/approve\/([A-Za-z0-9_-]+)/.exec(`]], guards: AHG },
+  { id: 'AH-expiry', file: AH, edits: [['if (!w || (w.expires && Date.now() > w.expires)) {', 'if (!w) {']], guards: AHG },
+  { id: 'AH-method', file: AH, edits: [["if (req.method !== 'POST') {", 'if (false) {']], guards: AHG },
+  { id: 'AH-origin', file: AH, edits: [["if (!(origin === 'http://' + here || ((!origin || origin === 'null') && site === 'same-origin'))) {", 'if (false) {']], guards: AHG },
+  { id: 'AH-body', file: AH, edits: [['body += c; if (body.length > 1000) req.destroy();', 'body += c;']], guards: AHG },
+  { id: 'AH-once', file: AH, edits: [["if (!w.decided && (d === 'approve' || d === 'decline')) hooks.decide(w, d);", "if (d === 'approve' || d === 'decline') hooks.decide(w, d);"]], guards: AHG },
+  { id: 'AH-revoke', file: AH, edits: [['if (secret) { bySecret.delete(secret); secretOf.delete(id); }', 'if (secret) { secretOf.delete(id); }']], guards: AHG },
+  { id: 'RD-scrub', file: RD, edits: [[String.raw`.join('<report>').replace(/(^|[\s([])(['"“”‘’])[^'"“”‘’]{0,400}\2(?=$|[\s:,;.)\]])/g, '$1<text>');`, ".join('<report>');"], ['  if (left.length >= 2) s =', '  if (false) s =']], guards: RDG },
+  { id: 'RD-mask', file: RD, edits: [[String.raw`export const maskValues = (m) => String(m || '').replace(/['"][^'"]*['"]/g, '<value>');`, "export const maskValues = (m) => String(m || '');"]], guards: RDG }
 ];
 
 // (0.3.1 T1, Windows) a mutant's text is written with "\n"; a Windows checkout has the files with CRLF, so each text is
