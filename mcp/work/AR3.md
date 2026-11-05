@@ -12,7 +12,7 @@
   its characters: (a) page-preview.js's real SVG in Chromium, each character's x read back; (b) Chromium on the text
   the writer gives an Arabic report (`isolateLatin`), right-to-left paragraph; (c) bidi-js on the same inputs.
   Shaping: harfbuzzjs glyphs in Noto Sans Arabic (SIL OFL) vs Chromium's canvas in the same font (width, pixels).
-- **Expected:** bidi-js = Chromium 14 of 14; a few labels where the preview differs; harfbuzzjs width within 1%;
+- **Expected checks:** bidi-js = Chromium 14 of 14; a few labels where the preview differs; harfbuzzjs width within 1%;
   bidi-js under 5 ms a page; harfbuzzjs about 1 MB of WASM. No suite changes; lint 0.
 - **Got:** the preview differs from the written order on **8 of 14** labels; bidi-js = Chromium on **42 of 42**
   inputs (the preview's text, the written text, the candidate fix's text); harfbuzzjs = Chromium shaping on
@@ -24,7 +24,7 @@
   not the browser's: fix it there (a job of its own, below). bidi-js is the pick when Node needs an order with no
   browser (a PDF, an MCP check of the writer's order); harfbuzzjs only if a PDF job finds its PDF library's shaping
   wrong.
-- **Resume point:** steps 1 to 4 done; CI below.
+- **Resume:** steps 1 to 4 done; CI below.
 
 ## What was found
 
