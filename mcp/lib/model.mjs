@@ -22,6 +22,8 @@ const require = createRequire(import.meta.url);
 // The readers it uses: pbip-bind's fromTmsl (the fields of a model's JSON) and tmdl-model.js (TMDL into that JSON).)
 const Bind = require('../../assets/js/pbip-bind.js');
 const Tmdl = require('../../assets/js/tmdl-model.js');
+// (0.3.2 DD2D) a model file's bytes to text and the size limits: assets/js/model-file.js's, the website's readers' too
+const ModelFile = require('../../assets/js/model-file.js');
 
 // Every path the tools read or write must sit inside the working folder, DATAARCUS_ROOT. Not set, empty, blank or
 // still a placeholder ("${user_config.working_folder}": what an app's settings leave when nothing was chosen) means
@@ -87,13 +89,8 @@ export function inside(p) {
   return real(full, p);
 }
 
-export const decode = (buf) => {
-  const u8 = new Uint8Array(buf);
-  if (u8[0] === 0xff && u8[1] === 0xfe) return new TextDecoder('utf-16le').decode(u8.subarray(2));
-  if (u8[0] === 0xef && u8[1] === 0xbb && u8[2] === 0xbf) return new TextDecoder('utf-8').decode(u8.subarray(3));
-  if (u8.length > 1 && u8[1] === 0) return new TextDecoder('utf-16le').decode(u8);
-  return new TextDecoder('utf-8').decode(u8);
-};
+// a file's bytes (a Buffer) -> its text: model-file.js decodeText (UTF-16LE or UTF-8, a byte order mark or none)
+export const decode = (buf) => ModelFile.decodeText(new Uint8Array(buf));
 const json = (buf) => JSON.parse(decode(buf));
 
 // A .pbit is a zip, and a zip can be built to unpack to far more than it weighs (a "zip bomb"). So the reader reads
@@ -104,9 +101,10 @@ const json = (buf) => JSON.parse(decode(buf));
 // The limits come from what real templates hold (written down in mcp/WORK.md, "The .pbit limits"): the largest
 // model part we have is 52,620 bytes (Ramadan Test.pbit), the 300-table test model is about 1.2 MB as Desktop's
 // UTF-16 model file, and the website's Health Check already says "a template without data is usually under 20 MB"
-// and refuses files over 300 MB. The website's worker (assets/js/model-health-worker.js) carries the same numbers.
+// and refuses files over 300 MB. The numbers live in one place, assets/js/model-file.js LIMITS (0.3.2 DD2D), which the
+// website's worker (assets/js/model-health-worker.js) and model import read too; PBIT_LIMITS is that same object.
 const MB = 1024 * 1024;
-export const PBIT_LIMITS = { model: 64 * MB, entry: 32 * MB, total: 128 * MB, file: 300 * MB, entries: 20000 };
+export const PBIT_LIMITS = ModelFile.LIMITS;
 const mb = (n) => (n >= MB / 10 ? (n / MB >= 10 ? Math.round(n / MB) : Math.round(n / MB * 10) / 10) + ' MB' : Math.ceil(n / 1024) + ' KB');
 const refuse = (what) => new ReadError('TOO_BIG', { what }, `This file was not read: ${what}. A Power BI template without data is usually under 20 MB; nothing in this file was used.`);
 const isModelPart = (n) => n === 'DataModelSchema' || /(^|\/)model\.bim$/i.test(n);

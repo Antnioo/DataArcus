@@ -295,6 +295,9 @@ const FILES = [
   { label: 'the BOM 0xFF 0xFE alone', b: [0xff, 0xfe] }, { label: 'a, then a zero byte', b: [0x61, 0x00] },
 ];
 const decode = async (x, get) => (await get())(Uint8Array.from(x.b));
+// (DD2D) the health worker reads model-file.js through self (its importScripts): given here as the worker has it
+const workerSelf = () => ({ DAModelFile: createRequire(abs('assets/js/model-file.js'))('./model-file.js') });
+const decodeInWorker = async (x, get) => (await get({ self: workerSelf() }))(Uint8Array.from(x.b));
 
 const CANON = [
   { label: 'keys out of order', v: { b: 1, a: 2 } }, { label: 'an undefined value', v: { a: undefined, b: 1 } },
@@ -413,6 +416,7 @@ const chunkHex = async (x, get) => { const c = (await get())(x.t, Uint8Array.fro
 // the reading limits of a model file, by kind
 const LIMIT_KEYS = ['model', 'entry', 'total', 'file', 'entries', 'pbix', '', 'MODEL'].map((k) => ({ label: k === '' ? "'' (no kind)" : k, k }));
 const limitOf = async (x, get) => (await get())[x.k];
+const limitInWorker = async (x, get) => (await get({ self: workerSelf() }))[x.k];
 // a text box's text: its paragraphs' runs
 const TB = (paragraphs) => ({ visual: { visualType: 'textbox', objects: paragraphs === undefined ? {} : { general: [{ properties: { paragraphs } }] } } });
 const BOXTEXTS = [
@@ -528,11 +532,8 @@ export const FAMILIES = [
     ] },
   { id: 'crc', title: 'What is the CRC-32 of these bytes?', question: 'bytes: their CRC-32 (the PNG and ZIP checksum)',
     inputs: BYTES, places: [
-      P('assets/js/design-engine.js', 'crc32', 'inner', crc),
+      P('assets/js/png-bytes.js', 'crc32', 'export', crc),
       P('assets/js/pbip-zip.js', 'crc32', 'export', crc),
-      P('mcp/lib/glass-picture.mjs', 'crc32', 'source', crc),
-      P('mcp/lib/page-picture.mjs', 'crc32', 'source', crc),
-      P('assets/js/theme-download-ui.js', 'crc32', 'source', crc),
     ] },
   { id: 'overlap', title: 'Do these two boxes overlap?', question: 'two boxes on a page: do they overlap by more than a rounding (half a pixel each way)?',
     inputs: BOXES, places: [
@@ -569,7 +570,8 @@ export const FAMILIES = [
     ] },
   { id: 'decode', title: 'What text do the bytes of a Power BI file hold?', question: "a file's bytes: its text (UTF-16LE or UTF-8, a BOM or none)",
     inputs: FILES, places: [
-      P('assets/js/model-health-worker.js', 'decodeText', 'source', decode),
+      P('assets/js/model-file.js', 'decodeText', 'export', decode),
+      P('assets/js/model-health-worker.js', 'decodeText', 'source', decodeInWorker),
       P('assets/js/model-import-browser.js', 'decodeText', 'source', decode),
       P('mcp/lib/model.mjs', 'decode', 'export', decode),
     ] },
@@ -596,23 +598,20 @@ export const FAMILIES = [
     ] },
   { id: 'u32', title: 'What number do four bytes hold?', question: 'bytes and an offset: the big-endian unsigned 32-bit number there (a PNG read)',
     inputs: U32, places: [
-      P('mcp/lib/glass-picture.mjs', 'u32', 'source', async (x, get) => (await get())(Uint8Array.from(x.b), x.i)),
-      P('mcp/lib/page-picture.mjs', 'u32', 'source', async (x, get) => (await get())(Uint8Array.from(x.b), x.i)),
+      P('assets/js/png-bytes.js', 'u32', 'export', async (x, get) => (await get())(Uint8Array.from(x.b), x.i)),
     ] },
   { id: 'lru', title: 'What does a small cache keep?', question: 'a cache of N entries: what its gets answer after these sets (the least recently used goes first)',
     inputs: LRUS, places: [
-      P('mcp/lib/glass-picture.mjs', 'lru', 'source', lruRun),
-      P('mcp/lib/page-picture.mjs', 'lru', 'source', lruRun),
+      P('mcp/lib/small-cache.mjs', 'lru', 'export', lruRun),
     ] },
   { id: 'png-chunk', title: 'What bytes make a PNG chunk?', question: "a chunk's type and body: its bytes (length, type, body, CRC-32)",
     inputs: CHUNKS, places: [
-      P('assets/js/design-engine.js', 'chunk', 'source', chunkHex, { within: 'pngOf' }),
-      P('mcp/lib/glass-picture.mjs', 'chunk', 'source', chunkHex, { within: 'encode' }),
-      P('mcp/lib/page-picture.mjs', 'chunk', 'source', chunkHex),
+      P('assets/js/png-bytes.js', 'pngChunk', 'export', chunkHex),
     ] },
   { id: 'limits', title: 'How large may a model file be?', question: 'a kind of model file or entry: the size (or count) over which it is refused before it is read',
     inputs: LIMIT_KEYS, places: [
-      P('assets/js/model-health-worker.js', 'LIMITS', 'source', limitOf),
+      P('assets/js/model-file.js', 'LIMITS', 'export', limitOf),
+      P('assets/js/model-health-worker.js', 'LIMITS', 'source', limitInWorker),
       P('assets/js/model-import-browser.js', 'LIMITS', 'export', limitOf),
       P('mcp/lib/model.mjs', 'PBIT_LIMITS', 'export', limitOf),
     ] },

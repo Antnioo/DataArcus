@@ -5,20 +5,17 @@
  * by the Model Health Check's worker). A .pbix is refused, and so is a file over the limits, before it is read.
  * (0.3.2 SP14: moved from pbip-bind.js, which keeps fromFolder and fromFile by forwarding to this file.)
  * which model folder a chosen folder means: model-nearest.js's (the MCP's rule; two at the nearest depth are refused).
+ * a file's bytes to text and the size limits: model-file.js's (0.3.2 DD2D; the MCP's and the health worker's too).
  * readers: pbip-bind.js's own { fromTmsl, relsOfTmsl, clean, tmdl } (tmdl: tmdl-model.js), handed over, never copied.
  * (c) DataArcus. All rights reserved.
  */
 (function (root) {
-  const decodeText = (u8) => {
-    if (u8.length >= 2 && u8[0] === 0xff && u8[1] === 0xfe) return new TextDecoder('utf-16le').decode(u8.subarray(2));
-    if (u8.length >= 3 && u8[0] === 0xef && u8[1] === 0xbb && u8[2] === 0xbf) return new TextDecoder('utf-8').decode(u8.subarray(3));
-    if (u8.length >= 2 && u8[1] === 0x00) return new TextDecoder('utf-16le').decode(u8);
-    return new TextDecoder('utf-8').decode(u8);
-  };
-
-  // The MCP reader's limits (mcp/lib/model.mjs PBIT_LIMITS, the Health Check worker's too): a file over them is refused
-  // before it is read (the audit of the reading block, "seen": the website read a model.bim of any size)
-  const MB = 1024 * 1024, LIMITS = { model: 64 * MB, entry: 32 * MB, total: 128 * MB, file: 300 * MB };
+  const ModelFile = typeof module !== 'undefined' && module.exports ? require('./model-file.js') : root.DAModelFile;
+  // a file's bytes to text: model-file.js decodeText (UTF-16LE or UTF-8, a byte order mark or none)
+  // The MCP reader's limits (mcp/lib/model.mjs PBIT_LIMITS, the Health Check worker's too; one object since DD2D:
+  // model-file.js LIMITS): a file over them is refused before it is read (the audit of the reading block, "seen": the
+  // website read a model.bim of any size). Its entries count is the worker's (this file never opens a ZIP).
+  const decodeText = ModelFile.decodeText, LIMITS = ModelFile.LIMITS;
   const Nearest = () => (typeof module !== 'undefined' && module.exports ? require('./model-nearest.js') : root.DAModelNearest);
   const tooBig = () => new Error('TOO_BIG');
   // A folder from <input webkitdirectory>: the .SemanticModel folder itself, or a project folder holding one.
