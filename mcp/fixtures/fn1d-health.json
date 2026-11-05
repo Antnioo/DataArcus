@@ -60,16 +60,16 @@
   "sha256": "e52d7041a7d9ef3bbc8f3de67ba805210f30f9098ea0b4838e3eba91ec9408a4"
  },
  "E16 the Gulf models": {
-  "length": 463273,
-  "sha256": "dcbd640c62025354d85cc382acacd531d20001348aaf250637dc6659090172b3"
+  "length": 601065,
+  "sha256": "6d6f8dc471b53c23aa0f5563a3ad791779139976a8f9a1124edbd01e9138c517"
  },
  "E17 the tricky DAX with the legacy report, the Arabic model with the PBIR report": {
   "length": 24955,
   "sha256": "8a4d87ddafe1402efaa2fb26366976ce76d9f16fad6c881aa92433124642e48b"
  },
  "E18 FN1D's model, with its report, model only, and without the model wrapper": {
-  "length": 22348,
-  "sha256": "bfed3dd20a683dc654f951c2ae278cc02b898d6651292ff2220d9ddd5596240d"
+  "length": 22345,
+  "sha256": "207e815ca9c71c0551cc79dcb8c8f8958ae48531a6ddc8c600295e58cefba8e9"
  },
  "Q1": {
   "length": 10,
@@ -272,24 +272,92 @@
   "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
  },
  "Q51": {
-  "length": 739,
-  "sha256": "52d6cbaf1dfcab3472c6ab0c137565b5cf2d63784e78253b8288122becf619fa"
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
  },
  "Q52": {
   "length": 10,
   "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
  },
  "Q53": {
-  "length": 1376,
-  "sha256": "44ac53426bf7c7c12afc8327ddc30d2475ca06164f905577a4bbadd961a97fdd"
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
  },
  "Q54": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q55": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q56": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q57": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q58": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q59": {
+  "length": 739,
+  "sha256": "52d6cbaf1dfcab3472c6ab0c137565b5cf2d63784e78253b8288122becf619fa"
+ },
+ "Q60": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q61": {
   "length": 1376,
   "sha256": "44ac53426bf7c7c12afc8327ddc30d2475ca06164f905577a4bbadd961a97fdd"
  },
- "Q55": {
+ "Q62": {
   "length": 1376,
   "sha256": "44ac53426bf7c7c12afc8327ddc30d2475ca06164f905577a4bbadd961a97fdd"
+ },
+ "Q63": {
+  "length": 1376,
+  "sha256": "44ac53426bf7c7c12afc8327ddc30d2475ca06164f905577a4bbadd961a97fdd"
+ },
+ "B1 measures at the edges: a lower-case table, 100 *, a column's amount, / 1000 *, all, an empty text, MIN, two concepts": {
+  "length": 2697,
+  "sha256": "6a3c70130f3c9a601a37b3d491fafb684836c9ab065a8bf1f056b49ba025d09e"
+ },
+ "B2 dates and formats at the edges: lag, day in lower case, MAX of a number, a ratio said as a margin, * 100 shown plain, bytes": {
+  "length": 549,
+  "sha256": "99313572ba14892f00f7162ddb5006260a6c98aaba804783c587f0643b1e3576"
+ },
+ "B3 relationships at the edges: one to one, a key not named as a key, a candidate in another relationship, two candidates": {
+  "length": 7,
+  "sha256": "643d5437104296e21d906ecb15b2c96ad278f20cfc4af53b12bb6069bd853726"
+ },
+ "B4 a measures table with hidden columns, a field parameter, a DATATABLE calendar": {
+  "length": 7,
+  "sha256": "643d5437104296e21d906ecb15b2c96ad278f20cfc4af53b12bb6069bd853726"
+ },
+ "B5 one regular table only, a calendar": {
+  "length": 7,
+  "sha256": "643d5437104296e21d906ecb15b2c96ad278f20cfc4af53b12bb6069bd853726"
+ },
+ "B6 a calendar read by a calculated table": {
+  "length": 7,
+  "sha256": "643d5437104296e21d906ecb15b2c96ad278f20cfc4af53b12bb6069bd853726"
+ },
+ "B7 a calendar read by a calculation group": {
+  "length": 7,
+  "sha256": "643d5437104296e21d906ecb15b2c96ad278f20cfc4af53b12bb6069bd853726"
+ },
+ "B8 a calendar read only in a time-intelligence call, a period table marked as dates, a calendar read by MAX": {
+  "length": 1269,
+  "sha256": "bcd8431d6b3058a4bbc1f0da5edd173037a5f627f3e7ef5e8bbc84cb19dc8b9a"
+ },
+ "B9 facts at the edges: two columns, a key named after Branches, a key marked as the key, a key DAX reads, an untyped key": {
+  "length": 2527,
+  "sha256": "d85d20fc3d681a63e5c598c9d0183018727f75e26b62631b4f0e2dc3e8727f01"
  },
  "G1 the pack's test model": {
   "length": 1002799,
@@ -386,5 +454,37 @@
  "G24 the generator, only a vs Last Ramadan measure": {
   "length": 1175965,
   "sha256": "2369eaa67e9753faed60baa400623ce88114caf92f4c00e0ff7a5ba1a9dec3fc"
+ },
+ "G25 the generator, months moved: Ramadan 1443 two days late, Dhu al-Hijja 1443 a day early, Shawwal 1444 five days late": {
+  "length": 1398955,
+  "sha256": "32d3428ec7e36d6c50d3e7ecd65ad792abdac0fff0520c33429d9ab5f06fa45d"
+ },
+ "G26 the generator, Ramadan 1443 five days late": {
+  "length": 1381987,
+  "sha256": "70220f2cd975f51b4c6671b982d3474f7f49019a982ecb0f9446cf9834de35b9"
+ },
+ "G27 the generator, Oman's own Ramadan 1440, from 17 May 2018": {
+  "length": 571978,
+  "sha256": "c180d5a8ff4ba8bc5c13f048d1eb6c8b143adfdef2b93b38b43da1466900713d"
+ },
+ "G28 the generator, a range that can't be read": {
+  "length": 369310,
+  "sha256": "99fbf4baea23a3ea7b01867a77eaeab0121808f94e4937218359155f1544d7e8"
+ },
+ "G29 the generator, ending in Ramadan 1443": {
+  "length": 1067740,
+  "sha256": "b85ef7c635cd4b47b427e00e9e2ec3bf76ab18559ebb4f331d34e3fc79c407cf"
+ },
+ "G30 the generator, an Eid measure only": {
+  "length": 1175965,
+  "sha256": "2369eaa67e9753faed60baa400623ce88114caf92f4c00e0ff7a5ba1a9dec3fc"
+ },
+ "G31 a DAX calendar the generator did not make": {
+  "length": 536098,
+  "sha256": "b55e57cb42f2b7b0ca67c19935d737499a434a4b49de4f54b16d3537102cefb4"
+ },
+ "G32 an imported calendar, Hijri and an Eid column": {
+  "length": 336559,
+  "sha256": "fc742b1923bb90413f42e4d4b3b948ef139c221b8c1da71946ee78471709004f"
  }
 }

@@ -51,7 +51,12 @@ const base2018 = JSON.parse(fs.readFileSync(path.join(REPO, 'scripts/tests/fixtu
 const imported = (cols) => ({ name: 'Calendar', columns: [col('Date', 'dateTime')].concat(cols.map((c) => col(c, /^Is /.test(c) ? 'boolean' : 'int64'))), partitions: mq('Calendar') });
 const weekendLine = packCal.split('\n').find((l) => l.trim().startsWith('"Is Weekend", '));
 const st = (o) => Object.assign({}, Cal.DEFAULTS, { start: '2021-01-01', end: '2023-12-31', fy: 4 }, o);
-const built = (o, measures) => { const b = Cal.build(st(o)); return bim([{ name: 'Calendar', columns: b.columns.map((name) => ({ name })), partitions: [{ source: { type: 'calculated', expression: b.dax.split('\n').slice(1).join('\n') } }] }, salesT(measures || total)]); };
+// moved: { 'year,month': 'YYYY-MM-DD' } a Hijri month's first day written in the generator's month list; edit: the DAX changed
+const built = (o, measures, moved, edit) => { const b = Cal.build(st(o));
+  let d = b.dax.split('\n').slice(1).join('\n');
+  Object.entries(moved || {}).forEach(([k, v]) => { const [y, m] = k.split(','), re = new RegExp('"\\d{4}-\\d{2}-\\d{2}"(\\s*,\\s*' + y + '\\s*,\\s*' + m + '\\s*\\})'); if (!re.test(d)) throw new Error('no month ' + k); d = d.replace(re, '"' + v + '"$1'); });
+  if (edit) d = edit(d);
+  return bim([{ name: 'Calendar', columns: b.columns.map((name) => ({ name })), partitions: [{ source: { type: 'calculated', expression: d } }] }, salesT(measures || total)]); };
 const GULF = [
   ['the pack\'s test model', () => bim([calc('Calendar', packCal), salesT(packMeasures)])],
   ['the generator\'s 2018-2030 calendar, no announced dates', () => bim([calc('Calendar', base2018), salesT(total)])],
@@ -70,12 +75,23 @@ const GULF = [
   ['the generator, with the pack\'s measures', () => built({ observed: true, start: '2024-01-01', end: '2030-12-31' }, packMeasures)],
   ['an empty model', () => ({ model: { tables: [] } })],
   ['null', () => null],
-  ['the generator, only a vs Last Ramadan measure', () => built({ observed: true }, [{ name: 'Sales vs Last Ramadan', expression: 'SUM ( Sales[Amount] )' }])]
+  ['the generator, only a vs Last Ramadan measure', () => built({ observed: true }, [{ name: 'Sales vs Last Ramadan', expression: 'SUM ( Sales[Amount] )' }])],
+  // (FN1D) the Gulf check's edges no case reached: months moved from Umm al-Qura (by two and five days, Dhu al-Hijja a
+  // day early), Oman's own Ramadan 1440, a range that can't be read, a calendar ending in Ramadan, an Eid measure only,
+  // a DAX calendar the generator did not make, Hijri and Eid columns without Ramadan's
+  ['the generator, months moved: Ramadan 1443 two days late, Dhu al-Hijja 1443 a day early, Shawwal 1444 five days late', () => built({ observed: false }, null, { '1443,9': '2022-04-04', '1443,12': '2022-06-29', '1444,10': '2023-04-26' })],
+  ['the generator, Ramadan 1443 five days late', () => built({ observed: false }, null, { '1443,9': '2022-04-07' })],
+  ['the generator, Oman\'s own Ramadan 1440, from 17 May 2018', () => built({ weekend: 'omn', observed: false, start: '2018-05-17', end: '2019-12-31' }, null, { '1440,9': '2019-05-07' })],
+  ['the generator, a range that can\'t be read', () => built({ observed: true }, null, null, (d) => d.replace(/CALENDAR\s*\(\s*DATE\s*\([^)]*\)\s*,\s*DATE\s*\([^)]*\)\s*\)/, 'CALENDAR ( MIN ( Sales[Date] ), MAX ( Sales[Date] ) )'))],
+  ['the generator, ending in Ramadan 1443', () => built({ observed: true, end: '2022-04-15' })],
+  ['the generator, an Eid measure only', () => built({ observed: true }, [{ name: 'Eid al-Fitr Window Sales', expression: 'SUM ( Sales[Amount] )' }])],
+  ['a DAX calendar the generator did not make', () => bim([{ name: 'Calendar', dataCategory: 'Time', columns: [col('Date', 'dateTime'), col('Hijri Year', 'int64'), col('Hijri Month Number', 'int64'), col('Hijri Day', 'int64')], partitions: [{ name: 'Calendar', mode: 'import', source: { type: 'calculated', expression: 'CALENDAR ( DATE ( 2022, 1, 1 ), DATE ( 2022, 12, 31 ) )' } }] }, salesT(total)])],
+  ['an imported calendar, Hijri and an Eid column', () => bim([imported(['Hijri Year', 'Hijri Month Number', 'Hijri Day', 'Is Eid al-Fitr']), salesT(total)])]
 ];
 
 // ---------- the parts no other case reached (FN1D's mutants that turned nothing red, each red under this model first) ----------
 // auto date tables of both kinds (not hidden, marked as dates), a function reading a column, a shared M expression, two
-// sources with different counts, a row-number column, a query of 45 steps, a report with an auto date hierarchy's level
+// sources with different counts (the most used one seen last), a row-number column, a query of 45 steps, a report with an auto date hierarchy's level
 // and a hierarchy named as a column
 const longM = 'let\n' + Array.from({ length: 45 }, (_, i) => '    S' + i + ' = ' + (i ? 'S' + (i - 1) : 'Csv.Document(File.Contents("C:\\\\data\\\\a.csv"))')).join(',\n') + '\nin\n    S44';
 const extraModel = (bare) => { const m = { culture: 'en-US', tables: [
@@ -87,7 +103,8 @@ const extraModel = (bare) => { const m = { culture: 'en-US', tables: [
   { name: 'LocalDateTable_0a1b', dataCategory: 'Time', partitions: [{ name: 'L', source: { type: 'calculated', expression: 'Calendar(Date(2020,1,1), Date(2020,12,31))' } }], columns: [F.col('Date', 'dateTime'), F.col('Year', 'int64')] },
   { name: 'DateTableTemplate_9f8e', dataCategory: 'Time', partitions: [{ name: 'D', source: { type: 'calculated', expression: 'Calendar(Date(2020,1,1), Date(2020,12,31))' } }], columns: [F.col('Date', 'dateTime'), F.col('Year', 'int64')] }],
   relationships: [], functions: [{ name: 'Twice', expression: '( x ) => x * 2 + SUM ( Sales[Extra] )' }],
-  expressions: [{ name: 'Shared Source', kind: 'm', expression: 'let S = Excel.Workbook(File.Contents("C:\\\\shared.xlsx")) in S' }] };
+  expressions: [{ name: 'Shared Source', kind: 'm', expression: 'let S = Excel.Workbook(File.Contents("C:\\\\shared.xlsx")) in S' },
+    { name: 'Web Source', kind: 'm', expression: 'let A = Web.Contents("https://example.com/a"), B = Web.Contents("https://example.com/b") in B' }] };
   return bare ? m : { compatibilityLevel: 1702, model: m }; };
 const extraReport = () => ({ format: 'pbir', files: [
   { path: 'definition/pages/p1/page.json', json: { name: 'p1', displayName: 'One' } },
@@ -109,6 +126,50 @@ const ENGINE = F.CASES(viaLoader).map(([name, make]) => [name, () => [make()]]).
   ['FN1D\'s model, with its report, model only, and without the model wrapper', () => [{ model: extraModel(), report: extraReport() }, { model: extraModel(), report: null }, { model: extraModel(true), report: extraReport() }]]
 ]);
 
+// ---------- B: the questions' edges (FN1D's mutants of health-confirm.js that turned nothing red; each red here first) ----------
+const T = (name, cols, measures, extra) => Object.assign({ name, partitions: F.mp(name), columns: cols, measures: measures || [] }, extra || {});
+const R = (f, fc, t, tc, extra) => Object.assign({ name: f + t + fc, fromTable: f, fromColumn: fc, toTable: t, toColumn: tc }, extra || {});
+const M_ = (tables, relationships) => ({ compatibilityLevel: 1567, model: { culture: 'en-US', tables, relationships: relationships || [] } });
+const sales = (measures, more) => T('Sales', [F.col('Date', 'dateTime'), F.col('Region', 'string'), F.col('Amount', 'double'), F.col('Revenue', 'double'), F.col('Qty', 'int64'), F.col('Cases', 'double')].concat(more || []), measures);
+const cal = (extra, cols) => T('Calendar', cols || [F.col('Date', 'dateTime'), F.col('Year', 'int64')], [], extra);
+const pf = (n, e, f) => F.ms(n, e, { formatString: f });
+const BOUND = [
+  ['measures at the edges: a lower-case table, 100 *, a column\'s amount, / 1000 *, all, an empty text, MIN, two concepts', () => M_([sales([
+    F.ms('Total North', 'CALCULATE ( SUM ( Sales[Amount] ), sales[Region] <> "North" )'), pf('Share', '100 * DIVIDE ( SUM ( Sales[Amount] ), 2 )', '0.0%'),
+    pf('Big', 'DIVIDE ( SUM ( Sales[Revenue] ), 1000 )', '#,0'), pf('Revenue Div', 'SUM ( Sales[Revenue] ) / 1000 * 3', '#,0'),
+    F.ms('All Sales', 'CALCULATE ( SUM ( Sales[Amount] ), Sales[Region] <> "North" )'), F.ms('Total Empty', 'CALCULATE ( SUM ( Sales[Amount] ), Sales[Region] <> "" )'),
+    F.ms('Min Deaths', 'MIN ( Sales[Cases] )'), F.ms('Revenue Cost', 'SUM ( Sales[Qty] )')])])],
+  ['dates and formats at the edges: lag, day in lower case, MAX of a number, a ratio said as a margin, * 100 shown plain, bytes', () => M_([sales([
+    F.ms('Current Lag', 'CALCULATE ( SUM ( Sales[Amount] ), DATEADD ( Sales[Date], -1, DAY ) )'), F.ms('Current Day', 'CALCULATE ( SUM ( Sales[Amount] ), DATEADD ( Sales[Date], -1, day ) )'),
+    F.ms('Latest Qty', 'MAX ( Sales[Qty] ) - 1'), pf('Current Ratio Margin', 'DIVIDE ( 3, 2 )', '0%'), pf('Score', 'SUM ( Sales[Amount] ) * 100', '#,0'),
+    pf('Revenue Bytes', 'DIVIDE ( SUM ( Sales[Revenue] ), 1000 )', '#,0')])])],
+  ['relationships at the edges: one to one, a key not named as a key, a candidate in another relationship, two candidates', () => M_([
+    T('Orders', [F.col('Customer Id', 'int64'), F.col('Ship Customer Key', 'int64'), F.col('Amount', 'double')]),
+    T('Customers', [F.col('Ship Customer Key', 'int64', { isKey: true }), F.col('Name', 'string')]),
+    T('Returns', [F.col('Customer Id', 'int64'), F.col('Customer Ref', 'int64')]), T('Refs', [F.col('Customer Ref', 'int64'), F.col('Name', 'string')]),
+    T('Visits', [F.col('Shop Id', 'int64'), F.col('Visit Shop Key', 'int64'), F.col('Amount', 'double')]), T('Shops', [F.col('Visit Shop Key', 'int64'), F.col('Name', 'string')]),
+    T('Notes', [F.col('Shop Id', 'int64'), F.col('Visit Shop Key', 'int64'), F.col('visit shop key ', 'int64')])],
+  [R('Orders', 'Customer Id', 'Customers', 'Ship Customer Key', { fromCardinality: 'one' }), R('Returns', 'Customer Id', 'Refs', 'Customer Ref'),
+    R('Visits', 'Shop Id', 'Shops', 'Visit Shop Key'), R('Visits', 'Visit Shop Key', 'Shops', 'Name', { isActive: false }), R('Notes', 'Shop Id', 'Shops', 'Visit Shop Key')])],
+  ['a measures table with hidden columns, a field parameter, a DATATABLE calendar', () => M_([sales([F.ms('Total', 'SUM ( Sales[Amount] )')]),
+    T('Calendar', [F.col('Date', 'dateTime', { isHidden: true }), F.col('Year', 'int64', { isHidden: true })], [F.ms('M1', '1')]),
+    T('Dates', [F.col('Date', 'dateTime', { relatedColumnDetails: { groupByColumns: [] } }), F.col('Year', 'int64')]),
+    T('Date Table', [F.col('Date', 'dateTime'), F.col('Year', 'int64')], [], { partitions: [{ name: 'D', source: { type: 'calculated', expression: 'DATATABLE ( "Date", DATETIME, {{ "2020-01-01" }} )' } }] })])],
+  ['one regular table only, a calendar', () => M_([cal()])],
+  ['a calendar read by a calculated table', () => M_([sales(), cal(), T('Copy', [F.col('Date', 'dateTime'), F.col('Year', 'int64')], [], { partitions: [{ name: 'C', source: { type: 'calculated', expression: 'FILTER ( Calendar, TRUE () )' } }] })])],
+  ['a calendar read by a calculation group', () => M_([sales(), cal(), { name: 'Time Calc', partitions: [{ name: 'Time Calc', source: { type: 'calculationGroup' } }], calculationGroup: { calculationItems: [{ name: 'All', expression: 'CALCULATE ( SELECTEDMEASURE (), ALL ( Calendar ) )' }] }, columns: [F.col('Name', 'string')] }])],
+  ['a calendar read only in a time-intelligence call, a period table marked as dates, a calendar read by MAX', () => M_([
+    sales([F.ms('YTD', 'CALCULATE ( SUM ( Sales[Amount] ), DATESYTD ( Calendar[Date] ) )'), F.ms('Last', 'MAX ( Dates[Date] )')]), cal(),
+    T('Periods', [F.col('Day', 'dateTime'), F.col('Year', 'int64')], [], { dataCategory: 'Time' }), T('Dates', [F.col('Date', 'dateTime'), F.col('Year', 'int64')])])],
+  ['facts at the edges: two columns, a key named after Branches, a key marked as the key, a key DAX reads, an untyped key', () => M_([
+    T('Small', [F.col('Amount', 'double'), F.col('Customer Key', 'int64')]), T('Customer', [F.col('Customer Key', 'int64'), F.col('Name', 'string')]),
+    T('Footfall', [F.col('Branch Key', 'int64'), F.col('Amount', 'double'), F.col('Note', 'string')]), T('Branches', [F.col('Branch Key', 'int64'), F.col('Name', 'string')]),
+    T('Orders', [F.col('Region Key', 'int64'), F.col('Amount', 'double'), F.col('Note', 'string')]), T('Region Map', [F.col('Region Key', 'int64', { isKey: true }), F.col('Weight', 'double')]),
+    T('Bookings', [F.col('Agent Key', 'int64'), F.col('Amount', 'double'), F.col('Note', 'string')], [F.ms('Agents Booked', 'CALCULATE ( SUM ( Bookings[Amount] ), TREATAS ( VALUES ( Agent[Agent Key] ), Bookings[Agent Key] ) )')]),
+    T('Agent', [F.col('Agent Key', 'int64', { isKey: true }), F.col('Name', 'string')]),
+    T('Calls', [F.col('Line Key', 'int64'), F.col('Amount', 'double'), F.col('Note', 'string')]), T('Lines', [F.col('Line Key', 'unknown', { isKey: true }), F.col('Name', 'string')])])]
+];
+
 // ---------- Q: pleaseConfirm() ----------
 const allModels = () => [].concat(...ENGINE.map(([, make]) => make().map((c) => c.model)));
 
@@ -124,6 +185,7 @@ allModels().forEach((m, i) => pin('Q' + (i + 1), () => {
   const M = Index.normalizeModel(m), userTables = M.tables.filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name));
   return [Confirm.pleaseConfirm(M), Confirm.pleaseConfirm(M, {}), Confirm.pleaseConfirm(M, { userTables })];
 }));
+BOUND.forEach(([name, make], i) => pin('B' + (i + 1) + ' ' + name, () => { const M = Index.normalizeModel(make()); return [Confirm.pleaseConfirm(M), Health.analyze(make(), null).confirm]; }));
 const gulfOut = [];
 GULF.forEach(([name, make], i) => pin('G' + (i + 1) + ' ' + name, () => { const r = OPTS.map((o) => Gulf.analyze(make(), o)); gulfOut.push(...r); return r; }));
 
