@@ -21,8 +21,9 @@
   sitemap-lastmod green; website `npm test` green; same-shape groups go down (9 -> 1).
 - **Red proof (not committed):** `'` taken out of htmlEsc: dd2h FAIL 155 of 175 (H5 and H13, and both texts for each
   of the 9 places in P); restored.
-- **State:** steps 1-5 done, integration merged once (d3d9bef4); the full run and CI next.
-- **Resume:** read Results; if CI is not green yet, run it (`gh workflow run tests.yml --ref feat/0.3.2-dd2h`).
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/41978502098 on 8e1f5854be2818e9c1c86898c85339ce058364a4
+- **State:** DONE (Linux and Windows; macOS runs where the reviewer merges).
+- **Resume:** none; the reviewer reads and merges.
 
 ## Copies before -> after (each place)
 | place | before | after |
@@ -74,8 +75,23 @@ none (no golden, twin or Desktop-measured test changed its answer).
   searched beyond the 9 places; a probe sweep for the next ledger.
 
 ## Lessons for the reviewer
+- sp8 M2 pins field-picker-ui.js to no `require(` at all: the full run caught it, the targeted website suites did
+  not (sp8's Node half lives in mcp/). The brief's list of split tests (sp10, sp26, sp30, sp42) missed sp8; a grep of
+  mcp/test-*.mjs for the edited file's name before the run finds them.
 - My first insert of the script tags matched `translations/theme-generator.min.js` and
   `translations/measure-builder.min.js` (the same file name) before the page script; build:min named the missing
   file at once. A tag inserted by a pattern needs the exact `assets/js/<name>` path.
 
 ## Results
+- Base (1730d919, before any change): MCP as CI's 5 shards side by side, all exit 0 (210 result lines).
+- Step 4: the website suites that load each page, 17 of 17 PASS (tools 399, model-health 255, consent 38,
+  theme-generator 922, theme-generator-lab 922, pbip 111, dax 51, svg-kpi 854, gulf-calendar 913, sp8 3, sp12 3,
+  sp24 23, sp25 22, sp33 34, sp32 39, sp34 18, sp31 17).
+- Merged origin/integration/0.3.2 once at 6087c735 (TN2) in d3d9bef4: stamps only in conflict, `npm run build:min`.
+  Integration moved again (cd7392f8, DD2U) after it: not merged (L-1103-04).
+- On ae82cf0b: the same 5 shards, every suite's number as on the base but dd1a 311 -> 319 (TN2's own, from
+  integration), dd2h 175 (new), and sp8 FAIL, 1 of 19 checks failed (M2, see Lessons); fixed in 8e1f5854 (sp8 19 PASS; sp10 113,
+  sp26 26, sp30 21, sp42 22 PASS). Mutation 76/76 killed (198 checks). Lint exit 0; check-contracts 710 (28 families,
+  99 places); check-modules --strict 1160; agent-memory, result-lines, literal requires, site config, stamps,
+  changelog-words, check-min PASS. The probe: html 9 places, 0 of 10 disagree.
+- CI run 41978502098 on 8e1f5854: green (MCP Linux and Windows 5 shards each, the website's 3 suites shards and checks).
