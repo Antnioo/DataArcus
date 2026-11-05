@@ -10,7 +10,7 @@
   storyLang, report-bind arName, twin-plan arOf); 3 the engines (text-measure, field-catalog, report-rules, pbip-query)
   and their loaders (the three theme generator pages, theme-generator.js BUILDER and loadBind), sp30 K2 admits the file;
   4 the parity test in dd1f; 5 CONTRACTS.md 1f, MODULES.md row, the probe's 1f places, CHANGELOG, WORK.md.
-- **Expected:** 7 tests -> 1 module (1 function, 1 regex); the probe's 1f: 3 groups, 4 of 11 disagree -> 1 group, 0;
+- **Expected checks:** 7 tests -> 1 module (1 function, 1 regex); the probe's 1f: 3 groups, 4 of 11 disagree -> 1 group, 0;
   dd1f new (about 15 unit + 7 x 15 parity + source checks); sp30 the same number (K2 widened, not added); every other
   suite's number unchanged; mutation 76/76; lint 0; check-contracts, check-modules --strict green.
 - **Answers that change (expected):** group B (report-rules) gains U+0750, U+08A0; group C (pbip-query, storyLang,
