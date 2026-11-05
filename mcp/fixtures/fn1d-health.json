@@ -60,12 +60,16 @@
   "sha256": "e52d7041a7d9ef3bbc8f3de67ba805210f30f9098ea0b4838e3eba91ec9408a4"
  },
  "E16 the Gulf models": {
-  "length": 440982,
-  "sha256": "e7cb2d3366cc226560272584ee251c20adf7e24f70aa7132b1f0d57e2608ed6a"
+  "length": 463273,
+  "sha256": "dcbd640c62025354d85cc382acacd531d20001348aaf250637dc6659090172b3"
  },
  "E17 the tricky DAX with the legacy report, the Arabic model with the PBIR report": {
   "length": 24955,
   "sha256": "8a4d87ddafe1402efaa2fb26366976ce76d9f16fad6c881aa92433124642e48b"
+ },
+ "E18 FN1D's model, with its report, model only, and without the model wrapper": {
+  "length": 22348,
+  "sha256": "bfed3dd20a683dc654f951c2ae278cc02b898d6651292ff2220d9ddd5596240d"
  },
  "Q1": {
   "length": 10,
@@ -264,12 +268,28 @@
   "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
  },
  "Q50": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q51": {
   "length": 739,
   "sha256": "52d6cbaf1dfcab3472c6ab0c137565b5cf2d63784e78253b8288122becf619fa"
  },
- "Q51": {
+ "Q52": {
   "length": 10,
   "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q53": {
+  "length": 1376,
+  "sha256": "44ac53426bf7c7c12afc8327ddc30d2475ca06164f905577a4bbadd961a97fdd"
+ },
+ "Q54": {
+  "length": 1376,
+  "sha256": "44ac53426bf7c7c12afc8327ddc30d2475ca06164f905577a4bbadd961a97fdd"
+ },
+ "Q55": {
+  "length": 1376,
+  "sha256": "44ac53426bf7c7c12afc8327ddc30d2475ca06164f905577a4bbadd961a97fdd"
  },
  "G1 the pack's test model": {
   "length": 1002799,
@@ -362,5 +382,9 @@
  "G23 null": {
   "length": 297370,
   "sha256": "8ce3ce0c2bf85c6927f4bfecbcd1c1dedfecc5ae41255e24b24c02e002a2c8a8"
+ },
+ "G24 the generator, only a vs Last Ramadan measure": {
+  "length": 1175965,
+  "sha256": "2369eaa67e9753faed60baa400623ce88114caf92f4c00e0ff7a5ba1a9dec3fc"
  }
 }

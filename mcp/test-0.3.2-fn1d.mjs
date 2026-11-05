@@ -69,8 +69,31 @@ const GULF = [
   ['the generator, a calendar ending in 2022', () => built({ start: '2020-06-01', end: '2022-02-01', observed: true }, packMeasures)],
   ['the generator, with the pack\'s measures', () => built({ observed: true, start: '2024-01-01', end: '2030-12-31' }, packMeasures)],
   ['an empty model', () => ({ model: { tables: [] } })],
-  ['null', () => null]
+  ['null', () => null],
+  ['the generator, only a vs Last Ramadan measure', () => built({ observed: true }, [{ name: 'Sales vs Last Ramadan', expression: 'SUM ( Sales[Amount] )' }])]
 ];
+
+// ---------- the parts no other case reached (FN1D's mutants that turned nothing red, each red under this model first) ----------
+// auto date tables of both kinds (not hidden, marked as dates), a function reading a column, a shared M expression, two
+// sources with different counts, a row-number column, a query of 45 steps, a report with an auto date hierarchy's level
+// and a hierarchy named as a column
+const longM = 'let\n' + Array.from({ length: 45 }, (_, i) => '    S' + i + ' = ' + (i ? 'S' + (i - 1) : 'Csv.Document(File.Contents("C:\\\\data\\\\a.csv"))')).join(',\n') + '\nin\n    S44';
+const extraModel = (bare) => { const m = { culture: 'en-US', tables: [
+  { name: 'Sales', partitions: [{ name: 'Sales', mode: 'import', source: { type: 'm', expression: longM } }],
+    columns: [{ name: 'RowNumber-2662979B-1795-4F74-8F37-6A1BA8059B61', dataType: 'int64', type: 'rowNumber', isHidden: true }, F.col('Date', 'dateTime'), F.col('Amount', 'double'), F.col('Extra', 'double'), F.col('Category', 'string'), F.col('Spare', 'string')],
+    hierarchies: [{ name: 'Cat H', levels: [{ name: 'Category', column: 'Category' }] }],
+    measures: [F.ms('Total', 'Twice ( SUM ( Sales[Amount] ) )'), F.ms('Plain', 'SUM ( Sales[Amount] )')] },
+  { name: 'Lookup', partitions: [{ name: 'Lookup', mode: 'import', source: { type: 'm', expression: 'let S = Excel.Workbook(File.Contents("C:\\\\x.xlsx")), T = Csv.Document(Web.Contents("https://example.com/a.csv")) in T' } }], columns: [F.col('Key', 'int64'), F.col('Name', 'string')] },
+  { name: 'LocalDateTable_0a1b', dataCategory: 'Time', partitions: [{ name: 'L', source: { type: 'calculated', expression: 'Calendar(Date(2020,1,1), Date(2020,12,31))' } }], columns: [F.col('Date', 'dateTime'), F.col('Year', 'int64')] },
+  { name: 'DateTableTemplate_9f8e', dataCategory: 'Time', partitions: [{ name: 'D', source: { type: 'calculated', expression: 'Calendar(Date(2020,1,1), Date(2020,12,31))' } }], columns: [F.col('Date', 'dateTime'), F.col('Year', 'int64')] }],
+  relationships: [], functions: [{ name: 'Twice', expression: '( x ) => x * 2 + SUM ( Sales[Extra] )' }],
+  expressions: [{ name: 'Shared Source', kind: 'm', expression: 'let S = Excel.Workbook(File.Contents("C:\\\\shared.xlsx")) in S' }] };
+  return bare ? m : { compatibilityLevel: 1702, model: m }; };
+const extraReport = () => ({ format: 'pbir', files: [
+  { path: 'definition/pages/p1/page.json', json: { name: 'p1', displayName: 'One' } },
+  { path: 'definition/pages/p1/visuals/v1/visual.json', json: { visual: { visualType: 'clusteredColumnChart', query: { queryState: {
+    Category: { projections: [{ field: { HierarchyLevel: { Expression: { Hierarchy: { Expression: { SourceRef: { Entity: 'Sales' } }, Hierarchy: 'Date' } }, Level: 'Year' } } }, { field: F.ent('Sales', 'Cat H') }] },
+    Y: { projections: [{ field: F.ent('Sales', 'Total', 'Measure') }] } } } } } }] });
 
 // ---------- E: analyze() ----------
 const one = (model, report) => [{ model, report }];
@@ -82,7 +105,8 @@ const ENGINE = F.CASES(viaLoader).map(([name, make]) => [name, () => [make()]]).
     { model: F.rulesModel(), report: F.rulesReport() }, { model: F.rulesModel(), report: null }, { model: F.questionsModel(), report: null },
     ...F.guardModels(), { model: F.unusedModel(), report: F.unusedReport() }, { model: F.unusedModel(), report: null }, { model: null, report: null }, { model: {}, report: {} }]],
   ['the Gulf models', () => GULF.map(([, make]) => ({ model: make(), report: null }))],
-  ['the tricky DAX with the legacy report, the Arabic model with the PBIR report', () => [{ model: F.trickyModel(), report: F.legacy() }, { model: F.arabicModel(), report: F.pbir() }]]
+  ['the tricky DAX with the legacy report, the Arabic model with the PBIR report', () => [{ model: F.trickyModel(), report: F.legacy() }, { model: F.arabicModel(), report: F.pbir() }]],
+  ['FN1D\'s model, with its report, model only, and without the model wrapper', () => [{ model: extraModel(), report: extraReport() }, { model: extraModel(), report: null }, { model: extraModel(true), report: extraReport() }]]
 ]);
 
 // ---------- Q: pleaseConfirm() ----------
