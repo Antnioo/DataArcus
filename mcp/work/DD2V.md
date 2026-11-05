@@ -12,8 +12,8 @@
 - **Answers that change (only these):** `stackedBarChart` is no longer a bar in the preview, check_report and the twin's picture;
   `stackedColumnChart` leaves the column kind lists of page-preview KIND and layout-check KINDS (listed in the note after step 3).
 - **Expected checks:** dd2v new; every other suite's number unchanged; lint 0; check-contracts, check-modules --strict, check-agent-memory, check-result-lines green.
-- **State:** steps 1-4 written; the full runs and CI follow.
-- **Resume:** run the checks, merge integration once if it moved, `npm run build:min`, CI.
+- **State:** DONE (Linux and Windows; macOS runs where the reviewer merges).
+- **Resume:** none; the reviewer reads and merges.
 
 ## Copies before -> after (each place)
 | place | before | after |
@@ -53,3 +53,4 @@ none (a type Power BI never writes changes its picture; no report Power BI write
 ## Lessons for the reviewer
 - `git grep -l` of the edited files found 56 tests; running the whole MCP in CI's shards plus the 3 website shards was the only sure proof (about 25 minutes on 4 cores).
 - A page loader edit (theme-generator.js loadPreview) is covered by the website shards (pbip, sp31, theme-generator).
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/41985887507 on cbf3569c17f11c19ff8608898c6f1a7515cebcb2
