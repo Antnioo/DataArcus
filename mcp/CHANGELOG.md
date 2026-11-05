@@ -8,6 +8,10 @@ package's manifest; this file says what is in it.
 - **A text box that holds only a number is text:** a text box that holds only a number, such as 0, is now seen as text by
   the accessibility check (it keeps its Tab stop and gets its alt text) and drawn in the preview, as the report check and
   read_report already read it.
+- **One answer to "is this text Arabic?":** a title or a name typed with Arabic presentation forms (such as «ﻻ») or
+  with letters from the Arabic supplement is now treated as Arabic everywhere: the report writer joins it with «حسب»,
+  create_report writes its story sentence and its count word in Arabic, the Arabic twin reads it as already Arabic, and
+  the report check measures it as an Arabic header.
 - **A name with a hyphen is written in quotes:** a table or column name with a hyphen (Sales-2024) is now written in
   quotes ('Sales-2024') in the health check's fix scripts and the measure builder, as every other DataArcus script writes it.
 - **One answer to "is this column a date part?":** the Arabic twin, the approval preview, the report writer and the
@@ -23,6 +27,8 @@ package's manifest; this file says what is in it.
   report (a width the picture columns could not read no longer stops them).
 - **The site now asks which model, as the MCP does:** choose a folder with two models side by side and the page names both
   and asks you to choose the model's own folder, instead of quietly using the first one by name.
+- **The theme generator's Arabic message for two models:** a folder with two models side by side now reads «نموذجين»
+  instead of «2 نماذج»; three or more keep «نماذج», and the English sentence is the same.
 - **The Arabic twin, a visual in a broken group:** a visual inside a group whose size is not a usable number (a width
   of 0, below 0, or text) is now mirrored, kept on its table and given room for its button inside its page, the same
   frame every step uses; before, one step could place it in the broken group and another in the page.

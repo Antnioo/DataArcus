@@ -266,9 +266,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // writer's bidi isolation, pbip-bidi.js, after text-measure.js, which it reads, before the writer, which calls it; 0.3.2
   // DD1B: a literal's text, number and true or false, pbir-values.js, first: the writer, the a11y rules and the check
   // read it; DD1A: is a column time by its name, time-names.js, right after it: the twin, the writer and the check read
-  // it; DD2T: a text box's paragraphs, text-runs.js, right after them: the a11y rules and the check read it; 0.3.2 DD2P:
+  // it; DD1F: is a text Arabic, arabic-script.js, first of all: text-measure.js, the writer and the check read it
+  // when they load; DD2T: a text box's paragraphs, text-runs.js, right after pbir-values.js: the a11y rules and the
+  // check read it; 0.3.2 DD2P:
   // the picture bytes, png-bytes.js, before pbip-zip.js, which reads its CRC-32 (the page loads it already: not loaded again))
-  const BUILDER = ['/assets/js/pbir-values.min.js?v=57e0aebe7cdf', '/assets/js/text-runs.min.js?v=047b2eda2154', '/assets/js/time-names.min.js?v=8d0c82e5e062', '/assets/js/text-measure.min.js?v=d2d8d06bb406', '/assets/js/story-titles.min.js?v=596a8e4e04fa', '/assets/js/visual-types.min.js?v=9fe419144b32', '/assets/js/mirror-policy.min.js?v=cb423b304386', '/assets/js/mirror-charts.min.js?v=ea242c6dc3ce', '/assets/js/mirror-text.min.js?v=f1bf57acb463', '/assets/js/mirror-units.min.js?v=91337fe5c334', '/assets/js/report-mirror.min.js?v=6df65257122c', '/assets/js/pbip-query.min.js?v=8c886d35900d', '/assets/js/pbip-sizing.min.js?v=14c9a147b14e', '/assets/js/pbip-notes.min.js?v=38120f9ce6fd',
+  const BUILDER = ['/assets/js/arabic-script.min.js?v=07b91699d1e3', '/assets/js/pbir-values.min.js?v=57e0aebe7cdf', '/assets/js/text-runs.min.js?v=047b2eda2154', '/assets/js/time-names.min.js?v=8d0c82e5e062', '/assets/js/text-measure.min.js?v=13d0792030b9', '/assets/js/story-titles.min.js?v=596a8e4e04fa', '/assets/js/visual-types.min.js?v=9fe419144b32', '/assets/js/mirror-policy.min.js?v=cb423b304386', '/assets/js/mirror-charts.min.js?v=ea242c6dc3ce', '/assets/js/mirror-text.min.js?v=f1bf57acb463', '/assets/js/mirror-units.min.js?v=91337fe5c334', '/assets/js/report-mirror.min.js?v=6df65257122c', '/assets/js/pbip-query.min.js?v=fc75e882e1c8', '/assets/js/pbip-sizing.min.js?v=14c9a147b14e', '/assets/js/pbip-notes.min.js?v=38120f9ce6fd',
     '/assets/js/label-limits.min.js?v=28489c70397d', '/assets/js/pbip-visuals-charts.min.js?v=7d1bb8b90fa6', '/assets/js/pbip-visuals-tables.min.js?v=ad2b43d89afd', '/assets/js/pbip-visuals.min.js?v=458cf51d0bf1', '/assets/js/pbip-tooltip.min.js?v=f840b971a8b9', '/assets/js/pbip-navigation.min.js?v=30ed39d92fb2', '/assets/js/pbip-page.min.js?v=04628e53532a', '/assets/js/report-a11y.min.js?v=8cd6136f38cf',
     '/assets/js/png-bytes.min.js?v=0f8f6e3b3c39', '/assets/js/pbip-zip.min.js?v=57524637fbad', '/assets/js/pbip-sample.min.js?v=c2586f4ca3c2', '/assets/js/pbip-bidi.min.js?v=7bfb226aefb3', '/assets/js/pbip-export.min.js?v=71b3b1f69a2f'];
   // (0.3.1 FX5: the page loads the sizes and what they read, for the canvas's bars; a script already on the page is not
@@ -295,15 +297,17 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(() => (window.DAModelImport ? null : loadScript('/assets/js/model-import-browser.min.js?v=16b8206a59b7')))
       // (DD1H: which column sorts a month or day name is sort-column.js's, which field-catalog.js reads when it loads: loaded first)
       .then(() => (window.DASortColumn ? null : loadScript('/assets/js/sort-column.min.js?v=8fba2c19aba2')))
+      // (DD1F: is a text Arabic is arabic-script.js's, which field-catalog.js reads when it loads: loaded first)
+      .then(() => (window.DAArabicScript ? null : loadScript('/assets/js/arabic-script.min.js?v=07b91699d1e3')))
       // (SP30: the model's metadata, normalised, is field-catalog.js's, which pbip-bind.js reads when it loads: loaded first)
-      .then(() => (window.DAFieldCatalog ? null : loadScript('/assets/js/field-catalog.min.js?v=cf93392ccf9b')))
+      .then(() => (window.DAFieldCatalog ? null : loadScript('/assets/js/field-catalog.min.js?v=910ad9ad493d')))
       // (SP30: the ranking is field-suggest.js's, which reads field-catalog.js and which pbip-bind.js reads: loaded between)
       .then(() => (window.DAFieldSuggest ? null : loadScript('/assets/js/field-suggest.min.js?v=748e6d5f87c5')))
       .then(() => loadScript('/assets/js/pbip-bind.min.js?v=600d69b2b551')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
   let words = null;
   const loadNames = () => Promise.all([window.DAArabicNames ? window.DAArabicNames : loadScript('/assets/js/arabic-names.min.js?v=637dc63aff40').then(() => window.DAArabicNames),
     words || (words = fetch('/assets/data/arabic-report-words.json').then((r) => (r.ok ? r.json() : Promise.reject(new Error('words')))).catch((e) => { words = null; throw e; }))]);
-  const CHECK = ['../assets/js/visual-types.min.js?v=9fe419144b32', '../assets/js/report-rules.min.js?v=074ffc4af72b', '../assets/js/layout-check.min.js?v=693e38069ce4'];
+  const CHECK = ['../assets/js/visual-types.min.js?v=9fe419144b32', '../assets/js/report-rules.min.js?v=1718fa3ad073', '../assets/js/layout-check.min.js?v=693e38069ce4'];
   const loadCheck = () => (window.DALayoutCheck ? Promise.resolve(window.DALayoutCheck) : loadBuilder().then(() => CHECK.reduce((q, src) => q.then(() => loadScript(src)), Promise.resolve())).then(() => window.DALayoutCheck));
   // (0.3.2 DD1B: the preview reads its literals with pbir-values.js, DD1A: its time names with time-names.js, DD2T:
   // a text box's paragraphs with text-runs.js, each

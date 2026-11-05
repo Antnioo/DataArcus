@@ -497,12 +497,13 @@ export const FAMILIES = [
     ] },
   { id: '1f', title: 'Is this text Arabic?', question: 'a text: does it hold an Arabic letter (the test that sends it the Arabic way)?',
     inputs: TEXTS, places: [
-      P('assets/js/text-measure.js', 'ARABIC', 'inner', async (x, get) => (await get()).test(x.s)),
-      P('assets/js/field-catalog.js', 'AR_SCRIPT', 'inner', async (x, get) => (await get()).test(x.s)),
-      P('assets/js/report-rules.js', 'AR_LETTER', 'inner', async (x, get) => (await get()).test(x.s)),
-      P('assets/js/pbip-query.js', 'AR_LETTERS', 'inner', async (x, get) => (await get()).test(x.s)),
+      P('assets/js/text-measure.js', 'ARABIC', 'export', async (x, get) => (await get()).test(x.s)),
+      P('assets/js/field-catalog.js', 'langOf', 'export', async (x, get) => (await get())(x.s) === 'ar'),
+      // (DD1F) an Arabic header has a band below its need (lowW < needW); any other text none
+      P('assets/js/report-rules.js', 'headerNeed', 'export', async (x, get) => { const m = (await get())(x.s, 12, 'Segoe UI', 1); return m.lowW < m.needW; }),
+      P('assets/js/pbip-query.js', 'AR_LETTERS', 'export', async (x, get) => (await get()).test(x.s)),
       P('mcp/lib/dax-functions.mjs', 'storyLang', 'export', async (x, get) => (await get())(x.s, 'ar') === 'ar'),
-      P('mcp/lib/report-bind.mjs', 'AR_COL', 'source', async (x, get) => (await get()).test(x.s)),
+      P('mcp/lib/report-bind.mjs', 'arName', 'export', async (x, get) => (await get())('W', 'E')(x.s).startsWith('W ')),
       P('mcp/lib/twin-plan.mjs', 'arOf', 'source', async (x, get) => (await get())(x.s), { within: 'planTwin' }),
     ] },
   { id: 'grid', title: 'Does this visual keep its grid left to right?', question: 'a visual type: a table or a matrix, whose columns Desktop keeps left to right in the twin',
@@ -527,8 +528,7 @@ export const FAMILIES = [
     ] },
   { id: 'canon', title: 'What is the canonical text of a plan?', question: 'a value: its JSON with keys sorted and undefined left out (the text a digest is taken of)',
     inputs: CANON, places: [
-      P('mcp/lib/artifact.mjs', 'canon', 'source', async (x, get) => (await get())(x.v)),
-      P('mcp/lib/plans.mjs', 'canon', 'source', async (x, get) => (await get())(x.v)),
+      P('mcp/lib/canon.mjs', 'canon', 'export', async (x, get) => (await get())(x.v)),
     ] },
   { id: 'crc', title: 'What is the CRC-32 of these bytes?', question: 'bytes: their CRC-32 (the PNG and ZIP checksum)',
     inputs: BYTES, places: [

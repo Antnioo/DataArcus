@@ -186,9 +186,10 @@ try {
   const CAT_NAMES = ['fromTmsl', 'relsOfTmsl', 'markCalendars', 'fieldOf', 'measureOf', 'measureCard', 'isPercent', 'dateColumnFor', 'sortColumnFor', 'isDateTable', 'nameLike', 'langOf', 'langsOf', 'twinsOf', 'fieldKey', 'exprOf', 'reachTable', 'readTables'];
   chk(() => CAT_NAMES.every((k) => typeof Cat[k] === 'function' && Bind[k] === Cat[k]) && !/function (catalog|fromTmsl|fieldOf|measureField|reached|reachTable|markCalendars|pairTwins)\s*\(|new WeakMap|@typedef/.test(bindSrc + read('pbip-bind.js')),
     () => `K1 pbip-bind.js must re-export field-catalog.js's functions (the same ones) and hold no catalog code: ${CAT_NAMES.filter((k) => Bind[k] !== Cat[k]).join(', ')}`);
-  // (0.3.2 DD1H: and the pure sort-column rule, sort-column.js, its one home; mcp/work/DD1H.md)
-  chk(() => (catSrc.match(/require\(['"][^'"]+['"]\)/g) || []).join() === "require('./field-meaning.js'),require('./sort-column.js')" && !/document\.|window\.|fetch\(|XMLHttpRequest|FileReader|arrayBuffer|localStorage|postMessage|importScripts|suggest\(|function build|EVALUATE/.test(catSrc),
-    () => 'K2 field-catalog.js must read no file, page or network, run no query, and require field-meaning.js and sort-column.js only');
+  // (0.3.2 DD1H: and the pure sort-column rule, sort-column.js, its one home; mcp/work/DD1H.md; DD1F: and the pure
+  // Arabic letter test, arabic-script.js, its one home; mcp/work/DD1F.md)
+  chk(() => (catSrc.match(/require\(['"][^'"]+['"]\)/g) || []).join() === "require('./field-meaning.js'),require('./sort-column.js'),require('./arabic-script.js')" && !/document\.|window\.|fetch\(|XMLHttpRequest|FileReader|arrayBuffer|localStorage|postMessage|importScripts|suggest\(|function build|EVALUATE/.test(catSrc),
+    () => 'K2 field-catalog.js must read no file, page or network, run no query, and require field-meaning.js, sort-column.js and arabic-script.js only');
   const tg = read('theme-generator.js'), at = (f) => tg.indexOf('/assets/js/' + f + '.min.js?v='), once = (f) => tg.split('/assets/js/' + f + '.min.js?v=').length === 2;
   chk(() => once('field-catalog') && once('pbip-bind') && at('field-meaning') < at('field-catalog') && at('field-catalog') < at('pbip-bind') && at('field-catalog') > tg.indexOf('const loadBind'),
     () => 'K3 theme-generator.js\'s loadBind must load field-catalog.min.js once, after field-meaning and before pbip-bind.min.js');

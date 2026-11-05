@@ -30,8 +30,9 @@ export function planBinding(o) {
 
 // (0.3.1 TT1, the owner, 27 Oct: a title is wholly Arabic or wholly English) «عدد X» only for an Arabic column; an English
 // one is "Count of X" in an Arabic report too (the mixed «عدد Order Id» made mixed titles)
-const AR_COL = /[\u0600-\u06FF]/;
-export const arName = (word, en) => (c) => (AR_COL.test(c) ? word + ' ' + c : en + ' ' + c);
+// is this text Arabic: arabic-script.js, its one home (0.3.2 DD1F; CONTRACTS.md 1f)
+const { hasArabic } = require('../../assets/js/arabic-script.js');
+export const arName = (word, en) => (c) => (hasArabic(c) ? word + ' ' + c : en + ' ' + c);
 
 // a binding's fields, and a field's key as the plan and the format script name it (Table[Field])
 export const fieldsOf = (b) => (b ? [b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean) : []);

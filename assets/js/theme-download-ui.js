@@ -170,7 +170,7 @@
         const code = e && e.message;
         // (0.3.2 DD1G) two models at the same level: both named and the visitor asks, as the MCP does (never a silent pick)
         const many = code === 'MANY_MODELS' && e.models ? e.models.join('; ') : null;
-        own[m] = { tables: [], bad: true, msg: many ? L(`This folder holds ${e.models.length} models at the same level: ${many}. Choose the model's own folder.`, `يحتوي هذا المجلد على ${e.models.length} نماذج في المستوى نفسه: ${many}. اختر مجلد النموذج نفسه.`)
+        own[m] = { tables: [], bad: true, msg: many ? L(`This folder holds ${e.models.length} models at the same level: ${many}. Choose the model's own folder.`, `يحتوي هذا المجلد على ${e.models.length === 2 ? 'نموذجين' : e.models.length + ' نماذج'} في المستوى نفسه: ${many}. اختر مجلد النموذج نفسه.`)
           : code === 'NO_SEMANTIC_MODEL' ? L('No .SemanticModel folder here. Choose the folder you saved the Power BI project in.', 'لا يوجد مجلد .SemanticModel هنا. اختر المجلد الذي حفظت فيه مشروع Power BI.')
           : code === 'PBIX' ? L('A .pbix keeps its model in a format only Power BI reads. Use File › Export › Power BI template (.pbit).', 'ملف .pbix يحفظ النموذج بصيغة لا يقرؤها إلا Power BI. استخدم File › Export › Power BI template (.pbit).')
             : code === 'ZIP_LIMIT' || code === 'TOO_BIG' ? L('This file is larger than a Power BI template without data (usually under 20 MB), or unpacks to more than it says, so it was not read. Export a fresh .pbit from Power BI Desktop.', 'هذا الملف أكبر من قالب Power BI بدون بيانات (عادة أقل من 20 ميجابايت)، أو يتجاوز عند فك ضغطه ما يذكره، لذا لم يُقرأ. صدّر ملف ‎.pbit‎ جديدًا من Power BI Desktop.')
