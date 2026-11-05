@@ -14,10 +14,36 @@
   sp29's purity check allows the one pure file (DAPngBytes); no number moves.
 - **Expected checks:** dd2u passes (new); every other suite's number as on the base; mutation 76/76; lint 0; check-min,
   stamps, check-contracts, check-modules --strict, check-agent-memory, check-result-lines green.
-- **State:** plan written; work not started.
-- **Resume:** step 2 of the brief.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41971624806 on 29ca8aa61343d57b6417fe4f95750a12c789f84f
+- **State:** DONE (Linux CI; Windows/macOS where the reviewer merges).
+- **Resume:** the reviewer reads and merges.
 
 ## Plan (one commit each)
 1. This note.
 2. design-metrics.js reads png-bytes.js; dd2u suite; tests.json line; `npm run build:min`; sitemap dates if moved.
 3. `affected.base` -> `origin/integration/0.3.2`; CONTRACTS.md u32 place list.
+
+## Answers before -> after
+imageSize on 8 made-up inputs (PNG 640x360, width 4294967295, zero width, header 1 byte short, width past 2^31, 5 bytes,
+null, a made-up JPG): identical before (base a02f6f00, run live) and after; pinned in dd2u (14 checks).
+
+## Decisions I made
+- A new suite dd2u (not more checks in dd2p) so no other suite's number moves.
+- sp29's purity regex allows `root.DAPngBytes` (the one pure file); no number moved (21).
+- tests.json `affected.base` moved in its own commit (3), after the code commit.
+- Pages: the three generator pages already load png-bytes first; no page edited, only build stamps moved.
+
+## For the owner
+none
+
+## Risky changes
+none
+
+## Seen, not in scope
+- On this branch `--affected` picks everything (tests.json and test-*.mjs are in the "everything" list), so it ran the whole
+  suite; my local run was stopped after 30+ min, CI ran the full suite green. Not verified: the exit code of a local
+  --affected on a branch that changes only a non-test source.
+- The clone was shallow with no node_modules; I ran npm ci and git fetch --unshallow.
+
+## Lessons for the reviewer
+A job that edits tests.json always makes --affected pick everything; check --affected from a docs-only commit instead.
