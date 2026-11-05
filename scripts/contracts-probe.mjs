@@ -538,13 +538,11 @@ export const FAMILIES = [
     ] },
   { id: 'overlap', title: 'Do these two boxes overlap?', question: 'two boxes on a page: do they overlap by more than a rounding (half a pixel each way)?',
     inputs: BOXES, places: [
-      P('mcp/lib/twin-visuals.mjs', 'overlaps', 'export', async (x, get) => (await get())(wh(x.a), wh(x.b))),
-      P('mcp/lib/redesign-grid.mjs', 'overlap', 'source', async (x, get) => (await get())(xywh(x.a), xywh(x.b))),
+      P('mcp/lib/box-overlap.mjs', 'overlaps', 'export', async (x, get) => (await get())(wh(x.a), wh(x.b))),
     ] },
   { id: 'overlap-area', title: 'How much do two boxes overlap?', question: 'two boxes on a page: the area they share',
     inputs: BOXES, places: [
-      P('mcp/lib/twin-geometry.mjs', 'overlapOf', 'source', async (x, get) => Math.round((await get())(wh(x.a), wh(x.b)) * 100) / 100),
-      P('mcp/lib/page-picture.mjs', 'meets', 'source', async (x, get) => Math.round((await get())(xywh(x.a), xywh(x.b)) * 100) / 100),
+      P('mcp/lib/box-overlap.mjs', 'overlapArea', 'export', async (x, get) => Math.round((await get())(wh(x.a), wh(x.b)) * 100) / 100),
     ] },
   { id: 'contrast', title: 'What is the contrast of two colours?', question: 'two colours: their WCAG contrast ratio (1 to 21)',
     inputs: COLOURS, places: [
