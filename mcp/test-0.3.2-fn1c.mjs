@@ -137,8 +137,9 @@ try {
   const ID = '00000000-0000-4000-8000-0000000000f1', pb = (d) => path.join(d, 'Twin Sales.pbip');
   const a = F.makeProject(path.join(ROOT2, 'twin-a')), b = F.noModel(F.makeProject(path.join(ROOT2, 'twin-b')));
   const r1 = planTwin({ path: pb(a), logicalId: ID, matrixAsTable: ['mGrouped', 'p4more/mCols', 'nothere'] });
-  // labels: every text an Arabic of its own but the page buttons (they take their page's), and a text by its words
-  const labels = {}; r1.texts.forEach((t, i) => { if (t.kind !== 'button' && i % 5 !== 4) labels[t.id] = 'نص عربي ' + (i + 1); }); labels.unknownId = 'x';
+  // labels: every text an Arabic of its own but the page buttons (they take their page's) and the titles that change
+  // with the selection (one given by a column is then mixed), and a text by its words
+  const labels = {}; r1.texts.forEach((t, i) => { if (t.kind !== 'button' && t.kind !== 'dynamicTitle' && i % 5 !== 4) labels[t.id] = 'نص عربي ' + (i + 1); }); labels.unknownId = 'x';
   const runs = {
     r1,
     r2: planTwin({ path: pb(a), logicalId: ID, into: 'same', timeRightToLeft: false, waterfallRtl: 'mirror', arabicMonth: false }),

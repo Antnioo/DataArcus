@@ -2,8 +2,8 @@
 // fixtures/twin-project with a page "p4more" added: matrices (grouped, with columns, flat), the kinds Power BI cannot
 // mirror (scatter, treemap, map, decomposition tree), a card grid, a flip card's face, a DAX library measure, a field
 // parameter's slicer, bar lists with their names beside them or hidden, a badge on a card, a legend at a place
-// Microsoft's catalog does not list, a running visual calculation, wide tables and long legends; and a page "p5pic"
-// drawn on a background picture (a PNG made here). makeProject(dir) writes it; noModel(dir) drops its model.
+// Microsoft's catalog does not list, a running visual calculation, wide tables, long legends and a title given by a
+// column; pages drawn on a picture (PNGs made here): p5pic flipped, p6words asked (it may hold words), p7bad unreadable. makeProject(dir) writes it; noModel(dir) drops its model.
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
@@ -20,12 +20,15 @@ const title = (t) => ({ title: obj({ show: L('true'), text: Q(t) }) });
 const S = 'Sales';
 
 // a PNG of w x h, RGBA, made of bands of colour (a picture that may hold words: not DataArcus's own)
-export function png(w, h) {
+export function png(w, h, words) {
   const crcT = Array.from({ length: 256 }, (z, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
   const crc = (b) => { let c = 0xffffffff; for (const x of b) c = crcT[(c ^ x) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
   const chunk = (t, d) => { const len = Buffer.alloc(4); len.writeUInt32BE(d.length); const td = Buffer.concat([Buffer.from(t), d]), c = Buffer.alloc(4); c.writeUInt32BE(crc(td)); return Buffer.concat([len, td, c]); };
   const raw = Buffer.alloc((w * 4 + 1) * h);
-  for (let y = 0; y < h; y++) { raw[y * (w * 4 + 1)] = 0; for (let x = 0; x < w; x++) { const o = y * (w * 4 + 1) + 1 + x * 4, band = Math.floor(x / 8) % 3; raw[o] = band === 0 ? 20 : 230; raw[o + 1] = band === 1 ? 20 : 200; raw[o + 2] = y % 16 < 8 ? 40 : 220; raw[o + 3] = 255; } }
+  for (let y = 0; y < h; y++) { raw[y * (w * 4 + 1)] = 0; for (let x = 0; x < w; x++) { const o = y * (w * 4 + 1) + 1 + x * 4, band = Math.floor(x / 8) % 3;
+    // words: a white picture with a line of eight dark letters 6 x 10, 3 apart (what the twin's check reads as words)
+    if (words) { const ink = y >= 20 && y < 30 && x >= 20 && x < 20 + 8 * 9 && (x - 20) % 9 < 6; raw[o] = raw[o + 1] = raw[o + 2] = ink ? 30 : 250; raw[o + 3] = 255; continue; }
+    raw[o] = band === 0 ? 20 : 230; raw[o + 1] = band === 1 ? 20 : 200; raw[o + 2] = y % 16 < 8 ? 40 : 220; raw[o + 3] = 255; } }
   const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 6;
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
 }
@@ -40,7 +43,7 @@ const MORE = [
   box('decomp1', 1000, 360, 300, 200, 7000, { visualType: 'decompositionTreeVisual', query: qs({ Analyze: [mea(S, 'Total Sales')], ExplainBy: [col(S, 'Region')] }) }),
   box('cardGrid', 1320, 360, 560, 200, 8000, { visualType: 'cardVisual', query: qs({ Data: [mea(S, 'Total Sales')], Rows: [col(S, 'Region')] }), objects: { smallMultiplesLayout: obj({ rowCount: L('2L') }) } }),
   box('flipFace', 40, 580, 200, 120, 9000, { visualType: 'image', objects: { general: obj({ imageUrl: Q('face.svg') }) }, visualContainerObjects: { visualLink: obj({ show: L('true'), type: Q('Bookmark'), bookmark: Q('bmDetails') }) } }),
-  box('daxCard', 260, 580, 200, 120, 10000, { visualType: 'card', query: qs({ Values: [mea(S, 'DAF KPI Card')] }) }),
+  box('daxCard', 260, 580, 200, 120, 10000, { visualType: 'card', query: qs({ Values: [mea(S, 'Total Sales (KPI card)')] }) }),
   box('fpSlicer', 480, 580, 220, 120, 11000, { visualType: 'slicer', query: { queryState: { Values: { projections: [col('Pick a measure', 'Pick a measure')], fieldParameters: [{ parameterExpr: { Column: { Expression: { SourceRef: { Entity: 'Pick a measure' } }, Property: 'Pick a measure' } }, index: 0, length: 2 }] } } } }),
   box('barNames', 720, 580, 160, 300, 12000, { visualType: 'tableEx', query: qs({ Values: [col(S, 'Product')] }) }),
   box('barBeside', 880, 580, 300, 300, 13000, { visualType: 'clusteredBarChart', query: qs({ Category: [col(S, 'Product')], Y: [mea(S, 'Total Sales')] }), objects: { categoryAxis: obj({ show: L('false') }) } }),
@@ -53,6 +56,7 @@ const MORE = [
   box('mayWideTbl', 260, 940, 400, 120, 20000, { visualType: 'tableEx', query: qs({ Values: [col(S, 'Region'), col(S, 'Product'), mea(S, 'Total Sales')] }), objects: { columnWidth: [{ properties: { value: L('150D') }, selector: { metadata: 'Sales.Region' } }] } }),
   box('longLegend', 700, 940, 220, 140, 21000, { visualType: 'donutChart', query: qs({ Y: [mea(S, 'Total Sales', 'Total sales of the whole region'), mea(S, 'Orders', 'Total sales of the whole period')] }), objects: { legend: obj({ show: L('true'), position: Q('Top'), fontSize: L('12D') }) } }),
   box('legendTitle', 940, 940, 200, 140, 22000, { visualType: 'pieChart', query: qs({ Category: [col(S, 'Region', 'The region where each of the orders was sold')], Y: [mea(S, 'Total Sales')] }), objects: { legend: obj({ show: L('true'), position: Q('Right') }) } }),
+  box('colTitle', 1200, 720, 300, 160, 24000, { visualType: 'clusteredColumnChart', query: qs({ Category: [col(S, 'Region')], Y: [mea(S, 'Total Sales')] }), visualContainerObjects: { title: obj({ show: L('true'), text: { expr: { Column: { Expression: { SourceRef: { Entity: S } }, Property: 'Region' } } } }) } }),
   box('padBtn', 1700, 900, 200, 40, 23000, { visualType: 'actionButton', objects: { text: [{ properties: { show: L('true') } }, { properties: { text: Q('  Back to start  ') }, selector: { id: 'default' } }] }, visualContainerObjects: { visualLink: obj({ show: L('true'), type: Q('PageNavigation'), navigationSection: Q('p1overview') }) } }),
 ];
 
@@ -68,10 +72,17 @@ export function makeProject(dir) {
   put(path.join(P, 'p5pic/page.json'), { $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json', name: 'p5pic', displayName: 'Picture', displayOption: 'FitToPage', width: 1280, height: 720,
     objects: { background: obj({ image: { image: { name: Q('bands.png'), url: { expr: { ResourcePackageItem: { PackageName: 'RegisteredResources', PackageType: 1, ItemName: 'bands.png' } } }, scaling: Q('Fit') } }, transparency: L('0D') }) } });
   put(path.join(P, 'p5pic/visuals/picCard/visual.json'), box('picCard', 40, 40, 300, 160, 1000, { visualType: 'card', query: qs({ Values: [mea(S, 'Orders')] }) }));
-  const pages = JSON.parse(fs.readFileSync(path.join(P, 'pages.json'), 'utf8')); pages.pageOrder.push('p4more', 'p5pic'); put(path.join(P, 'pages.json'), pages);
+  // p6words: a picture that may hold words (asked before it is flipped); p7bad: a picture that can't be read (kept)
+  put(path.join(R, 'StaticResources/RegisteredResources/words.png'), png(120, 60, true));
+  put(path.join(R, 'StaticResources/RegisteredResources/bad.png'), 'not a picture');
+  [['p6words', 'Words', 'words.png'], ['p7bad', 'Unreadable', 'bad.png']].forEach(([id, name, file]) => {
+    put(path.join(P, id, 'page.json'), { $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json', name: id, displayName: name, displayOption: 'FitToPage', width: 1280, height: 720,
+      objects: { background: obj({ image: { image: { name: Q(file), url: { expr: { ResourcePackageItem: { PackageName: 'RegisteredResources', PackageType: 1, ItemName: file } } }, scaling: Q('Normal') } }, transparency: L('0D') }) } });
+    put(path.join(P, id, 'visuals/c' + id + '/visual.json'), box('c' + id, 600, 300, 300, 160, 1000, { visualType: 'card', query: qs({ Values: [mea(S, 'Orders')] }) })); });
+  const pages = JSON.parse(fs.readFileSync(path.join(P, 'pages.json'), 'utf8')); pages.pageOrder.push('p4more', 'p5pic', 'p6words', 'p7bad'); put(path.join(P, 'pages.json'), pages);
   const rp = path.join(R, 'definition/report.json'), rj = JSON.parse(fs.readFileSync(rp, 'utf8'));
   const items = ((rj.resourcePackages || []).find((p) => p.name === 'RegisteredResources') || {}).items;
-  if (items) items.push({ name: 'bands.png', path: 'bands.png', type: 'Image' }); put(rp, rj);
+  if (items) ['bands.png', 'words.png', 'bad.png'].forEach((n) => items.push({ name: n, path: n, type: 'Image' })); put(rp, rj);
   return dir;
 }
 export function noModel(dir) { fs.rmSync(path.join(dir, 'Twin Sales.SemanticModel'), { recursive: true, force: true }); return dir; }
