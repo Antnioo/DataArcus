@@ -12,6 +12,8 @@
   same errors; English names with no Arabic letters stay English; MANY_MODELS_NAMED untouched); every other suite unchanged; lint 0.
 - **Resume:** plan pushed; next the red test, then the change, then CHANGELOG, merge integration once, build:min, checks, tests.yml, wait.
 
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/42004973605 on 05d8c81eca7c91c51c27897968ec1bad6f54f71b
+
 ## Before -> after (DRAFT for the owner: every new Arabic line)
 - English, any count: `"Models" holds 2 models at the same level: A; B. Give read_model the path of the one you mean.` -> unchanged.
 - Arabic, 2: DRAFT for the owner: «يحتوي "نماذج" على نموذجين في المستوى نفسه: A; B. أعطِ read_model مسار النموذج الذي تقصده.»
