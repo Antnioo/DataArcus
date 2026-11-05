@@ -7,7 +7,8 @@
 //   C1  the pinned input (L-1105-09, the lab driver's JSON as pf1 holds it): exec, kpis 0, no filters, planFields
 //       measure, timeAxis, category, category2, no planFields.kpis: no card on a report page, one Sales[Total Sales]
 //       card on each tooltip page (as before)
-//   C2  the plan names them: cardsWritten lists every written page and, on it, exactly the written cards (red on b8063087)
+//   C2  the plan names them: cardsWritten lists every written page that holds a card and, on it, exactly the written
+//       cards; said with a plan id (red on b8063087)
 //   C3  the approval page's data (pagesWritten, read from the written files) holds the same cards, page by page
 //   C4  kpis 3 (unchanged): the first page's top row and the designed second page keep their cards, said in the plan
 //   C5  another layout (analysis, kpis 0): the same; the answer is never cut (truncated)
@@ -45,8 +46,9 @@ const run = async (dir, args) => { timeLab(ROOT, dir);
   const made = await s.call('create_report', { path: dir, planId: id });
   return { pl, made, w: made.err ? [] : written(dir) }; };
 // C2: the plan's cardsWritten is the written report, page by page
-const samePages = (label, pl, w) => { const cw = !pl.err && pl.j.cardsWritten;
-  chk(() => cw && Array.isArray(cw.pages) && cw.pages.length === w.length && w.every((x, i) => cw.pages[i].page === x.page && !!cw.pages[i].tooltip === x.tooltip && J(cw.pages[i].cards) === J(x.cards) && (cw.pages[i].messageCards || 0) === x.messages),
+// (each page that holds a card, in the report's order; a page with no card visual is not listed)
+const samePages = (label, pl, w) => { const cw = !pl.err && pl.j.cardsWritten, held = w.filter((x) => x.cards.length);
+  chk(() => cw && Array.isArray(cw.pages) && cw.pages.length === held.length && held.every((x, i) => cw.pages[i].page === x.page && !!cw.pages[i].tooltip === x.tooltip && J(cw.pages[i].cards) === J(x.cards)),
     () => `C2 ${label}: the plan's cardsWritten names every page and its cards as written: plan ${J(cw || null).slice(0, 900)}, written ${J(w)}`);
   return cw; };
 // C3: the approval page's list (pagesWritten), read back from the written files
@@ -66,8 +68,8 @@ try {
     chk(() => report.length === 2 && report.every((x) => !x.cards.length), () => `C1 kpis 0: no card on the first page's top row or the designed second page: ${J(report)}`);
     chk(() => tips.length === 2 && tips.every((x) => J(x.cards) === J(['Sales[Total Sales]'])), () => `C1 each tooltip page holds its own card, Sales[Total Sales] (as before): ${J(tips)}`);
     const cw = samePages('the pinned input', pl, w);
-    chk(() => cw && cw.kpis === 0 && /no KPI cards on the report pages/.test(cw.sayInPlan) && /each tooltip page holds \(2 of them\)/.test(cw.sayInPlan) && /messageCards are the "no data" messages/.test(cw.sayInPlan),
-      () => `C2 the pinned input: sayInPlan says no KPI card, the 2 tooltip cards and the message cards: ${cw && cw.sayInPlan}`);
+    chk(() => cw && cw.kpis === 0 && /kpis 0 writes no KPI card on the report pages/.test(cw.sayInPlan) && /each tooltip page's own card shows the measure at the point a reader hovers, whatever kpis is/.test(cw.sayInPlan),
+      () => `C2 the pinned input: sayInPlan says no KPI card and each tooltip page's own card: ${cw && cw.sayInPlan}`);
     sameApproval('the pinned input', 'c1', w);
     chk(() => !/"truncated"/.test(pl.t || ''), () => 'C5 the pinned input: the plan answer is not cut');
   }
@@ -78,7 +80,7 @@ try {
     chk(() => made && !made.err && report.length === 2 && report.every((x) => J(x.cards) === J(two)), () => `C4 kpis 3: the first page's top row and the second page each show the model's 2 measures (as before): ${J(report)}`);
     chk(() => tips.length === 2 && tips.every((x) => J(x.cards) === J(['Sales[Total Sales]'])), () => `C4 kpis 3: each tooltip page keeps its own card: ${J(tips)}`);
     const cw = samePages('kpis 3', pl, w);
-    chk(() => cw && cw.kpis === 3 && /the KPI cards of the top row/.test(cw.sayInPlan), () => `C4 kpis 3: sayInPlan says the top row's cards: ${cw && cw.sayInPlan}`);
+    chk(() => cw && cw.kpis === 3 && /the KPI cards/.test(cw.sayInPlan) && !/no KPI card/.test(cw.sayInPlan), () => `C4 kpis 3: sayInPlan says the KPI cards: ${cw && cw.sayInPlan}`);
     sameApproval('kpis 3', 'c4', w);
   }
   // ---------- C5: another layout, kpis 0 ----------
