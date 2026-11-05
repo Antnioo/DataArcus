@@ -62,7 +62,8 @@
 | approval window (test-approval) | 31 | 32 (W-09/W-10 count the report pages' pictures; one check: the tooltip pictures after them) |
 | sp23 / sp44 | 29 / 23 | 29 / 23 (re-recorded, below) |
 | sp1 / sp2 / sp4 | 11 / 10 / 5 | 11 / 10 / 5 (fixtures unchanged) |
-Area runs: safety 23 suites, arabic 17 suites, report (keep-going) green after sq13; twin, core: below; website pbip 111, pv2 20;
+Area runs: safety 23 suites, arabic 17 suites, report (keep-going) green after sq13; core 11 (mcp 1595, mutation 86 of 86 killed), twin 51, model 28,
+checker 10, platform 3, release 5 suites passed; website pbip 111, pv2 20;
 test-site-config, lint 0, modules --strict, result-lines, changelog-words, agent-memory PASS.
 
 ## Changed on purpose
