@@ -54,7 +54,7 @@ How it is kept true:
 | [tmdl-name How is a name written in TMDL?](#tmdl-name-how-is-a-name-written-in-tmdl) | 7 | 0 of 9 | check_model_health's fix scripts, the measure builder page, the twin's model, create_report's sample | equal (one place: `tmdl-name.js`) |
 | [decode What text do the bytes of a Power BI file hold?](#decode-what-text-do-the-bytes-of-a-power-bi-file-hold) | 4 | 0 of 10 | every model read (the MCP and the website) | one place since DD2D: `assets/js/model-file.js` `decodeText` |
 | [limits How large may a model file be?](#limits-how-large-may-a-model-file-be) | 4 | 0 of 8 | every model read (the MCP and the website) | one place since DD2D: `assets/js/model-file.js` `LIMITS` |
-| [text-runs What text does a text box hold?](#text-runs-what-text-does-a-text-box-hold) | 4 | 4 of 9 | check_report, read_report, the preview | equal by the audit for two; the probe splits them in two pairs |
+| [text-runs What text does a text box hold?](#text-runs-what-text-does-a-text-box-hold) | 1 | 0 of 9 | check_report, read_report, the preview | one place since DD2T: `assets/js/text-runs.js` `paragraphTexts` |
 | [blank What is BLANK minus or divided by a number?](#blank-what-is-blank-minus-or-divided-by-a-number) | 2 | 3 of 10 | the SVG KPI designer page, create_report's SVG KPIs | equal by the audit; the probe differs (a division by BLANK or 0) |
 
 "places" counts a function once for each family it answers (`mirror-policy.js` `kindOf` answers two). Who sees it:
@@ -834,19 +834,19 @@ probe: one answer on all 8 kinds. The "Today" table above is the ledger's snapsh
 
 ## text-runs What text does a text box hold?
 
-**Question:** a text box's paragraphs: their runs' text, as one line.
+**One place:** assets/js/text-runs.js paragraphTexts (test mcp/test-0.3.2-dd2t.mjs).
 
-**Newest copy:** equal by the audit; the probe: two pairs (layout-check and report-inventory; report-a11y and
-page-preview), each pair equal.
+**Question:** a text box's paragraphs: one text per paragraph, its runs' values joined as written (0 -> "0", true ->
+"true", no value -> ""). How the lines are joined is each caller's own question, answered at its call.
+
+**Newest copy:** equal by the audit; the probe split the four old copies in two pairs (layout-check and
+report-inventory; report-a11y and page-preview), each pair equal.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/layout-check.js` `textOf` | [engines](MODULES.md#the-website-engines) | check_report and plan lint (placeholder text, empty boxes) |
-| `mcp/lib/report-inventory.mjs` `textOf` | [reading](MODULES.md#the-mcp-reading) | read_report's answer (a text box's text) |
-| `assets/js/report-a11y.js` `textOf` | [engines](MODULES.md#the-website-engines) | check_report (an empty text box is no Tab stop), the writer |
-| `assets/js/page-preview.js` `textOf` | [engines](MODULES.md#the-website-engines) | the preview (the text drawn in a box) |
+| `assets/js/text-runs.js` `paragraphTexts` | [engines](MODULES.md#the-website-engines) | the one place (DD2T), read by four callers, each with its own join: layout-check.js `textOf` (" / ", trimmed: check_report and plan lint, placeholder text and empty boxes), report-inventory.mjs `textOf` through visual-meaning.mjs (" / ", trimmed: read_report's answer), report-a11y.js `textOf` (" ": check_report and the writer, an empty text box is no Tab stop, its alt text), page-preview.js `textOf` (" ": the preview, the text drawn in a box) |
 
-**Today** (A: layout-check textOf, report-inventory textOf; B: report-a11y textOf, page-preview textOf):
+**Before DD2T** (A: layout-check textOf, report-inventory textOf; B: report-a11y textOf, page-preview textOf):
 
 | input | A | B |
 |---|---|---|
@@ -855,10 +855,18 @@ page-preview), each pair equal.
 | an empty paragraph between two | "A /  / B" | "A  B" |
 | spaces around | "Sales" | "  Sales  " |
 
-**Decided answer:** proposed: one reader of the runs, `0` kept (a run's value as written), and the join each caller's
-own (" / " to show a box's lines on one line, " " to test for text). The reviewer and the owner decide.
+**Decided answer:** one reader of the runs, `0` kept (a run's value as written), and the join each caller's own (" / "
+and trimmed to show a box's lines on one line, " " to test for text and to draw it). The reviewer's call under
+D-1104-15.
 
-**The test that will pin it:** the probe's 9 text boxes (family `text-runs`).
+**The test that pins it:** `mcp/test-0.3.2-dd2t.mjs` (the probe's 9 text boxes and 7 more: paragraphTexts pinned, each
+caller's join pinned, every caller run as the probe runs it gives paragraphTexts with its join; no caller reads the runs
+itself) and the probe's 9 text boxes (family `text-runs`).
+
+**Since DD2T (5 Nov):** the four copies are gone; each `textOf` is a call of `paragraphTexts` with its join. What
+changed: a run whose value is 0 (or false) is text for report-a11y (a Tab stop, given alt text) and is drawn by
+page-preview; before, B read it as "". Two paragraphs, an empty paragraph and spaces around keep each caller's answer.
+Where the paragraphs sit stays each caller's (`plain(general)` in three, the first general entry in page-preview).
 
 ## blank What is BLANK minus or divided by a number?
 

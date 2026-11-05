@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **A text box that holds only a number is text:** a text box that holds only a number, such as 0, is now seen as text by
+  the accessibility check (it keeps its Tab stop and gets its alt text) and drawn in the preview, as the report check and
+  read_report already read it.
 - **A name with a hyphen is written in quotes:** a table or column name with a hyphen (Sales-2024) is now written in
   quotes ('Sales-2024') in the health check's fix scripts and the measure builder, as every other DataArcus script writes it.
 - **One answer to "is this column a date part?":** the Arabic twin, the approval preview, the report writer and the
