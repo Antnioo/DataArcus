@@ -3,7 +3,7 @@
 - **Base:** fix/0.3.2-pf1 from origin/integration/0.3.2 (12d9d30c). Push only it; no merge but integration once before the last CI, no PR.
 - **Scope:** B-381: create_report drops planFields.measure when planFields.kpis is an empty list (no KPI cards): every chart and table shows "Sum of Amount". Cause and fix in mcp/lib/report-bind.mjs fieldBinding (its one place). B-380: create_arabic_twin with timeRightToLeft false says "categories right to left" for column and line charts over time it keeps left to right. Cause in assets/js/mirror-charts.js chartsOf (kind "column" kept), sentence in assets/js/report-mirror.js KIND_WHAT (a new kind "columnTime", as "waterfallTime" is for waterfalls).
 - **Expected checks:** new suites pf1 (area report, 21 checks, red on 12d9d30c first: 16 of 21) and pf1t (area twin, 13 checks, red on 12d9d30c first: 7 of 13); sp10 113 and sp39 96 unchanged in number, their recorded kind moved on purpose (below); every other suite unchanged.
-- **Resume:** code done (ac54711f); next: the area runs, integration merged once, CI on the branch.
+- **Resume:** code done (ac54711f), integration merged once (335c8778); CI run 42114092708 on the branch.
 
 ## The plan
 1. B-381, pinned first (L-1105-09): a made-up model "Time Lab" (Sales: FiscalYear, Qtr, Amount, measure Total Sales; «المبيعات»: «شهر» sorted by «رقم الشهر», «المبلغ», measure «إجمالي المبيعات»; no relationship), the brief's plan_layout input (exec, kpis 0, no filters, planFields measure, timeAxis, category, category2, and the swapped run) with planFields.kpis [] (no cards), plan -> approve -> create_report; every written value projection is Sales[Total Sales] (red on the base: 0 Total Sales, 11 Sum(Sales.Amount), the laptop's count). Each other key (kpis, timeAxis, category, category2, table, slicers) checked written as given.
@@ -19,11 +19,13 @@
 ## Before -> after
 - B-381: create_report with planFields.kpis [] and planFields.measure: every chart and table `Sum of Amount` -> `Total Sales` (9 value projections, 0 summed or counted, both runs). fieldBinding's usable measures: the plan's cards, else the picker's, else the plan's measure; the number of cards stays the plan's (report-build.mjs maxKpis).
 - B-380: chartRtl returns `{ timeKept }`; chartsOf passes it on; mirrorVisual reports kind "columnTime" (inside, its rules stay the column family's, so mirror-policy.js `titled` still right-aligns its title); `KIND_WHAT.columnTime`: "column, line, area and combo charts over time, kept left to right as asked (timeRightToLeft false): value axis at the right, their periods in the original's order from the left". Written files byte for byte the base's for both choices (pf1t T3: digests recorded on the base).
+- Area runs on ac54711f (each from its run's own last line): report 66 suites passed, twin 52, core 11, arabic 17; sp23 29, sp41 24, sp44 23; lint exit 0; test-contracts 14, contracts 715, modules 1160, result-lines 216, changelog-words 217, agent-memory 441, site config PASS. After the merge (335c8778): pf1 21, pf1t 13, sp10 113, sp39 96, lint 0.
 - Time Lab twin plan answer: 21,664 (default) and 21,686 characters (time kept) of 40,000; fx1 PASS 22 three runs of three.
 
 ## Changed on purpose
 - mcp/fixtures/sp39-mirror.json: 8 run entries (lineMonth, xColumn, xLineDate, xCombo; runs B and E, the two with timeRightToLeft false): `"kind": "column"` -> `"kind": "columnTime"` and their `sha` (each 4 characters longer: the word "Time" in the digested output); `api.KIND_WHAT` 4dead3bc4cfd5540595ca76d:3923 -> 9c51555d8d5056948ac004db:4115 (the new sentence).
 - mcp/fixtures/sp10-policy.json: 20 run entries (lineMonth, mDateHier, mDateHierLine, mFiscalYearDim, mStartOfMonth, mOrderDateCat, mMonthName, mArabicMonth, mComboMonth, mYearCol; runs B and E): the same kind and sha. mcp/test-0.3.2-sp10.mjs's DD1A overlay: mFiscalYear runs B and E kind "column" -> "columnTime" (it pins them in the test, not the file).
+- mcp/fixtures/fn1c-plans.json (caught by CI run 42114092708; fn1c is in no area I ran): run r2 (the twin plan with timeRightToLeft false) `answer` 3b112a74... -> 3aa3bea9..., `size` 32011 -> 31910. Dumped on 12d9d30c and on this branch: mirrors' column count 5 -> 4 plus a columnTime entry (count 1, the new sentence); the longer mirrors make the answer's text paging list 18 texts instead of 19 (textsFrom 18, notListed 36, the field text "Sum of Amount" moves to the next answer). Nothing else differs. Re-recorded with `node test-0.3.2-fn1c.mjs --record`: those 2 lines only.
 - Done by a script that copies only those two fields from a fresh recording and stops if anything else in the run differs; a full re-record was refused (it would also move entries DD1A pinned in its overlay). Nothing else in either file changed (git diff: 28 kinds, 28 shas, 1 digest).
 
 ## CHANGELOG line
@@ -51,5 +53,7 @@ none
 - The answer for a text measure as the only planFields.kpis still says it after the write (create_report's note), not in the plan.
 
 ## Lessons for the reviewer
+- fn1c pins the twin plan's whole answer (r2: timeRightToLeft false) but sits outside the twin area: a change to KIND_WHAT should run fn1c too (it went red in CI, not in my area runs).
+- CI run 42114092708: sp6 (website, shard 2) said the plain preview differs at equal size (43517 bytes); it passed locally 3 of 3 and failed in no other recent run. Watched on the next run.
 - The brief's "kpis: 0" hid the trigger: the bug needs planFields.kpis [] (or all text measures); top-level kpis 0 alone writes Total Sales. A brief that pins an eval input should copy the lab driver's exact JSON.
 - sp10's fixture predates DD1A; a re-record moves DD1A's overlay entries too, so a kind change must be patched field by field.
