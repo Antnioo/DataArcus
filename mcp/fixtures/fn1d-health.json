@@ -1,0 +1,490 @@
+{
+ "E1 A1 the health project (model.bim and a PBIR report)": {
+  "length": 8447,
+  "sha256": "96fed4c8607701c9adbf1600a1162e831da5541fa839411ee35e98f1a1e50cf7"
+ },
+ "E2 A2 the twin project": {
+  "length": 5067,
+  "sha256": "6bb3ac865723de146644dc03f97d0b02f42f9c6216e5f4e5dc9f6a21fb195971"
+ },
+ "E3 A3 a TMDL project (folder)": {
+  "length": 7492,
+  "sha256": "b08e55012ca9d2c219d5d4a0f50506fb3b0b68c3508a5e5cab48a1a0b105937a"
+ },
+ "E4 A4 the same project as a .pbit": {
+  "length": 7934,
+  "sha256": "ac3190404ae76191079ce209bc7bde4d1f3c31a3c6e899b5271bbf92977bf0a0"
+ },
+ "E5 A5 the Ramadan TMDL project": {
+  "length": 31419,
+  "sha256": "c55c71dcf0f161fd34cb962f1cd9106b74ad109cd7fc81f64855f0eb2104ad1a"
+ },
+ "E6 A6 legacy.pbit (a legacy Layout)": {
+  "length": 5782,
+  "sha256": "148b6be8b2df9c636c88b90c5590554dd94acbea8bedd1f36a2ea100c88c20d4"
+ },
+ "E7 A7 the tricky DAX, model only": {
+  "length": 14525,
+  "sha256": "85f22f093243d73f4af537db62de182cc1f33eefcab2c632a0fb991b9aa58cf2"
+ },
+ "E8 A8 the tricky DAX with a PBIR report": {
+  "length": 15102,
+  "sha256": "aa20e0707466befdbafb1e737f3ca221d60e91b637dd28f0bc97da452499092f"
+ },
+ "E9 A9 the Arabic model with a legacy report": {
+  "length": 8103,
+  "sha256": "847ece82dc0647f25686b7e838d481ec644bac453753ed339d9dcb0a788c526d"
+ },
+ "E10 A10 DAX tables and a function, model only": {
+  "length": 3430,
+  "sha256": "b25c77a3c0f872547151ec224b9c6607980c930c59bcb3492662984b86c6ddd7"
+ },
+ "E11 A11 the incomplete TMDL model (a table file empty)": {
+  "length": 7492,
+  "sha256": "b08e55012ca9d2c219d5d4a0f50506fb3b0b68c3508a5e5cab48a1a0b105937a"
+ },
+ "E12 calculation groups with a PBIR report": {
+  "length": 7146,
+  "sha256": "28d1dbf62636dbc400f0415cd4131fce1402a4d840542b3326989e7d59f5beab"
+ },
+ "E13 measures using another table's measures, with a PBIR report": {
+  "length": 8519,
+  "sha256": "227eef44fa9d6dacd96e182b513857e104c1d62f614bd2f3964e29230cb54b22"
+ },
+ "E14 the incomplete TMDL model (a table file that is not TMDL)": {
+  "length": 6441,
+  "sha256": "931cd902c960294ac3eb7eca5da92710c885e8b22826c1cb9e24b3c8cf2e749f"
+ },
+ "E15 the edge cases (sp27 E1)": {
+  "length": 132133,
+  "sha256": "e52d7041a7d9ef3bbc8f3de67ba805210f30f9098ea0b4838e3eba91ec9408a4"
+ },
+ "E16 the Gulf models": {
+  "length": 601065,
+  "sha256": "6d6f8dc471b53c23aa0f5563a3ad791779139976a8f9a1124edbd01e9138c517"
+ },
+ "E17 the tricky DAX with the legacy report, the Arabic model with the PBIR report": {
+  "length": 24955,
+  "sha256": "8a4d87ddafe1402efaa2fb26366976ce76d9f16fad6c881aa92433124642e48b"
+ },
+ "E18 FN1D's model, with its report, model only, and without the model wrapper": {
+  "length": 22345,
+  "sha256": "207e815ca9c71c0551cc79dcb8c8f8958ae48531a6ddc8c600295e58cefba8e9"
+ },
+ "Q1": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q2": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q3": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q4": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q5": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q6": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q7": {
+  "length": 739,
+  "sha256": "52d6cbaf1dfcab3472c6ab0c137565b5cf2d63784e78253b8288122becf619fa"
+ },
+ "Q8": {
+  "length": 739,
+  "sha256": "52d6cbaf1dfcab3472c6ab0c137565b5cf2d63784e78253b8288122becf619fa"
+ },
+ "Q9": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q10": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q11": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q12": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q13": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q14": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q15": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q16": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q17": {
+  "length": 10162,
+  "sha256": "3cb2605a396f082baaf4c9c253c1ecfc1bf3330e6b68a2e0b25ee3f0329b7d26"
+ },
+ "Q18": {
+  "length": 712,
+  "sha256": "ea7a80512cb058f8e8564c4a6420d7d8373869129f5fd981c5e5a0ed6f1003da"
+ },
+ "Q19": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q20": {
+  "length": 1507,
+  "sha256": "c656e106f2c872cae1cefcba660909e78ad9a79c1292fcb4e10593be1729f36a"
+ },
+ "Q21": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q22": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q23": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q24": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q25": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q26": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q27": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q28": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q29": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q30": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q31": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q32": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q33": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q34": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q35": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q36": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q37": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q38": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q39": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q40": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q41": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q42": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q43": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q44": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q45": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q46": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q47": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q48": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q49": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q50": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q51": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q52": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q53": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q54": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q55": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q56": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q57": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q58": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q59": {
+  "length": 739,
+  "sha256": "52d6cbaf1dfcab3472c6ab0c137565b5cf2d63784e78253b8288122becf619fa"
+ },
+ "Q60": {
+  "length": 10,
+  "sha256": "5ae1625b488b3935122d8dd627fe575b388a5aa360378fa4407aad08baaed1e2"
+ },
+ "Q61": {
+  "length": 1376,
+  "sha256": "44ac53426bf7c7c12afc8327ddc30d2475ca06164f905577a4bbadd961a97fdd"
+ },
+ "Q62": {
+  "length": 1376,
+  "sha256": "44ac53426bf7c7c12afc8327ddc30d2475ca06164f905577a4bbadd961a97fdd"
+ },
+ "Q63": {
+  "length": 1376,
+  "sha256": "44ac53426bf7c7c12afc8327ddc30d2475ca06164f905577a4bbadd961a97fdd"
+ },
+ "B1 measures at the edges: a lower-case table, 100 *, a column's amount, / 1000 *, all, an empty text, MIN, two concepts": {
+  "length": 2697,
+  "sha256": "6a3c70130f3c9a601a37b3d491fafb684836c9ab065a8bf1f056b49ba025d09e"
+ },
+ "B2 dates and formats at the edges: lag, day in lower case, MAX of a number, a ratio said as a margin, * 100 shown plain, bytes": {
+  "length": 549,
+  "sha256": "99313572ba14892f00f7162ddb5006260a6c98aaba804783c587f0643b1e3576"
+ },
+ "B3 relationships at the edges: one to one, a key not named as a key, a candidate in another relationship, two candidates": {
+  "length": 7,
+  "sha256": "643d5437104296e21d906ecb15b2c96ad278f20cfc4af53b12bb6069bd853726"
+ },
+ "B4 a measures table with hidden columns, a field parameter, a DATATABLE calendar": {
+  "length": 7,
+  "sha256": "643d5437104296e21d906ecb15b2c96ad278f20cfc4af53b12bb6069bd853726"
+ },
+ "B5 one regular table only, a calendar": {
+  "length": 7,
+  "sha256": "643d5437104296e21d906ecb15b2c96ad278f20cfc4af53b12bb6069bd853726"
+ },
+ "B6 a calendar read by a calculated table": {
+  "length": 7,
+  "sha256": "643d5437104296e21d906ecb15b2c96ad278f20cfc4af53b12bb6069bd853726"
+ },
+ "B7 a calendar read by a calculation group": {
+  "length": 7,
+  "sha256": "643d5437104296e21d906ecb15b2c96ad278f20cfc4af53b12bb6069bd853726"
+ },
+ "B8 a calendar read only in a time-intelligence call, a period table marked as dates, a calendar read by MAX": {
+  "length": 1269,
+  "sha256": "bcd8431d6b3058a4bbc1f0da5edd173037a5f627f3e7ef5e8bbc84cb19dc8b9a"
+ },
+ "B9 facts at the edges: two columns, a key named after Branches, a key marked as the key, a key DAX reads, an untyped key": {
+  "length": 2527,
+  "sha256": "d85d20fc3d681a63e5c598c9d0183018727f75e26b62631b4f0e2dc3e8727f01"
+ },
+ "G1 the pack's test model": {
+  "length": 1002799,
+  "sha256": "8c40683c062436bc8b97035bdc24eb2fc14ee051da39c8b0014593dedfeaae71"
+ },
+ "G2 the generator's 2018-2030 calendar, no announced dates": {
+  "length": 1486816,
+  "sha256": "dd70c88bfd2fba29c313985adb45c4e9b45bb22ed8cf935e2e84088564680b6f"
+ },
+ "G3 an imported calendar with Hijri, flags and weekend": {
+  "length": 361534,
+  "sha256": "a5db6d1058e770e04385faffb164e4f09bdbd7efcf37ced01a8b91e71e0b621e"
+ },
+ "G4 an imported calendar, Hijri only": {
+  "length": 536818,
+  "sha256": "2819c4f526cf9cd351bca5cb956de9210c6be1d11eb7a329e53e154654a44ba1"
+ },
+ "G5 an imported calendar, no Hijri": {
+  "length": 442090,
+  "sha256": "b6f2b41a9575a88827aa02b3c73227e6c8f931270fa2c14ad0e3025edeacfc1d"
+ },
+ "G6 no calendar": {
+  "length": 297370,
+  "sha256": "8ce3ce0c2bf85c6927f4bfecbcd1c1dedfecc5ae41255e24b24c02e002a2c8a8"
+ },
+ "G7 the pack with another weekend form": {
+  "length": 276886,
+  "sha256": "6f13cca3ba5241c983c6b1463d8a4287c70f5f58079ba9309462ed193b646a45"
+ },
+ "G8 the pack without its estimates column": {
+  "length": 1163785,
+  "sha256": "c2735be2c38b016e14f1c10fe92c86e57f2a06e15663f12cfa0989d8a260154b"
+ },
+ "G9 the generator, weekend uae, announced dates": {
+  "length": 983269,
+  "sha256": "b848ea3f65430b3650b1a2ff44d77466d8064bacbbfbdb76b96851c679dcbbb5"
+ },
+ "G10 the generator, weekend ksa, announced dates": {
+  "length": 867535,
+  "sha256": "886d882450c2b9696923f9e1fe233685124a3ef8c6120f55b5bbb54c28158549"
+ },
+ "G11 the generator, weekend qat, announced dates": {
+  "length": 867535,
+  "sha256": "886d882450c2b9696923f9e1fe233685124a3ef8c6120f55b5bbb54c28158549"
+ },
+ "G12 the generator, weekend kwt, announced dates": {
+  "length": 867535,
+  "sha256": "886d882450c2b9696923f9e1fe233685124a3ef8c6120f55b5bbb54c28158549"
+ },
+ "G13 the generator, weekend bhr, announced dates": {
+  "length": 867535,
+  "sha256": "886d882450c2b9696923f9e1fe233685124a3ef8c6120f55b5bbb54c28158549"
+ },
+ "G14 the generator, weekend omn, announced dates": {
+  "length": 867535,
+  "sha256": "886d882450c2b9696923f9e1fe233685124a3ef8c6120f55b5bbb54c28158549"
+ },
+ "G15 the generator, weekend shj, announced dates": {
+  "length": 691591,
+  "sha256": "1093691063d2567a1bd9632b381b0c01df5c04b476b910be95112c9e48b589b3"
+ },
+ "G16 the generator, Saudi weekend, Umm al-Qura dates": {
+  "length": 865375,
+  "sha256": "91973b775f5f76f92ffaa2a4ff951a9782bb9393981bfab33c3f2d06c3c50c27"
+ },
+ "G17 the generator, Omani weekend, Umm al-Qura 2018-2026": {
+  "length": 1096795,
+  "sha256": "7dee98ff848344384b868e89b0e241f49b294747cf50b51869cb5f82ab588ad2"
+ },
+ "G18 the generator, no Hijri": {
+  "length": 1281661,
+  "sha256": "c6afa8e60013448a9944bdd8674bc4c90d6748ffb60d74232a71efbb51eb46d5"
+ },
+ "G19 the generator in Arabic": {
+  "length": 1270045,
+  "sha256": "6ca675e6f870c453fe5c10a66f52e0e79a5f3e3cc5050f81ae2f54fb8e09b2aa"
+ },
+ "G20 the generator, a calendar ending in 2022": {
+  "length": 1082143,
+  "sha256": "8bc5c11813d2376e50fa9dc9b1032bfe7c7262e6bb23b9c247280baffbbe38b8"
+ },
+ "G21 the generator, with the pack's measures": {
+  "length": 935542,
+  "sha256": "f449080a052005a2e735fc961ce0745e68985056e6fd8310e9c690f15bebcb93"
+ },
+ "G22 an empty model": {
+  "length": 297370,
+  "sha256": "8ce3ce0c2bf85c6927f4bfecbcd1c1dedfecc5ae41255e24b24c02e002a2c8a8"
+ },
+ "G23 null": {
+  "length": 297370,
+  "sha256": "8ce3ce0c2bf85c6927f4bfecbcd1c1dedfecc5ae41255e24b24c02e002a2c8a8"
+ },
+ "G24 the generator, only a vs Last Ramadan measure": {
+  "length": 1175965,
+  "sha256": "2369eaa67e9753faed60baa400623ce88114caf92f4c00e0ff7a5ba1a9dec3fc"
+ },
+ "G25 the generator, months moved: Ramadan 1443 two days late, Dhu al-Hijja 1443 a day early, Shawwal 1444 five days late": {
+  "length": 1398955,
+  "sha256": "32d3428ec7e36d6c50d3e7ecd65ad792abdac0fff0520c33429d9ab5f06fa45d"
+ },
+ "G26 the generator, Ramadan 1443 five days late": {
+  "length": 1381987,
+  "sha256": "70220f2cd975f51b4c6671b982d3474f7f49019a982ecb0f9446cf9834de35b9"
+ },
+ "G27 the generator, Oman's own Ramadan 1440, from 17 May 2018": {
+  "length": 571978,
+  "sha256": "c180d5a8ff4ba8bc5c13f048d1eb6c8b143adfdef2b93b38b43da1466900713d"
+ },
+ "G28 the generator, a range that can't be read": {
+  "length": 369310,
+  "sha256": "99fbf4baea23a3ea7b01867a77eaeab0121808f94e4937218359155f1544d7e8"
+ },
+ "G29 the generator, ending in Ramadan 1443": {
+  "length": 1067740,
+  "sha256": "b85ef7c635cd4b47b427e00e9e2ec3bf76ab18559ebb4f331d34e3fc79c407cf"
+ },
+ "G30 the generator, an Eid measure only": {
+  "length": 1175965,
+  "sha256": "2369eaa67e9753faed60baa400623ce88114caf92f4c00e0ff7a5ba1a9dec3fc"
+ },
+ "G31 a DAX calendar the generator did not make": {
+  "length": 536098,
+  "sha256": "b55e57cb42f2b7b0ca67c19935d737499a434a4b49de4f54b16d3537102cefb4"
+ },
+ "G32 an imported calendar, Hijri and an Eid column": {
+  "length": 336559,
+  "sha256": "fc742b1923bb90413f42e4d4b3b948ef139c221b8c1da71946ee78471709004f"
+ }
+}

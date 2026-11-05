@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // a text box's paragraphs with text-runs.js, each
   // loaded first unless the builder or the page already did)
   const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : (window.DAPbirValues ? Promise.resolve() : loadScript('../assets/js/pbir-values.min.js?v=57e0aebe7cdf')).then(() => (window.DATimeNames ? null : loadScript('../assets/js/time-names.min.js?v=2cf40585fc6e'))).then(() => (window.DATextRuns ? null : loadScript('../assets/js/text-runs.min.js?v=047b2eda2154'))).then(() => (window.DAHtmlEscape ? null : loadScript('../assets/js/html-escape.min.js?v=b560fc5666ec'))).then(() => (window.DAVisualTypes ? null : loadScript('../assets/js/visual-types.min.js?v=ba87a9528156'))).then(() => loadScript('../assets/js/page-preview.min.js?v=bba92247771e')).then(() => window.DAPagePreview));
-  const MODEL_WORKER = '/assets/js/model-health-worker.min.js?v=f8a9fe51dcbc';
+  const MODEL_WORKER = '/assets/js/model-health-worker.min.js?v=46818f5fb869';
 
   // ---------- the downloads, the visual backgrounds and the reminder (theme-download-ui.js, 0.3.2 SP31) ----------
   const Dl = window.DAThemeDownloadUI.mount({ store: S, engine: E, $, L, isAr, track, toast, layout: Lay,
