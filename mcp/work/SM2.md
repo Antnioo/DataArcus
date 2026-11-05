@@ -9,7 +9,9 @@
 - **Expected checks:** mutation 86 -> 88 mutants, all killed (its check count up by 2); test-0.3.1-fx2 only goes up;
   every other suite's number as on the base; lint 0; check-agent-memory, check-result-lines, changelog-words green.
   No CHANGELOG line (nothing a person sees changes).
-- **Resume:** step 1 (this note) done; next the two mutants on the harness's copy, then the cases.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42087770849 on ce2fd8844cd3b235153eec38291992d244a9852a (Linux and Windows; macOS skipped on branch runs)
+- **Results:** mutation PASS 225 checks, 88 mutants all killed; fx2 21 -> 25; sp43 21 unchanged; lint 0; check-agent-memory, result-lines, changelog-words PASS. No full local run (D-1102-02).
+- **Resume:** DONE; the reviewer reads and merges.
 
 ## Plan (one commit each)
 1. This note.
