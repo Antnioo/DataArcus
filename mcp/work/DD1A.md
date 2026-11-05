@@ -18,7 +18,8 @@
   suite's number as before; mutation 76/76; lint 0; check-contracts, check-modules --strict green.
 - **Got:** exactly that (Results).
 - **Merge:** integration/0.3.2 moved to ae8c1734 (DD2D, DD2P): merged once (see git log), `npm run build:min`.
-- **State:** CI below.
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/41945245578 on b127166e
+- **State:** DONE (Linux and Windows; macOS runs where the reviewer merges).
 - **Resume:** none once CI is green; the reviewer reads and merges.
 
 ## Lists before -> after (each place; the probe's 24 names)
