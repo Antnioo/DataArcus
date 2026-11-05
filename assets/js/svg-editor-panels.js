@@ -18,14 +18,12 @@
  */
 (function (root) {
 'use strict';
-function create(opt) {
-  const $ = opt.$, S = opt.store, K = opt.K, TYPES = opt.types, POS = opt.pos, L = opt.L, esc = opt.esc, clone = opt.clone, r1 = opt.r1;
-  const samples = opt.samples, track = opt.track, toast = opt.toast, view = opt.view;
-  const renderCanvas = view.canvas, renderDax = view.dax, save = view.save, renderAll = view.all;
+// the number formats and the formula kinds the panels offer (fixed lists, file-level since FN1B)
+const FMT = [['auto', 'Auto (1.2K / 3.4M)', 'تلقائي (1.2K / 3.4M)'], ['n0', '1,235', '1,235'], ['n1', '1,234.6', '1,234.6'], ['n2', '1,234.57', '1,234.57'], ['k1', '1.2K', '1.2K'], ['m1', '1.2M', '1.2M'], ['p0', '83%', '83%'], ['p1', '82.7%', '82.7%']];
+const KINDS = { ratio: ['A ÷ B', 'أ ÷ ب'], diff: ['A − B', 'أ − ب'], pct: ['% change of A vs B', 'نسبة تغير أ عن ب'] };
 
-  const FMT = [['auto', 'Auto (1.2K / 3.4M)', 'تلقائي (1.2K / 3.4M)'], ['n0', '1,235', '1,235'], ['n1', '1,234.6', '1,234.6'], ['n2', '1,234.57', '1,234.57'], ['k1', '1.2K', '1.2K'], ['m1', '1.2M', '1.2M'], ['p0', '83%', '83%'], ['p1', '82.7%', '82.7%']];
-  const KINDS = { ratio: ['A ÷ B', 'أ ÷ ب'], diff: ['A − B', 'أ − ب'], pct: ['% change of A vs B', 'نسبة تغير أ عن ب'] };
-
+function valuesKit(p) {
+  const { S, L, samples } = p;
   // ---------- values (what the panels show of them) ----------
   const byId = (id) => S.design.values.find((v) => v.id === id);
   const valueName = (id) => { const v = byId(id); return v ? v.label || v.measure || v.id : '?'; };
@@ -52,7 +50,11 @@ function create(opt) {
   };
   const newId = (base) => { let i = 1; while (S.design.values.some((v) => v.id === base + i)) i++; return base + i; };
   const firstValue = (preferFraction) => { const f = S.design.values.find((v) => (preferFraction ? v.kind !== 'measure' : true)); return (f || S.design.values[0] || {}).id; };
+  Object.assign(p, { valueName, evalValues, isFraction, usedBy, newId, firstValue });
+}
 
+function layersPart(p) {
+  const { $, S, TYPES, POS, L, esc, clone, renderAll } = p;
   // ---------- layers panel ----------
   function renderLayers() {
     const list = S.design.layers.map((l, i) => ({ l, i })).reverse(); // top layer first, like design tools
@@ -73,7 +75,11 @@ function create(opt) {
     renderAll();
   };
   $('layers').addEventListener('click', (e) => { const b = e.target.closest('[data-act]'); if (b) layerAction(b.dataset.act, +b.dataset.i); });
+  Object.assign(p, { renderLayers, layerAction });
+}
 
+function addPart(p) {
+  const { opt, $, S, TYPES, L, track, renderAll } = p;
   // ---------- add layers ----------
   const makeLayer = (type) => {
     const W = S.design.w, H = S.design.h, m = Math.min(W, H), n = S.design.layers.filter((l) => l.type === type).length + 1;
@@ -101,7 +107,12 @@ function create(opt) {
     renderAll();
     track('svgkpi_add_layer', { layer_type: b.dataset.add });
   });
+  Object.assign(p, { renderAddBar });
+}
 
+// the properties panel's fields and its data links
+function fieldKit(p) {
+  const { S, K, L, esc, isFraction } = p;
   // ---------- properties panel ----------
   const valOpts = (cur, onlyBefore) => S.design.values.filter((v, i) => onlyBefore == null || i < onlyBefore).map((v) => `<option value="${esc(v.id)}"${v.id === cur ? ' selected' : ''}>${esc(v.label || v.measure || v.id)}</option>`).join('');
   const num = (label, path, v, step) => `<label class="kd-f"><span>${label}</span><input type="number" step="${step || 'any'}" data-p="${path}" value="${esc(v == null ? '' : v)}"></label>`;
@@ -150,7 +161,12 @@ function create(opt) {
     }
     return h;
   };
+  Object.assign(p, { valOpts, num, col, txt, sel_, scaleUI, rulesUI, showUI, textUI });
+}
 
+// the properties panel: the card's settings, or the selected layer's and its data links
+function propsView(p) {
+  const { $, S, TYPES, L, num, col, txt, sel_, scaleUI, rulesUI, showUI, textUI } = p;
   function renderProps() {
     const P = $('props');
     if (S.sel < 0 || !S.design.layers[S.sel]) {
@@ -208,7 +224,12 @@ function create(opt) {
     h += showUI(b.show) + '</div>';
     P.innerHTML = h;
   }
+  Object.assign(p, { renderProps });
+}
 
+// the properties panel's edits
+function propsInput(p) {
+  const { $, S, renderCanvas, renderDax, save, renderAll, evalValues, isFraction, firstValue, renderLayers, renderProps } = p;
   // set a value on an object by a dotted path like "bind.fill.rules.0.c"
   const setPath = (obj, path, v) => { const ks = path.split('.'); let o = obj; ks.slice(0, -1).forEach((k) => { if (o[k] == null) o[k] = {}; o = o[k]; }); o[ks[ks.length - 1]] = v; };
   const NUMERIC = /(^|\.)(x|y|w|h|rx|r|cx|cy|x1|y1|x2|y2|sw|size|opacity|p|d0|d1|r0|r1|t|radius|weight|n|dotR|areaOpacity)$/;
@@ -262,7 +283,10 @@ function create(opt) {
     if (!Object.keys(l.bind).length) delete l.bind;
     renderAll();
   });
+}
 
+function valuesPanel(p) {
+  const { $, S, K, L, esc, r1, toast, renderCanvas, renderDax, save, renderAll, evalValues, isFraction, usedBy, newId, renderLayers, valOpts, renderProps } = p;
   // ---------- data panel ----------
   const fmtVal = (x) => (x == null ? L('blank', 'فارغ') : Math.abs(x) < 10 && x % 1 ? x.toFixed(3) : K.formatNumber(x, '#,0.00').replace(/\.00$/, ''));
   function renderValues() {
@@ -312,6 +336,16 @@ function create(opt) {
     S.design.values.push({ id: newId('f'), label: L('Formula ', 'معادلة ') + (ms.filter((v) => v.kind !== 'measure').length + 1), kind: 'ratio', a: ms[0].id, b: ms[1].id });
     renderAll();
   });
+  Object.assign(p, { renderValues });
+}
+
+function create(opt) {
+  const $ = opt.$, S = opt.store, K = opt.K, TYPES = opt.types, POS = opt.pos, L = opt.L, esc = opt.esc, clone = opt.clone, r1 = opt.r1;
+  const samples = opt.samples, track = opt.track, toast = opt.toast, view = opt.view;
+  const renderCanvas = view.canvas, renderDax = view.dax, save = view.save, renderAll = view.all;
+  const p = { opt, $, S, K, TYPES, POS, L, esc, clone, r1, samples, track, toast, renderCanvas, renderDax, save, renderAll };
+  [valuesKit, layersPart, addPart, fieldKit, propsView, propsInput, valuesPanel].forEach((step) => step(p));
+  const { renderLayers, renderAddBar, renderProps, renderValues, layerAction, valueName } = p;
   return Object.freeze({ renderLayers, renderAddBar, renderProps, renderValues, layerAction, valueName });
 }
 root.SVGEditorPanels = Object.freeze({ create: create });
