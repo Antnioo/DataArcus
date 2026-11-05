@@ -23,7 +23,7 @@ export function fieldsDesign(design, F) {
 // (kpiValues "full"), more (create_report's page filters' options) }; with design, its fieldsDesign too.
 export function planBinding(o) {
   const { m, pickFrom, lang, F } = o;
-  const pinned = F ? Object.fromEntries([['kpis', F.kpis], ['main', F.measure], ['date', F.timeAxis], ['catA', F.category], ['catB', F.category2], ['slicers', F.slicers], ['table', F.table]].filter(([, v]) => v)) : null;
+  const pinned = F ? Object.fromEntries([['kpis', F.kpis], ['main', F.measure], ['date', F.timeAxis], ['catA', F.category], ['catB', F.category2], ['slicers', F.slicers], ['table', F.table], ['noDate', F.noTime]].filter(([, v]) => v)) : null;   // (AP1: noDate, timeAxis "none")
   const pickOpts = () => Object.assign(relsOf(m, lang), F && F.measure ? { main: F.measure } : {}, o.full ? { kpiValues: 'full' } : {}, pinned ? { pinned } : {}, o.more || {});
   return Object.assign(o.design ? fieldsDesign(o.design, F) : {}, { pinned, pickOpts, bindFor: (n) => Bind.suggest(pickFrom, n, pickOpts()) });
 }

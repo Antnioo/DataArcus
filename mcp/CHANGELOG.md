@@ -5,6 +5,11 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **The approval page names every visual, slicer and button the click writes:** a new report's approval page lists each
+  page it writes, the tooltip pages too, and on it every visual by kind and count, each slicer by its field, each button
+  by where it goes and each chart by the field it groups by; a chart written as another kind says which page it is on.
+- **No time axis when the person asks for none:** plan_layout and create_report take `timeAxis: "none"` in the plan's
+  fields: the report gets no trend chart, no month tooltip and no date slicer DataArcus would add, and the plan says so.
 - **A text box that holds only a number is text:** a text box that holds only a number, such as 0, is now seen as text by
   the accessibility check (it keeps its Tab stop and gets its alt text) and drawn in the preview, as the report check and
   read_report already read it.

@@ -45,7 +45,7 @@ export const CREATE_REPORT_INPUTS = {
     fields: z.object({
       kpis: z.array(z.string()).max(LIMITS.kpiCards).describe('The KPI cards\' measures, in card order; the row gets one card per measure'),
       measure: z.string().describe('The measure the charts show'),
-      timeAxis: z.string().describe('The column of the line chart\'s axis (a month or date column)'),
+      timeAxis: z.string().describe('The column of the line chart\'s axis (a month or date column), or "none" when the person asks for no time axis'),
       category: z.string().describe('The column of the bar chart (also donut, funnel, treemap)'),
       category2: z.string().describe('The column of the column chart (also map)'),
       table: z.array(z.string()).min(1).max(LIMITS.tableFields).describe('The table\'s columns and measures, in order'),

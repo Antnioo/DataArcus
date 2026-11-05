@@ -22,8 +22,10 @@
 - **Step 3:** the page lists every page the click writes, page by page ("What each page holds"). approval-complete
   25 -> 45 (A9, red on the base: 45 checks, 14 failed). Changed on purpose: sp23 and sp44 (4 report pages' hashes),
   rc24 (2 regexes): below.
-- **State:** step 3 done.
-- **Resume:** step 4, (e): planFields.timeAxis "none".
+- **Step 4:** planFields.timeAxis "none" (create_report's fields.timeAxis too): no time axis in the plan, its text,
+  the page or the report. gulf-date-questions 63 -> 68 (GD-12, red on the base: 3 of 66 failed).
+- **State:** step 4 done.
+- **Resume:** merge integration once, build:min, the full run, CI.
 
 ## Step 2: what was written and what the page named (made-up model, 5 Nov)
 Model: `Service.SemanticModel` (model.bim): Work Orders (Order ID, Date Key, Department, Status, Hours; measures Work
@@ -78,3 +80,21 @@ approved: the round's 9 slicers and 3 reset buttons (3 pages) were on the approv
   من النموذج: كلها مذكورة أدناه، صفحة صفحة (ما تحويه كل صفحة)».
 - Checks on this step: safety and report + core areas green but sp6 and glass-tables (the shallow clone's missing
   base commits; green once the history was fetched); lint 0; mutation 86 of 86 killed.
+
+## Step 4: "no time axis" (e)
+- plan_layout had no way to say it: planFields.timeAxis is a field or nothing, and nothing meant "the picker takes
+  one" (every new plan: a month axis, gulf-date-questions.mjs:61's axis from the picker). The smallest option on the
+  existing input: `timeAxis: "none"` (`report-fields.mjs` isNoTime, NO_TIME_AXIS). It resolves to `noTime` (no field),
+  `report-bind.mjs` pins `noDate`, and `assets/js/field-suggest.js` then picks no time axis and no year slicer of its
+  own (a slicer the person names stays). The rest follows from no date: the writer's no-time layout (D16), no line
+  chart, no month tooltip page. plan_layout: the layout made for no time, no axis to the Gulf date questions, and the
+  answer's timeAxis says only `{ none: true, sayInPlan: "no time axis, as the person asked ..." }` (no trend
+  instruction). The plan pins the fields, so create_report builds the same files (the digest as before).
+- Red first: GD-12 in test-0.3.0-gulf-date-questions.mjs: on the base `FAIL  gulf-date-questions  3 of 66 checks
+  failed` (planProblems: "fields.timeAxis: "none" is not written as Table[Field]"); with the fix 68 of 68 (GD-12a-e:
+  a plan id, the answer's timeAxis none, no trend text and no Dim Date / Date Key in the plan, the page, the report).
+- The suites that pin the edited files (field-suggest, report-fields, report-bind, report-inputs, plan_layout): 18
+  suites, all green, their numbers unchanged (sp1 and sp2, plan_layout's answers byte for byte, too). build:min wrote
+  field-suggest.min.js and the ?v= stamps (theme-generator.js and its pages); test-site-config green; the website's
+  scripts/tests/run-all.mjs 42 of 42 (run alone: run beside 3 MCP suites its shared browser crashed, 26 "crash").
+- CHANGELOG [Unreleased]: two plain lines (the page names everything; no time axis when asked).

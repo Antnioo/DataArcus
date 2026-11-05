@@ -165,7 +165,8 @@
     const sortTargets = new Set(); ((opt && opt.modelTables) || tables).concat(tables).forEach((t) => (t.columns || []).forEach((c) => { if (c.sortBy) sortTargets.add(t.name + '\u0000' + String(c.sortBy)); }));
     const sortsOther = (c) => sortTargets.has(c.t + '\u0000' + c.c) || columns.some((o) => o !== c && o.t === c.t && o.sortBy && o.sortBy.c === c.c);
     const monthText = (c) => !/^(int64|double|decimal|number)$/.test(c.type) && !metaOf(c).numeric && !sortsOther(c),   /* (round 11: a summed month number is no month axis) */ dayDate = (c) => /date/.test(c.type) && !metaOf(c).stamp;
-    let date = inDate.find((c) => monthText(c) && /^(month[\s_-]*(name|year|label)?|year[\s_-]*month|الشهر)$/i.test(c.c)) || inDate.find((c) => monthText(c) && /month|الشهر/i.test(c.c))
+    // (0.3.2 AP1) pinned.noDate: the person asked for no time axis: none is picked, nor the year slicer the picker adds
+    let date = P.noDate ? null : inDate.find((c) => monthText(c) && /^(month[\s_-]*(name|year|label)?|year[\s_-]*month|الشهر)$/i.test(c.c)) || inDate.find((c) => monthText(c) && /month|الشهر/i.test(c.c))
       || inDate.find(dayDate) || columns.find((c) => dayDate(c) && near(c))
       || byLang(columns.filter((c) => monthText(c) && /^(month[\s_-]*(name)?|الشهر)$/i.test(c.c) && near(c)), L, quiet)[0] || null;   // no date table: a month column anywhere
     // Round 12 (#16; seen in Desktop 2.158, round 11: "January" ... "December" slanted on the line chart): the time axis
@@ -202,7 +203,7 @@
       if (to) { say(fieldKey(to.t, to.c), `The time axis is ${to.c}, not ${date.c}: the dates span more than one year (${span}), and a month name would add up the same month of every year in one point.`); date = to; }
       else if (span === undefined) say(fieldKey(date.t, date.c), `${date.c} is the time axis; the date range is not known (no counts given, no calendar DAX that names it). If the dates span more than one year, use a year-month column or the date instead.`);
     }
-    let year = inDate.find((c) => /^(year|السنة)$/i.test(c.c)) || null;
+    let year = P.noDate ? null : inDate.find((c) => /^(year|السنة)$/i.test(c.c)) || null;
     // (FX4) a year of one value is no slicer
     if (year && ST.distinct(year.t, year.c) === 1) { say(fieldKey(year.t, year.c), `${year.c} is not a slicer: the model's counts give it one value.`); year = null; }
     // a category: a text column, or one of unknown type whose name reads as a category (not a number, date or key)
@@ -261,7 +262,7 @@
     // (builder 7's audit A3-2, 11 Oct: these rules were create_report's, by the Gulf calendar's own names, so the website's
     // download of the same model had none of them; the caller now passes options and builds nothing itself)
     // pinned: the fields the user names ({ kpis, main, date, catA, catB, slicers, table }, as fieldOf and measureOf give
-    // them), kept as named: the given slicers first, a slot left over keeps the picker's
+    // them), kept as named: the given slicers first, a slot left over keeps the picker's; noDate (AP1): no time axis
     const same = (x, y) => x && y && x.t === y.t && x.c === y.c;
     let ch = Object.assign({ kpis, main, date, catA, catB, slicers: [sl[0] || null, sl[1] || null, sl[2] || null] }, opt && opt.kpiValues === 'full' ? { full: true } : {}, reach ? { reach: { relationships: rels, modelTables: (opt && opt.modelTables) || tables } } : {});
     ['kpis', 'main', 'date', 'catA', 'catB', 'table'].forEach((k) => { if (P[k]) ch[k] = P[k]; });
@@ -276,7 +277,7 @@
     // a flag true ("Is Festival", "Is Ramadan"), the time axis runs by the flag's own day column of the same table
     // ("Festival Day": the flag's word and "day"), unless the plan named the axis
     let axisBy = null;
-    if (!P.date) for (const fl of (opt && opt.axisFor) || []) {
+    if (!P.date && !P.noDate) for (const fl of (opt && opt.axisFor) || []) {
       if (!fl || !(fl.values || []).length || !fl.values.every((v) => v === true)) continue;
       const tb = ((opt && opt.modelTables) || tables).concat(tables).find((x) => x.name === fl.t), word = String(fl.c).replace(/^\s*(is|flag)[\s_-]+/i, '').replace(/[\s_-]+flag\s*$/i, '').trim().toLowerCase();
       const dc = tb && word && (tb.columns || []).find((c) => c.name !== fl.c && c.name.replace(/[\s_-]+/g, ' ').trim().toLowerCase() === word.replace(/[\s_-]+/g, ' ') + ' day');

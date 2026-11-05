@@ -28,7 +28,7 @@ import { fitRepeats } from '../lib/plan-headroom.mjs';
 import { READS, focusInput, tablesInput, modelPath, pageInput, langInput, strictInputs } from '../lib/tool-inputs.mjs';
 import { modelRef } from '../lib/plan-keys.mjs';
 import { formatsAnswer } from '../lib/fix-scripts.mjs';
-import { relsOf, fieldsAndProblems, axesProblems, axesOf } from '../lib/report-fields.mjs';
+import { relsOf, fieldsAndProblems, axesProblems, axesOf, isNoTime } from '../lib/report-fields.mjs';
 import { unknownKeys, CREATE_REPORT_INPUTS, REPORT_LOOK, withLookDefaults, reportPin, redesignOnly, heldInputs } from '../lib/report-inputs.mjs';
 import { topSaid, phoneAnswer, calendarSaid } from '../lib/report-said.mjs';
 import { BLANK_PNG_BYTES } from '../lib/report-run.mjs';
@@ -67,7 +67,7 @@ export function register(server, ctx) {
       // (0.3.2 TK1, B-272: create_report's own words, B-88, moved here with the input: the plan holds it)
       displayNames: z.record(z.string(), z.string()).optional().describe('Names to show instead of the model\'s field names, as { "Table[Field]": "name" } (Arabic names for an Arabic report: { "Table[Field]": "الاسم" }). Never show a name the user has not approved: only names the user gave or approved are written; with path and lang "ar" the others get a proposal (arabicNames) to approve or edit; without approval the model\'s names stay. The report shows the name wherever it shows the field (titles, axes, legends, headers, slicers, tooltips). The model is never renamed'),
       planFields: z.object({ kpis: z.array(z.string()).max(40), measure: z.string(), timeAxis: z.string(), category: z.string(), category2: z.string(), table: z.array(z.string()).max(40), slicers: z.array(z.string()).max(40) })
-        .partial().strict().optional().describe('With path: the plan\'s fields in create_report\'s fields shape (Table[Field]); each is checked against the model and the tools\' limits before the plan is shown'),
+        .partial().strict().optional().describe('With path: the plan\'s fields in create_report\'s fields shape (Table[Field]); each is checked against the model and the tools\' limits before the plan is shown. timeAxis "none" when the person asks for no time or date field: no trend, no month tooltip'),
       focus: focusInput, tables: tablesInput,
       themeFrom: z.string().max(200).optional().describe('With path: the report (its name, as colours.otherReports lists it) whose colours a design without its own colours keeps, when the model has several'),
       // (audit 6, A6-1: what create_report will write, pinned with the plan; the same definitions as create_report's)
@@ -168,13 +168,15 @@ export function register(server, ctx) {
     // fields the plan names, else the picker's; the design engine's fitSlots, in planLayout)
     // (SQ13, 0.2.9-writer-S1: the writer grows the header when the report's page tabs need two rows, which it measures on
     // the report's pages and title: the plan's first page is measured among the same pages, names and title)
+    // (0.3.2 AP1) planFields.timeAxis "none": the person asked for no time axis (report-fields.mjs isNoTime)
+    const noAxis = isNoTime((a.planFields || {}).timeAxis);
     const planFit = (design, slots) => { if (!m0) return {}; const sc = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (sc.needsFocus) return {};
       const lang = a.lang === 'ar' ? 'ar' : 'en', pf0 = a.planFields || {}, sug = Bind.suggest(sc.tables, 1, relsOf(m0, lang)) || {};
       const specs = projectPages(design.layout, lang, { second: a.secondPage !== false, panel: a.slidePanel === true });
       return Pbip.fitOptions({ lang, rtl: designRtl(design.layout, lang), font: design.font, theme: buildTheme(design, lang), model: { byPath: 'Model.SemanticModel' }, title: a.title || a.name,
-        bind: { date: pf0.timeAxis || sug.date || null, slicers: pf0.slicers || sug.slicers || [] }, pages: specs.map((p, i) => ({ name: p.name, page: pageOf(design.layout).page, slots: i ? p.slots : slots, panel: p.panel, grow: true })) })[0]; };
+        bind: { date: noAxis ? null : pf0.timeAxis || sug.date || null, slicers: pf0.slicers || sug.slicers || [] }, pages: specs.map((p, i) => ({ name: p.name, page: pageOf(design.layout).page, slots: i ? p.slots : slots, panel: p.panel, grow: true })) })[0]; };
     // (the laptop's sweep, D16: a model with no time axis is planned with the layout made for it, as create_report writes it)
-    const planNoTime = (() => { if (!m0) return false; const sc = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (sc.needsFocus) return false;
+    const planNoTime = (() => { if (!m0) return false; if (noAxis) return true; const sc = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (sc.needsFocus) return false;
       return !(a.planFields || {}).timeAxis && !(Bind.suggest(sc.tables, 1, relsOf(m0, a.lang === 'ar' ? 'ar' : 'en')) || {}).date; })();
     const r = planLayout(Object.assign({}, a, a.planFields && a.planFields.table ? { tableFields: a.planFields.table.length } : {}, { fit: planFit, noTime: planNoTime })), { page, fitted } = pageOf(r.design.layout);
     // (0.3.0 D2) the gallery kinds the user asked for, on the designed page's slots as create_report puts them (each slot
@@ -213,7 +215,7 @@ export function register(server, ctx) {
     let gulfDates = {}, gulfDateRows = null, hijriYear = null;
     if (m0) {
       const scG = scopeOf(m0, { focus: a.focus, tables: a.tables });
-      const axisG = pf.timeAxis || (scG.needsFocus ? null : (() => { const d = (Bind.suggest(scG.tables, 1, relsOf(m0, a.lang === 'ar' ? 'ar' : 'en')) || {}).date; return d && d.c != null ? `${d.t}[${d.c}]` : null; })());
+      const axisG = noAxis ? null : pf.timeAxis || (scG.needsFocus ? null : (() => { const d = (Bind.suggest(scG.tables, 1, relsOf(m0, a.lang === 'ar' ? 'ar' : 'en')) || {}).date; return d && d.c != null ? `${d.t}[${d.c}]` : null; })());
       const GQ = DateQ.gulfDateQuestions(m0, a, { axis: axisG });
       if (GQ) { GQ.problems.forEach((x) => planProblems.push(x)); gulfDates = { gulfDates: GQ.answer }; gulfDateRows = GQ.rows; hijriYear = GQ.hijriYear; }
     }
@@ -221,7 +223,7 @@ export function register(server, ctx) {
     let timeAxis = {};
     if (m0 && !planProblems.length) {
       const sc0 = scopeOf(m0, { focus: a.focus, tables: a.tables });
-      const tf = pf.timeAxis ? (fieldsAndProblems(m0.tables, { timeAxis: pf.timeAxis }).out || {}).timeAxis : sc0.needsFocus ? null : (Bind.suggest(sc0.tables, 1, relsOf(m0, a.lang === 'ar' ? 'ar' : 'en')) || {}).date;
+      const tf = noAxis ? null : pf.timeAxis ? (fieldsAndProblems(m0.tables, { timeAxis: pf.timeAxis }).out || {}).timeAxis : sc0.needsFocus ? null : (Bind.suggest(sc0.tables, 1, relsOf(m0, a.lang === 'ar' ? 'ar' : 'en')) || {}).date;
       // (the cross-review's G6: the writer's own decision, Pbip.timeAxisPlan, said here; never a promise the writer may not keep)
       if (tf) { const key = `${tf.t}[${tf.c}]`, tp = Pbip.timeAxisPlan(tf) || { order: 'own' };
         const how = { own: 'The column\'s own order (a date or a number).', model: 'The model sorts this column (its sort-by column): calendar order.',
@@ -230,6 +232,8 @@ export function register(server, ctx) {
           monthStart: tp.by ? `In time order by the month start (a report-level measure from ${tp.by.t}[${tp.by.c}]), showing the last ${tp.last} months with data (a visual filter the user can clear); the model is not changed.` : '',
           az: 'A to Z: this text column has no sort column, and no date of a date table orders it. Pick a date or month column with an order, or add a sort-by column in the model, before showing the plan.' }[tp.order];
         timeAxis = { timeAxis: { field: key, order: tp.order, how, sayInPlan: 'Say in the plan how the trend\'s axis is ordered and how many months it shows.' } }; }
+      // (AP1, E1 round 5 (e): the plan kept a trend instruction after the trend was dropped) no axis: said, and only that
+      if (noAxis) timeAxis = { timeAxis: { none: true, sayInPlan: 'Say in the plan: no time axis, as the person asked (planFields.timeAxis "none"): no trend chart, no month tooltip and no date slicer DataArcus would add; the charts by category take the trend\'s place.' } };
     }
     // (0.2.9, custom visuals, step C) the replacements of an existing report's custom visuals, each with what it loses; the
     // plan pins the approved mapping, and create_report writes only that, in a new "<name> native" report
