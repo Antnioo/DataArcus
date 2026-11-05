@@ -34,8 +34,7 @@
   // palette is an error (never a silent black). Without a palette nothing changes: the designer's page and its
   // downloads compile as before.
   const mixHex = (a, b, t) => '#' + [1, 3, 5].map((i) => { const x = parseInt(a.slice(i, i + 2), 16), y = parseInt(b.slice(i, i + 2), 16); return Math.round(x + (y - x) * t).toString(16).padStart(2, '0'); }).join('');
-  const lumOf = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4))).reduce((a, x, i) => a + x * [0.2126, 0.7152, 0.0722][i], 0);
-  const contrastOf = (a, b) => { const x = lumOf(a), y = lumOf(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const contrastOf = (typeof module === 'object' && module.exports ? require('./contrast.js') : root.DAContrast).contrast;
   const themePalette = (ui, data) => {
     const u = ui || {}, text = hexOk(u.text) ? u.text : '#1f2937', card = hexOk(u.card) ? u.card : '#ffffff', accent = hexOk(u.accent) ? u.accent : '#0f6cbd';
     const p = { text: text, card: card, background: hexOk(u.background) ? u.background : card, accent: accent, good: hexOk(u.good) ? u.good : '#2e7d32', bad: hexOk(u.bad) ? u.bad : '#c62828', neutral: hexOk(u.neutral) ? u.neutral : mixHex(text, card, 0.5),

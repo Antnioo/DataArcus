@@ -545,8 +545,9 @@ export const FAMILIES = [
     ] },
   { id: 'contrast', title: 'What is the contrast of two colours?', question: 'two colours: their WCAG contrast ratio (1 to 21)',
     inputs: COLOURS, places: [
-      P('assets/js/design-colours.js', 'contrast', 'inner', ratio),
-      P('assets/js/pbip-query.js', 'contrast', 'inner', ratio),
+      P('assets/js/contrast.js', 'contrast', 'export', ratio),
+      P('assets/js/design-colours.js', 'contrast', 'export', ratio),
+      P('assets/js/pbip-query.js', 'contrast', 'export', ratio),
       P('assets/js/svg-kpi-compiler.js', 'contrastOf', 'inner', ratio),
     ] },
   { id: 'xml', title: 'How is a text escaped for XML (SVG)?', question: 'a text: the same text safe inside an XML attribute or element (& < > \' ")',

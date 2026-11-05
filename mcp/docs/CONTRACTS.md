@@ -48,7 +48,7 @@ How it is kept true:
 | [lru What does a small cache keep?](#lru-what-does-a-small-cache-keep) | 1 | 0 of 8 | the twin's pictures, the glass | one place since DD2P: `mcp/lib/small-cache.mjs` `lru` |
 | [overlap Do these two boxes overlap?](#overlap-do-these-two-boxes-overlap) | 1 | 0 of 9 | the twin, the redesign | one place since DD2O: `mcp/lib/box-overlap.mjs` `overlaps` |
 | [overlap-area How much do two boxes overlap?](#overlap-area-how-much-do-two-boxes-overlap) | 1 | 0 of 9 | the twin | one place since DD2O: `mcp/lib/box-overlap.mjs` `overlapArea` |
-| [contrast What is the contrast of two colours?](#contrast-what-is-the-contrast-of-two-colours) | 3 | 0 of 9 | generate_theme, the writer, the SVG KPIs | equal |
+| [contrast What is the contrast of two colours?](#contrast-what-is-the-contrast-of-two-colours) | 4 | 0 of 9 | generate_theme, the writer, the SVG KPIs | one place since DD2K: `assets/js/contrast.js` `contrast` |
 | [xml How is a text escaped for XML (SVG)?](#xml-how-is-a-text-escaped-for-xml-svg) | 2 | 0 of 10 | the SVG KPIs, the flip cards | equal |
 | [html How is a text escaped for HTML?](#html-how-is-a-text-escaped-for-html) | 9 | 3 of 10 | the website's pages, the approval window | equal by the audit; the probe differs (null, `'`) |
 | [tmdl-name How is a name written in TMDL?](#tmdl-name-how-is-a-name-written-in-tmdl) | 7 | 0 of 9 | check_model_health's fix scripts, the measure builder page, the twin's model, create_report's sample | equal (one place: `tmdl-name.js`) |
@@ -572,21 +572,29 @@ line on `{ w, h }` boxes); their callers read `overlapArea`.
 
 ## contrast What is the contrast of two colours?
 
+**One place:** assets/js/contrast.js contrast (test mcp/test-0.3.2-dd2k.mjs).
+
 **Question:** two colours: their WCAG contrast ratio (1 to 21).
 
 **Newest copy:** equal (the audit and the probe).
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/design-colours.js` `contrast` | [engines](MODULES.md#the-website-engines) | generate_theme, the theme generator page, check_report's contrast (through design-engine.js) |
-| `assets/js/pbip-query.js` `contrast` | [engines](MODULES.md#the-website-engines) | the writer (a gradient's two ends, 3:1 off the card) |
-| `assets/js/svg-kpi-compiler.js` `contrastOf` | [engines](MODULES.md#the-website-engines) | the SVG KPI designer page, create_report's SVG KPIs |
+| `assets/js/contrast.js` `contrast` | [engines](MODULES.md#the-website-engines) | the one place (DD2K): every reader below reads it |
+| `assets/js/design-colours.js` `contrast` | [engines](MODULES.md#the-website-engines) | generate_theme, the theme generator page, check_report's contrast (through design-engine.js); the same function, exported as before |
+| `assets/js/pbip-query.js` `contrast` | [engines](MODULES.md#the-website-engines) | the writer (a gradient's two ends, 3:1 off the card); the same function, exported as before |
+| `assets/js/svg-kpi-compiler.js` `contrastOf` | [engines](MODULES.md#the-website-engines) | the SVG KPI designer page, create_report's SVG KPIs; the same function |
 
-**Today:** all 3 answer the same on all 9 pairs (each gives NaN for `#FFF`, a colour name and an empty text).
+**Today:** all 4 answer the same on all 9 pairs (each gives NaN for `#FFF`, a colour name and an empty text).
 
 **Decided answer:** today's; one copy (Phase 2).
 
 **The test that will pin it:** the probe's 9 pairs (family `contrast`).
+
+**Since DD2K (5 Nov):** one copy: `assets/js/contrast.js` `luminance` and `contrast` (test
+mcp/test-0.3.2-dd2k.mjs: the 9 pairs and 6 colours pinned as the base gave them, and the three places give that one
+answer). The three places read it (design-colours.js `lum` and `contrast`, pbip-query.js `lum` and `contrast`,
+svg-kpi-compiler.js `contrastOf`); their own copies are gone. The 3:1 and 4.5:1 thresholds stay each caller's own.
 
 ## xml How is a text escaped for XML (SVG)?
 

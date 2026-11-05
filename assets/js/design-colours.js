@@ -4,7 +4,8 @@
  * design-engine.js as it was). Hex colours, contrast (WCAG), HSL, harmonies, the calm palette, CIE Lab and CIEDE2000,
  * colour-vision simulation and the colours of a logo. Every input is an argument: nothing here reads a design, a
  * default palette, the page or a language. design-engine.js (DAEngine) re-exports every name; the generator pages load
- * this file before design-engine.js (browser global DAColours), Node requires it.
+ * this file before design-engine.js (browser global DAColours), Node requires it; contrast.js (DAContrast) is loaded before this
+ * file (0.3.2 DD2K: lum and contrast are its luminance and contrast).
  */
 (function (root) {
   // ---------- color math ----------
@@ -13,8 +14,9 @@
   const hexToRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
   const rgbToHex = (r) => '#' + r.map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
   const mix = (a, b, t) => { const A = hexToRgb(a), B = hexToRgb(b); return rgbToHex(A.map((v, i) => v + (B[i] - v) * t)); };
-  const lum = (h) => { const c = hexToRgb(h).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
-  const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const Contrast = typeof module !== 'undefined' && module.exports ? require('./contrast.js') : root.DAContrast;
+  const lum = Contrast.luminance;
+  const contrast = Contrast.contrast;
   const hexToHsl = (h) => {
     let [r, g, b] = hexToRgb(h).map((v) => v / 255);
     const max = Math.max(r, g, b), min = Math.min(r, g, b); let hh = 0, s = 0; const l = (max + min) / 2;
