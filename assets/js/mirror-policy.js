@@ -11,7 +11,11 @@
   // (the fuzz test's F-T1..F-T3, 11 Oct: a report from anyone can hold any shape. Every read checks the shape it touches)
   const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
   const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
-  const strOf = (p) => { const v = lit(p); return typeof v === 'string' && /^'.*'$/s.test(v) ? v.slice(1, -1).replace(/''/g, "'") : null; };
+  // a literal's text: pbir-values.js, its one home (0.3.2 DD1B; DD1A: sp10 P10 admits the pure shared files)
+  const PV = typeof module !== 'undefined' && module.exports ? require('./pbir-values.js') : root.DAPbirValues;
+  const strOf = PV.litText;
+  // is a column, by its name, a date part: time-names.js, its one home (0.3.2 DD1A, the owner D-1104-15)
+  const TN = typeof module !== 'undefined' && module.exports ? require('./time-names.js') : root.DATimeNames;
   // the entries of a formatting card that are objects (an odd one is skipped, never changed)
   const entries = (bag, name) => (isObj(bag) && Array.isArray(bag[name]) ? bag[name].filter((e) => isObj(e) && (e.properties === undefined || isObj(e.properties))) : null);
   const projections = (query, role) => (isObj(query) && isObj(query.queryState) && isObj(query.queryState[role]) && Array.isArray(query.queryState[role].projections) ? query.queryState[role].projections : null);
@@ -53,15 +57,14 @@
 
   // ---- the time axis ----
   // a time category: a hierarchy level, a column of a date table, or a column named like a date part
-  // (B-282: pbip-query.js's isTime splits a name into its words first, FiscalYear -> Fiscal Year; this one tests the
-  // raw name, so FiscalYear outside a date table is not time here. Kept as it is: one rule for both is B-282's job)
-  const TIME_NAME = /\b(date|month|year|quarter|week|day|weekday|period)s?\b|التاريخ|الشهر|السنة|الربع|الأسبوع|اليوم/i;
+  // (B-282, 0.3.2 DD1A: the name is read by time-names.js isTimeName, the one test the writer, the preview and the check
+  // use too: FiscalYear, Qtr and a bare «شهر» are time here as there; a date table still comes first)
   function isTime(field, dateTables) {
     if (!isObj(field)) return false;
     if (field.HierarchyLevel) return true;
     const c = field.Column; if (!isObj(c)) return false;
     const ent = isObj(c.Expression) && isObj(c.Expression.SourceRef) ? c.Expression.SourceRef.Entity : null;
-    return (dateTables || []).includes(ent) || TIME_NAME.test(String(c.Property || ''));
+    return (dateTables || []).includes(ent) || TN.isTimeName(String(c.Property || ''));
   }
   // visual: a visual.json's "visual". Whether its first Category field is time
   const categoryIsTime = (visual, dateTables) => isTime((first(projections(isObj(visual) ? visual.query : null, 'Category')) || {}).field, dateTables);
@@ -131,7 +134,7 @@
 
   const api = Object.freeze({ isObj, lit, strOf, entries, projections, first,
     COLUMN, BAR, WATERFALL, SLICER, SIDELESS, isCustom, kindOf,
-    TIME_NAME, DATE_LIKE, isTime, categoryIsTime, invertsTimeAxis,
+    DATE_LIKE, isTime, categoryIsTime, invertsTimeAxis,
     MOVES_ONLY, movesOnly, waterfallKind, ONE_ROW_H, oneRowButtons, verticalValues, TITLED, titled, keepsGridLtr });
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAMirrorPolicy = api;
 })(typeof self !== 'undefined' ? self : this);

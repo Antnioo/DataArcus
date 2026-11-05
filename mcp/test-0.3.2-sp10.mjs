@@ -138,6 +138,24 @@ const got = { about: 'SP10: the twin\'s policy answers (kind, time axis, mirrorV
 rows.forEach((r) => { got.visuals[r.id] = answerOf(r); });
 pages.forEach((pg) => { got.pages[pg.id] = pageOf(pg); });
 const gold = record ? got : rd(GOLD);
+// (0.3.2 DD1A, the owner D-1104-15: one time test for the twin, the preview, the writer and the check, time-names.js
+// isTimeName.) The recorded file stays as recorded; the answers DD1A moved are written here, each one, and nothing else
+// may differ: FiscalYear and StartOfMonth are time by their words now (Fiscal Year, Start Of Month), with or without the
+// date tables. Two outputs follow: with time kept left to right (runs B and E) the FiscalYear line is no longer sorted
+// and the FiscalYear waterfall is kept as a time waterfall. Those runs' output (sha) is not pinned here; their kind and
+// changes are.
+const DD1A = {
+  'made-up/mFiscalYear': { time: { dt: true, none: true }, runs: { B: { kind: 'column', changes: ['position', 'value axis', 'title'] }, E: { kind: 'column', changes: ['position', 'value axis', 'title'] } } },
+  'made-up/mFiscalYearDim': { time: { dt: true, none: true } },
+  'made-up/mStartOfMonth': { time: { dt: true, none: true } },
+  'made-up/mWaterfallFiscal': { time: { dt: true, none: true }, runs: { E: { kind: 'waterfallTime', changes: ['position', 'value axis'] } } },
+  'made-up/mWaterfallDate': { time: { dt: true, none: true } }
+};
+if (!record && moved) for (const [id, d] of Object.entries(DD1A)) {
+  const g = gold.visuals[id]; if (!g) continue;
+  g.time = d.time;
+  for (const [k, r] of Object.entries(d.runs || {})) g.runs[k] = { kind: r.kind, changes: r.changes, sha: ((got.visuals[id] || { runs: {} }).runs[k] || {}).sha };
+}
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 // V: each visual as recorded
@@ -190,15 +208,17 @@ if (moved) {
   chk(() => { b = bad(rows, (r) => { const before = JSON.stringify(r.v), v = isObj(r.v) ? r.v.visual : null; P.kindOf(r.v); P.categoryIsTime(v, DT); P.invertsTimeAxis(v, RUNS.C); P.oneRowButtons(v, 40); P.verticalValues(v); P.keepsGridLtr(r.v); P.waterfallKind(v, { mode: 'mirror', timeRightToLeft: false, dateTables: DT }); return JSON.stringify(r.v) === before; });
     return !b.length && Object.isFrozen(P) && Object.isFrozen(P.COLUMN) && Object.isFrozen(P.BAR) && Object.isFrozen(P.SIDELESS) && Object.isFrozen(P.MOVES_ONLY); },
   () => `P9 the predicates must change no visual and the api and its tables be frozen: ${b.join(', ')}`);
-  // P10: the one home of each rule, and the load order
+  // P10: the one home of each rule, and the load order. mirror-policy.js requires visual-types.js and, besides it, only
+  // the pure shared files (a list, never a number; 0.3.2 DD1A: the reviewer's call): pbir-values.js, time-names.js
+  const PURE_SHARED = ["'./visual-types.js'", "'./pbir-values.js'", "'./time-names.js'"];
   chk(() => {
     const m = fs.readFileSync(path.join(JS, 'report-mirror.js'), 'utf8'), p = fs.readFileSync(path.join(JS, 'mirror-policy.js'), 'utf8'), tg = fs.readFileSync(path.join(JS, 'theme-generator.js'), 'utf8');
     const reqs = (p.match(/require\(([^)]*)\)/g) || []).map((x) => x.slice(8, -1));
     const atJ = (f) => tg.indexOf('/assets/js/' + f + '?v='), n = tg.split('/assets/js/mirror-policy.min.js?v=').length - 1;
     return /require\('\.\/mirror-policy\.js'\)/.test(m) && /root\.DAMirrorPolicy/.test(m) && !/const (COLUMN|BAR|WATERFALL|SLICER|SIDELESS|TIME_NAME|DATE_LIKE|ONE_ROW_H) =|function (kindOf|isTime)\(/.test(m) &&
-      JSON.stringify(reqs) === JSON.stringify(["'./visual-types.js'"]) && !/\beval\s*\(|new Function|\bimport\s*\(|Gallery\(\)/.test(p) &&
+      reqs.includes("'./visual-types.js'") && reqs.every((r) => PURE_SHARED.includes(r)) && !/\beval\s*\(|new Function|\bimport\s*\(|Gallery\(\)/.test(p) &&
       n === 1 && atJ('visual-types.min.js') > 0 && atJ('visual-types.min.js') < atJ('mirror-policy.min.js') && atJ('mirror-policy.min.js') < atJ('report-mirror.min.js') && fs.existsSync(path.join(JS, 'mirror-policy.min.js'));
-  }, () => 'P10 the families, the time names and the content rules must live in mirror-policy.js only (it requires visual-types.js alone), report-mirror.js read them, and the theme generator load mirror-policy.min.js once, after visual-types and before report-mirror');
+  }, () => 'P10 the families, the time names and the content rules must live in mirror-policy.js only (it requires visual-types.js and only the pure shared files pbir-values.js and time-names.js), report-mirror.js read them, and the theme generator load mirror-policy.min.js once, after visual-types and before report-mirror');
 }
 
 if (record) { fs.writeFileSync(GOLD, JSON.stringify(got, null, 1) + '\n'); console.log(`  (recorded ${rows.length} visuals and ${pages.length} pages)`); }

@@ -28,8 +28,8 @@ How it is kept true:
 
 | family | places | disagree on N of M inputs | who sees it | newest copy |
 |---|---|---|---|---|
-| [1a Is this column time?](#1a-is-this-column-time) | 4 | 12 of 24 | the twin, the preview, the writer, check_report | merge (pbip-query.js splits camel case, layout-check.js takes the Arabic article off, page-preview.js has the most words) |
-| [1b-text What text does a literal hold?](#1b-text-what-text-does-a-literal-hold) | 11 | 0 of 15 | check_report, the writer, the twin, the preview, the redesign | one place since DD1B: `assets/js/pbir-values.js` `litText` (mirror-policy.js keeps an equal copy, pinned) |
+| [1a Is this column time?](#1a-is-this-column-time) | 4 | 0 of 24 | the twin, the preview, the writer, check_report | one place since DD1A: `assets/js/time-names.js` `isTimeName` |
+| [1b-text What text does a literal hold?](#1b-text-what-text-does-a-literal-hold) | 11 | 0 of 15 | check_report, the writer, the twin, the preview, the redesign | one place since DD1B: `assets/js/pbir-values.js` `litText` |
 | [1b-shown What does a literal show?](#1b-shown-what-does-a-literal-show) | 2 | 0 of 15 | check_report, read_report | one place since DD1B: `assets/js/pbir-values.js` `litShown` |
 | [1b-number What number does a literal hold?](#1b-number-what-number-does-a-literal-hold) | 5 | 0 of 15 | check_report, read_report, the twin, the preview | one place since DD1B: `assets/js/pbir-values.js` `litNumber` |
 | [1b-bool What true or false does a literal hold?](#1b-bool-what-true-or-false-does-a-literal-hold) | 3 | 0 of 15 | check_report, read_report, the twin, the preview, the native copy | one place since DD1B: `assets/js/pbir-values.js` `litBool` |
@@ -62,6 +62,8 @@ the MCP tool whose answer or written file carries the place's answer, or the web
 place are not mapped yet (see the note's "Lessons").
 
 ## 1a Is this column time?
+
+**One place:** assets/js/time-names.js isTimeName (test mcp/test-0.3.2-dd1a.mjs).
 
 **Question:** a column named like this: is it a date part (a day, month, quarter, year, a date)?
 
@@ -101,6 +103,14 @@ question for mirror-policy).
 
 **The test that will pin it:** the probe's 24 names (family `1a`).
 
+**Since DD1A (4 Nov; the owner D-1104-15):** the decided answer above, in one place: `assets/js/time-names.js`
+(`wordsOf`, `isTimeName`, `TIME_WORDS`; plurals of every word, «أ إ آ» read as «ا», short vowels dropped). The four places
+call `isTimeName` for the name; what each knows first stays in its own code (a date table or a hierarchy level in
+mirror-policy.js, the picker's `time` or `kind` mark in pbip-query.js). Their own lists (mirror-policy `TIME_NAME`,
+page-preview `TIME_NAME`, pbip-query `TIME_WORDS` and `wordsOf`, layout-check `TIME_WORDS` and its `wordsOf`) are gone;
+dd1a's P runs the four on the 24 names and 26 more: one answer each. The probe: one answer on all 24 inputs. The
+"Today" table above is the ledger's snapshot before DD1A.
+
 ## 1b-text What text does a literal hold?
 
 **One place:** assets/js/pbir-values.js litText (test mcp/test-0.3.2-dd1b.mjs).
@@ -112,7 +122,7 @@ undone to `'`), or nothing.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/mirror-policy.js` `strOf` | [engines](MODULES.md#the-website-engines) | the twin (report-mirror.js reads with it) |
+| `assets/js/mirror-policy.js` `strOf` | [engines](MODULES.md#the-website-engines) | the twin (report-mirror.js reads with it); reads litText (`PV.litText`, since DD1A) |
 | `assets/js/page-preview.js` `lit` | [engines](MODULES.md#the-website-engines) | the preview (a link's type, a flip card's title) |
 | `assets/js/page-preview.js` `strOf` | [engines](MODULES.md#the-website-engines) | the preview (titles, fonts, colours) |
 | `assets/js/report-a11y.js` `strOf` | [engines](MODULES.md#the-website-engines) | check_report (alt text, accessibility), the writer |
@@ -153,9 +163,8 @@ reader over the same parse, and `""` where a caller wants it is the caller's `||
 **The test that will pin it:** the probe's 15 literals (family `1b-text`; the same 15 pin 1b-number and 1b-bool).
 
 **Since DD1B (4 Nov):** every place above reads `assets/js/pbir-values.js` `litText` (an alias of it, or a call with
-`?? ''` where the caller wanted an empty text for nothing), except `mirror-policy.js` `strOf`, kept as its own copy
-because sp10's P10 pins mirror-policy.js to require visual-types.js alone; dd1b pins it to litText's answer on all 15
-literals (the reviewer's call: mcp/work/DD1B.md). Gone, their calls read litText (or the question they asked: a font size
+`?? ''` where the caller wanted an empty text for nothing); `mirror-policy.js` `strOf` too since DD1A (`PV.litText`:
+sp10's P10 admits the pure shared files, the reviewer's call). Gone, their calls read litText (or the question they asked: a font size
 by litNumber, a show or bold by litBool): `pbip-query.js` `S0` (pbip-visuals.js), `terminology.mjs` `litText`,
 `twin-geometry.mjs` `litOf`, `twin-pages.mjs` `lit` (in `fitPhoneTabs`), `twin-visuals.mjs` `litStr` (twin-copy, twin-pages,
 twin-plan, twin-text-fit). Group B moved to [1b-shown](#1b-shown-what-does-a-literal-show). Changed: `'it''s'` in

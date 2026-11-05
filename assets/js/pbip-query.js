@@ -116,15 +116,15 @@
   // a bar or column chart by a text category (byValue) is sorted by its measure, largest first; a time category (a
   // month, day, week, quarter or year, Hijri ones too, a name the model sorts, a number) keeps its own order
   // (round 23 part 5, the review's 9: whole words, so "Holiday Package" or "Candidate" is a text category)
-  const TIME_WORDS = /\b(month|day|weekday|week|quarter|year|hijri|date|period)s?\b|(^|\s)(الشهر|اليوم|الأسبوع|الربع|السنة|هجري|الهجري)(\s|$)/i;
   // (part 6, the re-review's 1: a name is split into its words first, at CamelCase, "_", "-" and digits: MonthName,
-  // Month_Name, FiscalYear, WeekNum, اسم_الشهر are time; "Holiday Package" and "Candidate" are not)
-  const wordsOf = (n) => String(n).replace(/([a-z])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2').replace(/[_\-\d]+/g, ' ');
+  // Month_Name, FiscalYear, WeekNum, اسم_الشهر are time; "Holiday Package" and "Candidate" are not. 0.3.2 DD1A: the
+  // words and the one list are time-names.js isTimeName's, as the twin, the preview and the check read them)
+  const TN = typeof module !== 'undefined' && module.exports ? require('./time-names.js') : root.DATimeNames;
   // 0.2.9, audit 3's A3-8: the field picker marks a time category (time: true or false, or its kind: a day, week,
   // month, quarter, year, date, period or Hijri category is time; any other kind is not) and its mark decides; the
-  // name's words (TIME_WORDS) only where the picker gives no mark ("Day Type" with a kind of its own is a category)
+  // name's words (time-names.js isTimeName) only where the picker gives no mark ("Day Type" with a kind of its own is a category)
   const TIME_KINDS = /^(date|day|weekday|week|month|quarter|year|period|hijri|time)s?$/i;
-  const isTime = (f) => (f.time != null ? !!f.time : f.kind != null ? TIME_KINDS.test(String(f.kind)) : TIME_WORDS.test(wordsOf(f.c)));
+  const isTime = (f) => (f.time != null ? !!f.time : f.kind != null ? TIME_KINDS.test(String(f.kind)) : TN.isTimeName(f.c));
   const sorted = (query, f, byValue) => {
     if (!query || !f) return query;
     if (!f.sortBy) {
@@ -477,7 +477,7 @@
     S, SCHEMA, lit, str, bool, num, color, obj, resource, LINE_WIDTH, lineStyle,
     json, rnd, guid, lum, contrast, mixHex, fieldCol, fieldMea, q, fname,
     shown, AGG, fieldAgg, isValue, proj, tproj, label, hasControl, daxSafe, daxNames,
-    TYPES, CHARTS, TIME_WORDS, wordsOf, TIME_KINDS, isTime, sorted, HEX6, gradientEnds, gradientFill,
+    TYPES, CHARTS, TIME_KINDS, isTime, sorted, HEX6, gradientEnds, gradientFill,
     mirrorChart, orderHelper, orderedBy, inOrder, isTextField, Bind, nameLike, YEARISH, KIND_ROWS, catKind,
     AR_MONTHS, NAMES, namesOf, tableFields, ROW_LABEL, rowLabelOf, rowLabelProj, AGG_DAX, valueDax, monthLabel,
     labelMonth, timeAxisPlan, rowLabelDax, CAT_KINDS, bindQuery, AR_LETTERS, byTitle, bindTitle, bindStory, kpiLabel, PF_KINDS, pfLiteral, pageFilterOf, measures

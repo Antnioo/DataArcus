@@ -375,10 +375,11 @@
   // (invertAxis; a categorical axis ignores it) or it is sorted descending by its category (or the order key it carries
   // in its tooltips), 'ltr' sorted ascending or not sorted; null when its category is not time (by its name) or it is
   // sorted by something else. Settings only, never a value; the preview's cue, never written
-  const TIME_NAME = /\b(date|dates|day|days|week|weeks|month|months|quarter|quarters|qtr|year|years|yr|fy|period|periods)\b|تاريخ|يوم|أسبوع|شهر|ربع|سنة|عام|فترة/i;
+  // (0.3.2 DD1A: the name is read by time-names.js isTimeName, its one home, as the twin, the writer and the check read it)
+  const TN = typeof module !== 'undefined' && module.exports ? require('./time-names.js') : root.DATimeNames;
   function timeDirOf(vis, c) {
     const f = c.field || {}, e = f.Column || f.Measure || ((f.Aggregation || {}).Expression || {}).Column || {};
-    if (!TIME_NAME.test(String(e.Property || '') + ' ' + nameOfProj(c))) return null;
+    if (!TN.isTimeName(String(e.Property || '') + ' ' + nameOfProj(c))) return null;
     const ax = props((vis.objects || {}).categoryAxis);
     if (boolOf(ax.invertAxis) === true && strOf(ax.axisType) !== 'Categorical') return 'rtl';
     const q = vis.query || {}, s = ((q.sortDefinition || {}).sort || [])[0];
