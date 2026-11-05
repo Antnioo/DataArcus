@@ -7,7 +7,7 @@
   1a (mirror-policy `isTime`, page-preview `timeDirOf`, pbip-query `isTime`, layout-check `TIMEY`) call isTimeName
   for the name; what each knows first stays first (a date table; the picker's `time` / `kind` mark). Their lists went.
 - **Commits:** plan ac91bf9; 1 the module, .min.js, suite dd1a (c98ebf6); 2 the four places and their loaders
-  (5f6443a1); 3 the parity test (becaa499); 4 ledger, CHANGELOG, WORK.md, this note (see git log).
+  (5f6443a1); 3 the parity test (becaa499); 4 ledger, CHANGELOG, WORK.md, this note (6fe7ca7a).
 - **Lists before -> after:** four word lists -> one. The probe's 1a: 12 of 24 inputs disagreed -> 0 (all four answer
   the same on all 24). 26 answers changed on those 12 inputs (table below); every one false -> true.
 - **Answers a person sees:** see "## Answers that changed"; sp10 (twin golden) moved on 5 made-up visuals, all
@@ -16,7 +16,8 @@
   back, 20 fail (291 of 311: 19 P, 1 S).
 - **Expected checks:** dd1a 311; dd1b 545 -> 546 (its S2 exception went, the brief); sp10 113 as before; every other
   suite's number as before; mutation 76/76; lint 0; check-contracts, check-modules --strict green.
-- **Got:** exactly that (Results). integration/0.3.2 did not move: no merge.
+- **Got:** exactly that (Results).
+- **Merge:** integration/0.3.2 moved to ae8c1734 (DD2D, DD2P): merged once (see git log), `npm run build:min`.
 - **State:** CI below.
 - **Resume:** none once CI is green; the reviewer reads and merges.
 
@@ -75,7 +76,11 @@ here so you can see them: StartOfMonth was not one of the brief's three examples
 - page-preview read Arabic words as substrings before (طعام held عام); now whole words only: such a name loses the arrow.
 
 ## Results
-- On 6fe7ca7a (code as of 5f6443a1; later commits: the dd1a test file and docs): MCP as CI's 5 shards side by side
+- After the merge (d15d2857): MCP 5 shards side by side, all exit 0, 202 suites PASS (dd2d 48 and dd2p 112 new from
+  integration); dd1a 311, dd1b 546, sp10 113, twin-fuzz 185, mutation 76/76 killed. Website `npm test`: all 42 passed
+  in one run. Lint 0; check-contracts PASS 730 (28 families, 103 places); probe 1a: 0 of 24; check-modules --strict PASS
+  1098; stamps 1516; agent-memory (WORK.md 3200 of 3200: integration's line grew, DD1B and DD1A share one entry).
+- Before the merge, on 6fe7ca7a (code as of 5f6443a1; later commits: the dd1a test file and docs): MCP as CI's 5 shards side by side
   (`DA_SHARD=k/4 node run-tests.mjs --keep-going`, after `git fetch --unshallow`): all 5 exit 0, 200 suites PASS;
   dd1a 311, dd1b 546, sp10 113, mutation 76/76 killed, twin-fuzz 185, sp39 96, sp42 22, dd1c 75, glass-tables 113,
   sp6 13 (the numbers DD1B reported, dd1b +1). No base run here (two full runs at once pass the time limit).
