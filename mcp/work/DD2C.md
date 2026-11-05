@@ -19,7 +19,8 @@
   1 place, 0 of 10 differ (was 2 places, equal); samejob.py is the reviewer's (not in this repo): its same-shape
   groups go DOWN by one, not countable here.
 - **State:** steps 1-4 done. integration/0.3.2 did not move (no merge); build:min: nothing to change. Local: MCP 205
-  of 205 (5 shards side by side; mutation 76/76; dd2c 48), site 42 of 42, lint 0. CI: below.
+  of 205 (5 shards side by side; mutation 76/76; dd2c 48), site 42 of 42, lint 0. DONE.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41956675615 on 516e99557b3fda4de2a4933f9d7659fefd85c8f3
 - **Resume:** none; the reviewer reads and merges.
 
 ## The answers (before, measured on the base 128285e; after: the same, pinned in dd2c)
