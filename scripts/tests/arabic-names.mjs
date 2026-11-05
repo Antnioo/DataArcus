@@ -56,7 +56,7 @@ const flatOf = (files) => { const ids = new Map(), at = (x) => { if (!ids.has(x)
   return Object.keys(files).filter((n) => !/\.png$/i.test(n)).map((n) => (n + '\n' + files[n].toString('utf8')).replace(RANDOM, at)).join('\n'); };
 const digest = (files) => crypto.createHash('sha256').update(flatOf(files)).digest('hex');
 
-function model(dir, name, tables, relationships) {
+export function model(dir, name, tables, relationships) {
   fs.mkdirSync(path.join(dir, name, name + '.SemanticModel'), { recursive: true });
   fs.writeFileSync(path.join(dir, name, name + '.SemanticModel', 'definition.pbism'), '{ "version": "4.0", "settings": {} }');
   fs.writeFileSync(path.join(dir, name, name + '.SemanticModel', 'model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables, relationships } }));
