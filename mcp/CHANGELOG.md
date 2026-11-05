@@ -5,6 +5,8 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **A name with a hyphen is written in quotes:** a table or column name with a hyphen (Sales-2024) is now written in
+  quotes ('Sales-2024') in the health check's fix scripts and the measure builder, as every other DataArcus script writes it.
 - **The health check now finds the sort column the report writer finds:** a month or day name whose number column has
   no type in the model files is now sorted by that number column in the fix script, as the report writer sorts it,
   instead of the script adding a second number column of its own.
