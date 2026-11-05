@@ -41,7 +41,7 @@ How it is kept true:
 | [grid Does this visual keep its grid left to right?](#grid-does-this-visual-keep-its-grid-left-to-right) | 2 | 0 of 18 | the twin | equal |
 | [vt-slicer Is this visual a slicer?](#vt-slicer-is-this-visual-a-slicer) | 5 | 1 of 18 | read_report, check_report, the twin, the preview | (not in the audit) |
 | [vt-bar Is this visual a bar chart?](#vt-bar-is-this-visual-a-bar-chart) | 4 | 1 of 18 | the twin, the preview, check_report | (not in the audit) |
-| [canon What is the canonical text of a plan?](#canon-what-is-the-canonical-text-of-a-plan) | 2 | 0 of 10 | every write (the approval's digest) | equal |
+| [canon What is the canonical text of a plan?](#canon-what-is-the-canonical-text-of-a-plan) | 1 | 0 of 10 | every write (the approval's digest) | one place since DD2C: `mcp/lib/canon.mjs` `canon` |
 | [crc What is the CRC-32 of these bytes?](#crc-what-is-the-crc-32-of-these-bytes) | 2 | 0 of 8 | every PNG and ZIP written | one place since DD2P: `assets/js/png-bytes.js` `crc32` |
 | [png-chunk What bytes make a PNG chunk?](#png-chunk-what-bytes-make-a-png-chunk) | 1 | 0 of 8 | every PNG written | one place since DD2P: `assets/js/png-bytes.js` `pngChunk` |
 | [u32 What number do four bytes hold?](#u32-what-number-do-four-bytes-hold) | 1 | 0 of 8 | the twin's and the glass's PNG reads | one place since DD2P: `assets/js/png-bytes.js` `u32` |
@@ -472,20 +472,27 @@ hundredPercentStackedBarChart) in one list; the same for `stackedColumnChart`. T
 
 ## canon What is the canonical text of a plan?
 
+**One place:** mcp/lib/canon.mjs canon (test mcp/test-0.3.2-dd2c.mjs).
+
 **Question:** a value: its JSON with keys sorted and undefined left out (the text a plan's digest is taken of).
 
 **Newest copy:** equal (the audit and the probe).
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `mcp/lib/artifact.mjs` `canon` | [write](MODULES.md#the-mcp-the-write-path) | every write (the binding of a plan to its click) |
-| `mcp/lib/plans.mjs` `canon` | [gate](MODULES.md#the-mcp-the-approval-gate) | every approval (the plan's digest, a changed plan named) |
+| `mcp/lib/canon.mjs` `canon` | [gate](MODULES.md#the-mcp-the-approval-gate) | the one place (DD2C): every write reads it through artifact.mjs `modelPrintOf` and `bindingOf` (the binding of a plan to its click: create_report, the twin's write, the redesign) and every approval through plans.mjs `inputDifferences` and `gate` (the plan's pins against a write's inputs, a changed plan named) |
 
 **Today:** both answer the same on all 10 values (the same line, copied).
 
 **Decided answer:** today's; one copy (Phase 2: same code, should be one).
 
-**The test that will pin it:** the probe's 10 values (family `canon`).
+**The test that pins it:** `mcp/test-0.3.2-dd2c.mjs` (the probe's 10 values and 6 more pinned; the base's bindings,
+model prints and gate differences of made-up plans byte for byte; both old copies, from the base's source, beside the one
+place: one answer each) and the probe's 10 values (family `canon`).
+
+**Since DD2C (5 Nov):** one canonical text: canon.mjs `canon`. artifact.mjs (`modelPrintOf`, `bindingOf`) and plans.mjs
+(`inputDifferences`, the gate) import it; their copies are gone. No answer and no digest changed. The "Today" line
+above is the ledger's snapshot before DD2C (2 places).
 
 ## crc What is the CRC-32 of these bytes?
 

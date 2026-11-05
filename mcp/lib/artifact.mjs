@@ -16,13 +16,12 @@ import { createRequire } from 'node:module';
 import { inventory, memorySource, REPORT_LIMITS } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
 import { rulesInput, knownGap, impactOf } from './check-report.mjs';
+import { canon } from './canon.mjs';   // (0.3.2 DD2C) one JSON form (object keys sorted, undefined left out): the same values always hash the same
 
 const require = createRequire(import.meta.url);
 const Rules = require('../../assets/js/report-rules.js');
 
 export const sha = (b) => crypto.createHash('sha256').update(b).digest('hex');
-// one JSON form (object keys sorted, undefined left out), so the same values always hash the same
-const canon = (v) => JSON.stringify(v === undefined ? null : v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().filter((key) => x[key] !== undefined).map((key) => [key, x[key]])) : x));
 
 /** The digest of a project's files: sha256 over the sorted lines "path NUL sha256(bytes) LF" (paths as written). */
 export const digestOf = (files) => sha(files.map((f) => String(f.path) + '\0' + sha(typeof f.data === 'string' ? Buffer.from(f.data) : f.data) + '\n').sort().join(''));

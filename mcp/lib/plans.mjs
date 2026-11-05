@@ -7,6 +7,7 @@
 // prompt when the app supports MCP elicitation. The assistant's reply approves nothing: the tools can't check who
 // typed it.
 import crypto from 'node:crypto';
+import { canon } from './canon.mjs';   // (0.3.2 DD2C) the one canonical text of a plan
 import { scriptWords } from './plain-words.mjs';   // (0.3.0 T1, T-4: what a script is and how to apply it, with every plan that writes one)
 
 // how long a plan id is good for: 2 hours from its proposal, never extended (an approval does not restart it: Z-02).
@@ -103,9 +104,8 @@ export function approval(id) {
 export function planOf(id) { const p = plans.get(String(id)); return p && alive(p) ? { id: p.id, kind: p.kind, writes: p.writes.slice(), data: p.data, expires: p.created + TTL } : null; }
 
 // Audit 6, A6-1 and A6-5: a plan pins what the write may use (data.pins[tool], stored at the proposal); the write's own
-// inputs are compared with it, key by key, and any difference is refused with the keys named. canon: one JSON form
-// (object keys sorted, undefined as null), so the same inputs always compare equal
-const canon = (v) => JSON.stringify(v === undefined ? null : v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().filter((key) => x[key] !== undefined).map((key) => [key, x[key]])) : x));
+// inputs are compared with it, key by key, and any difference is refused with the keys named. canon (canon.mjs): one
+// JSON form (object keys sorted, undefined left out), so the same inputs always compare equal
 // (0.3.1 R4A, round 4's problem 3: "inputs differ ... in fields (slicers)" left the agent guessing) each difference names
 // the values: what was passed that the plan doesn't hold, what the plan holds that was not passed, and the exact input to
 // pass. The values are the agent's own inputs and the plan's pins (names, fields, options), never data. A file's print
