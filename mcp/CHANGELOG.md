@@ -4,7 +4,7 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
-## [0.3.1]: 2026-11-03 (the version for testers)
+## [0.3.1]: 2026-11-04 (the version for testers)
 Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports
 opens, every page reads right to left, and Microsoft's validator finds nothing in a twin that its English report does
 not have. In short:
