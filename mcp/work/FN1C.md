@@ -26,8 +26,10 @@
 - **Characterisation, red-proven on ca3a1b73:** 111 mutants (shadow 22, twin 45, page 44), one or more per step, each
   in a git worktree of the base; which suite turned red: below. 106 red: 62 on an existing suite, 44 on fn1c only
   (each red on ca3a1b73 under its mutant first). 5 page mutants red nowhere (one equivalent, four not reached).
-- **State:** CI_PENDING (see "CI" below).
-- **Resume:** CI on the branch; then DONE.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42086400939 on bf8fd809 (Linux and Windows; macOS skipped
+  by the workflow on a branch run). After it only this note changed.
+- **State: DONE.**
+- **Resume:** none; the reviewer's merge (WORK.md's 0.3.2 line: FN1C, left to the merge). The ratchet: 21 -> 18.
 
 ## The steps (one per job of the old function, called in the old order)
 - **pbip-page.js write**, context `pc` (the page; the report's names destructured from `c` in each step as before):
