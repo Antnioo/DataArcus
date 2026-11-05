@@ -10,7 +10,9 @@
  */
 (function (root) {
   'use strict';
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // the HTML escape: html-escape.js htmlEsc, its one home (0.3.2 DD2H; the page loads it first, Node requires it)
+  const HE = typeof module !== 'undefined' && module.exports ? require('./html-escape.js') : root.DAHtmlEscape;
+  const esc = HE.htmlEsc;
   // the area of a finding (the page's CAT, in English)
   const AREA = { perf: 'Performance', maint: 'Maintainability', bp: 'Best practice' };
   // where a "please confirm" question points

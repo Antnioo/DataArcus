@@ -21,11 +21,13 @@
  */
 (function (root) {
   'use strict';
+  // the HTML escape: html-escape.js htmlEsc, its one home (0.3.2 DD2H; the page loads it first, Node requires it)
+  const HE = typeof module !== 'undefined' && module.exports ? require('./html-escape.js') : root.DAHtmlEscape;
   function create(app, host) {
     const S = host.state, $ = (id) => document.getElementById(id);
     const isAr = () => document.documentElement.lang === 'ar';
     const L = (en, ar) => (isAr() ? ar : en);
-    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const esc = HE.htmlEsc;
     const num = (n) => new Intl.NumberFormat(isAr() ? 'ar-u-nu-latn' : 'en-US').format(n);
     const bdi = (x) => '<bdi dir="ltr">' + esc(x) + '</bdi>';
     const RULES = () => (window.MHEngine && window.MHEngine.RULES) || {};

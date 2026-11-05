@@ -162,7 +162,8 @@ EVALUATE
     $('ramNote').style.display = ms.some((m) => /Ramadan|Eid al-/.test(m.name)) ? '' : 'none';
     save();
   };
-  const escapeHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  // the HTML escape: html-escape.js htmlEsc, its one home (0.3.2 DD2H; the page loads it before this file)
+  const escapeHtml = window.DAHtmlEscape.htmlEsc;
 
   // ---------- inputs ----------
   const setMode = () => {

@@ -16,13 +16,15 @@
  */
 (function (glob) {
   'use strict';
+  // the HTML escape: html-escape.js htmlEsc, its one home (0.3.2 DD2H; the page loads it first, Node requires it)
+  const HE = typeof module !== 'undefined' && module.exports ? require('./html-escape.js') : glob.DAHtmlEscape;
   function mount({ root, EX, QS, CASES, byId, ALL, DOM, SKILL, REN, renTopic, LEARN, PR, MK, SES, G, track }) {
     const { stats, readiness, mistakes, streak, record, isBm, toggleBm, rank } = PR;
 
     // ---------- helpers ----------
     const isAr = () => document.documentElement.lang === 'ar';
     const L = (en, ar) => (isAr() ? ar : en);
-    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const esc = HE.htmlEsc;
     const num = (n) => new Intl.NumberFormat(isAr() ? 'ar-u-nu-latn' : 'en-US').format(n);
     const shuffle = (a) => SES.shuffle(a, Math.random);
     const LET = 'ABCDEFGH';
