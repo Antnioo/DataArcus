@@ -12,6 +12,8 @@
   check-result-lines green. Same-shape groups go down.
 - **Red proof (not committed):** take the `.replace(/'/g, '&apos;')` step out of svg-escape.js; the new test fails on
   the texts holding an apostrophe, for both names.
+- **State:** code done, running the checks and CI.
+- **Resume:** run the full suite as 4 shards, merge integration once, `npm run build:min`, `gh workflow run tests.yml --ref feat/0.3.2-dd2x`.
 
 ## Plan (one commit each)
 1. This note.
