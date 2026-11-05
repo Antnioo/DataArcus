@@ -173,6 +173,13 @@ const allText = Object.values(answers).join('\n');
 const pieces = PRIVATE.flatMap((t) => [t, ...(t.match(/"[^"]+"/g) || []).map((x) => x.slice(1, -1))]).filter((t) => t.length >= 6);
 const leaked = pieces.filter((t) => allText.includes(t) || allText.includes(JSON.stringify(t).slice(1, -1)));
 chk(() => PRIVATE.length >= 8 && leaked.length === 0 && !/Acme/.test(allText), () => `X1: ${leaked.length} private texts appear in an answer: lengths ${leaked.map((t) => t.length).join(', ')}`);
+// X2 (0.3.2 SM1, B-329: RD-mask survived every suite): a schema message that quotes a part ("must have required property
+// 'name'") reaches the answer with that part written <value>, never in quotes (check-redact.mjs maskValues). Its own
+// input, outside the recorded K cases (the fixture is not touched): a made-up page without its required name
+twin('sreq');
+{ const pf = PG('sreq', 'p2details'), p = rd(pf); delete p.name; wr(pf, p); }
+const sreq = await CR.checkReport('sreq/' + RP, { checks: ['schemas'] }), sw = ((sreq && sreq.findings) || []).filter((f) => f.rule === 'SCHEMA').map((f) => String(f.what));
+chk(() => sw.length >= 1 && sw.some((w) => /required property <value>/.test(w)) && sw.every((w) => !/['"“”‘’]/.test(w)), () => `X2: a schema message's quoted part is written <value>, never in quotes: ${JSON.stringify(sw).slice(0, 400)}`);
 // E1: every skip said, never a pass
 const S = said;
 chk(() => S.skipped.validator.ran === false && /over the/.test(S.skipped.validator.why) && S.skipped.notChecked.includes('files too large') && /Not judged/.test(S.skipped.summary) && !/^Nothing found/.test(S.skipped.summary)
