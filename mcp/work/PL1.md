@@ -16,8 +16,11 @@
   test-site-config green. CHANGELOG: one plain line.
 - **Found:** code in labels: the card look's chart.look, 5 "More" rows by input key, a redesign's visual type and
   theme keys. Fixed: approval-complete 45 -> 54 (A10, red on the base: 9 failed); sp23/sp44 4 pages each, on purpose.
-- **State:** the fix pushed; the full run and CI next.
-- **Resume:** merge origin/integration/0.3.2 once if it moved, build:min, full run, CI.
+- **Local:** integration/0.3.2 did not move (d0cabe5b), no merge; build:min no change; `npm test -- --keep-going`: 210
+  of 211 passed, glass-default R2 pinned the old card look line (fixed in eff34702, 43 of 43); lint 0; agent-memory,
+  modules --strict, result-lines, contracts, changelog-words, test-site-config green.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42029826587 on eff34702abde5039ed54daabe46747f3fcb60345
+- **State:** DONE. **Resume:** the reviewer reads and merges; the owner's Arabic drafts (For the owner).
 
 ## Step 1: every option label the page shows today (base d0cabe5b)
 Report page, "Look and options" (`LK`, approval-disclosure.mjs): Visual gallery, Theme file, Logo, Colours, Bar
@@ -57,12 +60,14 @@ purpose (code, left to right) and stays.
   الإشارات المرجعية»; shown only on AP1's Arabic page list when a page holds a navigator).
 - Redesign theme rows: "Theme <file>: dataColors / foreground / background / tableAccent / good / neutral / bad" ->
   "data colours / text colour / background colour / table accent colour / colour for good results / colour for neutral
-  results / colour for bad results" (the redesign page's words are English: approval-ar.mjs has none of its rows).
+  results / colour for bad results" (the redesign's page is English: its summary sets no Arabic).
 - Changed on purpose: sp23 and sp44 (`fixtures/sp23-approval.json`, `sp44-approval.json`), 4 pages each, re-recorded
   with SP23_RECORD / SP44_RECORD after SP23_DUMP / SP44_DUMP of the base's and the branch's pages: report-en,
   report-ar, report-hostile: 1 line each (the card look); redesign: 18 lines (the visual rows' kinds); nothing else
   differs; every other entry (sp23 16 pages and prompts, the unit ones; sp44 the answers and life) unchanged; sp23 29
   and sp44 23 checks as on the base. The sp23 and sp44 dumps of each page are the same bytes.
+- glass-default R2 (`test-0.3.1-glass-default.mjs:118`) pinned "chart.look "auto"" on the page: now the new words
+  and no chart.look, 43 checks as before (found by the full run after the fix's commit).
 - CHANGELOG [Unreleased]: one plain line. WORK.md: "PL1 (options in words)" (3,197 of 3,200 characters).
 
 ## Decisions I made
