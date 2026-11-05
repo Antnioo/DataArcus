@@ -19,7 +19,9 @@
 - **Mutants before -> after:** 76 -> 86, all killed: AH-host, AH-link, AH-expiry, AH-method, AH-origin, AH-body, AH-once,
   AH-revoke (killed by sp44, 4 of them by test-approval too), RD-scrub, RD-mask (killed by sp41).
 - **Guards added:** sp41 X2 (RD-mask; 23 -> 24 checks), sp44 L8 (AH-link; 22 -> 23 checks): each red with its mutant.
-- **State:** the code done; the last CI below.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/41983867565 on 786267bb79e0d43defd6a84411b433dc9bfe5574
+- **State:** DONE (Linux and Windows CI; macOS where the reviewer merges). Local: 205 of 207 suites, the 2 others
+  (glass-tables, sp6) failed only on this container's shallow clone and pass once its history is fetched.
 - **Resume:** the reviewer reads and merges.
 
 ## Plan (one commit each)
