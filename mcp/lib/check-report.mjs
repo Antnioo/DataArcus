@@ -312,9 +312,12 @@ function fieldParametersStep(cr) {
         what: `a measure reads the field parameter's display column alone (${visible(x.parameter).slice(0, 60)}[${visible(x.display).slice(0, 60)}]): Power BI Desktop refuses it ("part of composite key") and the visual using it shows an error`,
         fix: 'Read the parameter\'s order column instead: IF ( HASONEVALUE ( <table>[<table> Order] ), SWITCH ( SELECTEDVALUE ( <table>[<table> Order] ), 0, "label", ... ), "Choose one metric" ). DataArcus\'s metric switcher script writes it so.',
         source: 'DataArcus: measured in Power BI Desktop 2.158, the field parameter lab of 10 Oct 2026' }));
-      fieldParameters = { parameters: tables.map((t) => ({ table: safeName(t), visuals: used.filter((u) => u.table === t).length, inModel: have ? have.has(t) : null })),
+      // (PF3, B-384) capped like suspiciousNames: the first FP_LISTED tables, "more" says how many are left out; the note names
+      // at most FP_NAMED of the missing ones and says "and N more"
+      const listed = tables.slice(0, FP_LISTED), named = missing.slice(0, FP_NAMED).map((t) => JSON.stringify(safeName(t))).join(', ') + (missing.length > FP_NAMED ? ` and ${missing.length - FP_NAMED} more` : '');
+      fieldParameters = { parameters: listed.map((t) => ({ table: safeName(t), visuals: used.filter((u) => u.table === t).length, inModel: have ? have.has(t) : null })), ...(tables.length > FP_LISTED ? { more: tables.length - FP_LISTED } : {}),
         note: !tm ? 'The visuals that switch by a field parameter need its table in the model; the model could not be read here, so it is not known whether it is there yet.'
-          : missing.length ? `Until the script is applied: the field parameter${missing.length === 1 ? '' : 's'} ${missing.map((t) => JSON.stringify(safeName(t))).join(', ')} ${missing.length === 1 ? 'is' : 'are'} not in the model yet, so only the visuals that switch by ${missing.length === 1 ? 'it' : 'them'} show Power BI's error (apply the metric switcher's TMDL script next to the project in TMDL view). Not a broken report: every other visual works.`
+          : missing.length ? `Until the script is applied: the field parameter${missing.length === 1 ? '' : 's'} ${named} ${missing.length === 1 ? 'is' : 'are'} not in the model yet, so only the visuals that switch by ${missing.length === 1 ? 'it' : 'them'} show Power BI's error (apply the metric switcher's TMDL script next to the project in TMDL view). Not a broken report: every other visual works.`
           : 'The field parameter tables the visuals switch by are in the model.' };
     } }
   cr.fieldParameters = fieldParameters;
@@ -402,9 +405,12 @@ function answerStep(cr) {
   while (size() > ANSWER_CAP && answer.findings.length > 1) { answer.findings = answer.findings.slice(0, Math.max(1, Math.floor(answer.findings.length * 0.7))); answer.truncated = true; }
   if (answer.findings.length < all.length) Object.assign(answer, { findingsNotListed: all.length - answer.findings.length, findingsHow: 'counts.byRule counts every finding. For the ones not listed, call check_report again with checks: ["<one check>"], one kind at a time.' });
   while (size() > ANSWER_CAP && answer.lint && answer.lint.findings.length) { answer.lint.findings = answer.lint.findings.slice(0, Math.floor(answer.lint.findings.length * 0.7)); answer.lint.truncated = true; }
+  // (PF3) the field parameter list, halved (its "more" kept true) when the answer is still over the cap
+  while (size() > ANSWER_CAP && answer.fieldParameters && answer.fieldParameters.parameters.length > 1) { const fp = answer.fieldParameters, keep = Math.floor(fp.parameters.length / 2); fp.more = (fp.more || 0) + fp.parameters.length - keep; fp.parameters = fp.parameters.slice(0, keep); }
   if (size() > ANSWER_CAP && answer.suspiciousNames) { answer.suspiciousNames.names = answer.suspiciousNames.names.slice(0, 5); }
   if (size() > ANSWER_CAP) answer.notChecked = answer.notChecked.slice(0, 10);
   return answer;
 }
 const ANSWER_CAP = AIM;
+const FP_LISTED = 50, FP_NAMED = 5;
 export { ROOT, REPORT_LIMITS };
