@@ -225,7 +225,24 @@ function summaryOf(kind, data) {
   const blank = new Set(Array.isArray(d.blankImages) ? d.blankImages.map(String) : []);
   const glassPics = new Set(Array.isArray(d.glassImages) ? d.glassImages.map(String) : []);
   const files = Array.isArray(d.outputs) ? groupFiles(d.outputs, [[BLANK_LABEL(), { test: (f) => blank.has(f) }], [GLASS_LABEL(), { test: (f) => glassPics.has(f) }], ['Metric switcher script', / - metric switcher\.tmdl$/i], ['Status icons script', / - status icons\.tmdl$/i], ['DAX functions script', / - DAX functions(?: \d+)?\.tmdl$/i]]) : null;   // (L3: the switch's own script; 0.3.1 L6: the DAX functions')
+  // (0.3.2 FN1E) each kind's page by its own steps, on one context; a report's in five, in this order
+  const sc = { kind, d, pins, sections, val, files };
   if (kind === 'report') {
+    reportHeadStep(sc);
+    reportFieldsStep(sc);
+    reportExtrasStep(sc);
+    reportLookStep(sc);
+    return reportTailStep(sc);
+  }
+  if (kind === 'redesign') return redesignStep(sc);
+  if (kind === 'sample') return sampleStep(sc);
+  if (kind === 'twin') return twinStep(sc);
+  themeColoursStep(sc);
+  return inputsStep(sc);
+}
+// (FN1E) a report: the name written, the title, the DAX library's first line, "Report"
+function reportHeadStep(sc) {
+  const { kind, d, pins, sections, val, files } = sc;
     const p = pins.create_report || {}, L = (p.design && p.design.layout) || {};
     // (0.3.1 R4A, the laptop's rc.1 run: the prompt named the taken "Gulf Retail Sales" while the write went to the free
     // "Gulf Retail Sales - New design") the name the write uses: the plan's own .pbip, else the name asked
@@ -244,6 +261,11 @@ function summaryOf(kind, data) {
     sections.push({ heading: 'Report', rows: [['Name', wName && p.name && wName !== p.name ? aq(`${wName} ("${p.name}" is already taken in that folder: the new report gets this free name)`, `«${wName}» (الاسم «${p.name}» مستخدم في هذا المجلد: يأخذ التقرير الجديد هذا الاسم المتاح)`) : nm0 == null ? nm0 : aq(String(nm0), `«${nm0}»`)],
       ['Title', p.title ? aq(String(p.title), `«${p.title}»`) : (p.name ? '(the report\'s name)' : '')], ['Language', p.lang === 'ar' ? 'Arabic (right to left)' : 'English'],
       ['Page size', p.page ? val(p.page) : L.page || (p.pages ? '' : E.DEFAULT_PAGE)], p.customVisualsFrom != null ? ['Copy of the report', aq(String(p.customVisualsFrom), `«${p.customVisualsFrom}»`)] : null].filter((r) => r && r[1] !== undefined && r[1] !== '' && r[1] !== null).map(([k, v]) => [k, v && typeof v === 'object' ? v : val(v)]) });
+  Object.assign(sc, { p, L, T, DF });
+}
+// (FN1E) a report: the kinds changed, Layout, Fields, each page's visuals, Pages, the names shown, the terminology
+function reportFieldsStep(sc) {
+  const { d, sections, val, p, L } = sc;
     // (rc.24, B-140: the page said "Column chart by" for the chart written as a bar chart) the kind each chart is written
     // as, with the reason when the writer changed it (the plan's data: kinds [{ role, from, to }], plan_layout's lint)
     const kinds = Array.isArray(d.kinds) ? d.kinds : [], changeOf = (from) => kinds.find((k) => k && k.from === from);
@@ -277,6 +299,10 @@ function summaryOf(kind, data) {
     if (p.pages) sections.push({ heading: 'Pages', rows: p.pages.map((pg, i) => [`Page ${i + 1}: ${cut(pg.name, 80)}`, (pg.slots || []).map((s) => `${s.kind}${s.title ? `: ${s.title}` : ''}${s.text ? ` "${cut(s.text, 120)}"` : ''}`).concat(pg.background ? [`background: ${pg.background}`] : [])]) });
     if (p.displayNames && Object.keys(p.displayNames).length) sections.push({ heading: 'Names shown in the report', rows: Object.entries(p.displayNames).map(([k, v]) => [k, String(v)]) });
     if (Array.isArray(d.terminology) && d.terminology.length) sections.push(termSheet(d.terminology));
+}
+// (FN1E) a report: dates, the fields in English, waterfalls, flip cards, status icons, the DAX function library
+function reportExtrasStep(sc) {
+  const { d, sections, DF } = sc;
     // (0.3.0 J17, B-170) the date the report follows, its grain and seasonal scope, and the dates' status, before the click
     if (Array.isArray(d.gulfDates) && d.gulfDates.length) sections.push({ heading: 'Dates and seasonal scope', rows: d.gulfDates.map(([k, v]) => [String(k), String(v)]) });
     // (0.3.0 R2: an Arabic report's texts are Arabic, or listed here with why before the go) the fields kept in English
@@ -306,6 +332,10 @@ function summaryOf(kind, data) {
       .concat((DF.measures || []).map((x) => [`Measure ${cut(String(x.measure || ''), 140)}`, `${({ sparkline: 'sparkline column', bulletBar: 'bullet bar column', kpiCards: 'KPI card picture', storyTitles: 'story title' })[x.use] || String(x.use || '')} of ${cut(String(x.of || ''), 140)}`]),
         [['Colours', String(DF.colours || '')], ['Model change', String(DF.modelChange || '')], ['User-defined functions', String(DF.status || '')]],
         (DF.notUsed || []).map((x) => [`Not used: ${String(x.use || '')}${x.page ? ` (${cut(String(x.page), 60)})` : ''}`, String(x.why || '')])) });
+}
+// (FN1E) a report: its look and options
+function reportLookStep(sc) {
+  const { d, sections, val, p } = sc;
     // (the options by their names in the report's words; a bar colour left out is the default the plan says)
     const LK = { gallery: 'Visual gallery', theme: 'Theme file', logo: 'Logo', colors: 'Colours', chartColors: 'Bar colours', chartAxes: 'Chart axes', kpiValues: 'KPI values', noDataMessage: 'Message when there is no data', slidePanel: 'Filters in a slide-in panel', smoothLines: 'Smooth lines', slicerStyle: 'Slicer style', grid: 'Gridlines', flipCards: 'Flip cards', waterfallRtl: 'Waterfall, right to left', statusIcons: 'Status icons', daxFunctions: 'DAX function library', sharedAxes: 'Shared axes (the user\'s answers)', font: 'Font', rtl: 'Right to left', dir: 'Reading direction' };
     const bars = p.chartColors !== undefined && p.chartColors !== null ? p.chartColors : p.pages ? 'solid' : p.design ? 'gradient' : null;
@@ -327,6 +357,11 @@ function summaryOf(kind, data) {
       : Array.isArray(lk.glassFailed) ? `Plain: with these colours glass can't keep everything readable (${lk.glassFailed.map((c) => `${String(c.check || '')}${c.ratio != null ? ` ${(Math.floor(+c.ratio * 10) / 10).toFixed(1)}:1, needs ${+c.min}:1` : ''}`).join('; ')}), so the cards are solid` : 'Plain, as asked: Power BI\'s own cards']);
     if (bars) look.unshift([LK.chartColors, bars === 'gradient' ? 'each bar fades by its value; a chart by a second category field gets a second colour, the same on every page' : 'one colour for every bar']);
     sections.push({ heading: 'Look and options', rows: look });
+}
+// (FN1E) a report: the metric switcher, thinner bars, the gallery, more options, both languages, what is not fully
+// Arabic, already there, the custom visuals replaced, not checked before writing; the page
+function reportTailStep(sc) {
+  const { d, sections, val, p, T } = sc;
     // (L3) the metric switcher: the measures and their labels, the charts that switch, and the model change it needs
     const ms = d.metricSwitcher && typeof d.metricSwitcher === 'object' ? d.metricSwitcher : null;
     const CK = { bar: 'Bar chart', line: 'Line chart' };
@@ -373,11 +408,12 @@ function summaryOf(kind, data) {
     const nc = d.exact && Array.isArray(d.exact.notChecked) ? d.exact.notChecked : [];
     if (nc.length) sections.unshift({ heading: 'Not checked before writing', rows: nc.map((n) => [NOT_CHECKED[n.check] ? NOT_CHECKED[n.check].charAt(0).toUpperCase() + NOT_CHECKED[n.check].slice(1) : 'A check', `not run: ${String(n.why || '')}. The rest of the report was checked (all ${d.exact.pages || 'its'} pages).`]) });
     return Object.assign(T, { sections });
-  }
+}
   // (0.3, J13 redesign step 2; the laptop's PROOF-rc24 block 2 (b): step 1's page showed the plan's fields, not what was
   // dropped) a redesign's page lists every change (page, visual, from, to), every visual not changed with why, and what
   // is copied as it is
-  if (kind === 'redesign') {
+function redesignStep(sc) {
+  const { kind, d, sections, val } = sc;
     // (0.3.2 PL1, E1 round 5: a theme change by the theme file's key) each colour the restyle changes, in words
     const THEME_KEYS = { dataColors: 'data colours', foreground: 'text colour', background: 'background colour', tableAccent: 'table accent colour', good: 'colour for good results', neutral: 'colour for neutral results', bad: 'colour for bad results' };
     // (ST1, R4A-S4) a text setting in plain words: "font", "text size", "title font" (the visual's own property names
@@ -427,10 +463,11 @@ function summaryOf(kind, data) {
     const rFiles = Array.isArray(d.outputs) ? groupFiles(d.outputs, [["Theme (the original's, copied)", THEME_FILE], ["Images (the original's, copied)", /\.(png|jpe?g|gif|svg)$/i]]) : null;
     const themed = S.theme && S.theme.tokens && Object.keys(S.theme.tokens).length;
     return { title: 'Redesign of a report', sections, files: rFiles, kind, lostNote: d.copied ? `Nothing is left out: all ${d.copied} files of the original are copied, with only the changes below (the copy is checked before it is written, and a missing file stops the write). The redesign writes no format script; the theme file and the images listed are the original's, copied${themed ? ', the theme with the changes listed under Changes' : ' as they are'}.` : null };
-  }
+}
   // (0.3.1 C) the sample project: what it holds (names and counts, never a row), every file grouped; no preview (its
   // report is empty) and no script (its .tmdl files are the model itself)
-  if (kind === 'sample') {
+function sampleStep(sc) {
+  const { kind, d, pins, sections, val } = sc;
     const S = d.sample || {}, T = Array.isArray(S.tables) ? S.tables : [], own = pins.create_report || {};
     // (0.3.1 LR1) on the Arabic page each row's name and value in Arabic (SAMPLE_AR; the plan's sampleAr, made by
     // sample-project.mjs from the same facts), the English line under each; a value without its Arabic stays English
@@ -442,8 +479,10 @@ function summaryOf(kind, data) {
       .filter((r) => r[1] != null).map(([k, v, ar]) => [two(k, SAMPLE_AR[k]), two(val(v), ar == null ? ar : String(ar))]) });
     sections.push({ heading: `Tables (${T.length})`, rows: T.map((t, i) => [String(t.table), two(`${Number(t.rows)} made-up rows, ${Number(t.columns)} columns${t.measures ? `, ${Number(t.measures)} measures` : ''}`, TA ? String(TA[i]) : null)]) });
     return { title: 'Sample project (made-up data)', sections, files: Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Model (TMDL)', /\.SemanticModel\//i], ['Empty report', /\.Report\//i]]) : null, kind, lang: own.lang === 'ar' ? 'ar' : 'en', titleKey: 'sample' };
-  }
-  if (kind === 'twin') {
+}
+// (FN1E) the Arabic twin, and the EN-AR copy
+function twinStep(sc) {
+  const { kind, d, sections } = sc;
     const labels = Object.entries(d.labels || {});
     // (0.3.0 T1, T-7: "Waterfall, right to left: native: ..." on a report with no waterfall) an option the report does not
     // use is left out (the plan's data says how many waterfalls and picture pages it has; an older plan shows them all)
@@ -490,9 +529,11 @@ function summaryOf(kind, data) {
     if (LG) languagesSections(LG, sections, 0);
     // (0.3.1 CX2) the twin's and the copy's preview is null only when it failed (twinPreview): said on the page
     return { title: LG ? 'English and Arabic in one report' : 'Arabic twin of a report', sections, ...('preview' in d && d.preview == null ? { previewFailed: 'all' } : {}), previews: d.preview && Array.isArray(d.preview.pages) && d.preview.pages.length ? d.preview : null, files: Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Arabic calendar script', /\.tmdl$/i]]) : null, kind, lang: 'ar', scriptWhat: 'the Arabic calendar columns', titleKey: LG ? 'same' : 'twin' };
-  }
+}
   // (D6, the laptop proof of rc.2: the theme's page showed name, lang and path) the colours it writes, as swatches with
   // their hex, and the report they come from
+function themeColoursStep(sc) {
+  const { kind, d, sections } = sc;
   if (kind === 'theme' && d.colours && typeof d.colours === 'object') {
     const C = d.colours, src = d.source && typeof d.source === 'object' ? d.source : null, one = (c) => ({ swatches: [['', String(c)]] });
     const from = !src ? null : src.from === 'visuals' ? `from the colours on the visuals of report "${String(src.report)}"`
@@ -500,6 +541,10 @@ function summaryOf(kind, data) {
     sections.push({ heading: 'Colours', rows: [from ? ['Where they come from', from] : null, ['Data colours', { swatches: (Array.isArray(C.data) ? C.data : []).map((c, i) => [String(i + 1), String(c)]) }],
       ['Page', one(C.page)], ['Visuals', one(C.visuals)], ['Text', one(C.text)], ['Accent', one(C.accent)], C.mode ? ['Mode', (C.mode === 'dark' ? 'dark' : 'light') + (C.modeAsked === 'dark' || C.modeAsked === 'light' ? (C.modeAsked !== C.mode ? `: the palette's own colours decide; "${C.modeAsked}" was asked and not used` : '') : '')] : null].filter(Boolean) });
   }
+}
+// (FN1E) the inputs (a theme, the fix scripts, the calendar, another kind): in plain words, as given, the answers; the page
+function inputsStep(sc) {
+  const { kind, d, pins, sections, val, files } = sc;
   const titles = { theme: 'Theme file', scripts: 'Model fix scripts', calendar: 'Gulf calendar script' };
   const own = Object.values(pins)[0] || {}, shownAnswers = Array.isArray(d.answersShown) ? d.answersShown : null;
   // (0.3.0 T1, T-7: "maxItems: 15 weekStart: sunday") each input in plain words; every input as given, folded below

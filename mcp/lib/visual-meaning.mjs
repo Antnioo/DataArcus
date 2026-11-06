@@ -122,6 +122,16 @@ export function meaningOf(visual, opts) {
     return out(kind, roles, { native: type, drill: cat.length > 1 ? cat.map(copy) : [], series: roles.Series ? roles.Series.map(copy) : null, confidence: 'high', why: 'a Power BI visual: kept as it is' });
   }
 
+  // (0.3.2 FN1E) the steps, in this order, on one context: the roles, the shape, the hint, the answer
+  const mc = { visual, o, type, temporal, formatOf, out };
+  const none = rolesStep(mc); if (none) return none;
+  shapeStep(mc);
+  hintStep(mc);
+  return answerStep(mc);
+}
+// (FN1E) the roles' effective classes, the hint, the live roles and their helpers; a visual with no live role is answered here
+function rolesStep(mc) {
+  const { visual, o, type, temporal, out } = mc;
   const R = rolesOf(visual || {}, o.customRoles, temporal), idHints = hintsOf(type), objHint = objectHintOf(o.customObjects || (visual && visual.customObjects));
   let hint = objHint || idHints[0] || null;
   const lost = [];
@@ -139,8 +149,12 @@ export function meaningOf(visual, opts) {
   const vals = (...effs) => by(...effs).flatMap((r) => r.vals.map(copy));
   const withTips = (roles) => (tips.length ? Object.assign(roles, { Tooltips: tips }) : roles);
   const custom = 'a custom visual';
+  Object.assign(mc, { idHints, objHint, hint, lost, live, named, by, cols, vals, withTips, custom });
   if (!live.length) return out('unknown', {}, { why: `${custom} with no fields in its roles: nothing tells what it shows` });
-
+}
+// (FN1E) the shape: which family of kinds the fields can show, and its roles
+function shapeStep(mc) {
+  const { lost, live, by, cols, vals, withTips } = mc;
   // the shape: which family of kinds the fields can show
   let shape, roles, drill = [], series = null, why, kind, aggregate = null, targets = [], idFit = null;
   const valueRoles = by('value', 'indicator', 'bar', 'anonVal', 'y', 'size', 'line', 'goal', 'min', 'max', 'x');
@@ -156,24 +170,7 @@ export function meaningOf(visual, opts) {
     why = 'its roles join two columns (a start and an end, or nodes and their links): a network, which no native visual draws';
   } else if (by('location', 'latitude', 'longitude').length) {
     shape = 'map';
-    // a place: by latitude and longitude when both are there (Azure map takes those columns only without a Location),
-    // else by a location or a name; a category that is no name is the legend
-    const NAME = ['name', 'names', 'label', 'labels'], named2 = (r) => r.words.some((w) => NAME.includes(w));
-    const lat = by('latitude').flatMap((r) => r.fields.map(copy)).slice(0, 1), lon = by('longitude').flatMap((r) => r.fields.map(copy)).slice(0, 1);
-    const places = cols('location').concat(by('category').filter(named2).flatMap((r) => r.cols.map(copy)));
-    const legend = cols('series').concat(by('category').filter((r) => !named2(r)).flatMap((r) => r.cols.map(copy)));
-    // Azure map needs a Location (Microsoft's validator): the place's name, else the first category; latitude and
-    // longitude go with it averaged (its capabilities: with a Location they are values), so each place sits where they say
-    // (rc.2b, Z11: with latitude and longitude but no place, the latitude column keys each point: a category used as the
-    // location would move the points; never a table for a map)
-    const keyByLat = !places.length && lat.length && lon.length;
-    roles = withTips({ Category: places.length ? places.slice(0, 1) : keyByLat ? lat.map(copy) : legend.splice(0, 1) });
-    if (lat.length && lon.length) { roles.Y = lat.map((f) => Object.assign({}, f, { kind: 'aggregation', agg: 'Avg' })); roles.X = lon.map((f) => Object.assign({}, f, { kind: 'aggregation', agg: 'Avg' })); aggregate = { Y: 'Avg', X: 'Avg' }; }
-    const size = vals('size', 'value', 'anonVal').slice(0, 1); if (size.length) roles.Size = size;
-    if (legend.length) roles.Series = legend.slice(0, 1);
-    if (keyByLat) lost.push('the place names: the original had none, so each point is keyed by its latitude (shown as its location name) and placed by its latitude and longitude');
-    else if (!places.length && roles.Category.length) lost.push('the place names: its category is used as the location, which Power BI looks up on the map; check the places');
-    why = `a location${roles.Y ? ' with its latitude and longitude' : ''}${size.length ? ', sized by a value' : ''}${legend.length ? ' by a category' : ''}: a map`;
+    ({ roles, aggregate, why } = mapShape(mc));
   } else if (by('x').length && (by('y').length || by('value').length)) {
     shape = 'scatter';
     roles = withTips({ Category: cols('category', 'time', 'anonCol'), X: vals('x'), Y: vals('y', 'value').slice(0, 1), Size: vals('size').slice(0, 1) });
@@ -213,6 +210,38 @@ export function meaningOf(visual, opts) {
       why = 'columns only, in several roles: a table';
     }
   } else {
+    ({ shape, roles, drill, series, why, kind, targets } = chartShape(mc, catRoles));
+  }
+  Object.assign(mc, { shape, roles, drill, series, why, kind, aggregate, targets, idFit });
+}
+// (FN1E) a map's roles: a place, its latitude and longitude, its size and legend
+function mapShape(mc) {
+  const { lost, by, cols, vals, withTips } = mc;
+  let roles, aggregate = null, why;
+    // a place: by latitude and longitude when both are there (Azure map takes those columns only without a Location),
+    // else by a location or a name; a category that is no name is the legend
+    const NAME = ['name', 'names', 'label', 'labels'], named2 = (r) => r.words.some((w) => NAME.includes(w));
+    const lat = by('latitude').flatMap((r) => r.fields.map(copy)).slice(0, 1), lon = by('longitude').flatMap((r) => r.fields.map(copy)).slice(0, 1);
+    const places = cols('location').concat(by('category').filter(named2).flatMap((r) => r.cols.map(copy)));
+    const legend = cols('series').concat(by('category').filter((r) => !named2(r)).flatMap((r) => r.cols.map(copy)));
+    // Azure map needs a Location (Microsoft's validator): the place's name, else the first category; latitude and
+    // longitude go with it averaged (its capabilities: with a Location they are values), so each place sits where they say
+    // (rc.2b, Z11: with latitude and longitude but no place, the latitude column keys each point: a category used as the
+    // location would move the points; never a table for a map)
+    const keyByLat = !places.length && lat.length && lon.length;
+    roles = withTips({ Category: places.length ? places.slice(0, 1) : keyByLat ? lat.map(copy) : legend.splice(0, 1) });
+    if (lat.length && lon.length) { roles.Y = lat.map((f) => Object.assign({}, f, { kind: 'aggregation', agg: 'Avg' })); roles.X = lon.map((f) => Object.assign({}, f, { kind: 'aggregation', agg: 'Avg' })); aggregate = { Y: 'Avg', X: 'Avg' }; }
+    const size = vals('size', 'value', 'anonVal').slice(0, 1); if (size.length) roles.Size = size;
+    if (legend.length) roles.Series = legend.slice(0, 1);
+    if (keyByLat) lost.push('the place names: the original had none, so each point is keyed by its latitude (shown as its location name) and placed by its latitude and longitude');
+    else if (!places.length && roles.Category.length) lost.push('the place names: its category is used as the location, which Power BI looks up on the map; check the places');
+    why = `a location${roles.Y ? ' with its latitude and longitude' : ''}${size.length ? ', sized by a value' : ''}${legend.length ? ' by a category' : ''}: a map`;
+  return { roles, aggregate, why };
+}
+// (FN1E) a chart's roles: a KPI, or a chart by a category (combo, waterfall, line or bar) with its series
+function chartShape(mc, catRoles) {
+  const { temporal, formatOf, lost, by, cols, vals, withTips } = mc;
+  let shape, roles, drill = [], series = null, why, kind, targets = [];
     // a chart: a category (its columns are the drill levels), values, and maybe a series
     const catRole = catRoles[0], cat = catRole ? catRole.cols.map(copy) : [];
     const ser = cols('series').concat(catRoles.slice(1).flatMap((r) => r.cols.map(copy)));
@@ -259,7 +288,12 @@ export function meaningOf(visual, opts) {
       shape = 'chart';
       roles._time = isTime || timeTyped;
     }
-  }
+  return { shape, roles, drill, series, why, kind, targets };
+}
+// (FN1E) the confidence, and the hint of the id's words or the format objects
+function hintStep(mc) {
+  const { formatOf, idHints, objHint, hint, lost, named, shape, roles } = mc;
+  let { why, kind, series, idFit } = mc;
 
   // confidence: the shape with named roles is medium, without them low; the hint moves it
   let conf = named ? 'medium' : 'low';
@@ -298,6 +332,11 @@ export function meaningOf(visual, opts) {
       why += `; the id's words hint at ${aOr(hint === 'time' ? 'timeline' : hint)}, set aside: the fields can't be shown as one`;
     }
   }
+  Object.assign(mc, { conf, why, kind, series, idFit });
+}
+// (FN1E) the last losses and the answer
+function answerStep(mc) {
+  const { out, lost, named, custom, roles, drill, series, why, kind, aggregate, targets, idFit, conf } = mc;
   if (kind === 'network') lost.push('no native visual draws a network: an HTML/SVG measure in an image-capable visual is needed (the owner approves it in the plan)');
   if (drill.length > 1) {
     if (drillsIn(NATIVE[kind])) lost.push(`the custom visual's own drill-down (its animation and click behaviour): Power BI's drill buttons on the native visual take its place, the ${drill.length} levels kept as a hierarchy`);
