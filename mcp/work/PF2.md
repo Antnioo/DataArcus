@@ -3,7 +3,7 @@
 - **Base:** fix/0.3.2-pf2 from origin/integration/0.3.2 (b8063087, PF1 merged). Push only it; integration merged in once before the last CI; no PR.
 - **Scope:** plan_layout with kpis 0 and no planFields.kpis still wrote 2 cards showing Total Sales. Measured first (below): they are the two tooltip pages' own cards (one each), on all 4 layouts; no report page gets a card with kpis 0. So not a kpis bug: the plan must name every card it writes, page by page, before Approve. Done in plan-lint.mjs pagesWritten (the one reader of the planned pages) and plan_layout's answer (a new `cardsWritten`, with a plan id).
 - **Expected checks:** new suite pf2 (area report) 15 checks, red on b8063087 first (8 of 15); pf1 21 unchanged; sp1, sp3, sp4, sp7, sp13, sp43 keep their checks, 35 recorded plan answers moved on purpose (the new key only, below); every other suite unchanged.
-- **Resume:** the fix and the re-records are committed; next: the area runs, the merge of integration, CI.
+- **Resume:** done. CI green: https://github.com/Antnioo/DataArcus/actions/runs/42130662303 on 74579e27 (integration/0.3.2 still b8063087, the base: nothing to merge).
 
 ## The plan
 1. Pin the exact input (L-1105-09): pf1's Time Lab model (its `model()` moved to a shared fixture, never a copy), plan_layout { path, layout "exec", kpis 0, name "TL", planFields { measure Sales[Total Sales], timeAxis Sales[FiscalYear], category Sales[Qtr], category2 «المبيعات»[«شهر»] } } (no filters, no planFields.kpis), approve_plan, create_report.
@@ -20,6 +20,7 @@
 - The approval page's data (pagesWritten, plan-lint.mjs): each page gains `cards` (each card by its model measures, in the page's reading order: y then x) and `messageCards` (the "no data" cards). Its other lists unchanged (the approval page's HTML is byte for byte the base's: sp23 29, sp44 23).
 - What is written: unchanged, byte for byte (every written file and create_report answer in sp3, sp4, sp7, sp13, sp43). kpis 0 still writes no report-page card; each tooltip page keeps its own card (its design, whatever kpis).
 - Answer sizes: the largest pinned plan (B5, hr1 from a 136-character folder) under AIM 38,000 (hr1 10 PASS); the step before the Arabic texts unchanged (hr2 7 PASS).
+- Area runs on 74579e27 (each from its run's last line): report 67 suites passed, core 11; mutation 225 (88 mutants, all killed; run alone); lint exit 0; test-contracts 14, contracts 715, modules 1160, result-lines 219, changelog-words 223, agent-memory 444.
 - pf2: red on b8063087 first: 8 of 15 (7 failed: C2 x3 and its two sayInPlan checks, C3 x2); now 15 of 15. pf1 21 (now reading fixtures/time-lab.mjs).
 
 ## Changed on purpose
@@ -60,5 +61,6 @@ The plan names every card the report writes, page by page, the card each tooltip
 
 ## Lessons for the reviewer
 - pagesWritten's sort (AP1) never sorted: it read keys the inventory deletes. A sort over fields should be pinned by a test with two visuals out of file order.
+- The mutation suite run beside three other suites lost 4 approval-http mutants (timing under load); alone it kills all 88 on the base and here.
 - A new key in plan_layout's answer moves 6 recorded suites (sp1, sp3, sp4, sp7, sp13, sp43) and meets the headroom pins (hr1, hr2): the brief named sp4 and sp43 only. A sweep of every test that calls plan_layout (126 files, 4 at a time, about 25 minutes) found them all.
 - The brief named report-build.mjs maxKpis as the likely cause; measuring which page each card sat on (5 minutes) showed none on a report page.
