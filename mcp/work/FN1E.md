@@ -16,12 +16,20 @@
 - **Ratchet:** the brief's count (the gate's) 15 -> 12 for the reviewer to set. My script (assets/js, mcp/lib,
   mcp/tools, server.mjs; a file's own wrapper left out) 17 -> 14 (it also counts calendar-generator.js's wrapper and
   compile's inner function).
-- **Expected checks:** RESULTS
+- **Expected checks:** (each run's own output file, its PASS/FAIL lines) areas checker, report, twin, safety and model
+  (183 files: the approval suites sp23, sp44, approval-disclosure, approval-complete; sp18, sp37, sp41, sp42) on
+  integration's head b8063087: 179 result lines, 7,742 checks, all PASS. **Got** on the merged head 06d200ff: the same
+  179 with the same check count each (no difference, suite by suite) plus fn1e 590 (8,332). No fixture re-recorded.
+  Lint 0; test-contracts 14, check-contracts 715, check-modules 1160, result-lines 219, changelog-words 223,
+  agent-memory, site config, sitemap lastmod pass. (The two area runs were cut at 60 suites by a container restart;
+  the other 123 ran after it, scratch runset2.sh.)
 - **Characterisation, red-proven on f6bf9fac:** 320 mutants (approval 160, check_report 82, meaning 78), one or more
   per step, each in a git worktree of f6bf9fac: 307 red (fn1e 301, each fn1e case red on f6bf9fac under its mutant
   first; 6 only on an existing suite), 13 equivalent or not reached by any input (below). fn1e green on f6bf9fac unmutated.
-- **State:** split, pins and mutants done; integration merged in once (06d200ff); area runs and CI running.
-- **Resume:** the area runs' results and CI into this note, then DONE.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42134574531 on 7e3e07d1 (Linux and Windows, 17 jobs;
+  macOS skipped by the workflow on a branch run). After it only this note changed.
+- **State: DONE.**
+- **Resume:** none; the reviewer's merge. The ratchet: 15 -> 12.
 
 ## The steps (one per job of the old function, called in the old order)
 - **summaryOf**, context `sc` ({ kind, d, pins, sections, val, files }; a report adds p, L, T, DF): reportHeadStep (the
@@ -120,5 +128,7 @@ none
   first): parse every mutant before running it.
 - `pkill -f "node test-"` to stop one runner killed another's suites mid-run (two false reds, rerun): stop a runner by
   its own command line.
+- Two container restarts killed long runs (area runs, mutant passes): a runner that appends one line per suite and skips
+  the done ones resumes where it stopped; `npm test -- <areas>` starts again from the first.
 - Mutants against whole-output pins still survive at the edges: 57 of 320 needed new inputs after the first pass, and
   changing an input to reach one edge can drop another (D102): rerun every mutant after the last re-record.
