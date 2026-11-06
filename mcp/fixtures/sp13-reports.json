@@ -4,8 +4,8 @@
   "T1 EN glass 1920 x 1080, rail at the start, two pages": {
    "plan": {
     "err": false,
-    "length": 12555,
-    "sha256": "e7e02a1ba92ec18defeea72dcf30b4c561882bbd41802c6b9d4f34e7974def36"
+    "length": 13142,
+    "sha256": "c7f05b54b94cef598c259c1a34fe676bd29a750a16b93c43b14845c60976f662"
    },
    "report": {
     "err": false,
@@ -20,8 +20,8 @@
   "T2 EN plain 1280 x 720, strip on top": {
    "plan": {
     "err": false,
-    "length": 13742,
-    "sha256": "90e441b85c161cb8e0d8e84b5590bdd4edd6aec3297b4769cbd4d19011cdb799"
+    "length": 14332,
+    "sha256": "916f02f769d10e98a2d472752f1b4fd02bda763eb10768af54ff3a14cd250ca2"
    },
    "report": {
     "err": false,
@@ -36,8 +36,8 @@
   "T3 AR glass 1920 x 1080, slide-in panel, names approved": {
    "plan": {
     "err": false,
-    "length": 17322,
-    "sha256": "c7154dc88e7e910fc9f447795dc366fcca0d2551a76e8a5e3b3bbd17559d147a"
+    "length": 17872,
+    "sha256": "c96f6b66309d328c46b80d793038d24c5c20e036db71868b90449bb53e5d4728"
    },
    "report": {
     "err": false,
@@ -52,8 +52,8 @@
   "T4 AR plain 1280 x 720, strip on top, names approved": {
    "plan": {
     "err": false,
-    "length": 19507,
-    "sha256": "efd2b309cf856536a40dbd30cca399005b3f398e69764ceeb6e3b9496d3c1067"
+    "length": 20066,
+    "sha256": "0290f32dac5bb7793e59c2451a7e99ef0525baa4bce261098a311a3113642675"
    },
    "report": {
     "err": false,
@@ -68,8 +68,8 @@
   "T5 EN glass 1280 x 720 on the twin, slide-in panel": {
    "plan": {
     "err": false,
-    "length": 13067,
-    "sha256": "5f53c2e5bead1ee465733ac9f0efecf1cf6302bba8d7326ddd3fd71bf26364db"
+    "length": 13615,
+    "sha256": "2288c33fbb590e67f5999f4c3cafd8bbd62bcea543af1c0aac0dbb33bc7fb1e2"
    },
    "report": {
     "err": false,
@@ -84,8 +84,8 @@
   "T6 hand-placed, 8 pages, tabs on two rows": {
    "plan": {
     "err": false,
-    "length": 10690,
-    "sha256": "22ac7a0354ecc7073c51b61b67f9a0735d9d5c0487271b6cba905e99b2ffcde8"
+    "length": 11094,
+    "sha256": "cafa224eb5530c4cfd66485f8f554161f2921472bf7a81288d84db0f696a9cd0"
    },
    "report": {
     "err": false,
@@ -100,8 +100,8 @@
   "T7 hand-placed AR on the twin, 6 pages, a low header, a small slicer slot": {
    "plan": {
     "err": false,
-    "length": 19810,
-    "sha256": "326734118824bceeac174ce0cdf1ce50d2317eb257167f65e6a6818864e905f4"
+    "length": 20213,
+    "sha256": "0cd81b486f930b9d7b402be9dde46a2ed3c5a0d9feac340250b3b6e3aab5ad0d"
    },
    "report": {
     "err": false,
@@ -116,8 +116,8 @@
   "T8 hand-placed EN, 7 pages, a low header, a narrow strip": {
    "plan": {
     "err": false,
-    "length": 10968,
-    "sha256": "f2c2f7e7fc4ed794c3faee893e3ded60f61b80dcc57e1d1363c0da5811c5c11c"
+    "length": 11372,
+    "sha256": "a0f38d626025faf34395cb2544ea8a978472289a7a58b8fab9e8c1d85de21aba"
    },
    "report": {
     "err": false,
@@ -132,8 +132,8 @@
   "T9 hand-placed AR on the twin, 4 pages, a header too low for tabs: single buttons": {
    "plan": {
     "err": false,
-    "length": 19556,
-    "sha256": "25c7fc89c7f840bec083d329f92ecd368a6b7178c15b1d9541729aecd38e54d8"
+    "length": 19959,
+    "sha256": "7cc5c064a675c35d42019fe1b9cb5ba7d8e9736b0e78b10a9a13fa316cf620bc"
    },
    "report": {
     "err": false,

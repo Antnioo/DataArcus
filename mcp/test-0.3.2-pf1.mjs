@@ -18,20 +18,14 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { serverClient } from './test-0.2.9.mjs';
+import { timeLab } from './fixtures/time-lab.mjs';
 
 const problems = []; let checks = 0;
 const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } catch (e) { err = ' (threw: ' + String(e && e.message || e).slice(0, 200) + ')'; } checks++; if (!ok) { let m = ''; try { m = msg(); } catch (e) { m = 'unexpected shape'; } problems.push(m + err); } };
 const short = (x) => (x && x.err ? String(x.t).slice(0, 400) : JSON.stringify(x && x.j).slice(0, 400));
 
 const ROOT = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-pf1-')));
-const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"A"}, {}) in Source' } }];
-const col = (name, dataType, x) => Object.assign({ name, dataType, sourceColumn: name }, x || {});
-const model = (dir, extra) => { fs.mkdirSync(path.join(ROOT, dir, 'Time Lab.SemanticModel'), { recursive: true });
-  fs.writeFileSync(path.join(ROOT, dir, 'Time Lab.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [
-    { name: 'Sales', partitions: mp('Sales'), columns: [col('FiscalYear', 'string'), col('Qtr', 'string'), col('Amount', 'double', { summarizeBy: 'sum' })],
-      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }].concat(extra || []) },
-    { name: 'المبيعات', partitions: mp('المبيعات'), columns: [col('شهر', 'string', { sortByColumn: 'رقم الشهر' }), col('رقم الشهر', 'int64'), col('المبلغ', 'double', { summarizeBy: 'sum' })],
-      measures: [{ name: 'إجمالي المبيعات', expression: "SUM ( 'المبيعات'[المبلغ] )", formatString: '#,0' }] }] } })); };
+const model = (dir, extra) => timeLab(ROOT, dir, extra);   // (the shared fixture: fixtures/time-lab.mjs, PF2 reuses it)
 const walk = (d) => (fs.existsSync(d) ? fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)])) : []);
 // every written visual: its type, its category fields and its value fields (Table[Field], "Sum(T[c])" for an aggregation)
 const nameOf = (f) => (f.Measure ? `${f.Measure.Expression.SourceRef.Entity}[${f.Measure.Property}]` + (f.Measure.Expression.SourceRef.Schema ? ' (report)' : '')

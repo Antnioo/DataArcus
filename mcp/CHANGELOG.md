@@ -14,6 +14,9 @@ package's manifest; this file says what is in it.
 - **The approval page names every visual, slicer and button the click writes:** a new report's approval page lists each
   page it writes, the tooltip pages too, and on it every visual by kind and count, each slicer by its field, each button
   by where it goes and each chart by the field it groups by; a chart written as another kind says which page it is on.
+- **The plan names every card the report writes:** plan_layout now lists, page by page, each card and the measure it
+  shows, the card each tooltip page holds too (a report planned with no KPI cards still has one on each tooltip page,
+  showing the value a reader points at, and the plan did not say so).
 - **No time axis when the person asks for none:** plan_layout and create_report take `timeAxis: "none"` in the plan's
   fields: the report gets no trend chart, no month tooltip and no date slicer DataArcus would add, and the plan says so.
 - **The person's language decides the several-models answer:** read_model, suggest_fields and check_model_health take

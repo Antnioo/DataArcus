@@ -195,9 +195,10 @@ export function aggregationAnswer(g, lang) {
 // its kind, counted; the slicers by their field, the buttons by where they go, the charts by the field they group by.
 // Field names only (metadata), never a value. files: the exact artifact's files ("<name>.Report/..."). Returns
 // [{ n, name, tooltip, hidden, visuals, slicers: [field], buttons: [{ to: 'page' | 'bookmark' | 'other', name }],
-//   kinds: [{ type, count, by: [field] }], usedBy?: [page name] (a tooltip page: the pages whose visuals show it) }],
+//   kinds: [{ type, count, by: [field] }], cards: [{ shows: [measure] }] (each card by the model measures it shows),
+//   messageCards (the "no data" message cards laid over charts), usedBy?: [page name] (a tooltip page: the pages whose visuals show it) }],
 //   each list in reading order (top to bottom, then across); [] when the report can't be read back.
-const BY_ROLES = ['Category', 'Rows', 'Axis', 'Legend', 'Series', 'Values'];
+const BY_ROLES = ['Category', 'Rows', 'Axis', 'Legend', 'Series', 'Values'], CARD_TYPES = /^(cardVisual|card|multiRowCard|kpi)$/;
 export function pagesWritten(files) {
   let inv = null;
   try { inv = inventory(memorySource(inReport({ files: files || [] })), 'the planned report'); } catch (e) { inv = null; }
@@ -205,16 +206,38 @@ export function pagesWritten(files) {
   const tips = new Map();
   inv.pages.forEach((p) => p.visuals.forEach((x) => { if (x.tooltipPage) { const u = tips.get(x.tooltipPage) || []; if (!u.includes(p.name)) u.push(p.name); tips.set(x.tooltipPage, u); } }));
   return inv.pages.map((p) => {
-    const slicers = [], buttons = [], kinds = new Map();
+    const slicers = [], buttons = [], kinds = new Map(), cards = [];
+    let messageCards = 0;
     p.visuals.slice().sort((a, b) => a.ry - b.ry || a.rx - b.rx).forEach((x) => {
       const cols = BY_ROLES.flatMap((r) => (x.fields && x.fields[r]) || []).filter((f) => f && f.kind === 'column').map((f) => `${f.table}[${f.name}]`);
       if (x.slicer) { slicers.push(cols[0] || '(a field)'); return; }
       if (x.type === 'actionButton') { const m = /^(\w+)(?: -> (?:bookmark|page) "(.*)")?/.exec(String(x.action || '')) || [];
         buttons.push({ to: m[1] === 'PageNavigation' ? 'page' : m[1] === 'Bookmark' ? 'bookmark' : 'other', name: m[2] || null }); return; }
+      // (0.3.2 PF2, B-383: kpis 0 and the tooltip pages' own cards, unnamed in the plan) each card by the model measures
+      // it shows; a card showing report measures only is a "no data" message laid over a chart (noDataMessage), counted apart
+      if (CARD_TYPES.test(x.type)) { const all = Object.values(x.fields || {}).flat().filter((f) => f && f.kind === 'measure'), shows = all.filter((f) => !f.report).map((f) => `${f.table}[${f.name}]`);
+        if (shows.length) cards.push({ shows: [...new Set(shows)], y: +x.y || 0, x: +x.x || 0 }); else if (all.length) messageCards++; }
       const k = kinds.get(x.type) || { type: x.type, count: 0, by: [] }; k.count++;
       if (cols[0] && !/^(cardVisual|card|multiRowCard|kpi|textbox|shape|image|group|tableEx|pivotTable)$/.test(x.type)) k.by.push(cols[0]);
       kinds.set(x.type, k);
     });
-    return Object.assign({ n: p.n, name: p.name, tooltip: p.kind === 'Tooltip', hidden: !!p.hidden, visuals: p.visualCount, slicers, buttons, kinds: [...kinds.values()] }, p.kind === 'Tooltip' ? { usedBy: tips.get(p.name) || [] } : {});
+    return Object.assign({ n: p.n, name: p.name, tooltip: p.kind === 'Tooltip', hidden: !!p.hidden, visuals: p.visualCount, slicers, buttons, kinds: [...kinds.values()],
+      // (the cards in the page's reading order, top to bottom then across: by the position the inventory keeps)
+      cards: cards.sort((a, b) => a.y - b.y || a.x - b.x).map((c) => ({ shows: c.shows })), messageCards }, p.kind === 'Tooltip' ? { usedBy: tips.get(p.name) || [] } : {});
   });
+}
+
+// (0.3.2 PF2, B-383; the owner's standing rule: the plan the person approves says what the click writes) every card
+// visual the planned report writes, page by page, from pagesWritten (the exact files): the KPI cards of a page's top row
+// (kpis: 0 leaves the row out) and each tooltip page's own card, written whatever kpis is. A page with no card visual is
+// not listed; the "no data" message cards (messageCards) are said by the design lint (COVER_CARDS); KPI cards drawn as
+// pictures (flipCards, svgCards) by their own part. Field names only (metadata).
+// kpis: the plan's card count (null: hand-placed pages); PW: pagesWritten(files). Returns { kpis, pages: [{ page,
+// tooltip?, cards: [measures] }] (40 pages, 12 cards each at most), sayInPlan }, or null when nothing was read back.
+export function cardsWritten(PW, kpis) {
+  if (!Array.isArray(PW) || !PW.length) return null;
+  const all = PW.filter((x) => (x.cards || []).length).map((x) => Object.assign({ page: String(x.name) }, x.tooltip ? { tooltip: true } : {}, { cards: x.cards.slice(0, 12).map((c) => c.shows.join(', ')) }));
+  const tips = all.some((x) => x.tooltip), pages = all.slice(0, 40);
+  return Object.assign({ kpis, pages }, all.length > 40 ? { notListed: all.length - 40 } : {}, {
+    sayInPlan: `Say in the plan each card in pages (the measure it shows): ${kpis === 0 ? 'kpis 0 writes no KPI card on the report pages' : 'the KPI cards (as pictures: said in flipCards, svgCards)'}${tips ? '; each tooltip page\'s own card shows the measure at the point a reader hovers, whatever kpis is' : ''}.` });
 }
