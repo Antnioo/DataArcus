@@ -1,12 +1,13 @@
 # BF1 (0.3.2): the live build page, dataarcus.com/build/ (unlisted)
 
 ## Summary
-**State:** IN PROGRESS (review fixes, CI running)
+**State:** DONE
 - **Approval:** the owner, 8 Nov (D-1108-14, B-397): "i actually wanted something like a page in dataarcus"; chose "Unlisted first" and "Now, ships with 0.3.2".
 - **Base:** `fix/0.3.2-bf1` from `origin/integration/0.3.2` (e621426b).
 - **Scope:** website files only: `build/index.html`, `assets/js/build-page.js` (+ .min.js), the per-page connect-src rule in `scripts/csp.mjs`, `assets/js/build-helix.js` (+ .min.js), `scripts/tests/build-page.mjs` and its fixtures, `three@0.160.0` as a pinned devDependency (package.json, lock), the suite lists, MODULES.md row, this note, one WORK.md line. No MCP code.
 - **Expected checks:** new suite `build-page` 0 -> 46 checks (red on e621426b first: the page did not exist, 0 checks, crashed); `node scripts/test-site-config.mjs`, `csp.mjs`, `check-min.mjs`, `sitemap-lastmod.mjs` pass; lint exits 0; CI green.
-- **Resume:** built and tested locally 2026-11-08T13:40Z; CI run and its line below. Nothing else left but the reviewer's merge.
+- **CI:** CI green: https://github.com/Antnioo/DataArcus/actions/runs/42489030221 on b299239f (2026-11-08T14:29Z). Earlier runs 42486268590 and 42487602342 were red on build/ in the language suites and the menu check; fixed.
+- **Resume:** nothing left; the reviewer merges. The reviewer's 14:10Z five data fixes are in (see Before -> after).
 
 ## Before -> after
 - Before: no /build/ page. After: dataarcus.com/build/ (unlisted): a live 3D DNA helix of the builders (three.js, SVG fallback), telemetry tiles, builder cards, CI now, integration today as a timeline, the release line. Read from the public repo in the visitor's browser.
