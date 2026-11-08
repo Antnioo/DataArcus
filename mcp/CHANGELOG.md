@@ -89,6 +89,9 @@ package's manifest; this file says what is in it.
 - **Inside the approval page, check_report and the reading of each visual, in smaller steps:** what the approval page
   says each click writes, check_report's answer and what each visual is read as are each made by short named steps
   instead of one long function; every page, finding and reading is byte for byte what it was before.
+- **Inside the field picker, create_report's build and the SVG KPI Designer's DAX, in smaller steps:** which fields
+  are picked and in what order, every file create_report writes and every DAX measure the designer compiles are each
+  made by short named steps instead of one long function; all of them are byte for byte what they were before.
 - **Inside the Theme Generator's downloads, the site's navigation and the SVG KPI Designer's panels, in smaller
   steps:** each is made by short named steps instead of one long function; every download, menu, counter, panel and
   click is what it was before.
