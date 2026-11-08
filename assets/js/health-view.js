@@ -23,6 +23,8 @@
   'use strict';
   // the HTML escape: html-escape.js htmlEsc, its one home (0.3.2 DD2H; the page loads it first, Node requires it)
   const HE = typeof module !== 'undefined' && module.exports ? require('./html-escape.js') : root.DAHtmlEscape;
+  // the toast: page-toast.js toast and boxToast, their one home (0.3.2 DD2W; the page loads it first, Node requires it)
+  const PT = typeof module !== 'undefined' && module.exports ? require('./page-toast.js') : root.DAPageToast;
   // the categories, severities and the Fix plan's kinds: data, one copy for every step below
   const CAT = {
     perf: { en: 'Performance', ar: 'الأداء', icon: 'bi-lightning-charge' },
@@ -73,12 +75,7 @@
       else fallback();
       function fallback() { const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); done(); } catch (e) { /* ignore */ } t.remove(); }
     }
-    let tt;
-    function toast(msg) {
-      let t = $('mhToast');
-      if (!t) { t = document.createElement('div'); t.id = 'mhToast'; t.className = 'mh-toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
-      t.textContent = msg; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 1800);
-    }
+    function toast(msg) { PT.toast(msg, { el: PT.boxToast('mhToast', 'mh-toast'), cls: 'show', ms: 1800 }); }
     // the score card's lines, listed for screen readers under the card's button
     function cardText(lines, rtl) {
       const list = $('mhCardText');

@@ -7,6 +7,9 @@
 //          (the same), the page's own toast used for both
 //   S1     the source and the .min.js give the same answers (the pages load the .min.js)
 //   L1     every page that runs a place loads page-toast.min.js before that place's script (English and Arabic)
+//   X1-X3  the exam and health check boxes (exam-view 2200 ms dpToast, health-view 1800 ms mhToast) in a real page: the
+//          base's own toast and boxToast + toast give the same markup byte for byte after one message, after a second
+//          one and after the time; the same timer times
 //   P1-P3  each #toast page (calendar, measure builder, theme generator, SVG KPI), English and Arabic: the copy button
 //          with the clipboard (its own message), a refused clipboard and no clipboard (the box's text selected, "Selected.
 //          Press Ctrl+C to copy" in the page's language); the toast shown (opacity 1) with the page's own time
@@ -142,7 +145,7 @@ export const PAGES = [
 // every page that loads a place, and the place's script it must come before
 export const LOADS = [
   ...PAGES.map((x) => [x.page, x.script]),
-  ['tools/power-bi-theme-generator.html', 'theme-generator'], ['tools/power-bi-theme-generator-lab.html', 'theme-download-ui'], ['tools/power-bi-theme-generator-lab.html', 'theme-generator'],
+  ['tools/power-bi-theme-generator.html', 'theme-generator'], ['tools/pl-300-practice-exam.html', 'exam-view'], ['tools/dp-600-practice-exam.html', 'exam-view'], ['tools/power-bi-model-health-check.html', 'health-view'], ['tools/power-bi-theme-generator-lab.html', 'theme-download-ui'], ['tools/power-bi-theme-generator-lab.html', 'theme-generator'],
 ];
 const loadOrder = () => {
   const problems = []; let checks = 0;
@@ -186,12 +189,64 @@ async function onPage(browser, url, x, lang, mode) {
   return { checks, problems };
 }
 
+// the base's two box toasts (5cf96356, exam-view.js mount and health-view.js create), as they were, beside the one place
+export const OLD_BOX = {
+  exam: `let toastT;
+    function toast(msg) {
+      let t = document.getElementById('dpToast');
+      if (!t) { t = document.createElement('div'); t.id = 'dpToast'; t.className = 'dp-toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+      t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200);
+    }`,
+  health: `const $ = (id) => document.getElementById(id);
+    let tt;
+    function toast(msg) {
+      let t = $('mhToast');
+      if (!t) { t = document.createElement('div'); t.id = 'mhToast'; t.className = 'mh-toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+      t.textContent = msg; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 1800);
+    }`,
+};
+const NEW_BOX = {
+  exam: "function toast(msg) { PT.toast(msg, { el: PT.boxToast('dpToast', 'dp-toast'), cls: 'show', ms: 2200 }); }",
+  health: "function toast(msg) { PT.toast(msg, { el: PT.boxToast('mhToast', 'mh-toast'), cls: 'show', ms: 1800 }); }",
+};
+async function boxes(browser) {
+  const problems = []; let checks = 0;
+  const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+  const min = fs.readFileSync(path.join(ROOT, 'assets/js/page-toast.min.js'), 'utf8');
+  // the same text in the place's source (exam-view.js, health-view.js) as NEW_BOX: the test runs what the page runs
+  for (const [k, f] of [['exam', 'exam-view'], ['health', 'health-view']]) { checks++; if (!fs.readFileSync(path.join(ROOT, 'assets/js/' + f + '.js'), 'utf8').includes(NEW_BOX[k])) problems.push(`X0 assets/js/${f}.js no longer holds ${NEW_BOX[k]}`); }
+  for (const k of ['exam', 'health']) {
+    const run = async (code, withPT) => {
+      const ctx = await browser.newContext(), pg = await ctx.newPage();
+      try {
+        await pg.setContent('<!doctype html><html><body><main>page</main></body></html>');
+        if (withPT) await pg.addScriptTag({ content: min });
+        return await pg.evaluate(async (code) => {
+          const delays = [], st = window.setTimeout; window.setTimeout = function (f, ms, ...a) { delays.push(ms); return st.call(this, f, ms, ...a); };
+          const PT = window.DAPageToast;
+          const toast = new Function('PT', code + '\nreturn toast;')(PT);
+          const out = [];
+          toast('First message'); out.push(document.body.innerHTML);
+          toast('رسالة ثانية'); out.push(document.body.innerHTML);
+          await new Promise((r) => st(r, Math.max(...delays) + 300)); out.push(document.body.innerHTML);
+          return { out, delays };
+        }, code);
+      } finally { await ctx.close(); }
+    };
+    const a = await run(OLD_BOX[k], false), b = await run(NEW_BOX[k], true);
+    ['X1 after one message', 'X2 after a second message', 'X3 after the time'].forEach((what, i) => check(a.out[i] === b.out[i], `${k} ${what}: the markup differs: base ${a.out[i]} / now ${b.out[i]}`));
+    check(JSON.stringify(a.delays) === JSON.stringify(b.delays), `${k}: the timers' times differ: base ${a.delays} / now ${b.delays}`);
+  }
+  return { checks, problems };
+}
+
 export default async function ({ browser, url } = {}) {
   const problems = []; let checks = 0;
   const add = (r) => { checks += r.checks; problems.push(...r.problems); };
   add(await unit(require(path.join(ROOT, 'assets/js/page-toast.js')), 'source'));
   add(await unit(loadMin(), 'min'));
   add(loadOrder());
+  if (browser) add(await boxes(browser));
   if (browser) for (const x of PAGES) for (const lang of ['en', 'ar']) for (const mode of ['ok', 'refused', 'none']) add(await onPage(browser, url, x, lang, mode));
   return { checks, problems };
 }

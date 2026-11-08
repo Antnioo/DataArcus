@@ -976,10 +976,10 @@ text: yes" is pinned by the check: the definitions must stay the same text (spac
 
 | copy | places | same text | newest copy |
 |---|---|---|---|
-| toast (the page's `#toast`) | `assets/js/calendar-generator.js` `toast`; `assets/js/measure-builder.js` `toast`; `assets/js/theme-generator.js` `toast` | yes | equal |
-| toast (the page's `#toast`, longer) | `assets/js/svg-kpi-designer.js` `toast`; `assets/js/calendar-generator.js` `toast` | no: 2200 ms against the others' 1800 ms (found by this check) | equal by the audit; the time differs |
-| toast (a box it makes) | `assets/js/exam-view.js` `toast`; `assets/js/health-view.js` `toast` | no: 2200 ms and 1800 ms, each its own id | equal by the audit; the times differ |
-| copy fallback (select the text) | `assets/js/calendar-generator.js` `fallback`; `assets/js/measure-builder.js` `fallback`; `assets/js/svg-kpi-designer.js` `fallback`; `assets/js/theme-download-ui.js` `fallback`; `assets/js/health-view.js` `fallback` | no: each selects its own element; health-view copies through a textarea | equal by the audit (the four that select) |
+| toast (the page's `#toast`) | `assets/js/calendar-generator.js` `toast`; `assets/js/measure-builder.js` `toast`; `assets/js/theme-generator.js` `toast` | yes | one place since DD2W: `assets/js/page-toast.js` `toast` (each place a one-line alias, 1800 ms) |
+| toast (the page's `#toast`, longer) | `assets/js/svg-kpi-designer.js` `toast`; `assets/js/calendar-generator.js` `toast` | no: 2200 ms against the others' 1800 ms (found by this check) | one place since DD2W: `assets/js/page-toast.js` `toast` (the time is the page's, kept) |
+| toast (a box it makes) | `assets/js/exam-view.js` `toast`; `assets/js/health-view.js` `toast` | no: 2200 ms and 1800 ms, each its own id and class | one place since DD2W: `assets/js/page-toast.js` `boxToast` and `toast` (shown by the class `show`; the box's markup byte for byte the base's, scripts/tests/dd2w.mjs X1-X3) |
+| copy fallback (select the text) | `assets/js/calendar-generator.js` `copyText`; `assets/js/measure-builder.js` `copyText`; `assets/js/svg-kpi-designer.js` `copyText`; `assets/js/theme-download-ui.js` `copyText` | yes | one place since DD2W: `assets/js/page-toast.js` `copyText` (each page passes its element and its two messages; before DD2W each place's own `fallback`) |
 | the health worker's address | `assets/js/health-worker-client.js` `WORKER_URL`; `assets/js/theme-generator.js` `MODEL_WORKER` | yes | equal |
 | the health check's area labels | `assets/js/health-downloads.js` `AREA`; `assets/js/health-view.js` `CAT` | no: CAT holds the Arabic and the icons too; the English words are the same | equal |
 
@@ -1008,6 +1008,8 @@ ledger does not add it again.
 - `assets/js/pbip-bidi.js` `lit`: the quoted literal itself (`'Sales'` with its
   quotes) or null, for a writer that puts it back as it was; not the text it holds (1b-text).
 - `mcp/lib/text-format.mjs` `lit`: any text value as written, for a format check; not the text of a literal.
+- `assets/js/health-view.js` `fallback` (in `copy`): a list copied through a textarea and `execCommand('copy')` when the
+  clipboard refuses, saying "Copied"; not the tool pages' select-the-text fallback (page-toast.js `copyText`) (DD2W).
 - `assets/js/svg-expressions.js` `ESCAPES` and `mcp/lib/dax-functions.mjs` `esc`: XML and a data URL's `%` and `#`
   inside DAX text, a different escape from `xml`.
 - `mcp/lib/metric-switcher.mjs` `esc` and `mcp/lib/text-format.mjs` `esc`: a regular expression's escape, not a markup one.
