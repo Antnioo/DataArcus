@@ -26,9 +26,9 @@
   changelog-words, agent-memory pass.
 - **Characterisation, red-proven on 1ee00b30:** 913 mutants (Gulf calendar 269, date questions 310, copy 334), one change
   each, parsed first, in git worktrees of 1ee00b30: 851 red, 62 equivalent or not reached by any suite (below).
-- CI: started on this commit (its url and result are written here after the run).
-- **State:** CI on the branch's head (the run named above).
-- **Resume:** if CI is red: `gh run view <id> --log-failed`, fix, push, CI again; else the reviewer's merge. Ratchet 9 -> 6.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42470065730 on 8e20af03. After it only this note changed.
+- **State: DONE.**
+- **Resume:** none; the reviewer's merge. The ratchet: 9 -> 6 (with FN1F).
 
 ## The steps (one per job of the old function, called in the old order)
 - **addGulfCalendar**, context `gc` ({ m, a, env }): inputsStep (country, name, years), relationshipsStep (relateTo and
