@@ -11,7 +11,7 @@
   there: check_report `checks` 470,031 characters at 3,000 items, plan_layout `pages` 187,971 and 423,861, generate_theme
   `folder` with a 150,000-character string HANGS the server (no answer in 10 s), the shape checks S3-S6). All other suites
   unchanged by a byte (the pinned fixtures); `agent` suites re-checked for the instructions' last line.
-- **Resume:** round 2 (D-1108-16) in progress: AT-5 fixed, CI running. Round 1 was DONE, CI green: https://github.com/Antnioo/DataArcus/actions/runs/42489282364 on d25ec6ca611dd33198b90df20d92de05ef7b6ecb
+- **Resume:** DONE (round 2, D-1108-16). CI green: https://github.com/Antnioo/DataArcus/actions/runs/42495162883 on 63a93dd11b427c97c7946fe287c8faec2dabbbeb. Round 1 was DONE, CI green: https://github.com/Antnioo/DataArcus/actions/runs/42489282364 on d25ec6ca611dd33198b90df20d92de05ef7b6ecb
 
 ## Plan
 1. Red first: `test-0.3.2-rv1.mjs` on 225498d2 (done: red).
@@ -123,3 +123,5 @@ CI green: https://github.com/Antnioo/DataArcus/actions/runs/42489282364 on d25ec
   translation dictionary): re-recorded on purpose for the one article whose subtitle changed (report-ready-for-arabic,
   English +42 and Arabic +58 characters). Exact lines: `"i18n": "eef05f650bb1f9c2"` -> `"fc78011d53f744b8"` (line 727) and
   `"dict": 44363` -> `44463` (line 738); sp36 18 = 18.
+
+CI green (round 2): https://github.com/Antnioo/DataArcus/actions/runs/42495162883 on 63a93dd11b427c97c7946fe287c8faec2dabbbeb
