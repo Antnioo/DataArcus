@@ -18,6 +18,8 @@
   'use strict';
   // the HTML escape: html-escape.js htmlEsc, its one home (0.3.2 DD2H; the page loads it first, Node requires it)
   const HE = typeof module !== 'undefined' && module.exports ? require('./html-escape.js') : glob.DAHtmlEscape;
+  // the toast: page-toast.js toast and boxToast, their one home (0.3.2 DD2W; the page loads it first, Node requires it)
+  const PT = typeof module !== 'undefined' && module.exports ? require('./page-toast.js') : glob.DAPageToast;
   // (0.3.2 FN1A) mount builds the page by named steps, each one part of it; each step's code is the code it was inside
   // mount, moved. vw: the page's context (the input, the progress's calls, the state ui) each step adds its functions
   // to; ui: the page's own state (the screen, its context, the mock's timer, the practice and mock choices, the outline).
@@ -59,12 +61,7 @@
     const { grade, answered, scoreMock, tallySession } = G;
     const newInst = (q) => SES.newInst(q, Math.random);
     // ---------- small UI bits ----------
-    let toastT;
-    function toast(msg) {
-      let t = document.getElementById('dpToast');
-      if (!t) { t = document.createElement('div'); t.id = 'dpToast'; t.className = 'dp-toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
-      t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200);
-    }
+    function toast(msg) { PT.toast(msg, { el: PT.boxToast('dpToast', 'dp-toast'), cls: 'show', ms: 2200 }); }
     function modal(title, text, okLabel, onOk, cancelLabel) {
       const m = document.createElement('div');
       m.className = 'dp-modal';

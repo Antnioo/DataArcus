@@ -16,7 +16,7 @@ import fs from 'node:fs';
 import { ROOT, serve, launch, flushCoverage } from './lib.mjs';
 import { oneLine, budget, osName, scrub } from '../../mcp/test-results.mjs';
 
-const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'components', 'consent', 'lang-switcher', 'theme-generator', 'theme-generator-lab', 'pbip', 'dax', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model', 'design-engine', 'gulf-calendar', 'text-align', 'theme-logo', 'github-links', 'arabic-names', 'layout-canvas', 'sp5', 'sp6', 'sp7', 'sp8', 'sp9', 'sp13', 'sp12', 'sp15', 'sp14', 'sp24', 'sp25', 'sp27', 'sp33', 'sp29', 'sp32', 'sp34', 'fn1a', 'fn1b', 'sp31', 'sp35', 'sp36', 'pv2', 'dd2z', 'build-page'];
+const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'components', 'consent', 'lang-switcher', 'theme-generator', 'theme-generator-lab', 'pbip', 'dax', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model', 'design-engine', 'gulf-calendar', 'text-align', 'theme-logo', 'github-links', 'arabic-names', 'layout-canvas', 'sp5', 'sp6', 'sp7', 'sp8', 'sp9', 'sp13', 'sp12', 'sp15', 'sp14', 'sp24', 'sp25', 'sp27', 'sp33', 'sp29', 'sp32', 'sp34', 'fn1a', 'fn1b', 'sp31', 'sp35', 'sp36', 'pv2', 'dd2z', 'dd2w', 'build-page'];
 // the same test on the lab page, where the generator runs on the design engine (the live page keeps the old script for now)
 const LAB = { 'theme-generator-lab': 'theme-generator', 'layout-lab': 'layout' };
 // CI's parallel jobs (B-145, owner's go 18 Oct): every suite in exactly one shard, balanced by the seconds CI measured
@@ -25,7 +25,7 @@ const LAB = { 'theme-generator-lab': 'theme-generator', 'layout-lab': 'layout' }
 const SHARDS = [
   ['site', 'consent', 'lang-switcher', 'model-health', 'dax', 'pbip', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model', 'github-links', 'arabic-names', 'layout-canvas', 'sp5', 'sp7', 'sp8', 'sp13', 'sp12', 'sp14', 'sp35', 'sp36', 'pv2', 'build-page'],
   ['design-engine', 'tools', 'components', 'spacing', 'gulf-calendar', 'sp6', 'sp9', 'sp15', 'sp27', 'sp29', 'sp32', 'sp34', 'fn1a', 'fn1b', 'sp31'],
-  ['anchors', 'text-align', 'theme-generator', 'theme-generator-lab', 'theme-logo', 'sp24', 'sp25', 'sp33', 'dd2z'],
+  ['anchors', 'text-align', 'theme-generator', 'theme-generator-lab', 'theme-logo', 'sp24', 'sp25', 'sp33', 'dd2z', 'dd2w'],
 ];
 {
   const listed = SHARDS.flat(), twice = listed.filter((n, i) => listed.indexOf(n) !== i), none = ALL.filter((n) => !listed.includes(n)), extra = listed.filter((n) => !ALL.includes(n));
