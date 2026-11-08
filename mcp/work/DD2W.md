@@ -24,8 +24,9 @@
   theme-generator, theme-generator-lab, svg-kpi, sp25, sp31, pbip, model-health, gulf-calendar green; lint 0.
 - **Red proof (not committed):** `clearTimeout(timers.get(t));` taken out of page-toast.js (and its .min.js rebuilt):
   dd2w FAIL, 4 of its then 30 checks: T3 and T6, source and min; restored.
-- **State:** steps 1-5 done, integration had not moved (5cf96356), CI started 2026-11-08T16:55Z.
-- **Resume:** wait for CI on the branch; green: its line here, DONE.
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/42502343919 on 47346f74247c3f663d53514b4e5238d1c7f25808
+- **State:** DONE 2026-11-08T17:09Z (Linux and Windows; macOS runs where the reviewer merges).
+- **Resume:** none; the reviewer reads and merges.
 
 ## Copies before -> after (each place)
 | place | before | after |
