@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-08T22:48Z",
+  "generated_at": "2026-11-08T23:02Z",
   "today": {
     "date": "2026-11-08",
-    "cost_usd": 169.41,
-    "tokens": 555579136,
-    "sessions": 39,
+    "cost_usd": 196.09,
+    "tokens": 638937753,
+    "sessions": 41,
     "by_kind": {
       "builder": {
-        "cost_usd": 76.06,
-        "count": 12
+        "cost_usd": 100.1,
+        "count": 13
       },
       "worker": {
-        "cost_usd": 92.2,
-        "count": 23
+        "cost_usd": 94.84,
+        "count": 24
       },
       "probe": {
         "cost_usd": 1.15,
@@ -30,8 +30,8 @@
         "count": 12
       },
       "opus": {
-        "cost_usd": 130.41,
-        "count": 27
+        "cost_usd": 157.09,
+        "count": 29
       }
     }
   },
@@ -116,12 +116,21 @@
     },
     {
       "date": "2026-11-08",
-      "cost_usd": 169.41,
-      "tokens": 555579136,
-      "sessions": 39
+      "cost_usd": 196.09,
+      "tokens": 638937753,
+      "sessions": 41
     }
   ],
   "jobs": [
+    {
+      "id": "TA5",
+      "title": "TA5: Today v2.5 plan and build: the Build tab (3D DNA command center), full review and bugs, synced with the memory, a gallery, Learn (git basics), tidier tabs (D-1108-20, D-1108-21)",
+      "model": "opus",
+      "cost_usd": 24.04,
+      "tokens": 76435746,
+      "minutes": 52,
+      "finished_at": "2026-11-08T21:05Z"
+    },
     {
       "id": "BF3",
       "title": "BF3: the build page says exactly what it sends (Codex release-delta)",
@@ -232,8 +241,8 @@
     }
   ],
   "workers": {
-    "count": 23,
-    "cost_usd": 92.2,
+    "count": 24,
+    "cost_usd": 94.84,
     "costliest": [
       {
         "label": "cleanup",
@@ -257,6 +266,11 @@
   },
   "top": [
     {
+      "label": "TA5",
+      "kind": "builder",
+      "cost_usd": 24.04
+    },
+    {
       "label": "cleanup",
       "kind": "worker",
       "cost_usd": 19.52
@@ -275,11 +289,6 @@
       "label": "FN1G",
       "kind": "builder",
       "cost_usd": 15.67
-    },
-    {
-      "label": "worker 19:36",
-      "kind": "worker",
-      "cost_usd": 9.26
     }
   ]
 }
