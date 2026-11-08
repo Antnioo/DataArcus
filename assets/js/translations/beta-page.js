@@ -23,14 +23,14 @@ window.betaPageTranslations = {
         "badge": "Public beta",
         "title": "DataArcus for Power BI",
         "subtitle": "An AI agent in Claude Desktop reads your Power BI project (PBIP, with its TMDL model) and writes a complete new report (PBIR) next to it, in English or in Arabic, right to left.",
-        "button": "Download 0.3.0",
+        "button": "Download 0.3.1",
         "how": "See how it works",
         "facts": "Free during the beta. Windows, with Power BI Desktop and Claude Desktop.",
         "ga": "Microsoft: <em>\"Power BI Desktop projects (PBIP) and Power BI enhanced report format (PBIR) are generally available.\"</em> (<a href='https://learn.microsoft.com/power-bi/developer/projects/projects-external-editing' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>)"
       },
       "new31": {
         "title": "What's new in 0.3.1",
-        "date": "Released on [release day].",
+        "date": "Released on 4 November 2026.",
         "l1": "<strong>Try it without a model of your own.</strong> Ask \"show me what DataArcus can do\": after you approve, it writes a made-up Gulf retail project (a model with 18 months of made-up sales, a date table and an empty report) to a new folder, then suggests four next steps on it.",
         "l2": "<strong>Is your report ready for Arabic?</strong> <code translate='no'>check_report</code> with its Arabic lens reads any report, whoever built it, and says page by page what reads wrong in Arabic. Each finding comes with its fix: a DataArcus request you approve, a setting in Power BI Desktop, or plainly that Power BI has no setting for it. It only reads.",
         "l3": "<strong>One report in English and Arabic, straight from the plan.</strong> Ask for one report in both languages: the plan builds the English pages and each page's Arabic page, mirrored, with a language button on every page and each slicer pair kept in sync. You approve the Arabic texts and field names first.",
@@ -103,7 +103,7 @@ window.betaPageTranslations = {
       },
       "join": {
         "title": "Download and install",
-        "next": "<ol class='mb-3'><li>Download <code>dataarcus-0.3.0.mcpb</code> from the <a href='https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0' class='text-accent'>0.3.0 release</a>.</li><li>Check its SHA-256 before you install it. Run: <code dir='ltr' class='d-block my-1'>certutil -hashfile dataarcus-0.3.0.mcpb SHA256</code>It must print: <code dir='ltr' class='d-block text-break my-1'>aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb</code></li><li>With Claude Desktop installed, double-click the file and choose Install. Every step: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md' class='text-accent'>the install guide</a>.</li></ol>Questions, problems or feedback? Write to us here, or see <a href='https://github.com/Antnioo/DataArcus/blob/main/SUPPORT.md' class='text-accent'>how to get help</a>. No payment.",
+        "next": "<ol class='mb-3'><li>Download <code>dataarcus-0.3.1.mcpb</code> from the <a href='https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.1' class='text-accent'>0.3.1 release</a>.</li><li>Check its SHA-256 before you install it. Run: <code dir='ltr' class='d-block my-1'>certutil -hashfile dataarcus-0.3.1.mcpb SHA256</code>It must print: <code dir='ltr' class='d-block text-break my-1'>619818daa59662bb564497ca5ef1383d8b28b84c268c109c8064291d539c027a</code></li><li>With Claude Desktop installed, double-click the file and choose Install. Every step: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md' class='text-accent'>the install guide</a>.</li></ol>Questions, problems or feedback? Write to us here, or see <a href='https://github.com/Antnioo/DataArcus/blob/main/SUPPORT.md' class='text-accent'>how to get help</a>. No payment.",
         "name": "Name *",
         "email": "Email *",
         "model": "What is your model about? *",
@@ -138,14 +138,14 @@ window.betaPageTranslations = {
         "badge": "نسخة تجريبية عامة",
         "title": "DataArcus لـ Power BI",
         "subtitle": "وكيل ذكاء اصطناعي في Claude Desktop يقرأ مشروع Power BI الخاص بك (PBIP مع نموذج TMDL) ويكتب بجانبه تقريرًا جديدًا كاملًا (PBIR)، بالإنجليزية أو بالعربية من اليمين إلى اليسار.",
-        "button": "نزّل الإصدار 0.3.0",
+        "button": "نزّل الإصدار 0.3.1",
         "how": "شاهد كيف يعمل",
         "facts": "مجاني خلال النسخة التجريبية. يعمل على Windows مع Power BI Desktop و Claude Desktop.",
         "ga": "Microsoft: <em>\"Power BI Desktop projects (PBIP) and Power BI enhanced report format (PBIR) are generally available.\"</em> أي أن مشاريع Power BI Desktop (PBIP) وصيغة التقارير المحسّنة (PBIR) متاحة للجميع. (<a href='https://learn.microsoft.com/power-bi/developer/projects/projects-external-editing' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>)"
       },
       "new31": {
         "title": "الجديد في الإصدار 0.3.1",
-        "date": "صدر في [يوم الإصدار].",
+        "date": "صدر في 4 نوفمبر 2026.",
         "l1": "<strong>جرّبه دون نموذج خاص بك.</strong> اطلب: «أرني ما يستطيع DataArcus فعله»، وبعد موافقتك يكتب في مجلد جديد مشروعًا تجريبيًا لسلسلة متاجر خليجية (نموذج فيه بيانات مبيعات تجريبية لـ 18 شهرًا، وجدول التاريخ، وتقرير فارغ)، ثم يقترح عليك أربع خطوات تالية عليه.",
         "l2": "<strong>هل تقريرك جاهز للعربية؟</strong> تقرأ <code translate='no'>check_report</code> بعدستها العربية أي تقرير، أيًّا كان من بناه، وتقول صفحةً صفحة ما يُقرأ خطأً بالعربية. ومع كل ملاحظة علاجها: طلب من DataArcus توافق عليه، أو إعداد تغيّره في Power BI Desktop، أو بيان واضح بأن Power BI لا يوفّر إعدادًا لذلك. وهي تقرأ فقط.",
         "l3": "<strong>تقرير واحد بالإنجليزية والعربية من الخطة مباشرة.</strong> اطلب تقريرًا واحدًا باللغتين: تبني الخطة الصفحات الإنجليزية ولكل صفحة صفحتها العربية معكوسة، مع زر للغة في كل صفحة، ويبقى كل زوج من المقسمات (Slicers) متزامنًا. وتوافق أنت أولًا على النصوص العربية وأسماء الحقول.",
@@ -218,7 +218,7 @@ window.betaPageTranslations = {
       },
       "join": {
         "title": "التنزيل والتثبيت",
-        "next": "<ol class='mb-3'><li>نزّل <code>dataarcus-0.3.0.mcpb</code> من <a href='https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0' class='text-accent'>صفحة الإصدار 0.3.0</a>.</li><li>تحقّق من بصمته SHA-256 قبل تثبيته. شغّل: <code dir='ltr' class='d-block my-1'>certutil -hashfile dataarcus-0.3.0.mcpb SHA256</code>ويجب أن يطبع: <code dir='ltr' class='d-block text-break my-1'>aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb</code></li><li>بعد تثبيت Claude Desktop، انقر الملف نقرًا مزدوجًا واختر Install. كل الخطوات: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md' class='text-accent'>دليل التثبيت</a>.</li></ol>أسئلة أو مشكلات أو ملاحظات؟ اكتب لنا هنا، أو راجع <a href='https://github.com/Antnioo/DataArcus/blob/main/SUPPORT.md' class='text-accent'>كيف تحصل على المساعدة</a>. دون أي دفع.",
+        "next": "<ol class='mb-3'><li>نزّل <code>dataarcus-0.3.1.mcpb</code> من <a href='https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.1' class='text-accent'>صفحة الإصدار 0.3.1</a>.</li><li>تحقّق من بصمته SHA-256 قبل تثبيته. شغّل: <code dir='ltr' class='d-block my-1'>certutil -hashfile dataarcus-0.3.1.mcpb SHA256</code>ويجب أن يطبع: <code dir='ltr' class='d-block text-break my-1'>619818daa59662bb564497ca5ef1383d8b28b84c268c109c8064291d539c027a</code></li><li>بعد تثبيت Claude Desktop، انقر الملف نقرًا مزدوجًا واختر Install. كل الخطوات: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md' class='text-accent'>دليل التثبيت</a>.</li></ol>أسئلة أو مشكلات أو ملاحظات؟ اكتب لنا هنا، أو راجع <a href='https://github.com/Antnioo/DataArcus/blob/main/SUPPORT.md' class='text-accent'>كيف تحصل على المساعدة</a>. دون أي دفع.",
         "name": "الاسم *",
         "email": "البريد الإلكتروني *",
         "model": "عن ماذا يتحدث نموذجك؟ *",
