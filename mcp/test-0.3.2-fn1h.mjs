@@ -75,6 +75,21 @@ bim('big', 'Big.SemanticModel', [{ name: 'Sales', partitions: mp('Sales'), colum
 bim('shopw', 'Shop.SemanticModel', shop()); fs.writeFileSync(path.join(ROOT, 'shopw', 'Shop.pbip'), JSON.stringify({ version: '1.0', artifacts: [] }));
 fs.mkdirSync(path.join(ROOT, 'quest', 'Q.SemanticModel'), { recursive: true }); fs.writeFileSync(path.join(ROOT, 'quest', 'Q.SemanticModel', 'model.bim'), JSON.stringify(questionsModel(), null, 2));
 fs.writeFileSync(path.join(ROOT, 'quest', 'Q.pbip'), JSON.stringify({ version: '1.0', artifacts: [] }));
+// edges: a month name whose number column holds a control character, a percent with a number format, three more
+// names with a control character; a model with nothing to fix; questions and no script (the answers file alone)
+bim('edges', 'Edge.SemanticModel', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Date', 'dateTime'), col('Month Name', 'string'), col('Month Number\t', 'int64'), col('Amount', 'double', { formatString: '#,0' }), col('Re\tgion', 'string'), col('Ci\nty', 'string')],
+  measures: [{ name: 'Margin %', expression: 'DIVIDE ( SUM ( Sales[Amount] ), 2 )', formatString: '#,0' }, { name: 'Total', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Ret\turns', expression: '1', formatString: '#,0' }, { name: 'Lo\nss', expression: '1', formatString: '#,0' }] }]);
+bim('clean', 'Clean.SemanticModel', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double', { formatString: '#,0' })], measures: [{ name: 'Total', expression: 'SUM ( Sales[Amount] )', formatString: '#,0', displayFolder: 'Main', description: 'The total.' }] }]);
+const qonly = () => [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Customer Key', 'int64'), col('Cases', 'int64', { formatString: '#,0' }), col('Category', 'string')], measures: [{ name: 'Units Doubled', expression: 'SUM(Sales[Cases]) + SUM(Sales[Cases])', formatString: '#,0' }] },
+  { name: 'Customer', partitions: mp('Customer'), columns: [col('Billing Customer Key', 'int64', { isKey: true }), col('Name', 'string')] }];
+for (const d of ['qonly', 'qbad', 'qfail']) { bim(d, 'Q.SemanticModel', qonly()); fs.writeFileSync(path.join(ROOT, d, 'Q.pbip'), JSON.stringify({ version: '1.0', artifacts: [] })); }
+fs.writeFileSync(path.join(ROOT, 'qbad', 'Q.dataarcus-answers.json'), 'not an answers file');
+// a bad answers file beside a model with no question
+bim('cleanbad', 'Clean.SemanticModel', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double', { formatString: '#,0' })], measures: [{ name: 'Total', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] }]);
+fs.writeFileSync(path.join(ROOT, 'cleanbad', 'Clean.pbip'), JSON.stringify({ version: '1.0', artifacts: [] })); fs.writeFileSync(path.join(ROOT, 'cleanbad', 'Clean.dataarcus-answers.json'), '{ "broken": ');
+// the model changed after the go: a script the plan did not name
+bim('chg', 'C.SemanticModel', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Date', 'dateTime'), col('Month Name', 'string'), col('Amount', 'double', { formatString: '#,0' })], measures: [{ name: 'Total', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] }]);
+fs.writeFileSync(path.join(ROOT, 'chg', 'C.pbip'), JSON.stringify({ version: '1.0', artifacts: [] }));
 const norm = (t, root) => [root, JSON.stringify(root).slice(1, -1), root.split(path.sep).join('/')].reduce((s, r) => s.split(r).join('<ROOT>'), String(t)).replace(/plan-[0-9a-f]{12}/g, 'plan-<id>').split('\\\\').join('/');
 const CALLS = [
   ['health', { path: 'health' }], ['health maxItems 1', { path: 'health', maxItems: 1 }], ['health only', { path: 'health', only: ['NO_FORMAT', 'pleaseConfirm', 'gulfCalendar', 'NOT_A_PART'] }],
@@ -83,7 +98,8 @@ const CALLS = [
   ['health Sharjah', { path: 'health', weekend: 'shj', asOf: '2026-03-01' }], ['tmdl', { path: 'tmdl/H.SemanticModel' }], ['tmdl typed', { path: 'tmdl/H.SemanticModel', columnTypes: { 'Sales Agg[Amount]': 'double', 'Nope[X]': 'text' } }],
   ['broken', { path: 'broken/B.SemanticModel' }], ['broken with a plan', { path: 'broken/B.SemanticModel', planId: 'plan-000000000000' }], ['ramadan', { path: 'ramadan/R.SemanticModel', country: 'uae', asOf: '2026-03-01' }],
   ['shop', { path: 'shop' }], ['shop maxItems 2, Monday', { path: 'shop', maxItems: 2, weekStart: 'monday' }], ['shop maxItems 200, Saturday', { path: 'shop', maxItems: 200, weekStart: 'saturday' }],
-  ['shop only', { path: 'shop', only: ['MONTH_SORT', 'THOUSANDS', 'FORMATS', 'PCT_FORMAT'] }], ['dataset', { path: 'dataset' }], ['hand only', { path: 'handonly' }], ['big', { path: 'big', maxItems: 200 }],
+  ['shop only', { path: 'shop', only: ['MONTH_SORT', 'THOUSANDS', 'FORMATS', 'PCT_FORMAT'] }], ['edges', { path: 'edges' }], ['clean', { path: 'clean' }],
+  ['ramadan, no country', { path: 'ramadan/R.SemanticModel', asOf: '2026-03-01' }], ['a bad answers file', { path: 'qbad' }], ['a bad answers file, no question', { path: 'cleanbad' }], ['dataset', { path: 'dataset' }], ['hand only', { path: 'handonly' }], ['big', { path: 'big', maxItems: 200 }],
 ];
 const s = await serverClient(ROOT);
 try {
@@ -106,10 +122,31 @@ try {
   await step('questions: shown answered', { path: 'quest' }, 'quest');
   const q3 = await step('questions: forget, the plan', { path: 'quest', forgetAnswers: true }, 'quest');
   await step('questions: forgotten', { path: 'quest', forgetAnswers: true, planId: await go(q3) }, 'quest');
+  await step('questions: maxItems 1', { path: 'quest', maxItems: 1 }, 'quest');
+  // the answers file alone (no script): answered, written; then answered again while forgetting; then the measure
+  // changed, so the answer recorded before is forgotten
+  const k0 = async (dir) => { const r = await s.call('check_model_health', { path: dir }); return ((r.j && r.j.pleaseConfirm && r.j.pleaseConfirm.items) || []).map((x) => ({ answerKey: x.answerKey, answer: 'intended' })); };
+  const a1 = await k0('qonly'), o1 = await step('answers only: the plan', { path: 'qonly', answers: a1 }, 'qonly');
+  await step('answers only: written', { path: 'qonly', answers: a1, planId: await go(o1) }, 'qonly');
+  const o2 = await step('answers only: forget and answer, the plan', { path: 'qonly', answers: a1, forgetAnswers: true }, 'qonly');
+  await step('answers only: forget and answer, written', { path: 'qonly', answers: a1, forgetAnswers: true, planId: await go(o2) }, 'qonly');
+  const qm = qonly(); qm[0].measures[0].expression = 'SUM(Sales[Cases]) + SUM(Sales[Cases]) + 0'; bim('qonly', 'Q.SemanticModel', qm);
+  await step('answers only: the measure changed', { path: 'qonly' }, 'qonly');
+  const a3 = await k0('qonly'), o3 = await step('answers only: answered again, the plan', { path: 'qonly', answers: a3 }, 'qonly');
+  await step('answers only: answered again, written', { path: 'qonly', answers: a3, planId: await go(o3) }, 'qonly');
+  // the answers file cannot be written (a folder took its name after the go)
+  const a2 = await k0('qfail'), f1 = await step('answers fail: the plan', { path: 'qfail', answers: a2 }, 'qfail'), fid = await go(f1);
+  fs.mkdirSync(path.join(ROOT, 'qfail', 'Q.dataarcus-answers.json', 'x'), { recursive: true });
+  await step('answers fail: not written', { path: 'qfail', answers: a2, planId: fid }, 'qfail');
+  // the model changed after the go: the plan does not name the new script, nothing is written
+  const c1 = await step('changed: the plan', { path: 'chg' }, 'chg'), cid = await go(c1);
+  bim('chg', 'C.SemanticModel', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Date', 'dateTime'), col('Month Name', 'string'), col('Amount', 'double', { formatString: '#,0' })], measures: [{ name: 'Total', expression: 'SUM ( Sales[Amount] )' }] }]);
+  await step('changed: refused', { path: 'chg', planId: cid }, 'chg');
 } finally { await s.close(); }
 // the working folder is the model folder itself: no place for a script (said, never written inside the model)
 const inner = path.join(ROOT, 'shop', 'Shop.SemanticModel'), s2 = await serverClient(inner);
-try { const r = await s2.call('check_model_health', { path: '.' }); const tx = String(r.err) + '\n' + norm(r.t, inner); now['B2 the model folder as the working folder'] = pin(tx); texts['B2 the model folder as the working folder'] = tx; }
+try { for (const [name, args] of [['the model folder as the working folder', { path: '.' }], ['the model folder as the working folder, forget', { path: '.', forgetAnswers: true }]]) {
+  const r = await s2.call('check_model_health', args); const tx = String(r.err) + '\n' + norm(r.t, inner); now['B2 ' + name] = pin(tx); texts['B2 ' + name] = tx; } }
 finally { await s2.close(); }
 
 if (process.env.FN1H_DUMP) fs.writeFileSync(process.env.FN1H_DUMP, JSON.stringify(texts, null, 1));

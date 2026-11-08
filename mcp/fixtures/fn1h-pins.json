@@ -1845,6 +1845,26 @@
    "length": 8357,
    "sha256": "b6792a34935a24487600aeae4f5ffb9b803fc5d8bd678651ba32e964dffb3c61"
   },
+  "B2 edges": {
+   "length": 9026,
+   "sha256": "33642c78adfe64a040d80e4c608fc98edd3fdf8b3b440bebdcda8de1fb53dcdd"
+  },
+  "B2 clean": {
+   "length": 1947,
+   "sha256": "fa11902adc959ad474c1296715ef3fa2c7c45e0e502ce8165e1ff72ca005275c"
+  },
+  "B2 ramadan, no country": {
+   "length": 13858,
+   "sha256": "5dab49dde59c47bcc8ded56d5952a9317d3f83988afdb7a80cbb824a31457e96"
+  },
+  "B2 a bad answers file": {
+   "length": 3483,
+   "sha256": "03ed10b76f7f42476b93911ec43f65ccd4c4a65f3a04befebb40800af80c0e46"
+  },
+  "B2 a bad answers file, no question": {
+   "length": 3248,
+   "sha256": "020053d485bd4849e332ad119c188c447e9ce6a1e6158e3e9ba41e2e32a7a5d2"
+  },
   "B2 dataset": {
    "length": 14292,
    "sha256": "07e8b058f05fe21d3435aa87ab2e416f71c2f70eeb64a8b40835982ac844ebf4"
@@ -1893,9 +1913,61 @@
    "length": 12595,
    "sha256": "548c1973426b33dd5ad46fdc8fa640f543c4aee15e547310909f56f9fae7f4b4"
   },
+  "B2 questions: maxItems 1": {
+   "length": 9915,
+   "sha256": "ae2e9b18e2a056314b49680f19abb00f4c87c44f7f62a682c043b7e0dc20a408"
+  },
+  "B2 answers only: the plan": {
+   "length": 4414,
+   "sha256": "f923a0507793fa872f5c5bd008b8a7fea0db01f14b2c9536b99a573329b2ace9"
+  },
+  "B2 answers only: written": {
+   "length": 3791,
+   "sha256": "106f271139cbd47c0ae8514d9cac4c6762905487b710e09cf464ac65b670f7aa"
+  },
+  "B2 answers only: forget and answer, the plan": {
+   "length": 4686,
+   "sha256": "38b3f55f7d3be68b8952a5457a5369cab151df10679139735fc36154216262e1"
+  },
+  "B2 answers only: forget and answer, written": {
+   "length": 3791,
+   "sha256": "fcd07ce1856df3cdf894e3bc95a00f29d8ed0f66f2f791096aff4783cab3aab9"
+  },
+  "B2 answers only: the measure changed": {
+   "length": 3794,
+   "sha256": "c461a6478c0ea1251cf49c9917c8450e2ec3f70abbe1674f084c1574135582dd"
+  },
+  "B2 answers only: answered again, the plan": {
+   "length": 4810,
+   "sha256": "867f6db2510e8a9db01f4449064f96e8559b6e66bb8f375018daac3bbb055eb0"
+  },
+  "B2 answers only: answered again, written": {
+   "length": 3791,
+   "sha256": "6e3ddb10d21c0f6365a74ad672f9366d00c2cb135d512229682f974bdea72941"
+  },
+  "B2 answers fail: the plan": {
+   "length": 4414,
+   "sha256": "e27c94d7cd301e9cd201ec8ab661f031875df9eb9388905f56336d075c1c4f20"
+  },
+  "B2 answers fail: not written": {
+   "length": 4311,
+   "sha256": "53b552b6a6fd82121d08ab41ca1aec1ff17ceb30350cdf0fcacd4736dd4c9708"
+  },
+  "B2 changed: the plan": {
+   "length": 6129,
+   "sha256": "53f2040fdb87cae47629da4084e70f29bfb809bde3eadd81202ba88fe7e118ab"
+  },
+  "B2 changed: refused": {
+   "length": 384,
+   "sha256": "d497c7fb0a75629724d06b515e94095706505a241969583526f6ea589a3b158f"
+  },
   "B2 the model folder as the working folder": {
    "length": 12274,
    "sha256": "3c47293abfb4e029763e94ad5d6a93f1ed517661a46184ceab06bdf50395134b"
+  },
+  "B2 the model folder as the working folder, forget": {
+   "length": 13000,
+   "sha256": "be59b7126813d1f27383666bac8b3d37aa1f5ce11134624a0164b57101c404cb"
   }
  }
 }
