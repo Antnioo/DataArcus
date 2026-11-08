@@ -20,7 +20,11 @@
 - **Got on the base 5cf96356:** website "All 47 passed (1803s)" (sp31 17, pbip 111, layout 512, layout-canvas 31,
   theme-generator 922, theme-logo 753, fn1b 17, sp5 3, sp7 3, sp13 3); MCP suites that read build all PASS (sp28 17,
   sp5 12, sp43 21, v029w 75 and 25 more, the mutant runner's controls).
-- **Got on 2a7c8314:** see "The final runs" below (filled from each run's output file).
+- **Got on 2a7c8314 (the last code commit, integration merged):** MCP `npm test -- --keep-going` "run-tests: 227
+  suites passed" (every suite in one local run, the 5 CI shards' union; fn1i 22, sp28 17, sp43 21, sp5 12, fn1h 5,
+  mutation 225); website "All 49 passed (2381s)" (sp31 17, pbip 111, layout 512, theme-generator 922, fn1b 17, fn1i 14,
+  dd2w 130). No fixture changed. Lint 0; contracts 717, test-contracts 14, modules, check-min, stamps, site config, csp,
+  ar-pages, sitemap-lastmod, agent-memory, result-lines 227, changelog-words PASS.
 - **Characterisation, red-proven on 5cf96356:** 136 one-line mutants, each alone in a git worktree of the base (the
   layout panel's after build:min). build 70: 65 red (sp28 47, fn1i 12, sp43 2, mirror-parity 1, fx3b 1, tt2 1,
   v029w 1; fn1i grew four builds after the first survivors), 5 equivalent. mount 66: 48 red on sp31, 14 red only on
@@ -62,7 +66,8 @@
 - `scripts/tests/fn1i.mjs` (website, shard 2): 14 checks (above), on the live English page.
 
 ## The final runs (2a7c8314)
-- pending
+- As in the summary. The Arabic generator at 390 x 844: right to left, 4 layout buttons, 10 slot rows, the canvas, 6
+  presets, no page error, no sideways scroll.
 
 ## CHANGELOG line
 - **Inside the Theme Generator's layout panel and the website's Power BI project download, in smaller steps:** each is
