@@ -14,7 +14,7 @@
   21, sp4 5, sp6 13, fn1e 590, site sp6 4 unchanged; lint 0; repo checks PASS.
 - **Red first:** ap2 on 1fad33a5 (c205aa78, the suite alone): 6 of 28 pass (R1-1..6, R2-1..6, R3-4..7 x2, R3-9, R4-2
   fail); now 28 of 28.
-- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42480505052 on b6573704
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42482157052 on 97e633d4 (before: run 42480505052 on b6573704)
 - **State:** DONE.
 - **Resume:** the reviewer reads and merges.
 
