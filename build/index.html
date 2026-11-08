@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; img-src 'self' data: blob:; connect-src 'self' https://api.github.com https://raw.githubusercontent.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Build room - DataArcus</title>
+  <meta name="robots" content="noindex" />
+  <meta name="description" content="A live view of what is being built for DataArcus, read straight from the public GitHub repository in your browser." />
+  <link rel="canonical" href="https://dataarcus.com/build/" />
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/assets/img/favicon-48.png" sizes="48x48" type="image/png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#0a0f1c" />
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link href="/assets/css/vendor/bootstrap.min.css?v=d85327d99c7a" rel="stylesheet">
+  <link href="/assets/css/style.min.css?v=29c11a1ea13b" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
+  </noscript>
+  
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+
+  <style>
+    .bp { padding: var(--page-top) 0 var(--page-bottom); --bp-surface: rgba(255,255,255,.05); --bp-border: rgba(255,255,255,.12); --bp-text: #cbd5e1; --bp-head: #f8fafc; --bp-dim: #94a3b8; --bp-ok: #34d399; --bp-bad: #f87171; --bp-run: #00d4ff; --bp-wait: #fbbf24; }
+    .bp-kicker { color: var(--accent); font-weight: 800; letter-spacing: .12em; text-transform: uppercase; font-size: .8rem; margin-bottom: 8px; }
+    .bp h1, .bp h2 { color: var(--bp-head); }
+    .bp h2 { font-size: 1.1rem; font-weight: 700; margin: 0 0 4px; }
+    .bp-lead, .bp-sub, .bp-text { color: var(--bp-text); }
+    .bp-sub, .bp-dim { color: var(--bp-dim); font-size: .85rem; }
+    .bp-note { border: 1px solid var(--bp-wait); border-radius: 10px; padding: 8px 12px; color: var(--bp-wait); font-size: .9rem; }
+    .bp-line { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 28px 0; padding: 0; position: relative; }
+    .bp-line li { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding-top: 6px; color: var(--bp-text); font-size: .85rem; }
+    .bp-line li::before { content: ""; position: absolute; top: 14px; left: -50%; width: 100%; height: 3px; background: var(--bp-border); z-index: 0; }
+    .bp-line li:first-child::before { display: none; }
+    .bp-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--bp-dim); position: relative; z-index: 1; border: 3px solid var(--dk, #0a0f1c); }
+    .bp-count { font-weight: 800; color: var(--bp-head); }
+    .bp-moving li::before { background: repeating-linear-gradient(90deg, var(--bp-run) 0 12px, transparent 12px 24px); background-size: 24px 3px; animation: bp-flow 1s linear infinite; }
+    .bp-moving .bp-dot { background: var(--bp-run); animation: bp-pulse 1.6s ease-out infinite; }
+    .bp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .bp-card { background: var(--bp-surface); border: 1px solid var(--bp-border); border-radius: 14px; padding: 18px 20px; min-width: 0; }
+    .bp-card:first-child { grid-column: 1 / -1; }
+    .bp-list { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 10px; }
+    .bp-row { border: 1px solid var(--bp-border); border-radius: 10px; padding: 10px 12px; position: relative; overflow: hidden; min-width: 0; }
+    .bp-live { border-color: var(--bp-run); }
+    .bp-top, .bp-msg, .bp-run { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+    .bp-msg { margin-top: 4px; justify-content: space-between; }
+    .bp-run { margin-top: 6px; font-size: .85rem; }
+    .bp-text, .bp-branch { overflow-wrap: anywhere; min-width: 0; }
+    .bp-code { background: rgba(0,212,255,.15); color: var(--accent); font-weight: 800; border-radius: 6px; padding: 1px 8px; font-size: .8rem; }
+    .bp-branch, .bp-sha { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .8rem; color: var(--bp-dim); }
+    .bp-state { font-weight: 700; color: var(--bp-head); font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
+    .bp-when { color: var(--bp-dim); font-size: .8rem; white-space: nowrap; }
+    .bp-link { color: var(--accent); font-size: .85rem; }
+    .bp-pill { border-radius: 999px; padding: 1px 10px; font-size: .75rem; font-weight: 700; border: 1px solid currentColor; }
+    .bp-green { color: var(--bp-ok); } .bp-red { color: var(--bp-bad); } .bp-running { color: var(--bp-run); animation: bp-pulse-text 1.6s ease-in-out infinite; } .bp-queued, .bp-other { color: var(--bp-wait); }
+    .bp-bar { display: block; flex: 1 1 100%; height: 4px; border-radius: 2px; background: repeating-linear-gradient(45deg, var(--bp-run) 0 8px, transparent 8px 16px); background-size: 22.6px 4px; animation: bp-flow 1s linear infinite; }
+    .bp-release { font-size: 1.15rem; font-weight: 700; color: var(--bp-head); overflow-wrap: anywhere; }
+    .bp-pending { color: var(--bp-wait); }
+    .bp-empty { color: var(--bp-dim); }
+    @keyframes bp-flow { to { background-position: 24px 0; } }
+    @keyframes bp-pulse { 0% { box-shadow: 0 0 0 0 rgba(0,212,255,.6); } 100% { box-shadow: 0 0 0 12px rgba(0,212,255,0); } }
+    @keyframes bp-pulse-text { 50% { opacity: .55; } }
+    @media (prefers-reduced-motion: reduce) { .bp-moving li::before, .bp-moving .bp-dot, .bp-bar, .bp-running { animation: none; } }
+    @media (max-width: 767px) { .bp-grid { grid-template-columns: minmax(0, 1fr); } .bp-line li { font-size: .72rem; } .bp-card { padding: 14px; } }
+    @media (prefers-color-scheme: light) {
+      .bp-card { --bp-surface: #ffffff; --bp-border: #cbd5e1; --bp-text: #1e293b; --bp-head: #0f172a; --bp-dim: #475569; --bp-ok: #047857; --bp-bad: #b91c1c; --bp-run: #0369a1; --bp-wait: #92400e; }
+      .bp-card .bp-code { color: #0369a1; background: #e0f2fe; } .bp-card .bp-link { color: #0369a1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/#hero">
+        <img src="/assets/img/logo.svg" alt="DataArcus logo" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/#services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="/portfolio.html">Showcases</a></li>
+          <li class="nav-item"><a class="nav-link" href="/tools/">Free Tools</a></li>
+          <li class="nav-item"><a class="nav-link" href="/power-bi-mcp/">AI Agent (beta)</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#contact">Contact</a></li>
+        </ul>
+        <a href="/#contact" class="btn btn-accent ms-lg-3">Book a Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="bp">
+      <div class="container">
+        <p class="bp-kicker">Build room</p>
+        <h1 class="display-6 fw-bold">What is being built right now</h1>
+        <p class="bp-lead">Read live from the public GitHub repository, in your browser. Nothing is stored, nothing is sent. <span id="bp-updated">Loading...</span></p>
+        <p id="bp-limit" class="bp-note" role="status" hidden></p>
+        <p id="bp-warn" class="bp-note" role="status" hidden></p>
+
+        <ol id="bp-line" class="bp-line" aria-label="The line: branches at work, CI, integration, release">
+          <li data-station="branches"><span class="bp-dot"></span><span class="bp-name">Branches at work</span><span class="bp-count">-</span></li>
+          <li data-station="ci"><span class="bp-dot"></span><span class="bp-name">CI</span><span class="bp-count">-</span></li>
+          <li data-station="integration"><span class="bp-dot"></span><span class="bp-name">Integration</span><span class="bp-count">-</span></li>
+          <li data-station="release"><span class="bp-dot"></span><span class="bp-name">Release</span><span class="bp-count">-</span></li>
+        </ol>
+
+        <div class="bp-grid">
+          <section class="bp-card">
+            <h2>Builders at work</h2>
+            <p class="bp-sub">Branches with a push in the last 24 hours, newest first.</p>
+            <ul id="bp-builders" class="bp-list"><li class="bp-empty">Loading...</li></ul>
+          </section>
+          <section class="bp-card">
+            <h2>CI now</h2>
+            <p class="bp-sub">tests.yml runs in progress or finished in the last 3 hours.</p>
+            <ul id="bp-ci" class="bp-list"><li class="bp-empty">Loading...</li></ul>
+          </section>
+          <section class="bp-card">
+            <h2>Integration today</h2>
+            <p class="bp-sub">Merges in the last 24 hours. Head: <span id="bp-head"></span></p>
+            <ul id="bp-merges" class="bp-list"><li class="bp-empty">Loading...</li></ul>
+          </section>
+          <section class="bp-card">
+            <h2>Release</h2>
+            <p class="bp-sub">The version on the integration branch against the latest release.</p>
+            <p id="bp-release" class="bp-release">Loading...</p>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="/#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="/assets/img/logo.svg" alt="DataArcus logo" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3">Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent">Power BI</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent">Data Engineering</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent">Analytics</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent">Consulting</a></li>
+              <li class="mb-2"><a href="/tools/" class="text-white-50 text-decoration-none hover-accent">Free Power BI &amp; Fabric Tools</a></li>
+              <li class="mb-2"><a href="/power-bi-mcp/" class="text-white-50 text-decoration-none hover-accent">DataArcus for Power BI</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/#about" class="text-white-50 text-decoration-none hover-accent">About</a></li>
+              <li class="mb-2"><a href="/portfolio.html" class="text-white-50 text-decoration-none hover-accent">Showcases</a></li>
+              <li class="mb-2"><a href="/#contact" class="text-white-50 text-decoration-none hover-accent">Contact</a></li>
+              <li class="mb-2"><a href="/blog.html" class="text-white-50 text-decoration-none hover-accent">Blog</a></li>
+              <li class="mb-2"><a href="/privacy.html" class="text-white-50 text-decoration-none hover-accent">Privacy</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span>All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0">Made in Dubai</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
+  <script src="/assets/js/site-navigation.min.js?v=73f198dd3eb3" defer></script>
+  <script src="/assets/js/build-page.min.js?v=ac02c90dd3ed" defer></script>
+</body>
+</html>
