@@ -15,6 +15,7 @@
 - Fix, check-report.mjs only: `fieldParameters.parameters` keeps the first 50 (`more` = the rest); the note names at most 5 missing tables then "and N more"; the cut loop halves the list (`more` kept true) when still over the cap. No new cap function: it follows suspiciousNames (slice + `more`), the helper the answer's other lists use in check-report.mjs; capAnswer (answer.mjs) is not used by checkReport.
 - Integration (a548495d) had not moved, so no merge was needed.
 - CI green: https://github.com/Antnioo/DataArcus/actions/runs/42139851477 on 19db21c6f5d24d9706dbb1f0f198a7387951b754 (conclusion success; the macOS parts are skipped by design, CI1).
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42458392713 on be93def2f2481058452658e87e1e70b5e457f04f (the WORK.md line commit; run started by the reviewer's day-loop worker, the builder idle, L-1108-07).
 
 ## Changed on purpose
 - mcp/fixtures/fn1e-pins.json, one entry only, "C cut to the bone": sha 7c8dc8b9... -> 970662c7..., len 72285 -> 29464. Dumped on a548495d and on this branch (FN1E_DUMP), every top-level key that differs:
