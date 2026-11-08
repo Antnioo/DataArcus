@@ -77,7 +77,19 @@ function scriptOf(Fix, table, columns, body, rels, more, x) {
  * Throws an Error (with "Nothing was written.") for every refusal.
  */
 export function addGulfCalendar(m, a, env) {
-  const { Gulf, Fix, writeScript, scriptDir, scriptBase } = env;
+  // (0.3.2 FN1G) in named steps, called in the old order (each refusal where it was): gc holds what a step makes
+  const gc = { m, a, env };
+  inputsStep(gc);
+  relationshipsStep(gc);
+  basesStep(gc);
+  tableStep(gc);
+  scriptStep(gc);
+  return answerStep(gc);
+}
+
+// the country, the table's name and the years
+function inputsStep(gc) {
+  const { m, a } = gc, { Gulf } = gc.env;
   const raw = modelOf(m.tmsl).tables || [];
   const country = a.country || 'uae';
   if (!COUNTRY_CODES.includes(country)) refuse(`Unknown country "${country}": use one of ${COUNTRY_CODES.join(', ')}.`);
@@ -97,6 +109,12 @@ export function addGulfCalendar(m, a, env) {
   if (ly - fy + 1 > 60) refuse(`${fy} to ${ly} is ${ly - fy + 1} years; the calendar takes at most 60.`);
   const start = `${String(fy).padStart(4, '0')}-01-01`, end = `${String(ly).padStart(4, '0')}-12-31`;
   if (fy < 1000 || Cal.parse(start) < Cal.MIN_DATE || ly > 9999 || Cal.parse(end) > Cal.MAX_DATE) refuse(`Power BI dates run from 1 March 1900 to 31 December 9999, so ${fy} to ${ly} can't be a calendar: the first year is at least 1901.`);
+  Object.assign(gc, { raw, country, C, table, start, end });
+}
+
+// the relationships asked for (relateTo), and what each says that is not the one asked for as it is
+function relationshipsStep(gc) {
+  const { m, a, raw, table } = gc;
 
   // relationships, only for the date columns the user names. (0.3.1 GC3, the laptop's tour step 3: Sales[Date] already
   // related to the sample's Calendar[Date]) Never a second active relationship from a column that already has an active one
@@ -153,6 +171,12 @@ export function addGulfCalendar(m, a, env) {
       en: `${from} already relates to ${r.inactive.held}, so its relationship to ${to} is added inactive (Model view shows it dashed): a measure uses it with USERELATIONSHIP, for example CALCULATE ( [Your measure], USERELATIONSHIP ( ${from}, ${to} ) )`,
       ar: `العمود ${from} مرتبط من قبل بـ ${r.inactive.held}، لذا تُضاف علاقته بـ ${to} غير نشطة (تظهر متقطعة في Model view): يستعملها المقياس بـ USERELATIONSHIP، مثلًا CALCULATE ( [Your measure], USERELATIONSHIP ( ${from}, ${to} ) )` });
   });
+  Object.assign(gc, { modelRels, AUTO, rels, untyped, relWhy });
+}
+
+// the base measures of the Ramadan and Eid measures
+function basesStep(gc) {
+  const { a, raw } = gc;
 
   // (0.3.2 GM1, RD5 g) the base measures for the Ramadan and Eid measures: each a measure of the model, named as
   // "Table[Measure]"; at most 5. Its name goes into the DAX only as a measure reference ([Name], ] doubled); a name a
@@ -171,6 +195,12 @@ export function addGulfCalendar(m, a, env) {
     if (seen.has(k)) refuse(`measures names ${JSON.stringify(`${t.name}[${ms.name}]`)} twice.`);
     seen.add(k); bases.push({ table: String(t.name), name: String(ms.name), formatString: typeof ms.formatString === 'string' ? ms.formatString : null });
   });
+  gc.bases = bases;
+}
+
+// the generator's table, what the check reads in it, and the notes
+function tableStep(gc) {
+  const { m, a, country, C, table, start, end, untyped } = gc, { Gulf } = gc.env;
 
   // the generator's own table for these settings (the website's defaults for what isn't asked: fiscal and relative
   // columns on, Hijri on, as the page)
@@ -197,6 +227,12 @@ export function addGulfCalendar(m, a, env) {
   if (st.observed && country !== 'uae' && country !== 'ksa') notes.push(ownDates
     ? `The announced dates are the UAE's. ${C.name} announced ${ownDates.reduce((n, e) => n + ['ramadan', 'fitr', 'adha'].filter((k) => e[k]).length, 0)} of them a day later from 2019 to 2026 (sourced: scripts/gulf-calendar/DATES-SOURCES.md); the table keeps the UAE's, and ${C.name} can announce a day apart again. check_model_health's gulfCalendar section compares ${C.name}'s calendar with Umm al-Qura, counts ${C.name}'s own sourced days as no difference and lists any other difference only as a note.`
     : `The announced dates are the UAE's; none of ${C.name}'s own are sourced, and ${C.name} can announce a day apart. check_model_health's gulfCalendar section compares ${C.name}'s calendar with Umm al-Qura and lists a difference only as a note, never as an error.`);
+  Object.assign(gc, { weekend, st, built, body, selfCheck, notes });
+}
+
+// the measures, the VAT column and the pegs table, the script and its file
+function scriptStep(gc) {
+  const { a, raw, table, rels, bases, C, st, built, body, notes } = gc, { Fix, writeScript, scriptDir, scriptBase } = gc.env;
 
   // the file: next to the project, a free name, never over another file; the same script asked again names its file
   // (0.3.1 AF2: the name the plan chose; the writer's refusal, a name taken or the model changed, is passed on as it is)
@@ -222,6 +258,12 @@ export function addGulfCalendar(m, a, env) {
   const script = scriptOf(Fix, table, built.columns, body, rels, built.sorts, { measureLines, colDesc: vatOn ? { [Cal.VAT_COLUMN]: vatWhat } : {}, tables: pegsTable ? [pegsTable] : [] });
   if (made.length) notes.push(`The ${made.length} Ramadan and Eid measures follow ${JSON.stringify(table)}'s dates: put its columns (Hijri Year, Ramadan Day) on the visual, and relate it to your facts (relateTo, or the step by hand). A filter on another date table is not moved back a Hijri year.`);
   let file; try { file = writeScript(scriptDir, scriptBase + ' - add Gulf calendar', script); } catch (e) { if (e && (e.left || /^Nothing was written/.test(String(e.message)))) throw e; refuse('The script could not be written to ' + scriptDir + ' (' + String((e && e.code) || (e && e.message) || e) + ').'); }
+  Object.assign(gc, { pegsName, made, vatOn, vatWhat, pegRows, pegsTable, file });
+}
+
+// the answer: the dates, the steps by hand and how to apply the script
+function answerStep(gc) {
+  const { a, raw, table, start, end, country, C, modelRels, AUTO, rels, relWhy, bases, weekend, st, built, selfCheck, notes, pegsName, made, vatOn, vatWhat, pegRows, pegsTable, file } = gc, { Gulf } = gc.env;
 
   const later = st.observed ? GD.events.flatMap((e) => [['ramadan', e.ramadan, 0], ['fitr', e.fitr, 0], ['adha', e.adha, 9]].filter(([, d]) => d)
     .filter(([, d, back]) => T(d) - back * 864e5 > T(GD.checked) && T(d) >= T(start) && T(d) <= T(end)).map(([, d]) => d)).sort()[0] || null : null;

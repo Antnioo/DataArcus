@@ -54,6 +54,26 @@ const SAY = 'Say in the plan which date the report follows and whether the perso
  * Returns null when there is nothing to ask or say, else { answer, problems, rows }.
  */
 export function gulfDateQuestions(m, a, opts) {
+  // (0.3.2 FN1G) in named steps, called in the old order: gq holds what a step makes
+  const gq = { m, a, opts };
+  modelStep(gq);
+  candidatesStep(gq);
+  seasonalStep(gq);
+  const { ambiguous, seasonal } = gq;
+  if (!ambiguous && !seasonal && !a.gulfDates) return null;
+  calendarColumnsStep(gq);
+  answersStep(gq);
+  questionsStep(gq);
+  usingStep(gq);
+  grainScopeStep(gq);
+  problemsStep(gq);
+  rememberStep(gq);
+  return answerStep(gq);
+}
+
+// the model's tables and relationships, the inputs, the trend's axis, the calendar and the plan's measures
+function modelStep(gq) {
+  const { m, a, opts } = gq;
   const model = (m && m.tmsl && (m.tmsl.model || m.tmsl)) || {}, raw = (model.tables || []).filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(String(t.name)));
   const rels = (model.relationships || []).filter((r) => r && r.fromTable != null && r.toTable != null);
   const given = Object.assign({}, a.gulfDates || {}), pf = a.planFields || {}, problems = [];
@@ -66,6 +86,11 @@ export function gulfDateQuestions(m, a, opts) {
   const measureHome = (k) => { const x = keyOf(k); if (!x) return null; const t = tableOf(x.t); if (t && (t.measures || []).some((y) => String(y.name) === x.c)) return x.t;
     const h = raw.find((tt) => (tt.measures || []).some((y) => String(y.name) === x.c)); return h ? String(h.name) : null; };
   const planMeasures = [...(pf.kpis || []), ...(pf.measure ? [pf.measure] : [])].map(keyOf).filter((x) => x && measureHome(x.key)).map((x) => ({ key: x.key, home: measureHome(x.key) }));
+  Object.assign(gq, { model, raw, rels, given, pf, problems, tableOf, colOf, axis, cal, C, planMeasures });
+}
+
+function candidatesStep(gq) {
+  const { rels, tableOf, C, planMeasures } = gq;
 
   // 1. the structural date candidates: each date column of the fact tables (tables with a relationship to the
   // calendar, and the tables of the plan's measures), with the relationship from it to the calendar and its flag
@@ -77,12 +102,22 @@ export function gulfDateQuestions(m, a, opts) {
     candidates.push({ key: `${f}[${c.name}]`, table: f, column: String(c.name), rel: rel ? { to: `${C}[${rel.toColumn}]`, active: rel.isActive !== false } : null });
   }));
   const ambiguous = facts.some((f) => candidates.filter((x) => x.table === f).length >= 2);
+  Object.assign(gq, { candidates, ambiguous });
+}
+
+function seasonalStep(gq) {
+  const { a, given, axis } = gq;
 
   // seasonal: a Ramadan, Eid or Hijri page filter or axis, or a seasonal grain asked for
   const filters = (a.pageFilters || []).map((f) => Object.assign({ k: keyOf(f && f.field) }, f)).filter((f) => f.k);
   const seasonFilter = filters.find((f) => SEASON_COL.test(f.k.c) && !ROLE.hijriYear.re.test(f.k.c));
   const seasonal = !!(seasonFilter || (axis && SEASON_COL.test(axis.c)) || ['hijri', 'seasonDay'].includes(given.grain));
-  if (!ambiguous && !seasonal && !a.gulfDates) return null;
+  Object.assign(gq, { filters, seasonFilter, seasonal });
+}
+
+// the season's names, and the calendar's fields
+function calendarColumnsStep(gq) {
+  const { cal, C, seasonFilter } = gq;
   const isEid = seasonFilter && /(^|[^a-z])eid([^a-z]|$)|عيد/i.test(seasonFilter.k.c);
   const season = isEid ? 'Eid' : 'Ramadan', seasonAr = isEid ? 'العيد' : 'رمضان';
 
@@ -97,6 +132,12 @@ export function gulfDateQuestions(m, a, opts) {
   };
   const columns = Object.fromEntries(Object.keys(ROLE).map((r) => [r, roleField(r)]));
   const hijriYearCandidates = cal ? calCols.filter((x) => ROLE.hijriYear.re.test(x)).map((x) => `${C}[${x}]`) : [];
+  Object.assign(gq, { season, seasonAr, gen, columns, hijriYearCandidates });
+}
+
+// the answers: given now, or remembered for this model
+function answersStep(gq) {
+  const { m, model, raw, given, problems, colOf, C, candidates, columns } = gq;
 
   // the memory: an answer given before for this model, while its evidence is unchanged
   const mk = modelKeyOf(m), seasonKeys = Object.values(columns).filter(Boolean).map((x) => x.field).concat(C ? [`${C}[Date]`] : []);
@@ -118,6 +159,11 @@ export function gulfDateQuestions(m, a, opts) {
     (v) => fieldAnswer(v, raw.flatMap((t) => (t.columns || []).map((c) => `${t.name}[${c.name}]`))));
   if (answers.hijriYearColumn && columns.hijriYear && columns.hijriYear.by !== 'declared') columns.hijriYear = { field: answers.hijriYearColumn, by: 'confirmed' };
   else if (answers.hijriYearColumn && !columns.hijriYear) columns.hijriYear = { field: answers.hijriYearColumn, by: 'confirmed' };
+  Object.assign(gq, { mk, evidenceOf, earlier, answers });
+}
+
+function questionsStep(gq) {
+  const { candidates, ambiguous, seasonal, season, seasonAr, columns, hijriYearCandidates, earlier, answers } = gq;
 
   // the questions, in order; each asked only when it applies
   const active = candidates.find((x) => x.rel && x.rel.active), list = [];
@@ -133,6 +179,11 @@ export function gulfDateQuestions(m, a, opts) {
   const pleaseConfirm = list.map((q) => Object.assign(q, { status: answers[q.id] != null ? 'answered' : 'open' }, answers[q.id] != null ? { answer: typeof answers[q.id] === 'string' ? shown(answers[q.id]) : answers[q.id] } : {}, earlier.includes(q.id) ? { earlier: true } : {}));
   const open = pleaseConfirm.filter((q) => q.status === 'open');
   const askNext = open[0] ? { id: open[0].id, en: open[0].en, ar: open[0].ar, options: open[0].options } : null;
+  Object.assign(gq, { active, pleaseConfirm, open, askNext });
+}
+
+function usingStep(gq) {
+  const { raw, tableOf, axis, C, planMeasures, candidates, earlier, answers, active } = gq;
 
   // 2. the date the report follows, and whether it is served (a confirmed role the plan can't follow stops the plan)
   let using = null; const blocked = [];
@@ -162,6 +213,11 @@ export function gulfDateQuestions(m, a, opts) {
         : { field: null, confirmed: false, why: 'no date candidate has an active relationship to the calendar' };
     }
   }
+  Object.assign(gq, { using, blocked });
+}
+
+function grainScopeStep(gq) {
+  const { given, problems, colOf, axis, cal, C, filters, seasonal, season, columns, answers, blocked } = gq;
 
   // 3. the grain and the scope (seasonal pages), against the axis and the page filters
   let grain = null, offer = null;
@@ -199,6 +255,12 @@ export function gulfDateQuestions(m, a, opts) {
       scopeNote = `One ${season}: Hijri year ${answers.year}, as the person gave it.`;
     }
   }
+  Object.assign(gq, { grain, offer, scopeNote });
+}
+
+// what the plan says first, and the problems that withhold its id
+function problemsStep(gq) {
+  const { problems, seasonal, season, open, using, blocked } = gq;
   // (an unanswered question does not withhold the plan id: the existing Ramadan plans and the golden tasks make plans
   // without answers; STRICT, held for the owner's go, would. Answers that contradict the plan always do, above)
   const sayFirst = seasonal && open.length ? `A seasonal page with ${open.length} open question${open.length === 1 ? '' : 's'}: before showing this plan, ask the person askNext (${open[0].id}), one question at a time, and call plan_layout again with gulfDates. Until then the plan follows ${using && using.field ? using.field : 'the model\'s active relationship'} and keeps every ${season} the filters keep: the approval page says each answer is missing.` : null;
@@ -207,6 +269,11 @@ export function gulfDateQuestions(m, a, opts) {
   const mustAnswer = open.filter((q) => ['grain', 'scope', 'year'].includes(q.id));
   if (STRICT && seasonal && mustAnswer.length) problems.push(`No plan id yet: a seasonal page needs its ${mustAnswer.map((q) => q.id === 'year' ? 'Hijri year' : q.id).join(' and ')} answered first, because a guessed grain or scope (Gregorian months instead of the season's days, every ${season} instead of one) shows other numbers than the person means. Ask askNext, one question at a time, and call plan_layout again with gulfDates.${sayFirst ? ' ' + sayFirst : ''}`);
   blocked.forEach((b) => problems.push(b));
+  gq.sayFirst = sayFirst;
+}
+
+function rememberStep(gq) {
+  const { given, C, seasonal, season, seasonAr, gen, columns, mk, evidenceOf, answers } = gq;
 
   // 5. the dates' status: announced or estimated, and the country's limits (the Gulf calendar's own notes)
   const status = seasonal ? statusOf({ gen, columns, cal: C, answers, country: given.country, season, seasonAr }) : null;
@@ -217,6 +284,11 @@ export function gulfDateQuestions(m, a, opts) {
     try { CONFIRMED.push(Memory.dateRecord({ modelKey: mk, question: q, evidence: evidenceOf(q), answer: ans })); } catch (e) { /* not a recordable answer */ }
   });
   if (CONFIRMED.length > MAX) CONFIRMED.splice(0, CONFIRMED.length - MAX);
+  gq.status = status;
+}
+
+function answerStep(gq) {
+  const { problems, C, cal, candidates, ambiguous, seasonal, season, gen, columns, earlier, answers, pleaseConfirm, askNext, open, using, blocked, grain, offer, scopeNote, sayFirst, status } = gq;
 
   const shownAnswers = Object.fromEntries(Object.entries(answers).map(([k, v]) => [k, typeof v === 'string' ? shown(v) : v]));
   const answer = Object.assign({

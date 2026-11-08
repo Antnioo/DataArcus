@@ -38,9 +38,17 @@ jobs:
           DENY_RANGE: ${{ github.event_name == 'push' && format('{0}..{1}', github.event.before, github.sha) || (github.event_name == 'pull_request' && format('{0}..{1}', github.event.pull_request.base.sha, github.event.pull_request.head.sha)) || '' }}
         run: node scripts/deny-scan.mjs .
 
+      # The tarball is cached: a GitHub release-download outage (504s, 8 Nov, B-389) must not fail the scan once one
+      # copy is saved. The checksum below is checked on every run, cached or fresh.
+      - name: Gitleaks tarball from the cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ${{ runner.temp }}/gl.tgz
+          key: gitleaks-8.21.2-linux-x64-5bc41815
+
       - name: No secrets in the history (gitleaks 8.21.2)
         run: |
-          curl -sSL -o "$RUNNER_TEMP/gl.tgz" https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz
+          [ -s "$RUNNER_TEMP/gl.tgz" ] || curl -fsSL --retry 5 --retry-all-errors --retry-delay 3 -o "$RUNNER_TEMP/gl.tgz" https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz
           echo "5bc41815076e6ed6ef8fbecc9d9b75bcae31f39029ceb55da08086315316e3ba  $RUNNER_TEMP/gl.tgz" | sha256sum -c -
           tar -xzf "$RUNNER_TEMP/gl.tgz" -C "$RUNNER_TEMP" gitleaks
           "$RUNNER_TEMP/gitleaks" git . --no-banner --redact --config .gitleaks.toml
