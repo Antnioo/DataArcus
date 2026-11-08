@@ -35,8 +35,7 @@ Changed (same two sentences, the owner's words of D-1108-09, short):
 - power-bi-mcp/index.html `beta.safe.model` and `beta.safe.data`, and the same two keys (English only) in
   assets/js/translations/beta-page.js (+ .min.js by build:min; stamps by the build; csp, ar-pages, sitemap-lastmod run).
 Not changed, and why:
-- The Arabic pages (ar/power-bi-mcp/index.html and the `ar` block of beta-page.js): they keep today's Arabic until the
-  owner's yes. Only the script's ?v= stamp moved on the Arabic page (the build).
+- (Round 1 kept the Arabic pages as they were; round 2 put the approved Arabic on them, below.)
 - mcp/CHANGELOG.md history, mcp/work/*, mcp/GOLDEN-TASKS.md, mcp/plans/*, mcp/research/*, mcp/ROADMAP.md: history or
   plans, not a statement to a user.
 - mcp/docs/OWNER-RULES.md:41 (the owner's rule as he said it: "never"), mcp/PRODUCT_SPEC.md:28/48/123, mcp/TOOLS.md,
@@ -44,9 +43,7 @@ Not changed, and why:
   texts are returned; :48 ("never returns data values") and the SKILL.md lines say "data values" in the narrow sense; the
   reviewer decides whether to align them.
 - code comments in assets/js/*.js and mcp/lib/*.mjs ("never a data value"): they describe what a function reads, not a promise.
-- articles/article-power-bi-custom-visual-ai-checks.html:198 and articles/article-power-bi-report-ready-for-arabic.html:297
-  (and their translations files) say "it never sends your data values to the AI": wider than the code in the same way.
-  Not in the owns and they have Arabic copies: see "For the owner".
+- (Round 1: the two articles' "never sends your data values" were left; round 2 changed them, below.)
 
 ## Tests
 - rv1: new, 467 checks (see the result line at the bottom).
@@ -62,8 +59,7 @@ approval) are worded exactly as the code behaves.
 - The guard wraps the SDK's `validateToolInput` and `createToolError` on the server instance (server.mjs calls
   `guardInputErrors(server)` after registering the tools): no node_modules edit, no per-tool code. A schema without zod's
   `safeParseAsync` falls back to the SDK's message, which `createToolError` then caps.
-- Error text is English only. The Arabic wording is a draft below; shipping Arabic the owner has not approved would
-  break D-1027-04. The tools' other errors take `lang` only on some tools, and an invalid input cannot be trusted to carry it.
+- Error text: English; Arabic after the owner's yes (round 2) when the call's `lang` is exactly "ar" (an invalid input cannot be trusted to carry a valid lang, so anything else is English). A call with lang "ar" is always rebuilt in Arabic, whatever the SDK message's length.
 - Bounds: check_report `checks` max 50 (12 distinct checks exist; 50 leaves duplicates alone), generate_theme `folder`
   max 500. The boundary cap holds without them. plan_layout's `pages` is in lib/report-inputs.mjs (not an owned file):
   not bounded here; the boundary cap answers it (test rv1 O plan_layout pages).
@@ -72,12 +68,10 @@ approval) are worded exactly as the code behaves.
 - Every hit of the grep is listed above; the owner's two sentences are used word for word.
 
 ## For the owner
-- Arabic DRAFT of the data promise (not published; the Arabic pages keep today's text): «لا يرسل DataArcus إلى تطبيق الذكاء الاصطناعي أي قيم من جداولك أو عوامل التصفية أو القطاعات أو الإشارات المرجعية. النص الذي كتبته بنفسك في العناوين ومربعات النص يُقرأ كما كتبته، ليتحقق منه الذكاء الاصطناعي، ولتتم ترجمته بموافقتك إن كان لديك توأم عربي.»
-- Arabic DRAFT of the write promise: «لا يُكتب أي شيء في مشاريعك قبل أن توافق على الخطة. الاستثناء الوحيد: عند أول تشغيل ينشئ DataArcus مجلد العمل الفارغ الذي اخترته إذا لم يكن موجودًا بعد.»
-- Arabic DRAFT of the validation error (shipped in English only): «خطأ في المدخلات: الأداة <الاسم> رفضت N مشكلة. أول ٥ مشكلات: ... و N أخرى. صحّح المدخلات وأعد الاستدعاء.»
-- Two articles still say "it never sends your data values to the AI" (power-bi-custom-visual-ai-checks p12, report-ready-for-arabic
-  exploreMore.subtitle). Proposed: "it never sends values from your tables, filters, slicers or bookmarks to the AI app".
-  Say yes and the reviewer brings it with the Arabic copies.
+- APPROVED by the owner (D-1108-16, relayed by the reviewer 8 Nov 15:05Z; slicers as «المقسمات (Slicers)») and published on the Arabic pages: the data promise: «لا يرسل DataArcus إلى تطبيق الذكاء الاصطناعي أي قيم من جداولك أو الفلاتر أو المقسمات (Slicers) أو الإشارات المرجعية. النص الذي كتبته بنفسك في العناوين ومربعات النص يُقرأ كما كتبته، ليتحقق منه الذكاء الاصطناعي، ولتتم ترجمته بموافقتك إن كان لديك توأم عربي.»
+- APPROVED as drafted (D-1108-16), published: the write promise: «لا يُكتب أي شيء في مشاريعك قبل أن توافق على الخطة. الاستثناء الوحيد: عند أول تشغيل ينشئ DataArcus مجلد العمل الفارغ الذي اخترته إذا لم يكن موجودًا بعد.»
+- APPROVED as drafted (D-1108-16), shipped when the call's own `lang` is "ar": «خطأ في المدخلات: الأداة <الاسم> رفضت N مشكلة. أول ٥ مشكلات: ... و N أخرى. صحّح المدخلات وأعد الاستدعاء.» (digits as numerals the tools already use; "أول N مشكلات" only when some are not shown)
+- Round 2 (D-1108-16, "i agree with you on the 4 points"): the two articles now say "it never sends values from your tables, filters, slicers or bookmarks to the AI app" (English, Arabic translations and the generated Arabic copies); the Arabic promises are on the Arabic pages.
 
 ## Risky changes
 - What an answer returns: an input-validation error is now our short text (tool, count, the first 5 problems with the
@@ -112,3 +106,14 @@ none
   message of 1,500 characters or less as the SDK made it, so none of the three moved (no fixture re-recorded).
 
 CI green: https://github.com/Antnioo/DataArcus/actions/runs/42489282364 on d25ec6ca611dd33198b90df20d92de05ef7b6ecb (rv1 467 checks PASS; lint 0; site config PASS; site and sp36 PASS locally)
+
+## Round 2 (D-1108-16, 8 Nov; the reviewer's message of 15:05Z relays the owner's "i agree with you on the 4 points")
+- Arabic data and write promises on the Arabic pages: the `ar` block of assets/js/translations/beta-page.js (`safe.model`
+  gets the write promise first, `safe.data` the data promise first, then the files-and-fingerprint sentence); ar/power-bi-mcp/index.html
+  by ar-pages.mjs.
+- Arabic input-validation error in `mcp/lib/tool-answer.mjs` (`inputErrorSaid`, lang "ar"); rv1 gains AR1-AR3 (467 -> 470).
+- The two articles (power-bi-custom-visual-ai-checks p12, report-ready-for-arabic exploreMore.subtitle): English HTML,
+  English and Arabic translations, and their generated Arabic copies (ar-pages.mjs).
+- Changed on purpose: test-0.3.0-claims.mjs DS1-2 (AR) now pins the approved Arabic data sentence; A2-S1 (AR) looks for
+  «توأم عربي» (the approved wording) instead of «النسخة العربية». 721 = 721.
+- build:min, stamps, csp.mjs, ar-pages.mjs and sitemap-lastmod run after the last commit.

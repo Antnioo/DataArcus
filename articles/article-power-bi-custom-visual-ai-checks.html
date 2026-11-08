@@ -195,7 +195,7 @@
               <h2 class="mt-5 mb-3" data-i18n="content.h6">When Power BI's own visuals are enough</h2>
               <p data-i18n-html="content.p10">Many requests for a new visual are things the core visuals already do. Sales by category and subcategory with drill-down is a bar chart with a hierarchy on its axis. A rich tooltip is a report page tooltip. Charts, cards, tables and slicers need no admin approval, work in PowerPoint exports and subscription emails, and Microsoft keeps them up to date. A prompt that starts with <em>"Use Power BI's core visuals only, and tell me if one can't do this"</em> saves you all four checks.</p>
               <p data-i18n-html="content.p11">If you do need a custom visual, ask the agent to follow the certification rules anyway, and run Microsoft's own check on the package: <code>pbiviz package --certification-audit</code> (powerbi-visuals-tools 6.1.0 or later) looks for unsafe calls to <code>fetch</code>, <code>XMLHttpRequest</code> and <code>eval</code>. Then bring your admin the source code, not just the file.</p>
-              <p data-i18n-html="content.p12">We take the same line in our own tools. The reports our <a href='../power-bi-mcp/' class='text-accent'>DataArcus agent</a> writes use Power BI's own visuals, so there is nothing for an admin to approve, and it never sends your data values to the AI. For the model side, see <a href='article-power-bi-model-ai-ready.html' class='text-accent'>our 7-point check</a>.</p>
+              <p data-i18n-html="content.p12">We take the same line in our own tools. The reports our <a href='../power-bi-mcp/' class='text-accent'>DataArcus agent</a> writes use Power BI's own visuals, so there is nothing for an admin to approve, and it never sends values from your tables, filters, slicers or bookmarks to the AI app. For the model side, see <a href='article-power-bi-model-ai-ready.html' class='text-accent'>our 7-point check</a>.</p>
               <h2 class="mt-5 mb-3" data-i18n="content.h7">Questions</h2>
               <h3 class="h5 mt-4 mb-2" data-i18n="content.q1">Can a custom visual made by an AI agent be certified?</h3>
               <p data-i18n-html="content.a1">Not while it stays private. Microsoft certifies only visuals published on AppSource ("Private visuals aren't certified"), after a review that can take up to four weeks for a new visual. For a visual used inside one organization, the usual route is an organizational visual, added by the Fabric admin.</p>
@@ -288,7 +288,7 @@
   </footer>
 
   <script src="../assets/js/translations/common.min.js?v=434124bdf3f2" defer></script>
-  <script src="../assets/js/translations/article-power-bi-custom-visual-ai-checks.min.js?v=cbb337c08288" defer></script>
+  <script src="../assets/js/translations/article-power-bi-custom-visual-ai-checks.min.js?v=ff35aa24edff" defer></script>
   <script src="../assets/js/locale-routes.min.js?v=ce1187fd5cbb" defer></script>
   <script src="../assets/js/locale-catalog.min.js?v=1464f13d8c0b" defer></script>
   <script src="../assets/js/locale-dom.min.js?v=faf294f00eb2" defer></script>

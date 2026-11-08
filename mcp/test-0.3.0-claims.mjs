@@ -22,7 +22,7 @@ for (const k of ['data', 'approve_plan', 'l3', 't3', 'validator']) { EN[k] = key
 
 // S1 (since 0.3.0 S1 read_report returns no static title; the twin returns titles, up to 200 characters, for their Arabic)
 check(!/short titles as typed/.test(EN.data) && /text boxes/.test(EN.data) && /twin/.test(EN.data), `A2-S1. beta-page en safe.data says read_report's titles are sent: "${EN.data.slice(0, 200)}"`);
-check(!/عناوينه القصيرة/.test(AR.data) && /مربعات النص/.test(AR.data) && /النسخة العربية/.test(AR.data), 'A2-S1. beta-page ar safe.data says the same as the English (text boxes; titles for the twin)');
+check(!/عناوينه القصيرة/.test(AR.data) && /مربعات النص/.test(AR.data) && /توأم عربي/.test(AR.data), 'A2-S1. beta-page ar safe.data says the same as the English (text boxes; titles for the twin)');
 // S2 (an app with MCP elicitation asks in its own prompt: no browser window opens)
 check(/own approval prompt/.test(EN.approve_plan), 'A2-S2. beta-page en approve_plan says an app with its own approval prompt asks there instead');
 check(/نافذة موافقة خاصة به/.test(AR.approve_plan), 'A2-S2. beta-page ar approve_plan says the same');
@@ -358,7 +358,7 @@ const DS1_EN = { lic: [[/PPU or capacity raises both limits: PPU allows models u
     [/Claude Code, VS Code \(agent mode\) or Cursor, on Windows, macOS or Linux/, 'DS1-4. the other clients'], [CLIENTS, 'DS1-4. the README setup notes link'], [/VS Code and Cursor not yet tried/, 'DS1-4. tried as the README says'], [/one-click \.mcpb is for Windows/, 'DS1-4. the .mcpb stays Windows']] };
 const DS1_AR = { lic: [[/ويزيد PPU أو السعة كلا الحدّين: يسمح PPU بنماذج حتى 100 غيغابايت و48 تحديثًا مجدولًا يوميًا، وفي سعة Fabric يتوقف حجم النموذج على فئة السعة \(SKU\) مع 48 تحديثًا مجدولًا يوميًا/, 'DS1-1. the PPU and capacity limits (AR)'], [LEARN_PPU, 'DS1-1. the PPU FAQ link (AR)'], [LEARN_PLAN, 'DS1-1. the licenses comparison link (AR)']],
   home: [[/والنصوص القصيرة المكتوبة في صفحات التقرير \(العناوين ومربعات النص\) وقد تحمل رقمًا أو اسمًا؛ ولا ترسل أبدًا صفوف الجداول ولا قيم الفلاتر أو المقسمات (?:\(Slicers\) )?ولا حالات الإشارات المرجعية/, 'DS1-2. the exact metadata sentence (AR)'], [PRIV, 'DS1-2. PRIVACY.md link (AR)']],
-  mcp: [[/وقد تحمل رقمًا أو اسمًا\. ولا يرسل أبدًا صفوف الجداول ولا قيم الفلاتر أو المقسمات ولا حالات الإشارات المرجعية/, 'DS1-2. the exact metadata sentence (AR)'], [PRIV3, 'DS1-2. PRIVACY.md section 3 link (AR)'],
+  mcp: [[/لا يرسل DataArcus إلى تطبيق الذكاء الاصطناعي أي قيم من جداولك أو الفلاتر أو المقسمات \(Slicers\) أو الإشارات المرجعية\. النص الذي كتبته بنفسك في العناوين ومربعات النص يُقرأ كما كتبته/, 'DS1-2. the exact metadata sentence (AR)'], [PRIV3, 'DS1-2. PRIVACY.md section 3 link (AR)'],
     [/عناوين عربية في التقارير العربية، حتى من نموذج بأسماء إنجليزية/, 'DS1-3. the Arabic titles heading (AR)'], [/وكل ما يبقى بالإنجليزية تذكره الخطة، مع السبب، قبل موافقتك/, 'DS1-3. what is kept in English (AR)'],
     [/Claude Code أو VS Code \(وضع الوكيل\) أو Cursor، على Windows أو macOS أو Linux/, 'DS1-4. the other clients (AR)'], [CLIENTS, 'DS1-4. the README setup notes link (AR)'], [/ولم يُجرَّب VS Code وCursor بعد/, 'DS1-4. tried as the README says (AR)'], [/ملف \.mcpb للتثبيت بنقرة واحدة فهو لـ Windows/, 'DS1-4. the .mcpb stays Windows (AR)']] };
 const halves = (t, page) => page === 'home' ? [t.split(/\bar: \{/)[0], t.split(/\bar: \{/)[1] || ''] : [enHalf(t), arHalf(t)];

@@ -60,6 +60,13 @@ try {
   chk(() => unk.err && /Unrecognized key 'foo'/.test(unk.t) && /the inputs of read_model are: /.test(unk.t), () => 'S7. an unknown key keeps TK1/MR1 words: ' + unk.t.slice(0, 300));
   const miss = await raw('read_model', {});
   chk(() => miss.err && /path/.test(miss.t), () => 'S8. a missing input is named: ' + miss.t.slice(0, 300));
+  // Arabic (D-1108-16): a tool with a lang input answers in Arabic when lang is "ar"; a bad lang or none stays English
+  const ar = await raw('read_model', { path: 'x', lang: 'ar', tables: Array.from({ length: 40 }, (_, i) => i) });
+  chk(() => ar.err && /^(MCP error -32602: )?خطأ في المدخلات: الأداة read_model رفضت \d+ مشكلة\. أول 5 مشكلات: /.test(ar.t) && /؛ و \d+ أخرى\. صحّح المدخلات وأعد الاستدعاء\.$/.test(ar.t) && ar.t.length <= 4000, () => 'AR1. lang ar: the approved Arabic, short: ' + ar.t.slice(0, 300));
+  const arOne = await raw('check_report', { path: 'x', lang: 'ar', checks: ['nope'] });
+  chk(() => arOne.err && /خطأ في المدخلات: الأداة check_report رفضت 1 مشكلة: /.test(arOne.t) && !/أخرى/.test(arOne.t), () => 'AR2. lang ar, one problem: no "more": ' + arOne.t.slice(0, 300));
+  const enBadLang = await raw('read_model', { path: 'x', lang: 'fr', tables: Array.from({ length: 40 }, (_, i) => i) });
+  chk(() => enBadLang.err && /Input validation error/.test(enBadLang.t), () => 'AR3. an invalid lang is English: ' + enBadLang.t.slice(0, 200));
   const nf = await raw('no_such_tool_' + 'z'.repeat(100000), {});
   chk(() => nf.err && nf.t.length <= ANSWER_MAX, () => 'S9. an unknown tool with a huge name: capped: ' + nf.t.length);
   const ok = await raw('read_model', { path: 'nothing-here' });
