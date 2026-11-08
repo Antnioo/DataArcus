@@ -253,22 +253,9 @@
     const ts = Page.themeSizes(o), c = Object.assign({ o, B, own, PAGES, base, rtl, font, W }, ts, Sizing.make({ font, LABEL: ts.LABEL }));
     return PAGES.map((pg) => Page.fitOf(c, pg));
   }
-  /** @param {BuildInput} o @returns {BuildResult} */
-  function build(o) {
-    checkBuild(o);
-    // (0.3, J7) the report theme's data colours at 3:1 on the card before anything reads them (design-engine toContrast;
-    // a colour already at 3:1 is kept exactly): every chart, fade and second colour below is chosen from these
-    const themeCard = ((((((((o.theme || {}).visualStyles || {})['*'] || {})['*'] || {}).background || [])[0] || {}).color || {}).solid || {}).color;
-    const readable = A11y.readable(o.theme, ((o.ui || {}).card) || themeCard);
-    if (readable.changed.length) o = Object.assign({}, o, { theme: readable.theme });
-    const lang = o.lang === 'ar' ? 'ar' : 'en', rtl = !!o.rtl, u = o.ui, font = o.font || 'Segoe UI';
-    const W = o.texts || {};
-    // the data: the sample table, the user's own model (o.model: { byPath } or { byConnection }), or none
-    const own = !!(o.model && (o.model.byPath || o.model.byConnection));
-    const sample = !!o.sample && !own;
-    const B = own ? (o.bind || null) : sample ? Sample.bind(lang) : null;
-    // the notes: what the writer did that its caller should tell (pbip-notes.js)
-    const n = Notes.make(o), { noData, rowLabels, timeExt } = n;
+  // build's steps (0.3.2 FN1I: build's parts as named steps, code moved; each is given what it reads and returns what
+  // later lines use). The bars' colours and the mirror asked:
+  function chartLookOf({ o, rtl, u }) {
     // bars that fade by value (o.chartColors 'gradient', round 13): the two ends, or null when the colour cannot fade
     const barBase = ((o.theme || {}).dataColors || [])[0] || (u || {}).accent, GRAD = o.chartColors === 'gradient' && u ? Engine.fadeEnds(barBase, u.card) : null;   // (P3, N25: the strong end is the colour itself, never past it)
     // (polish round P1, RESCORE-5: bank's deep teal, its colour 2, never appeared) the second bar or column chart of a
@@ -279,6 +266,10 @@
     const chartColors = { asked: o.chartColors === 'gradient', ends: GRAD, base: barBase, charts: 0, ends2: GRAD2, base2: GRAD2 ? bar2 : null, second: 0, keys: {} };
     // charts mirrored for a right-to-left report (o.chartAxes 'mirrored', round 13; see mirrorChart)
     const MIRROR = rtl && o.chartAxes === 'mirrored', chartAxes = { asked: o.chartAxes || null, rtl, charts: 0 };
+    return { GRAD, GRAD2, chartColors, MIRROR, chartAxes };
+  }
+  // the axes that are continuous:
+  function continuousOf({ o, B }) {
     // (0.3.1 M1: the twin's rules, report-mirror.js) the columns a chart's axis is continuous on, "Table.Column": a date or a
     // number, from the model's types (o.model.columns, the MCP's) and the bound fields' own; such an axis ignores the sort
     // and is reversed by categoryAxis.invertAxis
@@ -287,13 +278,20 @@
       const walk = (x, depth) => { if (!x || typeof x !== 'object' || depth > 4) return; if (Array.isArray(x)) return x.forEach((y) => walk(y, depth + 1));
         if (typeof x.t === 'string' && typeof x.c === 'string' && x.agg == null && (num(x.type) || x.num)) out.add(x.t + '.' + x.c); Object.values(x).forEach((y) => walk(y, depth + 1)); };
       walk(B, 0); return [...out]; })();
+    return CONTINUOUS;
+  }
+  // the quiet gridlines:
+  function quietGridOf({ o, u }) {
     // Quiet gridlines (o.quietGrid, round 13; seen in Desktop 2.158 on 6 Oct, "GE EN dark": on a dark design the value
     // axis's gridlines were near-white lines across the panel, louder than the data; with valueAxis.gridlineColor written
     // on the chart they are quiet): the text colour mixed 85% into the card, on the report's line, bar and column
     // charts, unless the theme sets its own gridlines (its chart style "dotted" or "off").
     const themeGrid = ['lineChart', 'clusteredBarChart', 'clusteredColumnChart'].some((t) => { const va = (((((o.theme || {}).visualStyles || {})[t] || {})['*'] || {}).valueAxis || [])[0]; return !!va && ('gridlineShow' in va || 'gridlineColor' in va); });
     const GRID = o.quietGrid && u && HEX6.test(String(u.text)) && HEX6.test(String(u.card)) && !themeGrid ? mixHex(u.text, u.card, 0.85) : null;
-    const NODATA = own && o.noDataMessage !== false;   // on by default since round 22 (the owner's rule: every part passed in Desktop on the night of 6-7 Oct); noDataMessage: false leaves it out
+    return GRID;
+  }
+  // the report's names, its files' names and its pages (each page's id: rnd(), in page order):
+  function namesOf({ o, W, B, rtl }) {
     const { base, theirs } = nameOf(o, W);
     const slug = base.replace(/[^\w-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'report';
     const R = base + '.Report', M = base + '.SemanticModel', D = R + '/definition';
@@ -306,12 +304,10 @@
     // two panels, two line charts in its box (to: 'two panels')
     const galleryNotes = [];
     if (Gallery) PAGES.forEach((pg) => { if (Array.isArray(pg.slots) && pg.slots.some((s) => s && Gallery.isKind(s.kind))) pg.slots = [].concat(...pg.slots.map((s) => { const r = Gallery.resolve(s, B, !!o.gallery, rtl); if (r.note) galleryNotes.push(Object.assign({ page: pg.name || base }, r.note)); return r.slots || [r.slot]; })); });
-    const files = [];
-    // a report for a local model is unzipped into the user's project folder, so it has no folder of its own
-    const add = (path, data) => files.push({ path: (theirs ? '' : base + '/') + path, data });
-    const align = rtl ? 'right' : 'left';
-    const edge = mixHex(u.text, u.card, 0.85);
-
+    return { base, theirs, R, M, D, themeFile, logoFile, PAGES, galleryNotes };
+  }
+  // the project shortcut, the report pointer and the semantic model:
+  function projectFiles({ add, o, own, sample, lang, base, R, M }) {
     // project shortcut, report pointer, semantic model
     add(base + '.pbip', json({ $schema: SCHEMA.pbip, version: '1.0', artifacts: [{ report: { path: R } }], settings: { enableAutoRecovery: true } }));
     const datasetRef = own ? (o.model.byPath ? { byPath: { path: '../' + String(o.model.byPath).replace(/^.*\//, '') } } : { byConnection: { connectionString: o.model.byConnection } })
@@ -331,7 +327,9 @@
         annotations: [{ name: '__PBI_TimeIntelligenceEnabled', value: '0' }, { name: 'PBI_ProTooling', value: '["DevMode"]' }]
       }
     }));
-
+  }
+  // the theme, the backgrounds, the logo, version.json and report.json:
+  function resourceFiles({ add, o, R, D, themeFile, logoFile, PAGES }) {
     // resources: the theme, the background, the logo
     // inside a project the theme carries the name report.json references, its file name with .json (Microsoft's
     // theming reference: customTheme.name, the registered item's name and path and the theme's own "name" must be equal)
@@ -359,7 +357,9 @@
       },
       annotations: [{ name: 'generatedBy', value: 'DataArcus Power BI Theme & Layout Generator (dataarcus.com)' }]
     }));
-
+  }
+  // the tooltip pages' names (rnd(): tipName, tipBinding, then the trend's) and tipFor:
+  function tooltipKit({ B }) {
     // pages
     const tipName = rnd(), tipBinding = rnd(), bookmarks = [];
     // Two tooltip pages when the bind has a month (tip.date): the trend page shows the hovered item's measure by month,
@@ -380,23 +380,13 @@
         t = { kind, m, cat, name: first ? (kind === 'trend' ? trend.name : tipName) : rnd(), binding: first ? (kind === 'trend' ? trend.binding : tipBinding) : rnd() };
         tipPages.push(t); }
       return t; };
-    add(D + '/pages/pages.json', '');
-    const pagesFile = files[files.length - 1];
-
-    // 0.2.9, audit 3's A3-12: the context the writer's modules share (pbip-query.js, pbip-sizing.js, pbip-page.js): this
-    // report's settings, its files, and its notes; then the report's own measures and the visuals' look
-    const c = Object.assign({
-      B, CONTINUOUS, D, GRAD, GRAD2, GRID, MIRROR, NODATA, PAGES, W, add, align, base, bookmarks,
-      chartAxes, chartColors, edge, font, lang, logoFile, o, own, rtl, same, sameField, tip, tipBinding,
-      tipFor, tipName, tipPages, trend, u, n
-    }, n);
-    Object.assign(c, Query.measures(c));
-    Object.assign(c, Page.kit(c));
-
+    return { tipName, tipBinding, bookmarks, tip, trend, same, sameField, tipPages, tipFor };
+  }
+  // the report's own SVG measures (reportExtensions.json):
+  function svgMeasures({ o, add, D, files }) {
     // Report-level measures (o.svgColumns: [{ page, t, m, expression }]): definition/reportExtensions.json, in the shape
     // Desktop accepted in D-P1: one entity per model table, each measure a text with the data category Image URL.
     // The model is not touched: these measures exist only in the report.
-    const svgDone = {};
     let extFile = null;   // reportExtensions.json, written again after the pages when a ring picture drops its number (round 18)
     if ((o.svgColumns || []).length || (o.svgCards || []).length) {
       const entities = [];
@@ -404,11 +394,10 @@
       add(D + '/reportExtensions.json', json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities }));
       extFile = { entry: files[files.length - 1], entities };
     }
-    Object.assign(c, { svgDone, extFile });
-
-    // the report's pages (pbip-page.js)
-    PAGES.forEach((pg, pageIndex) => Page.write(c, pg, pageIndex));
-
+    return extFile;
+  }
+  // the Reset buttons' bookmarks:
+  function bookmarkFiles({ bookmarks, add, D }) {
     // Reset buttons: one data-only bookmark per page that brings that page's slicers back to "All"
     if (bookmarks.length) {
       bookmarks.forEach((b) => add(D + '/bookmarks/' + b.name + '.bookmark.json', json(b.group
@@ -422,11 +411,9 @@
             explorationState: { version: '1.3', activeSection: b.page, sections: { [b.page]: { visualContainers: Object.fromEntries(b.targets.map((n) => [n, {}])) } } } })));
       add(D + '/bookmarks/bookmarks.json', json({ $schema: SCHEMA.bookmarks, items: bookmarks.map((b) => ({ name: b.name })) }));
     }
-
-    // the tooltip pages (pbip-page.js); six: the trend kept to its last 6 months
-    const six = Page.tooltips(c);
-    pagesFile.data = json({ $schema: SCHEMA.pages, pageOrder: PAGES.map((pg) => pg.id).concat(tip ? tipPages.filter((t) => t.kind === 'cat').concat(tipPages.filter((t) => t.kind === 'trend')).map((t) => t.name) : [tipName]), activePageName: PAGES[0].id });
-
+  }
+  // the "No data", row-label and time-axis measures:
+  function extMeasures({ noData, rowLabels, timeExt, extFile, add, D }) {
     // the "No data" measures (round 19): into the report's extensions, beside the SVG measures where there are some
     // (round 23: and the tables' row-label measures after them)
     // (0.2.9 part 2: and the time axes' measures, DateTime and Integer; written after the tooltip pages, which add some)
@@ -436,7 +423,9 @@
       if (extFile) extFile.changed = true; else add(D + '/reportExtensions.json', json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: ents }));
     }
     if (extFile && extFile.changed) extFile.entry.data = json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: extFile.entities });
-
+  }
+  // the .gitignore and the README:
+  function repoFiles({ o, W, add, base, theirs }) {
     // git: keep local and cached files out of source control
     // in someone's project folder these would replace their own files, so they are left out there
     // (0.3.1 TT2) o.namesNote: the Arabic names the person approved before the website's Arabic download, and each kept
@@ -446,6 +435,9 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base) + (o.namesNote || ''));
     } else if (o.namesNote) add(base + '.README.md', '# ' + base + o.namesNote);
+  }
+  // what build returns: alt text, the Arabic isolation, the notes:
+  function resultOf({ o, files, lang, rtl, readable, n, base, chartColors, chartAxes, tip, tipPages, six, galleryNotes }) {
     // (0.3, J7) alt text from each data visual's role and fields, tab stops in reading order, decorative parts out of it
     const a11y = Object.assign(A11y.apply(files.filter((f) => typeof f.data === 'string'), { lang, rtl }), { colours: readable.changed, card: readable.card || null });
     // (SQ15b, J18-S2) an Arabic report's texts, the alt texts above included: each Latin run inside Arabic text (an
@@ -458,6 +450,67 @@
     if (o.slicerStyle === 'pills') out.slicerStyle = { asked: 'pills', slicers: n.slicerStyles };
     if (o.grid === 'dotted' || o.grid === 'none') out.grid = { asked: o.grid, charts: n.gridCharts.n };
     return o.gallery || galleryNotes.length ? Object.assign(out, { gallery: galleryNotes }) : out;
+  }
+  /** @param {BuildInput} o @returns {BuildResult} */
+  function build(o) {
+    checkBuild(o);
+    // (0.3, J7) the report theme's data colours at 3:1 on the card before anything reads them (design-engine toContrast;
+    // a colour already at 3:1 is kept exactly): every chart, fade and second colour below is chosen from these
+    const themeCard = ((((((((o.theme || {}).visualStyles || {})['*'] || {})['*'] || {}).background || [])[0] || {}).color || {}).solid || {}).color;
+    const readable = A11y.readable(o.theme, ((o.ui || {}).card) || themeCard);
+    if (readable.changed.length) o = Object.assign({}, o, { theme: readable.theme });
+    const lang = o.lang === 'ar' ? 'ar' : 'en', rtl = !!o.rtl, u = o.ui, font = o.font || 'Segoe UI';
+    const W = o.texts || {};
+    // the data: the sample table, the user's own model (o.model: { byPath } or { byConnection }), or none
+    const own = !!(o.model && (o.model.byPath || o.model.byConnection));
+    const sample = !!o.sample && !own;
+    const B = own ? (o.bind || null) : sample ? Sample.bind(lang) : null;
+    // the notes: what the writer did that its caller should tell (pbip-notes.js)
+    const n = Notes.make(o), { noData, rowLabels, timeExt } = n;
+    const { GRAD, GRAD2, chartColors, MIRROR, chartAxes } = chartLookOf({ o, rtl, u });
+    const CONTINUOUS = continuousOf({ o, B });
+    const GRID = quietGridOf({ o, u });
+    const NODATA = own && o.noDataMessage !== false;   // on by default since round 22 (the owner's rule: every part passed in Desktop on the night of 6-7 Oct); noDataMessage: false leaves it out
+    const { base, theirs, R, M, D, themeFile, logoFile, PAGES, galleryNotes } = namesOf({ o, W, B, rtl });
+    const files = [];
+    // a report for a local model is unzipped into the user's project folder, so it has no folder of its own
+    const add = (path, data) => files.push({ path: (theirs ? '' : base + '/') + path, data });
+    const align = rtl ? 'right' : 'left';
+    const edge = mixHex(u.text, u.card, 0.85);
+
+    projectFiles({ add, o, own, sample, lang, base, R, M });
+    resourceFiles({ add, o, R, D, themeFile, logoFile, PAGES });
+
+    const { tipName, tipBinding, bookmarks, tip, trend, same, sameField, tipPages, tipFor } = tooltipKit({ B });
+    add(D + '/pages/pages.json', '');
+    const pagesFile = files[files.length - 1];
+
+    // 0.2.9, audit 3's A3-12: the context the writer's modules share (pbip-query.js, pbip-sizing.js, pbip-page.js): this
+    // report's settings, its files, and its notes; then the report's own measures and the visuals' look
+    const c = Object.assign({
+      B, CONTINUOUS, D, GRAD, GRAD2, GRID, MIRROR, NODATA, PAGES, W, add, align, base, bookmarks,
+      chartAxes, chartColors, edge, font, lang, logoFile, o, own, rtl, same, sameField, tip, tipBinding,
+      tipFor, tipName, tipPages, trend, u, n
+    }, n);
+    Object.assign(c, Query.measures(c));
+    Object.assign(c, Page.kit(c));
+
+    const svgDone = {};
+    const extFile = svgMeasures({ o, add, D, files });
+    Object.assign(c, { svgDone, extFile });
+
+    // the report's pages (pbip-page.js)
+    PAGES.forEach((pg, pageIndex) => Page.write(c, pg, pageIndex));
+
+    bookmarkFiles({ bookmarks, add, D });
+
+    // the tooltip pages (pbip-page.js); six: the trend kept to its last 6 months
+    const six = Page.tooltips(c);
+    pagesFile.data = json({ $schema: SCHEMA.pages, pageOrder: PAGES.map((pg) => pg.id).concat(tip ? tipPages.filter((t) => t.kind === 'cat').concat(tipPages.filter((t) => t.kind === 'trend')).map((t) => t.name) : [tipName]), activePageName: PAGES[0].id });
+
+    extMeasures({ noData, rowLabels, timeExt, extFile, add, D });
+    repoFiles({ o, W, add, base, theirs });
+    return resultOf({ o, files, lang, rtl, readable, n, base, chartColors, chartAxes, tip, tipPages, six, galleryNotes });
   }
 
   // AR_MONTHS: the one Arabic month list (the cross-review's duplicates: the twin uses it too)
