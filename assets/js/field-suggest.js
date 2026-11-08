@@ -79,7 +79,21 @@
   const grossBase = (n) => { const s = plainName(n), g = s.match(/^(.*?)\s*\bgross\b\s*(.*)$/), b = s.match(/^(.+?)\s*\b(before|pre)\s*discounts?$/);
     const base = g ? plainName(g[1] + ' ' + g[2]) : b ? plainName(b[1]) : ''; return base || null; };
   const WHY_MAX = 20;
+  // (0.3.2 FN1F) rank is made by named steps, each given one context (rk), in the old order: rankStep (the measures
+  // ranked), cardsStep (the headline and the KPI cards), dateStep (the reach, the time axis, the year slicer), catsStep
+  // (the categories and slicers), choicesStep (the pinned fields, excluded columns, axisFor, the Arabic swaps), notesStep
   function rank(tables, nKpis, opt) {
+    const rk = { tables, nKpis, opt };
+    rankStep(rk);
+    cardsStep(rk);
+    dateStep(rk);
+    catsStep(rk);
+    choicesStep(rk);
+    return notesStep(rk);
+  }
+  // the measures ranked: the catalog, the model's counts, the shape score, time variants, periods, net before gross
+  function rankStep(rk) {
+    const { tables, opt } = rk;
     const { measures, columns, hiddenMeasures } = catalog(tables, opt && opt.modelTables);
     // (FX4) every rule that acts says itself here, one plain line per field (the first rule that names it)
     const ST = statsOf((opt && opt.modelTables) || tables, opt && opt.stats), why = [], say = (field, line) => { if (!why.some((w) => w.field === field)) why.push({ field, line }); };
@@ -118,6 +132,11 @@
       const n = ranked.find((y) => y !== g && !grossBase(y.m) && [b, 'net ' + b, b + ' net'].includes(plainName(y.m)));
       if (!n || n.stale || !!n.pct !== !!g.pct || (timeDep.get(n) ? 1 : 0) > (timeDep.get(g) ? 1 : 0)) return;
       const gi = ranked.indexOf(g), ni = ranked.indexOf(n); if (ni > gi) { ranked.splice(ni, 1); ranked.splice(gi, 0, n); } nets.push([n, g]); });
+    Object.assign(rk, { measures, columns, ST, why, say, num, L, note, byName, timeDep, needsPeriod, keyOf, ranked, nets });
+  }
+  // the headline measure and the KPI cards: never a period measure, a share of all, a denominator or a self difference
+  function cardsStep(rk) {
+    const { nKpis, measures, say, byName, timeDep, needsPeriod, keyOf, ranked, nets } = rk;
     // a card shows one number for the whole page: never a period measure (S4: "No data" without its period), a what-if
     // value (D4), a helper (D2) or a share of all (D14); never two cards with the same value (D6, D14)
     // (rc.4, round 9, N5 + D14: one measure over another of the same value (the second its ALL form): 100 % on a card)
@@ -146,6 +165,11 @@
     ranked.filter((x) => cardable(x)).forEach((x) => { if (kpis.length < nKpis && !kpis.includes(x) && !keys.has(keyOf(x))) { kpis.push(x); keys.add(keyOf(x)); } });
     while (kpis.length < nKpis) kpis.push(null);   // more cards than measures: the rest stay empty
     nets.forEach(([n, g]) => { if (main === n || kpis.includes(n)) say(fieldKey(n.t, n.m), `${n.m} is the headline number before ${g.m}: the net amount first; the gross one (before discounts or returns) may follow.`); });
+    Object.assign(rk, { main, kpis });
+  }
+  // the measure's reach along the relationships, the time axis (a month name, the year-month span) and the year slicer
+  function dateStep(rk) {
+    const { tables, opt, columns, ST, say, num, L, main } = rk;
     // Round 22b (the review of round 22, items 2 and 3): only the main chart's category took this order, the column
     // chart's and the map's (catB) and the pool every other chart takes from still reached a table the measure is not
     // related to; and the walk began at the table the measure is stored in, which for a measures table of its own is
@@ -206,6 +230,11 @@
     let year = P.noDate ? null : inDate.find((c) => /^(year|السنة)$/i.test(c.c)) || null;
     // (FX4) a year of one value is no slicer
     if (year && ST.distinct(year.t, year.c) === 1) { say(fieldKey(year.t, year.c), `${year.c} is not a slicer: the model's counts give it one value.`); year = null; }
+    Object.assign(rk, { P, rels, anchor, reach, inDate, date, year });
+  }
+  // the categories (reached, in the language, never one the counts or names rule out), catA, catB and the slicers
+  function catsStep(rk) {
+    const { columns, ST, say, num, L, note, reach, inDate, date, year } = rk;
     // a category: a text column, or one of unknown type whose name reads as a category (not a number, date or key)
     // (round 11, N18: a column the model sums or formats as a plain number is a number, whatever its type in the files)
     const textLike = (c) => !metaOf(c).numeric && (c.type === 'string' || (c.type === 'unknown' && !NUMBERISH.test(c.c) && !DATEISH.test(c.c)));
@@ -257,6 +286,11 @@
       || (catA.dateTable ? DATE_PARTS.slice(1).map((re) => inDate.find((c) => re.test(c.c) && textLike(c) && c !== date && otherName(c))).filter(Boolean)[0] : null) || catA) : null;   /* (round 10, N12: never the quarter beside a real category; round 11, N18: no calendar part beside a real category at all) */   /* (round 10, N12: never the quarter beside a real category) */   // (catA only when the model has no other category: a chart left out leaves its slot empty, the writer's)
     // (D8 + D10: never two slicers on fields of the same name, never on a time stamp)
     const sl = [year, catA, catB, date].filter((x, i, l) => x && l.indexOf(x) === i && !metaOf(x).stamp && l.findIndex((y) => y && nm(y) === nm(x)) === i);
+    Object.assign(rk, { cats, unreached, noCategory, nm, catA, catB, sl });
+  }
+  // the choices: the pinned fields, the slicers a page filter fixes, the axis a flag asks for, the Arabic calendar names
+  function choicesStep(rk) {
+    const { tables, opt, columns, L, kpis, main, P, rels, reach, date, year, cats, nm, catA, catB, sl } = rk;
     // (round 23 part 5, the review's 2: the table's reach rule lives in build, so a binding built again from these choices
     // (a picker change, the website's own picks) keeps it: choices.reach)
     // (builder 7's audit A3-2, 11 Oct: these rules were create_report's, by the Gulf calendar's own names, so the website's
@@ -302,6 +336,11 @@
       return tw;
     };
     if (L === 'ar') { ['date', 'catA', 'catB'].forEach((k) => { ch[k] = inAr(ch[k]); }); ch.slicers = ch.slicers.map(inAr); if (ch.table) ch.table = ch.table.map(inAr); }
+    Object.assign(rk, { same, ch, pool, excluded, axisBy, calendarNames, swaps, inAr });
+  }
+  // the notes beside the binding, in the order the answer gives them
+  function notesStep(rk) {
+    const { columns, ST, why, L, note, ranked, main, kpis, P, anchor, reach, cats, unreached, noCategory, ch, pool, excluded, axisBy, calendarNames, swaps, inAr } = rk;
     // (SP30: the binding of ch is pbip-bind.js's build; these are the notes beside it, in the order the answer gives them)
     const notes = Object.assign({}, langNote(L, note));
     if (noCategory && !P.catA && !P.catB) notes.noCategory = 'The model has no text column outside its calendar to group by, so the charts by category are left out: say it in the plan (a calendar\'s year, month or day belongs on the trend).';
