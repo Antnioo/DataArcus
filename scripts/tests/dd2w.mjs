@@ -6,11 +6,15 @@
 //   C1-C4  copyText: the clipboard path (done), a refused clipboard (the node's text selected, selected), no clipboard
 //          (the same), the page's own toast used for both
 //   S1     the source and the .min.js give the same answers (the pages load the .min.js)
+//   L1     every page that runs a place loads page-toast.min.js before that place's script (English and Arabic)
+//   P1-P3  each #toast page (calendar, measure builder, theme generator, SVG KPI), English and Arabic: the copy button
+//          with the clipboard (its own message), a refused clipboard and no clipboard (the box's text selected, "Selected.
+//          Press Ctrl+C to copy" in the page's language); the toast shown (opacity 1) with the page's own time
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import { createRequire } from 'node:module';
-import { ROOT } from './lib.mjs';
+import { ROOT, visitor } from './lib.mjs';
 
 const require = createRequire(import.meta.url);
 
@@ -127,10 +131,67 @@ export async function unit(PT, tag) {
   return { checks, problems };
 }
 
-export default async function () {
+// the pages: which script runs a place, the copy button, the box it selects, the page's time and its two messages
+const SELECTED = ['Selected. Press Ctrl+C to copy', 'تم التحديد. اضغط Ctrl+C للنسخ'];
+export const PAGES = [
+  { page: 'tools/dax-calendar-table-generator.html', script: 'calendar-generator', btn: '#copyBtn', box: 'dax', ms: 1800, done: ['DAX copied. Paste it in New table', 'تم نسخ DAX. الصقه في New table'] },
+  { page: 'tools/dax-measure-builder.html', script: 'measure-builder', btn: '#copyAll', box: 'script', ms: 1800, done: ['Copied', 'تم النسخ'] },
+  { page: 'tools/power-bi-theme-generator.html', script: 'theme-download-ui', btn: '#copyBtn', box: 'json', ms: 1800, done: ['Theme JSON copied', 'تم نسخ ملف السمة'] },
+  { page: 'tools/svg-kpi-designer.html', script: 'svg-kpi-designer', btn: '#copyBtn', box: 'dax', ms: 2200, done: ['DAX copied. Set Data category to Image URL.', 'تم نسخ DAX. اجعل Data category = Image URL.'] },
+];
+// every page that loads a place, and the place's script it must come before
+export const LOADS = [
+  ...PAGES.map((x) => [x.page, x.script]),
+  ['tools/power-bi-theme-generator.html', 'theme-generator'], ['tools/power-bi-theme-generator-lab.html', 'theme-download-ui'], ['tools/power-bi-theme-generator-lab.html', 'theme-generator'],
+];
+const loadOrder = () => {
+  const problems = []; let checks = 0;
+  for (const [page, script] of LOADS) for (const p of [page, 'ar/' + page]) {
+    if (!fs.existsSync(path.join(ROOT, p))) continue;
+    const html = fs.readFileSync(path.join(ROOT, p), 'utf8'), pt = html.search(/assets\/js\/page-toast\.min\.js\?v=/), at = html.search(new RegExp('assets/js/' + script + '\\.min\\.js\\?v='));
+    checks++;
+    if (at < 0 || pt < 0 || pt > at) problems.push(`L1 ${p}: page-toast.min.js ${pt < 0 ? 'is not loaded' : 'comes after ' + script + '.min.js'}`);
+  }
+  return { checks, problems };
+};
+// the clipboard as a test wants it: 'ok' writes, 'refused' rejects, 'none' is no clipboard; every timer's time kept
+const CLIP = (mode) => `(() => {
+  const mode = ${JSON.stringify(mode)};
+  window.__wrote = []; window.__delays = [];
+  const st = window.setTimeout; window.setTimeout = function (f, ms, ...a) { window.__delays.push(ms); return st.call(this, f, ms, ...a); };
+  const cb = mode === 'none' ? undefined : { writeText: (t) => { window.__wrote.push(t); return mode === 'ok' ? Promise.resolve() : Promise.reject(new Error('NotAllowedError')); } };
+  Object.defineProperty(Navigator.prototype, 'clipboard', { get: () => cb, configurable: true });
+})();`;
+async function onPage(browser, url, x, lang, mode) {
+  const problems = []; let checks = 0;
+  const check = (ok, msg) => { checks++; if (!ok) problems.push(`${x.page} ${lang} ${mode}: ${msg}`); };
+  const v = await visitor(browser, { viewport: [1440, 900] });
+  try {
+    await v.ctx.addInitScript(CLIP(mode));
+    await v.pg.goto(lang === 'en' ? `${url}/${x.page}?lang=en` : `${url}/ar/${x.page}`, { waitUntil: 'networkidle' });
+    await v.pg.waitForFunction((id) => window.DAPageToast && document.getElementById(id) && document.getElementById(id).textContent.length > 0, x.box, { timeout: 30000 });
+    await v.pg.evaluate(() => { window.__delays = []; window.__wrote = []; getSelection().removeAllRanges(); });
+    await v.pg.$eval(x.btn, (b) => b.click());
+    await v.pg.waitForFunction(() => (document.getElementById('toast').textContent || '').length > 0, null, { timeout: 10000 });
+    const got = await v.pg.evaluate((id) => {
+      const t = document.getElementById('toast'), s = getSelection(), box = document.getElementById(id);
+      return { text: t.textContent, opacity: t.style.opacity, delays: window.__delays, wrote: window.__wrote.length, selected: s.rangeCount ? s.getRangeAt(0).toString() : '', boxText: box.textContent, inBox: s.rangeCount > 0 && box.contains(s.anchorNode) };
+    }, x.box);
+    const k = lang === 'en' ? 0 : 1;
+    if (mode === 'ok') check(got.text === x.done[k] && got.wrote === 1 && !got.selected, `P1 the clipboard: toast ${JSON.stringify(got.text)}, wanted ${JSON.stringify(x.done[k])}; wrote ${got.wrote}; selected ${got.selected.length} characters`);
+    else check(got.text === SELECTED[k] && got.inBox && got.selected.trim() === got.boxText.trim(), `P${mode === 'refused' ? 2 : 3} ${mode === 'refused' ? 'a refused clipboard' : 'no clipboard'}: toast ${JSON.stringify(got.text)}, wanted ${JSON.stringify(SELECTED[k])}; #${x.box} selected: ${got.inBox} (${got.selected.length} of ${got.boxText.length} characters)`);
+    check(String(got.opacity) === '1' && got.delays.includes(x.ms), `the toast shown (opacity ${got.opacity}) with the page's time ${x.ms} ms (timers set: ${got.delays.join(', ')})`);
+    check(!v.errs.length, `page errors: ${v.errs.join('; ')}`);
+  } finally { await v.ctx.close(); }
+  return { checks, problems };
+}
+
+export default async function ({ browser, url } = {}) {
   const problems = []; let checks = 0;
   const add = (r) => { checks += r.checks; problems.push(...r.problems); };
   add(await unit(require(path.join(ROOT, 'assets/js/page-toast.js')), 'source'));
   add(await unit(loadMin(), 'min'));
+  add(loadOrder());
+  if (browser) for (const x of PAGES) for (const lang of ['en', 'ar']) for (const mode of ['ok', 'refused', 'none']) add(await onPage(browser, url, x, lang, mode));
   return { checks, problems };
 }

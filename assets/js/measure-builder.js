@@ -198,7 +198,7 @@ EVALUATE
   ['n', 'days'].forEach((k) => $(k).addEventListener('input', relabel));
 
   // ---------- copy / download ----------
-  const toast = (msg) => { const t = $('toast'); t.textContent = msg; t.style.opacity = 1; clearTimeout(toast.h); toast.h = setTimeout(() => { t.style.opacity = 0; }, 1800); };
+  const toast = (msg) => window.DAPageToast.toast(msg, { ms: 1800 });   // page-toast.js, its one home (0.3.2 DD2W; the page loads it first)
   const copy = (text, pre) => {
     const fallback = () => { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast(L('Selected. Press Ctrl+C to copy', 'تم التحديد. اضغط Ctrl+C للنسخ')); };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast(L('Copied', 'تم النسخ')), fallback); else fallback();

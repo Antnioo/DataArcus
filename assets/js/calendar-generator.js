@@ -337,7 +337,7 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
   bind('cgHijri', 'hijri'); bind('cgFiscal', 'fiscal'); bind('cgRel', 'relative'); bind('cgObserved', 'observed'); bind('cgArabic', 'arabicNames');
   if (!hijriFmt) { $('cgHijri').checked = false; $('cgHijri').disabled = true; state.hijri = false; $('hijriNote').textContent = L('Your browser does not support Hijri dates. Try Chrome, Edge or Safari.', 'متصفحك لا يدعم التاريخ الهجري. جرّب Chrome أو Edge أو Safari.'); }
 
-  const toast = (msg) => { const t = $('toast'); t.textContent = msg; t.style.opacity = 1; clearTimeout(toast.h); toast.h = setTimeout(() => { t.style.opacity = 0; }, 1800); };
+  const toast = (msg) => window.DAPageToast.toast(msg, { ms: 1800 });   // page-toast.js, its one home (0.3.2 DD2W; the page loads it first)
   $('copyBtn').addEventListener('click', () => {
     const text = $('dax').textContent;
     const fallback = () => { const r = document.createRange(); r.selectNodeContents($('dax')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast(L('Selected. Press Ctrl+C to copy', 'تم التحديد. اضغط Ctrl+C للنسخ')); };
