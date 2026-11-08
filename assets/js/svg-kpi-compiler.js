@@ -124,7 +124,18 @@
   }
 
   // ---------- compile ----------
+  // (0.3.2 FN1F) named steps given one context (ck), called in the old order: valuesStep, helpersStep, layerStep for
+  // each layer (it calls one step per layer kind), svgStep
   function compile(design, opts) {
+    const ck = {};
+    valuesStep(ck, design, opts);
+    helpersStep(ck);
+    (ck.d.layers || []).forEach((el, i) => layerStep(ck, el, i));
+    return svgStep(ck);
+  }
+
+  // the design's sizes, the value names and each value's VAR
+  function valuesStep(ck, design, opts) {
     const d = design || {};
     const tag = !!(opts && opts.tag);  // preview only: wrap each layer in <g data-l='n'> for the editor
     const mirror = !!d.mirror;         // a right-to-left report: the picture is mirrored (shapes flipped, texts moved)
@@ -153,7 +164,12 @@
       vars.push({ name: varName(v.id), node: make(v, R), comment: null });
       valueIds.add(v.id);
     });
+    Object.assign(ck, { d, tag, mirror, W, H, vars, errors, valueIds, varName, R, Z, fromColumn });
+  }
 
+  // the builders the layers share
+  function helpersStep(ck) {
+    const { d, vars, errors, Z } = ck;
     // A value written out in full, with its measures inline, so it can be recalculated per period
     const exprOf = (id, depth) => {
       const v = (d.values || []).find((x) => x.id === id);
@@ -193,8 +209,12 @@
     const parts = [];     // top-level SVG pieces: string or node
     const lit = (arr, s) => { const last = arr[arr.length - 1]; if (typeof last === 'string') arr[arr.length - 1] = last + s; else arr.push(s); };
     const hoist = (el, prop, node, list) => { const name = '_L' + el._i + '_' + prop; vars.push({ name: name, node: node, comment: list }); return N.ref(name); };
+    Object.assign(ck, { exprOf, dateCol, scale, cond, rules, isRatio, pctFits, parts, lit, hoist });
+  }
 
-    (d.layers || []).forEach((el, i) => {
+  // one layer: its attribute helpers, its kind's step, then the mirror, the editor's tag and "show if"
+  function layerStep(ck, el, i) {
+    const { mirror, W, tag, errors, scale, rules, cond, parts, lit, hoist } = ck;
       el = Object.assign({}, el, { _i: i + 1 });
       const b = el.bind || {};
       const out = [];
@@ -215,27 +235,64 @@
         else if (el.opacity != null && +el.opacity < 1) lit(out, " opacity='" + attrNum(el.opacity) + "'");
       };
 
+      const ly = { el, b, out, numA, colA, common, note };
+
       switch (el.type) {
-        case 'rect':
+        case 'rect': rectLayer(ck, ly); break;
+        case 'circle': circleLayer(ck, ly); break;
+        case 'line': lineLayer(ck, ly); break;
+        case 'text': textLayer(ck, ly); break;
+        case 'ring': ringLayer(ck, ly); break;
+        case 'arrow': arrowLayer(ck, ly); break;
+        case 'spark': if (sparkLayer(ck, ly) === false) return; break;
+        default:
+          errors.push('Unknown layer type: ' + el.type);
+          return;
+      }
+      // a mirrored design flips every shape around the picture's vertical middle (texts are handled above)
+      if (mirror && el.type !== 'text') { out.unshift("<g transform='translate(" + W + " 0) scale(-1 1)'>"); if (typeof out[1] === 'string') { out[1] = out[0] + out[1]; out.shift(); } lit(out, '</g>'); }
+      // The editor wraps each layer (outside any "show if") so hidden layers stay selectable
+      if (tag) lit(parts, "<g data-l='" + (el._i - 1) + "'>");
+      // Show if: the whole layer becomes "" when the condition is false
+      if (b.show && b.show.v) {
+        const shown = hoist(el, 'show', cond(b.show), note());
+        const inner = out.map((p) => (typeof p === 'string' ? N.str(p) : p));
+        parts.push(N.iff(shown, N.cat(inner), N.str('')));
+      } else out.forEach((p) => (typeof p === 'string' ? lit(parts, p) : parts.push(p)));
+      if (tag) lit(parts, '</g>');
+  }
+
+  // a rect
+  function rectLayer(ck, ly) {
+    const { el, out, numA, colA, common } = ly, { lit } = ck;
           lit(out, '<rect');
           numA('x', 'x', el.x); numA('y', 'y', el.y); numA('width', 'w', el.w); numA('height', 'h', el.h);
           if (+el.rx) lit(out, " rx='" + attrNum(el.rx) + "'");
           colA('fill', 'fill', el.fill); common(); lit(out, '/>');
-          break;
-        case 'circle':
+  }
+
+  // a circle
+  function circleLayer(ck, ly) {
+    const { out, el, numA, colA, common } = ly, { lit } = ck;
           lit(out, '<circle');
           numA('cx', 'cx', el.cx); numA('cy', 'cy', el.cy); numA('r', 'r', el.r);
           colA('fill', 'fill', el.fill); common(); lit(out, '/>');
-          break;
-        case 'line':
+  }
+
+  // a line
+  function lineLayer(ck, ly) {
+    const { el, out, numA, colA } = ly, { lit } = ck;
           lit(out, '<line');
           numA('x1', 'x1', el.x1); numA('y1', 'y1', el.y1); numA('x2', 'x2', el.x2); numA('y2', 'y2', el.y2);
           colA('stroke', 'stroke', el.stroke || '#000000');
           lit(out, " stroke-width='" + attrNum(el.sw || 1) + "'" + (el.cap === 'round' ? " stroke-linecap='round'" : ''));
           if (el.opacity != null && +el.opacity < 1) lit(out, " opacity='" + attrNum(el.opacity) + "'");
           lit(out, '/>');
-          break;
-        case 'text': {
+  }
+
+  // a text: a value with its number format, or literal text
+  function textLayer(ck, ly) {
+    const { el, b, out, numA, colA, common, note } = ly, { mirror, W, R, Z, fromColumn, isRatio, pctFits, lit, hoist } = ck;
           // Round 14, the owner's ask (6 Oct 2026; a card read 33.8% and its ring's label "0"): a text that shows a ratio
           // (a ratio or % value, or a measure marked percent: its format has a %, or the caller's format rule says so) in a
           // number format shows it as a percent: "0.0%", or "0%" where "100.0%" does not fit inside the ring around it
@@ -259,9 +316,11 @@
             out.push(r);
           } else lit(out, safe(el.text || ''));
           lit(out, '</text>');
-          break;
-        }
-        case 'ring': {
+  }
+
+  // a ring: its track and its arc
+  function ringLayer(ck, ly) {
+    const { el, b, out, colA, note } = ly, { scale, lit, hoist } = ck;
           const r = Math.max(1, +el.r || 20), C = 2 * Math.PI * r, cx = attrNum(el.cx), cy = attrNum(el.cy), sw = attrNum(el.sw || 6);
           lit(out, "<circle cx='" + cx + "' cy='" + cy + "' r='" + attrNum(r) + "' fill='none' stroke='" + color(el.track || '#1e293b') + "' stroke-width='" + sw + "'/>");
           lit(out, "<circle cx='" + cx + "' cy='" + cy + "' r='" + attrNum(r) + "' fill='none'");
@@ -274,9 +333,11 @@
             lit(out, " stroke-opacity='"); out.push(N.iff(N.op('>', p, N.num(0)), N.str('1'), N.str('0'))); lit(out, "'");
           } else lit(out, " stroke-dasharray='" + attrNum(C * Math.max(0, Math.min(1, +el.p || 0))) + ' ' + attrNum(C) + "'");
           lit(out, '/>');
-          break;
-        }
-        case 'arrow': {
+  }
+
+  // an arrow
+  function arrowLayer(ck, ly) {
+    const { el, b, out, note } = ly, { Z, lit, hoist } = ck;
           // Triangle pointing up, down, or a flat bar, chosen by the sign of the value
           const x = +el.x || 0, y = +el.y || 0, s = Math.max(4, +el.size || 16), h = s / 2;
           const P = (pts) => 'M' + pts.map((p) => attrNum(p[0]) + ' ' + attrNum(p[1])).join(' L') + ' Z';
@@ -295,13 +356,15 @@
           lit(out, "'");
           if (el.opacity != null && +el.opacity < 1) lit(out, " opacity='" + attrNum(el.opacity) + "'");
           lit(out, '/>');
-          break;
-        }
-        case 'spark': {
+  }
+
+  // a sparkline; false: the layer is left out (its error said), as the old early return
+  function sparkLayer(ck, ly) {
+    const { el, b, out, colA, note } = ly, { d, errors, valueIds, dateCol, exprOf, lit, hoist } = ck;
           // Line over the last n periods: one CALCULATE per period, scaled between the lowest and highest value
           const sv = b.series && b.series.v;
-          if (!sv || !valueIds.has(sv)) { errors.push('Sparkline "' + (el.name || 'spark') + '" needs a value'); return; }
-          if (!dateCol) { errors.push("Date column must look like 'Date'[Date]"); return; }
+          if (!sv || !valueIds.has(sv)) { errors.push('Sparkline "' + (el.name || 'spark') + '" needs a value'); return false; }
+          if (!dateCol) { errors.push("Date column must look like 'Date'[Date]"); return false; }
           const n = Math.max(2, Math.min(60, Math.round(+el.n || 12))), grain = ['month', 'week', 'day'].includes(el.grain) ? el.grain : 'month';
           const x = +el.x || 0, y = +el.y || 0, w = Math.max(1, +el.w || 100), h = Math.max(1, +el.h || 30), step = w / (n - 1);
           const expr = exprOf(sv), complete = grain === 'month' && !!el.complete;
@@ -331,25 +394,11 @@
             out.push(N.iff(N.op('>', count, N.num(0)), N.cat([N.str("<circle cx='"), F(xOf(i0)), N.str("' cy='"), F(yOf(v0)),
               N.str("' r='" + attrNum(el.dotR || 3) + "' fill='" + color(el.dotColor || el.stroke || '#00d4ff') + "'/>")]), N.str('')));
           }
-          break;
-        }
-        default:
-          errors.push('Unknown layer type: ' + el.type);
-          return;
-      }
-      // a mirrored design flips every shape around the picture's vertical middle (texts are handled above)
-      if (mirror && el.type !== 'text') { out.unshift("<g transform='translate(" + W + " 0) scale(-1 1)'>"); if (typeof out[1] === 'string') { out[1] = out[0] + out[1]; out.shift(); } lit(out, '</g>'); }
-      // The editor wraps each layer (outside any "show if") so hidden layers stay selectable
-      if (tag) lit(parts, "<g data-l='" + (el._i - 1) + "'>");
-      // Show if: the whole layer becomes "" when the condition is false
-      if (b.show && b.show.v) {
-        const shown = hoist(el, 'show', cond(b.show), note());
-        const inner = out.map((p) => (typeof p === 'string' ? N.str(p) : p));
-        parts.push(N.iff(shown, N.cat(inner), N.str('')));
-      } else out.forEach((p) => (typeof p === 'string' ? lit(parts, p) : parts.push(p)));
-      if (tag) lit(parts, '</g>');
-    });
+  }
 
+  // the picture's frame, the pieces merged, hideIf and the answer
+  function svgStep(ck) {
+    const { d, W, H, vars, errors, valueIds, varName, parts, lit } = ck;
     const bg = hexOk(d.bg) ? "<rect width='" + W + "' height='" + H + "' rx='" + attrNum(d.radius || 0) + "' fill='" + color(d.bg) + "'/>" : '';
     const open = "<svg xmlns='http://www.w3.org/2000/svg' width='" + W + "' height='" + H + "' viewBox='0 0 " + W + ' ' + H + "'>" + bg;
     const svgParts = [open].concat(parts).concat(['</svg>']);

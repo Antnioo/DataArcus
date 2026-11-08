@@ -304,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // (SP30: the model's metadata, normalised, is field-catalog.js's, which pbip-bind.js reads when it loads: loaded first)
       .then(() => (window.DAFieldCatalog ? null : loadScript('/assets/js/field-catalog.min.js?v=910ad9ad493d')))
       // (SP30: the ranking is field-suggest.js's, which reads field-catalog.js and which pbip-bind.js reads: loaded between)
-      .then(() => (window.DAFieldSuggest ? null : loadScript('/assets/js/field-suggest.min.js?v=0163c8f2284b')))
+      .then(() => (window.DAFieldSuggest ? null : loadScript('/assets/js/field-suggest.min.js?v=ca404cf26ee2')))
       .then(() => loadScript('/assets/js/pbip-bind.min.js?v=600d69b2b551')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
   let words = null;
   const loadNames = () => Promise.all([window.DAArabicNames ? window.DAArabicNames : loadScript('/assets/js/arabic-names.min.js?v=637dc63aff40').then(() => window.DAArabicNames),
