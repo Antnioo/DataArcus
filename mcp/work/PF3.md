@@ -3,7 +3,7 @@
 - **Base:** `fix/0.3.2-pf3` from `origin/integration/0.3.2` at a548495d (FN1E merged). Push only this branch; never merged, no PR.
 - **Scope:** `mcp/lib/check-report.mjs` only: `fieldParameters.parameters` and its note are capped like suspiciousNames (first N kept, `more: <count>`), and the cut loop may cut this list too. fn1e's "cut to the bone" pin re-recorded for that one case. No other list, finding or text.
 - **Expected checks:** new test pf3 red on a548495d first, then green; fn1e: all cases but "cut to the bone" unchanged; checker area, lint, test-contracts, tests.yml green.
-- **Resume:** see "Progress" below.
+- **Resume:** done; CI green on 19db21c6 (see Progress).
 
 ## Plan and expected numbers
 - Base: the 700-table case answers 72,285 characters (over 40,000), parameters list uncapped.
@@ -13,7 +13,8 @@
 ## Progress
 - Test pf3 (mcp/test-0.3.2-pf3.mjs, area checker): red on a548495d first (5 of 7 checks failed: 700 tables answered 69,623 characters in pf3's own report; list 700 of 700, no `more`, note 17,059 characters); green after the fix, PASS 7 checks.
 - Fix, check-report.mjs only: `fieldParameters.parameters` keeps the first 50 (`more` = the rest); the note names at most 5 missing tables then "and N more"; the cut loop halves the list (`more` kept true) when still over the cap. No new cap function: it follows suspiciousNames (slice + `more`), the helper the answer's other lists use in check-report.mjs; capAnswer (answer.mjs) is not used by checkReport.
-- Resume: merge origin/integration/0.3.2 once, run tests.yml, write the CI line below.
+- Integration (a548495d) had not moved, so no merge was needed.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42139851477 on 19db21c6f5d24d9706dbb1f0f198a7387951b754 (conclusion success; the macOS parts are skipped by design, CI1).
 
 ## Changed on purpose
 - mcp/fixtures/fn1e-pins.json, one entry only, "C cut to the bone": sha 7c8dc8b9... -> 970662c7..., len 72285 -> 29464. Dumped on a548495d and on this branch (FN1E_DUMP), every top-level key that differs:
