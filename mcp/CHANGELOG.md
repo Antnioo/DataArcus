@@ -5,6 +5,7 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **Every answer has its cap, input errors too; the two promises say what the code does:** a call whose input fails a tool's schema is answered short (what was wrong at the first five places, "and N more", how to call again), where it was the whole validator message (46,772 characters for 300 invalid items). Wording only: DataArcus never sends values from your tables, filters, slicers or bookmarks to the AI app (text you typed in titles and text boxes is read as typed), and nothing in your projects is written before you approve the plan (the one exception: the empty working folder you chose is made on first start).
 - **The approval page says exactly what is written:** each page's slicers, buttons and cards are listed in the order a
   person reads the page (right to left on an Arabic page); each card is named by the measure it shows, and the "no data"
   message boxes over the charts are counted on their own line, never as cards. When the colours leave no room for the
