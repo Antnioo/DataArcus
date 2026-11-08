@@ -10,7 +10,11 @@ skill, and the shared engines it loads from `assets/js/`. If the code changes, t
 is checked again before the next release. What is not true yet is listed under "Known gaps" at the end.
 
 ## On one page
-Each line is said in full, with its evidence, in the section named in brackets.
+Two promises, in these words everywhere they are stated:
+- **Data:** DataArcus never sends values from your tables, filters, slicers or bookmarks to the AI app. Text you typed yourself in titles and text boxes is read as typed, so the AI can check it and, for an Arabic twin, translate it with your approval.
+- **Writes:** Nothing in your projects is written before you approve the plan. The one exception: on first start, DataArcus makes the empty working folder you chose, if it does not exist yet.
+
+Each line below is said in full, with its evidence, in the section named in brackets.
 - **What runs on your computer:** the MCP, a program your AI app starts there [1]; its one local page, the approval
   window, served to your own browser at 127.0.0.1 while a plan waits for your click [1]; the files it writes, only after
   you approve their plan, as new files inside the working folder you chose (its own answers file is the one it may
@@ -74,7 +78,7 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
 **Also sent, by every tool that reads a model:** when a table, column or measure name holds a character nobody sees (a direction override, a zero-width character), that name, with the character written as its code point (`hiddenCharacters`, up to 20 names). A report name given with such characters is written without them. **And (0.3.1):** a model file that can't be read fully (empty, not text, git merge-conflict markers, cut short, a line it can't place) is named, not skipped silently: `unreadable` first in `read_model` and `check_model_health` (no score then), its path relative to the project (screened) and why, never its text; the planning tools refuse with the same words. **And:** error messages. Since round 17 no answer or error holds a full local path: paths are relative to the working folder (for example `Sales Report/Sales Report.pbip`), the working folder is named by its last folder name only, and your home folder is written `~`, so your Windows user name is not sent. The full path of the working folder is written once, in the start line of the app's local log (section 1); no other path is logged.
 
 ## 3. Metadata only: no data values
-- **No DataArcus tool returns the data in your tables to Claude.** It reads files on your machine to check and
+- **No DataArcus tool returns values from your tables, filters, slicers or bookmarks to Claude.** It reads files on your machine to check and
   fingerprint them: the model's definition files (TMDL files, `model.bim`, or the model schema inside a `.pbit`), the
   report's own files (its definition, the images and themes in its StaticResources, a private custom visual's files),
   the files you name (a logo, a background, a theme) and DataArcus's own answers file. Whole files are read and hashed

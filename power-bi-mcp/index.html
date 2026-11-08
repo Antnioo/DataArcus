@@ -201,10 +201,10 @@
 
               <h2 class="mt-5 mb-3" data-i18n="beta.safe.title">What keeps it safe</h2>
               <ul>
-                <li data-i18n="beta.safe.model">It never changes your model and never writes over your files: every report is new, next to your model. The one file it replaces is its own answers file, and only after you approve.</li>
+                <li data-i18n="beta.safe.model">Nothing in your projects is written before you approve the plan. The one exception: on first start, DataArcus makes the empty working folder you chose, if it does not exist yet. It never changes your model and never writes over your files: every report is new, next to your model. The one file it replaces is its own answers file, and only after you approve.</li>
                 <li data-i18n="beta.safe.ask">It writes only inside the one folder you choose (and a private check copy in your computer's temporary folder, deleted when the check ends).</li>
                 <li data-i18n="beta.safe.validator">Its check_report tool checks any PBIR report offline with Microsoft's report validator.</li>
-                <li data-i18n-html="beta.safe.data">It reads files on your machine to check and fingerprint them. What it sends to Claude is your model's and report's names and structure (tables, columns, measures, formats, pages, visuals) and the short texts typed on report pages: page names and short text boxes, and for the Arabic twin its titles too, which can hold a figure or a name. Never table rows, filter or slicer values, or bookmark states. What the AI app sees: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#3-metadata-only-no-data-values' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>. The three boundaries on one page: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#on-one-page' class='text-accent' target='_blank' rel='noopener'>the privacy summary</a>.</li>
+                <li data-i18n-html="beta.safe.data">DataArcus never sends values from your tables, filters, slicers or bookmarks to the AI app. Text you typed yourself in titles and text boxes is read as typed, so the AI can check it and, for an Arabic twin, translate it with your approval. It reads files on your machine to check and fingerprint them; what it sends to Claude is your model's and report's names and structure (tables, columns, measures, formats, pages, visuals) and that typed text. What the AI app sees: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#3-metadata-only-no-data-values' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>. The three boundaries on one page: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#on-one-page' class='text-accent' target='_blank' rel='noopener'>the privacy summary</a>.</li>
               </ul>
 
               <h2 class="mt-5 mb-3" data-i18n="beta.req.title">Requirements and limits</h2>
@@ -313,7 +313,7 @@
   </footer>
 
   <script src="../assets/js/translations/common.min.js?v=434124bdf3f2" defer></script>
-  <script src="../assets/js/translations/beta-page.min.js?v=6b140634bbaf" defer></script>
+  <script src="../assets/js/translations/beta-page.min.js?v=0996c8f7eed2" defer></script>
   <script src="../assets/js/locale-routes.min.js?v=ce1187fd5cbb" defer></script>
   <script src="../assets/js/locale-catalog.min.js?v=1464f13d8c0b" defer></script>
   <script src="../assets/js/locale-dom.min.js?v=faf294f00eb2" defer></script>

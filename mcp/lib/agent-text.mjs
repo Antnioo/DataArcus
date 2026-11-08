@@ -50,6 +50,6 @@ export function instructions(LIMITS) {
     `6. A visual not supported (supported: ${visualWords(LIMITS)}; the last three only when asked): write nothing; offer the closest supported.`,
     '7. ' + NO_DIRECT_EDITS,
     '8. ' + ARABIC_LENS_RULE,
-    'Files are read and hashed locally; answers hold structure and short titles as typed, never table data or DAX. Writes are new files (bar its answers file); a failed one removes what it made. Tell the user every note and warning.'
+    'Answers hold structure and typed titles and text boxes, never values from tables, filters, slicers or bookmarks. Nothing is written before approval (bar the working folder, made on first start). Tell the user every note and warning.'
   ].join('\n');
 }

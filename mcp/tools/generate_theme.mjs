@@ -44,7 +44,7 @@ export function register(server, ctx) {
       lang: langInput,
       themeFrom: z.string().max(200).optional().describe('With path: the report (its name, as colours.otherReports lists it) whose colours to keep, when the model has several'),
       path: modelPath.optional().describe('The model the theme is for: when no colours are asked (no palette, brand, preset or mode) and one of its reports has its own theme, the colours start from that theme (said in sayInPlan)'),
-      folder: z.string().optional().describe('Folder for the theme file, inside the DataArcus folder (default: the DataArcus folder)'),
+      folder: z.string().max(500).optional().describe('Folder for the theme file, inside the DataArcus folder (default: the DataArcus folder)'),
       planId: planIdInput
     }), annotations: ADDS
   }, safe(async (a) => {
