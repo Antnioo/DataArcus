@@ -190,6 +190,19 @@ const VT_WORDS = { clusteredBarChart: ['bar chart', 'bar charts', 'مخططات 
 // (0.3.2 PL1, E1 round 5: a visual by Power BI's type key) one visual's kind in words; a custom visual by its id
 const kindSaid = (t) => { const s = String(t || ''), m = /^custom (.+)$/.exec(s); return m ? `custom visual ${m[1]}` : VT_WORDS[s] ? VT_WORDS[s][0] : s; };
 const nOf = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+// (AP2) a page's cards (pagesWritten: cards [{ shows: [Table[Measure]] }], messageCards, kinds): each card by its
+// measures' names (a model's measure names are unique), the message boxes, the cards with no measure; English and Arabic
+// (the Arabic of the message boxes and of a card with no measure: a DRAFT for the owner, mcp/work/AP2.md)
+const CARD_KINDS = /^(cardVisual|card|multiRowCard|kpi)$/;
+const measureName = (f) => { const m = /\[(.*)\]$/s.exec(String(f)); return m ? m[1] : String(f); };
+function cardItems(x) {
+  const C = (x.cards || []).map((c) => (c.shows || []).map(measureName)), msg = +x.messageCards || 0, out = [];
+  const all = (x.kinds || []).filter((k) => CARD_KINDS.test(k.type)).reduce((n, k) => n + (+k.count || 0), 0), left = Math.max(0, all - C.length - msg);
+  if (C.length) out.push({ en: `${nOf(C.length, 'card', 'cards')}: ${C.map((c) => c.join(' and ')).join(', ')}`, ar: `البطاقات: ${C.length} (${C.map((c) => c.map((n) => `«${n}»`).join(' و')).join('، ')})` });
+  if (msg) out.push({ en: `${nOf(msg, '"no data" message box', '"no data" message boxes')}: each over a chart, shown when it has no data`, ar: `مربعات رسالة «لا توجد بيانات»: ${msg} (كل منها فوق مخطط، يظهر عندما لا تكون لديه بيانات)` });
+  if (left) out.push({ en: `${nOf(left, 'card', 'cards')} with no measure`, ar: `بطاقات دون مقياس: ${left}` });
+  return out;
+}
 function pagesSection(PW) {
   const rows = PW.map((x) => {
     const items = [{ en: nOf(+x.visuals || 0, 'visual', 'visuals'), ar: `المرئيات: ${+x.visuals || 0}` }];
@@ -202,7 +215,11 @@ function pagesSection(PW) {
     const B = x.buttons || [];
     if (B.length) items.push({ en: `${nOf(B.length, 'button', 'buttons')}: ${B.map((b) => (b.to === 'page' ? `to page "${b.name}"` : b.to === 'bookmark' ? `"${b.name}" (a bookmark)` : 'another action')).join('; ')}`,
       ar: `الأزرار: ${B.length} (${B.map((b) => (b.to === 'page' ? `إلى الصفحة «${b.name}»` : b.to === 'bookmark' ? `«${b.name}» (إشارة مرجعية)` : 'إجراء آخر')).join('؛ ')})` });
+    // (0.3.2 AP2, A-PF2-2, D-1108-07) the cards by the measure each shows, at the place of the first card kind; the "no
+    // data" message boxes laid over the charts on their own line, never counted as cards; a card with no measure apart
+    let cardsSaid = false;
     (x.kinds || []).forEach((k) => { const w = VT_WORDS[k.type] || [String(k.type), String(k.type), String(k.type)], by = (k.by || []).map(String);
+      if (CARD_KINDS.test(k.type)) { if (!cardsSaid) items.push(...cardItems(x)); cardsSaid = true; return; }
       items.push({ en: `${nOf(+k.count || 0, w[0], w[1])}${by.length ? `: ${by.map((f) => `by ${f}`).join(', ')}` : ''}`, ar: `${w[2]}: ${+k.count || 0}${by.length ? ` (${by.map((f) => `حسب «${f}»`).join('، ')})` : ''}` }); });
     return [`Page ${x.n}: ${cut(String(x.name), 80)}`, items];
   });

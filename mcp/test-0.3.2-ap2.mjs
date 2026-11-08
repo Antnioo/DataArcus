@@ -73,13 +73,15 @@ const textOf = (h) => unesc(String(h).replace(/<[^>]+>/g, ' ')).replace(/\s+/g, 
     const t = textOf(A.approvalHtml({ id: 'plan-ap2000000001', kind: 'report', writes: ['the report "R.Report"'] }, Object.assign({ lang }, s)));
     const at = t.indexOf(lang === 'ar' ? 'ما تحويه كل صفحة (' : 'What each page holds ('), p2 = t.indexOf(lang === 'ar' ? 'الصفحة 2:' : 'Page 2:', at);
     return [t.slice(at, p2), t.slice(p2, p2 + 300)]; };
-  const [e1, e2] = part('en'), [a1, a2] = part('ar');
+  // (the Arabic page isolates each name: the tags' spaces around «», brackets, colons and commas taken out, both sides)
+  const tight = (t) => t.replace(/\s*([«»():،])\s*/g, '$1');
+  const [e1, e2] = part('en'), [a1, a2] = part('ar').map(tight);
   chk(() => /2 cards: Total Sales, إجمالي المبيعات/.test(e1) && !/3 cards/.test(e1), () => `R2-1 English: the cards by the measure each shows, the message box not counted as a card: ${e1}`);
   chk(() => /1 "no data" message box: /.test(e1), () => `R2-2 English: the "no data" message box on its own line: ${e1}`);
   chk(() => /2 "no data" message boxes: /.test(e2) && !/\bcards?\b/.test(e2.replace(/message box(es)?/g, '')), () => `R2-3 English: a page of message boxes only names no card: ${e2}`);
-  chk(() => a1.includes('البطاقات: 2 («Total Sales»، «إجمالي المبيعات»)') && !/بطاقات: 3/.test(a1), () => `R2-4 Arabic: the cards by measure: ${a1}`);
-  chk(() => /مربعات رسالة «لا توجد بيانات»: 1/.test(a1), () => `R2-5 Arabic: the message box on its own line: ${a1}`);
-  chk(() => /مربعات رسالة «لا توجد بيانات»: 2/.test(a2) && !/البطاقات|بطاقات:/.test(a2), () => `R2-6 Arabic: a page of message boxes only names no card: ${a2}`);
+  chk(() => a1.includes(tight('البطاقات: 2 («Total Sales»، «إجمالي المبيعات»)')) && !/بطاقات: 3/.test(a1), () => `R2-4 Arabic: the cards by measure: ${a1}`);
+  chk(() => a1.includes(tight('مربعات رسالة «لا توجد بيانات»: 1')), () => `R2-5 Arabic: the message box on its own line: ${a1}`);
+  chk(() => a2.includes(tight('مربعات رسالة «لا توجد بيانات»: 2')) && !/البطاقات|بطاقات:/.test(a2), () => `R2-6 Arabic: a page of message boxes only names no card: ${a2}`);
 }
 
 // ---------- R3: the glass look's picture as the page says it (the real server) ----------

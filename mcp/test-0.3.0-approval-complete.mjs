@@ -187,12 +187,17 @@ try {
     const AR = { 'Work Orders[Total Hours]': 'إجمالي الساعات', 'Work Orders[Work Order Count]': 'عدد أوامر العمل', 'Work Orders[Department]': 'القسم', 'Work Orders[Status]': 'الحالة', 'Work Orders[Hours]': 'الساعات', 'Work Orders[Order ID]': 'رقم الأمر',
       'Work Orders[Date Key]': 'التاريخ', 'Dim Date[Date]': 'التاريخ', 'Dim Date[Year]': 'السنة', 'Dim Date[Month]': 'الشهر', 'Dim Date[Month Number]': 'رقم الشهر' };
     // the written report, read here from its files: each page's name, kind, visuals by type, slicers' fields, buttons
+    const measuresOf = (v) => Object.values((v.visual.query || {}).queryState || {}).flatMap((r) => r.projections || []).map((p) => p.field && p.field.Measure).filter(Boolean);
     const readBack = (dir) => { const pd = path.join(dir, 'definition/pages'), order = rd(path.join(pd, 'pages.json')).pageOrder;
       return order.map((id, i) => { const pj = rd(path.join(pd, id, 'page.json')), vs = tree(path.join(pd, id, 'visuals')).filter((f) => /visual\.json$/.test(f)).map(rd), types = {}, slicers = [];
-        let buttons = 0; vs.forEach((v) => { const t = v.visualGroup ? 'group' : v.visual.visualType;
+        const cards = []; let buttons = 0, messages = 0; vs.forEach((v) => { const t = v.visualGroup ? 'group' : v.visual.visualType;
           if (t === 'slicer') { const pr = ((((v.visual.query || {}).queryState || {}).Values || {}).projections || [])[0], c = pr && pr.field && pr.field.Column; slicers.push(c ? `${c.Expression.SourceRef.Entity}[${c.Property}]` : '?'); }
-          else if (t === 'actionButton') buttons++; else types[t] = (types[t] || 0) + 1; });
-        return { n: i + 1, name: pj.displayName, tooltip: pj.type === 'Tooltip', w: pj.width, h: pj.height, visuals: vs.length, types, slicers, buttons }; }); };
+          else if (t === 'actionButton') buttons++;
+          // (0.3.2 AP2, A-PF2-2, changed on purpose: each card by the model measures it shows; a card of report measures
+          // only is a "no data" message box, counted on its own line, never as a card)
+          else if (t === 'cardVisual' && measuresOf(v).length) { const own = measuresOf(v).filter((m) => !m.Expression.SourceRef.Schema).map((m) => m.Property); if (own.length) cards.push([...new Set(own)]); else messages++; }
+          else types[t] = (types[t] || 0) + 1; });
+        return { n: i + 1, name: pj.displayName, tooltip: pj.type === 'Tooltip', w: pj.width, h: pj.height, visuals: vs.length, types, slicers, buttons, cards, messages }; }); };
     const EN = { clusteredBarChart: ['bar chart', 'bar charts'], clusteredColumnChart: ['column chart', 'column charts'], lineChart: ['line chart', 'line charts'], cardVisual: ['card', 'cards'], tableEx: ['table', 'tables'], textbox: ['text box', 'text boxes'], shape: ['shape', 'shapes'], group: ['group', 'groups'] };
     const ARW = { clusteredBarChart: 'مخططات شريطية', clusteredColumnChart: 'مخططات عمودية', lineChart: 'مخططات خطية', cardVisual: 'بطاقات', tableEx: 'جداول', textbox: 'مربعات نص', shape: 'أشكال', group: 'مجموعات مرئيات' };
     const n1 = (n, w) => `${n} ${n === 1 ? w[0] : w[1]}`;
@@ -212,8 +217,8 @@ try {
       const partOf = (x) => { const lab = lang === 'ar' ? `الصفحة ${x.n}: «${x.name}»` : `Page ${x.n}: ${x.name}`, i = S.indexOf(lab), nx = pages[x.n] ? S.indexOf(lang === 'ar' ? `الصفحة ${x.n + 1}: «` : `Page ${x.n + 1}: `, i + 1) : -1; return i < 0 ? '' : S.slice(i, nx > i ? nx : i + 1500); };
       for (const x of pages) {
         const P = partOf(x), want = (lang === 'ar'
-          ? [`المرئيات: ${x.visuals}`].concat(x.tooltip ? ['صفحة تلميح'] : [], x.slicers.length ? [`المقسمات: ${x.slicers.length} (`].concat(x.slicers.map((f) => `«${f}»`)) : [], x.buttons ? [`الأزرار: ${x.buttons}`] : [], Object.entries(x.types).map(([t, n]) => `${ARW[t] || t}: ${n}`))
-          : [`${x.visuals} visuals`].concat(x.tooltip ? ['a tooltip page'] : [], x.slicers.length ? [`${n1(x.slicers.length, ['slicer', 'slicers'])}: `].concat(x.slicers) : [], x.buttons ? [n1(x.buttons, ['button', 'buttons'])] : [], Object.entries(x.types).map(([t, n]) => n1(n, EN[t] || [t, t]))));
+          ? [`المرئيات: ${x.visuals}`].concat(x.tooltip ? ['صفحة تلميح'] : [], x.slicers.length ? [`المقسمات: ${x.slicers.length} (`].concat(x.slicers.map((f) => `«${f}»`)) : [], x.buttons ? [`الأزرار: ${x.buttons}`] : [], Object.entries(x.types).map(([t, n]) => `${ARW[t] || t}: ${n}`), x.cards.length ? [`البطاقات: ${x.cards.length} (`].concat(x.cards.flat().map((m) => `«${m}»`)) : [], x.messages ? [`مربعات رسالة «لا توجد بيانات» : ${x.messages}`] : [])
+          : [`${x.visuals} visuals`].concat(x.tooltip ? ['a tooltip page'] : [], x.slicers.length ? [`${n1(x.slicers.length, ['slicer', 'slicers'])}: `].concat(x.slicers) : [], x.buttons ? [n1(x.buttons, ['button', 'buttons'])] : [], Object.entries(x.types).map(([t, n]) => n1(n, EN[t] || [t, t])), x.cards.length ? [`${n1(x.cards.length, ['card', 'cards'])}: `].concat(x.cards.flat()) : [], x.messages ? [n1(x.messages, ['"no data" message box', '"no data" message boxes'])] : []));
         const missing = want.filter((t) => !P.includes(t));
         chk(() => P && !missing.length, () => `A9-2 ${lang}. page ${x.n} "${x.name}" is named with everything on it: missing ${JSON.stringify(missing)} in ${JSON.stringify(P.slice(0, 600))}`);
       }
