@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
     new MutationObserver(renderLogo).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   }
 
-  const toast = (msg) => { const t = $('toast'); t.textContent = msg; t.style.opacity = 1; clearTimeout(toast.h); toast.h = setTimeout(() => { t.style.opacity = 0; }, 1800); };
+  const toast = (msg) => window.DAPageToast.toast(msg, { ms: 1800 });   // page-toast.js, its one home (0.3.2 DD2W; the page loads it first)
 
   // (0.3.1 FX5) the sample's bars and columns as thick as Power BI draws n of them in the slot: the writer's rule
   // (pbip-sizing.js barBand, never thicker than its maximum), else Desktop's default (its 20% between categories);

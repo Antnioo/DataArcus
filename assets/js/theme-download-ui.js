@@ -100,10 +100,10 @@
   // the theme JSON: copy and download
   function jsonPart(d) {
     const { $, L, track, toast, hooks, design, st, updateStatus, fileBase } = d;
+    const copyText = (text, node, o) => window.DAPageToast.copyText(text, node, o);   // page-toast.js, its one home (0.3.2 DD2W)
     $('copyBtn').addEventListener('click', () => {
       const text = JSON.stringify(hooks.buildTheme(), null, 2);
-      const fallback = () => { const r = document.createRange(); r.selectNodeContents($('json')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast(L('Selected. Press Ctrl+C to copy', 'تم التحديد. اضغط Ctrl+C للنسخ')); };
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast(L('Theme JSON copied', 'تم نسخ ملف السمة')), fallback); else fallback();
+      copyText(text, $('json'), { done: L('Theme JSON copied', 'تم نسخ ملف السمة'), selected: L('Selected. Press Ctrl+C to copy', 'تم التحديد. اضغط Ctrl+C للنسخ'), toast });
       st.lastJson = text; updateStatus();
       track('theme_copy', { preset: design().preset || 'custom' });
     });
