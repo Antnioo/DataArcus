@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-08T18:02Z",
+  "generated_at": "2026-11-08T19:02Z",
   "today": {
     "date": "2026-11-08",
-    "cost_usd": 136.3,
-    "tokens": 464262363,
-    "sessions": 28,
+    "cost_usd": 139.38,
+    "tokens": 472623238,
+    "sessions": 29,
     "by_kind": {
       "builder": {
         "cost_usd": 69.05,
         "count": 9
       },
       "worker": {
-        "cost_usd": 66.1,
-        "count": 15
+        "cost_usd": 69.18,
+        "count": 16
       },
       "probe": {
         "cost_usd": 1.15,
@@ -30,8 +30,8 @@
         "count": 10
       },
       "opus": {
-        "cost_usd": 99.9,
-        "count": 18
+        "cost_usd": 102.98,
+        "count": 19
       }
     }
   },
@@ -116,9 +116,9 @@
     },
     {
       "date": "2026-11-08",
-      "cost_usd": 136.3,
-      "tokens": 464262363,
-      "sessions": 28
+      "cost_usd": 139.38,
+      "tokens": 472623238,
+      "sessions": 29
     }
   ],
   "jobs": [
@@ -205,8 +205,8 @@
     }
   ],
   "workers": {
-    "count": 15,
-    "cost_usd": 66.1,
+    "count": 16,
+    "cost_usd": 69.18,
     "costliest": [
       {
         "label": "cleanup",
