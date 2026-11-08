@@ -70,7 +70,8 @@ export async function launch() {
 }
 
 // The languages a page is tested in: an Arabic copy (ar/..., scripts/ar-pages.mjs) is Arabic whatever ?lang= says
-export const langsOf = (p) => (p.startsWith('ar/') ? ['ar'] : ['en', 'ar']);
+// (0.3.2 BF1) build/ (the unlisted live build page) is English only and loads no language scripts, like the go/ links
+export const langsOf = (p) => (p.startsWith('ar/') ? ['ar'] : p.startsWith('build/') ? ['en'] : ['en', 'ar']);
 
 // The HTML pages of the site (the go/ short links are redirects, not pages)
 // git runs without a shell, so the pattern needs no quotes (Windows' cmd.exe keeps single quotes and finds nothing)

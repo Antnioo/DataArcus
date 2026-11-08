@@ -35,6 +35,7 @@ None: the website only, no MCP change (mcp/CHANGELOG.md untouched).
 - Network: this page's CSP gets connect-src https://api.github.com https://raw.githubusercontent.com (GET only, public repo, no token), only on pages that load build-page.js (scripts/csp.mjs); privacy.html's policy is unchanged (checked in the suite).
 - Scripts: this page's script-src names the folder cdn.jsdelivr.net/npm/three@0.160.0/ (exact version, SRI hash on the tag), nothing site-wide.
 - A new devDependency, three@0.160.0 (package.json and package-lock.json).
+- Tests losing checks: site and lang-switcher skip build/ for the language checks (see Changed on purpose).
 - Test rule: test-site-config's "every page but 404, -lab" rule gained build/ (a page that is not in the sitemap on purpose); it loses no check.
 - The page writes nothing (no storage, no cookies, no forms).
 
@@ -44,6 +45,9 @@ None: the website only, no MCP change (mcp/CHANGELOG.md untouched).
 ## Screenshots (made-up fixtures, Chromium, the real page)
 - /tmp/claude-0/-home-user-DataArcus/f1f943a4-1491-5738-98ae-b4e9db334dd4/scratchpad/shots/build-desktop-dark.png and build-desktop-dark-label.png (1440 wide)
 - /tmp/claude-0/-home-user-DataArcus/f1f943a4-1491-5738-98ae-b4e9db334dd4/scratchpad/shots/build-phone-dark.png and build-phone-dark-label.png (390 wide)
+
+## Changed on purpose
+- CI run 42486268590 (on 48e073e5) was red: `site` (ar copy of build/ missing) and `lang-switcher` (no switcher on build/), shard 1 only, both about build/ being English only. Fixed 2026-11-08T13:57Z: `langsOf` in scripts/tests/lib.mjs says ['en'] for build/, and lang-switcher.mjs skips build/ in its two page loops. No expected number of another test changed; those two suites no longer check this one page for a switcher or an Arabic copy (it has neither by design).
 
 ## Seen, not in scope
 - scripts/tests/site.mjs runs more than 10 minutes alone on this machine (one job); not changed.
