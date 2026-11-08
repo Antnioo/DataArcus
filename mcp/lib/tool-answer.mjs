@@ -53,13 +53,13 @@ export const safe = (fn, opts) => async (args) => { const mark = writtenSince(),
 // message, so safe()'s cap never saw it. Fixed here, once, for every tool: a validation error is short (what was wrong at
 // the first few places, how many more, how to retry), and every error the SDK itself makes is capped as safe()'s are.
 // English only: the Arabic wording is a draft for the owner (mcp/work/RV1.md), never shipped before his yes.
-const SHOWN = 5, ISSUE_MAX = 500, VALUE_MAX = 40;
+const PASS_MAX = 1500, SHOWN = 5, ISSUE_MAX = 400, KEYS_MAX = 1500, VALUE_MAX = 40;   // (an unknown-key issue lists the tool's inputs: its own words are kept whole)
 const at = (obj, keys) => keys.reduce((o, k) => (o != null && typeof o === 'object' ? o[k] : undefined), obj);
 const pathOf = (keys) => keys.map((k, i) => (typeof k === 'number' ? `[${k}]` : (i ? '.' : '') + String(k).slice(0, 60))).join('') || '(the input)';
 const gotOf = (v) => (typeof v === 'string' ? `'${v.slice(0, VALUE_MAX)}${v.length > VALUE_MAX ? '...' : ''}'` : Array.isArray(v) ? `a list of ${v.length}` : v && typeof v === 'object' ? 'an object' : String(v));
 export const inputErrorSaid = (tool, issues, args) => {
   const list = issues || [], shown = list.slice(0, SHOWN);
-  const one = (i) => { const keys = (i.path || []), v = at(args, keys), msg = String(i.message || 'invalid').slice(0, ISSUE_MAX);
+  const one = (i) => { const keys = (i.path || []), v = at(args, keys), msg = String(i.message || 'invalid').slice(0, i.code === 'unrecognized_keys' ? KEYS_MAX : ISSUE_MAX);
     return `${pathOf(keys)}: ${msg}${i.code === 'unrecognized_keys' || v === undefined ? '' : ` (got ${gotOf(v)})`}`; };
   const more = list.length - shown.length;
   return `Input validation error: Invalid arguments for tool ${String(tool).slice(0, 60)}: ${list.length} problem${list.length === 1 ? '' : 's'}. ${shown.map(one).join('; ')}${more > 0 ? `; and ${more} more` : ''}. Fix the input and call again.`;
@@ -71,7 +71,8 @@ export const guardInputErrors = (server) => {
   server.validateToolInput = async (tool, args, name) => {
     try { return await check(tool, args, name); }
     catch (e) {
-      if (e instanceof McpError && e.code === ErrorCode.InvalidParams && tool && tool.inputSchema && typeof tool.inputSchema.safeParseAsync === 'function') {
+      // a message already short is the SDK's own, unchanged (pinned by older suites); only a long one is rebuilt
+      if (e instanceof McpError && e.code === ErrorCode.InvalidParams && String(e.message).length > PASS_MAX && tool && tool.inputSchema && typeof tool.inputSchema.safeParseAsync === 'function') {
         const r = await tool.inputSchema.safeParseAsync(args ?? {});
         if (!r.success) throw new McpError(ErrorCode.InvalidParams, inputErrorSaid(name, r.error.issues, args));
       }

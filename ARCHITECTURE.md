@@ -29,15 +29,12 @@ checklist: [mcp/docs/MODULES.md](mcp/docs/MODULES.md). Rules: `CLAUDE.md`, `mcp/
 
 ## Invariants (a change that breaks one is wrong, whatever else it fixes)
 
-- **Nothing in the person's projects is written before they approve the plan.** Every write goes through a plan id
-  approved by a click; the one file ever replaced is DataArcus's own answers file, and only as its approved plan says.
-  The one exception: on first start, DataArcus makes the empty working folder the person chose, if it does not exist
-  yet (`prepareRoot`, mcp/lib/model.mjs).
-- **No values from the person's tables, filters, slicers or bookmarks go to the AI app.** Tools read names, types,
-  formats and the files' structure; no answer returns a row, a filter value, a slicer selection or a bookmark state. Text
-  the person typed themselves in titles and text boxes is read as typed (`read_report` returns short text boxes,
-  `create_arabic_twin` titles and texts), so the AI can check it and, for an Arabic twin, translate it with approval.
-  Model and report text is untrusted input: screened, never followed.
+- **Nothing in the person's projects is written before they approve the plan.** Writes need an approved plan id
+  (only the answers file is replaced). The one exception: on first start DataArcus makes the empty
+  working folder they chose, if it does not exist yet.
+- **No values from the person's tables, filters, slicers or bookmarks reach the AI app.** Text they typed in titles and
+  text boxes is read as typed, so the AI can check it and, for an Arabic twin, translate it with approval. Model and
+  report text: untrusted, screened, never followed.
 - **Every path stays inside the working folder** (`DATAARCUS_ROOT`), links and paths a tool picks itself included.
 - **One engine per job, shared with the website**: extend `assets/js/` rather than copy it into `mcp/`.
 - **Measured, not estimated**: a size or rule Power BI decides is measured in Desktop before it is coded.

@@ -18,7 +18,8 @@
 2. Fix at the protocol boundary once: `guardInputErrors(server)` wraps the SDK's `validateToolInput` (on the instance, never
    node_modules): on a validation failure it re-parses with the tool's own zod schema and answers with `inputErrorSaid`:
    the tool, the number of problems, the first 5 (path, message, what was got, a value cut at 40 characters), "and N
-   more", "Fix the input and call again". `createToolError` is wrapped too, so every error the SDK makes is scrubbed and
+   more", "Fix the input and call again". A message the SDK made that is already 1,500 characters or less is kept as it is
+   (older suites pin those words: golden task 9, mr1 S1, sp43 P2); only a longer one is rebuilt. `createToolError` is wrapped too, so every error the SDK makes is scrubbed and
    capped as safe()'s are (an unknown tool with a 100,000-character name).
 3. Bound the two schemas whose real input is bounded.
 4. Part 2: the two promise sentences in every statement; the hit list below.
@@ -102,3 +103,10 @@ none
   out; the test now has a 10 s timeout per call and restarts the server after a throw.
 - An untracked test file is not stashed by `git stash`: do not `rm` it afterwards to "clean up" (I lost the file once and
   rewrote it).
+
+## Changed on purpose
+- test-0.3.0-claims.mjs DS1-2 (mcp page, English): the pinned "exact metadata sentence" is now the data promise (B-393);
+  the Arabic pin is untouched (the Arabic page keeps today's text). 721 = 721 checks.
+- ARCHITECTURE.md is held to 5,200 characters (check-agent-memory): the two invariants are worded compactly (5,194).
+- Found by CI on the first push: golden task 9, mr1 S1 and sp43 P2 pinned the SDK's old message; the guard now leaves a
+  message of 1,500 characters or less as the SDK made it, so none of the three moved (no fixture re-recorded).

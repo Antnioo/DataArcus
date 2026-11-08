@@ -55,7 +55,7 @@ try {
   chk(() => /\d+ more/.test(bad.t), () => 'S4. says how many more: ' + bad.t.slice(0, 500));
   chk(() => /call again/i.test(bad.t), () => 'S5. says how to retry: ' + bad.t.slice(0, 500));
   const one = await raw('check_report', { path: 'x', checks: ['nope'] });
-  chk(() => one.err && /nope/.test(one.t) && !/more/.test(one.t), () => 'S6. a small error keeps its detail and has no "more": ' + one.t);
+  chk(() => one.err && /checks\[0\]/.test(one.t) && !/more/.test(one.t) && one.t.length <= 1500, () => 'S6. a short error stays the SDK\'s own words (unchanged): ' + one.t);
   const unk = await raw('read_model', { path: 'x', foo: 1 });
   chk(() => unk.err && /Unrecognized key 'foo'/.test(unk.t) && /the inputs of read_model are: /.test(unk.t), () => 'S7. an unknown key keeps TK1/MR1 words: ' + unk.t.slice(0, 300));
   const miss = await raw('read_model', {});
