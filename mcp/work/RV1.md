@@ -11,7 +11,7 @@
   there: check_report `checks` 470,031 characters at 3,000 items, plan_layout `pages` 187,971 and 423,861, generate_theme
   `folder` with a 150,000-character string HANGS the server (no answer in 10 s), the shape checks S3-S6). All other suites
   unchanged by a byte (the pinned fixtures); `agent` suites re-checked for the instructions' last line.
-- **Resume:** DONE. CI green: https://github.com/Antnioo/DataArcus/actions/runs/42489282364 on d25ec6ca611dd33198b90df20d92de05ef7b6ecb
+- **Resume:** round 2 (D-1108-16) in progress: AT-5 fixed, CI running. Round 1 was DONE, CI green: https://github.com/Antnioo/DataArcus/actions/runs/42489282364 on d25ec6ca611dd33198b90df20d92de05ef7b6ecb
 
 ## Plan
 1. Red first: `test-0.3.2-rv1.mjs` on 225498d2 (done: red).
@@ -117,3 +117,5 @@ CI green: https://github.com/Antnioo/DataArcus/actions/runs/42489282364 on d25ec
 - Changed on purpose: test-0.3.0-claims.mjs DS1-2 (AR) now pins the approved Arabic data sentence; A2-S1 (AR) looks for
   «توأم عربي» (the approved wording) instead of «النسخة العربية». 721 = 721.
 - build:min, stamps, csp.mjs, ar-pages.mjs and sitemap-lastmod run after the last commit.
+
+- Round 2 CI red once (run 42493124176, AT-5: "(Slicer)" glossed twice on ar/power-bi-mcp): the owner's data promise is used exactly but its «المقسمات (Slicers)» gloss stays only at the page's first use (beta.new31.l3), so `safe.data` says «المقسمات»; the claims DS1-2 (AR) pin allows the gloss optionally.
