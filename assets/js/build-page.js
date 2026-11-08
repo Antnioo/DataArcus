@@ -10,8 +10,9 @@
  *   stateOf(noteText)         the text after "**State:**" in a job note, or ''
  *   newestVersion(branches)   the highest integration/X.Y.Z among the branch list (API answer): { version, branch } | null
  *   resultOf(run)             'queued' | 'running' | 'green' | 'red' | 'other' for a workflow run
- *   buildersOf({ events, runs, version, now })   branches at work: a push in the last 24 h, newest first, each with
- *                             its latest tests.yml run
+ *   buildersOf({ heads, runs, version, now })   branches at work: this release's fix/ and feat/ branches whose latest commit
+ *                             (heads: [{ branch, sha, message, time }], read per branch) is from the last 24 h, newest first,
+ *                             each with its latest tests.yml run
  *   statusOf(b, note, now)    a builder's light: running (a run in progress), red (a red run, or a note waiting on the owner), green
  *                             (done), stopped (no push for 2 h and nothing running), idle
  *   ciRows(runs, now)         runs in progress or finished in the last 3 h
@@ -32,6 +33,8 @@
 
   const REPO = 'Antnioo/DataArcus';
   const API = 'https://api.github.com/repos/' + REPO;
+const REL_API = 'https://api.github.com/repos/Antnioo/dataarcus-releases';   // the releases are published in their own public repo
+const MAX_LOOKUPS = 40, KEEP_CALLS = 12;   // latest-commit lookups per refresh; below KEEP_CALLS requests left, none
   const RAW = 'https://raw.githubusercontent.com/' + REPO + '/';
   const DAY = 864e5, HOUR = 36e5;
   const EVERY = 120000, SLOW_EVERY = 600000, LOW = 10, MAX_BUILDERS = 24;
@@ -75,15 +78,12 @@
   const runInfo = (r) => r && ({ id: r.id, branch: r.head_branch, sha: short(r.head_sha), result: resultOf(r), url: String(r.html_url || ''),
     started: stamp(r.run_started_at || r.created_at), updated: stamp(r.updated_at), done: r.status === 'completed' });
 
-  const buildersOf = ({ events, runs, version, now }) => {
+  const buildersOf = ({ heads, runs, version, now }) => {
     const out = new Map();
-    for (const e of Array.isArray(events) ? events : []) {
-      if (!e || e.type !== 'PushEvent' || !e.payload) continue;
-      const branch = String(e.payload.ref || '').replace(/^refs\/heads\//, ''), code = jobCode(branch, version), t = stamp(e.created_at);
-      if (!code || now - t > DAY || out.has(branch)) continue;   // events come newest first: the first push of a branch is its latest
-      const commits = Array.isArray(e.payload.commits) ? e.payload.commits : [];
-      const last = commits[commits.length - 1] || {};
-      out.set(branch, { branch, code, sha: short(e.payload.head || last.sha), message: firstLine(last.message), time: t, run: null });
+    for (const h of Array.isArray(heads) ? heads : []) {
+      const code = h && jobCode(h.branch, version);
+      if (!code || !h.time || now - h.time > DAY || out.has(h.branch)) continue;
+      out.set(h.branch, { branch: h.branch, code, sha: short(h.sha), message: firstLine(h.message), time: h.time, run: null });
     }
     for (const r of runsOf(runs)) {   // runs come newest first: the first run of a branch is its latest
       const b = out.get(r && r.head_branch);
@@ -139,7 +139,7 @@
         state.blockedUntil = state.resetAt || now() + 60000;
         throw Object.assign(new Error('rate limited'), { limited: true });
       }
-      if (!res.ok) throw new Error('GitHub answered ' + res.status);
+      if (!res.ok) throw Object.assign(new Error('GitHub answered ' + res.status), { status: res.status });
       const data = raw ? await res.text() : await res.json();
       cache.set(url, { etag: res.headers.get('etag') || '', data });
       return { data, fresh: true };
@@ -208,21 +208,37 @@
       if (busy) return busy;
       busy = (async () => {
         if (client.blocked()) { status(); return; }
-        const ask = async (key, path, opts) => { try { const r = await client.get(path, opts); last[key] = r.data; delete last[key + 'Err']; return r.data; } catch (e) { if (e.limited) throw e; last[key + 'Err'] = e.message; return last[key]; } };
+        // soft: a 404 is "not there" (no release yet), not a failure
+        const ask = async (key, path, opts) => { try { const r = await client.get(path, opts); last[key] = r.data; delete last[key + 'Err']; return r.data; } catch (e) { if (e.limited) throw e; if (opts && opts.soft && e.status === 404) { last[key] = null; delete last[key + 'Err']; return null; } last[key + 'Err'] = e.message; return last[key]; } };
         try {
           const branches = await ask('branches', API + '/branches?per_page=100');
           const found = newestVersion(branches) || last.found;
           if (found) last.found = found;
-          const [events, runs] = [await ask('events', API + '/events?per_page=100'), await ask('runs', API + '/actions/workflows/tests.yml/runs?per_page=50')];
+          const runs = await ask('runs', API + '/actions/workflows/tests.yml/runs?per_page=100');
           // no `since` in the address: it stays the same, so its ETag works (mergesOf keeps the last 24 h)
           const commits = found ? await ask('commits', API + '/commits?sha=' + encodeURIComponent(found.branch) + '&per_page=60') : null;
-          const latest = await ask('latest', API + '/releases/latest');
+          const latest = await ask('latest', REL_API + '/releases/latest', { soft: true });
+          // the branches by their latest commit: one lookup per job branch whose head is new to us (a commit never changes, so
+          // it is read once per sha; the branch list itself is a cheap 304 while nothing moved). The Events feed lags by hours.
+          const heads = last.heads || (last.heads = new Map());
+          const jobs = (Array.isArray(branches) ? branches : []).filter((b) => b && b.commit && found && jobCode(b.name, found.version)).slice(0, 80);
+          const todo = jobs.filter((b) => !heads.has(b.commit.sha)).slice(0, MAX_LOOKUPS);
+          let failed = 0;
+          for (let i = 0; i < todo.length; i += 8) {
+            if (client.state.remaining != null && client.state.remaining < KEEP_CALLS) break;
+            await Promise.all(todo.slice(i, i + 8).map(async (b) => {
+              try { const c = (await client.get(API + '/commits?sha=' + encodeURIComponent(b.commit.sha) + '&per_page=1')).data[0]; heads.set(b.commit.sha, { message: c && c.commit && c.commit.message, time: stamp(c && c.commit && (c.commit.committer || c.commit.author || {}).date) }); }
+              catch (e) { if (e.limited) throw e; failed++; }
+            }));
+          }
+          last.lookupsFailed = failed;
           const now = Date.now();
           let pkg = last.pkg;
           if (found) { try { pkg = JSON.parse((await client.get(RAW + esc(found.branch) + '/mcp/package.json', { raw: true })).data); last.pkg = pkg; } catch (e) { if (e.limited) throw e; } }
-          const builders = found ? buildersOf({ events, runs, version: found.version, now }) : [];
+          const builders = found ? buildersOf({ heads: jobs.filter((b) => heads.has(b.commit.sha)).map((b) => ({ branch: b.name, sha: b.commit.sha, message: heads.get(b.commit.sha).message, time: heads.get(b.commit.sha).time })), runs, version: found.version, now }) : [];
           const notes = last.notes || (last.notes = {});
-          await Promise.all(builders.map(async (b) => { try { notes[b.branch] = stateOf((await client.get(RAW + esc(b.branch) + '/mcp/work/' + esc(b.code) + '.md', { raw: true })).data); } catch (e) { if (e.limited) throw e; } }));
+          // a note that is not there (404) is "-", never a failure
+          await Promise.all(builders.map(async (b) => { try { notes[b.branch] = stateOf((await client.get(RAW + esc(b.branch) + '/mcp/work/' + esc(b.code) + '.md', { raw: true })).data); } catch (e) { if (e.limited) throw e; if (e.status === 404) notes[b.branch] = ''; } }));
           const ci = ciRows(runs, now), merges = mergesOf(commits, now);
           const headSha = commits && commits[0] && commits[0].sha, headRun = headSha && runsOf(runs).find((r) => r.head_sha === headSha);
           const sats = builders.map((b) => ({ code: b.code, status: statusOf(b, notes[b.branch], now), message: b.message, time: b.time, note: notes[b.branch] || '',
@@ -233,7 +249,7 @@
           const count = (k) => sats.filter((s) => s.status === k).length;
           drawLine({ running: count('running'), red: count('red'), done: count('green'), merged: merges.length, open: builders.length, mergeList: merges, items: sats,
             moving: builders.some((b) => live(b.run)) || ci.some((r) => !r.done) });
-          const bad = ['branches', 'events', 'runs', 'commits', 'latest'].filter((k) => last[k + 'Err']);
+          const bad = ['branches', 'runs', 'commits', 'latest'].filter((k) => last[k + 'Err']).concat(last.lookupsFailed ? ['some commits'] : []);
           note('bp-warn', bad.length ? 'Could not load ' + bad.join(', ') + ' just now: showing the last data.' : '');
           $('bp-updated').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         } catch (e) {

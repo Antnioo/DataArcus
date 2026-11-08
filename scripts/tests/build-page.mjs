@@ -46,6 +46,8 @@ export default async function ({ browser, url }) {
     const Hx = require('../../assets/js/build-helix.js');
     const hm = Hx.helixModel(Array.from({ length: 80 }, (_, i) => ({ code: 'J' + i, status: 'idle' })), [{ message: 'a' }, { message: 'b' }]);
     check(hm.rungs.length === 60 && hm.rungs[0].code === 'J0' && hm.rungs[0].t === 0.5 / 60 && hm.rungs[59].t === 59.5 / 60 && hm.nodes.length === 2 && hm.nodes[0].t === 0.25 && Hx.helixModel(null, null).rungs.length === 0, 'H1 the helix model: newest first, at most 60 rungs, t spread inside 0..1, merges as nodes');
+    const nowB = Date.parse('2026-11-08T12:00:00Z'), bl = B.buildersOf({ heads: [{ branch: 'fix/0.3.2-ab1', sha: 'a', message: 'AB1: x', time: nowB - 600e3 }, { branch: 'fix/0.3.2-old', sha: 'b', message: 'x', time: nowB - 30 * 3600e3 }, { branch: 'fix/0.3.1-no', sha: 'c', message: 'x', time: nowB - 600e3 }], runs: { workflow_runs: [{ id: 1, head_branch: 'fix/0.3.2-ab1', head_sha: 'a', status: 'queued', run_started_at: '2026-11-08T11:59:00Z', updated_at: '2026-11-08T11:59:00Z', html_url: 'https://github.com/x' }] }, version: '0.3.2', now: nowB });
+    check(bl.length === 1 && bl[0].code === 'AB1' && bl[0].message === 'AB1: x' && B.statusOf(bl[0], '', nowB) === 'running', 'B8 buildersOf: this release\'s branches by their latest commit within 24 h; a queued run is running');
     check(B.statusOf({ run: { result: 'running' }, time: 0 }, '', 1) === 'running' && B.statusOf({ run: { result: 'green' }, time: 0 }, 'waiting for the owner', 1) === 'red' && B.statusOf({ run: null, time: 0 }, 'DONE', 1) === 'green' && B.statusOf({ run: null, time: 0 }, '', 3 * 3600e3) === 'stopped' && B.statusOf({ run: null, time: 0 }, '', 3600e3) === 'idle', 'B7 statusOf: running, red (a note waiting on the owner), done, stopped after 2 h, idle');
     check(B.releaseLine({ version: '0.3.2' }, { tag_name: 'v0.3.1' }).inProgress && /0\.3\.2 in progress/.test(B.releaseLine({ version: '0.3.2' }, { tag_name: 'v0.3.1' }).text) && !B.releaseLine({ version: '0.3.2' }, { tag_name: 'v0.3.2' }).inProgress, 'B6 releaseLine: "in progress" while the versions differ');
   }
@@ -55,7 +57,7 @@ export default async function ({ browser, url }) {
   async function open(opts = {}, setup = null) {
     const v = await visitor(browser, { viewport: opts.viewport || [1440, 900], motion: opts.motion || 'no-preference' });
     const now = Date.now(), seen = { api: [], raw: [], inm: [], etags: {} };
-    const state = { remaining: 59, status: {}, reset: Math.floor(now / 1000) + 1800, force304: false, calls: 0 };
+    const state = { remaining: 59, status: {}, reset: Math.floor(now / 1000) + 1800, force304: false, calls: 0, noRelease: false };
     const json = (rt, body, extra = {}) => rt.fulfill({ status: 200, contentType: 'application/json', headers: { ...CORS, ...extra }, body: JSON.stringify(body) });
     const answer = (key, body) => async (rt) => {
       const r = rt.request(), u = new URL(r.url());
@@ -72,11 +74,14 @@ export default async function ({ browser, url }) {
     await v.ctx.route('https://api.github.com/**', async (rt) => {
       const p = new URL(rt.request().url()).pathname;
       if (rt.request().method() === 'OPTIONS') return rt.fulfill({ status: 204, headers: { ...CORS, 'access-control-allow-methods': 'GET' } });
-      if (/\/branches$/.test(p)) return answer('branches', FX.branches.map((name) => ({ name })))(rt);
-      if (/\/events$/.test(p)) return answer('events', FX.pushes.map((e, i) => ({ id: String(i), type: 'PushEvent', created_at: iso(e.agoMin, now), payload: { ref: 'refs/heads/' + e.branch, head: e.sha, commits: [{ sha: e.sha, message: e.message }] } })))(rt);
+      if (/\/Antnioo\/DataArcus\/branches$/.test(p)) return answer('branches', [...FX.branches, ...FX.heads.map((h) => h.branch)].map((name) => ({ name, commit: { sha: (FX.heads.find((h) => h.branch === name) || { sha: 'f'.repeat(40) }).sha, url: 'https://api.github.com/x' }, protected: false })))(rt);
       if (/\/workflows\/tests\.yml\/runs$/.test(p)) return answer('runs', { workflow_runs: FX.runs.map(run) })(rt);
-      if (/\/commits$/.test(p)) return answer('commits', FX.commits.map((c) => ({ sha: c.sha, parents: Array.from({ length: c.parents }, (_, i) => ({ sha: 'p' + i })), commit: { message: c.message, committer: { date: iso(c.agoMin, now) } } })))(rt);
-      if (/\/releases\/latest$/.test(p)) return answer('latest', FX.release)(rt);
+      if (/\/Antnioo\/DataArcus\/commits$/.test(p)) {
+        const sha = new URL(rt.request().url()).searchParams.get('sha'), h = FX.heads.find((x) => x.sha === sha);
+        if (h) return answer('head-' + sha.slice(0, 4), [{ sha: h.sha, parents: [{ sha: 'p' }], commit: { message: h.message, committer: { date: iso(h.agoMin, now) } } }])(rt);
+        return answer('commits', FX.commits.map((c) => ({ sha: c.sha, parents: Array.from({ length: c.parents }, (_, i) => ({ sha: 'p' + i })), commit: { message: c.message, committer: { date: iso(c.agoMin, now) } } })))(rt);
+      }
+      if (/\/Antnioo\/dataarcus-releases\/releases\/latest$/.test(p)) return state.noRelease ? rt.fulfill({ status: 404, headers: { ...CORS, 'x-ratelimit-remaining': '50' }, body: '{}' }) : answer('latest', FX.release)(rt);
       return rt.fulfill({ status: 404, headers: CORS, body: '{}' });
     });
     await v.ctx.route('https://raw.githubusercontent.com/**', async (rt) => {
@@ -100,20 +105,27 @@ export default async function ({ browser, url }) {
     const { v, seen } = await open();
     await loaded(v.pg).catch(() => null);
     const b = await text(v.pg, '#bp-builders'), ci = await text(v.pg, '#bp-ci'), mg = await text(v.pg, '#bp-merges'), head = await text(v.pg, '#bp-head'), rel = await text(v.pg, '#bp-release');
-    check(/BB2/.test(b) && /AA1/.test(b) && /IN PROGRESS/.test(b) && /DONE, CI green/.test(b), `S1 builders show the job code and the state from the note: ${b.slice(0, 160)}`);
-    check(/running/.test(await text(v.pg, '#bp-builders .bp-live .bp-pill')) && /in progress/.test(b) && /green/.test(b) && (await v.pg.locator('#bp-builders a[href^="https://github.com/Antnioo/DataArcus/actions/runs/"]').count()) === 2, 'S1 each builder shows its latest tests.yml run (in progress, green) with a link to the run');
+    check(/BB2/.test(b) && /AA1/.test(b) && /IN PROGRESS/.test(b) && /DONE, CI green/.test(b) && /WORKING/.test(b), `S1 builders show the job code and the state from the note: ${b.slice(0, 160)}`);
+    check(/running/.test(await text(v.pg, '#bp-builders .bp-live .bp-pill')) && /in progress/.test(b) && /green/.test(b) && (await v.pg.locator('#bp-builders a[href^="https://github.com/Antnioo/DataArcus/actions/runs/"]').count()) === 3, 'S1 each builder shows its latest tests.yml run (in progress, green) with a link to the run');
     check(/min ago/.test(b) && /First fix|first fix/.test(b), 'S1 the latest commit message and "ago" are shown');
-    check(/in progress/.test(ci) && /green/.test(ci) && /red/.test(ci) && !/old9|OLD9/i.test(ci) && (await v.pg.locator('#bp-ci a[href^="https://github.com/Antnioo/DataArcus/actions/runs/"]').count()) === 3, `S1 CI now: the in-progress, green and red runs of the last 3 hours (the 6 h old one not), each linked: ${ci.slice(0, 160)}`);
+    check(/in progress/.test(ci) && /green/.test(ci) && /red/.test(ci) && !/old9|OLD9/i.test(ci) && (await v.pg.locator('#bp-ci a[href^="https://github.com/Antnioo/DataArcus/actions/runs/"]').count()) === 4, `S1 CI now: the in-progress, queued, green and red runs of the last 3 hours (the 6 h old one not), each linked: ${ci.slice(0, 160)}`);
     check(/Merge AA0: the earlier job/.test(mg) && !/Merge origin/.test(mg) && !/a commit on the branch/.test(mg), `S1 integration today: the merge, not the builder's own "Merge origin/..." nor a one-parent commit: ${mg.slice(0, 160)}`);
     check(/ccccccc/.test(head) && /red/.test(head), `S1 the head sha and its tests.yml result: ${head}`);
-    check(/0\.3\.2 in progress, latest release 0\.3\.1/.test(rel), `S1 release line: ${rel}`);
+    check(/0\.3\.2 in progress, latest release 0\.3\.1/.test(rel) && seen.api.some((u) => /dataarcus-releases\/releases\/latest/.test(u)) && !seen.api.some((u) => /Antnioo\/DataArcus\/releases/.test(u)), `S1 release line, read from the releases repo: ${rel}`);
     check(!/OLD9/i.test(b) && !/ZZ1/.test(b), 'S2 a push older than 24 h and another release\'s branch are not builders');
-    check((await v.pg.locator('#bp-builders > li').count()) === 2 && /BB2/.test(await text(v.pg, '#bp-builders > li:first-child')), 'S2 two builders, newest activity first');
+    check((await v.pg.locator('#bp-builders > li').count()) === 4 && /BB2/.test(await text(v.pg, '#bp-builders > li:first-child')) && /CC3/.test(await text(v.pg, '#bp-builders > li:last-child')), 'S2 four builders (none from the events feed), newest commit first, a 24 h limit');
     check(await v.pg.evaluate(() => document.getElementById('bp-line').classList.contains('bp-moving')) && (await v.pg.locator('.bp-bar').count()) >= 1, 'S3 the line moves and a run in progress has its moving bar');
-    check(seen.api.length <= 6 && seen.api.length >= 5, `S4 one refresh makes at most 6 API calls (made ${seen.api.length})`);
+    check(seen.api.length === 4 + 5, `S4 a first look: 4 reads plus one latest-commit lookup per job branch of this release (5, the 2-day-old one too), nothing for another release's branch (made ${seen.api.length}: ${seen.api.join(' ')})`);
     check(seen.raw.some((p) => /\/mcp\/package\.json$/.test(p)) && seen.raw.some((p) => /\/mcp\/work\/BB2\.md$/.test(p)), 'S4 the notes and package.json come from raw.githubusercontent.com');
     check(await v.pg.evaluate(() => !window.__pwned && !document.querySelector('#bp-builders img, #bp-builders b')), 'X1 a commit message with HTML is text: no element made, no script run');
     check((await text(v.pg, '#bp-builders')).includes('<img src=x onerror="window.__pwned=1">'), 'X1 the HTML shows as the characters written');
+    // the reviewer's five live-data findings (14:10Z): branches by their latest commit, message and note on each card,
+    // queued or in progress counts as running, a missing note or release is not a failure, the release from its own repo
+    check(/DD4/.test(b) && /CC3/.test(b) && /DD4: queued work/.test(b) && /CC3: stopped two hours ago/.test(b) && !/\(no message\)/.test(b), `D1 D2 a branch with no push event shows, each card with its latest commit message: ${b.slice(0, 200)}`);
+    check(/note: WORKING/.test(b) && /note: -/.test(b), 'D2 the note\'s State line on a card; "-" where the branch has no note');
+    const nums = await v.pg.evaluate(() => ['running', 'red', 'done', 'merged', 'open'].map((k) => document.getElementById('bp-n-' + k).textContent));
+    check(nums.join(',') === '2,0,1,1,4', `D3 telemetry: a queued and an in-progress run both count as running (running,red,done,merged,open = ${nums.join(',')})`);
+    check(/Could not load/.test(await text(v.pg, '#bp-warn')) === false && await v.pg.locator('#bp-warn').isHidden(), `D4 a missing note file is not a failure: no banner (${await text(v.pg, '#bp-warn')})`);
     check(!v.errs.length, `P2 no page error on the first look: ${v.errs.join(' | ')}`);
     const mode = await v.pg.evaluate(() => { const h = document.getElementById('bp-line'); return [h.dataset.mode, !!h.querySelector('canvas'), h.getAttribute('aria-hidden')]; });
     check(mode[0] === 'webgl' && mode[1] && mode[2] === 'true', `H2 WebGL: the helix is drawn in a canvas and hidden from screen readers (${mode.join(',')})`);
@@ -141,7 +153,7 @@ export default async function ({ browser, url }) {
     const before = await text(v.pg, '#bp-builders');
     state.force304 = true; seen.inm.length = 0; seen.api.length = 0;
     await v.pg.evaluate(() => window.BuildPage.refresh());
-    check(seen.inm.length >= 5 && seen.inm.every((e) => /^"[a-z]+-1"$/.test(e)), `E1 the second refresh sends If-None-Match with each address's ETag (${seen.inm.length} sent of ${seen.api.length}: ${seen.api.join(' ')})`);
+    check(seen.inm.length === 4 && seen.api.length === 4 && seen.inm.every((e) => /^"[a-z]+-1"$/.test(e)), `E1 the second refresh sends If-None-Match with each address's ETag (${seen.inm.length} sent of ${seen.api.length}: ${seen.api.join(' ')})`);
     check((await text(v.pg, '#bp-builders')) === before && /BB2/.test(before) && /0\.3\.2 in progress/.test(await text(v.pg, '#bp-release')), 'E1 a 304 keeps the last data on the page');
     state.remaining = 7;
     await v.pg.evaluate(() => window.BuildPage.refresh());
@@ -151,6 +163,15 @@ export default async function ({ browser, url }) {
     state.remaining = 50; state.status.runs = 500;
     await v.pg.evaluate(() => window.BuildPage.refresh());
     check(/Could not load runs/.test(await text(v.pg, '#bp-warn')) && (await text(v.pg, '#bp-builders')).includes('IN PROGRESS'), 'E4 a failed call is said, the last data stays');
+    await v.ctx.close();
+  }
+
+  // ---- D4b: no release published yet (404): "in progress (no release found)", no banner
+  {
+    const { v } = await open({}, async ({ state }) => { state.noRelease = true; });
+    await loaded(v.pg).catch(() => null);
+    const rel = await text(v.pg, '#bp-release');
+    check(/0\.3\.2 in progress/.test(rel) && (await v.pg.locator('#bp-warn').isHidden()), `D4 a 404 for the release is "no release found", not a banner: ${rel} / ${await text(v.pg, '#bp-warn')}`);
     await v.ctx.close();
   }
 
@@ -189,7 +210,7 @@ export default async function ({ browser, url }) {
     const { v } = await open({}, async ({ v }) => { await v.ctx.addInitScript(() => { const g = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (t, ...r) { return /webgl/i.test(t) ? null : g.call(this, t, ...r); }; }); });
     await loaded(v.pg).catch(() => null);
     const info = await v.pg.evaluate(() => { const h = document.getElementById('bp-line'); return [h.dataset.mode, h.querySelectorAll('svg g[data-code]').length, document.querySelectorAll('#bp-builders > li').length]; });
-    check(info[0] === 'svg' && info[1] === 2 && info[2] === 2, `H3 no WebGL: the SVG helix with a rung per job, and the cards (${info.join(',')})`);
+    check(info[0] === 'svg' && info[1] === 4 && info[2] === 4, `H3 no WebGL: the SVG helix with a rung per job, and the cards (${info.join(',')})`);
     await v.pg.locator('#bp-line g[data-code="AA1"]').first().dispatchEvent('pointerenter');
     check(/AA1/.test(await text(v.pg, '#bp-line .bh-label')) && !(await v.pg.locator('#bp-line .bh-label').isHidden()), 'H3 the SVG rung shows its label');
     check(!v.errs.length, `H3 no page error without WebGL: ${v.errs.join(' | ')}`);

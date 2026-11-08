@@ -1,28 +1,129 @@
 {
-  "_about": "Made-up GitHub answers for scripts/tests/build-page.mjs (BF1). Times are minutes before the test's 'now' (agoMin); the suite turns them into timestamps. No real branch, run or person.",
-  "branches": ["main", "integration/0.3.1", "integration/0.3.2", "fix/0.3.2-aa1", "feat/0.3.2-bb2", "fix/0.3.2-old9", "fix/0.3.1-zz1"],
-  "pushes": [
-    { "branch": "feat/0.3.2-bb2", "sha": "bbbbbbbbbbbb2222222222222222222222222222", "agoMin": 4, "message": "BB2: <img src=x onerror=\"window.__pwned=1\">Fix the <b>chart</b> order\n\nbody line" },
-    { "branch": "fix/0.3.2-aa1", "sha": "aaaaaaaaaaaa1111111111111111111111111111", "agoMin": 50, "message": "AA1: first fix" },
-    { "branch": "fix/0.3.2-aa1", "sha": "aaaaaaaaaaaa0000000000000000000000000000", "agoMin": 200, "message": "AA1: older push of the same branch" },
-    { "branch": "fix/0.3.2-old9", "sha": "9999999999999999999999999999999999999999", "agoMin": 2000, "message": "OLD9: two days ago" },
-    { "branch": "fix/0.3.1-zz1", "sha": "7777777777777777777777777777777777777777", "agoMin": 10, "message": "ZZ1: another release" }
+  "_about": "Made-up GitHub answers in the shapes GitHub really returns (branches list entries {name, commit:{sha}}, commits list entries {sha, commit:{message, committer:{date}}, parents}, workflow runs, releases), for scripts/tests/build-page.mjs (BF1). Times are minutes before the test's 'now' (agoMin). No real branch, run or person.",
+  "branches": [
+    "main",
+    "integration/0.3.1",
+    "integration/0.3.2"
   ],
   "runs": [
-    { "id": 301, "branch": "feat/0.3.2-bb2", "sha": "bbbbbbbbbbbb2222222222222222222222222222", "status": "in_progress", "conclusion": null, "startedAgoMin": 3, "updatedAgoMin": 0 },
-    { "id": 300, "branch": "fix/0.3.2-aa1", "sha": "aaaaaaaaaaaa1111111111111111111111111111", "status": "completed", "conclusion": "success", "startedAgoMin": 45, "updatedAgoMin": 33 },
-    { "id": 299, "branch": "integration/0.3.2", "sha": "cccccccccccc3333333333333333333333333333", "status": "completed", "conclusion": "failure", "startedAgoMin": 100, "updatedAgoMin": 88 },
-    { "id": 298, "branch": "fix/0.3.2-old9", "sha": "9999999999999999999999999999999999999999", "status": "completed", "conclusion": "success", "startedAgoMin": 400, "updatedAgoMin": 390 }
+    {
+      "id": 301,
+      "branch": "feat/0.3.2-bb2",
+      "sha": "bbbbbbbbbbbb2222222222222222222222222222",
+      "status": "in_progress",
+      "conclusion": null,
+      "startedAgoMin": 3,
+      "updatedAgoMin": 0
+    },
+    {
+      "id": 302,
+      "branch": "fix/0.3.2-dd4",
+      "sha": "dddddddddddd4444444444444444444444444441",
+      "status": "queued",
+      "conclusion": null,
+      "startedAgoMin": 1,
+      "updatedAgoMin": 1
+    },
+    {
+      "id": 300,
+      "branch": "fix/0.3.2-aa1",
+      "sha": "aaaaaaaaaaaa1111111111111111111111111111",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAgoMin": 45,
+      "updatedAgoMin": 33
+    },
+    {
+      "id": 299,
+      "branch": "integration/0.3.2",
+      "sha": "cccccccccccc3333333333333333333333333333",
+      "status": "completed",
+      "conclusion": "failure",
+      "startedAgoMin": 100,
+      "updatedAgoMin": 88
+    },
+    {
+      "id": 298,
+      "branch": "fix/0.3.2-old9",
+      "sha": "9999999999999999999999999999999999999999",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAgoMin": 400,
+      "updatedAgoMin": 390
+    }
   ],
   "commits": [
-    { "sha": "cccccccccccc3333333333333333333333333333", "parents": 2, "agoMin": 95, "message": "Merge AA0: the earlier job" },
-    { "sha": "dddddddddddd4444444444444444444444444444", "parents": 1, "agoMin": 96, "message": "AA0: a commit on the branch" },
-    { "sha": "eeeeeeeeeeee5555555555555555555555555555", "parents": 2, "agoMin": 97, "message": "Merge origin/integration/0.3.2 into fix/0.3.2-aa0" }
+    {
+      "sha": "cccccccccccc3333333333333333333333333333",
+      "parents": 2,
+      "agoMin": 95,
+      "message": "Merge AA0: the earlier job"
+    },
+    {
+      "sha": "dddddddddddd4444444444444444444444444444",
+      "parents": 1,
+      "agoMin": 96,
+      "message": "AA0: a commit on the branch"
+    },
+    {
+      "sha": "eeeeeeeeeeee5555555555555555555555555555",
+      "parents": 2,
+      "agoMin": 97,
+      "message": "Merge origin/integration/0.3.2 into fix/0.3.2-aa0"
+    }
   ],
   "notes": {
     "fix/0.3.2-aa1": "# AA1 (0.3.2): made up\n\n**State:** DONE, CI green\n",
-    "feat/0.3.2-bb2": "# BB2\n\n**State:** IN PROGRESS\n"
+    "feat/0.3.2-bb2": "# BB2\n\n**State:** IN PROGRESS\n",
+    "fix/0.3.2-dd4": "# DD4\n\n**State:** WORKING\n"
   },
-  "package": { "name": "made-up", "version": "0.3.2" },
-  "release": { "tag_name": "v0.3.1" }
+  "package": {
+    "name": "made-up",
+    "version": "0.3.2"
+  },
+  "release": {
+    "tag_name": "v0.3.1",
+    "name": "v0.3.1",
+    "draft": false,
+    "prerelease": false
+  },
+  "heads": [
+    {
+      "branch": "feat/0.3.2-bb2",
+      "sha": "bbbbbbbbbbbb2222222222222222222222222222",
+      "agoMin": 4,
+      "message": "BB2: <img src=x onerror=\"window.__pwned=1\">Fix the <b>chart</b> order\n\nbody line"
+    },
+    {
+      "branch": "fix/0.3.2-dd4",
+      "sha": "dddddddddddd4444444444444444444444444441",
+      "agoMin": 20,
+      "message": "DD4: queued work"
+    },
+    {
+      "branch": "fix/0.3.2-aa1",
+      "sha": "aaaaaaaaaaaa1111111111111111111111111111",
+      "agoMin": 50,
+      "message": "AA1: first fix"
+    },
+    {
+      "branch": "fix/0.3.2-cc3",
+      "sha": "cccccccccccc3333333333333333333333333339",
+      "agoMin": 150,
+      "message": "CC3: stopped two hours ago"
+    },
+    {
+      "branch": "fix/0.3.2-old9",
+      "sha": "9999999999999999999999999999999999999999",
+      "agoMin": 2000,
+      "message": "OLD9: two days ago"
+    },
+    {
+      "branch": "fix/0.3.1-zz1",
+      "sha": "7777777777777777777777777777777777777777",
+      "agoMin": 10,
+      "message": "ZZ1: another release"
+    }
+  ],
+  "_notes_missing": "fix/0.3.2-cc3 has no note file on purpose: raw.githubusercontent.com answers 404, the card shows '-' and no banner."
 }
