@@ -413,6 +413,34 @@
    "length": 22244,
    "sha256": "8cba781bdda55a9b20c793ed5fd4a13c304bc641bc5c1fee8e71997f1227ec17"
   },
+  "G104 two columns held to one date table": {
+   "length": 18963,
+   "sha256": "fd0964b3cc0a1ad2cdd51627a0ac777319fdae989db0b0997ff0f9ee90d3ced6"
+  },
+  "G105 exactly 5 measures": {
+   "length": 56914,
+   "sha256": "8edba23b80924f0746fb9e52dfbb1408bba2bcd84eab3802613c7d93aec621d2"
+  },
+  "G106 a base format string TMDL can't hold": {
+   "length": 26067,
+   "sha256": "cb4929d1d260acd3792bf45e7d62316a5ff6308a7f3be8bb6b97340c5683271e"
+  },
+  "G107 no Umm al-Qura calendar": {
+   "length": 181,
+   "sha256": "25c590fcc6d229ef17c2d0d89e298db52c476e532299c0cbc5f258d516efd3ef"
+  },
+  "G108 checked to the day before a Ramadan": {
+   "length": 17076,
+   "sha256": "3eb3aff8251253961efff454a17519b5f7d52b446298e164d94d7fb1295e4e91"
+  },
+  "G109 checked to the day before an Eid al-Fitr": {
+   "length": 17076,
+   "sha256": "2eb7f2ad86a23ec0f538724b8721b56a6ef7eeb3bf0dd0909e41184ba957ecc6"
+  },
+  "G110 checked to the day before an Eid al-Adha": {
+   "length": 17076,
+   "sha256": "0cb5fbd71a095e2850efee3b9fa048cd57641ff0f9eea541fc10268c601c4442"
+  },
   "Q1": {
    "length": 3695,
    "sha256": "ba05b3ca86bb03e0ec4aa421b00d940a88c691340b06f110280ffc30b7b1e65e"
@@ -641,11 +669,23 @@
    "length": 4112,
    "sha256": "c82f53bb259f030b83c05fcac13e33a57c6e160273ea48a7a46626fd7a406734"
   },
-  "Q58 after the memory's cap": {
+  "Q58": {
+   "length": 3663,
+   "sha256": "a4f356aa2c0d5fd2c360854dae4186d091bb67da965d7dd2c189caf80677fa00"
+  },
+  "Q59": {
+   "length": 5882,
+   "sha256": "545181b94dbaeb88a3dc15c31d39619911d90f7fef61960b5f182aad8767863f"
+  },
+  "Q60": {
+   "length": 4,
+   "sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+  },
+  "Q61 after the memory's cap": {
    "length": 5946,
    "sha256": "cb8bac9ac30647c2a6b7566f0c2112b060e14a2aa0ddf9ca107d59a728f4fbc1"
   },
-  "Q59 the last of the cap": {
+  "Q62 the last of the cap": {
    "length": 3864,
    "sha256": "947cf223683289c3c485a25a0ca21098670460f37a3dc97e46fe55b3c203b96c"
   },
@@ -696,6 +736,34 @@
   "T12 tab orders: none free between two stops, a group of its own, no tab orders": {
    "length": 38898,
    "sha256": "b229d123ff98d818664c010677e69dca88ba6b233415ad2ce98f9ad4a5a38dcd"
+  },
+  "T13 no free place for either button on a page": {
+   "length": 85184,
+   "sha256": "cf39db02ced2c70ab81c0dd369b724346de32b48c6dece9b712b08a4dbca3277"
+  },
+  "T14 a free place for the narrower button only": {
+   "length": 83155,
+   "sha256": "b496a75b2416867b31875aaf891554a0b6d06cd2deb58de1bc62c19b116b4b0a"
+  },
+  "T15 the same with the Arabic tabs, the page shown in the original": {
+   "length": 83224,
+   "sha256": "14cb4ee9517913c6033217702ef996585a4d3a290650227ff95248a4b0c5fc0f"
+  },
+  "T16 no place for either, the Arabic tabs": {
+   "length": 85253,
+   "sha256": "3bd229c4e3de35b5e4266764126d1884ac6e30da497dbbbf307813ce74e37f61"
+  },
+  "T17 other files in a page's and a visual's folder": {
+   "length": 39785,
+   "sha256": "1dda2fc4c485e89993700d1dd85ae33f5cc47aa91dd89e3ace7759eb2f6015d2"
+  },
+  "T18 slicers with no query state, a role that is not an object, a projection that is not one": {
+   "length": 40202,
+   "sha256": "90a6277d6487329c01a51ab125e4e7ee1068dd3cb52696338425c3686adb1ad7"
+  },
+  "T19 a link to a bookmark that is not there, a group that is not there, a visual named \"undefined\"": {
+   "length": 39485,
+   "sha256": "1ffb3daeffa9329e7c43ca23bcec0344b6c89c06bfcc6267926d1ceddc80a29d"
   }
  }
 }

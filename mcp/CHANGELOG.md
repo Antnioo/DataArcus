@@ -89,6 +89,9 @@ package's manifest; this file says what is in it.
 - **Inside the approval page, check_report and the reading of each visual, in smaller steps:** what the approval page
   says each click writes, check_report's answer and what each visual is read as are each made by short named steps
   instead of one long function; every page, finding and reading is byte for byte what it was before.
+- **Inside add_gulf_calendar, the Gulf date questions and the English and Arabic copy, in smaller steps:** the Gulf
+  calendar's script and answer, plan_layout's date questions and the copy holding both languages are each made by short
+  named steps instead of one long function; every script, question, text and file is byte for byte what it was before.
 - **Inside the Theme Generator's downloads, the site's navigation and the SVG KPI Designer's panels, in smaller
   steps:** each is made by short named steps instead of one long function; every download, menu, counter, panel and
   click is what it was before.

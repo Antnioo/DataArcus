@@ -51,7 +51,10 @@ const M = {
     rel('r5', 'Orders', 'Due', 'TextDates', 'Date'), rel('r6', 'Sales', 'ShipDate', 'Untyped', 'Date'), rel('DataArcus Gulf Calendar 1', 'Orders', 'Due', 'Other', 'Date', false)]),
   taken: bim([SALES(), tbl('Gulf Calendar', [col('Date', 'dateTime')]), tbl('Gulf Calendar 2', [col('Gulf Calendar 3', 'string')]), tbl('Gulf Currency Pegs', [col('Currency', 'string')])]),
   gen: bim([SALES(), genCal('Calendar')], [rel('r1', 'Sales', 'Date', 'Calendar', 'Date')]),
-  empty: bim([])
+  empty: bim([]),
+  // two fact columns held to one date table (both relate to its Date: one relationship, two "via"); a format string a TMDL line can't hold
+  twoHeld: bim([SALES(), tbl('Calendar', [col('Date', 'dateTime')]), tbl('Orders', [col('Placed', 'dateTime')])], [rel('r1', 'Sales', 'Date', 'Calendar', 'Date'), rel('r2', 'Orders', 'Placed', 'Calendar', 'Date')]),
+  fmt: bim([tbl('Sales', [col('Date', 'dateTime')], [{ name: 'Odd Format', expression: '1', formatString: '#,0\n0' }])])
 };
 const mOf = (k) => ({ tmsl: JSON.parse(JSON.stringify(M[k])), source: 'fn1g-' + k });
 
@@ -98,6 +101,17 @@ const G_CASES = [
 ];
 G_CASES.forEach(([k, a], i) => keep(`G${i + 1}`, gcRun(k, a)));
 ['noDir', 'left', 'nothing', 'code', 'msg', 'str'].forEach((how, i) => keep(`G${G_CASES.length + 1 + i} writer ${how}`, gcRun('plain', { measures: ['Sales[Total Sales]'], ...Y }, how)));
+// the edges no case above reaches: two columns held to one date table, exactly 5 measures, a base format string TMDL
+// can't hold, a Node.js without the Umm al-Qura calendar, and the first estimate on each event's edge (the dates
+// "checked to" one day before a Ramadan or an Eid al-Fitr, ten days before an Eid al-Adha: its Arafah day counts)
+const G2 = G_CASES.length + 7;
+keep(`G${G2} two columns held to one date table`, gcRun('twoHeld', { relateTo: ['Sales[Date]', 'Orders[Placed]'], ...Y }));
+keep(`G${G2 + 1} exactly 5 measures`, gcRun('plain', { measures: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin]', 'Sales[Units]', 'Sales[Cost]'], ...Y }));
+keep(`G${G2 + 2} a base format string TMDL can't hold`, gcRun('fmt', { measures: ['Sales[Odd Format]'], ...Y }));
+{ const fmt = Cal.hijriFmt; Cal.hijriFmt = null; try { keep(`G${G2 + 3} no Umm al-Qura calendar`, gcRun('plain', Y)); } finally { Cal.hijriFmt = fmt; } }
+{ const GD = require('../assets/js/gulf-dates.js'), was = GD.checked;
+  [['2027-02-07', 'a Ramadan'], ['2027-03-08', 'an Eid al-Fitr'], ['2027-05-06', 'an Eid al-Adha']].forEach(([d, what], i) => {
+    GD.checked = d; try { keep(`G${G2 + 4 + i} checked to the day before ${what}`, gcRun('plain', { firstYear: 2027, lastYear: 2027 })); } finally { GD.checked = was; } }); }
 
 // ---------- Q: gulfDateQuestions ----------
 const named = () => tbl('Cal', [col('Date', 'dateTime'), col('Hijri_Year', 'int64'), col('الشهر الهجري', 'string', { sortByColumn: 'Hijri Month No' }), col('Hijri Month No', 'int64'), col('Ramadan Flag', 'boolean'),
@@ -115,7 +129,10 @@ const QM = {
   plainNames: bim([facts(), plainNames()], [rel('a', 'Sales', 'OrderDate', 'Cal', 'Date', false)]),
   one: bim([tbl('Sales', [col('OrderDate', 'dateTime'), col('Amount', 'double')], [{ name: 'Total Sales', expression: '1' }]), tbl('Cal', [col('Date', 'dateTime'), col('Month', 'string')])], [rel('a', 'Sales', 'OrderDate', 'Cal', 'Date')]),
   none: bim([facts()]),
-  noRel: bim([facts(), genCal('Calendar')], [])
+  noRel: bim([facts(), genCal('Calendar')], []),
+  // a measure name in two tables (Misc's after Sales'), a relationship with no from table and a table named "undefined"
+  odd: bim([facts(), genCal('Calendar'), tbl('Misc', [col('Note', 'string')], [{ name: 'Total Sales', expression: '2' }, { name: 'Misc Only', expression: '3' }]), tbl('undefined', [col('When', 'dateTime')])],
+    [rel('a', 'Sales', 'OrderDate', 'Calendar', 'Date'), { name: 'half', toTable: 'Calendar', toColumn: 'Date' }])
 };
 const qRun = (k, a, opts, src) => { let out; try { out = gulfDateQuestions({ tmsl: JSON.parse(JSON.stringify(QM[k])), source: src || 'fn1g-q-' + k }, a, opts); } catch (e) { out = { threw: String(e && e.message) }; } return JSON.stringify(out, null, 1); };
 const PF = (o) => Object.assign({ kpis: ['Sales[Total Sales]'] }, o);
@@ -169,7 +186,10 @@ const Q_CASES = [
   ['none', { planFields: { timeAxis: 'Sales[OrderDate]' }, gulfDates: { dateRole: 'Sales[ShipDate]' } }],
   ['noRel', { planFields: PF({ timeAxis: 'Calendar[Date]' }), pageFilters: [ram('Calendar[Is Ramadan]')] }], ['noRel', { planFields: PF({ timeAxis: 'Calendar[Date]' }), gulfDates: { dateRole: 'Sales[OrderDate]' } }],
   ['gen', { planFields: PF({ timeAxis: 'Calendar[Date]' }), gulfDates: { dateRole: 'Sales[ShipDate]' } }, null, 'fn1g-q-gen-again'],
-  ['gen', { planFields: PF({ timeAxis: 'Calendar[Date]' }) }, null, 'fn1g-q-gen-again']
+  ['gen', { planFields: PF({ timeAxis: 'Calendar[Date]' }) }, null, 'fn1g-q-gen-again'],
+  ['odd', { planFields: PF({ timeAxis: 'Calendar[Date]', kpis: ['Misc[Total Sales]', 'Sales[Misc Only]'] }) }],
+  ['odd', { planFields: PF({ timeAxis: 'Calendar[Date]' }), pageFilters: [ram('Sales[Region]', ['East']), ram('Calendar[Is Eid al-Adha]')] }],
+  ['one', { planFields: PF({ timeAxis: 'Cal[Date]' }), pageFilters: [ram('Cal[Month]', ['May'])] }]
 ];
 Q_CASES.forEach(([k, a, o, src], i) => keep(`Q${i + 1}`, qRun(k, a, o, src)));
 // the memory's cap: many answers recorded for many models, then the first model asked again (its answer dropped)
@@ -225,6 +245,24 @@ tcase('T11 a page drawn on a picture, a bookmark navigator, two pictures of one 
 tcase('T12 tab orders: none free between two stops, a group of its own, no tab orders', (d) => {
   ['btnReset', 'cardOrders', 'title', 'lineMonth', 'btnDetails', 'colRegion', 'nav', 'slRegion'].forEach((v, i) => edit(d, visualRel('p1overview', v), (j) => { if (j.position) j.position.tabOrder = i; }));
   ['btnBack', 'note2', 'barProduct', 'tblProducts', 'customGauge'].forEach((v) => edit(d, visualRel('p2details', v), (j) => { if (j.position) delete j.position.tabOrder; }));
+});
+// strips 20 px wide over the whole of p2details (1920 x 1080; its page button at the bottom), none holding a button's box (an obstacle each); gap: a place that
+// many px wide left free (the Arabic page's "English" button is narrower than the English page's «العربية»)
+const strips = (d, gap) => { for (let x = 0, k = 0; x < 1920; x += 20, k++) { if (gap && x >= 600 && x < 600 + gap) continue;
+  put(at(d, visualRel('p2details', 'strip' + k)), { $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json', name: 'strip' + k, position: { x, y: 0, z: 100 + k, width: 20, height: 1080, tabOrder: 100 + k }, visual: { visualType: 'shape', objects: { shape: obj({ tileShape: Q('rectangle') }) } } }); } };
+tcase('T13 no free place for either button on a page', (d) => strips(d, 0));
+tcase('T14 a free place for the narrower button only', (d) => strips(d, 80));
+tcase('T15 the same with the Arabic tabs, the page shown in the original', (d) => { strips(d, 80); edit(d, `${RD}/pages/p2details/page.json`, (j) => { j.visibility = 'AlwaysVisible'; }); }, { tabsShown: 'ar' });
+tcase('T16 no place for either, the Arabic tabs', (d) => strips(d, 0), { tabsShown: 'ar' });
+tcase('T17 other files in a page\'s and a visual\'s folder', (d) => { put(at(d, `${RD}/pages/p1overview/notes.json`), { note: 1 }); put(at(d, `${RD}/pages/p1overview/visuals/cardOrders/extra.json`), { x: 1 }); });
+tcase('T18 slicers with no query state, a role that is not an object, a projection that is not one', (d) => {
+  const mk = (name, y, q) => { const j = rd(at(d, visualRel('p1overview', 'slRegion'))); j.name = name; delete j.visual.syncGroup; j.position = Object.assign({}, j.position, { y, z: 7400 + y, tabOrder: 7400 + y }); j.visual.query = q; put(at(d, visualRel('p1overview', name)), j); };
+  mk('slNoState', 300, {}); mk('slNullRole', 360, { queryState: { Values: { projections: [null, { queryRef: 'Sales.Region' }] }, Other: { projections: 'x' } } });
+});
+tcase('T19 a link to a bookmark that is not there, a group that is not there, a visual named "undefined"', (d) => {
+  edit(d, visualRel('p1overview', 'btnDetails'), (j) => { j.visual.visualContainerObjects = Object.assign({}, j.visual.visualContainerObjects, { visualLink: [{ properties: { show: L('true'), type: Q('Bookmark'), bookmark: Q('bmGone') } }] }); });
+  edit(d, visualRel('p1overview', 'cardOrders'), (j) => { j.parentGroupName = 'ghostGroup'; });
+  const u = rd(at(d, visualRel('p2details', 'note2'))); u.name = 'undefined'; u.position = Object.assign({}, u.position, { y: 20, z: 9500, tabOrder: 9500 }); put(at(d, visualRel('p2details', 'undefined')), u);
 });
 T_CASES.forEach(([name, ed], i) => { const d = 'fn1g-t' + (i + 1); fs.cpSync(PROJ, path.join(ROOT, d), { recursive: true }); lf(path.join(ROOT, d)); if (ed) ed(d); });
 for (const [name, , args, own] of T_CASES) {
