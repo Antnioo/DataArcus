@@ -233,7 +233,7 @@ export const askedLook = (chart) => { const v = chart && typeof chart === 'objec
 const lookWord = (chart) => (chart && typeof chart === 'object' && Object.hasOwn(LOOK_WORDS, chart.look) ? Object.assign({}, chart, { look: LOOK_WORDS[chart.look] }) : chart);
 // A new design's look, set in design.chart.look (the design is changed): the one asked, else the default (glass); glass
 // only where it keeps everything readable (the engine's glassFit), else the plain look, and why. Contrast is the gate:
-// an asked glass that can't pass is plain too. what: 'report' or 'theme', for the plan's line. Returns { look, chosenBy: 'default' | 'asked', glassFailed?, sayInPlan }
+// an asked glass that can't pass is plain too. what: 'report' or 'theme', for the plan's line. Returns { look, chosenBy: 'default' | 'asked', glassFailed?, noPicture? { textOnPage, min } (glass whose page picture is the plain page colour: AP2), sayInPlan }
 const GLASS_FAILED = { textOnGlass: 'text on the see-through cards', labelsOnGlass: 'labels on the see-through cards', color1OnGlass: 'colour 1 on the see-through cards', textOnPicture: 'text on the page picture', gridOnGlass: 'table lines on the see-through cards', textOnBand: 'text on the banded rows', gridOnBand: 'table lines on the banded rows' };
 export function lookFor(design, asked, what = 'report') {
   const want = asked === 'auto' || asked === 'glass' ? asked : DEFAULT_LOOK, chosenBy = asked === want ? 'asked' : 'default';
@@ -242,11 +242,15 @@ export function lookFor(design, asked, what = 'report') {
   if (fit && !fit.fits) design.chart.look = 'auto';
   const r = (x) => (Math.floor(x * 10) / 10).toFixed(1);
   const failed = fit && !fit.fits ? (fit.failed.length ? fit.failed : [{ id: 'textOnGlass', ratio: null, min: 4.5 }]).map((c) => ({ check: GLASS_FAILED[c.id] || c.id, ratio: c.ratio == null ? null : Math.round(c.ratio * 100) / 100, min: c.min })) : null;
-  const sayInPlan = design.chart.look === 'glass'
+  // (0.3.2 AP2, A-E1R5B-1) glass with no page picture (glassFit's picture false): said as such, never "a soft page picture"
+  const noPicture = design.chart.look === 'glass' && fit && fit.picture === false ? { textOnPage: fit.textOnPage == null ? null : Math.round(fit.textOnPage * 100) / 100, min: 4.5 } : null;
+  const sayInPlan = noPicture
+    ? `${chosenBy === 'default' ? 'Glass look (default)' : 'Glass look, as asked'}: see-through cards over the page's own colour, with no page picture: the page's text stands ${noPicture.textOnPage == null ? 'under 4.5:1' : `${r(noPicture.textOnPage)}:1`} on that colour, under 4.5:1, and a picture would lower it; plain: chart.look "auto". Say it in the plan.`
+    : design.chart.look === 'glass'
     ? `${chosenBy === 'default' ? 'Glass look (default)' : 'Glass look, as asked'}: see-through cards over a soft page picture drawn from the theme's own colours (Power BI has no blur behind a visual); plain: chart.look "auto". Say it in the plan.`
     : failed ? `Plain look: ${chosenBy === 'default' ? 'glass is the default, but' : 'glass was asked, but'} with these colours it can't keep everything readable (${failed.map((c) => c.ratio == null ? `${c.check}: the cards would have to be solid` : `${c.check} ${r(c.ratio)}:1, needs ${c.min}:1`).join('; ')}), so this ${what} has Power BI's own solid cards. Say it in the plan, and offer other colours for the glass look.`
       : 'Plain look, as asked: Power BI\'s own cards; glass: chart.look "glass".';
-  return Object.assign({ look: design.chart.look, chosenBy }, failed ? { glassFailed: failed } : {}, { sayInPlan });
+  return Object.assign({ look: design.chart.look, chosenBy }, failed ? { glassFailed: failed } : {}, noPicture ? { noPicture } : {}, { sayInPlan });
 }
 
 // Page and style choices into a saved layout. base: a layout to change (plan_layout), fix: records what can't be used

@@ -5,6 +5,11 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.2
+- **The approval page says exactly what is written:** each page's slicers, buttons and cards are listed in the order a
+  person reads the page (right to left on an Arabic page); each card is named by the measure it shows, and the "no data"
+  message boxes over the charts are counted on their own line, never as cards. When the colours leave no room for the
+  glass look's soft page picture (the page's own text already stands under 4.5:1 on the page colour), the plan and the
+  approval page say the cards sit on the plain page colour, with no picture, instead of promising one.
 - **The approval page draws the tooltip pages too:** its preview now shows a picture of each tooltip page the click
   writes, after the report's pages, at the tooltip page's own size and captioned as a tooltip page. The preview still
   draws at most 12 pictures: the report's pages come first, and any tooltip page left out is counted.

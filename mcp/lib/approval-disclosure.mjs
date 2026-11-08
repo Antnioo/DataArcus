@@ -90,11 +90,13 @@ export function promptBox(plan, data) {
 // the file kinds in Arabic, beside their English names (the names Power BI's own files and this page's groups use)
 export const KIND_AR = { Bookmarks: 'الإشارات المرجعية', Pages: 'الصفحات', Visuals: 'المرئيات', 'Phone layouts': 'تخطيطات الهاتف', Theme: 'السمة', Images: 'الصور', 'Custom visual packages': 'حزم المرئيات المخصصة',
   'Flip cards script': 'سكربت البطاقات القابلة للقلب', 'Gulf calendar script': 'سكربت تقويم الخليج', Script: 'سكربت', 'Format script': 'سكربت التنسيقات', 'Project file': 'ملف المشروع', 'Report settings': 'إعدادات التقرير', 'Arabic calendar script': 'سكربت أعمدة التقويم العربية', 'Theme file': 'ملف السمة',
-  'Metric switcher script': 'سكربت مبدّل المقاييس', 'Model (TMDL)': 'النموذج (TMDL)', 'Empty report': 'تقرير فارغ', 'Status icons script': 'سكربت أيقونات الحالة', 'DAX functions script': 'سكربت دوال DAX', [BLANK_LABEL()]: 'خلفيات الصفحات (فارغة وشفافة: تظهر الصفحة بلون السمة)', [GLASS_LABEL()]: 'خلفيات الصفحات (الصورة الناعمة للشكل الزجاجي، مصنوعة من ألوان السمة: ليست صورة فوتوغرافية)',
+  'Metric switcher script': 'سكربت مبدّل المقاييس', 'Model (TMDL)': 'النموذج (TMDL)', 'Empty report': 'تقرير فارغ', 'Status icons script': 'سكربت أيقونات الحالة', 'DAX functions script': 'سكربت دوال DAX', [BLANK_LABEL()]: 'خلفيات الصفحات (فارغة وشفافة: تظهر الصفحة بلون السمة)', [GLASS_LABEL()]: 'خلفيات الصفحات (الصورة الناعمة للشكل الزجاجي، مصنوعة من ألوان السمة: ليست صورة فوتوغرافية)', [GLASS_PLAIN_LABEL()]: 'خلفيات الصفحات (لون الصفحة في الشكل الزجاجي، دون صورة مع هذه الألوان)',
   "Theme (the original's, copied)": 'السمة (سمة التقرير الأصلي، منسوخة كما هي)', "Images (the original's, copied)": 'الصور (صور التقرير الأصلي، منسوخة كما هي)' };
 function BLANK_LABEL() { return 'Page backgrounds (blank, see-through: the page shows the theme\'s colour)'; }
 // (0.3.1 GD1) the glass look's page picture, listed as what it is
 function GLASS_LABEL() { return 'Page backgrounds (the glass look\'s soft picture, made from the theme\'s colours: no photo)'; }
+// (0.3.2 AP2) the same files when the look has no page picture (lookFor's noPicture): the plain page colour
+function GLASS_PLAIN_LABEL() { return 'Page backgrounds (the glass look\'s page colour, plain: no picture with these colours)'; }
 // (0.3.0 T1, T-1: "102 files:" then every visual.json path; finance and HR approved "on the summary line") the files by
 // kind, in words ("1 report: 4 pages, 40 visuals, 2 bookmarks, 26 phone layouts; 1 theme; 1 script"), counted from the
 // same list the page folds below (the plan's own outputs: what the write writes)
@@ -190,6 +192,19 @@ const VT_WORDS = { clusteredBarChart: ['bar chart', 'bar charts', 'مخططات 
 // (0.3.2 PL1, E1 round 5: a visual by Power BI's type key) one visual's kind in words; a custom visual by its id
 const kindSaid = (t) => { const s = String(t || ''), m = /^custom (.+)$/.exec(s); return m ? `custom visual ${m[1]}` : VT_WORDS[s] ? VT_WORDS[s][0] : s; };
 const nOf = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+// (AP2) a page's cards (pagesWritten: cards [{ shows: [Table[Measure]] }], messageCards, kinds): each card by its
+// measures' names (a model's measure names are unique), the message boxes, the cards with no measure; English and Arabic
+// (the Arabic of the message boxes and of a card with no measure: approved by the owner, D-1108-12)
+const CARD_KINDS = /^(cardVisual|card|multiRowCard|kpi)$/;
+const measureName = (f) => { const m = /\[(.*)\]$/s.exec(String(f)); return m ? m[1] : String(f); };
+function cardItems(x) {
+  const C = (x.cards || []).map((c) => (c.shows || []).map(measureName)), msg = +x.messageCards || 0, out = [];
+  const all = (x.kinds || []).filter((k) => CARD_KINDS.test(k.type)).reduce((n, k) => n + (+k.count || 0), 0), left = Math.max(0, all - C.length - msg);
+  if (C.length) out.push({ en: `${nOf(C.length, 'card', 'cards')}: ${C.map((c) => c.join(' and ')).join(', ')}`, ar: `البطاقات: ${C.length} (${C.map((c) => c.map((n) => `«${n}»`).join(' و')).join('، ')})` });
+  if (msg) out.push({ en: `${nOf(msg, '"no data" message box', '"no data" message boxes')}: each over a chart, shown when it has no data`, ar: `مربعات رسالة «لا توجد بيانات»: ${msg} (كل منها فوق مخطط، يظهر عندما لا تكون لديه بيانات)` });
+  if (left) out.push({ en: `${nOf(left, 'card', 'cards')} with no measure`, ar: `بطاقات دون مقياس: ${left}` });
+  return out;
+}
 function pagesSection(PW) {
   const rows = PW.map((x) => {
     const items = [{ en: nOf(+x.visuals || 0, 'visual', 'visuals'), ar: `المرئيات: ${+x.visuals || 0}` }];
@@ -202,7 +217,12 @@ function pagesSection(PW) {
     const B = x.buttons || [];
     if (B.length) items.push({ en: `${nOf(B.length, 'button', 'buttons')}: ${B.map((b) => (b.to === 'page' ? `to page "${b.name}"` : b.to === 'bookmark' ? `"${b.name}" (a bookmark)` : 'another action')).join('; ')}`,
       ar: `الأزرار: ${B.length} (${B.map((b) => (b.to === 'page' ? `إلى الصفحة «${b.name}»` : b.to === 'bookmark' ? `«${b.name}» (إشارة مرجعية)` : 'إجراء آخر')).join('؛ ')})` });
+    // (0.3.2 AP2, A-PF2-2, D-1108-07) the cards by the measure each shows, at the place of the first card kind; the "no
+    // data" message boxes laid over the charts on their own line, never counted as cards; a card with no measure apart
+    let cardsSaid = false;
     (x.kinds || []).forEach((k) => { const w = VT_WORDS[k.type] || [String(k.type), String(k.type), String(k.type)], by = (k.by || []).map(String);
+      // (data without the cards list, as before PF2: its card kinds said as before)
+      if (CARD_KINDS.test(k.type) && Array.isArray(x.cards)) { if (!cardsSaid) items.push(...cardItems(x)); cardsSaid = true; return; }
       items.push({ en: `${nOf(+k.count || 0, w[0], w[1])}${by.length ? `: ${by.map((f) => `by ${f}`).join(', ')}` : ''}`, ar: `${w[2]}: ${+k.count || 0}${by.length ? ` (${by.map((f) => `حسب «${f}»`).join('، ')})` : ''}` }); });
     return [`Page ${x.n}: ${cut(String(x.name), 80)}`, items];
   });
@@ -224,7 +244,7 @@ function summaryOf(kind, data) {
   // writes blank (a see-through pixel, so the page shows the theme's colour) is listed as what it is
   const blank = new Set(Array.isArray(d.blankImages) ? d.blankImages.map(String) : []);
   const glassPics = new Set(Array.isArray(d.glassImages) ? d.glassImages.map(String) : []);
-  const files = Array.isArray(d.outputs) ? groupFiles(d.outputs, [[BLANK_LABEL(), { test: (f) => blank.has(f) }], [GLASS_LABEL(), { test: (f) => glassPics.has(f) }], ['Metric switcher script', / - metric switcher\.tmdl$/i], ['Status icons script', / - status icons\.tmdl$/i], ['DAX functions script', / - DAX functions(?: \d+)?\.tmdl$/i]]) : null;   // (L3: the switch's own script; 0.3.1 L6: the DAX functions')
+  const files = Array.isArray(d.outputs) ? groupFiles(d.outputs, [[BLANK_LABEL(), { test: (f) => blank.has(f) }], [d.look && d.look.noPicture ? GLASS_PLAIN_LABEL() : GLASS_LABEL(), { test: (f) => glassPics.has(f) }], ['Metric switcher script', / - metric switcher\.tmdl$/i], ['Status icons script', / - status icons\.tmdl$/i], ['DAX functions script', / - DAX functions(?: \d+)?\.tmdl$/i]]) : null;   // (L3: the switch's own script; 0.3.1 L6: the DAX functions')
   // (0.3.2 FN1E) each kind's page by its own steps, on one context; a report's in five, in this order
   const sc = { kind, d, pins, sections, val, files };
   if (kind === 'report') {
@@ -353,7 +373,10 @@ function reportLookStep(sc) {
     cc.forEach((c) => look.push(['The first data colour, made readable', `approved colour ${String(c.from)} -> written colour ${String(c.to)}: contrast ${c.contrast}:1 against the visuals' background ${String(d.colours.card || '')}, needs 3:1 for a data colour${own(c)} (the 3:1 contrast for graphics of WCAG 2.1, criterion 1.4.11; the hue is kept)`]));
     // (0.3.1 GD1) the cards' look: glass by default, plain where glass can't keep the text readable (and why), or as asked
     const lk = d.look && typeof d.look === 'object' ? d.look : null;
-    if (lk) look.unshift(['Card look', lk.look === 'glass' ? (lk.chosenBy === 'default' ? 'Glass look (default): see-through cards over a soft page picture made from the theme\'s colours (Power BI has no blur behind a visual); plain cards: ask for the plain look' : 'Glass look, as asked: see-through cards over a soft page picture made from the theme\'s colours')
+    // (0.3.2 AP2, A-E1R5B-1) glass whose page picture is the plain page colour (lookFor's noPicture): said as such
+    const np = lk && lk.look === 'glass' && lk.noPicture && typeof lk.noPicture === 'object' ? lk.noPicture : null;
+    if (np) look.unshift(['Card look', `${lk.chosenBy === 'default' ? 'Glass look (default)' : 'Glass look, as asked'}: see-through cards over the page's own colour, with no page picture: the page's text stands ${np.textOnPage == null || !isFinite(+np.textOnPage) ? 'under 4.5:1' : `${(Math.floor(+np.textOnPage * 10) / 10).toFixed(1)}:1`} on that colour, under 4.5:1, and a picture would lower it${lk.chosenBy === 'default' ? '; plain cards: ask for the plain look' : ''}`]);
+    else if (lk) look.unshift(['Card look', lk.look === 'glass' ? (lk.chosenBy === 'default' ? 'Glass look (default): see-through cards over a soft page picture made from the theme\'s colours (Power BI has no blur behind a visual); plain cards: ask for the plain look' : 'Glass look, as asked: see-through cards over a soft page picture made from the theme\'s colours')
       : Array.isArray(lk.glassFailed) ? `Plain: with these colours glass can't keep everything readable (${lk.glassFailed.map((c) => `${String(c.check || '')}${c.ratio != null ? ` ${(Math.floor(+c.ratio * 10) / 10).toFixed(1)}:1, needs ${+c.min}:1` : ''}`).join('; ')}), so the cards are solid` : 'Plain, as asked: Power BI\'s own cards']);
     if (bars) look.unshift([LK.chartColors, bars === 'gradient' ? 'each bar fades by its value; a chart by a second category field gets a second colour, the same on every page' : 'one colour for every bar']);
     sections.push({ heading: 'Look and options', rows: look });
