@@ -345,7 +345,7 @@ export default async function ({ browser, url }) {
         return { lang: document.documentElement.lang, dir: document.documentElement.dir, h1: document.querySelector('h1').textContent, title: document.title,
           text: document.body.innerText, action: f && f.getAttribute('action'), key: el('access_key') && el('access_key').value, subject: el('subject') && el('subject').value,
           fields: ['name', 'email', 'model', 'linkedin'].map((n) => [n, !!el(n), !!(el(n) && el(n).required), el(n) && el(n).labels.length]),
-          join: !!document.querySelector('.cta-actions a[href="https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0"]') && !!document.getElementById('join'), tools: document.querySelectorAll('#join, code').length };
+          join: !!document.querySelector('.cta-actions a[href^="https://github.com/Antnioo/dataarcus-releases/releases/tag/v"]') && !!document.getElementById('join'), tools: document.querySelectorAll('#join, code').length };
       });
       checks++;
       if (lang === 'ar' && (r.lang !== 'ar' || r.dir !== 'rtl')) problems.push(`${tag}: lang=${r.lang} dir=${r.dir}, want ar and rtl`);
@@ -359,7 +359,7 @@ export default async function ({ browser, url }) {
         if (!has || !labels) problems.push(`${tag}: form field ${n} missing or without a label`);
         else if (req !== (n !== 'linkedin')) problems.push(`${tag}: form field ${n} ${req ? 'required' : 'optional'}, want ${n === 'linkedin' ? 'optional' : 'required'}`);
       }
-      if (!r.join) problems.push(`${tag}: no Download button to the 0.3.0 release page, or no #join section`);
+      if (!r.join) problems.push(`${tag}: no Download button to a release page (its version: scripts/check-release.mjs), or no #join section`);
       if (r.tools < 9) problems.push(`${tag}: the 8 tools are not listed`);
       for (const claim of [/until you say/i, /until you approve/i, /nothing is written until/i, /plan first/i, /\bfirst\b[^.]{0,30}\b(tool|agent|mcp)\b/i, /\bonly (tool|agent|mcp)\b/i, /\b(AED|USD|\$)\s?\d/])
         if (claim.test(r.text)) problems.push(`${tag}: a claim it must not make: ${claim}`);

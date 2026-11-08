@@ -235,7 +235,7 @@ package's manifest; this file says what is in it.
   loading the translations, and putting them on the page (its text, direction and share previews) each have a file of
   their own; every page opens in the same language, reads and switches exactly as before.
 
-## [0.3.1]: 2026-11-03 (the version for testers)
+## [0.3.1]: 2026-11-04 (the version for testers)
 Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports
 opens, every page reads right to left, and Microsoft's validator finds nothing in a twin that its English report does
 not have. In short:
