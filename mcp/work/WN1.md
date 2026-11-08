@@ -10,7 +10,7 @@
   last 4 files were not in the brief's list). F02: read-report.mjs existingTheme (opened, rank) and model.mjs's
   win32-only compare. F03: approval-window.mjs (launchers, the watch, the shortcut), approve_plan.mjs. F05:
   plan_layout.mjs and create_arabic_twin.mjs (no plan id), files.mjs writeTree (writes nothing).
-- **Commits:** plan bc9b9b7f; code, tests, CHANGELOG, WORK.md 45e7e928.
+- **Commits:** plan bc9b9b7f; code, tests, CHANGELOG, WORK.md 45e7e928; note 328b2ceb; the write gate's list 1b418f2e; the shorter refusal and platform-paths' Windows branch (next commit).
 - **Expected checks:** wn1 33 checks, red on 3e7580d9 first (27 of 33 failed there; the 6 that passed are the
   escape still refused, F02 on a case-sensitive disk, R3's "shortcut removed" (vacuous there), R4, L2's plan within the
   limit). Every pinned suite green with its base count, no fixture re-recorded.
@@ -30,13 +30,27 @@
 - Guards: approval 32, approval-hardening 22, test-platform-paths 30, v029d 22, audit6 47, r4-write-safety 47,
   b153 37, r4a 32 (all PASS). Lint 0; modules 1198 (218 rows), result-lines 228, contracts 717, changelog-words,
   agent-memory PASS.
-- Areas: (below, added when read from their output)
+- Areas (`npm test -- <area> --keep-going`, on 45e7e928): core "12 suites passed" (mutation "95 mutants, all killed";
+  3 equivalent not run), checker "12 suites passed", model "31 suites passed"; safety "1 of 24 suites failed":
+  test-0.3.1-write-gate W1 (the shortcut's 4 temp-folder writes not listed): listed with why in 1b418f2e, "PASS
+  test-0.3.1-write-gate  7 checks"; safety run again on 1b418f2e: "24 suites passed (safety)". approval x3: 32, 32, 32.
 
 ## Changed on purpose
 - `test-0.3.2-sp42.mjs` P2: `within` is "defined in model.mjs" OR imported there from `./path-rules.mjs` (it moved to
   the one shared place, D-1104-12); still one check, the same count (22).
 - `test-0.3.2-sp44.mjs` V2: approval-window.mjs keeps `launchers` (was `browserCommand`: the list of programs, F03);
   the same check and count (23). No fixture changed: `state()` adds `shortcut` only when one was written.
+
+- `test-platform-paths.mjs` "long" (0.3.1 P1: a project path over 300 characters, written on every system): on Windows
+  plan_layout and create_arabic_twin now refuse it at plan time with the plain message and nothing is written (the
+  same 3 checks, their Windows branch reversed: CI run 42522986775 was red there, "3 of 30"); Linux and macOS unchanged.
+  Source: Microsoft Learn, "Power BI Desktop projects", Considerations and limitations 4: "the maximum path length for
+  project files is limited to 260 characters by default on Windows ... resulting in errors during save operations".
+  The Windows branch was run here with the limit forced to 259 on Linux: "PASS  test-platform-paths  30 checks".
+- `test-0.3.2-hr2.mjs` G1 (the answer at most 38,000): on Windows its 171-character folder makes the project too deep,
+  so the plan now carries the refusal; the first message (with the folder's whole path) gave 38,167 (CI run
+  42522986775). The message no longer repeats the folder: with it forced here, 37,994 on Linux; on Windows 38,167 -
+  564 (the old message) + 225 = about 37,830.
 
 ## CHANGELOG line
 - "**Four fixes for Windows:** a project in a folder whose name begins with two dots ... instead of failing half-way
@@ -76,6 +90,8 @@
   when the first did not open the page; a file holding the one-time link is written to the OS temp folder (this user
   only) and removed after the decision. Accepted risk, as already written in approval-window.mjs: another program of
   the person's computer (an AI app's command tool) can read it, as it can read the browser's history today.
+- A test that guards writes: `test-0.3.1-write-gate.mjs` lists approval-window.mjs's fs.mkdtempSync, chmodSync,
+  writeFileSync and rmSync (the shortcut, OS temp folder only) and its spawn's why names explorer.exe (F03).
 - What an answer returns: approve_plan's "waiting" answer gains window "not seen" and `shortcut: { file, folder }` in
   that case only; plan_layout and create_arabic_twin refuse a plan over the path limit.
 
@@ -89,6 +105,8 @@
 - check-redact.mjs `rel` and plain-words' path forms are not containment tests (left as they are).
 
 ## Lessons for the reviewer
+- F05 reversed a 0.3.1 promise pinned by test-platform-paths (a 300-character project written on Windows); only the
+  Windows CI showed it. A rule that refuses on one platform: grep the tests for long paths before the first CI run.
 - A rename of a pinned name (browserCommand) and a moved definition (within) each broke a split guard (sp44 V2,
   sp42 P2): the split guards pin names, so a fix in the shared place moves them.
 - state() gaining a key with a null value moved 5 sp44 recordings; a key only when it has a value kept them.

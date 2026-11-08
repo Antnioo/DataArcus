@@ -102,7 +102,7 @@ export function register(server, ctx) {
     const T = twinTree(P), source = reportPrint(a.path);
     // (0.3.2 WN1, F05) the deepest file the twin writes within the system's path limit (Windows: 259 characters), or no plan id
     const long = tooLongSaid(P.loc.project, T.files);
-    if (long) throw new Error(`No plan: the twin can't be written where it is: ${long}. Nothing was written.`);
+    if (long) throw new Error(`No plan: the twin can't be written there: ${long}. Nothing was written.`);
     const pin = { labels: P.labels, terms: P.terms, timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: Gallery.waterfallRtlOf(a.waterfallRtl), arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, flipPictures: [...new Set((a.flipPictures || []).map(String))].sort(), matrixAsTable: [...new Set((a.matrixAsTable || []).map(String))].sort(), into: LG ? 'same' : 'separate', tabsShown: LG ? P.copy.tabsShown : null, source, ...(culturesOf(a.modelNames).length ? { modelNames: culturesOf(a.modelNames) } : {}) };
     P.answer.exact = { digest: T.digest, files: T.files.length, note: 'The exact files the write will write, built now: after the go they are written byte for byte, or nothing is.' };
     // (0.3.1 BD2, measured in Desktop 2.159, 27 Oct) the Arabic page and tooltip page names that keep a Latin run: no mark

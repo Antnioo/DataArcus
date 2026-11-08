@@ -335,7 +335,7 @@ export function register(server, ctx) {
       if (exact && exact.check.status === 'blocked') planProblems.push(`the report this plan writes fails its check before writing (${Object.entries(exact.check.byRule).filter(([k]) => (exact.check.blocking || []).some((b) => b.rule === k)).map(([k, n]) => `${k} ${n}`).join(', ') || 'blocked'}; exactCheck lists the files): change the plan, or tell the user it can't be written as planned.`);
       // (0.3.2 WN1, F05) the deepest file it writes within the system's path limit (Windows: 259 characters), or no plan id
       const long = exact && m0 && m0.projectDir ? tooLongSaid(m0.projectDir, exact.files) : null;
-      if (long) planProblems.push(`the report can't be written where it is: ${long}.`);
+      if (long) planProblems.push(`the report can't be written there: ${long}.`);
     }
     // (0.3.1 TT1) an Arabic plan: the titles the report writes wholly in English (a field in them has no Arabic name), and
     // how to make them Arabic
