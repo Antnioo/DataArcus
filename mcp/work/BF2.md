@@ -1,12 +1,12 @@
 # BF2 (0.3.2): the usage panel ("Fuel") on /build/ (D-1108-15, B-399)
 
 ## Summary
-**State:** built, CI next (2026-11-08T15:08Z)
+**State:** DONE
 - **Approval:** the owner, 8 Nov (D-1108-15): "yes move it earlier also i want the website to show this" (after "i also wanted to check the usage it needed for all builders and every session and how many tokens").
 - **Base:** `fix/0.3.2-bf2` from `origin/integration/0.3.2` (446ebd8a).
 - **Scope:** `build/index.html` (the Fuel panel, below the existing sections), new `assets/js/build-usage.js` (+ .min.js), small hooks in `assets/js/build-page.js` (call the usage reader once per refresh cycle through the existing `createClient`) and `assets/js/build-helix.js` (a rung label shows that job's cost), `scripts/tests/build-page.mjs` + fixture `scripts/tests/fixtures/build-usage.json` (made-up numbers), MODULES.md row, this note, one WORK.md line. No MCP code.
 - **Expected checks:** suite `build-page` 52 -> about 70 (new U-checks: renders, schema mismatch, missing file, 390 px no sideways scroll, textContent, ETag/304, rung cost, no extra API call); every old check unchanged; `test-site-config`, `csp`, `check-min`, `stamps`, `check-modules`, `check-agent-memory`, `sitemap-lastmod` pass; lint exit 0; CI green.
-- **CI:** not run yet.
+- **CI:** CI green: https://github.com/Antnioo/DataArcus/actions/runs/42493818423 on 9fc99228 (2026-11-08T15:28Z).
 - **Resume:** CI on the last commit, then the reviewer merges.
 
 ## Plan
