@@ -18,6 +18,7 @@
  *   ciRows(runs, now)         runs in progress or finished in the last 3 h
  *   mergesOf(commits, now)    "Merge ..." commits of the last 24 h (a builder's own "Merge origin/..." left out)
  *   releaseLine(pkg, latest)  { text, inProgress }: the version on integration against the latest release
+ *   (BF2) where window.BuildUsage exists the Fuel panel is mounted on this client and read once per refresh
  *   createClient({ fetch, now, save })  the reader: etag cache (If-None-Match, a 304 keeps the data), the rate-limit
  *                             state (remaining < 10: every 10 min; a 403/429: wait until X-RateLimit-Reset)
  * Every text from GitHub is shown with textContent, never as HTML.
@@ -158,6 +159,8 @@ const MAX_LOOKUPS = 40, KEEP_CALLS = 12;   // latest-commit lookups per refresh;
     const last = {};   // section -> its last data: a section that cannot load keeps it
     // the helix (build-helix.js, three.js): where either is missing the page still works with its cards
     const helix = win.BuildHelix ? win.BuildHelix.mount($('bp-line'), win) : null;
+    // the Fuel panel (build-usage.js, BF2): read through this same client, once per refresh; the page works without it
+    const usage = win.BuildUsage ? win.BuildUsage.mount(win, client) : null;
     let timer = 0, busy = null;
 
     const el = (tag, cls, text) => { const e = doc.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -210,6 +213,7 @@ const MAX_LOOKUPS = 40, KEEP_CALLS = 12;   // latest-commit lookups per refresh;
         if (client.blocked()) { status(); return; }
         // soft: a 404 is "not there" (no release yet), not a failure
         const ask = async (key, path, opts) => { try { const r = await client.get(path, opts); last[key] = r.data; delete last[key + 'Err']; return r.data; } catch (e) { if (e.limited) throw e; if (opts && opts.soft && e.status === 404) { last[key] = null; delete last[key + 'Err']; return null; } last[key + 'Err'] = e.message; return last[key]; } };
+        const usageDone = usage ? usage.refresh() : null;   // alongside the page's own reads; it never throws
         try {
           const branches = await ask('branches', API + '/branches?per_page=100');
           const found = newestVersion(branches) || last.found;
@@ -241,7 +245,8 @@ const MAX_LOOKUPS = 40, KEEP_CALLS = 12;   // latest-commit lookups per refresh;
           await Promise.all(builders.map(async (b) => { try { notes[b.branch] = stateOf((await client.get(RAW + esc(b.branch) + '/mcp/work/' + esc(b.code) + '.md', { raw: true })).data); } catch (e) { if (e.limited) throw e; if (e.status === 404) notes[b.branch] = ''; } }));
           const ci = ciRows(runs, now), merges = mergesOf(commits, now);
           const headSha = commits && commits[0] && commits[0].sha, headRun = headSha && runsOf(runs).find((r) => r.head_sha === headSha);
-          const sats = builders.map((b) => ({ code: b.code, status: statusOf(b, notes[b.branch], now), message: b.message, time: b.time, note: notes[b.branch] || '',
+          if (usageDone) await usageDone;
+          const sats = builders.map((b) => ({ code: b.code, costText: usage && usage.costOf(b.code) != null ? usage.fmtUsd(usage.costOf(b.code)) : '', status: statusOf(b, notes[b.branch], now), message: b.message, time: b.time, note: notes[b.branch] || '',
             ci: b.run ? { queued: 'queued', running: 'in progress', green: 'green', red: 'red', other: 'ended' }[b.run.result] : '' }));
           drawBuilders(builders, notes, now); drawCi(ci);
           drawMerges({ merges, head: headSha ? { sha: short(headSha), run: headRun ? runInfo(headRun) : null } : null });
