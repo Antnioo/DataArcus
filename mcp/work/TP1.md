@@ -42,7 +42,7 @@
 - After: `fromFiles(files, { tooltips: true })` gives the tooltip pages after the shown pages (page order), each with
   `tooltip: true` and its own width and height; planPreview and twinPreview ask for them (the website does not).
   approval-view.mjs draws them after the report's pages (or the copy's pairs), one by one, captioned "Tooltip page N:
-  <name>" / «صفحة تلميح N: «<name>»» (the Arabic a DRAFT for the owner), at its own size: rendered `width` = the
+  <name>" / «صفحة تلميح N: «<name>»» (the Arabic approved by the owner, D-1108-07), at its own size: rendered `width` = the
   page's width (376 x 310 and 320 x 314 for the Service model, 320 x 240 in the twin fixture), the figure's own
   `max-width` so the CSS's `width:100%` never stretches it. The page's shared STYLE is not changed.
 - The cap (PREVIEW_PAGES_MAX, 12): the report's pages (pairs) win; tooltip pages take the slots left; those left out
@@ -94,7 +94,7 @@ test-site-config, lint 0, modules --strict, result-lines, changelog-words, agent
   pages keep their exact bytes (a first try with a CSS rule changed all 12 pages by 50 bytes).
 
 ## For the owner
-- The Arabic caption «صفحة تلميح N» and the count line's Arabic are DRAFTS: approve or edit.
+- The Arabic caption «صفحة تلميح N» and the count line's Arabic: approved as drafted (D-1108-07, 8 Nov; AP2).
 
 ## Risky changes
 - The approval step: the page now shows more pictures (drawn from the plan only, by the same renderer, every name

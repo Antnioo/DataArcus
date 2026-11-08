@@ -279,7 +279,7 @@ try {
   const b = page(MAX + 1, 2), cb = caps(b);
   chk(() => cb.length === MAX && cb.every((c) => /^Page /.test(c)) && /1 more pages not drawn here|1 more page not drawn here/.test(unesc(b)) && /2 more tooltip pages not drawn here/.test(unesc(b)), () => `A11-7. 13 report pages and 2 tooltip pages: 12 report pages drawn (they win the cap), 1 page and 2 tooltip pages counted: ${JSON.stringify(cb)} ${unesc(b).match(/<p class="note">[^<]*/g)}`);
   const c = page(2, 1, 'ar'), cc = caps(c);
-  chk(() => cc.length === 3 && /^صفحة تلميح 1: «T1»/.test(cc[2]), () => `A11-8. the Arabic caption (a draft for the owner): ${JSON.stringify(cc)}`);
+  chk(() => cc.length === 3 && /^صفحة تلميح 1: «T1»/.test(cc[2]), () => `A11-8. the Arabic caption (approved, D-1108-07): ${JSON.stringify(cc)}`);
   const d = page(3, 0);
   chk(() => !/class="tip"|Tooltip page|tooltip pages? not drawn/.test(d), () => 'A11-9. a plan with no tooltip page: no tooltip picture and no tooltip line');
 }
