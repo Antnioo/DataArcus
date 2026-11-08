@@ -80,9 +80,26 @@
     .bp-release { font-weight: 300; font-size: 1.6rem; color: var(--bp-green); overflow-wrap: anywhere; margin-top: 8px; }
     .bp-pending { color: var(--bp-running); }
     .bp-empty { color: var(--bp-dim); }
+    .bu-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; }
+    .bu-big { display: flex; flex-wrap: wrap; gap: 8px 40px; margin-top: 10px; }
+    .bu-big .bp-num { color: var(--bp-running); } .bu-big > div + div .bp-num { color: var(--bp-idle); }
+    .bu-h3 { font-size: .8rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--bp-dim); margin: 18px 0 0; }
+    .bu-list { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 6px; }
+    .bu-row, .bu-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; min-width: 0; }
+    .bu-row { justify-content: flex-start; font-size: .9rem; }
+    .bu-name, .bu-code { font-weight: 600; color: #fff; overflow-wrap: anywhere; min-width: 0; }
+    .bu-code { font-weight: 800; letter-spacing: .06em; }
+    .bu-val { font-weight: 300; color: var(--bp-green); font-variant-numeric: tabular-nums; }
+    .bu-chip { border: 1px solid var(--bp-edge); border-radius: 999px; padding: 0 9px; font-size: .7rem; color: var(--bp-dim); }
+    .bu-job { padding: 8px 0; border-top: 1px solid var(--bp-edge); min-width: 0; }
+    .bu-job:first-child { border-top: 0; }
+    .bu-title { margin-top: 4px; font-size: .8rem; color: var(--bp-dim); overflow-wrap: anywhere; }
+    .bu-chart { margin-top: 10px; } .bu-svg { display: block; width: 100%; height: auto; max-width: 100%; }
+    .bu-track { fill: rgba(255,255,255,.04); } .bu-bar { fill: var(--bp-idle); } .bu-bar:hover { fill: var(--bp-green); }
+    .bu-axis { stroke: var(--bp-edge); stroke-width: 1; } .bu-tick { fill: var(--bp-dim); font: 11px 'JetBrains Mono', ui-monospace, monospace; }
     @keyframes bp-slide { to { background-position: -200% 0; } }
     @media (prefers-reduced-motion: reduce) { .bp-bar { animation: none; } }
-    @media (max-width: 767px) { .bp-grid { grid-template-columns: minmax(0, 1fr); } .bp-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; } .bp-panel { padding: 16px; border-radius: 22px; } .bp-helix { height: 380px; } }
+    @media (max-width: 767px) { .bp-grid { grid-template-columns: minmax(0, 1fr); } .bp-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; } .bu-grid { grid-template-columns: minmax(0, 1fr); } .bp-panel { padding: 16px; border-radius: 22px; } .bp-helix { height: 380px; } }
   </style>
 </head>
 <body>
@@ -154,6 +171,25 @@
           <p class="bp-sub">The version on the integration branch against the latest release.</p>
           <p id="bp-release" class="bp-release">Loading...</p>
         </section>
+        <section class="bp-panel" id="bu-panel">
+          <h2>Fuel</h2>
+          <p class="bp-sub">What the builders and workers used today, read from <code>usage.json</code> on the public <code>build-data</code> branch. Costs in US dollars. <span id="bu-updated"></span></p>
+          <p id="bu-status" class="bp-note" role="status" hidden></p>
+          <div class="bu-big">
+            <div><span class="bp-num" id="bu-cost">-</span><span class="bp-lab">spent today</span></div>
+            <div><span class="bp-num" id="bu-tokens">-</span><span class="bp-lab">tokens today</span></div>
+          </div>
+          <div class="bu-grid">
+            <div><h3 class="bu-h3">Builders, workers, probes</h3><ul id="bu-kinds" class="bu-list"></ul></div>
+            <div><h3 class="bu-h3">By model</h3><ul id="bu-models" class="bu-list"></ul></div>
+          </div>
+          <h3 class="bu-h3">Last 14 days, cost per day</h3>
+          <div id="bu-chart" class="bu-chart"></div>
+          <div class="bu-grid">
+            <div><h3 class="bu-h3">Last finished jobs</h3><ul id="bu-jobs" class="bu-list"></ul></div>
+            <div><h3 class="bu-h3">Costliest today</h3><ul id="bu-top" class="bu-list"></ul></div>
+          </div>
+        </section>
       </div>
     </section>
   </main>
@@ -216,7 +252,8 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
   <script src="/assets/js/site-navigation.min.js?v=73f198dd3eb3" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" integrity="sha384-qOkzR5Ke/XkQxuGVJ9hpFEpDlcoLtWwVYhnJf06cLIZa2vaIptSqaubivErzmD5O" crossorigin="anonymous" defer></script>
-  <script src="/assets/js/build-helix.min.js?v=76581420c952" defer></script>
-  <script src="/assets/js/build-page.min.js?v=faafeb7c5e08" defer></script>
+  <script src="/assets/js/build-helix.min.js?v=47574ab39deb" defer></script>
+  <script src="/assets/js/build-usage.min.js?v=28f103e3dcf5" defer></script>
+  <script src="/assets/js/build-page.min.js?v=e257225aab4c" defer></script>
 </body>
 </html>

@@ -17,6 +17,16 @@
 //   H3  no WebGL: the SVG helix shows (mode svg, a rung per job, the label on hover) and the cards still fill
 //   H4  the three.js address is pinned to an exact version, the one package.json names, with a Subresource Integrity hash
 //   P2  no sideways scroll at 390 px; reduced motion stops the animations and the helix; no page error
+// 0.3.2 BF2 (B-399, D-1108-15): the Fuel panel (usage.json from the build-data branch, made-up fixture build-usage.json)
+//   U0  the pure helpers of assets/js/build-usage.js (version check, USD, millions, chart geometry, cost by job code)
+//   U1  the panel renders: today's cost and tokens, builders/workers/probes, models, the last jobs, the top five, "Updated HH:MM"
+//   U2  the 14-day chart is an inline SVG drawn to scale (bar heights follow cost, empty days are empty, a title per day)
+//   U3  a rung's label shows that job's cost when usage.json has it
+//   U4  a version other than 1 says so and stops the panel; the rest of the page works
+//   U5  a missing file (404) says so; the rest of the page works; no banner on the page
+//   U6  usage.json comes from raw.githubusercontent.com through the page's one reader: If-None-Match on the next refresh, no API call
+//   U7  every text from the file is text (a title with HTML makes no element); no session id or prompt is shown
+//   U8  no sideways scroll at 390 px with the panel; reduced motion; no page error
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
@@ -25,6 +35,7 @@ import { ROOT, visitor, WAIT } from './lib.mjs';
 
 const require = createRequire(import.meta.url);
 const FX = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/tests/fixtures/build-page.json'), 'utf8'));
+const UX = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/tests/fixtures/build-usage.json'), 'utf8'));
 const PAGE = '/build/';
 const CORS = { 'access-control-allow-origin': '*', 'access-control-expose-headers': 'etag, x-ratelimit-remaining, x-ratelimit-reset, x-ratelimit-limit', 'access-control-allow-headers': 'if-none-match, accept' };
 
@@ -56,8 +67,8 @@ export default async function ({ browser, url }) {
   const iso = (min, now) => new Date(now - min * 60e3).toISOString();
   async function open(opts = {}, setup = null) {
     const v = await visitor(browser, { viewport: opts.viewport || [1440, 900], motion: opts.motion || 'no-preference' });
-    const now = Date.now(), seen = { api: [], raw: [], inm: [], etags: {} };
-    const state = { remaining: 59, status: {}, reset: Math.floor(now / 1000) + 1800, force304: false, calls: 0, noRelease: false };
+    const now = Date.now(), seen = { api: [], raw: [], inm: [], etags: {}, usage: [], usageInm: [] };
+    const state = { remaining: 59, status: {}, reset: Math.floor(now / 1000) + 1800, force304: false, calls: 0, noRelease: false, usage: 'ok' };
     const json = (rt, body, extra = {}) => rt.fulfill({ status: 200, contentType: 'application/json', headers: { ...CORS, ...extra }, body: JSON.stringify(body) });
     const answer = (key, body) => async (rt) => {
       const r = rt.request(), u = new URL(r.url());
@@ -88,6 +99,12 @@ export default async function ({ browser, url }) {
       const u = new URL(rt.request().url());
       if (rt.request().method() === 'OPTIONS') return rt.fulfill({ status: 204, headers: { ...CORS, 'access-control-allow-methods': 'GET' } });
       seen.raw.push(u.pathname);
+      if (/\/Antnioo\/DataArcus\/build-data\/usage\.json$/.test(u.pathname)) {
+        seen.usage.push(u.pathname); const inm = rt.request().headers()['if-none-match']; if (inm) seen.usageInm.push(inm);
+        if (state.usage === 'missing') return rt.fulfill({ status: 404, headers: CORS, body: '404: Not Found' });
+        if (inm === '"usage-1"' && state.force304) return rt.fulfill({ status: 304, headers: { ...CORS, etag: '"usage-1"' } });
+        return rt.fulfill({ status: 200, contentType: 'text/plain', headers: { ...CORS, etag: '"usage-1"' }, body: JSON.stringify(state.usage === 'v2' ? { ...UX, version: 2 } : { ...UX, jobs: UX.jobs.map((j, i) => (i ? j : { ...j, session_id: 'sess-SECRET', prompt: 'PROMPT-SECRET' })) }) });
+      }
       if (/\/mcp\/package\.json$/.test(u.pathname)) return rt.fulfill({ status: 200, contentType: 'text/plain', headers: { ...CORS, etag: '"pkg"' }, body: JSON.stringify(FX.package) });
       const m = /\/Antnioo\/DataArcus\/(.+)\/mcp\/work\/([A-Z0-9]+)\.md$/.exec(decodeURIComponent(u.pathname));
       if (m && FX.notes[m[1]]) return rt.fulfill({ status: 200, contentType: 'text/plain', headers: { ...CORS, etag: '"n-' + m[2] + '"' }, body: FX.notes[m[1]] });
@@ -186,6 +203,81 @@ export default async function ({ browser, url }) {
     const lim = await text(v.pg, '#bp-limit');
     check(lim === `GitHub asks us to wait until ${want}.`, `E2 a 403 shows "GitHub asks us to wait until ${want}." (got "${lim}")`);
     check((await text(v.pg, '#bp-builders')) === before, 'E2 the data stays while we wait');
+    await v.ctx.close();
+  }
+
+  // ---- U0..U8: the Fuel panel (BF2)
+  {
+    let U = null;
+    try { U = require('../../assets/js/build-usage.js'); } catch (e) { check(false, `U0 assets/js/build-usage.js does not load: ${e.message}`); }
+    if (U) {
+      check(U.validate(UX).ok && U.validate({ version: 2 }).ok === false && /version 1; the file says 2/.test(U.validate({ version: 2 }).message) && U.validate(null).ok === false && U.validate({ version: 1 }).ok === false, 'U0 validate: version 1 with its parts passes; version 2, nothing, or a cut file does not, with the words "This page reads usage version 1; the file says 2"');
+      check(U.fmtUsd(12.3, 'en-US') === '$12.30' && U.fmtUsd(0, 'en-US') === '$0.00' && U.fmtUsd(1234.5, 'en-US') === '$1,234.50' && U.fmtUsd('x') === '-', 'U0 fmtUsd: "$12.34" style, two decimals, - for a non-number');
+      check(U.fmtMillions(346157859, 'en-US') === '346.2M' && U.fmtMillions(0, 'en-US') === '0M' && U.fmtMillions(null) === '-', 'U0 fmtMillions: tokens in millions');
+      const bars = U.dayBars(UX.days, 100);
+      check(bars.length === 14 && bars[13].h === 100 && bars[0].h === 0 && Math.abs(bars[9].h - (14.4 / 21.35) * 100) < 0.01 && U.dayBars([], 100).length === 0, 'U0 dayBars: 14 bars drawn to scale (the tallest day is full height, a zero day is 0, the rest in proportion)');
+      check(U.costById(UX.jobs).AA1 === 7.25 && Object.keys(U.costById(null)).length === 0, 'U0 costById: job code -> cost');
+    }
+  }
+  {
+    const { v, seen } = await open();
+    await loaded(v.pg).catch(() => null);
+    await v.pg.waitForFunction(() => /^Updated/.test((document.getElementById('bu-updated') || {}).textContent || ''), null, { timeout: WAIT }).catch(() => null);
+    const fuel = await text(v.pg, '#bu-panel');
+    const want = await v.pg.evaluate(() => [new Intl.NumberFormat([], { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(21.35), new Intl.NumberFormat([], { maximumFractionDigits: 1 }).format(66.185)]);
+    check((await text(v.pg, '#bu-cost')).includes('$' + want[0]) && (await text(v.pg, '#bu-tokens')).includes(want[1]) && /M/.test(await text(v.pg, '#bu-tokens')), `U1 today's cost in USD and tokens in millions, in the visitor's number format ($${want[0]}, ${want[1]}M): ${await text(v.pg, '#bu-cost')} / ${await text(v.pg, '#bu-tokens')}`);
+    const kinds = await text(v.pg, '#bu-kinds');
+    check(/builder/i.test(kinds) && /worker/i.test(kinds) && /probe/i.test(kinds) && /\$12\.10/.test(kinds) && /\$8\.40/.test(kinds) && /\$0\.85/.test(kinds), `U1 builders, workers and probes with cost and count: ${kinds.slice(0, 160)}`);
+    const models = await text(v.pg, '#bu-models');
+    check(/opus/i.test(models) && /sonnet/i.test(models) && /\$15\.60/.test(models) && /\$5\.75/.test(models), `U1 Opus and Sonnet with their cost: ${models.slice(0, 120)}`);
+    const jobs = await text(v.pg, '#bu-jobs');
+    check(/AA1/.test(jobs) && /ZY9/.test(jobs) && /XW8/.test(jobs) && /\$7\.25/.test(jobs) && /95 min/.test(jobs), `U1 the last finished jobs with cost and minutes: ${jobs.slice(0, 160)}`);
+    check(/made-up cleanup/.test(await text(v.pg, '#bu-top')) && (await v.pg.locator('#bu-top > li').count()) === 5, 'U1 the five costliest sessions of today');
+    check(/^Updated \d\d:\d\d/.test(await text(v.pg, '#bu-updated')), `U1 "Updated HH:MM" from generated_at: ${await text(v.pg, '#bu-updated')}`);
+    check(await v.pg.locator('#bu-status').isHidden(), 'U1 no message while the file is good');
+    // U2: the chart
+    const chart = await v.pg.evaluate(() => { const svg = document.querySelector('#bu-chart svg'); if (!svg) return null; const bars = [...svg.querySelectorAll('rect[data-day]')]; return { n: bars.length, h: bars.map((b) => +b.getAttribute('height')), titles: bars.map((b) => (b.querySelector('title') || {}).textContent || '') }; });
+    check(chart && chart.n === 14 && chart.h[13] > 0 && chart.h[0] === 0 && chart.h[13] >= Math.max(...chart.h) && Math.abs(chart.h[9] / chart.h[13] - 14.4 / 21.35) < 0.02 && /2026-11-08/.test(chart.titles[13]) && /\$21\.35/.test(chart.titles[13]), `U2 a 14-day inline SVG drawn to scale: ${chart && chart.h.join(',')}`);
+    // U3: the rung's label
+    await v.pg.evaluate(() => window.BuildPage.helix.focus('AA1'));
+    check(/\$7\.25/.test(await text(v.pg, '#bp-line .bh-label')), `U3 the rung's label shows that job's cost: ${await text(v.pg, '#bp-line .bh-label')}`);
+    await v.pg.evaluate(() => window.BuildPage.helix.focus('BB2'));
+    check(!/\$\d/.test(await text(v.pg, '#bp-line .bh-label')), 'U3 a job with no usage row shows no cost');
+    // U7: text, not HTML
+    check(await v.pg.evaluate(() => !document.querySelector('#bu-panel b, #bu-panel img, #bu-panel script')) && (await text(v.pg, '#bu-jobs')).includes('<b>bold?</b>'), 'U7 a title with HTML shows as the characters written, no element');
+    check(!/SECRET/.test(await v.pg.evaluate(() => document.getElementById('bu-panel').innerHTML)), 'U7 a field outside the schema (a session id, a prompt) in the file is never shown');
+    // U6: through the one reader
+    check(seen.usage.length === 1 && seen.usage[0] === '/Antnioo/DataArcus/build-data/usage.json' && !seen.api.some((u) => /usage/.test(u)), `U6 usage.json is read once from raw.githubusercontent.com (build-data branch), not the API (${seen.usage.join(',')})`);
+    check(!v.errs.length, `U1 no page error: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
+  {
+    const { v, state, seen } = await open();
+    await loaded(v.pg).catch(() => null);
+    await v.pg.waitForFunction(() => /^Updated/.test((document.getElementById('bu-updated') || {}).textContent || ''), null, { timeout: WAIT }).catch(() => null);
+    const before = await text(v.pg, '#bu-panel');
+    state.force304 = true; seen.usageInm.length = 0;
+    await v.pg.evaluate(() => window.BuildPage.refresh());
+    check(seen.usageInm.join(',') === '"usage-1"' && (await text(v.pg, '#bu-panel')) === before, `U6 the next refresh sends If-None-Match and a 304 keeps the panel (${seen.usageInm.join(',')})`);
+    await v.ctx.close();
+  }
+  for (const [mode, re, label] of [['v2', /This page reads usage version 1; the file says 2/, 'U4 a version other than 1'], ['missing', /Usage numbers are not available/, 'U5 a missing file']]) {
+    const { v } = await open({}, async ({ state }) => { state.usage = mode; });
+    await loaded(v.pg).catch(() => null);
+    await v.pg.waitForFunction(() => (document.getElementById('bu-status') || {}).hidden === false, null, { timeout: WAIT }).catch(() => null);
+    const msg = await text(v.pg, '#bu-status');
+    check(re.test(msg) && (await v.pg.locator('#bu-chart svg').count()) === 0 && !/\$\d/.test(await text(v.pg, '#bu-panel')), `${label}: the panel says so and shows no numbers: ${msg}`);
+    check(/BB2/.test(await text(v.pg, '#bp-builders')) && /0\.3\.2 in progress/.test(await text(v.pg, '#bp-release')) && (await v.pg.locator('#bp-warn').isHidden()), `${label}: the rest of the page works and no banner`);
+    check(!v.errs.length, `${label}: no page error: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
+  {
+    const { v } = await open({ viewport: [390, 800] });
+    await loaded(v.pg).catch(() => null);
+    await v.pg.waitForFunction(() => /^Updated/.test((document.getElementById('bu-updated') || {}).textContent || ''), null, { timeout: WAIT }).catch(() => null);
+    const w = await v.pg.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth, document.getElementById('bu-panel').scrollWidth, document.getElementById('bu-panel').clientWidth]);
+    check(w[0] <= w[1] && w[2] <= w[3], `U8 no sideways scroll at 390 px with the panel (page ${w[0]}/${w[1]}, panel ${w[2]}/${w[3]})`);
+    check(await v.pg.evaluate(() => { const r = document.querySelector('#bu-chart svg').getBoundingClientRect(); return r.width > 100 && r.right <= window.innerWidth; }), 'U8 the chart fits the phone width');
     await v.ctx.close();
   }
 

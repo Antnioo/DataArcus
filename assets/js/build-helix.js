@@ -8,7 +8,7 @@
  * Interface (the pure part runs in Node too):
  *   COLOURS                   state -> hex colour: running amber, red coral, green teal, stopped violet, idle blue
  *   MAX_RUNGS                 60: the most rungs drawn
- *   helixModel(items, merges) items: [{ code, status, message, ci, time }] newest first (status as build-page.js statusOf);
+ *   helixModel(items, merges) items: [{ code, status, message, ci, time, note?, costText? }] newest first (status as build-page.js statusOf);
  *                             merges: [{ message, time }] -> { rungs: [{ ...item, t }], nodes: [{ message, t }] }, t = 0 (top) .. 1, the rungs spread evenly inside it
  *   mount(host, win)          host: the element to draw in; -> { mode: 'webgl' | 'svg', set(model), focus(code) }.
  *                             Rotation only when motion is allowed, the tab shows and the helix is on screen; reduced
@@ -34,7 +34,7 @@
     };
   };
   const turnsOf = (n) => Math.max(1.5, Math.min(8, n / 6));
-  const labelText = (r) => [r.code, r.message || '(no message)', 'CI: ' + (r.ci || 'no run') + (r.note ? ' | note: ' + r.note : '')];
+  const labelText = (r) => [r.code, r.message || '(no message)', 'CI: ' + (r.ci || 'no run') + (r.note ? ' | note: ' + r.note : '') + (r.costText ? ' | cost ' + r.costText : '')];
 
   const mount = (host, win) => {
     const doc = win.document, THREE = win.THREE;
