@@ -11,7 +11,7 @@
   there: check_report `checks` 470,031 characters at 3,000 items, plan_layout `pages` 187,971 and 423,861, generate_theme
   `folder` with a 150,000-character string HANGS the server (no answer in 10 s), the shape checks S3-S6). All other suites
   unchanged by a byte (the pinned fixtures); `agent` suites re-checked for the instructions' last line.
-- **Resume:** parts 1 and 2 written and pushed; area runs, lint, CI next (see the bottom of the note for the result).
+- **Resume:** DONE. CI green: https://github.com/Antnioo/DataArcus/actions/runs/42489282364 on d25ec6ca611dd33198b90df20d92de05ef7b6ecb
 
 ## Plan
 1. Red first: `test-0.3.2-rv1.mjs` on 225498d2 (done: red).
@@ -110,3 +110,5 @@ none
 - ARCHITECTURE.md is held to 5,200 characters (check-agent-memory): the two invariants are worded compactly (5,194).
 - Found by CI on the first push: golden task 9, mr1 S1 and sp43 P2 pinned the SDK's old message; the guard now leaves a
   message of 1,500 characters or less as the SDK made it, so none of the three moved (no fixture re-recorded).
+
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/42489282364 on d25ec6ca611dd33198b90df20d92de05ef7b6ecb (rv1 467 checks PASS; lint 0; site config PASS; site and sp36 PASS locally)
