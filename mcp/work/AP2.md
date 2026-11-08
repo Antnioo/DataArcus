@@ -8,7 +8,7 @@
   through the shared `readingOrder` (assets/js/report-a11y.js) and each page's language (check-language.mjs
   `filledLanguages`). 3. A-PF2-2: the approval window (approval-disclosure.mjs pagesSection) names the measure each card
   shows and counts the "no data" message boxes on their own line; English and Arabic. 4. A-E1R5B-1: glass whose page
-  picture is the plain page colour is said as such by the plan and the approval page (the Arabic a DRAFT).
+  picture is the plain page colour is said as such by the plan and the approval page (the Arabic approved, D-1108-12).
 - **Expected checks:** new suite ap2 (area report) 28 checks, red on 1fad33a5 first (6 of 28); approval-complete 68 ->
   68 (A9-2 changed on purpose); sp23 29, sp44 23, sp1 11, sp3 11, sp7 11, sp13 12 (re-recorded on purpose, below); pf2 15, sp29
   21, sp4 5, sp6 13, fn1e 590, site sp6 4 unchanged; lint 0; repo checks PASS.
@@ -42,14 +42,14 @@
   an Arabic page's cards right to left.
 - A-PF2-2: "7 cards" (3 cards with a measure and 4 "no data" boxes) -> `3 cards: Total Sales, Orders, Avg Price` and
   `4 "no data" message boxes: each over a chart, shown when it has no data`; Arabic «البطاقات: 3 («Total Sales»، ...)»
-  and «مربعات رسالة «لا توجد بيانات»: 4 (كل منها فوق مخطط، يظهر عندما لا تكون لديه بيانات)» (DRAFT). A card with no
-  measure: `N cards with no measure` / «بطاقات دون مقياس: N» (DRAFT). A card shows its measure's name alone (a model's
+  and «مربعات رسالة «لا توجد بيانات»: 4 (كل منها فوق مخطط، يظهر عندما لا تكون لديه بيانات)» (approved, D-1108-12). A card with no
+  measure: `N cards with no measure` / «بطاقات دون مقياس: N» (approved, D-1108-12). A card shows its measure's name alone (a model's
   measure names are unique).
 - A-E1R5B-1: glassFit gains `picture: false, textOnPage` only for a glass that fits at strength 0 (every other result
   as on the base: sp6); lookFor gains `noPicture { textOnPage, min }` and says in sayInPlan "see-through cards over the
   page's own colour, with no page picture: the page's text stands 3.6:1 on that colour (the grey page), under 4.5:1, and a picture
   would lower it"; the approval page's Card look says the same, and the page background files are "Page backgrounds
-  (the glass look's page colour, plain: no picture with these colours)"; the Arabic line and label a DRAFT. What is
+  (the glass look's page colour, plain: no picture with these colours)"; the Arabic line and label approved (D-1108-12). What is
   written: unchanged, byte for byte (sp3, sp7, sp13's written files equal).
 - A-TP1-1: TP1.md's two DRAFT marks -> "approved by the owner, D-1108-07"; approval-complete A11-8's message the same.
 
@@ -99,7 +99,7 @@ no soft page picture promised where the colours leave no room for one.
 - The ratio said rounded down to one decimal, as glassFailed's.
 
 ## For the owner
-- The Arabic drafts (approve or edit): «مربعات رسالة «لا توجد بيانات»: N (كل منها فوق مخطط، يظهر عندما لا تكون لديه
+- Approved by the owner as they are (D-1108-12, 8 Nov: "approve as is"), no text changed: «مربعات رسالة «لا توجد بيانات»: N (كل منها فوق مخطط، يظهر عندما لا تكون لديه
   بيانات)»; «بطاقات دون مقياس: N»; the card look «الشكل الزجاجي (الافتراضي): بطاقات شفافة فوق لون الصفحة نفسه، دون صورة
   للصفحة: تباين نص الصفحة مع هذا اللون 3.6:1، أي أقل من 4.5:1، وأي صورة ستخفضه؛ وللبطاقات العادية: اطلب الشكل العادي»
   (and «، كما طلبت» when asked); the files «خلفيات الصفحات (لون الصفحة في الشكل الزجاجي، دون صورة مع هذه الألوان)».

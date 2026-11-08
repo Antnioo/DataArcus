@@ -194,7 +194,7 @@ const kindSaid = (t) => { const s = String(t || ''), m = /^custom (.+)$/.exec(s)
 const nOf = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 // (AP2) a page's cards (pagesWritten: cards [{ shows: [Table[Measure]] }], messageCards, kinds): each card by its
 // measures' names (a model's measure names are unique), the message boxes, the cards with no measure; English and Arabic
-// (the Arabic of the message boxes and of a card with no measure: a DRAFT for the owner, mcp/work/AP2.md)
+// (the Arabic of the message boxes and of a card with no measure: approved by the owner, D-1108-12)
 const CARD_KINDS = /^(cardVisual|card|multiRowCard|kpi)$/;
 const measureName = (f) => { const m = /\[(.*)\]$/s.exec(String(f)); return m ? m[1] : String(f); };
 function cardItems(x) {
