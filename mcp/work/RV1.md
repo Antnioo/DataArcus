@@ -125,3 +125,4 @@ CI green: https://github.com/Antnioo/DataArcus/actions/runs/42489282364 on d25ec
   `"dict": 44363` -> `44463` (line 738); sp36 18 = 18.
 
 CI green (round 2): https://github.com/Antnioo/DataArcus/actions/runs/42495162883 on 63a93dd11b427c97c7946fe287c8faec2dabbbeb
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/42495162883 on 63a93dd11b427c97c7946fe287c8faec2dabbbeb
