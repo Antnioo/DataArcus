@@ -122,10 +122,14 @@
     };
     // The gate (GD1): glass only where it keeps everything readable: the cards keep some transparency (t > 0) and every
     // glass check passes, except the page's own text on its own colour once the picture is plain (strength 0), which the
-    // plain look fails the same way. { fits, failed: [{ id, ratio, min }], t }
+    // plain look fails the same way. (0.3.2 AP2, A-E1R5B-1: E1 round 5b's approval page promised a soft page picture the
+    // written report did not have) picture: false when glass fits at strength 0, the picture one flat page colour: any colour
+    // field darker than the page would lower the page's text further, so none is drawn; textOnPage: that text's own
+    // contrast on the page colour. { fits, failed: [{ id, ratio, min }], t, picture? (false only), textOnPage? }
     const glassFit = (d) => {
       const g = glassLook(d), failed = g.checks.filter((c) => !c.pass && !(c.id === 'textOnPicture' && g.strength === 0)).map((c) => ({ id: c.id, ratio: c.ratio, min: c.min }));
-      return { fits: g.t > 0 && !failed.length, failed, t: g.t };
+      const onPage = g.checks.find((c) => c.id === 'textOnPicture'), fits = g.t > 0 && !failed.length;
+      return Object.assign({ fits, failed, t: g.t }, fits && g.strength === 0 ? { picture: false, textOnPage: onPage ? onPage.ratio : null } : {});
     };
     // the picture's pixels at w x h (RGB), as glassLook's strength makes them
     const glassPixels = (d, w, h, opt) => glassRgb(colours(d), glassLook(d, opt).strength, Math.max(1, Math.round(+w)), Math.max(1, Math.round(+h)));

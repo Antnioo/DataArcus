@@ -22,6 +22,8 @@ const LC = require('../../assets/js/layout-check.js');
 import { NAMES } from './design-lint.mjs';
 import { safeText } from './read-report.mjs';
 import { planBinding } from './report-run.mjs';   // (SQ15b, 0.2.9-reader-S8: create_report's page and binding, not a copy)
+import { rulesInput, filledLanguages } from './check-report.mjs';   // (0.3.2 AP2: each page's language, the native copy's own reading)
+const { readingOrder } = require('../../assets/js/report-a11y.js');   // (0.3.2 AP2: the order a reader meets, the writer's Tab order)
 
 const PNG1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4AWMAAQAABQABNtCI3QAAAABJRU5ErkJggg==', 'base64');
 
@@ -197,7 +199,7 @@ export function aggregationAnswer(g, lang) {
 // [{ n, name, tooltip, hidden, visuals, slicers: [field], buttons: [{ to: 'page' | 'bookmark' | 'other', name }],
 //   kinds: [{ type, count, by: [field] }], cards: [{ shows: [measure] }] (each card by the model measures it shows),
 //   messageCards (the "no data" message cards laid over charts), usedBy?: [page name] (a tooltip page: the pages whose visuals show it) }],
-//   each list in reading order (top to bottom, then across); [] when the report can't be read back.
+//   each list in reading order (rows top to bottom, each row in the page's reading direction); [] when the report can't be read back.
 const BY_ROLES = ['Category', 'Rows', 'Axis', 'Legend', 'Series', 'Values'], CARD_TYPES = /^(cardVisual|card|multiRowCard|kpi)$/;
 export function pagesWritten(files) {
   let inv = null;
@@ -205,10 +207,17 @@ export function pagesWritten(files) {
   if (!inv) return [];
   const tips = new Map();
   inv.pages.forEach((p) => p.visuals.forEach((x) => { if (x.tooltipPage) { const u = tips.get(x.tooltipPage) || []; if (!u.includes(p.name)) u.push(p.name); tips.set(x.tooltipPage, u); } }));
+  // (0.3.2 AP2, A-PF2-1, D-1108-07: AP1's sort read rx and ry, keys the inventory deletes, so the lists kept the files'
+  // order) each page's visuals as a person reads them: rows top to bottom, each row left to right, right to left on a
+  // right-to-left page (report-a11y.js readingOrder, the writer's own Tab order; each page's language as the native copy
+  // reads it, check-language.mjs filledLanguages: language buttons, the pages that link to it, its own texts)
+  let langs = {};
+  try { langs = filledLanguages(inv, rulesInput(inv).R).pages; } catch (e) { langs = {}; }
+  const inOrder = (p) => readingOrder(p.visuals.map((v) => ({ x: +v.x || 0, y: +v.y || 0, w: +v.w || 0, h: +v.h || 0, v })), langs[p.id] === 'ar' || langs[p.id] === 'he' ? 'rtl' : 'ltr').map((b) => b.v);
   return inv.pages.map((p) => {
     const slicers = [], buttons = [], kinds = new Map(), cards = [];
     let messageCards = 0;
-    p.visuals.slice().sort((a, b) => a.ry - b.ry || a.rx - b.rx).forEach((x) => {
+    inOrder(p).forEach((x) => {
       const cols = BY_ROLES.flatMap((r) => (x.fields && x.fields[r]) || []).filter((f) => f && f.kind === 'column').map((f) => `${f.table}[${f.name}]`);
       if (x.slicer) { slicers.push(cols[0] || '(a field)'); return; }
       if (x.type === 'actionButton') { const m = /^(\w+)(?: -> (?:bookmark|page) "(.*)")?/.exec(String(x.action || '')) || [];
@@ -216,14 +225,14 @@ export function pagesWritten(files) {
       // (0.3.2 PF2, B-383: kpis 0 and the tooltip pages' own cards, unnamed in the plan) each card by the model measures
       // it shows; a card showing report measures only is a "no data" message laid over a chart (noDataMessage), counted apart
       if (CARD_TYPES.test(x.type)) { const all = Object.values(x.fields || {}).flat().filter((f) => f && f.kind === 'measure'), shows = all.filter((f) => !f.report).map((f) => `${f.table}[${f.name}]`);
-        if (shows.length) cards.push({ shows: [...new Set(shows)], y: +x.y || 0, x: +x.x || 0 }); else if (all.length) messageCards++; }
+        if (shows.length) cards.push({ shows: [...new Set(shows)] }); else if (all.length) messageCards++; }
       const k = kinds.get(x.type) || { type: x.type, count: 0, by: [] }; k.count++;
       if (cols[0] && !/^(cardVisual|card|multiRowCard|kpi|textbox|shape|image|group|tableEx|pivotTable)$/.test(x.type)) k.by.push(cols[0]);
       kinds.set(x.type, k);
     });
     return Object.assign({ n: p.n, name: p.name, tooltip: p.kind === 'Tooltip', hidden: !!p.hidden, visuals: p.visualCount, slicers, buttons, kinds: [...kinds.values()],
-      // (the cards in the page's reading order, top to bottom then across: by the position the inventory keeps)
-      cards: cards.sort((a, b) => a.y - b.y || a.x - b.x).map((c) => ({ shows: c.shows })), messageCards }, p.kind === 'Tooltip' ? { usedBy: tips.get(p.name) || [] } : {});
+      // (the cards in the page's reading order, as every list here: inOrder)
+      cards, messageCards }, p.kind === 'Tooltip' ? { usedBy: tips.get(p.name) || [] } : {});
   });
 }
 
