@@ -98,6 +98,9 @@ package's manifest; this file says what is in it.
 - **Inside add_gulf_calendar, the Gulf date questions and the English and Arabic copy, in smaller steps:** the Gulf
   calendar's script and answer, plan_layout's date questions and the copy holding both languages are each made by short
   named steps instead of one long function; every script, question, text and file is byte for byte what it was before.
+- **Inside the Theme Generator's layout panel and the website's Power BI project download, in smaller steps:** each is
+  made by short named steps instead of one long function; every control, preview, saved choice and downloaded file is
+  byte for byte what it was before.
 - **Inside the field picker, create_report's build and the SVG KPI Designer's DAX, in smaller steps:** which fields
   are picked and in what order, every file create_report writes and every DAX measure the designer compiles are each
   made by short named steps instead of one long function; all of them are byte for byte what they were before.
