@@ -129,6 +129,20 @@ export const addedTaken = (name, page) => `Nothing was written: the visual the t
 // a list of files { rel, data } (data: the bytes to write, or from: the original's file copied as it is), and what the
 // plan says: pairs, buttons, syncGroups, bookmarks, tabs
 export function languageCopy(P, built, labels) {
+  // (0.3.2 FN1G) in named steps, called in the old order: lc holds what a step makes (n: the sync groups' number)
+  const lc = { P, built, labels, n: 0 };
+  idsStep(lc);
+  linksStep(lc);
+  built.pages.forEach((bp) => pageStep(lc, bp));
+  bookmarksStep(lc);
+  pagesJsonStep(lc);
+  resourcesStep(lc);
+  return answerStep(lc);
+}
+
+// the Arabic pages', visuals' and bookmarks' new ids, and the lists the copy fills
+function idsStep(lc) {
+  const { P } = lc;
   const { R, loc } = P, tabsShown = P.tabsShown === 'ar' ? 'ar' : 'en', hidden = 'HiddenInViewMode';
   const newId = idMaker([].concat(R.pages.map((pg) => pg.id), ...R.pages.map((pg) => pg.visuals.map((v) => v.json.name)), R.bookmarks.map((b) => b.json.name)));
   const arOf = new Map(R.pages.map((pg) => [String(pg.id), newId('page\u0000' + pg.id)])), names = new Map();
@@ -137,6 +151,11 @@ export function languageCopy(P, built, labels) {
   const changed = new Map(), added = [], addedVisuals = [], pairs = [], buttons = [], syncGroups = [], bothShown = new Map();
   const BOTH_SHOWN = 'both pages of this pair stay in the tabs (neither hidden), so a reader reaches each from the tabs';
   const jsonEq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  Object.assign(lc, { R, loc, tabsShown, hidden, newId, arOf, names, bmOf, changed, added, addedVisuals, pairs, buttons, syncGroups, bothShown, BOTH_SHOWN, jsonEq });
+}
+
+function linksStep(lc) {
+  const { built, R, newId, arOf, bmOf } = lc;
   // an Arabic visual's names and links: its own name and group, its page links, tooltip pages, drillthrough and bookmarks
   // (Microsoft's validator, PBIR_FILTER_NAME_DUPLICATE_GLOBAL: a filter's name is unique across the report) each filter of
   // an Arabic page or visual gets its own name, by page (fm: old name -> new), which its bookmarks follow
@@ -166,86 +185,116 @@ export function languageCopy(P, built, labels) {
     const to = arPicOf(n); im.name = Ls(to);
     if (isObj(im.url) && isObj(im.url.expr) && isObj(im.url.expr.ResourcePackageItem)) im.url.expr.ResourcePackageItem.ItemName = to;
   }));
-  let n = 0;
-  built.pages.forEach(({ pg, page, visuals, mobiles, extra }) => {
-    const id = String(pg.id), arId = arOf.get(id), nm = names.get(id), folder = pg.rel.slice(0, pg.rel.lastIndexOf('/') + 1), arFolder = 'definition/pages/' + arId + '/';
-    const P0 = pageOf(pg), tooltip = P0.type === 'Tooltip', drill = isObj(P0.pageBinding) && /drillthrough/i.test(String(P0.pageBinding.type || ''));
-    // the English page: the original's, its page hidden when the Arabic tabs are the ones shown
-    const enPage = isObj(pg.page) ? clone(pg.page) : pg.page, enV = pg.visuals.map((v) => clone(v.json)), enM = pg.visuals.map((v) => (v.mobile ? clone(v.mobile.json) : null));
-    if (isObj(enPage) && tabsShown === 'ar') enPage.visibility = hidden;
-    // the Arabic page: the twin's, under its new id, hidden when the English tabs are shown
-    const arPage = isObj(page) ? clone(page) : page, arV = visuals.map((v) => clone(v)), arM = (mobiles || []).map((m) => clone(m || null));
-    if (isObj(arPage)) {
-      arPage.name = arId;
-      if (isObj(arPage.pageBinding) && arPage.pageBinding.name != null) arPage.pageBinding.name = newId('binding\u0000' + arId);
-      if (tabsShown === 'en') arPage.visibility = hidden;
-      if (pics.size) withArPicture(arPage);
-      if (Array.isArray(arPage.visualInteractions)) arPage.visualInteractions.forEach((x) => { if (isObj(x)) ['source', 'target'].forEach((k) => { if (x[k] != null && nm.has(String(x[k]))) x[k] = nm.get(String(x[k])); }); });
-    }
-    arV.forEach((v, i) => { renameFilters(v, arId, String(pg.visuals[i] ? pg.visuals[i].json.name : i)); remap(v, nm); });
-    if (isObj(arPage)) renameFilters(arPage, arId, '');
-    // each slicer pair in one sync group: a group the English slicer has already, else its own. (SQ4, X2-S3: numbered in
-    // the slicers' file-name order, which Desktop draws at random, two copies of one report could number a pair apart)
-    // numbered by page order, then the slicer's place on its page (top to bottom, then left to right, then its name)
-    const at = (i) => absBox(enV, enV[i]) || { x: 0, y: 0 }, order = pg.visuals.map((v, i) => i).sort((a, b) => at(a).y - at(b).y || at(a).x - at(b).x || (String(pg.visuals[a].json.name) < String(pg.visuals[b].json.name) ? -1 : 1));
-    order.map((i) => [pg.visuals[i], i]).forEach(([v, i]) => {
-      // (0.3.1 X2) every slicer kind Microsoft's catalog says Power BI keeps in sync (the slicer, the button slicer's pills,
-      // the list and text slicers), of one field (Power BI syncs a slicer of one field only)
-      if (!canSync(typeOf(enV[i])) || !isObj(arV[i]) || !isObj(arV[i].visual)) return;
-      const has = isObj(enV[i].visual.syncGroup) && typeof enV[i].visual.syncGroup.groupName === 'string' && enV[i].visual.syncGroup.groupName;
-      const ps = isObj(enV[i].visual.query) && isObj(enV[i].visual.query.queryState) ? Object.values(enV[i].visual.query.queryState).flatMap((r) => (isObj(r) && Array.isArray(r.projections) ? r.projections : [])) : [];
-      const q = ps.map((p) => (isObj(p) && typeof p.queryRef === 'string' ? p.queryRef : '')).find(Boolean) || 'Slicer';
-      if (ps.length > 1) return;
-      if (!has) enV[i].visual.syncGroup = { groupName: `${q.slice(0, 80)} (EN-AR ${++n})`, fieldChanges: true, filterChanges: true };
-      arV[i].visual.syncGroup = clone(enV[i].visual.syncGroup);
-      syncGroups.push({ page: safeName(typeof P0.displayName === 'string' ? P0.displayName : id), slicer: safeName(String(v.json.name)), arabicSlicer: nm.get(String(v.json.name)), group: safeName(enV[i].visual.syncGroup.groupName), ...(has ? { kept: 'the English slicer\'s own sync group: its Arabic copy joins it' } : {}) });
-    });
-    // the language buttons (a tooltip or drillthrough page is reached by its visual, not by the tabs: none)
-    const say = (lang, r, pageName, target) => buttons.push(Object.assign({ page: safeName(pageName), on: LANG[lang].on, text: LANG[lang].text, goesTo: target, placed: !!r.json }, r.json ? { at: r.at, phone: r.phone } : {}, r.why ? { why: r.why } : {}));
-    if (!tooltip && !drill) {
-      const en = langButton(enPage, enV, enM, 'en', arId, newId('button\u0000' + id), R.theme);
-      if (en.json) { tabInOrder(enV, en.json, 'ltr'); enV.push(en.json); enM.push(en.mobile); added.push({ rel: folder + 'visuals/' + en.json.name + '/visual.json', data: json(en.json) }); if (en.mobile) added.push({ rel: folder + 'visuals/' + en.json.name + '/mobile.json', data: json(en.mobile) }); }
-      const ar = langButton(arPage, arV, arM, 'ar', id, newId('button\u0000' + arId), R.theme);
-      if (ar.json) { tabInOrder(arV, ar.json, P.keepLtr(pg) ? 'ltr' : 'rtl'); arV.push(ar.json); arM.push(ar.mobile); added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/visual.json', data: json(ar.json) }); if (ar.mobile) added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/mobile.json', data: json(ar.mobile) }); }
-      // (0.3.1 CX1, Codex's F02: a page with no free place for its button, its counterpart hidden in the tabs, stranded a
-      // reader) a pair with a button not placed keeps both its pages in the tabs (as each was in the original and the
-      // twin), so a reader reaches each from the tabs; the button's why and the pair say it
-      if (!en.json || !ar.json) {
-        if (isObj(enPage) && tabsShown === 'ar') { if (isObj(pg.page) && pg.page.visibility != null) enPage.visibility = pg.page.visibility; else delete enPage.visibility; }
-        if (isObj(arPage) && tabsShown === 'en') { if (isObj(page) && page.visibility != null) arPage.visibility = page.visibility; else delete arPage.visibility; }
-        bothShown.set(id, BOTH_SHOWN);
-        [en, ar].forEach((r) => { if (!r.json) r.why = String(r.why || '').replace(/: the page is written without it; add the button by hand$/, '') + ': the page is written without it, and ' + BOTH_SHOWN + ' (add the button by hand to hide one again)'; });
-      }
-      say('en', en, typeof P0.displayName === 'string' ? P0.displayName : id, arId);
-      say('ar', ar, isObj(arPage) && typeof arPage.displayName === 'string' ? arPage.displayName : arId, id);
-    }
-    // the English files that changed (the slicers' sync group, a group's phone box grown, the page hidden)
-    if (isObj(enPage) && !jsonEq(enPage, pg.page)) changed.set(pg.rel, json(enPage));
-    pg.visuals.forEach((v, i) => { if (!jsonEq(enV[i], v.json)) changed.set(v.rel, json(enV[i])); if (v.mobile && !jsonEq(enM[i], v.mobile.json)) changed.set(v.mobile.rel, json(enM[i])); });
-    // the Arabic page's files: every file of the English page's folder, under the new page id and visual names
-    const folderOf = new Map(pg.visuals.map((v, i) => [v.rel.split('/')[4], i]));
-    R.files.filter((f) => f.startsWith(folder)).forEach((f) => {
-      const segs = f.split('/'), i = segs[3] === 'visuals' && folderOf.has(segs[4]) ? folderOf.get(segs[4]) : -1;
-      segs[2] = arId; if (i >= 0) segs[4] = nm.get(String(pg.visuals[i].json.name));
-      const rel = segs.join('/');
-      if (f === pg.rel && isObj(arPage)) added.push({ rel, data: json(arPage) });
-      else if (i >= 0 && f === pg.visuals[i].rel) added.push({ rel, data: json(arV[i]) });
-      else if (i >= 0 && pg.visuals[i].mobile && f === pg.visuals[i].mobile.rel && arM[i]) added.push({ rel, data: json(arM[i]) });
-      else added.push({ rel, from: f });
-    });
-    // (0.3.1 MX3) a visual the twin adds to the Arabic page (a heatmap's names), named after its matrix's new name
-    // (0.3.2 HM1, B-296) its suffix as the plan named it (Names, Names2...), free of the Arabic page's own names, never
-    // over a file already there (a hard error)
-    const arTaken = new Set(arV.map((v) => String(isObj(v) ? v.name : '').toLowerCase()).concat(added.filter((f) => f.rel.startsWith(arFolder + 'visuals/')).map((f) => f.rel.slice((arFolder + 'visuals/').length).split('/')[0].toLowerCase())));
-    (extra || []).forEach((x) => { const j = clone(x.json), sfx = String(x.json.name).startsWith(String(x.from)) ? String(x.json.name).slice(String(x.from).length) : 'Names', base = (nm.get(x.from) || x.from) + sfx;
-      j.name = base; for (let k = 2; arTaken.has(j.name.toLowerCase()); k++) j.name = base + '_' + k;
-      const rel = arFolder + 'visuals/' + j.name + '/visual.json';
-      if (R.files.some((f) => f.toLowerCase().startsWith((arFolder + 'visuals/' + j.name + '/').toLowerCase())) || added.some((f) => f.rel === rel)) throw new Error(addedTaken(j.name, arId));
-      arTaken.add(j.name.toLowerCase()); renameFilters(j, arId, String(x.json.name)); added.push({ rel, data: json(j) }); addedVisuals.push({ page: arId, name: safeName(j.name), beside: safeName(nm.get(x.from) || x.from) }); });
-    const shown = (pgj) => !(isObj(pgj) && pgj.visibility === hidden);
-    pairs.push(Object.assign({ english: { id: safeName(id), name: safeName(typeof P0.displayName === 'string' ? P0.displayName : ''), hidden: !shown(enPage) },
-      arabic: { id: arId, name: safeName(isObj(arPage) && typeof arPage.displayName === 'string' ? arPage.displayName : ''), hidden: !shown(arPage) } }, tooltip ? { tooltip: true } : {}, drill ? { drillthrough: true } : {}, bothShown.has(id) ? { bothShown: bothShown.get(id) } : {}));
+  Object.assign(lc, { filtersOf, renameFilters, remap, RES, pics, arPics, withArPicture });
+}
+
+// one page: its English page and its Arabic page, their sync groups, language buttons and files, and the pair
+function pageStep(lc, { pg, page, visuals, mobiles, extra }) {
+  const { tabsShown, hidden, newId, arOf, names, pairs, bothShown, renameFilters, remap, pics, withArPicture } = lc;
+  const id = String(pg.id), arId = arOf.get(id), nm = names.get(id), folder = pg.rel.slice(0, pg.rel.lastIndexOf('/') + 1), arFolder = 'definition/pages/' + arId + '/';
+  const P0 = pageOf(pg), tooltip = P0.type === 'Tooltip', drill = isObj(P0.pageBinding) && /drillthrough/i.test(String(P0.pageBinding.type || ''));
+  // the English page: the original's, its page hidden when the Arabic tabs are the ones shown
+  const enPage = isObj(pg.page) ? clone(pg.page) : pg.page, enV = pg.visuals.map((v) => clone(v.json)), enM = pg.visuals.map((v) => (v.mobile ? clone(v.mobile.json) : null));
+  if (isObj(enPage) && tabsShown === 'ar') enPage.visibility = hidden;
+  // the Arabic page: the twin's, under its new id, hidden when the English tabs are shown
+  const arPage = isObj(page) ? clone(page) : page, arV = visuals.map((v) => clone(v)), arM = (mobiles || []).map((m) => clone(m || null));
+  if (isObj(arPage)) {
+    arPage.name = arId;
+    if (isObj(arPage.pageBinding) && arPage.pageBinding.name != null) arPage.pageBinding.name = newId('binding\u0000' + arId);
+    if (tabsShown === 'en') arPage.visibility = hidden;
+    if (pics.size) withArPicture(arPage);
+    if (Array.isArray(arPage.visualInteractions)) arPage.visualInteractions.forEach((x) => { if (isObj(x)) ['source', 'target'].forEach((k) => { if (x[k] != null && nm.has(String(x[k]))) x[k] = nm.get(String(x[k])); }); });
+  }
+  arV.forEach((v, i) => { renameFilters(v, arId, String(pg.visuals[i] ? pg.visuals[i].json.name : i)); remap(v, nm); });
+  if (isObj(arPage)) renameFilters(arPage, arId, '');
+  const pc = { pg, page, extra, id, arId, nm, folder, arFolder, P0, tooltip, drill, enPage, enV, enM, arPage, arV, arM };
+  syncStep(lc, pc);
+  buttonsStep(lc, pc);
+  pageFilesStep(lc, pc);
+  extraStep(lc, pc);
+  const shown = (pgj) => !(isObj(pgj) && pgj.visibility === hidden);
+  pairs.push(Object.assign({ english: { id: safeName(id), name: safeName(typeof P0.displayName === 'string' ? P0.displayName : ''), hidden: !shown(enPage) },
+    arabic: { id: arId, name: safeName(isObj(arPage) && typeof arPage.displayName === 'string' ? arPage.displayName : ''), hidden: !shown(arPage) } }, tooltip ? { tooltip: true } : {}, drill ? { drillthrough: true } : {}, bothShown.has(id) ? { bothShown: bothShown.get(id) } : {}));
+}
+
+function syncStep(lc, pc) {
+  const { syncGroups } = lc, { pg, id, nm, P0, enV, arV } = pc;
+  let { n } = lc;
+  // each slicer pair in one sync group: a group the English slicer has already, else its own. (SQ4, X2-S3: numbered in
+  // the slicers' file-name order, which Desktop draws at random, two copies of one report could number a pair apart)
+  // numbered by page order, then the slicer's place on its page (top to bottom, then left to right, then its name)
+  const at = (i) => absBox(enV, enV[i]) || { x: 0, y: 0 }, order = pg.visuals.map((v, i) => i).sort((a, b) => at(a).y - at(b).y || at(a).x - at(b).x || (String(pg.visuals[a].json.name) < String(pg.visuals[b].json.name) ? -1 : 1));
+  order.map((i) => [pg.visuals[i], i]).forEach(([v, i]) => {
+    // (0.3.1 X2) every slicer kind Microsoft's catalog says Power BI keeps in sync (the slicer, the button slicer's pills,
+    // the list and text slicers), of one field (Power BI syncs a slicer of one field only)
+    if (!canSync(typeOf(enV[i])) || !isObj(arV[i]) || !isObj(arV[i].visual)) return;
+    const has = isObj(enV[i].visual.syncGroup) && typeof enV[i].visual.syncGroup.groupName === 'string' && enV[i].visual.syncGroup.groupName;
+    const ps = isObj(enV[i].visual.query) && isObj(enV[i].visual.query.queryState) ? Object.values(enV[i].visual.query.queryState).flatMap((r) => (isObj(r) && Array.isArray(r.projections) ? r.projections : [])) : [];
+    const q = ps.map((p) => (isObj(p) && typeof p.queryRef === 'string' ? p.queryRef : '')).find(Boolean) || 'Slicer';
+    if (ps.length > 1) return;
+    if (!has) enV[i].visual.syncGroup = { groupName: `${q.slice(0, 80)} (EN-AR ${++n})`, fieldChanges: true, filterChanges: true };
+    arV[i].visual.syncGroup = clone(enV[i].visual.syncGroup);
+    syncGroups.push({ page: safeName(typeof P0.displayName === 'string' ? P0.displayName : id), slicer: safeName(String(v.json.name)), arabicSlicer: nm.get(String(v.json.name)), group: safeName(enV[i].visual.syncGroup.groupName), ...(has ? { kept: 'the English slicer\'s own sync group: its Arabic copy joins it' } : {}) });
   });
+  lc.n = n;
+}
+
+function buttonsStep(lc, pc) {
+  const { P, R, tabsShown, newId, added, buttons, bothShown, BOTH_SHOWN } = lc, { pg, page, id, arId, folder, arFolder, P0, tooltip, drill, enPage, enV, enM, arPage, arV, arM } = pc;
+  // the language buttons (a tooltip or drillthrough page is reached by its visual, not by the tabs: none)
+  const say = (lang, r, pageName, target) => buttons.push(Object.assign({ page: safeName(pageName), on: LANG[lang].on, text: LANG[lang].text, goesTo: target, placed: !!r.json }, r.json ? { at: r.at, phone: r.phone } : {}, r.why ? { why: r.why } : {}));
+  if (!tooltip && !drill) {
+    const en = langButton(enPage, enV, enM, 'en', arId, newId('button\u0000' + id), R.theme);
+    if (en.json) { tabInOrder(enV, en.json, 'ltr'); enV.push(en.json); enM.push(en.mobile); added.push({ rel: folder + 'visuals/' + en.json.name + '/visual.json', data: json(en.json) }); if (en.mobile) added.push({ rel: folder + 'visuals/' + en.json.name + '/mobile.json', data: json(en.mobile) }); }
+    const ar = langButton(arPage, arV, arM, 'ar', id, newId('button\u0000' + arId), R.theme);
+    if (ar.json) { tabInOrder(arV, ar.json, P.keepLtr(pg) ? 'ltr' : 'rtl'); arV.push(ar.json); arM.push(ar.mobile); added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/visual.json', data: json(ar.json) }); if (ar.mobile) added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/mobile.json', data: json(ar.mobile) }); }
+    // (0.3.1 CX1, Codex's F02: a page with no free place for its button, its counterpart hidden in the tabs, stranded a
+    // reader) a pair with a button not placed keeps both its pages in the tabs (as each was in the original and the
+    // twin), so a reader reaches each from the tabs; the button's why and the pair say it
+    if (!en.json || !ar.json) {
+      if (isObj(enPage) && tabsShown === 'ar') { if (isObj(pg.page) && pg.page.visibility != null) enPage.visibility = pg.page.visibility; else delete enPage.visibility; }
+      if (isObj(arPage) && tabsShown === 'en') { if (isObj(page) && page.visibility != null) arPage.visibility = page.visibility; else delete arPage.visibility; }
+      bothShown.set(id, BOTH_SHOWN);
+      [en, ar].forEach((r) => { if (!r.json) r.why = String(r.why || '').replace(/: the page is written without it; add the button by hand$/, '') + ': the page is written without it, and ' + BOTH_SHOWN + ' (add the button by hand to hide one again)'; });
+    }
+    say('en', en, typeof P0.displayName === 'string' ? P0.displayName : id, arId);
+    say('ar', ar, isObj(arPage) && typeof arPage.displayName === 'string' ? arPage.displayName : arId, id);
+  }
+}
+
+function pageFilesStep(lc, pc) {
+  const { R, changed, added, jsonEq } = lc, { pg, nm, folder, arId, enPage, enV, enM, arPage, arV, arM } = pc;
+  // the English files that changed (the slicers' sync group, a group's phone box grown, the page hidden)
+  if (isObj(enPage) && !jsonEq(enPage, pg.page)) changed.set(pg.rel, json(enPage));
+  pg.visuals.forEach((v, i) => { if (!jsonEq(enV[i], v.json)) changed.set(v.rel, json(enV[i])); if (v.mobile && !jsonEq(enM[i], v.mobile.json)) changed.set(v.mobile.rel, json(enM[i])); });
+  // the Arabic page's files: every file of the English page's folder, under the new page id and visual names
+  const folderOf = new Map(pg.visuals.map((v, i) => [v.rel.split('/')[4], i]));
+  R.files.filter((f) => f.startsWith(folder)).forEach((f) => {
+    const segs = f.split('/'), i = segs[3] === 'visuals' && folderOf.has(segs[4]) ? folderOf.get(segs[4]) : -1;
+    segs[2] = arId; if (i >= 0) segs[4] = nm.get(String(pg.visuals[i].json.name));
+    const rel = segs.join('/');
+    if (f === pg.rel && isObj(arPage)) added.push({ rel, data: json(arPage) });
+    else if (i >= 0 && f === pg.visuals[i].rel) added.push({ rel, data: json(arV[i]) });
+    else if (i >= 0 && pg.visuals[i].mobile && f === pg.visuals[i].mobile.rel && arM[i]) added.push({ rel, data: json(arM[i]) });
+    else added.push({ rel, from: f });
+  });
+}
+
+function extraStep(lc, pc) {
+  const { R, added, addedVisuals, renameFilters } = lc, { extra, nm, arId, arFolder, arV } = pc;
+  // (0.3.1 MX3) a visual the twin adds to the Arabic page (a heatmap's names), named after its matrix's new name
+  // (0.3.2 HM1, B-296) its suffix as the plan named it (Names, Names2...), free of the Arabic page's own names, never
+  // over a file already there (a hard error)
+  const arTaken = new Set(arV.map((v) => String(isObj(v) ? v.name : '').toLowerCase()).concat(added.filter((f) => f.rel.startsWith(arFolder + 'visuals/')).map((f) => f.rel.slice((arFolder + 'visuals/').length).split('/')[0].toLowerCase())));
+  (extra || []).forEach((x) => { const j = clone(x.json), sfx = String(x.json.name).startsWith(String(x.from)) ? String(x.json.name).slice(String(x.from).length) : 'Names', base = (nm.get(x.from) || x.from) + sfx;
+    j.name = base; for (let k = 2; arTaken.has(j.name.toLowerCase()); k++) j.name = base + '_' + k;
+    const rel = arFolder + 'visuals/' + j.name + '/visual.json';
+    if (R.files.some((f) => f.toLowerCase().startsWith((arFolder + 'visuals/' + j.name + '/').toLowerCase())) || added.some((f) => f.rel === rel)) throw new Error(addedTaken(j.name, arId));
+    arTaken.add(j.name.toLowerCase()); renameFilters(j, arId, String(x.json.name)); added.push({ rel, data: json(j) }); addedVisuals.push({ page: arId, name: safeName(j.name), beside: safeName(nm.get(x.from) || x.from) }); });
+}
+
+function bookmarksStep(lc) {
+  const { labels, R, loc, newId, arOf, names, bmOf, changed, added, filtersOf } = lc;
   // the bookmarks: an Arabic copy of each (its pages and visuals the Arabic ones, its name as approved), listed after the English
   const BM = 'definition/bookmarks/bookmarks.json';
   R.bookmarks.forEach((b) => {
@@ -268,6 +317,10 @@ export function languageCopy(P, built, labels) {
     // (SQ4, X1-S2) a group's Arabic copy takes the group's approved name
     const item = (it) => (!isObj(it) ? it : Array.isArray(it.children) ? Object.assign(clone(it), { name: newId('bookmarkGroup\u0000' + it.name), children: it.children.map((c) => bmOf.get(String(c)) || c) }, labels['bookmarkGroup:' + it.name] != null ? { displayName: labels['bookmarkGroup:' + it.name] } : {}) : Object.assign(clone(it), { name: bmOf.get(String(it.name)) || it.name }));
     j.items = j.items.concat(j.items.map(item)); changed.set(BM, json(j)); } } catch (e) { /* not JSON: copied as it is */ } }
+}
+
+function pagesJsonStep(lc) {
+  const { R, loc, tabsShown, arOf, changed, pairs } = lc;
   // pages.json: the English pages, then the Arabic ones in the same order; the first page opened in the language shown
   const PJ = 'definition/pages/pages.json';
   let activePage = null;
@@ -278,6 +331,11 @@ export function languageCopy(P, built, labels) {
     if (tabsShown === 'ar' && first) j.activePageName = arOf.get(first);
     activePage = j.activePageName != null ? safeName(String(j.activePageName)) : null;
     changed.set(PJ, json(j)); } } catch (e) { /* not JSON: copied as it is */ } }
+  lc.activePage = activePage;
+}
+
+function resourcesStep(lc) {
+  const { built, R, loc, changed, added, RES, arPics } = lc;
   if (built.ext) changed.set(EXT, json(built.ext));
   // (GD2) the Arabic pages' pictures, written and registered beside the English pages' (report.json's RegisteredResources)
   const RJ = 'definition/report.json';
@@ -293,6 +351,11 @@ export function languageCopy(P, built, labels) {
     changed.set(RJ, json(j)); } } catch (e) { /* not JSON: copied as it is */ } }
   arPics.forEach(({ to, data }) => added.push({ rel: RES + to, data }));
   mp.forEach(({ name, data }) => added.push({ rel: RES + name, data }));
+}
+
+// the copy's .platform, its files, notes and tabs, the answer
+function answerStep(lc) {
+  const { P, built, labels, R, loc, tabsShown, changed, added, addedVisuals, pairs, buttons, syncGroups, bothShown, BOTH_SHOWN, activePage } = lc;
   // (0.3.1 X2) a report built in English and Arabic keeps its own name (P.name): it is new, not a copy
   if (R.hasPlatform) { const pl = loc.mem ? jsonAt(loc, '.platform') : mustJson(path.join(loc.dir, '.platform'), '.platform'); pl.metadata = Object.assign({}, pl.metadata, { displayName: P.name || loc.base + COPY_TAG }); pl.config = Object.assign({}, pl.config, { logicalId: P.logicalId || crypto.randomUUID() }); changed.set('.platform', json(pl)); }
   // (0.3.0 A1) a report without .platform (the validator's PBIR_PLATFORM_MISSING, a "can break"): the twin writes its own, as create_report does
