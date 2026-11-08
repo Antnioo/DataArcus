@@ -53,7 +53,7 @@ export function policy(html) {
   const jsdStyles = jsdIn(/<link\b[^>]*\shref="https:\/\/cdn\.jsdelivr\.net\/npm\/((?:@[^/"]+\/)?[^/"@]+@[^/"]+)\/[^"]*\.css"/gi);
   const jsdFonts = jsdStyles.filter((u) => FONT_PACKAGES.some((f) => u.startsWith(`https://cdn.jsdelivr.net/npm/${f}@`)));
   const gf = /https:\/\/fonts\.googleapis\.com\//.test(html) || /lang-manager/.test(html);
-  // (0.3.2 BF1) the live build page reads the public repo: GitHub's API and raw files, on the pages that load build-page.js only
+  // (0.3.2 BF1, BF3) the live build page reads the public repo: GitHub's API and raw files, on the pages that load build-page.js only; its scripts fetch nothing from this site, so it has no 'self' in connect-src
   const gh = /<script\b[^>]*\ssrc="[^"]*assets\/js\/build-page(?:\.min)?\.js/i.test(html);
   const pbi = /data-pbi-src="https:\/\/app\.powerbi\.com\//.test(html), form = /<form\b[^>]*\saction="https:\/\/api\.web3forms\.com\//.test(html);
   const imgHosts = [...new Set([...html.matchAll(/<(?:img|source)\b[^>]*\s(?:src|srcset)="(https:\/\/[^/"\s]+)/gi)].map((m) => m[1]))];   // pictures on other sites (a badge)
@@ -64,7 +64,7 @@ export function policy(html) {
     ['style-src', "'self'", "'unsafe-inline'", ...(gf ? ['https://fonts.googleapis.com'] : []), ...jsdStyles],
     ['font-src', "'self'", ...(gf ? ['https://fonts.gstatic.com'] : []), ...jsdFonts],
     ['img-src', "'self'", 'data:', 'blob:', ...imgHosts, ...pick('img')],
-    ['connect-src', "'self'", ...pick('connect'), ...(form ? ['https://api.web3forms.com'] : []), ...(gh ? ['https://api.github.com', 'https://raw.githubusercontent.com'] : [])],
+    ['connect-src', ...(gh ? [] : ["'self'"]), ...pick('connect'), ...(form ? ['https://api.web3forms.com'] : []), ...(gh ? ['https://api.github.com', 'https://raw.githubusercontent.com'] : [])],
     ['frame-src', ...((pbi || ga) ? [...(pbi ? ['https://app.powerbi.com'] : []), ...pick('frame')] : ["'none'"])],
     ['object-src', "'none'"],
     ['base-uri', "'self'"],

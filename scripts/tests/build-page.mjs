@@ -281,6 +281,16 @@ export default async function ({ browser, url }) {
     await v.ctx.close();
   }
 
+  // ---- F3 (BF3): which requests the page's scripts make (fetch, XHR, beacon): GitHub only, never this site
+  {
+    const reqs = [];
+    const { v } = await open({}, async ({ v }) => { v.pg.on('request', (r) => { if (['fetch', 'xhr', 'ping', 'websocket', 'eventsource'].includes(r.resourceType())) reqs.push(r.url()); }); });
+    await loaded(v.pg).catch(() => null);
+    const hosts = [...new Set(reqs.map((u) => new URL(u).host))].sort();
+    check(reqs.length > 0 && hosts.every((h) => h === 'api.github.com' || h === 'raw.githubusercontent.com'), `F3 (BF3) script requests go to GitHub only: ${hosts.join(', ')}`);
+    await v.ctx.close();
+  }
+
   // ---- P1: unlisted
   {
     const html = fs.readFileSync(path.join(ROOT, 'build/index.html'), 'utf8');
@@ -291,7 +301,9 @@ export default async function ({ browser, url }) {
     const csp = spawnSync(process.execPath, [path.join(ROOT, 'scripts/csp.mjs')], { encoding: 'utf8' });
     check(csp.status === 0, `P1 csp.mjs passes: ${csp.stdout.trim().slice(0, 200)}`);
     const pol = (html.match(/Content-Security-Policy" content="([^"]*)"/) || [])[1] || '';
-    check(/connect-src 'self' https:\/\/api\.github\.com https:\/\/raw\.githubusercontent\.com(;|$)/.test(pol), `P1 connect-src names GitHub's API and raw files: ${pol.slice(0, 200)}`);
+    check(/connect-src https:\/\/api\.github\.com https:\/\/raw\.githubusercontent\.com(;|$)/.test(pol), `P1 connect-src names GitHub's API and raw files: ${pol.slice(0, 200)}`);
+    check(/connect-src https:\/\/api\.github\.com https:\/\/raw\.githubusercontent\.com(;|$)/.test(pol), `F1 (BF3) connect-src lists exactly api.github.com and raw.githubusercontent.com, no 'self': ${pol.slice(0, 300)}`);
+    check(html.includes('Your browser reads the public GitHub repository directly. DataArcus stores nothing and receives nothing from this page.') && !/Nothing is stored, nothing is sent/.test(html), 'F2 (BF3) the page says exactly what it sends');
     const other = (fs.readFileSync(path.join(ROOT, 'privacy.html'), 'utf8').match(/Content-Security-Policy" content="([^"]*)"/) || [])[1] || '';
     check(!/github/.test(other), 'P1 the rule is this page\'s only: privacy.html\'s policy has no GitHub host');
     check(!/<script(?![^>]*\ssrc=)[^>]*>/i.test(html), 'P1 no inline script on the page');
