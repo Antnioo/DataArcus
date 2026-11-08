@@ -689,6 +689,58 @@
    "length": 3864,
    "sha256": "947cf223683289c3c485a25a0ca21098670460f37a3dc97e46fe55b3c203b96c"
   },
+  "Q63": {
+   "length": 3904,
+   "sha256": "bd30033f40b3ea06ba83585f8f173da78813477969220a325b0b058cf8bb6b69"
+  },
+  "Q64": {
+   "length": 4112,
+   "sha256": "9c70257c8519dccf9cfdba068ce9e2203cd1d67e97de2d94597e71edb3f49779"
+  },
+  "Q65": {
+   "length": 3059,
+   "sha256": "2694472a48248afbd4e3ec0bd46e2289b8f16805dc337af243e0c67dbc49e2f5"
+  },
+  "Q66": {
+   "length": 3016,
+   "sha256": "e8de474a45f5eb74e7b605444f9662106b5665a205f0633912f1ad195615e18f"
+  },
+  "Q67": {
+   "length": 3016,
+   "sha256": "e8de474a45f5eb74e7b605444f9662106b5665a205f0633912f1ad195615e18f"
+  },
+  "Q68": {
+   "length": 6508,
+   "sha256": "4027a439f19d8da5eeb49d6f1c701cd01b3c5d6f3ccbd3e783fb377cebff9b35"
+  },
+  "Q69": {
+   "length": 6154,
+   "sha256": "44bd7502b1a43864d99db1c036f966054db93f982d8804290fc2735a76acb968"
+  },
+  "Q70": {
+   "length": 6512,
+   "sha256": "2e2f9b7fbb388fc6d0be9b288c04305596e7f2ff1ecf145abbaf90636d8a61c6"
+  },
+  "Q71": {
+   "length": 6136,
+   "sha256": "88ca00466b33159ef66c0eca1d3bd58a5d17b958e817f4179b8340d6328b9524"
+  },
+  "Q72": {
+   "length": 6253,
+   "sha256": "df4e5dabd2b6dbfd22bf324c06e52df8cd0dbc6a138f2329aca60df4cff9695c"
+  },
+  "Q73": {
+   "length": 5450,
+   "sha256": "8ac28dad48e40f9800fbb0d92604fee203d33ed4556b16887b111b87674b8549"
+  },
+  "Q74": {
+   "length": 2317,
+   "sha256": "9c7e40b767b26abd7b5d67c18815a2fcd30ff0b62fc38bedcb406f4311059ce2"
+  },
+  "Q75": {
+   "length": 4310,
+   "sha256": "2eb25479ac69374920837c29440c9b0f91d30a7fc9ded2381fba58a688f30c4e"
+  },
   "T1 as it is, English tabs": {
    "length": 38890,
    "sha256": "2dfa746868888f0a1a4ecf2c82af8c0ede0188233e0212cc3ef2edc0f3cacea0"
@@ -764,6 +816,42 @@
   "T19 a link to a bookmark that is not there, a group that is not there, a visual named \"undefined\"": {
    "length": 39485,
    "sha256": "1ffb3daeffa9329e7c43ca23bcec0344b6c89c06bfcc6267926d1ceddc80a29d"
+  },
+  "T20 glass pictures: a page, a wallpaper, a taken Arabic name, a picture not glass, an image without its url": {
+   "length": 39518,
+   "sha256": "c2a2b352f63e0f20487d2aab83ac21003ed157f1261388c514a635fd2ddaff9d"
+  },
+  "T21 the same with no resource packages in report.json, the Arabic tabs": {
+   "length": 39587,
+   "sha256": "acad905a36cf59d72924790435ad1c1afbf17e8a311b2108be7cc38a913812d2"
+  },
+  "T22 hm1's N1-25 heatmap (its names table added on the Arabic page)": {
+   "length": 18371,
+   "sha256": "bf291f7dc80ba60c7e4f977517400c9de2dbed3275b4654afbabaf9b71528b29"
+  },
+  "T23 bookmark sections: another key named like a filter, a visual group by its name": {
+   "length": 38898,
+   "sha256": "84566a4c6958e402997e6b6c4181913fdce5af2c33abe0488c4d8dc375052a1f"
+  },
+  "T24 bookmarks.json with no bookmarks": {
+   "length": 37493,
+   "sha256": "14672f35020fc21caf74de036cd450ec0c9cdec57f248d9824a05dc2b2efe726"
+  },
+  "T25 pages.json: a page that is not there first, then the tooltip page, no active page, the Arabic tabs": {
+   "length": 38967,
+   "sha256": "249216084a8f7811eb28fb18d546fded08b9c18d06dc155d1aa3191016300d32"
+  },
+  "T26 pages.json: the active page not a page, the Arabic tabs": {
+   "length": 38967,
+   "sha256": "8e22915388f55e735678fc28f5cd4482a524b6fd70e7f20dc7203d6540963303"
+  },
+  "T27 a file in another folder of the page named like a visual's": {
+   "length": 39350,
+   "sha256": "7ede928ea36e8504d50c8a037d6557e4ac8d893180a5835f035757fdc93a2ee5"
+  },
+  "T28 a slicer whose query role is not an object": {
+   "length": 39664,
+   "sha256": "61cdaf3eadca78c7af50b7ce4b1f5d172e43224d98009624d217fec6988eab4d"
   }
  }
 }

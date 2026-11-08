@@ -16,7 +16,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 // first: a fresh working folder and the seeded random, before the tools load
-import { ROOT, twin, norm, filesOf, sha, put, rd, lf, L, Q, obj } from './fixtures/twin-runs.mjs';
+import { ROOT, twin, norm, filesOf, sha, put, rd, lf, L, Q, obj, materialize } from './fixtures/twin-runs.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -196,6 +196,33 @@ Q_CASES.forEach(([k, a, o, src], i) => keep(`Q${i + 1}`, qRun(k, a, o, src)));
 for (let i = 0; i < 2600; i++) qRun('one', { planFields: PF({ timeAxis: 'Cal[Date]' }), gulfDates: { grain: 'gregorian', scope: 'all' } }, null, 'fn1g-cap-' + i);
 keep(`Q${Q_CASES.length + 1} after the memory's cap`, qRun('gen', { planFields: PF({ timeAxis: 'Calendar[Date]' }), pageFilters: [ram('Calendar[Is Ramadan]')] }));
 keep(`Q${Q_CASES.length + 2} the last of the cap`, qRun('one', { planFields: PF({ timeAxis: 'Cal[Date]' }), pageFilters: [ram('Cal[Ramadan]')] }, null, 'fn1g-cap-2599'));
+// after the cap (so no case above sees their answers): the edges the first pass left. odd2: a measure of Misc also in
+// Sales, Misc's own date and a long Hijri year column, a measure whose text starts with the column it names; two:
+// exactly two date columns; wide: thirteen (the candidates' cap is 12)
+const LONG = 'Hijri Year ' + 'y'.repeat(170);
+Object.assign(QM, {
+  odd2: bim([facts(), genCal('Calendar'), tbl('Misc', [col('Logged', 'dateTime'), col(LONG, 'int64')], [{ name: 'Total Sales', expression: '2' }, { name: 'Misc Only', expression: '3' }]),
+    tbl('Odd', [col('Note', 'string')], [{ name: 'Odd Ship', expression: 'Sales[ShipDate] -- USERELATIONSHIP' }])], [rel('a', 'Sales', 'OrderDate', 'Calendar', 'Date'), rel('b', 'Sales', 'ShipDate', 'Calendar', 'Date', false)]),
+  two: bim([tbl('Sales', [col('A', 'dateTime'), col('B', 'dateTime')], [{ name: 'M', expression: '1' }]), tbl('Cal', [col('Date', 'dateTime')])], [rel('a', 'Sales', 'A', 'Cal', 'Date')]),
+  wide: bim([tbl('Sales', Array.from({ length: 13 }, (x, i) => col('D' + i, 'dateTime')), [{ name: 'M', expression: '1' }]), tbl('Cal', [col('Date', 'dateTime')])], [rel('a', 'Sales', 'D0', 'Cal', 'Date')])
+});
+const RAM = [ram('Calendar[Is Ramadan]')];
+const Q_MORE = [
+  ['odd2', { planFields: PF({ timeAxis: 'Calendar[Date]', kpis: ['Misc[Total Sales]', 'Sales[Misc Only]'] }) }],
+  ['odd2', { planFields: PF({ timeAxis: 'Calendar[Date]', kpis: ['Misc[Total Sales]', 'Sales[Misc Only]'] }), gulfDates: { dateRole: 'Sales[ShipDate]' } }],
+  ['odd2', { planFields: PF({ timeAxis: 'Calendar[Date]', kpis: ['Odd[Odd Ship]'] }), gulfDates: { dateRole: 'Sales[ShipDate]' } }],
+  ['odd2', { planFields: PF({ timeAxis: 'Sales[OrderDate]' }), gulfDates: { dateRole: 'Sales[ShipDate]' } }],
+  ['odd2', { planFields: PF(), gulfDates: { dateRole: 'Sales[ShipDate]' } }],
+  ['odd2', { planFields: PF({ timeAxis: 'Calendar[Date]' }), pageFilters: RAM.concat([ram('Calendar[Hijri Year]', [1445]), ram(`Misc[${LONG}]`, [1445])]), gulfDates: { grain: 'gregorian', scope: 'all', hijriYearColumn: `Misc[${LONG}]` } }],
+  ['odd2', { planFields: PF({ timeAxis: 'Calendar[Date]' }), pageFilters: RAM, gulfDates: { grain: 'gregorian', scope: 'year', year: 14450 } }, null, 'fn1g-q-y5'],
+  ['odd2', { planFields: PF({ timeAxis: 'Calendar[Date]' }), pageFilters: RAM }, null, 'fn1g-q-y5'],
+  ['odd2', { planFields: PF({ timeAxis: 'Calendar[Date]' }), pageFilters: RAM, gulfDates: { grain: 'gregorian', scope: 'year', year: 999 } }, null, 'fn1g-q-y3'],
+  ['odd2', { planFields: PF({ timeAxis: 'Calendar[Date]' }), pageFilters: RAM }, null, 'fn1g-q-y3'],
+  ['one', { planFields: PF({ timeAxis: 'Cal[Date]' }), pageFilters: [ram('Cal[Ramadan]')], gulfDates: { scope: 'year', year: 1445, hijriYearColumn: 'Cal[Month]' } }, null, 'fn1g-q-hy'],
+  ['two', { planFields: { kpis: ['Sales[M]'] } }],
+  ['wide', { planFields: { kpis: ['Sales[M]'] } }]
+];
+Q_MORE.forEach(([k, a, o, src], i) => keep(`Q${Q_CASES.length + 3 + i}`, qRun(k, a, o, src)));
 
 // ---------- T: the EN-AR copy (languageCopy) through create_arabic_twin into "same" ----------
 const PROJ = path.join(HERE, 'fixtures/twin-project'), RD = 'Twin Sales.Report/definition';
@@ -264,10 +291,36 @@ tcase('T19 a link to a bookmark that is not there, a group that is not there, a 
   edit(d, visualRel('p1overview', 'cardOrders'), (j) => { j.parentGroupName = 'ghostGroup'; });
   const u = rd(at(d, visualRel('p2details', 'note2'))); u.name = 'undefined'; u.position = Object.assign({}, u.position, { y: 20, z: 9500, tabOrder: 9500 }); put(at(d, visualRel('p2details', 'undefined')), u);
 });
-T_CASES.forEach(([name, ed], i) => { const d = 'fn1g-t' + (i + 1); fs.cpSync(PROJ, path.join(ROOT, d), { recursive: true }); lf(path.join(ROOT, d)); if (ed) ed(d); });
+// glass pictures (DataArcus's marked PNG, made up: a gradient, so a flip is seen), one per page, a wallpaper, a picture
+// whose Arabic name is taken, a picture that is not glass, an image with no url
+const E = require('../assets/js/design-engine.js');
+const glass = (w, h, k) => Buffer.from(E.encodePng(w, h, Uint8Array.from({ length: w * h * 3 }, (x, i) => (i * k) % 251), E.GLASS_MARK));
+const RR = 'Twin Sales.Report/StaticResources/RegisteredResources/';
+const picOf = (n, url) => obj({ image: Object.assign({ image: Object.assign({ name: Q(n) }, url ? { url: { expr: { ResourcePackageItem: { PackageName: 'RegisteredResources', PackageType: 1, ItemName: n } } } } : {}) }, { scaling: Q('Fit') }) });
+const glassPages = (d, noPackage) => {
+  fs.writeFileSync(at(d, RR + 'glass.png'), glass(32, 18, 7)); fs.writeFileSync(at(d, RR + 'glass2.png'), glass(16, 9, 3)); fs.writeFileSync(at(d, RR + 'glass2-ar.png'), glass(8, 8, 5)); put(at(d, RR + 'plain.svg'), '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"/>');
+  edit(d, `${RD}/pages/p1overview/page.json`, (j) => { j.objects = { background: picOf('glass.png', true) }; });
+  edit(d, `${RD}/pages/p2details/page.json`, (j) => { j.objects = { wallpaper: picOf('glass2.png', true), background: [{ properties: { image: { image: { name: Q('glass2.png'), url: 'odd' } } } }, { properties: { image: { image: { name: Q('plain.svg') } } } }, 'x', { properties: {} }] }; });
+  edit(d, `${RD}/report.json`, (j) => { if (noPackage) delete j.resourcePackages; else (j.resourcePackages || []).forEach((pk) => { if (pk.name === 'RegisteredResources') pk.items = (pk.items || []).concat(['glass.png', 'glass2.png', 'glass2-ar.png', 'plain.svg'].map((n) => ({ name: n, path: n, type: 'Image' }))); }); });
+};
+tcase('T20 glass pictures: a page, a wallpaper, a taken Arabic name, a picture not glass, an image without its url', (d) => glassPages(d));
+tcase('T21 the same with no resource packages in report.json, the Arabic tabs', (d) => glassPages(d, true), { tabsShown: 'ar' });
+tcase('T22 hm1\'s N1-25 heatmap (its names table added on the Arabic page)', null, { project: 'hm1' });
+tcase('T23 bookmark sections: another key named like a filter, a visual group by its name', (d) => {
+  edit(d, `${RD}/pages/p1overview/page.json`, (j) => { j.filterConfig = { filters: [{ name: 'pf1' }] }; });
+  edit(d, `${RD}/bookmarks/bmReset.bookmark.json`, (j) => { j.explorationState.sections.p1overview = { filters: { byName: { pf1: {} } }, other: { pf1: { a: 1 } }, visualContainerGroups: { grpKpi: {}, nope: {} }, visualContainers: { slRegion: {} } }; });
+});
+tcase('T24 bookmarks.json with no bookmarks', (d) => { fs.rmSync(at(d, `${RD}/bookmarks/bmReset.bookmark.json`)); fs.rmSync(at(d, `${RD}/bookmarks/bmDetails.bookmark.json`)); edit(d, `${RD}/bookmarks/bookmarks.json`, (j) => { j.items = [{ name: 'gone' }]; }); });
+tcase('T25 pages.json: a page that is not there first, then the tooltip page, no active page, the Arabic tabs', (d) => edit(d, `${RD}/pages/pages.json`, (j) => { j.pageOrder = ['ghost', 'p3tooltip', 'p1overview', 'p2details']; delete j.activePageName; }), { tabsShown: 'ar' });
+tcase('T26 pages.json: the active page not a page, the Arabic tabs', (d) => edit(d, `${RD}/pages/pages.json`, (j) => { j.activePageName = 'ghost'; }), { tabsShown: 'ar' });
+tcase('T27 a file in another folder of the page named like a visual\'s', (d) => put(at(d, `${RD}/pages/p1overview/extras/cardOrders/x.json`), { x: 1 }));
+tcase('T28 a slicer whose query role is not an object', (d) => { const j = rd(at(d, visualRel('p1overview', 'slRegion'))); j.name = 'slNull'; delete j.visual.syncGroup; j.position = Object.assign({}, j.position, { y: 420, z: 7600, tabOrder: 7600 }); j.visual.query = { queryState: { Values: null, Other: { projections: [{ queryRef: 'Sales.Region' }] } } }; put(at(d, visualRel('p1overview', 'slNull')), j); });
+const HM1 = JSON.parse(fs.readFileSync(path.join(HERE, 'fixtures/hm1/N1-25.json'), 'utf8'));
+T_CASES.forEach(([name, ed, args], i) => { const d = 'fn1g-t' + (i + 1); if (args.project === 'hm1') { materialize(HM1, path.join(ROOT, d)); return; } fs.cpSync(PROJ, path.join(ROOT, d), { recursive: true }); lf(path.join(ROOT, d)); if (ed) ed(d); });
 for (const [name, , args, own] of T_CASES) {
   const d = 'fn1g-t' + (T_CASES.findIndex((c) => c[0] === name) + 1);
-  let r; try { r = await twin(Object.assign({ path: d + '/Twin Sales.pbip', arabicMonth: false, into: 'same' }, args), own || null); } catch (e) { r = { plan: { err: true, t: 'threw: ' + String(e && e.message) }, write: null }; }
+  const { project, ...more } = args;
+  let r; try { r = await twin(Object.assign({ path: d + (project === 'hm1' ? '/Synthetic.pbip' : '/Twin Sales.pbip'), arabicMonth: false, into: 'same' }, more), own || null); } catch (e) { r = { plan: { err: true, t: 'threw: ' + String(e && e.message) }, write: null }; }
   keep(name, JSON.stringify({ plan: { err: r.plan.err, t: norm(r.plan.t) }, write: r.write ? { err: r.write.err, t: norm(r.write.t) } : null, files: filesOf(path.join(ROOT, d)) }));
 }
 
