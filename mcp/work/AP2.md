@@ -14,7 +14,8 @@
   21, sp4 5, sp6 13, fn1e 590, site sp6 4 unchanged; lint 0; repo checks PASS.
 - **Red first:** ap2 on 1fad33a5 (c205aa78, the suite alone): 6 of 28 pass (R1-1..6, R2-1..6, R3-4..7 x2, R3-9, R4-2
   fail); now 28 of 28.
-- **State:** CI_PLACEHOLDER
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42480505052 on b6573704
+- **State:** DONE.
 - **Resume:** the reviewer reads and merges.
 
 ## Diagnosis (A-E1R5B-1, measured on 1fad33a5 with scratch probes, not committed)
@@ -61,7 +62,11 @@
 | sp1, sp3, sp7, sp13 | 11, 11, 11, 12 | 11, 11, 11, 12 (re-recorded) |
 | pf2, sp29, sp4, sp6, fn1e | 15, 21, 5, 13, 590 | the same |
 | site: sp6, sp29, sp31, design-engine, theme-generator, theme-logo, pbip | sp6 4 | 4, 8, 17, 600, 922, 753, 111 PASS |
-AREAS_PLACEHOLDER
+- Area runs on b6573704 (integration d852557f merged in; each number from its run's last line): report 69 suites
+  passed, safety 23, core 11, checker 12; on 3ba6ffbc+sp1 (before the last fix, which only touches page data without a
+  cards list): arabic 17, model 31, twin 53. Lint exit 0; modules 1160, contracts 715, result-lines 224,
+  changelog-words 237, agent-memory 452, site config PASS.
+- Integration moved again after my one merge (e621426b, FN1H): not merged again (L-1103-04); the reviewer merges.
 
 ## Changed on purpose
 - sp23-approval.json and sp44-approval.json (the same 4 pages each): the base's pages (worktree at 1fad33a5) and this
