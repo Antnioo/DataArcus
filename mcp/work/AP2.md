@@ -10,7 +10,7 @@
   shows and counts the "no data" message boxes on their own line; English and Arabic. 4. A-E1R5B-1: glass whose page
   picture is the plain page colour is said as such by the plan and the approval page (the Arabic a DRAFT).
 - **Expected checks:** new suite ap2 (area report) 28 checks, red on 1fad33a5 first (6 of 28); approval-complete 68 ->
-  68 (A9-2 changed on purpose); sp23 29, sp44 23, sp3 11, sp7 11, sp13 12 (re-recorded on purpose, below); pf2 15, sp29
+  68 (A9-2 changed on purpose); sp23 29, sp44 23, sp1 11, sp3 11, sp7 11, sp13 12 (re-recorded on purpose, below); pf2 15, sp29
   21, sp4 5, sp6 13, fn1e 590, site sp6 4 unchanged; lint 0; repo checks PASS.
 - **Red first:** ap2 on 1fad33a5 (c205aa78, the suite alone): 6 of 28 pass (R1-1..6, R2-1..6, R3-4..7 x2, R3-9, R4-2
   fail); now 28 of 28.
@@ -58,7 +58,7 @@
 | ap2 (new) | 6 of 28 | 28 |
 | approval-complete | 68 | 68 (A9-2 changed on purpose) |
 | sp23, sp44 | 29, 23 | 29, 23 (re-recorded) |
-| sp3, sp7, sp13 | 11, 11, 12 | 11, 11, 12 (re-recorded) |
+| sp1, sp3, sp7, sp13 | 11, 11, 11, 12 | 11, 11, 11, 12 (re-recorded) |
 | pf2, sp29, sp4, sp6, fn1e | 15, 21, 5, 13, 590 | the same |
 | site: sp6, sp29, sp31, design-engine, theme-generator, theme-logo, pbip | sp6 4 | 4, 8, 17, 600, 922, 753, 111 PASS |
 AREAS_PLACEHOLDER
@@ -71,8 +71,8 @@ AREAS_PLACEHOLDER
   page 2 "6 cards" -> the same 3 cards + 3 message boxes; each tooltip page "1 card" -> "1 card: Total Sales"; "2
   groups" / "3 groups" one line later (the kinds in reading order); the Arabic page the same in Arabic; report-cap's 14
   pages "1 card" -> "1 "no data" message box: ..." and its 2 tooltip pages "1 card: Total Sales".
-- sp3-answers.json (R4, R5), sp7-reports.json (T3, T4, T6, T7), sp13-reports.json (T3, T4): dumped on both (SP3_DUMP,
-  SP7_DUMP, SP13_DUMP) and compared: in each, plan_layout's answer differs only in cardsWritten, the same cards on the
+- sp1-answers.json (P4, P5), sp3-answers.json (R4, R5), sp7-reports.json (T3, T4, T6, T7), sp13-reports.json (T3, T4):
+  dumped on both (SP1_DUMP, SP3_DUMP, SP7_DUMP, SP13_DUMP) and compared: in each, plan_layout's answer differs only in cardsWritten, the same cards on the
   same pages, reordered right to left on the Arabic report pages («تحليل», «نظرة عامة», «ملخص تنفيذي», «التفاصيل»,
   «مراقبة العمليات», «رسالة واحدة»), the same length; every written file and create_report answer equal.
 - approval-complete A9-2: the written cards read back by measure and the "no data" boxes apart (was: every card visual
@@ -118,6 +118,6 @@ no soft page picture promised where the colours leave no room for one.
   check_model_health, approval-disclosure measureName): a family for CONTRACTS.md.
 
 ## Lessons for the reviewer
-- A change to pagesWritten's order moves plan_layout's cardsWritten too (sp3, sp7, sp13 on Arabic plans): the brief
+- A change to pagesWritten's order moves plan_layout's cardsWritten too (sp1, sp3, sp7, sp13 on Arabic plans): the brief
   named sp23 only; the report area run found them.
 - sp6 pins glassFit's exact result: a new key for every design moved it; added only where it means something.

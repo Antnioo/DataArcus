@@ -19,12 +19,12 @@
   "P4 Arabic, names approved": {
    "err": false,
    "length": 17109,
-   "sha256": "4b8b8321b47b1c73c183a66559b9a1761b83f7768a3a89efe3907f28208fa7ff"
+   "sha256": "74f9f77f690a1ce4b102e29dd30a74f9426d262fc81ed379e3a8e08c19ac27f4"
   },
   "P5 Arabic, no names": {
    "err": false,
    "length": 20591,
-   "sha256": "78e88168f668c263a2fd6977917c4604cdc82eb0a84c3eae8c00b4ba885c475b"
+   "sha256": "099e6a928c76eeeb13dec93333e6844c2c1759444af96a3be05f0d6df7170cf3"
   },
   "P6 bilingual": {
    "err": false,
