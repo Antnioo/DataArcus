@@ -20,14 +20,18 @@
   server.mjs: 15 on 4bc74921, 12 on a548495d, 9 on ed9d4bdd.
 - **Expected checks:** the base 4bc74921: MCP `npm test -- report core model` "108 suites passed"; website svg-kpi,
   sp12, dd2z, tools, pbip, theme-generator(-lab), sp7, sp8, sp13, sp14, sp25, sp33, sp36, fn1b, text-align, consent
-  "All 17 passed". **Got** on ed9d4bdd: (the runs going).
+  "All 17 passed". **Got** on ed9d4bdd: MCP "109 suites passed" (the 108 with the same check counts, suite by suite,
+  plus fn1f 6), website "All 17 passed" with the same 17 totals. No fixture re-recorded. Lint 0; test-contracts 14,
+  check-contracts 715, check-modules 1160, check-min 1219, site config, result-lines 221, changelog-words 29,
+  agent-memory 446 pass; sitemap lastmod already matched.
 - **Characterisation, red-proven on 4bc74921:** 288 mutants (rank 100, compile 108, reportBuild 80), one or more per
   part, each in a git worktree of the base: 277 red, 11 equivalent or unreachable (below). The new suite fn1f
   (6 checks; 426 designs, 260 + 19 models, 56 builds pinned case by case) is green on 4bc74921 unmutated and on every
   split commit; its fixture was recorded on 4bc74921 only (a worktree, `git diff 4bc74921 -- assets mcp/lib` empty).
 - CI: not yet run (after the area runs).
-- **State:** splits, pin and CHANGELOG pushed; the area runs going on ed9d4bdd.
-- **Resume:** read the area runs, fill "Got" and "The runs", then CI on the head.
+- **State:** CI running on the head.
+- **Resume:** the CI result; then DONE. Integration moved to 1ee00b30 (PF3) after my one merge: not merged again
+  (L-1103-04); PF3 touches none of the three files (tests.json gets a line from each).
 
 ## The steps (one per job of the old function, called in the old order)
 - **rank** (context `rk`): rankStep (catalog, counts, score, time variants, periods, net before gross), cardsStep
@@ -81,7 +85,10 @@
 - The tests.json line sits after fn1e's; the CHANGELOG line before the Theme Generator's.
 
 ## The runs
-- (going)
+- On ed9d4bdd (after `npm run build:min`): MCP `npm test -- report core model` "109 suites passed" in 27 min (fn1f 6;
+  the mutation suite's line differs only in its seconds); website "All 17 passed" (tools 399, consent 38,
+  theme-generator 922, theme-generator-lab 922, pbip 111, svg-kpi 854, text-align 474, sp7 3, sp8 3, sp13 3, sp12 3,
+  sp14 9, sp25 22, sp33 34, fn1b 17, sp36 18, dd2z 8), the base's totals.
 
 ## CHANGELOG line
 - **Inside the field picker, create_report's build and the SVG KPI Designer's DAX, in smaller steps:** which fields
