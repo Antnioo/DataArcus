@@ -13,12 +13,14 @@
 - **Commits:** plan bc9b9b7f; code, tests, CHANGELOG, WORK.md 45e7e928; note 328b2ceb; the write gate's list 1b418f2e; the shorter refusal and platform-paths' Windows branch (next commit).
 - **CI:** run 42522986775 red (Windows: platform-paths "long", hr1, hr2, mutation's platform-paths baseline);
   run 42524293460 red (Windows hr1, hr2; website theme-generator "steps bar did not open", Linux, a page this job does
-  not touch, green in the first run); both fixed in the commit after dfcf01dc.
+  not touch, green in the first run); both fixed in 22da9f66.
+  CI green: https://github.com/Antnioo/DataArcus/actions/runs/42525256832 on 22da9f66 (Linux, Windows, website; macOS
+  skipped on a branch run, as the workflow does).
 - **Expected checks:** wn1 33 checks, red on 3e7580d9 first (27 of 33 failed there; the 6 that passed are the
   escape still refused, F02 on a case-sensitive disk, R3's "shortcut removed" (vacuous there), R4, L2's plan within the
   limit). Every pinned suite green with its base count, no fixture re-recorded.
 - **Got (local, Linux):** see "Tests before -> after" below.
-- **Resume:** 2026-11-08T20:37Z: code pushed; area runs, then CI on the branch.
+- **Resume:** 2026-11-08T21:45Z: DONE (CI green on 22da9f66); the reviewer merges.
 
 ## Tests before -> after
 - new: `wn1` 0 -> 33 (red on 3e7580d9 first: "FAIL  wn1  27 of 33 checks", path-rules.mjs moved aside).
