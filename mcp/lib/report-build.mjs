@@ -50,7 +50,22 @@ export const themeColors = (t) => {
 };
 export const themeOf = (p) => readUserFile(p, { kind: 'theme', max: THEME_MAX, json: true });
 
+// (0.3.2 FN1F) reportBuild is made by named steps, each given one context (rb), in the old order: toolsStep (the slot
+// and field helpers), inputsStep (the notes, counts, logo and gallery), designStep or handStep (the pages and the build),
+// scriptsStep (the scripts the report offers), finishStep (the answer)
 export function reportBuild({ a, m, notReady, F, PF, SV, SC, rtlHand, binding }) {
+  const rb = { a, m, notReady, F, PF, SV, SC, rtlHand, binding };
+  toolsStep(rb);
+  inputsStep(rb);
+  if (a.design) designStep(rb);
+  else handStep(rb);
+  scriptsStep(rb);
+  return finishStep(rb);
+}
+
+// the build's helpers: the input check, the SVG cards and columns, the text and value slots, the KPI count, the names
+function toolsStep(rb) {
+  const { a, m, notReady, SV, SC, binding } = rb;
   const input = (ok, msg) => { if (!ok) throw new Error(notReady ? `${notReady} Also: ${msg}` : msg); };
   const { usable, COUNTS, nValues, nCards, bindFor, cardNote, listFormats } = binding;
   const svgCardsFor = (n) => { if (!SC) return undefined;
@@ -98,6 +113,12 @@ export function reportBuild({ a, m, notReady, F, PF, SV, SC, rtlHand, binding })
   // name the picker swapped for its Arabic column keeps the name given for the English one
   // (0.3.2 SP4) the names given, put on copies of the bound fields: lib/report-bind.mjs
   const named = (b) => namedFields(b, given);
+  Object.assign(rb, { input, usable, COUNTS, nCards, bindFor, cardNote, listFormats, svgCardsFor, svgFor, kpiCards, modelNames, modelColumns, textLeftOut, withText, leftOutVisuals, withValues, png1, kpisOf, given, named });
+}
+
+// what the report takes from the person: the notes begun, the counts, the logo, the gallery's helpers, the unknown keys
+function inputsStep(rb) {
+  const { a, m } = rb;
   // the logo, as the website takes it: a PNG or JPG, 2 MB at most; its size is read so its box can take its shape
   const reportNotes = [];
   // (0.3.1 FX5b, the owner's D-1028-06) the distinct counts a bar or column chart's thickness follows: columnStats' (the
@@ -139,7 +160,13 @@ export function reportBuild({ a, m, notReady, F, PF, SV, SC, rtlHand, binding })
   let tinyPage = false, smallPageNote = null, designRepaired = null, switchAt = null;
   const subKeys = {};   // round 22: a subtitle key given in the other language -> the slot's role in the report's language
   const unknown = a.design ? unknownKeys(a.design) : null;
-  if (a.design) {
+  Object.assign(rb, { reportNotes, countOf, logo, logoRatio, galleryOn, withSplit, galleryOf, r, bind, extra, written, boundPages, look, tinyPage, smallPageNote, designRepaired, switchAt, subKeys, unknown });
+}
+
+// a design: the plan's pages, the gallery, the subtitles, the theme and the build
+function designStep(rb) {
+  const { a, m, F, PF, nCards, cardNote, bindFor, kpisOf, logo, logoRatio, withText, withValues, withSplit, listFormats, named, subKeys, galleryOn, svgFor, svgCardsFor, modelNames, modelColumns, countOf, png1 } = rb;
+  let { r, bind, extra, written, boundPages, look, tinyPage, smallPageNote, designRepaired, switchAt, kpiCards } = rb;
     // the website's project download for this design: its pages (second page, slide-in panel), labels and theme
     const planned = planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang, colors: a.colors, theme: a.theme });
     let design = planned.design;
@@ -192,7 +219,13 @@ export function reportBuild({ a, m, notReady, F, PF, SV, SC, rtlHand, binding })
       // (0.3.1 GD1) the cards' look written: glass by default, plain where glass can't keep the text readable, or as asked
       look: Object.assign({ look: planned.look.look, chosenBy: planned.look.chosenBy }, planned.look.glassFailed ? { glassFailed: planned.look.glassFailed } : {}),
       ...(themeChanged.length ? { themeChanged } : {}) };
-  } else {
+  Object.assign(rb, { r, bind, extra, written, boundPages, look, tinyPage, smallPageNote, designRepaired, switchAt, kpiCards });
+}
+
+// hand-placed pages: the KPI slots kept, the theme scaled to the pages, the build
+function handStep(rb) {
+  const { a, m, PF, rtlHand, usable, COUNTS, nCards, cardNote, bindFor, kpisOf, logo, withText, withValues, withSplit, listFormats, named, reportNotes, galleryOn, svgFor, svgCardsFor, modelNames, modelColumns, countOf, png1 } = rb;
+  let { r, bind, written, look, switchAt, kpiCards } = rb;
     // hand-placed pages: KPI slots beyond the measures are left out, and named
     const leftOut = [];
     a.pages = a.pages.map((p) => { let k = 0; return Object.assign({}, p, { slots: p.slots.filter((s) => { if (s.kind !== 'kpi') return true; k++; if (k <= nCards) return true; leftOut.push(s.title || `KPI ${k}`); return false; }) }); });
@@ -240,7 +273,13 @@ export function reportBuild({ a, m, notReady, F, PF, SV, SC, rtlHand, binding })
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, hand: true, png: p.background ? readUserFile(p.background, { kind: 'background image', max: BACKGROUND_MAX }) : png1 }))
     });
     switchAt = { rtl: rtlHand, page: { w: a.pages[0].width, h: a.pages[0].height } };
-  }
+  Object.assign(rb, { r, bind, written, look, switchAt, kpiCards });
+}
+
+// the scripts the report offers: the metric switcher, the Arabic calendar, flip cards, status icons, the DAX functions
+function scriptsStep(rb) {
+  const { a, m, input, given, r, bind, written, look, switchAt, reportNotes } = rb;
+  let { boundPages } = rb;
   if (!boundPages) boundPages = a.pages;
   // (L3) the metric switcher: its page and its TMDL script join the built files (one write, one digest); the labels are
   // the display names the plan shows for the measures (the user's, or the plan's Arabic or readable ones)
@@ -281,6 +320,12 @@ export function reportBuild({ a, m, notReady, F, PF, SV, SC, rtlHand, binding })
     input(!(a.flipCards && daxOption(a.daxFunctions).includes('kpiCards')), 'Nothing was written. daxFunctions "kpiCards" and flipCards both turn the KPI cards into pictures: choose one (daxFunctions without "kpiCards", or flipCards false).');
     daxR = applyDax(r.files, { opt: a.daxFunctions, tmsl: m.tmsl, lang: a.lang, ui: look && look.ui, base: r.base, seed: modelPrintOf(m) + '\0' + r.base + '\0dax', font: look && look.font, rtl: look && look.rtl });
   }
+  Object.assign(rb, { boundPages, SW, CO, flip, icons, daxR });
+}
+
+// the gallery's list, the Arabic texts isolated, the name's note, the format script, and the answer
+function finishStep(rb) {
+  const { a, m, r, bind, given, reportNotes, textLeftOut, leftOutVisuals, kpiCards, smallPageNote, tinyPage, designRepaired, unknown, SW, CO, flip, icons, daxR, written, extra, boundPages, subKeys, modelNames, galleryOf, galleryOn } = rb;
   const galleryList = galleryOn(boundPages) ? galleryOf(boundPages, bind) : null;
   // (0.3.0 J18, B-171 item 5; F1: every mixed text) an Arabic report's texts: each Latin run inside Arabic text (an
   // acronym, a code, a model name kept in English) isolated wherever the report shows it, in the files the plan checks
