@@ -30,8 +30,9 @@
   mcp/tools` empty).
 - CI: red on 5f02e193 (https://github.com/Antnioo/DataArcus/actions/runs/42472997766): Windows shard 4, fn1h A1 "0 of
   141 the same" (the answer's `open` is path.join, `Project\\R.pbip` there). fn1h now writes it with / on Windows (a
-  no-op on Linux; no pin changed); CI again on the fix (named here when green).
-- **State:** the code done; CI running.
+  no-op on Linux; no pin changed). CI green: https://github.com/Antnioo/DataArcus/actions/runs/42473960903 on d3413bdf
+  (Linux and Windows; macOS skipped by the workflow on a branch run). After it only this note changed.
+- **State: DONE.**
 - **Resume:** none; the reviewer's merge (fn_over_150: 9 -> 6).
 
 ## The steps (one per job of the old function, called in the old order)
