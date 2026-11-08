@@ -28,7 +28,9 @@
   141 build states, 41 health calls and writes, 302 reports, pinned case by case) is green on 2fc104ce unmutated and
   on every split commit; its fixture was recorded on 2fc104ce only (a worktree, `git diff 2fc104ce -- assets mcp/lib
   mcp/tools` empty).
-- CI: pending (named here when green).
+- CI: red on 5f02e193 (https://github.com/Antnioo/DataArcus/actions/runs/42472997766): Windows shard 4, fn1h A1 "0 of
+  141 the same" (the answer's `open` is path.join, `Project\\R.pbip` there). fn1h now writes it with / on Windows (a
+  no-op on Linux; no pin changed); CI again on the fix (named here when green).
 - **State:** the code done; CI running.
 - **Resume:** none; the reviewer's merge (fn_over_150: 9 -> 6).
 
@@ -128,3 +130,5 @@ none
 - A function that is pure (reportAnswer) is pinned best directly: one made-up state with every condition on, then one
   variant per condition, caught 42 mutants no create_report run reached.
 - Mutant ids must be read from the list, not from memory: three of my first analyses named the wrong mutant.
+- A pin of an answer that holds a path.join (create_report's `open`) differs on Windows: normalise the separator in
+  the test before CI, or CI's Windows shard finds it after 12 minutes.

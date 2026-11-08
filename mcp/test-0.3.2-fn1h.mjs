@@ -50,6 +50,8 @@ for (const [name, run] of BUILDS(300).concat(EDGES)) {
 for (const [name, change] of VARIANTS) {
   const s = fullState(); change(s);
   let t; try { t = JSON.stringify(reportAnswer(s)); } catch (e) { t = 'threw: ' + String(e && e.message || e); }
+  // (the answer's "open" is path.join of the project folder: written with / as on the base, on Windows too)
+  if (path.sep !== '/') t = t.split(JSON.stringify('Project' + path.sep).slice(1, -1)).join('Project/');
   now['A1 ' + name] = pin(t); texts['A1 ' + name] = t;
 }
 
