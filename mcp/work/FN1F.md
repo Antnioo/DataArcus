@@ -28,9 +28,10 @@
   part, each in a git worktree of the base: 277 red, 11 equivalent or unreachable (below). The new suite fn1f
   (6 checks; 426 designs, 260 + 19 models, 56 builds pinned case by case) is green on 4bc74921 unmutated and on every
   split commit; its fixture was recorded on 4bc74921 only (a worktree, `git diff 4bc74921 -- assets mcp/lib` empty).
-- CI: not yet run (after the area runs).
-- **State:** CI running on the head.
-- **Resume:** the CI result; then DONE. Integration moved to 1ee00b30 (PF3) after my one merge: not merged again
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42460641520 on 63543af0 (Linux and Windows; macOS
+  skipped by the workflow on a branch run). After it only this note changed.
+- **State: DONE.**
+- **Resume:** none; the reviewer's merge (fn_over_150: 12 -> 9). Integration moved to 1ee00b30 (PF3) after my one merge: not merged again
   (L-1103-04); PF3 touches none of the three files (tests.json gets a line from each).
 
 ## The steps (one per job of the old function, called in the old order)
