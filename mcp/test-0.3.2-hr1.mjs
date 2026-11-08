@@ -2,7 +2,7 @@
 // on, the large fixture) answered 39,632 characters from a short folder and over 40,000 on CI's longer checkout path:
 // the answer repeated the absolute project path in many fields. It now names the folder once (root) and every other
 // file relative to it, so its size no longer grows with the path.
-//   H1  the B5 plan from a long temporary folder (a 120-character folder name): at most 95% of ANSWER_MAX
+//   H1  the B5 plan from a long temporary folder (a 120-character folder name; 50 on Windows, WN1): at most 95% of ANSWER_MAX
 //   H2  its length differs by at most 200 characters between a short and a long folder
 //   H3  no field of the long-folder answer repeats the folder more than once (root names it)
 //   H4  check_report and create_arabic_twin's plan from the long folder: the same, at most one mention of the folder
@@ -87,7 +87,9 @@ async function run(parent) {
 }
 
 const SHORT = fs.mkdtempSync(path.join(os.tmpdir(), 'hr1-'));
-const LONGP = fs.mkdtempSync(path.join(os.tmpdir(), 'hr1-')); const LONG = path.join(LONGP, 'a'.repeat(120)); fs.mkdirSync(LONG);
+// (0.3.2 WN1, F05) on Windows a folder name of 50: with 120 the project's deepest file passes Windows' 259 characters,
+// so its plans are refused before the approval (Power BI Desktop keeps the 260 limit); elsewhere 120 as before
+const LONGP = fs.mkdtempSync(path.join(os.tmpdir(), 'hr1-')); const LONG = path.join(LONGP, 'a'.repeat(process.platform === 'win32' ? 50 : 120)); fs.mkdirSync(LONG);
 try {
   const a = await run(SHORT), b = await run(LONG);
   const la = String(a.plan.t).length, lb = String(b.plan.t).length;

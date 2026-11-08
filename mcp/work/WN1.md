@@ -11,6 +11,9 @@
   win32-only compare. F03: approval-window.mjs (launchers, the watch, the shortcut), approve_plan.mjs. F05:
   plan_layout.mjs and create_arabic_twin.mjs (no plan id), files.mjs writeTree (writes nothing).
 - **Commits:** plan bc9b9b7f; code, tests, CHANGELOG, WORK.md 45e7e928; note 328b2ceb; the write gate's list 1b418f2e; the shorter refusal and platform-paths' Windows branch (next commit).
+- **CI:** run 42522986775 red (Windows: platform-paths "long", hr1, hr2, mutation's platform-paths baseline);
+  run 42524293460 red (Windows hr1, hr2; website theme-generator "steps bar did not open", Linux, a page this job does
+  not touch, green in the first run); both fixed in the commit after dfcf01dc.
 - **Expected checks:** wn1 33 checks, red on 3e7580d9 first (27 of 33 failed there; the 6 that passed are the
   escape still refused, F02 on a case-sensitive disk, R3's "shortcut removed" (vacuous there), R4, L2's plan within the
   limit). Every pinned suite green with its base count, no fixture re-recorded.
@@ -47,10 +50,12 @@
   Source: Microsoft Learn, "Power BI Desktop projects", Considerations and limitations 4: "the maximum path length for
   project files is limited to 260 characters by default on Windows ... resulting in errors during save operations".
   The Windows branch was run here with the limit forced to 259 on Linux: "PASS  test-platform-paths  30 checks".
-- `test-0.3.2-hr2.mjs` G1 (the answer at most 38,000): on Windows its 171-character folder makes the project too deep,
-  so the plan now carries the refusal; the first message (with the folder's whole path) gave 38,167 (CI run
-  42522986775). The message no longer repeats the folder: with it forced here, 37,994 on Linux; on Windows 38,167 -
-  564 (the old message) + 225 = about 37,830.
+- `test-0.3.2-hr1.mjs` and `test-0.3.2-hr2.mjs` (an answer's size from a long folder): their "long" folder name is 50
+  characters on Windows (120 elsewhere, as before). With 120 the folder is 171 characters on CI's Windows, the
+  project's deepest file passes 259, and the plans are refused before the approval (CI run 42524293460: hr1 "4 failed",
+  no report to check; hr2 38,010 with the refusal in the answer). Their checks and numbers are unchanged; on Windows
+  the folder is shorter (about 100 characters), the longest that still writes.
+- The refusal's words no longer repeat the folder's path (the first form made hr2's step 38,167 on Windows).
 
 ## CHANGELOG line
 - "**Four fixes for Windows:** a project in a folder whose name begins with two dots ... instead of failing half-way
