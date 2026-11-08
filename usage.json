@@ -1,0 +1,222 @@
+{
+  "version": 1,
+  "generated_at": "2026-11-08T14:15Z",
+  "today": {
+    "date": "2026-11-08",
+    "cost_usd": 105.12,
+    "tokens": 346157859,
+    "sessions": 19,
+    "by_kind": {
+      "builder": {
+        "cost_usd": 57.48,
+        "count": 5
+      },
+      "worker": {
+        "cost_usd": 46.49,
+        "count": 10
+      },
+      "probe": {
+        "cost_usd": 1.15,
+        "count": 4
+      },
+      "other": {
+        "cost_usd": 0,
+        "count": 0
+      }
+    },
+    "by_model": {
+      "sonnet": {
+        "cost_usd": 24.83,
+        "count": 6
+      },
+      "opus": {
+        "cost_usd": 80.29,
+        "count": 13
+      }
+    }
+  },
+  "days": [
+    {
+      "date": "2026-10-26",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-10-27",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-10-28",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-10-29",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-10-30",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-10-31",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-11-01",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-11-02",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-11-03",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-11-04",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-11-05",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-11-06",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-11-07",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-11-08",
+      "cost_usd": 105.12,
+      "tokens": 346157859,
+      "sessions": 19
+    }
+  ],
+  "jobs": [
+    {
+      "id": "AP2",
+      "title": "AP2: the approval page says exactly what is written (A-TP1-1, A-PF2-1, A-PF2-2, A-E1R5B-1)",
+      "model": "opus",
+      "cost_usd": 17.19,
+      "tokens": 63715211,
+      "minutes": 123,
+      "finished_at": "2026-11-08T13:03Z"
+    },
+    {
+      "id": "LC1",
+      "title": "LC1: the approved lessons built (D-1108-10)",
+      "model": "sonnet",
+      "cost_usd": 4.16,
+      "tokens": 21632685,
+      "minutes": 18,
+      "finished_at": "2026-11-08T12:18Z"
+    },
+    {
+      "id": "GS1",
+      "title": "GS1: state generated from jobs.json (D-1108-08)",
+      "model": "opus",
+      "cost_usd": 4.18,
+      "tokens": 8549239,
+      "minutes": 13,
+      "finished_at": "2026-11-08T11:22Z"
+    },
+    {
+      "id": "FN1H",
+      "title": "FN1H: reportAnswer, check_model_health register and pbip-visuals visual into named steps",
+      "model": "opus",
+      "cost_usd": 16.28,
+      "tokens": 52729105,
+      "minutes": 130,
+      "finished_at": "2026-11-08T11:16Z"
+    },
+    {
+      "id": "FN1G",
+      "title": "FN1G: languageCopy, gulfDateQuestions and addGulfCalendar into named steps",
+      "model": "opus",
+      "cost_usd": 15.67,
+      "tokens": 51042012,
+      "minutes": 151,
+      "finished_at": "2026-11-08T10:22Z"
+    }
+  ],
+  "workers": {
+    "count": 10,
+    "cost_usd": 46.49,
+    "costliest": [
+      {
+        "label": "cleanup",
+        "cost_usd": 19.52,
+        "minutes": 66,
+        "started": "2026-11-08T08:34Z"
+      },
+      {
+        "label": "worker 08:50",
+        "cost_usd": 7.22,
+        "minutes": 66,
+        "started": "2026-11-08T08:49Z"
+      },
+      {
+        "label": "worker 10:53",
+        "cost_usd": 5.36,
+        "minutes": 57,
+        "started": "2026-11-08T10:54Z"
+      }
+    ]
+  },
+  "top": [
+    {
+      "label": "cleanup",
+      "kind": "worker",
+      "cost_usd": 19.52
+    },
+    {
+      "label": "AP2",
+      "kind": "builder",
+      "cost_usd": 17.19
+    },
+    {
+      "label": "FN1H",
+      "kind": "builder",
+      "cost_usd": 16.28
+    },
+    {
+      "label": "FN1G",
+      "kind": "builder",
+      "cost_usd": 15.67
+    },
+    {
+      "label": "worker 08:50",
+      "kind": "worker",
+      "cost_usd": 7.22
+    }
+  ]
+}
