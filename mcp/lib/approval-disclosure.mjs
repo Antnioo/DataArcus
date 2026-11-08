@@ -221,7 +221,8 @@ function pagesSection(PW) {
     // data" message boxes laid over the charts on their own line, never counted as cards; a card with no measure apart
     let cardsSaid = false;
     (x.kinds || []).forEach((k) => { const w = VT_WORDS[k.type] || [String(k.type), String(k.type), String(k.type)], by = (k.by || []).map(String);
-      if (CARD_KINDS.test(k.type)) { if (!cardsSaid) items.push(...cardItems(x)); cardsSaid = true; return; }
+      // (data without the cards list, as before PF2: its card kinds said as before)
+      if (CARD_KINDS.test(k.type) && Array.isArray(x.cards)) { if (!cardsSaid) items.push(...cardItems(x)); cardsSaid = true; return; }
       items.push({ en: `${nOf(+k.count || 0, w[0], w[1])}${by.length ? `: ${by.map((f) => `by ${f}`).join(', ')}` : ''}`, ar: `${w[2]}: ${+k.count || 0}${by.length ? ` (${by.map((f) => `حسب «${f}»`).join('، ')})` : ''}` }); });
     return [`Page ${x.n}: ${cut(String(x.name), 80)}`, items];
   });
