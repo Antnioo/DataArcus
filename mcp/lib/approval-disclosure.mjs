@@ -90,11 +90,13 @@ export function promptBox(plan, data) {
 // the file kinds in Arabic, beside their English names (the names Power BI's own files and this page's groups use)
 export const KIND_AR = { Bookmarks: 'الإشارات المرجعية', Pages: 'الصفحات', Visuals: 'المرئيات', 'Phone layouts': 'تخطيطات الهاتف', Theme: 'السمة', Images: 'الصور', 'Custom visual packages': 'حزم المرئيات المخصصة',
   'Flip cards script': 'سكربت البطاقات القابلة للقلب', 'Gulf calendar script': 'سكربت تقويم الخليج', Script: 'سكربت', 'Format script': 'سكربت التنسيقات', 'Project file': 'ملف المشروع', 'Report settings': 'إعدادات التقرير', 'Arabic calendar script': 'سكربت أعمدة التقويم العربية', 'Theme file': 'ملف السمة',
-  'Metric switcher script': 'سكربت مبدّل المقاييس', 'Model (TMDL)': 'النموذج (TMDL)', 'Empty report': 'تقرير فارغ', 'Status icons script': 'سكربت أيقونات الحالة', 'DAX functions script': 'سكربت دوال DAX', [BLANK_LABEL()]: 'خلفيات الصفحات (فارغة وشفافة: تظهر الصفحة بلون السمة)', [GLASS_LABEL()]: 'خلفيات الصفحات (الصورة الناعمة للشكل الزجاجي، مصنوعة من ألوان السمة: ليست صورة فوتوغرافية)',
+  'Metric switcher script': 'سكربت مبدّل المقاييس', 'Model (TMDL)': 'النموذج (TMDL)', 'Empty report': 'تقرير فارغ', 'Status icons script': 'سكربت أيقونات الحالة', 'DAX functions script': 'سكربت دوال DAX', [BLANK_LABEL()]: 'خلفيات الصفحات (فارغة وشفافة: تظهر الصفحة بلون السمة)', [GLASS_LABEL()]: 'خلفيات الصفحات (الصورة الناعمة للشكل الزجاجي، مصنوعة من ألوان السمة: ليست صورة فوتوغرافية)', [GLASS_PLAIN_LABEL()]: 'خلفيات الصفحات (لون الصفحة في الشكل الزجاجي، دون صورة مع هذه الألوان)',
   "Theme (the original's, copied)": 'السمة (سمة التقرير الأصلي، منسوخة كما هي)', "Images (the original's, copied)": 'الصور (صور التقرير الأصلي، منسوخة كما هي)' };
 function BLANK_LABEL() { return 'Page backgrounds (blank, see-through: the page shows the theme\'s colour)'; }
 // (0.3.1 GD1) the glass look's page picture, listed as what it is
 function GLASS_LABEL() { return 'Page backgrounds (the glass look\'s soft picture, made from the theme\'s colours: no photo)'; }
+// (0.3.2 AP2) the same files when the look has no page picture (lookFor's noPicture): the plain page colour
+function GLASS_PLAIN_LABEL() { return 'Page backgrounds (the glass look\'s page colour, plain: no picture with these colours)'; }
 // (0.3.0 T1, T-1: "102 files:" then every visual.json path; finance and HR approved "on the summary line") the files by
 // kind, in words ("1 report: 4 pages, 40 visuals, 2 bookmarks, 26 phone layouts; 1 theme; 1 script"), counted from the
 // same list the page folds below (the plan's own outputs: what the write writes)
@@ -241,7 +243,7 @@ function summaryOf(kind, data) {
   // writes blank (a see-through pixel, so the page shows the theme's colour) is listed as what it is
   const blank = new Set(Array.isArray(d.blankImages) ? d.blankImages.map(String) : []);
   const glassPics = new Set(Array.isArray(d.glassImages) ? d.glassImages.map(String) : []);
-  const files = Array.isArray(d.outputs) ? groupFiles(d.outputs, [[BLANK_LABEL(), { test: (f) => blank.has(f) }], [GLASS_LABEL(), { test: (f) => glassPics.has(f) }], ['Metric switcher script', / - metric switcher\.tmdl$/i], ['Status icons script', / - status icons\.tmdl$/i], ['DAX functions script', / - DAX functions(?: \d+)?\.tmdl$/i]]) : null;   // (L3: the switch's own script; 0.3.1 L6: the DAX functions')
+  const files = Array.isArray(d.outputs) ? groupFiles(d.outputs, [[BLANK_LABEL(), { test: (f) => blank.has(f) }], [d.look && d.look.noPicture ? GLASS_PLAIN_LABEL() : GLASS_LABEL(), { test: (f) => glassPics.has(f) }], ['Metric switcher script', / - metric switcher\.tmdl$/i], ['Status icons script', / - status icons\.tmdl$/i], ['DAX functions script', / - DAX functions(?: \d+)?\.tmdl$/i]]) : null;   // (L3: the switch's own script; 0.3.1 L6: the DAX functions')
   // (0.3.2 FN1E) each kind's page by its own steps, on one context; a report's in five, in this order
   const sc = { kind, d, pins, sections, val, files };
   if (kind === 'report') {
@@ -370,7 +372,10 @@ function reportLookStep(sc) {
     cc.forEach((c) => look.push(['The first data colour, made readable', `approved colour ${String(c.from)} -> written colour ${String(c.to)}: contrast ${c.contrast}:1 against the visuals' background ${String(d.colours.card || '')}, needs 3:1 for a data colour${own(c)} (the 3:1 contrast for graphics of WCAG 2.1, criterion 1.4.11; the hue is kept)`]));
     // (0.3.1 GD1) the cards' look: glass by default, plain where glass can't keep the text readable (and why), or as asked
     const lk = d.look && typeof d.look === 'object' ? d.look : null;
-    if (lk) look.unshift(['Card look', lk.look === 'glass' ? (lk.chosenBy === 'default' ? 'Glass look (default): see-through cards over a soft page picture made from the theme\'s colours (Power BI has no blur behind a visual); plain cards: ask for the plain look' : 'Glass look, as asked: see-through cards over a soft page picture made from the theme\'s colours')
+    // (0.3.2 AP2, A-E1R5B-1) glass whose page picture is the plain page colour (lookFor's noPicture): said as such
+    const np = lk && lk.look === 'glass' && lk.noPicture && typeof lk.noPicture === 'object' ? lk.noPicture : null;
+    if (np) look.unshift(['Card look', `${lk.chosenBy === 'default' ? 'Glass look (default)' : 'Glass look, as asked'}: see-through cards over the page's own colour, with no page picture: the page's text stands ${np.textOnPage == null || !isFinite(+np.textOnPage) ? 'under 4.5:1' : `${(Math.floor(+np.textOnPage * 10) / 10).toFixed(1)}:1`} on that colour, under 4.5:1, and a picture would lower it${lk.chosenBy === 'default' ? '; plain cards: ask for the plain look' : ''}`]);
+    else if (lk) look.unshift(['Card look', lk.look === 'glass' ? (lk.chosenBy === 'default' ? 'Glass look (default): see-through cards over a soft page picture made from the theme\'s colours (Power BI has no blur behind a visual); plain cards: ask for the plain look' : 'Glass look, as asked: see-through cards over a soft page picture made from the theme\'s colours')
       : Array.isArray(lk.glassFailed) ? `Plain: with these colours glass can't keep everything readable (${lk.glassFailed.map((c) => `${String(c.check || '')}${c.ratio != null ? ` ${(Math.floor(+c.ratio * 10) / 10).toFixed(1)}:1, needs ${+c.min}:1` : ''}`).join('; ')}), so the cards are solid` : 'Plain, as asked: Power BI\'s own cards']);
     if (bars) look.unshift([LK.chartColors, bars === 'gradient' ? 'each bar fades by its value; a chart by a second category field gets a second colour, the same on every page' : 'one colour for every bar']);
     sections.push({ heading: 'Look and options', rows: look });

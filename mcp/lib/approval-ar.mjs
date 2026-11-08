@@ -78,6 +78,9 @@ const STATUS_AR = [[/^approved$/, () => 'معتمد'], [/^approved \(earlier in 
   [/^draft from the fixed list of report words: approved with this plan$/, () => 'مسودة من القائمة الثابتة لكلمات التقارير: تُعتمد مع هذه الخطة'], [/^kept in English$/, () => 'يبقى بالإنجليزية']];
 // texts the page composes, by pattern: [regex, (...groups) => Arabic or null]
 const PATTERNS = [
+  // (0.3.2 AP2, A-E1R5B-1) the glass look with no page picture (DRAFT for the owner, mcp/work/AP2.md)
+  [/^Glass look (\(default\)|, as asked): see-through cards over the page's own colour, with no page picture: the page's text stands (\d+\.\d|under 4\.5):1 on that colour, under 4\.5:1, and a picture would lower it(; plain cards: ask for the plain look)?$/,
+    (by, r, plain) => `الشكل الزجاجي${by === '(default)' ? ' (الافتراضي)' : '، كما طلبت'}: بطاقات شفافة فوق لون الصفحة نفسه، دون صورة للصفحة: تباين نص الصفحة مع هذا اللون ${r === 'under 4.5' ? 'أقل من 4.5:1' : `${r}:1`}، أي أقل من 4.5:1، وأي صورة ستخفضه${plain ? '؛ وللبطاقات العادية: اطلب الشكل العادي' : ''}`],
   // the theme's source: from the theme of report "Sales" (theme.json), and the colours on its visuals
   [/^from the colours on the visuals of report "([^"]*)"$/, (r) => `من ألوان المرئيات في التقرير «${r}»`],
   [/^from the theme of report "([^"]*)" \(([^)]*)\)( and the colours on its visuals)?$/, (r, t, v) => `من سمة التقرير «${r}» («${t}»)${v ? ' ومن ألوان مرئياته' : ''}`],

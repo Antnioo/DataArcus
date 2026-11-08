@@ -94,7 +94,7 @@ test-site-config, lint 0, modules --strict, result-lines, changelog-words, agent
   pages keep their exact bytes (a first try with a CSS rule changed all 12 pages by 50 bytes).
 
 ## For the owner
-- The Arabic caption «صفحة تلميح N» and the count line's Arabic: approved as drafted (D-1108-07, 8 Nov; AP2).
+- The Arabic caption «صفحة تلميح N» and the count line's Arabic: approved as they are (D-1108-07, 8 Nov; AP2).
 
 ## Risky changes
 - The approval step: the page now shows more pictures (drawn from the plan only, by the same renderer, every name
