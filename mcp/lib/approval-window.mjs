@@ -8,6 +8,9 @@
 // as plain text. What it can't do: another program on the person's computer (one that controls their browser or mouse,
 // or another tool of the AI app that runs commands or reads the browser's history) could click it too.
 import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 // (0.3.2 SP23) what each page says: approval-disclosure.mjs (pure); (SP44) its HTML: approval-view.mjs (pure); the
 // server, the secret, the Host and Origin checks and the call of the click's callback: approval-http.mjs. This file
 // keeps each window's life (open, wait, state, close) and the browser launch.
@@ -15,50 +18,92 @@ import * as Http from './approval-http.mjs';
 export { approvalHtml, PREVIEW_PAGES_MAX } from './approval-view.mjs';
 export { summary, groupFiles, kindsLine, plainLine, promptSummary, promptText, promptBox, PROMPT_SUMMARY_CAP } from './approval-disclosure.mjs';
 
-const windows = new Map();          // planId -> { plan, show, expires, decided: null | 'approve' | 'decline', waiters, opened, seen }
+const windows = new Map();          // planId -> { plan, show, expires, decided: null | 'approve' | 'decline', waiters, opened, seen, lost, shortcut }
 
-/** The program that opens the page: the system's default browser, or DATAARCUS_BROWSER (a program's path, or a JSON
- *  array of a program and its first arguments; the tests use it for a browser of their own). */
-function browserCommand(url) {
-  const own = process.env.DATAARCUS_BROWSER;
+/** The programs that open the page, in order: the system's default browser, then (Windows, 0.3.2 WN1 F03) explorer.exe
+ *  with the link, a second way to the default browser when the first starts and then fails; or DATAARCUS_BROWSER alone
+ *  (a program's path, or a JSON array of a program and its first arguments; the tests use it for a browser of their own).
+ *  Pure: platform and env given. -> [[cmd, args], ...] */
+export function launchers(url, platform = process.platform, env = process.env) {
+  const own = env.DATAARCUS_BROWSER;
   if (own) {
     let cmd = own, args = [];
     if (/^\s*\[/.test(own)) { const v = JSON.parse(own); if (!Array.isArray(v) || !v.length || v.some((x) => typeof x !== 'string')) throw new Error('DATAARCUS_BROWSER must be a program\'s path or a JSON array of strings'); [cmd, ...args] = v; }
-    return [cmd, args.concat(url)];
+    return [[cmd, args.concat(url)]];
   }
   // (no shell: the link goes to the program as one argument, never through cmd's parsing of & and ^)
-  if (process.platform === 'win32') return ['rundll32.exe', ['url.dll,FileProtocolHandler', url]];
-  if (process.platform === 'darwin') return ['open', [url]];
-  return ['xdg-open', [url]];
+  if (platform === 'win32') return [['rundll32.exe', ['url.dll,FileProtocolHandler', url]], ['explorer.exe', [url]]];
+  if (platform === 'darwin') return [['open', [url]]];
+  return [['xdg-open', [url]]];
 }
-function launch(url) {
+// one program started: null when it started (onExit(code) once it ends), or why it could not start
+function launch([cmd, args], onExit) {
   return new Promise((resolve) => {
     let child;
-    try { const [cmd, args] = browserCommand(url); child = spawn(cmd, args, { detached: true, stdio: 'ignore', windowsHide: true }); }
+    try { child = spawn(cmd, args, { detached: true, stdio: 'ignore', windowsHide: true }); }
     catch (e) { resolve(String(e && e.message || e)); return; }
     let done = false; const end = (v) => { if (!done) { done = true; resolve(v); } };
     child.once('error', (e) => end(String(e && e.message || e)));
     child.once('spawn', () => { child.unref(); end(null); });
+    if (onExit) child.once('exit', (code) => onExit(code));
   });
 }
 
-
+// (0.3.2 WN1, F03: Codex's Windows review) a launcher that starts and then fails left the person waiting for a page that
+// never came. The page is watched: not loaded within SEEN_WAIT (or its launcher ended with an error), the next launcher
+// is tried; after the last one, a shortcut to the page is written for the person to open themselves. The shortcut is a
+// small HTML file (any browser opens it, on any system) in a new folder of the OS temp folder, readable by this user
+// only; its link is never in a tool's answer (the AI must never be able to approve), only the file's name and folder.
+// It is removed once the plan is decided or its window closed. DATAARCUS_SEEN_WAIT_MS can only shorten the wait (tests).
+const SEEN_WAIT = (() => { const v = Number(process.env.DATAARCUS_SEEN_WAIT_MS); return Number.isFinite(v) && v >= 0 ? Math.min(10000, v) : 10000; })();
+export const SHORTCUT_NAME = 'DataArcus approval.html';
+const shortcutHtml = (url) => `<!doctype html><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta http-equiv="refresh" content="0;url=${url}"><title>DataArcus approval</title><p><a href="${url}">Open DataArcus's approval page</a></p>\n`;
+function writeShortcut(w, url) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-approval-')), file = path.join(dir, SHORTCUT_NAME);
+  try { fs.chmodSync(dir, 0o700); } catch (e) { /* Windows: the user's own temp folder */ }
+  fs.writeFileSync(file, shortcutHtml(url), { flag: 'wx', mode: 0o600 });
+  w.shortcut = { dir, file };
+}
+function dropShortcut(w) {
+  if (!w || !w.shortcut) return;
+  try { fs.rmSync(w.shortcut.dir, { recursive: true, force: true }); } catch (e) { /* best effort: the temp folder */ }
+  w.shortcut = null;
+}
+// (a server that ends leaves no shortcut behind)
+process.once('exit', () => { windows.forEach((w) => dropShortcut(w)); });
+// shows the shortcut's folder (Windows only: a folder window; elsewhere the answer names the folder)
+function showFolder(dir) { if (process.platform === 'win32' && !process.env.DATAARCUS_BROWSER) launch(['explorer.exe', [dir]]).catch(() => {}); }
+// watches a window opened by launcher i: the next one, then the shortcut, while the page is not seen
+function watch(w, url, list, i, failed) {
+  const t0 = Date.now();
+  const tick = () => {
+    if (w.seen || w.decided || !windows.has(w.plan.id) || windows.get(w.plan.id) !== w) return;
+    if (!failed.v && Date.now() - t0 < SEEN_WAIT) { w.timer = setTimeout(tick, 100); if (w.timer.unref) w.timer.unref(); return; }
+    if (i + 1 < list.length) { const f = { v: false }; launch(list[i + 1], (code) => { if (code && list[i + 1][0] !== 'explorer.exe') f.v = true; }).then((why) => { if (why) f.v = true; watch(w, url, list, i + 1, f); }); return; }
+    try { writeShortcut(w, url); showFolder(w.shortcut.dir); } catch (e) { w.shortcut = null; }
+    w.lost = true; w.waiters.splice(0).forEach((fn) => fn(null));
+  };
+  tick();
+}
 
 /** Opens (or, with reopen, opens again) the approval window of a plan. plan: { id, kind, writes }; show: { title,
  *  sections: [{ heading, rows: [[label, value | [values]]] }] }; expires: when the plan expires (ms); onDecide(id,
  *  decision): called once, on the click. Returns { opened: true } or { opened: false, why }. */
 export async function open(plan, show, expires, onDecide, reopen) {
   await Http.listen({ find: (id) => windows.get(id), seen: (w) => { w.seen = true; },
-    decide: (w, d) => { w.decided = d; try { onDecide(w.plan.id, d); } catch (e) { w.decided = null; return; } w.waiters.splice(0).forEach((f) => f(d)); } });
+    decide: (w, d) => { w.decided = d; try { onDecide(w.plan.id, d); } catch (e) { w.decided = null; return; } dropShortcut(w); w.waiters.splice(0).forEach((f) => f(d)); } });
   let w = windows.get(plan.id);
   if (w && w.decided) return { opened: false, why: 'decided' };
   if (!w) {
     w = { plan: { id: plan.id, kind: plan.kind, writes: plan.writes.slice() }, show, expires, decided: null, waiters: [], opened: false, seen: false };
     windows.set(plan.id, w); Http.issue(plan.id);
   } else if (w.opened && !reopen) return { opened: true, again: false };
-  const why = await launch(Http.linkOf(plan.id));
+  const url = Http.linkOf(plan.id), list = launchers(url), failed = { v: false };
+  clearTimeout(w.timer); dropShortcut(w); w.lost = false;
+  const why = await launch(list[0], (code) => { if (code) failed.v = true; });
   if (why) return { opened: false, why };
   w.opened = true;
+  if (!w.seen) watch(w, url, list, 0, failed);
   return { opened: true, again: !!reopen };
 }
 
@@ -67,6 +112,7 @@ export function wait(id, ms) {
   const w = windows.get(id);
   if (!w) return Promise.resolve(null);
   if (w.decided) return Promise.resolve(w.decided);
+  if (w.lost && !w.seen) return Promise.resolve(null);
   return new Promise((resolve) => {
     const f = (d) => { clearTimeout(t); resolve(d); };
     const t = setTimeout(() => { const i = w.waiters.indexOf(f); if (i >= 0) w.waiters.splice(i, 1); resolve(null); }, Math.max(0, ms));
@@ -74,8 +120,9 @@ export function wait(id, ms) {
   });
 }
 
-/** What the window of a plan knows: null (none), or { opened, seen, decided }. */
-export function state(id) { const w = windows.get(id); return w ? { opened: w.opened, seen: w.seen, decided: w.decided } : null; }
+/** What the window of a plan knows: null (none), or { opened, seen, decided, shortcut? } (shortcut: { dir, file } once
+ *  the page was not seen and a shortcut was written, WN1 F03; the file holds the link, the answer never does). */
+export function state(id) { const w = windows.get(id); return w ? Object.assign({ opened: w.opened, seen: w.seen, decided: w.decided }, w.shortcut && !w.seen ? { shortcut: Object.assign({}, w.shortcut) } : {}) : null; }
 
 /** Forgets a plan's window (its link answers "no longer valid" from then on). */
-export function close(id) { const w = windows.get(id); if (w) { Http.revoke(id); windows.delete(id); w.waiters.splice(0).forEach((f) => f(null)); } }
+export function close(id) { const w = windows.get(id); if (w) { clearTimeout(w.timer); dropShortcut(w); Http.revoke(id); windows.delete(id); w.waiters.splice(0).forEach((f) => f(null)); } }

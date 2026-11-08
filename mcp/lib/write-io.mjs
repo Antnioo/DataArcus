@@ -15,6 +15,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { within } from './path-rules.mjs';   // (0.3.2 WN1, F01: the one containment rule)
 
 const REAL = { writeFileSync: fs.writeFileSync, mkdirSync: fs.mkdirSync, linkSync: fs.linkSync, renameSync: fs.renameSync, unlinkSync: fs.unlinkSync, rmdirSync: fs.rmdirSync, openSync: fs.openSync, closeSync: fs.closeSync };
 export const io = Object.assign({}, REAL);
@@ -56,7 +57,7 @@ export function testEditBeforeWrite() {
   const rel = process.env.DATAARCUS_TEST_EDIT_BEFORE_WRITE, root = process.env.DATAARCUS_ROOT;
   if (!rel || !root) return;
   const f = path.resolve(root, rel);
-  if (path.relative(path.resolve(root), f).startsWith('..')) return;
+  if (!within(path.resolve(root), f)) return;
   REAL.writeFileSync(f, '\n', { flag: 'a' });
 }
 
@@ -87,7 +88,6 @@ export function writeFailed(e, what, ours, foreign) {
 const idOf = (st) => ({ dev: st.dev, ino: st.ino });
 const lstatOf = (p) => { try { return fs.lstatSync(p, { bigint: true }); } catch (e) { if (e && e.code === 'ENOENT') return null; throw e; } };
 const rootReal = () => { const r = String(process.env.DATAARCUS_ROOT || '').trim(); return r ? fs.realpathSync.native(path.resolve(r)) : null; };
-const within = (root, p) => { const rel = path.relative(root, p); return !(rel.startsWith('..') || path.isAbsolute(rel)); };
 const sha = (b) => crypto.createHash('sha256').update(b).digest('hex');
 /**
  * Creates the new file e.path ('wx': never over anything) and writes data through that handle. e = { path } is recorded

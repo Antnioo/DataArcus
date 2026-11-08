@@ -30,6 +30,7 @@ const GUARD_TIMEOUT = process.env.DA_MUTATION_GUARD_TIMEOUT ? +process.env.DA_MU
 const PL = 'mcp/lib/plans.mjs', MO = 'mcp/lib/model.mjs', WI = 'mcp/lib/write-io.mjs', FI = 'mcp/lib/files.mjs', CR = 'mcp/lib/check-report.mjs', CI = 'mcp/lib/check-impact.mjs', AD = 'mcp/lib/approval-disclosure.mjs', AV = 'mcp/lib/approval-view.mjs', MDI = 'mcp/lib/model-discovery.mjs', RI = 'mcp/lib/report-inventory.mjs';   // (0.3.2 SP23: what each approval page says moved to AD; SP41: each finding's kind moved to CI; SP42: discovery to MDI, the report inventory to RI; SP44: the approval page's HTML to AV)
 // (0.3.2 SP22) the untrusted-text screen and the shown names moved to model-names.mjs, the KPI list to model-metadata.mjs
 const MN = 'mcp/lib/model-names.mjs', MM = 'mcp/lib/model-metadata.mjs';
+const PR = 'mcp/lib/path-rules.mjs';   // (0.3.2 WN1: the path rules, one copy each)
 // (0.3.2 SM1) the approval window's HTTP side and check_report's one redaction boundary, with the suites that guard them
 const AH = 'mcp/lib/approval-http.mjs', RD = 'mcp/lib/check-redact.mjs';
 const AHG = ['test-0.3.2-sp44.mjs', 'test-approval.mjs'], RDG = ['test-0.3.2-sp41.mjs'];   // (the suites that kill them, mcp/work/SM1.md)
@@ -67,7 +68,16 @@ const MUTANTS = [
   { id: 'AF-health-model', file: 'mcp/tools/check_model_health.mjs', edits: [['  if (write) sameModelBeforeWrite(planId, () => loadModel(p).print, print0);\n', '']], guards: ['test-0.3.1-audit-writes.mjs'] },
 
   // 2. path safety
-  { id: 'D-within', file: MO, edits: [["const within = (root, p) => { const rel = path.relative(root, p); return !(rel.startsWith('..') || path.isAbsolute(rel)); };", 'const within = (root, p) => { const rel = path.relative(root, p); return !path.isAbsolute(rel); };']], guards: ['test-0.2.9d.mjs', 'test-platform-paths.mjs', 'test-audit6.mjs', 'test-0.3.0-write-safety.mjs'] },
+  // (0.3.2 WN1, F01) the one containment rule moved to path-rules.mjs (outsideRel); D-within as before, and the new rule's parts
+  { id: 'D-within', file: PR, edits: [["return r === '..' || sepsOf(P).some((s) => r.startsWith('..' + s)) || P.isAbsolute(r);", 'return P.isAbsolute(r);']], guards: ['test-0.3.2-wn1.mjs', 'test-0.2.9d.mjs', 'test-platform-paths.mjs', 'test-audit6.mjs', 'test-0.3.0-write-safety.mjs'] },
+  { id: 'D-within-prefix', file: PR, edits: [["return r === '..' || sepsOf(P).some((s) => r.startsWith('..' + s)) || P.isAbsolute(r);", "return r.startsWith('..') || P.isAbsolute(r);"]], guards: ['test-0.3.2-wn1.mjs'] },
+  { id: 'D-within-parent', file: PR, edits: [["return r === '..' || sepsOf(P).some((s) => r.startsWith('..' + s)) || P.isAbsolute(r);", "return sepsOf(P).some((s) => r.startsWith('..' + s)) || P.isAbsolute(r);"]], guards: ['test-0.3.2-wn1.mjs', 'test-0.2.9d.mjs'] },
+  { id: 'D-within-drive', file: PR, edits: [["return r === '..' || sepsOf(P).some((s) => r.startsWith('..' + s)) || P.isAbsolute(r);", "return r === '..' || sepsOf(P).some((s) => r.startsWith('..' + s));"]], guards: ['test-0.3.2-wn1.mjs'] },
+  { id: 'D-within-winsep', file: PR, edits: [["const sepsOf = (P) => (P.sep === '\\\\' ? ['\\\\', '/'] : ['/']);", "const sepsOf = (P) => [P.sep];"]], guards: ['test-0.3.2-wn1.mjs'] },
+  // (WN1, F02 and F05) a name in another case; the path limit
+  { id: 'D-samename', file: PR, edits: [['(caseless(platform) ? String(a).toLowerCase() === String(b).toLowerCase() : String(a) === String(b))', '(String(a) === String(b))']], guards: ['test-0.3.2-wn1.mjs'] },
+  { id: 'D-pathmax', file: PR, edits: [['  return worst && worst.length > max ? Object.assign(worst, { max }) : null;', '  return null;']], guards: ['test-0.3.2-wn1.mjs'] },
+  { id: 'A-shortcut', file: 'mcp/lib/approval-window.mjs', edits: [['    try { writeShortcut(w, url); showFolder(w.shortcut.dir); } catch (e) { w.shortcut = null; }', '    w.shortcut = null;']], guards: ['test-0.3.2-wn1.mjs'] },
   { id: 'D-underRoot-any', file: MO, edits: [['  return r && within(realRoot, r) ? path.join(root, path.relative(realRoot, r)) : null;', '  return full;']], guards: ['test-platform-paths.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs', 'test-0.3.0-write-safety.mjs'] },
   { id: 'D-underRoot-nolink', file: MO, edits: [['  return r && within(realRoot, r) ? path.join(root, path.relative(realRoot, r)) : null;', '  return null;']], guards: ['test-platform-paths.mjs'] },
   { id: 'D-real', file: MO, edits: [['  if (!r || !within(fs.realpathSync.native(ROOT), r)) throw linkError(', '  if (false) throw linkError(']], guards: ['test-platform-paths.mjs', 'test-0.3.0-write-safety.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs', 'test-z.mjs'] },

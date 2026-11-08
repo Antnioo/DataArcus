@@ -22,6 +22,7 @@ import { KNOWN_TYPES, countsOf, mixedOf, boldItalicOf } from './text-format.mjs'
 import { langOfTexts, pageLanguages } from './check-language.mjs';   // (0.3.2 SP20: each page's language)
 import { sameQuestion } from './same-question.mjs';   // (0.3.2 NC1: the number check, layer 1, option against)
 import { scrub, rel, relOut, cleanPath, tidy } from './check-redact.mjs';   // (0.3.2 SP41: the one redaction boundary)
+import { outsideRel } from './path-rules.mjs';   // (0.3.2 WN1, F01: the one containment rule)
 import { schemaCheck, VALIDATOR_VERSION } from './check-schema.mjs';   // (0.3.2 SP41: the bundled schemas)
 import { CHECKS, arr, plainObj, DESKTOP_OPENED, OPENED_FIX, VALIDATOR_GAPS, knownGap, impactOf, impactSummary, IMPACT, DESKTOP_OPENS_SOURCE, DESKTOP_DRAWS } from './check-impact.mjs';   // (0.3.2 SP41: each finding's kind)
 export { pageLanguages, filledLanguages } from './check-language.mjs';
@@ -53,7 +54,7 @@ export const rulesInput = (inv) => LC.rulesInput(inv, { isCustom });   // (the r
 // there. Read by the shared TMDL reader, links never followed, within the report file limit; names are only matched
 function daxScriptMeasures(loc) {
   const out = new Set(), dir = path.dirname(loc.reportDir), up = path.relative(ROOT, dir);
-  if (up.startsWith('..') || path.isAbsolute(up)) return out;
+  if (outsideRel(up)) return out;
   let names = []; try { names = fs.readdirSync(dir).filter((n) => n.endsWith(SCRIPT_SUFFIX + '.tmdl')).sort().slice(0, 20); } catch (e) { return out; }
   for (const n of names) {
     let tree = null; try { tree = Tmdl.parse(readCapped(path.join(dir, n), REPORT_LIMITS.file, 'DAX functions script').toString('utf8')); } catch (e) { tree = null; }
@@ -179,9 +180,9 @@ async function validatorStep(cr) {
         const file = it.file && path.isAbsolute(it.file) ? rel(loc.reportDir, it.file) : null;
         // (polish round P2) a gap of the validator's own catalog that Desktop was seen to draw: a note with its evidence
         let known = null;
-        if (file && !file.startsWith('..') && /visual\.json$/i.test(file) && VALIDATOR_GAPS.some((g) => g.code === code && g.object === it.path)) { try { known = knownGap(code, it.path, readJson(path.join(loc.reportDir, ...file.split('/')))); } catch (e) { known = null; } }
+        if (file && !outsideRel(file) && /visual\.json$/i.test(file) && VALIDATOR_GAPS.some((g) => g.code === code && g.object === it.path)) { try { known = knownGap(code, it.path, readJson(path.join(loc.reportDir, ...file.split('/')))); } catch (e) { known = null; } }
         if (known) { validator.known++; if (d.severity === 'error') validator.errors--; else if (d.severity === 'warning') validator.warnings--; }
-        add(Object.assign({ origin: 'validator', _base: it.file ? path.basename(String(it.file)) : '', rule: /^[A-Z0-9_]{3,60}$/.test(code) ? code : 'VALIDATOR', severity: known ? 'note' : d.severity === 'error' ? 'error' : d.severity === 'warning' ? 'warning' : 'note', file: file && !file.startsWith('..') ? file : null, page: null, visual: null,
+        add(Object.assign({ origin: 'validator', _base: it.file ? path.basename(String(it.file)) : '', rule: /^[A-Z0-9_]{3,60}$/.test(code) ? code : 'VALIDATOR', severity: known ? 'note' : d.severity === 'error' ? 'error' : d.severity === 'warning' ? 'warning' : 'note', file: file && !outsideRel(file) ? file : null, page: null, visual: null,
           what: scrub(String(it.message || '').split(String(it.file || '\u0000')).join('').replace(/[:\s]+$/, ''), loc.reportDir), fix: Object.hasOwn(DESKTOP_OPENED, code) ? OPENED_FIX : 'See Microsoft\'s report authoring reference for this code.',
           source: `Microsoft validator ${VALIDATOR_VERSION}: ${code}` }, known ? { known, fix: 'Nothing to fix: Power BI Desktop draws it (see known.evidence). Keep it; only Microsoft\'s validator does not list it yet.' } : {}));
       }

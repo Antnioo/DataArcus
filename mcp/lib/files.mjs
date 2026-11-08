@@ -7,6 +7,7 @@ import path from 'node:path';
 import { nothingAt, real, inside, readCapped } from './model.mjs';
 import { createFile, makeDir, noteDir, rollBack, shownWritePath, writeFailed, writeFileNew } from './write-io.mjs';
 import { consume } from './plans.mjs';
+import { tooLongSaid } from './path-rules.mjs';   // (0.3.2 WN1, F05: a path over the system's limit)
 export { writeFileNew };   // (B-153: the one writer of one new file, for the tools; writeNew in model.mjs is the same)
 
 // what was written in this server's life, in order (audit 6, A6-17): a tool that fails says what it had written
@@ -35,6 +36,10 @@ export function writeTree(dir, files, opts) {
   const tops = [...new Set(files.map((f) => String(f.path).split('/')[0]))];
   const taken = tops.filter((t) => !nothingAt(path.join(dir, t)));
   if (taken.length) throw new Error(`Nothing was written: ${taken.length === 1 ? `"${taken[0]}" is` : `${taken.length} names are`} already there (e.g. "${taken[0]}"). DataArcus never writes over anything: choose another name, or rename or move the old one.`);
+  // (0.3.2 WN1, F05) a path over the system's limit (Windows: 259 characters) is refused before anything is written;
+  // the plans refuse it first (plan_layout, create_arabic_twin), this is the write's own check
+  const long = tooLongSaid(dir, files);
+  if (long) throw new Error(`Nothing was written: ${long}.`);
   real(dir);
   tops.forEach((t) => real(path.join(dir, t)));
   const fail = testFailure(), beforePlace = opts && typeof opts.beforePlace === 'function' ? opts.beforePlace : null;

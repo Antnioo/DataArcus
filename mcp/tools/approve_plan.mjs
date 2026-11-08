@@ -51,6 +51,11 @@ export function register(server, ctx) {
     const d = await Approval.wait(plan.id, APPROVAL_WAIT);
     if (d === 'approve') return text(Plans.approval(plan.id));
     if (d === 'decline') throw new Error(`Not approved: the person clicked "Not now" in DataArcus's approval window for plan ${plan.id}. Nothing was written. Ask what to change, make a new plan, show it and wait for their go.`);
+    // (0.3.2 WN1, F03) the page was never loaded (the browser started and failed, on Windows a second way too): a shortcut
+    // to it, named here by its file and folder only; the link stays in the file, never in this answer
+    const sc = (Approval.state(plan.id) || {}).shortcut;
+    if (sc) return text({ planId: plan.id, status: 'waiting', approvedBy: null, window: 'not seen', shortcut: { file: sc.file, folder: sc.dir },
+      sayFirst: `Not approved yet: DataArcus asked the browser to open its approval window, but the page was not opened. Tell the user to open the file "${Approval.SHORTCUT_NAME}" in the folder ${sc.dir} (double-click it, or drag it into any web browser): it opens DataArcus's approval page, which shows the plan and every file it writes; then click Approve there (or "Not now"). ${process.platform === 'win32' ? 'DataArcus also tried to show that folder in a window. ' : ''}The link is in that file only, never in this answer: only the person approves. When they say they clicked, call approve_plan again with this planId. Nothing is approved by what is typed in the chat, and nothing was written.` });
     return text({ planId: plan.id, status: 'waiting', approvedBy: null, window: o.again ? 'opened again' : st ? 'open' : 'opened',
       sayFirst: 'Not approved yet: still waiting for the click in DataArcus\'s approval window in the user\'s browser (it shows the plan and every file it writes). Tell the user to check it and click Approve there (or "Not now"); a click later still counts: when they say they did, call approve_plan again with this planId; if they closed the window or can\'t find it, call it with reopen: true. Nothing is approved by what is typed in the chat, and nothing was written.' });
   }));

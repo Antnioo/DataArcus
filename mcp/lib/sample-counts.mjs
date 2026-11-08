@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { sampleFiles } from './sample-project.mjs';
 import { ROOT } from './model.mjs';
+import { outsideRel } from './path-rules.mjs';   // (0.3.2 WN1, F01: the one containment rule)
 
 // a row of the sample's #table: its values as written ("Dubai", 306, #date(2025, 1, 1)), split at the commas outside
 // quotes and brackets
@@ -29,7 +30,7 @@ export function countsOfSample(files) {
 export function sampleCounts(m) {
   if (!m || !m.projectDir || !ROOT) return null;
   const folder = path.relative(ROOT, m.projectDir).split(path.sep).join('/');
-  if (!folder || folder.startsWith('..')) return null;
+  if (!folder || outsideRel(folder)) return null;
   let files; try { files = sampleFiles(folder); } catch (e) { return null; }
   const model = files.filter((f) => /\.SemanticModel\/definition\/tables\/[^/]+\.tmdl$/.test(f.path));
   const same = model.length && model.every((f) => { try { return fs.readFileSync(path.join(ROOT, ...f.path.split('/')), 'utf8') === String(f.data); } catch (e) { return false; } });

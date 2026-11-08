@@ -21,6 +21,7 @@ import * as Terms from '../lib/terminology.mjs';
 import * as DateQ from '../lib/gulf-date-questions.mjs';
 import { UNTRUSTED } from '../lib/agent-text.mjs';
 import { whereSaid, relOf, NEVER_APPLIED, NEVER_APPLIED_AR } from '../lib/plain-words.mjs';
+import { tooLongSaid } from '../lib/path-rules.mjs';   // (0.3.2 WN1, F05)
 import { monthOffer as calendarOffer, twinPreview } from '../lib/arabic-twin.mjs';
 import { lookOf, bilingualSaid, BILINGUAL_LAST, NOT_TRANSLATED_WHY, englishTitles, sayArabicPlan, pageSizeSaid } from '../lib/plan-disclosure.mjs';
 import { text, safe } from '../lib/tool-answer.mjs';
@@ -332,6 +333,9 @@ export function register(server, ctx) {
       const unchecked = exact ? (exact.check.notRun || []).filter((n) => MUST_RUN[n.check] && !n.capped) : [];
       if (unchecked.length) planProblems.push(`the report this plan writes could not be fully checked: ${unchecked.map((n) => MUST_RUN[n.check]).join(' and ')} did not run (exactCheck.notRun says why), so no plan id is given. Tell the user; try again, or check the report with check_report after another plan.`);
       if (exact && exact.check.status === 'blocked') planProblems.push(`the report this plan writes fails its check before writing (${Object.entries(exact.check.byRule).filter(([k]) => (exact.check.blocking || []).some((b) => b.rule === k)).map(([k, n]) => `${k} ${n}`).join(', ') || 'blocked'}; exactCheck lists the files): change the plan, or tell the user it can't be written as planned.`);
+      // (0.3.2 WN1, F05) the deepest file it writes within the system's path limit (Windows: 259 characters), or no plan id
+      const long = exact && m0 && m0.projectDir ? tooLongSaid(m0.projectDir, exact.files) : null;
+      if (long) planProblems.push(`the report can't be written where it is: ${long}.`);
     }
     // (0.3.1 TT1) an Arabic plan: the titles the report writes wholly in English (a field in them has no Arabic name), and
     // how to make them Arabic
