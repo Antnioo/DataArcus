@@ -11,7 +11,8 @@
 //     package folders the page loads stylesheets from
 //   - fonts: Google Fonts, and the folder of a jsDelivr stylesheet that loads its own fonts (Bootstrap Icons); images: the site, data: and blob: (the tools' previews), the
 //     hosts of the page's own <img> from other sites (the certification badge), and the analytics beacons;
-//     connections: the analytics beacons, and Web3Forms on the pages with a form that posts to it (the home page's contact form, the beta page's request form)
+//     connections: the analytics beacons, and Web3Forms on the pages with a form that posts to it (the home page's contact form, the beta page's request form),
+//     and GitHub's API and raw files on the build page only (the pages that load build-page.js)
 //   - frames: Power BI only on pages with the "Load the live report" facade, and the Google tag's own frame; nothing else
 //   - no plugins (object-src 'none'), <base> only to the site, forms post only to the site or Web3Forms
 //
@@ -52,6 +53,8 @@ export function policy(html) {
   const jsdStyles = jsdIn(/<link\b[^>]*\shref="https:\/\/cdn\.jsdelivr\.net\/npm\/((?:@[^/"]+\/)?[^/"@]+@[^/"]+)\/[^"]*\.css"/gi);
   const jsdFonts = jsdStyles.filter((u) => FONT_PACKAGES.some((f) => u.startsWith(`https://cdn.jsdelivr.net/npm/${f}@`)));
   const gf = /https:\/\/fonts\.googleapis\.com\//.test(html) || /lang-manager/.test(html);
+  // (0.3.2 BF1) the live build page reads the public repo: GitHub's API and raw files, on the pages that load build-page.js only
+  const gh = /<script\b[^>]*\ssrc="[^"]*assets\/js\/build-page(?:\.min)?\.js/i.test(html);
   const pbi = /data-pbi-src="https:\/\/app\.powerbi\.com\//.test(html), form = /<form\b[^>]*\saction="https:\/\/api\.web3forms\.com\//.test(html);
   const imgHosts = [...new Set([...html.matchAll(/<(?:img|source)\b[^>]*\s(?:src|srcset)="(https:\/\/[^/"\s]+)/gi)].map((m) => m[1]))];   // pictures on other sites (a badge)
   const pick = (k) => [...(ga ? GA[k] : []), ...(clarity ? CLARITY[k] : [])];
@@ -61,7 +64,7 @@ export function policy(html) {
     ['style-src', "'self'", "'unsafe-inline'", ...(gf ? ['https://fonts.googleapis.com'] : []), ...jsdStyles],
     ['font-src', "'self'", ...(gf ? ['https://fonts.gstatic.com'] : []), ...jsdFonts],
     ['img-src', "'self'", 'data:', 'blob:', ...imgHosts, ...pick('img')],
-    ['connect-src', "'self'", ...pick('connect'), ...(form ? ['https://api.web3forms.com'] : [])],
+    ['connect-src', "'self'", ...pick('connect'), ...(form ? ['https://api.web3forms.com'] : []), ...(gh ? ['https://api.github.com', 'https://raw.githubusercontent.com'] : [])],
     ['frame-src', ...((pbi || ga) ? [...(pbi ? ['https://app.powerbi.com'] : []), ...pick('frame')] : ["'none'"])],
     ['object-src', "'none'"],
     ['base-uri', "'self'"],
