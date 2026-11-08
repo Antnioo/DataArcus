@@ -21,6 +21,22 @@ const Fix = require('../../assets/js/model-health-tmdl.js');
  *  its field list of a binding; fmt is formatsAnswer's (null without a format script). Returns the answer object. */
 export function reportAnswer(x) {
   const { a, m, r, bind, given, written, fmt, projectCheck, extra, unknown, sc, designRepaired, reportNotes, kpiCards, leftOutVisuals, textLeftOut, PF, SV, SC, boundPages, smallPageNote, tinyPage, subKeys, ringNumbers, FULL, cardFormats, tableFormats, flip, icons, daxR, englishNames, textKpis, slicersDropped, byFlagDay, modelNames, F, galleryList, SW, CO, barThickness, fieldsOf } = x;
+  const ra = { a, m, r, bind, given, written, fmt, projectCheck, extra, unknown, sc, designRepaired, reportNotes,
+      kpiCards, leftOutVisuals, textLeftOut, PF, SV, SC, boundPages, smallPageNote, tinyPage, subKeys, ringNumbers,
+      FULL, cardFormats, tableFormats, flip, icons, daxR, englishNames, textKpis, slicersDropped, byFlagDay,
+      modelNames, F, galleryList, SW, CO, barThickness, fieldsOf };
+  panelsStep(ra);
+  formatsStep(ra);
+  pageNotesStep(ra);
+  looksStep(ra);
+  axesStep(ra);
+  leftOutStep(ra);
+  titlesStep(ra);
+  return answerStep(ra);
+}
+// the panels behind the visuals, the KPI cards, the text boxes, the titles and the page filters said
+function panelsStep(ra) {
+  const { a, r, written, reportNotes, kpiCards, leftOutVisuals, textLeftOut, PF } = ra;
   // what the report shows behind its visuals (read from the theme that was written, as the report writer reads it)
   const solid = !!((((((written.visualStyles || {})['*'] || {})['*'] || {}).background || [{}])[0] || {}).show);
   const panels = solid
@@ -35,6 +51,11 @@ export function reportAnswer(x) {
   // the page filters, in words: the user must see that the pages show part of the data
   const shownValue = (v) => (typeof v === 'string' ? `"${v}"` : String(v));
   if (PF) reportNotes.push(`${PF.length === 1 ? 'A page filter is' : PF.length + ' page filters are'} set on every page of the report: ${PF.map((f) => `${f.key} is ${f.values.map(shownValue).join(' or ')}`).join('; ')}. Every visual shows only that part of the data. The user sees, changes or clears ${PF.length === 1 ? 'it' : 'them'} in the Filters pane of Power BI.`);
+  Object.assign(ra, { panels, TT });
+}
+// the model notes, the numbers without a thousand separator and the SVG measures
+function formatsStep(ra) {
+  const { m, r, bind, reportNotes, PF, SV, SC, boundPages, cardFormats, tableFormats, fieldsOf } = ra;
   const notes = modelNotes(m.tmsl, bind);
   // numbers the report shows whose format in the model has no thousand separator (or that have no format): Power BI
   // takes the format of a table cell, a tooltip and an unscaled card from the model, so the report can't add it
@@ -60,6 +81,11 @@ export function reportAnswer(x) {
   const svgList = (SV || []).map((c) => Object.assign({ label: c.label, entity: c.t, page: boundPages[c.at.page].name, shownAs: 'a column of that page\'s table, after its own columns (in a right-to-left report after its text column)', characters: c.expression.length, status: SVG_STATUS }, (r.svgSizes || {})[c.at.page] ? { imageWidth: r.svgSizes[c.at.page].w, imageHeight: r.svgSizes[c.at.page].h } : {}))
     .concat((SC || []).map((c) => ({ label: c.label, entity: c.t, shownAs: `the image of KPI card ${c.card} on every page`, characters: c.expression.length, status: SVG_STATUS })));
   const svgMeasures = svgList.length ? { svgMeasures: svgList } : {};
+  Object.assign(ra, { notes, numberFormats, svgList, svgMeasures });
+}
+// the SVG sizes, the small page, the subtitles, blank cards, bar charts, short days and rings said
+function pageNotesStep(ra) {
+  const { a, r, bind, reportNotes, boundPages, smallPageNote, tinyPage, subKeys, ringNumbers, svgList } = ra;
   // pictures narrowed so the table fits its box (never a scrollbar or a cut header)
   Object.entries(r.svgSizes || {}).filter(([, z]) => z.capped).forEach(([pi, z]) => reportNotes.push(`The SVG pictures in the table on "${boundPages[pi].name}" were narrowed to ${z.w} x ${z.h} (the widest design is ${z.design}) so the table fits its box. For the design's own size, give the table more room or fewer columns.`));
   // round 19 (the owner's choice B): a page under 800 wide takes the single-focus layout (the design engine's rule):
@@ -74,6 +100,10 @@ export function reportAnswer(x) {
   if ((r.ringsSmall || []).length) reportNotes.push(`The ring${r.ringsSmall.length === 1 ? '' : 's'} in the table (${[...new Set(r.ringsSmall.map((x) => x.label))].join(', ')}) ${r.ringsSmall.length === 1 ? 'is' : 'are'} drawn ${Math.max(...r.ringsSmall.map((x) => x.h))} high, too small for a number to be read, so ${r.ringsSmall.length === 1 ? 'it has' : 'they have'} no number inside: the measure's own column in the table carries the value (add it to fields.table where the table does not have it).`);   // (night of 6-7 Oct, seen in Desktop: a table without that column showed the value nowhere, and the note said it did)
   if (ringNumbers.length) reportNotes.push(`The ring${ringNumbers.length === 1 ? '' : 's'} on the KPI card${ringNumbers.length === 1 ? '' : 's'} (${ringNumbers.join(', ')}) ${ringNumbers.length === 1 ? 'has' : 'have'} no number inside: the card already shows the value, and two numbers read as two facts. A table picture keeps its number.`);
   if (svgList.length) reportNotes.push(`${svgList.length === 1 ? 'An SVG picture was' : svgList.length + ' SVG pictures were'} added (${svgList.map((c) => c.label).join(', ')}): each is a measure that exists only in this report (definition/reportExtensions.json); the model was not changed. This is ${SVG_STATUS}.`);
+}
+// the KPI values, the chart colours and axes, the slicers, flip cards, icons, the DAX library and waterfalls
+function looksStep(ra) {
+  const { m, r, reportNotes, FULL, flip, icons, daxR, englishNames, textKpis } = ra;
   // how the KPI cards show their numbers
   const kpiValues = { kpiValues: FULL
     ? { mode: 'full', note: 'The KPI cards show Power BI\'s own default, and the full number with thousand separators (101,914) where the measure\'s format has none; the value is smaller on narrow cards so nine digits fit.' }
@@ -105,6 +135,11 @@ export function reportAnswer(x) {
   (r.waterfallRtl || []).forEach((x) => reportNotes.push(`The waterfall${x.title ? ` "${visible(x.title)}"` : ''} on "${visible(x.page)}": ${x.written === 'columnChart' ? x.what : x.what + (x.why ? ` (${x.why})` : '')}.`));
   if (englishNames.size) reportNotes.push(`${[...englishNames].join(', ')} ${englishNames.size === 1 ? 'shows' : 'show'} the calendar's own names, English unless the calendar was made in Arabic: add the Gulf calendar's Arabic name columns to show Arabic day and month names (add_gulf_calendar writes them, as does the Calendar Generator's "Add Arabic name columns"), then create the report again.`);
   reportNotes.push('How the KPI cards show their numbers: ' + CARD_RULE + (textKpis.length ? '' : ''));
+  Object.assign(ra, { kpiValues, chartColors, chartAxes, looks, daxFirst });
+}
+// the time axes, Top N, blanks, accessibility, tooltips, formats, row labels and the tables said
+function axesStep(ra) {
+  const { a, r, bind, reportNotes, boundPages, textKpis, slicersDropped, byFlagDay } = ra;
   // 0.2.9 part 2 (the owner's own test of 0.2.8): what the report does to its axes, tables and tooltips, said once
   (r.timeAxes || []).forEach((x) => reportNotes.push(`The line chart by ${visible(x.field)} on "${x.page}" is in time order by the month's first date (a report-level measure, "Month start (sort)", from ${visible(x.by)}; the model's column has no sort column)${x.last ? `, and shows the last ${x.last} months with data (a visual filter: clear it in the Filters pane for the whole history)` : ''}.`));
   // (the cross-review's G13: said only where a chart got the filter)
@@ -140,6 +175,10 @@ export function reportAnswer(x) {
   // days and months put in calendar order in a table by a helper column (round 12, #17)
   if ((r.tableOrder || []).length) reportNotes.push(`${[...new Set(r.tableOrder.map((x) => x.field))].join(', ')} ${r.tableOrder.length === 1 ? 'is' : 'are'} in calendar order in the table${r.tableOrder.length === 1 ? '' : 's'} too (by ${[...new Set(r.tableOrder.map((x) => x.by))].join(', ')}, the same order as the charts): the model gives ${r.tableOrder.length === 1 ? 'it' : 'them'} no sort-by column, so each table carries the number in a narrow column with no header, in the card colour. Setting the sort-by column in the model (check_model_health, fixes.MONTH_SORT) orders slicers too.`);
   // visuals left out because the model has no field for them (never written empty)
+}
+// the report language, renamed measures, the visuals left out and the tables' columns
+function leftOutStep(ra) {
+  const { a, m, r, bind, reportNotes, modelNames, F } = ra;
   const WHY = { funnel: 'a funnel shows an amount, and the model has no measure that is not a ratio or a percent', slicer: 'the model has no more text columns a slicer can use', line: bind && !bind.measure ? 'the model has no measure for it' : bind && bind.noRelatedCalendar ? (bind.noRelatedCalendar.kind === 'date' ? `no date column is related to ${visible(bind.noRelatedCalendar.measure.t)}: the date column${bind.noRelatedCalendar.tables.length === 1 ? '' : 's'} of ${bind.noRelatedCalendar.tables.map(visible).join(', ')} ${bind.noRelatedCalendar.tables.length === 1 ? 'is' : 'are'} not reached from ${visible(bind.noRelatedCalendar.measure.t)}[${visible(bind.noRelatedCalendar.measure.m)}]; add a calendar related to ${visible(bind.noRelatedCalendar.measure.t)} (add_gulf_calendar writes one) for a trend` : `no calendar is related to ${visible(bind.noRelatedCalendar.measure.t)}: the model's calendar${bind.noRelatedCalendar.tables.length === 1 ? '' : 's'} (${bind.noRelatedCalendar.tables.map(visible).join(', ')}) ${bind.noRelatedCalendar.tables.length === 1 ? 'is' : 'are'} not reached from ${visible(bind.noRelatedCalendar.measure.t)}[${visible(bind.noRelatedCalendar.measure.m)}]; add the relationship (a date column of ${visible(bind.noRelatedCalendar.measure.t)} to the calendar's date) for a trend`): 'the model has no month or date column for its axis', table: 'no field was found for it', matrix: 'it needs a text column and a measure', gauge: 'the model has no measure for it', card: 'the model has no measure for it' };
   const KIND = { slicer: 'Slicer', line: 'Line chart', bar: 'Bar chart', column: 'Column chart', donut: 'Donut chart', funnel: 'Funnel', treemap: 'Treemap', map: 'Map', table: 'Table', matrix: 'Matrix', gauge: 'Gauge', card: 'Card' };
   // (round 22b, the outside review's X-04) no category is related to the main measure: the charts that need one are left out
@@ -169,6 +208,11 @@ export function reportAnswer(x) {
   const TC = r.tableColumns || [], fkey = (f) => `${f.t}[${f.c != null ? f.c : f.m}]`;
   const tableColumns = TC.length ? { tableColumns: TC.map((c) => ({ page: c.page, shown: c.kept.length, leftOut: c.leftOut.map(fkey) })) } : {};
   if (TC.length) reportNotes.push(`Fields were left out of the table on ${TC.map((c) => `"${c.page}" (${c.leftOut.map(fkey).join(', ')})`).join('; ')}: at this page size the table has room for ${[...new Set(TC.map((c) => c.kept.length))].join(' or ')} columns, and a table wider than its box hides columns behind a scrollbar. For the fields left out: a wider table slot, a larger page, shorter display names, or fewer fields in fields.table.`);
+  Object.assign(ra, { leftOutList, tableColumns });
+}
+// the tabs, the page buttons, the KPI and chart titles, the display names and the Arabic names
+function titlesStep(ra) {
+  const { a, r, bind, given, reportNotes, fieldsOf, TT } = ra;
   // page tabs in two rows (round 16, the owner's yes on design finding #13)
   if ((r.chartTops || []).length) reportNotes.push(`${r.chartTops.length === 1 ? 'A chart shows' : `${r.chartTops.length} charts show`} the top ${[...new Set(r.chartTops.map((x) => x.top))].join(' or ')} of ${[...new Set(r.chartTops.map((x) => visible(x.field)))].join(', ')} by the measure, as the title says: the chart holds that many; the rest is in the table, the slicers and the filter pane.`);
   if ((r.tabRows || []).length) reportNotes.push(`The page tabs take ${[...new Set(r.tabRows.map((x) => x.rows))].join(' or ')} rows at ${[...new Set(r.tabRows.map((x) => x.size + 'pt'))].join(' or ')} on ${r.tabRows.length === 1 ? 'one page' : r.tabRows.length + ' pages'}: the page names fit one row only at a smaller size, and two rows read better; nothing is cut.`);
@@ -190,6 +234,13 @@ export function reportAnswer(x) {
   const missing = a.lang === 'ar' ? uniqueFields(fieldsOf(bind).filter((f) => !f.name && !/[\u0600-\u06FF]/.test(f.c != null ? f.c : f.m))).map((x) => x.key) : null;
   const arabic = a.lang === 'ar' ? { arabicNames: { shownFields: shown.length, missing,
     how: missing.length ? 'These fields show under their model names. To show Arabic names, call create_report again with displayNames: { "Table[Field]": "الاسم" } for each (propose names, show them to the user, and pass only the ones they approve or edit: never show a name the user has not approved). The model is not renamed.' : 'Every field the report shows has an Arabic name.' } } : {};
+  Object.assign(ra, { pageButtons, chartTitles, kpiTitles, shown, names, arabic });
+}
+// the answer object, the formats first
+function answerStep(ra) {
+  const { m, r, fmt, projectCheck, extra, unknown, sc, designRepaired, reportNotes, kpiCards, PF, galleryList, SW,
+      CO, barThickness, panels, notes, numberFormats, svgMeasures, kpiValues, chartColors, chartAxes, looks,
+      daxFirst, leftOutList, tableColumns, pageButtons, chartTitles, kpiTitles, shown, names, arabic } = ra;
   // formats fixed at the source: said first, with the script (the report already shows the right formats)
   const formats = fmt ? { formats: Object.assign({ sayFirst: `Tell the user first: ${fmt.fields.length} of the report's fields ${fmt.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). The report already shows them right: the cards, the tooltip's card and the tables carry the right format of their own. Applying the script sets them in the model too, so every other visual, Excel and other reports show them right.` }, fmt) } : {};
   return Object.assign(daxFirst, formats, { written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, projectCheck ? { check: Object.assign({ tellUser: 'Checked before it was written (the measured rules of what Power BI Desktop draws, and the layout check). Tell the user the summary; when it lists problems, say each one with its fix.' }, projectCheck) } : {}, extra, { panels },

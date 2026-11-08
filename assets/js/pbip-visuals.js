@@ -197,110 +197,155 @@
     let pending = null;   // (this table's row label, for its own column widths: Tb.fix reads it with the report's)
     let visual, box = s, vFilters = null, tableH = null;   // (tableH: a table's whole-row height inside its panel, S3 with the design's N6)   // (vFilters: the visual's own filters, from fixVisual; the cross-review's G12)
     let hov = null;   // a chart's own measure and category, for its tooltip page (the second sweep's T4 and T5)
+    const vc = { x, o, u, W, font, base, lang, logoFile, NODATA, B, own, chartTitles, s, kpiIndex, pg, rtl, align,
+        rowLabels, noDataSkipped, LABEL, SOLID, TITLE, boxFit, centred, frame, pt, textbox, titleFit, out, note,
+        sink, tc, type, pending, visual, box, vFilters, tableH, hov };
     if (s.kind === 'title') {
-      // the title and the logo text follow the header's height (within 8-60pt), and stay on one line in it, with
-      // the text's middle at the header's (see centred)
-      const size = Math.min(pt((s.textH || s.h) * 0.42), boxFit(s.textH || s.h));
-      box = centred(s, size);
-      visual = { visualType: 'textbox', objects: textbox(shown(o.title || base), size, true, u.text), visualContainerObjects: frame(null, o.title || base) };
+      titleStep(vc);
     } else if (s.kind === 'logo') {
-      // image.fit 'Fit' keeps the logo's own ratio and shows it whole; the old imageScaling 'Fit' stretched it to the
-      // box (measured in Desktop 2.158). The box itself has the logo's shape (the design engine, logoRatio).
-      const size = Math.min(pt((s.textH || s.h) * 0.3), boxFit(s.textH || s.h));
-      // (round 12, #30: the Tahoma placeholder sat 2.6 to 3.4 below the header's middle, measured in Desktop 2.158,
-      // round 11 (D15): it is drawn 3 higher)
-      // (0.2.9, O-6 of the owner's test of 0.2.8: "Your logo" stayed in a finished report's header): no placeholder
-      // where the caller says so (create_report); the website's template download keeps it for the user to replace
-      if (!logoFile && o.logoPlaceholder === false) return Object.assign(out, { skip: true });
-      if (!logoFile) { box = centred(s, size); if (/^tahoma/i.test(font) && box.y > s.y) { const up = Math.min(3, box.y - s.y); box = { y: box.y - up, h: box.h + up }; } }
-      visual = logoFile
-        ? { visualType: 'image', objects: { general: obj({ imageUrl: resource(logoFile) }), image: obj({ fit: str('Fit') }) }, visualContainerObjects: frame(null, W.logo || 'Logo') }
-        // the placeholder until a logo is added: sized to the header slot, in the secondary text colour so it reads
-        // (round 12, #30: aligned to the page's edge, the side the logo will take: right in English, left in Arabic;
-        // "شعارك" started 150 in from the edge, seen in Desktop 2.158, round 11)
-        : { visualType: 'textbox', objects: textbox(W.logoHere || 'Your logo', size, false, mixHex(u.text, u.card, 0.3), rtl ? 'left' : 'right'), visualContainerObjects: frame(null, W.logo || 'Logo') };
+      { const ret = logoStep(vc); if (ret !== undefined) return ret; }
     } else if (s.kind === 'text') {
-      // (round 13, seen in Desktop on 6 Oct, "R12 text EN": the sentence at 11pt on a 1920 x 1080 page read like a
-      // footnote at the top of a tall panel: a given text is written at the theme's label size for the page, 11 at least)
-      // (round 12, #20: the slot's own text when the caller gives one, s.text; the placeholder is for the website's
-      // template download only: create_report leaves the box out when it has no text for it)
-      visual = { visualType: 'textbox', objects: textbox(s.text != null ? String(s.text) : W.textHere || 'Explain what the main chart shows and what to do about it.', s.text != null ? Math.max(11, LABEL) : 11, false, u.text), visualContainerObjects: frame(s.title, s.title, null, true) };
+      textStep(vc);
     } else {
-      // a table keeps only the fields its width has room for (pbip-visuals-tables.js prepare); Bt is the bind this visual is
-      // written from, and each chart's category, measure and axis (pbip-visuals-charts.js prepare)
-      let { Bt, tableText, smallEntry } = Tb.prepare(x, { Bt: B }, sink);
-      Bt = Ch.prepare(x, { Bt }, sink);
-      const query = B ? (isGallery(s.kind) ? G.bindQuery(s.kind, Bt) : bindQuery(s.kind, Bt, kpiIndex, rtl)) : null;
-      hov = Ch.hover(s.kind, B, Bt);
-      let ttl = s.title;
-      const extra = {};
-      // (round 10: the sample download names its charts by their fields too, "Total Revenue by Month", as a report on a
-      // user's model does; before, it kept the layout's role names, "Main trend")
-      // (0.3, J4: the story title, story-titles.js: every form its rules allow, the full one first; a gallery visual
-      // (0.3, J8) keeps its own title, visual-gallery.js)
-      const story = B && query && !isGallery(s.kind) ? bindStory(s.kind, Bt, W.by || 'by') : null;
-      if (story) ttl = story[0].text;
-      else if (B && query && isGallery(s.kind)) ttl = G.title(s.kind, Bt, W.by || 'by') || ttl;
-      // (rc1: a chart cut to its top N says so in its title, as the tooltip page's "Top 6")
-      let topOf = null, topLead = '', tail = '', told = null;
-      // (0.3.1 TT1, the owner, 27 Oct: a title is wholly Arabic or wholly English) its «أعلى» / "Top" and its «التفاصيل» /
-      // "detail" are in the title's language, not the report's: "Top 6: Total Sales by Region" in an Arabic report too
-      const arT = AR_LETTERS.test(ttl || '');
-      { const top = B && query ? Ch.topCount(tc, s, pg, Ch.catOf(Bt, query)) : 0; if (top && ttl) { topLead = (arT ? 'أعلى ' : 'Top ') + top + ': '; topOf = { n: top, cat: Ch.catOf(Bt, query), y: query.queryState.Y.projections[0].field }; } }
-      if ((s.kind === 'table' || s.kind === 'matrix') && ttl && chartTitles.has(ttl)) tail = ': ' + (arT ? (W.detail && AR_LETTERS.test(W.detail) ? W.detail : 'التفاصيل') : (W.detail && !AR_LETTERS.test(W.detail) ? W.detail : 'detail'));   // (round 14: in the title's own script)
-      // (0.3, J4, B-131: a long title was cut at a word, "...حسب قناة البيع المستخدمة في…") the first form whose title
-      // fits its box on two lines, with its "Top 999 of 999: " (the report measure's longest lead) and its ": detail";
-      // the writer's word cut below is left for a title no rule shortens enough
-      if (story && s.kind !== 'kpi' && s.kind !== 'card') {
-        const room = s.w - 2 * Math.round(16 * pg.page.h / 1080), lead = topOf ? (arT ? 'أعلى 999 من 999: ' : 'Top 999 of 999: ') : '';
-        told = ST.fit(story, (t) => titleFit(lead + t + tail, TITLE, room).mode !== 'shortened'); ttl = told.text;
-      }
-      if (ttl) ttl = topLead + ttl + tail;
-      // (0.3, J4, the owner's decision of 19 Oct: the alt text is the FULL story title, never the fitted one; a screen
-      // reader has no box to fit)
-      const altFull = story && ttl && s.kind !== 'kpi' ? topLead + story[0].text + tail : null;
-      if (s.kind === 'kpi') { if (B && query) ttl = kpiLabel(B.kpis[kpiIndex], W.by); }
-      // KPI names read as labels: semibold, so the number below stays the hero
-      if (s.kind === 'kpi') extra.title = obj({ show: bool(true), text: str(shown(ttl)), alignment: str(align), bold: bool(true) });
-      // a visual that shows data is never written without its fields (Microsoft's validator: PBIR_QUERY_STATE_MISSING;
-      // Desktop shows an empty box): on a user's own model it is left out and told (leftOut). The KPI cards are
-      // counted by the caller.
-      if (B && own && !query && (CHARTS.includes(s.kind) || isGallery(s.kind) || ['table', 'matrix', 'gauge', 'card'].includes(s.kind))) { note('leftOut', { page: pg.name || base, kind: s.kind, title: s.title || null }); return Object.assign(out, { skip: true }); }
-      visual = { visualType: type, visualContainerObjects: frame(ttl, altFull || ttl, extra, true), drillFilterOtherVisuals: true };
-      if (query) visual.query = query;
-      // the charts' own formatting (pbip-visuals-charts.js format)
-      const toMirror = Ch.format(x, { visual, query, Bt, ttl }, sink);
-      // Round 21 (the capabilities lab's #2, Desktop 2.158, 7 Oct 2026: one small line under the title, shaped right in
-      // Arabic, kept on Save): a subtitle from the approved plan only (o.subtitles: a slot's plan role, English or
-      // Arabic, or a hand-placed slot's title -> its text); the writer never makes one up
-      // (round 22, the code review's b, measured in Desktop 2.158.1304 on 7 Oct: on a planned KPI card the subtitle's line
-      // pushes the value down and cuts it in half, the card is sized for a title and a value: never on a card. The keys
-      // used are reported, subtitlesUsed, so the caller can say which were not)
-      if (o.subtitles && ttl && visual.visualContainerObjects && s.kind !== 'kpi' && s.kind !== 'card') { const key = [].concat(s.role || [], s.title || []).find((k) => typeof o.subtitles[k] === 'string' && o.subtitles[k].trim());
-        if (key != null) { visual.visualContainerObjects.subTitle = obj({ show: bool(true), text: str(o.subtitles[key].trim()) }); note('subtitlesUsed', key); } }
-      // Round 12 (#24; seen in Desktop 2.158, 5 Oct 2026: long Arabic chart titles and a slicer header were cut at their
-      // start, "...عات حسب اسم الفرع التجاري الرئيسي", so the measure's name was lost). A chart's or table's title too
-      // long for one line wraps to two (titleWrap, as a KPI title does), and one too long for two lines is shortened at a
-      // word with "…" at its end, so it still begins with the measure's name; the full title stays the alt text. The
-      // room: the visual's width less 16 a side (1920 x 1080, scaled); the theme's title size, measured as bold.
-      if (s.kind !== 'kpi' && s.kind !== 'card' && ttl) {
-        const tf = titleFit(ttl, TITLE, s.w - 2 * Math.round(16 * pg.page.h / 1080)), tp = visual.visualContainerObjects.title[0].properties;
-        // (0.3.0 D2: a gallery visual had no story entry, so two charts that read the same were numbered "(2)") its measure
-        // and axis as its title says them, and its kind's word for a page where no other sentence is left
-        const gs = !told && B && query && isGallery(s.kind) ? G.storyOf(s.kind, Bt, W.by || 'by') : null;
-        out.fitted = { ttl, avail: s.w - 2 * Math.round(16 * pg.page.h / 1080), page: pg.name || base, top: topOf, story: told ? { m: told.m, c: told.c, ranked: !!topOf, full: story[0], alt: story[0].text + tail }
-          : gs ? { m: gs.m, c: gs.c, ranked: false, full: { m: gs.m, c: gs.c }, alt: ttl, tail: gs.tail } : null };
-        if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); note('titles.' + tf.mode, out.fitted.entry = { page: pg.name || base, title: ttl, shown: tf.shown }); }
-      }
-      // the cards' formatting (pbip-visuals-tables.js card)
-      Tb.card(x, { visual, query, ttl, type }, sink);
-      // the tables' formatting, their row labels, pictures and whole rows (pbip-visuals-tables.js format)
-      ({ tableH, pending } = Tb.format(x, { visual, query, Bt, tableText, smallEntry, box }, sink));
-      // the fixes once the fields are written: the charts' filters, bars and axes, the tables' column widths (with this
-      // table's own row label: pending), then a mirrored report's charts turned
-      if (B && visual && visual.query) { vFilters = Ch.fix(x, { visual, Bt }, sink); Tb.fix(x, { visual, Bt, tt: tableText, rowLabels: pending ? rowLabels.concat(pending) : rowLabels }, sink); }
-      if (toMirror && visual && visual.query) Ch.mirror(x, { visual }, sink);
+      { const ret = chartTitleStep(vc); if (ret !== undefined) return ret; }
+      chartFormatStep(vc);
     }
+    noDataStep(vc);
+    return panelStep(vc);
+  }
+  // the header's title, on one line at the header's middle
+  function titleStep(vc) {
+    const { o, u, base, s, boxFit, centred, frame, pt, textbox } = vc;
+    let { visual, box } = vc;
+    // the title and the logo text follow the header's height (within 8-60pt), and stay on one line in it, with
+    // the text's middle at the header's (see centred)
+    const size = Math.min(pt((s.textH || s.h) * 0.42), boxFit(s.textH || s.h));
+    box = centred(s, size);
+    visual = { visualType: 'textbox', objects: textbox(shown(o.title || base), size, true, u.text), visualContainerObjects: frame(null, o.title || base) };
+    Object.assign(vc, { visual, box });
+  }
+  // the header's logo, or its placeholder (none where the caller says so)
+  function logoStep(vc) {
+    const { o, u, W, font, logoFile, s, rtl, boxFit, centred, frame, pt, textbox, out } = vc;
+    let { visual, box } = vc;
+    // image.fit 'Fit' keeps the logo's own ratio and shows it whole; the old imageScaling 'Fit' stretched it to the
+    // box (measured in Desktop 2.158). The box itself has the logo's shape (the design engine, logoRatio).
+    const size = Math.min(pt((s.textH || s.h) * 0.3), boxFit(s.textH || s.h));
+    // (round 12, #30: the Tahoma placeholder sat 2.6 to 3.4 below the header's middle, measured in Desktop 2.158,
+    // round 11 (D15): it is drawn 3 higher)
+    // (0.2.9, O-6 of the owner's test of 0.2.8: "Your logo" stayed in a finished report's header): no placeholder
+    // where the caller says so (create_report); the website's template download keeps it for the user to replace
+    if (!logoFile && o.logoPlaceholder === false) return Object.assign(out, { skip: true });
+    if (!logoFile) { box = centred(s, size); if (/^tahoma/i.test(font) && box.y > s.y) { const up = Math.min(3, box.y - s.y); box = { y: box.y - up, h: box.h + up }; } }
+    visual = logoFile
+      ? { visualType: 'image', objects: { general: obj({ imageUrl: resource(logoFile) }), image: obj({ fit: str('Fit') }) }, visualContainerObjects: frame(null, W.logo || 'Logo') }
+      // the placeholder until a logo is added: sized to the header slot, in the secondary text colour so it reads
+      // (round 12, #30: aligned to the page's edge, the side the logo will take: right in English, left in Arabic;
+      // "شعارك" started 150 in from the edge, seen in Desktop 2.158, round 11)
+      : { visualType: 'textbox', objects: textbox(W.logoHere || 'Your logo', size, false, mixHex(u.text, u.card, 0.3), rtl ? 'left' : 'right'), visualContainerObjects: frame(null, W.logo || 'Logo') };
+    Object.assign(vc, { visual, box });
+  }
+  // a text box: the slot's own text, or the template's placeholder
+  function textStep(vc) {
+    const { u, W, s, LABEL, frame, textbox } = vc;
+    let { visual } = vc;
+    // (round 13, seen in Desktop on 6 Oct, "R12 text EN": the sentence at 11pt on a 1920 x 1080 page read like a
+    // footnote at the top of a tall panel: a given text is written at the theme's label size for the page, 11 at least)
+    // (round 12, #20: the slot's own text when the caller gives one, s.text; the placeholder is for the website's
+    // template download only: create_report leaves the box out when it has no text for it)
+    visual = { visualType: 'textbox', objects: textbox(s.text != null ? String(s.text) : W.textHere || 'Explain what the main chart shows and what to do about it.', s.text != null ? Math.max(11, LABEL) : 11, false, u.text), visualContainerObjects: frame(s.title, s.title, null, true) };
+    Object.assign(vc, { visual });
+  }
+  // a card, chart or table: its fields, query, story title with its Top N and detail, alt text (left out without fields)
+  function chartTitleStep(vc) {
+    const { x, W, base, B, own, chartTitles, s, kpiIndex, pg, rtl, align, TITLE, titleFit, out, note, sink, tc } = vc;
+    let { hov } = vc;
+    // a table keeps only the fields its width has room for (pbip-visuals-tables.js prepare); Bt is the bind this visual is
+    // written from, and each chart's category, measure and axis (pbip-visuals-charts.js prepare)
+    let { Bt, tableText, smallEntry } = Tb.prepare(x, { Bt: B }, sink);
+    Bt = Ch.prepare(x, { Bt }, sink);
+    const query = B ? (isGallery(s.kind) ? G.bindQuery(s.kind, Bt) : bindQuery(s.kind, Bt, kpiIndex, rtl)) : null;
+    hov = Ch.hover(s.kind, B, Bt);
+    let ttl = s.title;
+    const extra = {};
+    // (round 10: the sample download names its charts by their fields too, "Total Revenue by Month", as a report on a
+    // user's model does; before, it kept the layout's role names, "Main trend")
+    // (0.3, J4: the story title, story-titles.js: every form its rules allow, the full one first; a gallery visual
+    // (0.3, J8) keeps its own title, visual-gallery.js)
+    const story = B && query && !isGallery(s.kind) ? bindStory(s.kind, Bt, W.by || 'by') : null;
+    if (story) ttl = story[0].text;
+    else if (B && query && isGallery(s.kind)) ttl = G.title(s.kind, Bt, W.by || 'by') || ttl;
+    // (rc1: a chart cut to its top N says so in its title, as the tooltip page's "Top 6")
+    let topOf = null, topLead = '', tail = '', told = null;
+    // (0.3.1 TT1, the owner, 27 Oct: a title is wholly Arabic or wholly English) its «أعلى» / "Top" and its «التفاصيل» /
+    // "detail" are in the title's language, not the report's: "Top 6: Total Sales by Region" in an Arabic report too
+    const arT = AR_LETTERS.test(ttl || '');
+    { const top = B && query ? Ch.topCount(tc, s, pg, Ch.catOf(Bt, query)) : 0; if (top && ttl) { topLead = (arT ? 'أعلى ' : 'Top ') + top + ': '; topOf = { n: top, cat: Ch.catOf(Bt, query), y: query.queryState.Y.projections[0].field }; } }
+    if ((s.kind === 'table' || s.kind === 'matrix') && ttl && chartTitles.has(ttl)) tail = ': ' + (arT ? (W.detail && AR_LETTERS.test(W.detail) ? W.detail : 'التفاصيل') : (W.detail && !AR_LETTERS.test(W.detail) ? W.detail : 'detail'));   // (round 14: in the title's own script)
+    // (0.3, J4, B-131: a long title was cut at a word, "...حسب قناة البيع المستخدمة في…") the first form whose title
+    // fits its box on two lines, with its "Top 999 of 999: " (the report measure's longest lead) and its ": detail";
+    // the writer's word cut below is left for a title no rule shortens enough
+    if (story && s.kind !== 'kpi' && s.kind !== 'card') {
+      const room = s.w - 2 * Math.round(16 * pg.page.h / 1080), lead = topOf ? (arT ? 'أعلى 999 من 999: ' : 'Top 999 of 999: ') : '';
+      told = ST.fit(story, (t) => titleFit(lead + t + tail, TITLE, room).mode !== 'shortened'); ttl = told.text;
+    }
+    if (ttl) ttl = topLead + ttl + tail;
+    // (0.3, J4, the owner's decision of 19 Oct: the alt text is the FULL story title, never the fitted one; a screen
+    // reader has no box to fit)
+    const altFull = story && ttl && s.kind !== 'kpi' ? topLead + story[0].text + tail : null;
+    if (s.kind === 'kpi') { if (B && query) ttl = kpiLabel(B.kpis[kpiIndex], W.by); }
+    // KPI names read as labels: semibold, so the number below stays the hero
+    if (s.kind === 'kpi') extra.title = obj({ show: bool(true), text: str(shown(ttl)), alignment: str(align), bold: bool(true) });
+    // a visual that shows data is never written without its fields (Microsoft's validator: PBIR_QUERY_STATE_MISSING;
+    // Desktop shows an empty box): on a user's own model it is left out and told (leftOut). The KPI cards are
+    // counted by the caller.
+    if (B && own && !query && (CHARTS.includes(s.kind) || isGallery(s.kind) || ['table', 'matrix', 'gauge', 'card'].includes(s.kind))) { note('leftOut', { page: pg.name || base, kind: s.kind, title: s.title || null }); return Object.assign(out, { skip: true }); }
+    Object.assign(vc, { hov, Bt, tableText, smallEntry, query, ttl, extra, story, topOf, tail, told, altFull });
+  }
+  // the visual: its subtitle, its title fitted, the charts', cards' and tables' formatting and fixes, the mirror
+  function chartFormatStep(vc) {
+    const { x, o, W, base, B, s, pg, rowLabels, TITLE, frame, titleFit, out, note, sink, type, box, Bt, tableText,
+        smallEntry, query, ttl, extra, story, topOf, tail, told, altFull } = vc;
+    let { pending, visual, vFilters, tableH } = vc;
+    visual = { visualType: type, visualContainerObjects: frame(ttl, altFull || ttl, extra, true), drillFilterOtherVisuals: true };
+    if (query) visual.query = query;
+    // the charts' own formatting (pbip-visuals-charts.js format)
+    const toMirror = Ch.format(x, { visual, query, Bt, ttl }, sink);
+    // Round 21 (the capabilities lab's #2, Desktop 2.158, 7 Oct 2026: one small line under the title, shaped right in
+    // Arabic, kept on Save): a subtitle from the approved plan only (o.subtitles: a slot's plan role, English or
+    // Arabic, or a hand-placed slot's title -> its text); the writer never makes one up
+    // (round 22, the code review's b, measured in Desktop 2.158.1304 on 7 Oct: on a planned KPI card the subtitle's line
+    // pushes the value down and cuts it in half, the card is sized for a title and a value: never on a card. The keys
+    // used are reported, subtitlesUsed, so the caller can say which were not)
+    if (o.subtitles && ttl && visual.visualContainerObjects && s.kind !== 'kpi' && s.kind !== 'card') { const key = [].concat(s.role || [], s.title || []).find((k) => typeof o.subtitles[k] === 'string' && o.subtitles[k].trim());
+      if (key != null) { visual.visualContainerObjects.subTitle = obj({ show: bool(true), text: str(o.subtitles[key].trim()) }); note('subtitlesUsed', key); } }
+    // Round 12 (#24; seen in Desktop 2.158, 5 Oct 2026: long Arabic chart titles and a slicer header were cut at their
+    // start, "...عات حسب اسم الفرع التجاري الرئيسي", so the measure's name was lost). A chart's or table's title too
+    // long for one line wraps to two (titleWrap, as a KPI title does), and one too long for two lines is shortened at a
+    // word with "…" at its end, so it still begins with the measure's name; the full title stays the alt text. The
+    // room: the visual's width less 16 a side (1920 x 1080, scaled); the theme's title size, measured as bold.
+    if (s.kind !== 'kpi' && s.kind !== 'card' && ttl) {
+      const tf = titleFit(ttl, TITLE, s.w - 2 * Math.round(16 * pg.page.h / 1080)), tp = visual.visualContainerObjects.title[0].properties;
+      // (0.3.0 D2: a gallery visual had no story entry, so two charts that read the same were numbered "(2)") its measure
+      // and axis as its title says them, and its kind's word for a page where no other sentence is left
+      const gs = !told && B && query && isGallery(s.kind) ? G.storyOf(s.kind, Bt, W.by || 'by') : null;
+      out.fitted = { ttl, avail: s.w - 2 * Math.round(16 * pg.page.h / 1080), page: pg.name || base, top: topOf, story: told ? { m: told.m, c: told.c, ranked: !!topOf, full: story[0], alt: story[0].text + tail }
+        : gs ? { m: gs.m, c: gs.c, ranked: false, full: { m: gs.m, c: gs.c }, alt: ttl, tail: gs.tail } : null };
+      if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); note('titles.' + tf.mode, out.fitted.entry = { page: pg.name || base, title: ttl, shown: tf.shown }); }
+    }
+    // the cards' formatting (pbip-visuals-tables.js card)
+    Tb.card(x, { visual, query, ttl, type }, sink);
+    // the tables' formatting, their row labels, pictures and whole rows (pbip-visuals-tables.js format)
+    ({ tableH, pending } = Tb.format(x, { visual, query, Bt, tableText, smallEntry, box }, sink));
+    // the fixes once the fields are written: the charts' filters, bars and axes, the tables' column widths (with this
+    // table's own row label: pending), then a mirrored report's charts turned
+    if (B && visual && visual.query) { vFilters = Ch.fix(x, { visual, Bt }, sink); Tb.fix(x, { visual, Bt, tt: tableText, rowLabels: pending ? rowLabels.concat(pending) : rowLabels }, sink); }
+    if (toMirror && visual && visual.query) Ch.mirror(x, { visual }, sink);
+    Object.assign(vc, { visual, vFilters, tableH });
+  }
+  // Round 19: the "No data for this selection" measure where the visual's measure is blank
+  function noDataStep(vc) {
+    const { W, base, lang, NODATA, s, pg, noDataSkipped, out, note, visual, tableH } = vc;
     // Round 19 (the owner's idea, 6 Oct 2026): "No data for this selection" where the visual's measure is blank. A
     // report-level measure (reportExtensions.json, the model untouched) gives the text only when the measure is blank,
     // and "" otherwise; a card shows it in the same box one layer below (a lower z), with the panel's look (the theme's
@@ -328,6 +373,10 @@
         if (tableH) visual.visualContainerObjects.dropShadow = obj({ show: bool(false) });
       }
     }
+  }
+  // the panel behind a table shorter than its slot, and the builder's output
+  function panelStep(vc) {
+    const { NODATA, SOLID, out, visual, box, vFilters, tableH, hov } = vc;
     // (S3 + N6) a table shorter than its slot: the panel at the slot's height behind it, the "No data" card where the
     // report has one (above, at the slot's box), else an empty text box, which the theme draws as a panel (measured,
     // round 1), on a solid theme; a transparent theme's panel is the page's background picture. The table keeps its
