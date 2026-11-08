@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-08T19:02Z",
+  "generated_at": "2026-11-08T19:57Z",
   "today": {
     "date": "2026-11-08",
-    "cost_usd": 139.38,
-    "tokens": 472623238,
-    "sessions": 29,
+    "cost_usd": 160.42,
+    "tokens": 531948148,
+    "sessions": 35,
     "by_kind": {
       "builder": {
-        "cost_usd": 69.05,
-        "count": 9
+        "cost_usd": 73.88,
+        "count": 11
       },
       "worker": {
-        "cost_usd": 69.18,
-        "count": 16
+        "cost_usd": 85.39,
+        "count": 20
       },
       "probe": {
         "cost_usd": 1.15,
@@ -26,12 +26,12 @@
     },
     "by_model": {
       "sonnet": {
-        "cost_usd": 36.4,
-        "count": 10
+        "cost_usd": 36.82,
+        "count": 11
       },
       "opus": {
-        "cost_usd": 102.98,
-        "count": 19
+        "cost_usd": 123.6,
+        "count": 24
       }
     }
   },
@@ -116,12 +116,30 @@
     },
     {
       "date": "2026-11-08",
-      "cost_usd": 139.38,
-      "tokens": 472623238,
-      "sessions": 29
+      "cost_usd": 160.42,
+      "tokens": 531948148,
+      "sessions": 35
     }
   ],
   "jobs": [
+    {
+      "id": "BF3",
+      "title": "BF3: the build page says exactly what it sends (Codex release-delta)",
+      "model": "sonnet",
+      "cost_usd": 0.42,
+      "tokens": 1490574,
+      "minutes": 16,
+      "finished_at": "2026-11-08T18:43Z"
+    },
+    {
+      "id": "DD2W",
+      "title": "DD2W: one toast and one copy helper for the website pages (Phase 2)",
+      "model": "opus",
+      "cost_usd": 4.41,
+      "tokens": 11905307,
+      "minutes": 41,
+      "finished_at": "2026-11-08T17:09Z"
+    },
     {
       "id": "RV1",
       "title": "RV1: every validation error capped; the two promises say what the code does (B-392, B-393)",
@@ -205,8 +223,8 @@
     }
   ],
   "workers": {
-    "count": 16,
-    "cost_usd": 69.18,
+    "count": 20,
+    "cost_usd": 85.39,
     "costliest": [
       {
         "label": "cleanup",
@@ -221,10 +239,10 @@
         "started": "2026-11-08T08:49Z"
       },
       {
-        "label": "worker 10:53",
-        "cost_usd": 5.36,
-        "minutes": 57,
-        "started": "2026-11-08T10:54Z"
+        "label": "worker 19:36",
+        "cost_usd": 9.26,
+        "minutes": 18,
+        "started": "2026-11-08T19:36Z"
       }
     ]
   },
@@ -250,9 +268,9 @@
       "cost_usd": 15.67
     },
     {
-      "label": "worker 08:50",
+      "label": "worker 19:36",
       "kind": "worker",
-      "cost_usd": 7.22
+      "cost_usd": 9.26
     }
   ]
 }
