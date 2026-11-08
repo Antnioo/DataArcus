@@ -15,7 +15,7 @@ const NAMES = {
   en: { m: ['Total Sales', 'Orders', 'Total Sales Amount Including Every Regional Adjustment', 'Margin %', 'Ret\turns'], c: ['City', 'Channel', 'Segment', 'Product Category Long Name', 'Store'] },
   ar: { m: ['إجمالي المبيعات', 'الطلبات', 'إجمالي المبيعات بعد كل التعديلات الإقليمية والخصومات', 'الهامش', 'المرتجعات'], c: ['المدينة', 'القناة', 'الشريحة', 'فئة المنتج الطويلة', 'المتجر'] }
 };
-const KINDS = ['kpi', 'card', 'bar', 'column', 'line', 'donut', 'table', 'matrix', 'gauge', 'funnel', 'treemap', 'map', 'text', 'bar', 'column', 'table'];
+const KINDS = ['kpi', 'card', 'bar', 'column', 'line', 'donut', 'table', 'matrix', 'gauge', 'funnel', 'treemap', 'map', 'text', 'bar', 'column', 'table'], GALLERY = ['combo', 'waterfall', 'multiples'];
 
 // one build's inputs: a language, a page, its slots and the options; the bind names the model's fields
 function caseOf(r, i) {
@@ -26,22 +26,28 @@ function caseOf(r, i) {
   const bind = { kpis: [ms[0], ms[1], ms[3], ms[2]].slice(0, 2 + Math.floor(r() * 3)), measure: pick([ms[0], ms[2], ms[4], ms[0]]), date: C(lang === 'ar' ? 'اسم الشهر' : 'Month Name', { sortBy: { t: 'Calendar', c: 'Month Number' } }, 'Calendar'),
     cats: { bar: pick(cs), column: pick(cs), donut: pick(cs), funnel: cs[2], treemap: cs[3], map: cs[0] }, y: { funnel: ms[1], gauge: ms[3] }, catPool: cs.slice(0, 4),
     table: [pick(cs), pick([ms[0], ms[2]]), ms[1], ms[3]].slice(0, 2 + Math.floor(r() * 3)), slicers: [cs[0], cs[1], lang === 'ar' ? null : cs[2]], tip: { card: ms[0], cat: cs[2], y: ms[1], date: C('Month Name', {}, 'Calendar') } };
+  // (a gallery report: the combo, waterfall and small multiples; a bind with a piece missing: those visuals are left out)
+  const gallery = r() < 0.3;
+  if (gallery) bind.gallery = { combo: { columns: ms[1], line: ms[3], axis: bind.date }, multiples: { split: cs[1] } };
+  if (r() < 0.2) { const gone = pick(['funnel', 'gauge', 'bar', 'treemap', 'map']); if (gone === 'gauge' || gone === 'funnel') delete bind.y[gone]; else delete bind.cats[gone]; }
+  if (r() < 0.1) bind.kpis = bind.kpis.slice(0, 1);
   const rtl = lang === 'ar', slots = [];
   if (r() < 0.8) { const tw = Math.round(w * (0.2 + r() * 0.3)), th = Math.round(h * (0.05 + r() * 0.06)); slots.push({ kind: 'title', x: rtl ? w - 24 - tw : 24, y: 12, w: tw, h: th }); if (r() < 0.85) slots.push({ kind: 'logo', x: rtl ? 24 : w - 24 - 120, y: 12, w: 120, h: th }); }
   const top = Math.round(h * 0.13), cols = 2 + Math.floor(r() * 3), rows = 2 + Math.floor(r() * 2), gw = Math.floor((w - 48) / cols), gh = Math.floor((h - top - 16) / rows);
-  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) { if (r() < 0.15) continue; const kind = pick(KINDS), span = x < cols - 1 && r() < 0.25 ? 2 : 1;
-    const s = { kind, x: 24 + x * gw, y: top + y * gh, w: gw * span - 12, h: gh - 12 };
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) { if (r() < 0.15) continue; const kind = gallery && r() < 0.4 ? pick(GALLERY) : pick(KINDS), span = x < cols - 1 && r() < 0.25 ? 2 : 1;
+    const s = { kind, x: 24 + x * gw, y: top + y * gh, w: Math.max(60, gw * span - 12 - Math.floor(r() * gw * 0.4)), h: gh - 12 };
     if (r() < 0.35) s.title = pick([lang === 'ar' ? 'ملاحظات' : 'Notes', 'Margin gauge', lang === 'ar' ? 'تفاصيل المبيعات' : 'Sales detail', 'mix']);
     if (kind === 'text' && r() < 0.6) s.text = lang === 'ar' ? 'ارتفعت المبيعات في الشمال.' : 'Sales rose in the north.';
     if ((kind === 'bar' || kind === 'column') && r() < 0.3) s.topN = 3 + Math.floor(r() * 5);
     if (r() < 0.2) s.role = pick(['mix', 'trend', 'detail']);
     slots.push(s); if (span === 2) x++; }
-  const o = { lang, pages: [{ name: rtl ? 'نظرة عامة' : 'Overview', page: { w, h }, slots, panel: null, hand: true, png: new Uint8Array([3]) }] };
+  const o = { lang, gallery, pages: [{ name: rtl ? 'نظرة عامة' : 'Overview', page: { w, h }, slots, panel: null, hand: true, png: new Uint8Array([3]) }] };
   if (r() < 0.3) o.logo = { ext: pick(['png', 'jpg']), bytes: new Uint8Array([9, 9, i & 255]) };
   if (r() < 0.25) o.logoPlaceholder = false;
   if (r() < 0.3) o.noDataMessage = false;
   if (r() < 0.3) o.subtitles = { mix: lang === 'ar' ? 'المنتجات حسب المبيعات' : 'Products by sales', 'Margin gauge': 'Against the target', trend: 'Over time' };
   if (rtl && r() < 0.6) o.chartAxes = 'mirrored';
+  if (rtl && gallery && r() < 0.5) o.waterfallRtl = 'mirror';
   if (r() < 0.25) o.kpiValues = 'full';
   if (r() < 0.2) o.transparent = true;
   if (r() < 0.3) o.title = pick(['A very long report title for the header that goes on and on', 'تقرير المبيعات الشهري المفصل لكل المناطق', 'Sales']);

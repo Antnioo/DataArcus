@@ -5,7 +5,7 @@ import './test-env.mjs';
 // mutant: create_report's answer (lib/report-result.mjs reportAnswer, 141 made-up build states: every note's condition
 // on, then one variant per condition), check_model_health's registration and answers through the real server (its entry
 // in the tool list, byte for byte; answers and refusals on made-up models), and the shared writer's visuals
-// (assets/js/pbip-visuals.js visual: 300 seeded hand-placed reports, every file written). Recorded in
+// (assets/js/pbip-visuals.js visual: 300 seeded hand-placed reports and 2 edges, every file written). Recorded in
 // fixtures/fn1h-pins.json as sha256 and length; FN1H_RECORD=1 records them again (only on the base, never to make a run
 // pass); FN1H_DUMP=<file> writes the texts compared. The writer's random ids come from SP1's one fixed seed.
 //   A1  create_report's answers;  B1  check_model_health in the tool list;  B2  its answers and refusals;
@@ -33,7 +33,10 @@ const now = {}, texts = {};
 
 // ---------- C: the writer's visuals (first: the seeded ids run in this process's order) ----------
 const vis = []; let allText = '';
-for (const [name, run] of BUILDS(300)) {
+// the 300 seeded builds, then two edges a search of 3,000 more found (seed 7): a story title that fits its room only by
+// the 16 a side, and a gallery title whose tail is said
+const EDGES = [[7, 253], [7, 943]].map(([seed, i]) => ['E' + seed + '-' + i, BUILDS(i, seed)[i - 1][1]]);
+for (const [name, run] of BUILDS(300).concat(EDGES)) {
   let r; try { r = run(); } catch (e) { r = { threw: String(e && e.message || e).slice(0, 300) }; }
   const files = (r.files || []).map((f) => f.path + '\0' + sha(typeof f.data === 'string' ? f.data : Buffer.from(f.data || []))).join('\n');
   const rest = Object.assign({}, r); delete rest.files; delete rest.zip;
@@ -106,7 +109,7 @@ try {
 } finally { await s.close(); }
 // the working folder is the model folder itself: no place for a script (said, never written inside the model)
 const inner = path.join(ROOT, 'shop', 'Shop.SemanticModel'), s2 = await serverClient(inner);
-try { const r = await s2.call('check_model_health', { path: 'model.bim' }); const tx = String(r.err) + '\n' + norm(r.t, inner); now['B2 the model folder as the working folder'] = pin(tx); texts['B2 the model folder as the working folder'] = tx; }
+try { const r = await s2.call('check_model_health', { path: '.' }); const tx = String(r.err) + '\n' + norm(r.t, inner); now['B2 the model folder as the working folder'] = pin(tx); texts['B2 the model folder as the working folder'] = tx; }
 finally { await s2.close(); }
 
 if (process.env.FN1H_DUMP) fs.writeFileSync(process.env.FN1H_DUMP, JSON.stringify(texts, null, 1));
