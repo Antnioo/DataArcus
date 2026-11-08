@@ -29,8 +29,10 @@
   layout panel's after build:min). build 70: 65 red (sp28 47, fn1i 12, sp43 2, mirror-parity 1, fx3b 1, tt2 1,
   v029w 1; fn1i grew four builds after the first survivors), 5 equivalent. mount 66: 48 red on sp31, 14 red only on
   the new website fn1i, 4 equivalent. Each new check green on 5cf96356 unmutated and on the split.
-- **State:** the runs and CI below.
-- **Resume:** if CI is not green below, `gh run view <id> --log-failed`, fix, push, CI again.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42513626118 on f79b38c0 (Linux and Windows, MCP 5
+  shards each, website 3 shards; macOS skipped by the workflow on a branch run). After it only this note changed.
+- **State: DONE.**
+- **Resume:** none; the reviewer's merge (fn_over_150: 3 -> 1).
 
 ## The steps (one per job of the old function, called in the old order)
 - **mount** (context `ui`: the inputs, then what each step returns; `state` holds the two lets the listeners write,
