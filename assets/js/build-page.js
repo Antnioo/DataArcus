@@ -12,6 +12,8 @@
  *   resultOf(run)             'queued' | 'running' | 'green' | 'red' | 'other' for a workflow run
  *   buildersOf({ events, runs, version, now })   branches at work: a push in the last 24 h, newest first, each with
  *                             its latest tests.yml run
+ *   statusOf(b, note, now)    a builder's light: running (a run in progress), red (a red run, or a note waiting on the owner), green
+ *                             (done), stopped (no push for 2 h and nothing running), idle
  *   ciRows(runs, now)         runs in progress or finished in the last 3 h
  *   mergesOf(commits, now)    "Merge ..." commits of the last 24 h (a builder's own "Merge origin/..." left out)
  *   releaseLine(pkg, latest)  { text, inProgress }: the version on integration against the latest release
@@ -32,7 +34,7 @@
   const API = 'https://api.github.com/repos/' + REPO;
   const RAW = 'https://raw.githubusercontent.com/' + REPO + '/';
   const DAY = 864e5, HOUR = 36e5;
-  const EVERY = 120000, SLOW_EVERY = 600000, LOW = 10, MAX_BUILDERS = 12;
+  const EVERY = 120000, SLOW_EVERY = 600000, LOW = 10, MAX_BUILDERS = 24;
 
   const ago = (ms, now) => {
     if (!ms) return '';
@@ -90,6 +92,14 @@
     return [...out.values()].sort((a, b) => b.time - a.time).slice(0, MAX_BUILDERS);
   };
 
+  const statusOf = (b, note, now) => {
+    const r = b && b.run ? b.run.result : '';
+    if (r === 'running' || r === 'queued') return 'running';
+    if (r === 'red' || /\b(wait|owner|stop|block)/i.test(String(note || ''))) return 'red';
+    if (r === 'green' || /^done\b/i.test(String(note || ''))) return 'green';
+    return b && now - b.time > 2 * HOUR ? 'stopped' : 'idle';
+  };
+
   const ciRows = (runs, now) => runsOf(runs).map(runInfo)
     .filter((r) => r && (!r.done || now - r.updated <= 3 * HOUR))
     .map((r) => ({ ...r, seconds: r.done ? Math.max(0, Math.round((r.updated - r.started) / 1000)) : Math.max(0, Math.round((now - r.started) / 1000)) }));
@@ -139,33 +149,38 @@
   };
 
   // ------------------------------------------------------------------ the page
+  // ------------------------------------------------------------------ the page
   const start = (win) => {
     const doc = win.document;
     const $ = (id) => doc.getElementById(id);
     if (!$('bp-builders')) return;
     const client = createClient({ fetch: (u, o) => win.fetch(u, o), now: () => Date.now() });
     const last = {};   // section -> its last data: a section that cannot load keeps it
+    // the helix (build-helix.js, three.js): where either is missing the page still works with its cards
+    const helix = win.BuildHelix ? win.BuildHelix.mount($('bp-line'), win) : null;
     let timer = 0, busy = null;
 
     const el = (tag, cls, text) => { const e = doc.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
     const when = (ms) => { const t = el('time', 'bp-when', ago(ms, Date.now())); t.dateTime = new Date(ms).toISOString(); t.dataset.ts = String(ms); t.title = new Date(ms).toLocaleString(); return t; };
     const link = (href, text) => { const a = el('a', 'bp-link', text); if (/^https:\/\/github\.com\//.test(href)) { a.href = href; a.target = '_blank'; a.rel = 'noopener'; } return a; };
     const pill = (result) => el('span', 'bp-pill bp-' + result, { queued: 'queued', running: 'in progress', green: 'green', red: 'red', other: 'ended' }[result] || result);
+    const light = (status) => el('span', 'bp-pill bp-' + status, { running: 'running', red: 'red', green: 'done', stopped: 'stopped', idle: 'idle' }[status] || status);
     const dur = (s) => (s >= 3600 ? Math.floor(s / 3600) + ' h ' + Math.round((s % 3600) / 60) + ' min' : s >= 60 ? Math.floor(s / 60) + ' min ' + (s % 60) + ' s' : s + ' s');
-    const fill = (id, nodes, empty) => { const box = $(id); box.replaceChildren(...(nodes.length ? nodes : [el('p', 'bp-empty', empty)])); };
+    const fill = (id, nodes, empty) => { const box = $(id); box.replaceChildren(...(nodes.length ? nodes : [el('li', 'bp-empty', empty)])); };
     const note = (id, text) => { const n = $(id); n.textContent = text || ''; n.hidden = !text; };
-    const runBar = (r) => (r && r.result === 'running' ? el('span', 'bp-bar') : null);
+    const live = (r) => r && !r.done;
+    const extras = (r) => (r && r.result === 'running' ? [el('span', 'bp-bar')] : []);
 
-    const drawBuilders = (list, notes) => {
+    const drawBuilders = (list, notes, now) => {
       fill('bp-builders', list.map((b) => {
-        const row = el('li', 'bp-row' + (b.run && !b.run.done ? ' bp-live' : '')), top = el('div', 'bp-top');
-        top.append(el('span', 'bp-code', b.code), el('span', 'bp-branch', b.branch));
-        const st = notes[b.branch];
-        if (st) top.append(el('span', 'bp-state', st));
+        const st = notes[b.branch] || '', status = statusOf(b, st, now);
+        const row = el('li', 'bp-row' + (live(b.run) ? ' bp-live' : '')), top = el('div', 'bp-top');
+        top.append(el('span', 'bp-code', b.code), light(status), el('span', 'bp-branch', b.branch));
         const line = el('div', 'bp-msg'); line.append(el('span', 'bp-text', b.message || '(no message)'), when(b.time));
-        row.append(top, line);
-        if (b.run) { const r = el('div', 'bp-run'); r.append(pill(b.run.result), el('span', 'bp-sha', b.run.sha), link(b.run.url, 'tests'), ...[runBar(b.run)].filter(Boolean)); row.append(r); }
-        else row.append(el('div', 'bp-run bp-dim', 'no tests run yet'));
+        const tele = el('div', 'bp-tele'); tele.append(el('span', null, 'last push ' + ago(b.time, now)), el('span', null, 'CI '), el('span', null, st ? 'note: ' + st : 'note: -'));
+        tele.children[1].append(b.run ? pill(b.run.result) : el('span', 'bp-dim', 'no run yet'));
+        row.append(...extras(b.run), top, line, tele);
+        if (b.run) { const r = el('div', 'bp-run'); r.append(el('span', 'bp-sha', b.run.sha), link(b.run.url, 'tests')); row.append(r); }
         return row;
       }), 'No builder has pushed in the last 24 hours.');
     };
@@ -173,7 +188,7 @@
       const row = el('li', 'bp-row' + (r.done ? '' : ' bp-live')), top = el('div', 'bp-top');
       top.append(pill(r.result), el('span', 'bp-branch', r.branch), el('span', 'bp-sha', r.sha));
       const line = el('div', 'bp-msg'); line.append(el('span', 'bp-text', (r.done ? 'ran ' : 'running ') + dur(r.seconds)), when(r.started), link(r.url, 'open the run'));
-      row.append(top, line, ...[runBar(r)].filter(Boolean)); return row;
+      row.append(...extras(r), top, line); return row;
     }), 'No tests.yml run in the last 3 hours.');
     const drawMerges = (m) => {
       fill('bp-merges', m.merges.map((c) => { const row = el('li', 'bp-row'), line = el('div', 'bp-msg'); line.append(el('span', 'bp-text', c.message), when(c.time)); row.append(line); return row; }), 'No merge in the last 24 hours.');
@@ -182,8 +197,10 @@
     };
     const drawRelease = (rel) => { $('bp-release').textContent = rel.text; $('bp-release').classList.toggle('bp-pending', rel.inProgress); };
     const drawLine = (mod) => {
-      for (const k of ['branches', 'ci', 'integration', 'release']) { const s = doc.querySelector('[data-station="' + k + '"] .bp-count'); if (s) s.textContent = String(mod[k] == null ? '-' : mod[k]); }
-      doc.getElementById('bp-line').classList.toggle('bp-moving', !!mod.moving);
+      const n = (id, v) => { $(id).textContent = String(v); };
+      n('bp-n-running', mod.running); n('bp-n-red', mod.red); n('bp-n-done', mod.done); n('bp-n-merged', mod.merged); n('bp-n-open', mod.open);
+      $('bp-line').classList.toggle('bp-moving', !!mod.moving);
+      if (helix) helix.set(win.BuildHelix.helixModel(mod.items, mod.mergeList));
     };
 
     // ---- one refresh: at most 5 API calls; the notes and package.json come from raw.githubusercontent.com
@@ -208,11 +225,14 @@
           await Promise.all(builders.map(async (b) => { try { notes[b.branch] = stateOf((await client.get(RAW + esc(b.branch) + '/mcp/work/' + esc(b.code) + '.md', { raw: true })).data); } catch (e) { if (e.limited) throw e; } }));
           const ci = ciRows(runs, now), merges = mergesOf(commits, now);
           const headSha = commits && commits[0] && commits[0].sha, headRun = headSha && runsOf(runs).find((r) => r.head_sha === headSha);
-          drawBuilders(builders, notes); drawCi(ci);
+          const sats = builders.map((b) => ({ code: b.code, status: statusOf(b, notes[b.branch], now), message: b.message, time: b.time, note: notes[b.branch] || '',
+            ci: b.run ? { queued: 'queued', running: 'in progress', green: 'green', red: 'red', other: 'ended' }[b.run.result] : '' }));
+          drawBuilders(builders, notes, now); drawCi(ci);
           drawMerges({ merges, head: headSha ? { sha: short(headSha), run: headRun ? runInfo(headRun) : null } : null });
           drawRelease(releaseLine(pkg, latest));
-          const live = builders.some((b) => b.run && !b.run.done) || ci.some((r) => !r.done);
-          drawLine({ branches: builders.length, ci: ci.filter((r) => !r.done).length, integration: merges.length, release: releaseLine(pkg, latest).inProgress ? 'open' : 'done', moving: live });
+          const count = (k) => sats.filter((s) => s.status === k).length;
+          drawLine({ running: count('running'), red: count('red'), done: count('green'), merged: merges.length, open: builders.length, mergeList: merges, items: sats,
+            moving: builders.some((b) => live(b.run)) || ci.some((r) => !r.done) });
           const bad = ['branches', 'events', 'runs', 'commits', 'latest'].filter((k) => last[k + 'Err']);
           note('bp-warn', bad.length ? 'Could not load ' + bad.join(', ') + ' just now: showing the last data.' : '');
           $('bp-updated').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -235,11 +255,12 @@
       const wait = client.blocked() ? Math.max(1000, client.state.blockedUntil - Date.now() + 1000) : client.nextIn();
       timer = win.setTimeout(() => refresh().then(schedule), wait);
     };
+    win.BuildPage.helix = helix;
     doc.addEventListener('visibilitychange', () => { if (doc.hidden) win.clearTimeout(timer); else refresh().then(schedule); });
     win.setInterval(() => doc.querySelectorAll('time[data-ts]').forEach((t) => { t.textContent = ago(+t.dataset.ts, Date.now()); }), 30000);
     win.BuildPage.refresh = refresh;
     refresh().then(schedule);
   };
 
-  return { REPO, EVERY, SLOW_EVERY, ago, jobCode, stateOf, newestVersion, resultOf, buildersOf, ciRows, mergesOf, releaseLine, createClient, start };
+  return { REPO, EVERY, SLOW_EVERY, ago, jobCode, stateOf, newestVersion, resultOf, statusOf, buildersOf, ciRows, mergesOf, releaseLine, createClient, start };
 }));

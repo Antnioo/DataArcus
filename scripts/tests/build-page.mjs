@@ -12,7 +12,11 @@
 //   E3  X-RateLimit-Remaining under 10: the page says it slows to every 10 minutes
 //   E4  a call that fails keeps that section's last data and says so
 //   P1  noindex; not in the menu or the footer; not in sitemap.xml; csp.mjs passes; the policy has connect-src for GitHub
-//   P2  no sideways scroll at 390 px; reduced motion stops the animations; no page error
+//   H1  the helix model (pure): rungs newest first, at most 60, t from 0 to 1; merges as nodes
+//   H2  WebGL: the helix is drawn (mode webgl, a canvas, aria-hidden) and a rung's label shows its code and commit line as text
+//   H3  no WebGL: the SVG helix shows (mode svg, a rung per job, the label on hover) and the cards still fill
+//   H4  the three.js address is pinned to an exact version, the one package.json names, with a Subresource Integrity hash
+//   P2  no sideways scroll at 390 px; reduced motion stops the animations and the helix; no page error
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
@@ -39,6 +43,10 @@ export default async function ({ browser, url }) {
     check(B.stateOf('# x\n**State:** DONE, CI green\nmore') === 'DONE, CI green' && B.stateOf('no state here') === '' && B.stateOf(null) === '', 'B3 stateOf reads the **State:** line');
     check(JSON.stringify(B.newestVersion([{ name: 'integration/0.3.2' }, { name: 'integration/0.10.0' }, { name: 'integration/0.9.9' }, { name: 'main' }])) === '{"version":"0.10.0","branch":"integration/0.10.0"}' && B.newestVersion([{ name: 'main' }]) === null, 'B4 newestVersion compares numbers, not text');
     check(B.resultOf({ status: 'queued' }) === 'queued' && B.resultOf({ status: 'in_progress' }) === 'running' && B.resultOf({ status: 'completed', conclusion: 'success' }) === 'green' && B.resultOf({ status: 'completed', conclusion: 'failure' }) === 'red' && B.resultOf({ status: 'completed', conclusion: 'cancelled' }) === 'other', 'B5 resultOf: queued, running, green, red, other');
+    const Hx = require('../../assets/js/build-helix.js');
+    const hm = Hx.helixModel(Array.from({ length: 80 }, (_, i) => ({ code: 'J' + i, status: 'idle' })), [{ message: 'a' }, { message: 'b' }]);
+    check(hm.rungs.length === 60 && hm.rungs[0].code === 'J0' && hm.rungs[0].t === 0.5 / 60 && hm.rungs[59].t === 59.5 / 60 && hm.nodes.length === 2 && hm.nodes[0].t === 0.25 && Hx.helixModel(null, null).rungs.length === 0, 'H1 the helix model: newest first, at most 60 rungs, t spread inside 0..1, merges as nodes');
+    check(B.statusOf({ run: { result: 'running' }, time: 0 }, '', 1) === 'running' && B.statusOf({ run: { result: 'green' }, time: 0 }, 'waiting for the owner', 1) === 'red' && B.statusOf({ run: null, time: 0 }, 'DONE', 1) === 'green' && B.statusOf({ run: null, time: 0 }, '', 3 * 3600e3) === 'stopped' && B.statusOf({ run: null, time: 0 }, '', 3600e3) === 'idle', 'B7 statusOf: running, red (a note waiting on the owner), done, stopped after 2 h, idle');
     check(B.releaseLine({ version: '0.3.2' }, { tag_name: 'v0.3.1' }).inProgress && /0\.3\.2 in progress/.test(B.releaseLine({ version: '0.3.2' }, { tag_name: 'v0.3.1' }).text) && !B.releaseLine({ version: '0.3.2' }, { tag_name: 'v0.3.2' }).inProgress, 'B6 releaseLine: "in progress" while the versions differ');
   }
 
@@ -93,7 +101,7 @@ export default async function ({ browser, url }) {
     await loaded(v.pg).catch(() => null);
     const b = await text(v.pg, '#bp-builders'), ci = await text(v.pg, '#bp-ci'), mg = await text(v.pg, '#bp-merges'), head = await text(v.pg, '#bp-head'), rel = await text(v.pg, '#bp-release');
     check(/BB2/.test(b) && /AA1/.test(b) && /IN PROGRESS/.test(b) && /DONE, CI green/.test(b), `S1 builders show the job code and the state from the note: ${b.slice(0, 160)}`);
-    check(/in progress/.test(await text(v.pg, '#bp-builders .bp-live .bp-pill')) && /green/.test(b) && (await v.pg.locator('#bp-builders a[href^="https://github.com/Antnioo/DataArcus/actions/runs/"]').count()) === 2, 'S1 each builder shows its latest tests.yml run (in progress, green) with a link to the run');
+    check(/running/.test(await text(v.pg, '#bp-builders .bp-live .bp-pill')) && /in progress/.test(b) && /green/.test(b) && (await v.pg.locator('#bp-builders a[href^="https://github.com/Antnioo/DataArcus/actions/runs/"]').count()) === 2, 'S1 each builder shows its latest tests.yml run (in progress, green) with a link to the run');
     check(/min ago/.test(b) && /First fix|first fix/.test(b), 'S1 the latest commit message and "ago" are shown');
     check(/in progress/.test(ci) && /green/.test(ci) && /red/.test(ci) && !/old9|OLD9/i.test(ci) && (await v.pg.locator('#bp-ci a[href^="https://github.com/Antnioo/DataArcus/actions/runs/"]').count()) === 3, `S1 CI now: the in-progress, green and red runs of the last 3 hours (the 6 h old one not), each linked: ${ci.slice(0, 160)}`);
     check(/Merge AA0: the earlier job/.test(mg) && !/Merge origin/.test(mg) && !/a commit on the branch/.test(mg), `S1 integration today: the merge, not the builder's own "Merge origin/..." nor a one-parent commit: ${mg.slice(0, 160)}`);
@@ -107,6 +115,11 @@ export default async function ({ browser, url }) {
     check(await v.pg.evaluate(() => !window.__pwned && !document.querySelector('#bp-builders img, #bp-builders b')), 'X1 a commit message with HTML is text: no element made, no script run');
     check((await text(v.pg, '#bp-builders')).includes('<img src=x onerror="window.__pwned=1">'), 'X1 the HTML shows as the characters written');
     check(!v.errs.length, `P2 no page error on the first look: ${v.errs.join(' | ')}`);
+    const mode = await v.pg.evaluate(() => { const h = document.getElementById('bp-line'); return [h.dataset.mode, !!h.querySelector('canvas'), h.getAttribute('aria-hidden')]; });
+    check(mode[0] === 'webgl' && mode[1] && mode[2] === 'true', `H2 WebGL: the helix is drawn in a canvas and hidden from screen readers (${mode.join(',')})`);
+    await v.pg.evaluate(() => window.BuildPage.helix.focus('BB2'));
+    const lab = await text(v.pg, '#bp-line .bh-label');
+    check(/BB2/.test(lab) && lab.includes('<img src=x') && /CI: in progress/.test(lab), `H2 a rung's label: code, commit line as text, CI state: ${lab.slice(0, 120)}`);
     await v.ctx.close();
   }
 
@@ -171,6 +184,26 @@ export default async function ({ browser, url }) {
     check(!/<script(?![^>]*\ssrc=)[^>]*>/i.test(html), 'P1 no inline script on the page');
   }
 
+  // ---- H3: no WebGL: the SVG helix and the cards
+  {
+    const { v } = await open({}, async ({ v }) => { await v.ctx.addInitScript(() => { const g = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (t, ...r) { return /webgl/i.test(t) ? null : g.call(this, t, ...r); }; }); });
+    await loaded(v.pg).catch(() => null);
+    const info = await v.pg.evaluate(() => { const h = document.getElementById('bp-line'); return [h.dataset.mode, h.querySelectorAll('svg g[data-code]').length, document.querySelectorAll('#bp-builders > li').length]; });
+    check(info[0] === 'svg' && info[1] === 2 && info[2] === 2, `H3 no WebGL: the SVG helix with a rung per job, and the cards (${info.join(',')})`);
+    await v.pg.locator('#bp-line g[data-code="AA1"]').first().dispatchEvent('pointerenter');
+    check(/AA1/.test(await text(v.pg, '#bp-line .bh-label')) && !(await v.pg.locator('#bp-line .bh-label').isHidden()), 'H3 the SVG rung shows its label');
+    check(!v.errs.length, `H3 no page error without WebGL: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
+
+  // ---- H4: three.js pinned
+  {
+    const html = fs.readFileSync(path.join(ROOT, 'build/index.html'), 'utf8'), pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+    const m = /<script src="https:\/\/cdn\.jsdelivr\.net\/npm\/three@([^/"]+)\/build\/three\.min\.js"([^>]*)>/.exec(html);
+    check(m && /^\d+\.\d+\.\d+$/.test(m[1]) && m[1] === pkg.devDependencies.three && /integrity="sha384-/.test(m[2]), `H4 three.js is loaded at an exact version, the one package.json pins (${m && m[1]} / ${pkg.devDependencies.three}), with an integrity hash`);
+    check(/script-src[^;]*https:\/\/cdn\.jsdelivr\.net\/npm\/three@\d+\.\d+\.\d+\//.test(html) && !/three@/.test(fs.readFileSync(path.join(ROOT, 'privacy.html'), 'utf8')), 'H4 the script policy names three.js\'s package folder on this page only');
+  }
+
   // ---- P2: phone width, reduced motion
   {
     const { v } = await open({ viewport: [390, 800] });
@@ -180,8 +213,8 @@ export default async function ({ browser, url }) {
     await v.ctx.close();
     const r = await open({ motion: 'reduce' });
     await loaded(r.v.pg).catch(() => null);
-    const anim = await r.v.pg.evaluate(() => [...document.querySelectorAll('.bp-bar, .bp-moving .bp-dot')].map((e) => getComputedStyle(e).animationName));
-    check(anim.length > 0 && anim.every((a) => a === 'none'), `P2 reduced motion: no animation (${anim.join(',')})`);
+    const anim = await r.v.pg.evaluate(() => [...document.querySelectorAll('.bp-bar')].map((e) => getComputedStyle(e).animationName));
+    check(anim.length > 0 && anim.every((a) => a === 'none') && (await r.v.pg.evaluate(() => document.getElementById('bp-line').dataset.motion)) === 'still', `P2 reduced motion: no animation, a still helix (${anim.join(',')})`);
     await r.v.ctx.close();
   }
   return { checks, problems };
