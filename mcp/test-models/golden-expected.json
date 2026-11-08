@@ -45,7 +45,7 @@
       "kpiCards": "built 2 -> 1: round 12 (85d54c1), #26: 'Unused One' shows text (its format is \"Yes\";\"Yes\";\"No\") and is never a KPI card"
     },
     "9": {
-      "message": "create_report -> plan_layout in the message: 0.3.2 TK1 (B-272): create_report takes path and planId; the hand-placed pages go to plan_layout (the same slot schema), which refuses the unsupported kind first. Still refused, nothing written"
+      "message": "0.3.2 RV1 (B-392, Codex's release review): an input that fails the tool's schema is answered short at the protocol boundary (\"N problems. <path>: <message> (got ...)\", the first 5, \"and N more\", \"Fix the input and call again\") instead of the SDK's whole validator message; only this error text moved (first 80 characters recorded here)"
     },
     "10": {
       "visuals": "35 -> 39: round 10 (3803b7a), the navigator as buttons with a line (see task 1) | 39 -> 45: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (+6). The model's Logistics tables and calendar hold rows as DAX tables since round 22: no other number of this task changed | 45 -> 43: 0.2.9 part 2 (11 Oct 2026, O-6 of the owner's test of 0.2.8): create_report writes no \"Your logo\" placeholder when no logo is given (-1 on each page) | 43 -> 45: design round 9, the re-score's S7 (builder 10): the details page's last row is the table beside a new bar chart (+1) and its \"No data\" card (+1)",
@@ -267,7 +267,7 @@
     "9": {
       "id": 9,
       "refused": true,
-      "message": "MCP error -32602: Input validation error: Invalid arguments for tool plan_layout: Invalid option: expected one of \"title\"|\"logo\"|\"kpi\"|\"card\"|\"line\"|\"bar\"|\"colu",
+      "message": "MCP error -32602: Input validation error: Invalid arguments for tool plan_layout: 2 problems. pages[0].slots[0].kind: Invalid option: expected one of \"title\"|\"l",
       "written": false,
       "overwritten": 0
     },
