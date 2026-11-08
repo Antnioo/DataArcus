@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "generated_at": "2026-11-08T19:57Z",
+  "generated_at": "2026-11-08T19:58Z",
   "today": {
     "date": "2026-11-08",
-    "cost_usd": 160.42,
-    "tokens": 531948148,
-    "sessions": 35,
+    "cost_usd": 162.6,
+    "tokens": 539569246,
+    "sessions": 36,
     "by_kind": {
       "builder": {
-        "cost_usd": 73.88,
-        "count": 11
+        "cost_usd": 76.06,
+        "count": 12
       },
       "worker": {
         "cost_usd": 85.39,
@@ -26,8 +26,8 @@
     },
     "by_model": {
       "sonnet": {
-        "cost_usd": 36.82,
-        "count": 11
+        "cost_usd": 39.0,
+        "count": 12
       },
       "opus": {
         "cost_usd": 123.6,
@@ -116,9 +116,9 @@
     },
     {
       "date": "2026-11-08",
-      "cost_usd": 160.42,
-      "tokens": 531948148,
-      "sessions": 35
+      "cost_usd": 162.6,
+      "tokens": 539569246,
+      "sessions": 36
     }
   ],
   "jobs": [
@@ -139,6 +139,15 @@
       "tokens": 11905307,
       "minutes": 41,
       "finished_at": "2026-11-08T17:09Z"
+    },
+    {
+      "id": "TD1",
+      "title": "TD1: the Today app's two files generated (D-1108-18, B-406)",
+      "model": "sonnet",
+      "cost_usd": 2.18,
+      "tokens": 7621098,
+      "minutes": 11,
+      "finished_at": "2026-11-08T17:01Z"
     },
     {
       "id": "RV1",
