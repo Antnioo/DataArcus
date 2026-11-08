@@ -741,6 +741,14 @@
    "length": 4310,
    "sha256": "2eb25479ac69374920837c29440c9b0f91d30a7fc9ded2381fba58a688f30c4e"
   },
+  "Q76": {
+   "length": 4575,
+   "sha256": "8171eb90a710f3efbede333395c5c0c895eeb9392f9f9577e39dc5ad6a64dd65"
+  },
+  "Q77": {
+   "length": 4575,
+   "sha256": "8171eb90a710f3efbede333395c5c0c895eeb9392f9f9577e39dc5ad6a64dd65"
+  },
   "T1 as it is, English tabs": {
    "length": 38890,
    "sha256": "2dfa746868888f0a1a4ecf2c82af8c0ede0188233e0212cc3ef2edc0f3cacea0"
@@ -852,6 +860,10 @@
   "T28 a slicer whose query role is not an object": {
    "length": 39664,
    "sha256": "61cdaf3eadca78c7af50b7ce4b1f5d172e43224d98009624d217fec6988eab4d"
+  },
+  "T29 a bookmark group with an empty name (none drafted: the note says it keeps its name)": {
+   "length": 39024,
+   "sha256": "345fcffc24a43677de083c910b8ea1adb44ff4f3538ae5cde04f6a1574732c78"
   }
  }
 }

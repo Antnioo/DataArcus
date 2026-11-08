@@ -220,7 +220,9 @@ const Q_MORE = [
   ['odd2', { planFields: PF({ timeAxis: 'Calendar[Date]' }), pageFilters: RAM }, null, 'fn1g-q-y3'],
   ['one', { planFields: PF({ timeAxis: 'Cal[Date]' }), pageFilters: [ram('Cal[Ramadan]')], gulfDates: { scope: 'year', year: 1445, hijriYearColumn: 'Cal[Month]' } }, null, 'fn1g-q-hy'],
   ['two', { planFields: { kpis: ['Sales[M]'] } }],
-  ['wide', { planFields: { kpis: ['Sales[M]'] } }]
+  ['wide', { planFields: { kpis: ['Sales[M]'] } }],
+  ['odd2', { planFields: PF({ timeAxis: 'Calendar[Date]', kpis: ['Sales[Misc Only]'] }) }],
+  ['odd2', { planFields: PF({ timeAxis: 'Calendar[Date]', kpis: ['Misc[Total Sales]'] }) }]
 ];
 Q_MORE.forEach(([k, a, o, src], i) => keep(`Q${Q_CASES.length + 3 + i}`, qRun(k, a, o, src)));
 
@@ -316,6 +318,7 @@ tcase('T26 pages.json: the active page not a page, the Arabic tabs', (d) => edit
 tcase('T27 a file in another folder of the page named like a visual\'s', (d) => put(at(d, `${RD}/pages/p1overview/extras/cardOrders/x.json`), { x: 1 }));
 tcase('T28 a slicer whose query role is not an object', (d) => { const j = rd(at(d, visualRel('p1overview', 'slRegion'))); j.name = 'slNull'; delete j.visual.syncGroup; j.position = Object.assign({}, j.position, { y: 420, z: 7600, tabOrder: 7600 }); j.visual.query = { queryState: { Values: null, Other: { projections: [{ queryRef: 'Sales.Region' }] } } }; put(at(d, visualRel('p1overview', 'slNull')), j); });
 const HM1 = JSON.parse(fs.readFileSync(path.join(HERE, 'fixtures/hm1/N1-25.json'), 'utf8'));
+tcase('T29 a bookmark group with an empty name (none drafted: the note says it keeps its name)', (d) => edit(d, `${RD}/bookmarks/bookmarks.json`, (j) => { j.items = [{ name: 'grpE', displayName: '', children: ['bmReset'] }, { name: 'bmDetails' }]; }));
 T_CASES.forEach(([name, ed, args], i) => { const d = 'fn1g-t' + (i + 1); if (args.project === 'hm1') { materialize(HM1, path.join(ROOT, d)); return; } fs.cpSync(PROJ, path.join(ROOT, d), { recursive: true }); lf(path.join(ROOT, d)); if (ed) ed(d); });
 for (const [name, , args, own] of T_CASES) {
   const d = 'fn1g-t' + (T_CASES.findIndex((c) => c[0] === name) + 1);
