@@ -119,3 +119,7 @@ CI green: https://github.com/Antnioo/DataArcus/actions/runs/42489282364 on d25ec
 - build:min, stamps, csp.mjs, ar-pages.mjs and sitemap-lastmod run after the last commit.
 
 - Round 2 CI red once (run 42493124176, AT-5: "(Slicer)" glossed twice on ar/power-bi-mcp): the owner's data promise is used exactly but its «المقسمات (Slicers)» gloss stays only at the page's first use (beta.new31.l3), so `safe.data` says «المقسمات»; the claims DS1-2 (AR) pin allows the gloss optionally.
+- Round 2 CI red twice: run 42493968554, sp36 S10 (scripts/tests/fixtures/sp36-lang.json pins the Arabic article's
+  translation dictionary): re-recorded on purpose for the one article whose subtitle changed (report-ready-for-arabic,
+  English +42 and Arabic +58 characters). Exact lines: `"i18n": "eef05f650bb1f9c2"` -> `"fc78011d53f744b8"` (line 727) and
+  `"dict": 44363` -> `44463` (line 738); sp36 18 = 18.
