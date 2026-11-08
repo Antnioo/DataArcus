@@ -241,10 +241,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- copy ----------
   const toast = (msg) => window.DAPageToast.toast(msg, { ms: 2200 });   // page-toast.js, its one home (0.3.2 DD2W; the page loads it first)
+  const copyText = (text, node, o) => window.DAPageToast.copyText(text, node, o);   // page-toast.js, its one home (0.3.2 DD2W)
   $('copyBtn').addEventListener('click', () => {
-    const text = $('dax').textContent;
-    const fallback = () => { const r = document.createRange(); r.selectNodeContents($('dax')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast(L('Selected. Press Ctrl+C to copy', 'تم التحديد. اضغط Ctrl+C للنسخ')); };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast(L('DAX copied. Set Data category to Image URL.', 'تم نسخ DAX. اجعل Data category = Image URL.')), fallback); else fallback();
+    copyText($('dax').textContent, $('dax'), { done: L('DAX copied. Set Data category to Image URL.', 'تم نسخ DAX. اجعل Data category = Image URL.'), selected: L('Selected. Press Ctrl+C to copy', 'تم التحديد. اضغط Ctrl+C للنسخ'), toast });
     track('svgkpi_copy', { template: S.design.id || 'custom', layers: S.design.layers.length });
     if (tour) tour.copied();
   });

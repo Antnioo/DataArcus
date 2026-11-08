@@ -199,10 +199,8 @@ EVALUATE
 
   // ---------- copy / download ----------
   const toast = (msg) => window.DAPageToast.toast(msg, { ms: 1800 });   // page-toast.js, its one home (0.3.2 DD2W; the page loads it first)
-  const copy = (text, pre) => {
-    const fallback = () => { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast(L('Selected. Press Ctrl+C to copy', 'تم التحديد. اضغط Ctrl+C للنسخ')); };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast(L('Copied', 'تم النسخ')), fallback); else fallback();
-  };
+  const copyText = (text, node, o) => window.DAPageToast.copyText(text, node, o);   // page-toast.js, its one home (0.3.2 DD2W)
+  const copy = (text, pre) => copyText(text, pre, { done: L('Copied', 'تم النسخ'), selected: L('Selected. Press Ctrl+C to copy', 'تم التحديد. اضغط Ctrl+C للنسخ'), toast });
   $('copyAll').addEventListener('click', () => { copy($('script').textContent, $('script')); track('measure_copy_all', { count: buildMeasures().length, mode: state.mode }); });
   $('copyTmdl').addEventListener('click', () => { copy($('tmdl').textContent, $('tmdl')); track('measure_copy_tmdl', { count: buildMeasures().length, mode: state.mode }); });
   const download = (id, ext, event) => {

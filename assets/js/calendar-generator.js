@@ -338,10 +338,9 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
   if (!hijriFmt) { $('cgHijri').checked = false; $('cgHijri').disabled = true; state.hijri = false; $('hijriNote').textContent = L('Your browser does not support Hijri dates. Try Chrome, Edge or Safari.', 'متصفحك لا يدعم التاريخ الهجري. جرّب Chrome أو Edge أو Safari.'); }
 
   const toast = (msg) => window.DAPageToast.toast(msg, { ms: 1800 });   // page-toast.js, its one home (0.3.2 DD2W; the page loads it first)
+  const copyText = (text, node, o) => window.DAPageToast.copyText(text, node, o);   // page-toast.js, its one home (0.3.2 DD2W)
   $('copyBtn').addEventListener('click', () => {
-    const text = $('dax').textContent;
-    const fallback = () => { const r = document.createRange(); r.selectNodeContents($('dax')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast(L('Selected. Press Ctrl+C to copy', 'تم التحديد. اضغط Ctrl+C للنسخ')); };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast(L('DAX copied. Paste it in New table', 'تم نسخ DAX. الصقه في New table')), fallback); else fallback();
+    copyText($('dax').textContent, $('dax'), { done: L('DAX copied. Paste it in New table', 'تم نسخ DAX. الصقه في New table'), selected: L('Selected. Press Ctrl+C to copy', 'تم التحديد. اضغط Ctrl+C للنسخ'), toast });
     track('calendar_copy', { hijri: state.hijri, week: state.week, weekend: state.weekend, fiscal_start: state.fy, observed: observedOn() });
   });
   $('dlBtn').addEventListener('click', () => {
