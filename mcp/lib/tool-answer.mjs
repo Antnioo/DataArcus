@@ -4,6 +4,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { ROOT, rootProblem, Notice } from './model.mjs';
 import { wordOf } from './read-words.mjs';
 import { writtenSince } from './files.mjs';
@@ -46,3 +47,36 @@ const notice = (state, whatToDo) => text({ workingFolder: ROOT ? path.basename(R
 // (0.3.2 LG1) opts.lang: the tool's own lang input also says its coded errors (the reading tools; a write tool's lang
 // defaults to "en" and would turn AR4's letter rule off, so it is not passed)
 export const safe = (fn, opts) => async (args) => { const mark = writtenSince(), lang = opts && opts.lang && args ? args.lang : undefined; try { const problem = rootProblem(); if (problem) return ROOT ? notice('missing', problem) : fail(problem); return await fn(args); } catch (e) { return e instanceof Notice ? notice(e.state, e.message) : fail(e && e.code && !/^E[A-Z]+$/.test(e.code) ? e : failText(e, writtenSince(mark)), lang); } };   // (a reading block's coded error is worded by wordOf, A1-9; any other by failText, A6)
+
+// (0.3.2 RV1, B-392: Codex's release review; check_report with 300 invalid items answered 46,772 characters, 1,000 answered
+// 155,972) The SDK checks a call's input against the tool's schema BEFORE any handler runs and answers with zod's whole
+// message, so safe()'s cap never saw it. Fixed here, once, for every tool: a validation error is short (what was wrong at
+// the first few places, how many more, how to retry), and every error the SDK itself makes is capped as safe()'s are.
+// English only: the Arabic wording is a draft for the owner (mcp/work/RV1.md), never shipped before his yes.
+const SHOWN = 5, ISSUE_MAX = 500, VALUE_MAX = 40;
+const at = (obj, keys) => keys.reduce((o, k) => (o != null && typeof o === 'object' ? o[k] : undefined), obj);
+const pathOf = (keys) => keys.map((k, i) => (typeof k === 'number' ? `[${k}]` : (i ? '.' : '') + String(k).slice(0, 60))).join('') || '(the input)';
+const gotOf = (v) => (typeof v === 'string' ? `'${v.slice(0, VALUE_MAX)}${v.length > VALUE_MAX ? '...' : ''}'` : Array.isArray(v) ? `a list of ${v.length}` : v && typeof v === 'object' ? 'an object' : String(v));
+export const inputErrorSaid = (tool, issues, args) => {
+  const list = issues || [], shown = list.slice(0, SHOWN);
+  const one = (i) => { const keys = (i.path || []), v = at(args, keys), msg = String(i.message || 'invalid').slice(0, ISSUE_MAX);
+    return `${pathOf(keys)}: ${msg}${i.code === 'unrecognized_keys' || v === undefined ? '' : ` (got ${gotOf(v)})`}`; };
+  const more = list.length - shown.length;
+  return `Input validation error: Invalid arguments for tool ${String(tool).slice(0, 60)}: ${list.length} problem${list.length === 1 ? '' : 's'}. ${shown.map(one).join('; ')}${more > 0 ? `; and ${more} more` : ''}. Fix the input and call again.`;
+};
+// installs both on a server (server.mjs, after the tools are registered): validateToolInput and createToolError are the
+// SDK's own steps; wrapping them on the instance leaves node_modules as it is
+export const guardInputErrors = (server) => {
+  const check = server.validateToolInput.bind(server);
+  server.validateToolInput = async (tool, args, name) => {
+    try { return await check(tool, args, name); }
+    catch (e) {
+      if (e instanceof McpError && e.code === ErrorCode.InvalidParams && tool && tool.inputSchema && typeof tool.inputSchema.safeParseAsync === 'function') {
+        const r = await tool.inputSchema.safeParseAsync(args ?? {});
+        if (!r.success) throw new McpError(ErrorCode.InvalidParams, inputErrorSaid(name, r.error.issues, args));
+      }
+      throw e;
+    }
+  };
+  server.createToolError = (message) => ({ isError: true, content: [{ type: 'text', text: capText(scrub(String(message))) }] });
+};

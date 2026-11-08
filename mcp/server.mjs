@@ -8,6 +8,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { ROOT, prepareRoot, rootProblem } from './lib/model.mjs';
 import { instructions } from './lib/agent-text.mjs';
 import { LIMITS } from './lib/tool-limits.mjs';
+import { guardInputErrors } from './lib/tool-answer.mjs';
 // (0.3.1 S9) one module a tool, registered below in the same order as before (tools/list keeps its order)
 import { register as registerReadModel } from './tools/read_model.mjs';
 import { register as registerSuggestFields } from './tools/suggest_fields.mjs';
@@ -42,6 +43,8 @@ registerPlanLayout(server, ctx);
 registerAddGulfCalendar(server, ctx);
 registerCreateArabicTwin(server, ctx);
 registerApprovePlan(server, ctx);
+// (0.3.2 RV1, B-392) a call whose input fails the schema is answered short and capped, for every tool
+guardInputErrors(server);
 
 prepareRoot();
 await server.connect(new StdioServerTransport());
