@@ -79,7 +79,7 @@ export function register(server, ctx) {
       plan: Plans.proposal(Plans.propose('calendar', modelRef(m, a.path), [`the TMDL script "${path.basename(scriptFile)}" ${whereSaid(scriptDir)}, adding the table ${JSON.stringify(rest.table)} (${rest.range.from} to ${rest.range.to})${extrasSaid(rest)}${rest.relationships.length ? ' and ' + rest.relationships.length + ' relationship' + (rest.relationships.length > 1 ? 's' : '') : ''}${rest.relationshipsWhy ? ` (${rest.relationshipsWhy.join('; ')})` : ''}; ${NEVER_APPLIED}`], { pins: { add_gulf_calendar: inputsPin(a) }, outputs: [path.basename(scriptFile)],
         // (SQ3, T1-S6) the same line in Arabic, for the page of a plan with Arabic names
         writesAr: [`سكربت TMDL «${path.basename(scriptFile)}» ${whereSaid(scriptDir, undefined, true)}، يضيف الجدول «${rest.table}» (من ${rest.range.from} إلى ${rest.range.to})${extrasSaid(rest, true)}${rest.relationships.length ? `، والعلاقات: ${rest.relationships.length}` : ''}${relationshipsWhyAr ? ` (${relationshipsWhyAr.join('؛ ')})` : ''}؛ ${NEVER_APPLIED_AR}`] })) }));
-  }));
+  }, { lang: 'given' }));
 }
 
 // (0.3.0 T1, C1: the HR tester refused a 32-file report plan when she wanted one script) only the Arabic calendar columns

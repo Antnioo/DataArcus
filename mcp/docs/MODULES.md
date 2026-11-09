@@ -403,7 +403,7 @@ In `mcp/lib/`. Every answer, the instructions, and what more than one tool uses.
 |---|---|---|---|---|
 | `answer.mjs` | what leaves the server in an answer: every format character of a name written visibly, the answer capped and fitted | an answer -> the answer sent | `tool-answer.mjs`, `scope.mjs`, `report-answer.mjs`, `twin-plan.mjs` | yes |
 | `agent-text.mjs` | the server's instructions and the tool descriptions' shared sentences, from the tools' own limits | none -> the instructions and the shared texts | `server.mjs`, every tool | yes |
-| `tool-answer.mjs` | how every tool answers: the text scrubbed of local paths and capped, the errors, safe() around each handler | a tool's result or error -> its answer | every tool | no: fs |
+| `tool-answer.mjs` | how every tool answers: the text scrubbed of local paths and capped, the errors, safe() around each handler (a write tool's own `lang` is told from an absent one once, `langGiven`) | a tool's result or error -> its answer | every tool | no: fs |
 | `tool-inputs.mjs` | the input schemas more than one tool takes (zod) and what a tool does to the user's files | none -> the schemas and annotations | every tool, `report-inputs.mjs` | yes |
 | `tool-limits.mjs` | the tools' limits and the visual kinds a slot can be: one list | none -> LIMITS, VISUAL_KINDS | `server.mjs`, `tool-inputs.mjs`, `report-inputs.mjs`, `read_model.mjs` | yes |
 | `small-cache.mjs` | the MCP's small cache, one copy (0.3.2 DD2P): the last few results kept, the least recently used dropped first | a size -> `{ get, set }` | `glass-picture.mjs`, `page-picture.mjs` | yes |
