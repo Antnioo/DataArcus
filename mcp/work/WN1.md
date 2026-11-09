@@ -20,7 +20,7 @@
   escape still refused, F02 on a case-sensitive disk, R3's "shortcut removed" (vacuous there), R4, L2's plan within the
   limit). Every pinned suite green with its base count, no fixture re-recorded.
 - **Got (local, Linux):** see "Tests before -> after" below.
-- **Resume:** 2026-11-09T02:10Z: D-1109-01 done (Windows: no place in the answer); CI on the new head, then DONE.
+- **Resume:** 2026-11-09T02:38Z: State: DONE (D-1109-01 in; CI green on 821d314b, run 42550835744); the reviewer merges.
 
 ## Tests before -> after
 - new: `wn1` 0 -> 33 (red on 3e7580d9 first: "FAIL  wn1  27 of 33 checks", path-rules.mjs moved aside).
@@ -105,6 +105,8 @@
 - CI run 42549501774 red on ba53340b: Windows wn1 R2-R3 (written for the macOS/Linux answer, now the Windows one there)
   and mutation's wn1 baseline; R2-R3 now set DATAARCUS_TEST_PLATFORM 'linux' (R6 is Windows): "PASS  wn1  38 checks" here
   and with the whole run as win32. Website sp6 ("the preview differs", Linux, a page this job does not touch) red once.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42550835744 on 821d314b (Linux, Windows, website; macOS
+  skipped on a branch run). State: DONE.
 - Same counts after: sp44 23, approval 32, approval-hardening 22, write-gate 7, sp23 29, approval-complete 68, r4a 32;
   lint 0; changelog-words PASS. CHANGELOG line: Windows opens the folder and the AI is not told where it is.
 
