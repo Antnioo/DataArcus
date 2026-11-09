@@ -87,6 +87,17 @@ export function register(server, ctx) {
     // (0.3, J13 redesign step 2) a redesign of an existing report is a plan of its own: a copy with allowlisted patches
     if (a.redesignFrom != null) { const no = redesignProblems(a); return text(no ? no.answer : proposed(redesignPlan(a, refuseUnreadable(loadModel(a.path))))); }
     if (a.sample) return text(proposed(samplePlan(a)));
+    // (0.3.2 FN1J) the plan's named steps (below register), in the old order, on one context (lc)
+    const lc = { a, LIMITS };
+    stateStep(lc); modelStep(lc); layoutStep(lc); limitsStep(lc); gulfDatesStep(lc); monthOrderStep(lc); customVisualsStep(lc);
+    switcherStep(lc); iconsStep(lc); daxStep(lc); axesStep(lc); lintStep(lc); await exactStep(lc); titlesStep(lc); previewStep(lc);
+    kindsStep(lc); saidStep(lc); slicersStep(lc); writesStep(lc); terminologyStep(lc); planStep(lc);
+    return answerStep(lc);
+  }));
+}
+
+// (0.3.2 FN1J) the plan's names so far, the terms reused from this session, and the names given checked as create_report checks them
+function stateStep(lc) { let { a } = lc;
     // formats fixed at the source (the owner's ask, 6 Oct 2026): with the model, the fields that lack their right format
     // come first, with the script (check_model_health's kind of script, for the report's fields only)
     let formats = {}, arabicNames = {}, displayNamesAns = {}, m0 = null, planNames = null, notTranslated = null;
@@ -94,6 +105,9 @@ export function register(server, ctx) {
     const reused = {}, reusedNames = () => Object.fromEntries(Object.entries(reused).map(([k, c]) => [k, c.decision === 'kept' ? k.replace(/^.*?\[(.*)\]$/, '$1') : c.alias]));
     // (R-04: a name the plan pins is a name create_report can write: the same check, at the plan)
     Object.entries(a.displayNames || {}).forEach(([k, v]) => writtenName(v, `displayNames: ${visible(String(k)).slice(0, 160)}`));
+  Object.assign(lc, { formats, arabicNames, displayNamesAns, m0, planNames, notTranslated, reused, reusedNames }); }
+// (FN1J) the model read: its fields, their formats, the readable names of an English plan, the Arabic names of an Arabic plan
+function modelStep(lc) { let { a, formats, arabicNames, displayNamesAns, m0, planNames, notTranslated, reused, reusedNames } = lc;
     if (a.path) {
       const m = (m0 = refuseUnreadable(loadModel(a.path))), sc = scopeOf(m, { focus: a.focus, tables: a.tables });
       // (keep the dashboard's identity, the owner's go 12 Oct: the model's report's own theme, the design's default colours)
@@ -164,6 +178,9 @@ export function register(server, ctx) {
       }
       if (fmt) formats = { formats: Object.assign({ sayFirst: `Tell the user first, before the layout: ${fmt.fields.length} of the plan's fields ${fmt.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). create_report shows them right in the report's cards, tooltip and tables anyway; the script sets them in the model too.` }, fmt) };
     }
+  Object.assign(lc, { formats, arabicNames, displayNamesAns, m0, planNames, notTranslated }); }
+// (FN1J) the layout and its fit on the model's fields, the look and the page size
+function layoutStep(lc) { let { a, m0 } = lc;
     // (A2-5: the plan's table fields set the table's share of a narrow row, as create_report's)
     // (0.2.9, audit 2's A2-3: the plan's slots are those the report gets: the writer's measures, Pbip.fitOptions, on the
     // fields the plan names, else the picker's; the design engine's fitSlots, in planLayout)
@@ -189,6 +206,9 @@ export function register(server, ctx) {
     const lookPlan = a.customVisualsFrom == null && !a.pages ? r.look : null;
     // the page size (0.2.9, O-8): who chose it, and the line said (lib/plan-disclosure.mjs)
     const pageSize = pageSizeSaid(a.page != null, page);
+  Object.assign(lc, { noAxis, r, page, fitted, unknown, lookPlan, pageSize }); }
+// (FN1J) the plan checked against the tools' limits and the model (planProblems), the fields against the model
+function limitsStep(lc) { let { LIMITS, a, m0, r } = lc;
     // the plan checked against the tools' limits and the model before it is shown (0.2.9, O-12); a plan within them gets a plan id
     const planProblems = [], pf = a.planFields || {};
     const over = (n, max, what) => { if (n > max) planProblems.push(`${what}: ${n} in the plan, the report takes ${max} at most. Change the plan to ${max} or fewer before showing it.`); };
@@ -210,6 +230,9 @@ export function register(server, ctx) {
     let model = null, planned = null;
     if (a.path) { const m = m0; model = modelRef(m, a.path); if (Object.keys(pf).length) { const fr = fieldsAndProblems(m.tables, pf); fr.problems.forEach((x) => planProblems.push(x + ' (use the names exactly as read_model lists them)')); planned = pf; } }
     else if (Object.keys(pf).length) planProblems.push('planFields need path (the model), so the fields can be checked against it.');
+  Object.assign(lc, { planProblems, pf, model, planned }); }
+// (FN1J) the Gulf date questions
+function gulfDatesStep(lc) { let { a, m0, noAxis, planProblems, pf } = lc;
     // (0.3.0 J17, B-170) the Gulf date questions: which date the plan follows (an active relationship is not the business
     // intent), the grain and the seasonal scope, asked one at a time; a role nothing serves, or a seasonal page with an open
     // question, gets no plan id. The trend's axis: the plan's, or the date the picker takes
@@ -220,6 +243,9 @@ export function register(server, ctx) {
       const GQ = DateQ.gulfDateQuestions(m0, a, { axis: axisG });
       if (GQ) { GQ.problems.forEach((x) => planProblems.push(x)); gulfDates = { gulfDates: GQ.answer }; gulfDateRows = GQ.rows; hijriYear = GQ.hijriYear; }
     }
+  Object.assign(lc, { gulfDates, gulfDateRows, hijriYear }); }
+// (FN1J) the trend's month order
+function monthOrderStep(lc) { let { a, m0, noAxis, planProblems, pf } = lc;
     // 0.2.9 part 2 (O-13): how the plan's month axis will be ordered, said before the plan is shown
     let timeAxis = {};
     if (m0 && !planProblems.length) {
@@ -236,6 +262,9 @@ export function register(server, ctx) {
       // (AP1, E1 round 5 (e): the plan kept a trend instruction after the trend was dropped) no axis: said, and only that
       if (noAxis) timeAxis = { timeAxis: { none: true, sayInPlan: 'Say in the plan: no time axis, as the person asked (planFields.timeAxis "none"): no trend chart, no month tooltip and no date slicer DataArcus would add; the charts by category take the trend\'s place.' } };
     }
+  Object.assign(lc, { timeAxis }); }
+// (FN1J) the native replacements of a report's custom visuals
+function customVisualsStep(lc) { let { a, m0, planProblems } = lc;
     // (0.2.9, custom visuals, step C) the replacements of an existing report's custom visuals, each with what it loses; the
     // plan pins the approved mapping, and create_report writes only that, in a new "<name> native" report
     let customVisuals = {}, cvEntries = null, cvAsk = [], cvArt = null;
@@ -246,18 +275,27 @@ export function register(server, ctx) {
         // (this session only), with their digest and the logical id chosen now: after the go they are written byte for byte
         if (cv.entries.length && !cv.answer.taken) { try { cvArt = nativeArtifact(cv); cv.answer.exact = { digest: cvArt.digest, files: cvArt.files.length, note: 'The exact files the write will write, built now: after the go they are written byte for byte, or nothing is.' }; } catch (e) { planProblems.push('customVisualsFrom: ' + String(e && e.message || e).replace(/^Nothing was written: /, '')); } } }
     }
+  Object.assign(lc, { customVisuals, cvEntries, cvAsk, cvArt }); }
+// (FN1J) the metric switcher's measures
+function switcherStep(lc) { let { a, m0, planProblems } = lc;
     // (L3) the metric switcher's measures: each a measure of the model, 2 to 5, before the plan is shown
     if (a.metricSwitcher) {
       if (!m0) planProblems.push('metricSwitcher needs path (the model), so its measures can be checked against it.');
       else if (a.customVisualsFrom != null) planProblems.push('metricSwitcher is for a new report; a native copy of custom visuals writes the replacements alone.');
       else resolveSwitch(m0.tables, a.metricSwitcher).problems.forEach((x) => planProblems.push(x + ' (use the names exactly as read_model lists them)'));
     }
+  }
+// (FN1J) the status icons
+function iconsStep(lc) { let { a, m0, planProblems } = lc;
     // (L5) the status icons' measures, thresholds and targets, before the plan is shown (a threshold is never guessed)
     if (a.statusIcons && a.statusIcons !== false) {
       if (!m0) planProblems.push('statusIcons needs path (the model), so its measures and targets can be checked against it.');
       else if (a.customVisualsFrom != null) planProblems.push('statusIcons is for a new report; a native copy of custom visuals writes the replacements alone.');
       else if (Array.isArray(a.statusIcons)) resolveIcons(modelOf(m0.tmsl).tables || [], a.statusIcons).problems.forEach((x) => planProblems.push(x));
     }
+  }
+// (FN1J) the DAX function library
+function daxStep(lc) { let { a, m0, planProblems } = lc;
     // (0.3.1 L6) the DAX function library: the model, no function of its own under a DA.* name, not with flipCards' cards
     if (daxOption(a.daxFunctions)) {
       if (!m0) planProblems.push('daxFunctions needs path (the model): its compatibility level and functions are read from the model\'s files.');
@@ -265,22 +303,14 @@ export function register(server, ctx) {
       else resolveDax(m0.tmsl).problems.forEach((x) => planProblems.push(x));
       if (a.flipCards && daxOption(a.daxFunctions).includes('kpiCards')) planProblems.push('daxFunctions "kpiCards" and flipCards both turn the KPI cards into pictures: choose one (daxFunctions without "kpiCards", or flipCards false).');
     }
+  }
+// (FN1J) the shared axes
+function axesStep(lc) { let { a, m0, planProblems } = lc;
     // (0.3.0 J19) the person's answers on shared axes name the model's own measures
     if (a.sharedAxes) { if (!m0) planProblems.push('sharedAxes needs path (the model), so its measures can be checked against it.'); else axesProblems(m0, a.sharedAxes).forEach((x) => planProblems.push(x)); }
-    // 0.3.0 step 1, "Preview before Approve" (the owner's go, 18 Oct): the planned pages as the approval window draws them
-    // (lib/plan-lint.mjs planPreview, the shared renderer's page model), kept with the plan and never in an answer: types,
-    // positions, sizes, titles, field names and theme colours, never a value. A native copy of custom visuals has none
-    // (0.3.0 D5: drawn from the exact artifact's files when there is one, the bytes create_report writes: its titles are
-    // the written titles; built here only for a plan without one)
-    const previewOf = (files) => {
-      if (!m0 || planProblems.length || cvEntries) return null;
-      try {
-        const sc = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (sc.needsFocus) return null;
-        const lang = a.lang === 'ar' ? 'ar' : 'en';
-        return Object.assign({ lang }, planPreview(Object.assign({ m: m0, tables: sc.tables, design: r.design, lang, gallery: a.gallery, axes: m0 ? axesOf(m0, a.sharedAxes) : undefined, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null,
-          second: a.secondPage !== false, panel: a.slidePanel === true, title: a.title || a.name, displayNames: planNames || a.displayNames }, files ? { files } : {})));
-      } catch (e) { return null; }
-    };
+  }
+// (FN1J) the design lint, the names of the fields it adds, the aggregation guard
+function lintStep(lc) { let { a, arabicNames, m0, planNames, notTranslated, reused, reusedNames, r, planProblems, pf } = lc;
     // round 15 (the owner's go on round 13's recommendation 1): gradient bars are the default for designed pages, and the
     // plan the user approves says so
     // 0.2.9 item 11 (LAYER checks): the design lint of the planned page (the writer's page built in memory, read and
@@ -319,6 +349,9 @@ export function register(server, ctx) {
     const aggr = (designLint.designLint && designLint.designLint.aggregation) || null;
     (aggr ? aggr.problems : []).forEach((x) => planProblems.push(`${x.field}: ${a.lang === 'ar' ? x.ar : x.en}`));
     const aggregation = aggr && (aggr.nonAdditive.length || aggr.questions.length) ? { aggregation: aggregationAnswer(aggr, a.lang === 'ar' ? 'ar' : 'en') } : {};
+  Object.assign(lc, { arabicNames, planNames, designLint, aggregation }); }
+// (FN1J) the exact artifact, its check and the path limit
+async function exactStep(lc) { let { a, m0, planNames, planProblems, model, hijriYear } = lc;
     // J14 (0.3, B-168): the exact artifact: the report create_report will write (every page, the tooltip pages, page
     // filters, display names, number formats, SVG measures), built by create_report's own build with this plan's inputs
     // and checked on every page (lib/artifact.mjs); a blocked check gives no plan id, an approved plan writes exactly these
@@ -337,6 +370,9 @@ export function register(server, ctx) {
       const long = exact && m0 && m0.projectDir ? tooLongSaid(m0.projectDir, exact.files) : null;
       if (long) planProblems.push(`the report can't be written there: ${long}.`);
     }
+  Object.assign(lc, { planPin, exact }); }
+// (FN1J) an Arabic page's titles in English, the switcher's labels, the bilingual report's titles
+function titlesStep(lc) { let { a, arabicNames, m0, notTranslated, planProblems, exact } = lc;
     // (0.3.1 TT1) an Arabic plan: the titles the report writes wholly in English (a field in them has no Arabic name), and
     // how to make them Arabic
     // (the owner, 27 Oct: "in arabic if title is english then translate it don't keep english titles in arabic reports")
@@ -366,6 +402,23 @@ export function register(server, ctx) {
       if (english.length) planProblems.push(`the Arabic pages' titles are Arabic (the owner's rule, as for an Arabic report), and ${english.length === 1 ? 'this title has' : 'these titles have'} no approved Arabic yet, so ${english.length === 1 ? 'it' : 'they'} would be written in English on the Arabic pages: ${english.slice(0, 20).map((x) => JSON.stringify(visible(x).slice(0, 120))).join(', ')}${english.length > 20 ? ` and ${english.length - 20} more` : ''} (bilingual.texts). Draft the Arabic of each (its draftArabic, or your own in plain business Arabic), show the drafts to the user to approve or edit, and call plan_layout again with the approved ones as arabicTexts ({ "<the English text>": "..." }); for a title the user keeps English on purpose, give its English text back as its Arabic (it is then written wholly English). No plan id until every title listed has one or the other.`); }
     // (0.3.1 TB1b, D-1027-03) and no plan id while a kept field parameter title would be composed mixed on an Arabic page
     if (exact && exact.bilingual && exact.bilingual.P.mixedTitles.length) { const MT = exact.bilingual.P.mixedTitles; planProblems.push(`a title on a field parameter on the Arabic pages would be mixed, Arabic and English: ${MT.slice(0, 5).map((x) => `"${x.text}" (${x.why})`).join('; ')}. ${MT[0].how.replace('its id in labels', 'its English in arabicTexts')}`); }
+  }
+// (FN1J) the preview and the exact artifact's check, said
+function previewStep(lc) { let { a, m0, planNames, r, planProblems, pf, cvEntries, planPin, exact } = lc;
+    // 0.3.0 step 1, "Preview before Approve" (the owner's go, 18 Oct): the planned pages as the approval window draws them
+    // (lib/plan-lint.mjs planPreview, the shared renderer's page model), kept with the plan and never in an answer: types,
+    // positions, sizes, titles, field names and theme colours, never a value. A native copy of custom visuals has none
+    // (0.3.0 D5: drawn from the exact artifact's files when there is one, the bytes create_report writes: its titles are
+    // the written titles; built here only for a plan without one)
+    const previewOf = (files) => {
+      if (!m0 || planProblems.length || cvEntries) return null;
+      try {
+        const sc = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (sc.needsFocus) return null;
+        const lang = a.lang === 'ar' ? 'ar' : 'en';
+        return Object.assign({ lang }, planPreview(Object.assign({ m: m0, tables: sc.tables, design: r.design, lang, gallery: a.gallery, axes: m0 ? axesOf(m0, a.sharedAxes) : undefined, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null,
+          second: a.secondPage !== false, panel: a.slidePanel === true, title: a.title || a.name, displayNames: planNames || a.displayNames }, files ? { files } : {})));
+      } catch (e) { return null; }
+    };
     // (0.3.1 X2, V1's pictures) a bilingual plan draws each English page beside its Arabic page, from the plan's own build
     // (the copy's files, as create_report writes them); its check is the English build's, as a plan in English
     const preview = exact && exact.bilingual ? (() => { const pv = previewOf(exact.bilingual.english), tw = twinPreview(exact.bilingual.P, exact.files);
@@ -375,6 +428,9 @@ export function register(server, ctx) {
         : exact.check.status === 'incomplete' ? `Tell the user: not every check could run on the report this plan writes (notRun), so it is not known to be clean. ${(exact.check.notRun || []).every((n) => !MUST_RUN[n.check] || n.capped) ? 'The approval page lists what was not checked; create_report writes exactly the files that were checked.' : 'No plan id is given (planProblems).'}`
           : 'The report this plan writes fails its check (blocking): no plan id. Change the plan.' })
       : { status: 'notBuilt', why: planProblems.length ? 'the plan is outside the tools\' limits (planProblems)' : 'create_report would refuse these inputs (call it to see why): nothing to check, and no plan can be written from them' } };
+  Object.assign(lc, { preview, exactCheck }); }
+// (FN1J) the gallery's slots and the kinds the writer gives them, the shared axes said
+function kindsStep(lc) { let { a, r, cvEntries, cvAsk, designLint, exact } = lc;
     // rc.22, B-140 (the owner's rc.21 test: the approved column chart was written as a bar chart): the plan's slots get the
     // kind the writer gives them (its own rules, on the page the lint built as create_report writes it), so what is
     // approved is what is written. (rc.24: the lint runs before the plan is proposed, so the plan's data carries the
@@ -398,6 +454,9 @@ export function register(server, ctx) {
     const axAsk = (galleryPlan || []).flatMap((g) => g.ask || []).concat(cvAsk);
     const sharedAxesAns = axSplits.length || axAsk.length || a.sharedAxes ? { sharedAxes: Object.assign({ splits: axSplits }, axAsk.length ? { ask: axAsk } : {}, a.sharedAxes ? { answered: a.sharedAxes } : {},
       { sayInPlan: 'Say in the plan, for each chart whose measures stay apart, that they are separate visuals and why (the reason is given in English and Arabic): measures share one axis only in the same unit, scale and currency, and only when the user says they compare; there is never a second axis, and no currency is converted. Ask the user each question in ask, in their words; pass only their own answer back as sharedAxes, then make the plan again.' }) } : {};
+  Object.assign(lc, { galleryPlan, kinds, ofKind, writtenKinds, sharedAxesAns }); }
+// (FN1J) what the exact build writes, said: bars, gallery, waterfalls, switch, flip, formats, calendar, icons, DAX, both languages
+function saidStep(lc) { let { a, formats, m0, designLint, exact, galleryPlan } = lc;
     // (0.3.1 FX3b, D-1028-06, FX5b's item 3) the charts whose bars the writer makes thinner, by the number of categories
     // each shows: said in the plan before the go (counts and sizes only, never a category's name or value)
     const barThickness = exact && exact.barThickness ? { barThickness: Object.assign({}, exact.barThickness, { sayInPlan: 'Say in the plan, before the go, which charts get thinner bars and why: said.en for a person who reads English, said.ar for Arabic (counts and sizes only).' }) } : {};
@@ -424,6 +483,9 @@ export function register(server, ctx) {
     const daxPlan = exact && exact.dax ? exact.dax : null;
     // (0.3.1 X2) the bilingual report as the plan's exact build made it: both halves, said before the go
     const biSaid = exact && exact.bilingual ? bilingualSaid(exact.bilingual) : null;
+  Object.assign(lc, { formats, barThickness, gallery, waterfallRtl, switchPlan, flipPlan, calFile, calPlan, calendarArabic, iconsPlan, daxPlan, biSaid }); }
+// (FN1J) the slicers and the bilingual report, said
+function slicersStep(lc) { let { a, pf, exact, biSaid } = lc;
     // (the answer compact, Q1: every text and field whole; a draft once, the widened buttons and columns counted, the cut
     // ones listed; the plan's data keeps every list for the approval page)
     // (0.3.1 LR1, the laptop's tour: 2 slicers asked, a third bound unsaid) every slicer the report writes, named in the
@@ -443,6 +505,9 @@ export function register(server, ctx) {
       buttons: biSaid.buttons.map(({ goesTo, text: tx, ...b }) => b), syncGroups: biSaid.syncGroups.map(({ arabicSlicer, ...g }) => g),
       ...(biSaid.fitted ? { fitted: Object.assign({}, biSaid.fitted, { buttons: (biSaid.fitted.buttons || []).length, headers: (biSaid.fitted.headers || []).length }) } : {}) }) } : {};
     const biWrites = biSaid ? ` (in English and Arabic: its ${biSaid.pairs.length} English pages and their ${biSaid.pairs.length} Arabic pages, ${biSaid.buttons.filter((b) => b.placed).length} language buttons, ${biSaid.syncGroups.length} slicer pairs kept in sync, the ${a.tabsShown === 'ar' ? 'English' : 'Arabic'} pages hidden in the tabs)` : '';
+  Object.assign(lc, { slicersAns, bilingual, biWrites }); }
+// (FN1J) what the plan writes, in English and Arabic, and the status icons said
+function writesStep(lc) { let { a, formats, m0, cvEntries, switchPlan, flipPlan, calFile, calPlan, iconsPlan, daxPlan, biSaid, biWrites } = lc;
     const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0, axesOf(m0, a.sharedAxes), { second: a.customVisualsSecond }).writes : [`the report "<name>.Report" and its "<name>.pbip" ${m0 && m0.projectDir ? whereSaid(m0.projectDir).replace(/, next to "[^"]*"$/, '') + ', next to the model' : 'next to the model'}, with the theme inside it${biWrites}${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"${formats.formats.alreadyThere ? ' (already there with exactly this script: not written again)' : ''}` : ''}${switchPlan ? `, and the metric switcher's TMDL script "<name>${SCRIPT_SUFFIX}.tmdl" (a new table for the model, ${NEVER_APPLIED})` : ''}${flipPlan ? `, and the flip cards' TMDL script "${flipPlan.scriptAfterGo}" (${flipPlan.newMeasures} new measures, ${NEVER_APPLIED})` : ''}${iconsPlan && iconsPlan.scriptAfterGo ? `, and the status icons' TMDL script "${iconsPlan.scriptAfterGo}" (${iconsPlan.newMeasures} new measures, ${NEVER_APPLIED})` : ''}${daxPlan ? `, and the DAX functions' TMDL script "${daxPlan.scriptAfterGo}" (${daxPlan.functions.filter((f) => f.inScript).length} functions and ${daxPlan.measures.length} measures, ${NEVER_APPLIED}; ${daxPlan.compatibility.raises ? 'applying it raises the model\'s compatibility level to 1702, which cannot be undone' : 'the model is already at 1702 or higher'})` : ''} (create_report)`];
     if (calFile && a.customVisualsFrom == null && writes.length) writes[0] += `, and the Arabic calendar columns' TMDL script "${calFile}" (${calPlan ? `${calPlan.columns.length} column${calPlan.columns.length === 1 ? '' : 's'}` : 'columns'} for the date table, ${NEVER_APPLIED})`;
     // (SQ3, T1-S6) the same line in Arabic, for an Arabic report's approval page (a native copy's stays English)
@@ -455,6 +520,9 @@ export function register(server, ctx) {
       + (daxPlan ? `، وسكربت TMDL لدوال DAX «${daxPlan.scriptAfterGo}» (الدوال: ${daxPlan.functions.filter((f) => f.inScript).length}، المقاييس: ${daxPlan.measures.length}، ${NA}؛ ${daxPlan.compatibility.raises ? 'تطبيقه يرفع مستوى التوافق في النموذج إلى 1702، ولا يمكن التراجع عنه' : 'النموذج عند 1702 أو أعلى'})` : '')
       + (calFile ? `، وسكربت TMDL لأعمدة التقويم العربية «${calFile}» (أعمدة لجدول التاريخ: ${calPlan ? calPlan.columns.length : '?'}، ${NA})` : '') + ' (create_report)'] : null;
     const statusIcons = iconsPlan ? { statusIcons: Object.assign({}, iconsPlan, { pending: undefined, sayInPlan: `Say in the plan: which table or matrix columns get a status icon (columns), how each is decided (rule: the user's thresholds as given, or the target the model names), that the icons differ in shape${iconsPlan.scriptAfterGo ? `, and the model change: ${iconsPlan.newMeasures} new status measures in the script "${iconsPlan.scriptAfterGo}" next to the project: the user must apply the script first, in TMDL view (the model is not changed by DataArcus; until then no icon shows)` : ''}${(iconsPlan.notShown || []).length ? '; and each measure left without an icon, with why (notShown)' : ''}.` }) } : {};
+  Object.assign(lc, { writes, writesAr, statusIcons }); }
+// (FN1J) the terminology sheet of an Arabic plan
+function terminologyStep(lc) { let { a, arabicNames, m0, planNames, notTranslated, reused, exact, switchPlan, flipPlan } = lc;
     // (0.3.0 J18, B-171) the terminology sheet of an Arabic plan: every field the report shows (read from the exact
     // artifact's files when there is one), where it shows, its English name and its Arabic and their status, and the one
     // term to ask next. The plan's data keeps the rows for the approval page, and the terms are remembered once written
@@ -483,6 +551,9 @@ export function register(server, ctx) {
           .concat(switchKeys.includes(k) ? [`${switchPlan.page}: a choice of the metric switcher (its slicer and its charts' title)`] : []))]; });
       terminology = { terminology: Object.assign({ sheet: termRows }, Terms.askNextOf(termRows), { how: Terms.HOW }) };
     }
+  Object.assign(lc, { terminology, termRows }); }
+// (FN1J) the DAX library and flip cards said, the proposal (or the problems), the cards, kinds, colours, switch and page names
+function planStep(lc) { let { a, formats, m0, planNames, notTranslated, r, lookPlan, planProblems, model, planned, gulfDateRows, customVisuals, cvEntries, cvArt, planPin, exact, preview, galleryPlan, kinds, writtenKinds, switchPlan, flipPlan, iconsPlan, daxPlan, biSaid, slicersAns, writes, writesAr, termRows } = lc;
     // (L6) the compatibility step FIRST in the plan's answer, before anything else
     const daxFunctions = daxPlan ? { daxFunctions: Object.assign({ sayFirst: daxPlan.compatibility.sayFirst }, daxPlan, { pending: undefined, sayInPlan: `Say FIRST in the plan, before anything else, in the user's language: ${daxPlan.compatibility.sayFirst} Then: the four functions (DA.Sparkline, DA.BulletBar, DA.KpiCard, DA.StoryTitle), each measure that calls one and where it shows (used), what was not used and why (notUsed),${a.lang === 'ar' ? ' each story title\'s language (used.storyTitles sentence: an Arabic sentence only for a measure shown under an Arabic name, else English; its leader is a value of the data, shown as the model holds it, so it can be in the other language: a data value is never translated),' : ''} and the model change: the script "${daxPlan.scriptAfterGo}" next to the project, which the user applies in TMDL view (the model is not changed by DataArcus; in Power BI Desktop each KPI card, story title and table picture column shows an error until you apply the script).` }) } : {};
     // (0.3.1 SQ10, Q1-S8) the answer's cards once each (a measure's card, its title and back), with the pages that show
@@ -510,6 +581,9 @@ export function register(server, ctx) {
     const metricSwitcher = switchPlan ? { metricSwitcher: Object.assign({ sayInPlan: 'Say in the plan: the Metric page, its slicer and the charts that switch, each measure with its label, every measure in leftOut with its why (its table is not related to the charts\' axes), and the model change: a new table as a TMDL script file next to the project that the user applies in TMDL view (DataArcus never changes the model); until it is applied only that page shows Power BI\'s error. Show howToApply after the write.' }, switchPlan) } : {};
     // (0.3.1 BD2) the Arabic page and tooltip page names that keep a Latin run, from the exact files (tabs lay out left to right)
     const pageNames = (a.lang === 'ar' || a.languages === 'en+ar') && exact && Array.isArray(exact.files) ? { pageNames: Terms.pageNamesOf(exact.files) } : {};
+  Object.assign(lc, { daxFunctions, flipCards, plan, cards, kindChanges, chartColors, metricSwitcher, pageNames }); }
+// (FN1J) the answer, its repeats said once past 95% of the limit
+function answerStep(lc) { let { LIMITS, formats, arabicNames, displayNamesAns, r, page, fitted, unknown, lookPlan, pageSize, gulfDates, timeAxis, customVisuals, designLint, aggregation, exactCheck, ofKind, sharedAxesAns, barThickness, gallery, waterfallRtl, calendarArabic, biSaid, slicersAns, bilingual, statusIcons, terminology, daxFunctions, flipCards, plan, cards, kindChanges, chartColors, metricSwitcher, pageNames } = lc;
     // (0.3.2 HR1) past 95% of the answer limit, the repeats said once (lib/plan-headroom.mjs) before the cap would cut
     return text(fitRepeats(Object.assign(daxFunctions, formats, arabicNames, terminology, pageNames, bilingual, gulfDates, displayNamesAns, customVisuals, plan, slicersAns, timeAxis, designLint, exactCheck, cards, barThickness, kindChanges, gallery, sharedAxesAns, waterfallRtl, flipCards, statusIcons, aggregation, metricSwitcher, calendarArabic, { phone: phoneAnswer(r.design.layout.phoneLayout !== false) }, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds, or all of them when it has at most N + 2; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => {
       // (0.2.9.1, B-174) what the writer keeps on the plan's page (the lint built it): its N and up to how many categories it
@@ -518,5 +592,4 @@ export function register(server, ctx) {
       (lt || []).forEach((t) => { const sl = ofKind(t.from)[t.nth]; if (sl) written.set(sl, t); });
       const tops = r.slots.filter((x) => x.topN && (!lt || written.has(x))).map((x) => Object.assign({ role: x.role, kind: x.kind, top: x.topN }, written.has(x) ? { top: written.get(x).top, allUpTo: written.get(x).allUpTo } : {}));
       return tops.length ? { categoryCharts: { tops, sayInPlan: `Each bar and column chart by a category shows the categories its place can hold, its Top N by its measure (${tops.map((x) => `${x.role}: ${topSaid(x)}`).join('; ')}): the rest are left out, with no "Other" bar. Its title says "Top N of M:" (for example "Top 9 of 16:") only when it leaves categories out, counted in the report; a chart that shows all its categories keeps its plain title. Say it in the plan; a month or day axis keeps all its values in order.` } } : {}; })(), { limits: LIMITS, page, pageSize, ...(lookPlan ? { look: lookPlan } : {}), fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.preview ? { preview: r.preview } : {}, r.pageTint ? { pageTint: r.pageTint } : {}, r.colours ? { colours: r.colours } : {}, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design })), biSaid ? { last: BILINGUAL_LAST } : undefined);   // (X2: the texts to approve cut last)
-  }));
 }
