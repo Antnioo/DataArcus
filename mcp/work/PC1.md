@@ -9,7 +9,7 @@
 - **Expected checks:** test-powerbi-prices.mjs: new checks red on 207784c6 (3 places say 23 September, fallback
   2026-10-03 vs JSON 2026-11-02), then PASS; check:min, sitemap-lastmod, site config PASS; run-all tools, site PASS.
 - **Got:** test-powerbi-prices 29/29 (3 red before the sync: page span, translations spans, fallback; red on 207784c6's data first); run-all site 629, tools 399, lang-switcher 1442 PASS; 0.3.0-claims 721 PASS; lint 0. Code: 7cf571ec.
-- **Resume:** CI next (2026-11-09T04:23Z); earlier: plan written (2026-11-09T04:08Z); next the red check, then syncChecked, the workflow, the sync run, CI.
+- **Resume:** done; waits for the reviewer (2026-11-09T04:51Z). CI green: https://github.com/Antnioo/DataArcus/actions/runs/42562897929 on 1268e8f8 (first run 42561593473 red only on sitemap lastmod, fixed).
 
 ## Plan
 1. Red first: add the drift check to scripts/test-powerbi-prices.mjs (already run by tests.yml).
