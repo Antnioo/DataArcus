@@ -1,3 +1,5 @@
+STOP: B-416 turns `fn1j` red on Linux and macOS: fixtures/fn1j-pins.json pins plan_layout's answer for case G12 (the path limit, a Linux run) and the sentence now says `(for example ~/PBI)` where the base said `(for example C:/PBI)` (the only differing text, measured with FN1J_DUMP on 0f5d0f79 and on this branch). The brief forbids touching fn1j-pins.json, so I did not re-record it; CI cannot be green until the reviewer re-records G12 (or lifts the stay-out). Nothing else in the report area failed.
+
 # PH1 (0.3.2): the last two path compares call path-rules.mjs; tooLongSaid's example follows the platform (B-412, B-416)
 
 ## Summary
@@ -5,7 +7,7 @@
 - **Base:** `fix/0.3.2-ph1` from `origin/integration/0.3.2` at 0f5d0f79 (FN1J merged). Push only this branch.
 - **Scope:** redesign.mjs `same` and report-build.mjs `fsInTree` call path-rules.mjs `sameOnDisk`; `tooLongSaid` example: win32 `C:\PBI`, darwin and linux `~/PBI`. New suite ph1. Not plan_layout.mjs or FN1J's files.
 - **Expected checks:** new `ph1` red on 0f5d0f79 first (tooLongSaid darwin and linux, the two source checks); redesign, sp2, sp43, fn1f, wn1 and the pinning split tests unchanged counts; mutation run before and after.
-- **Resume:** 2026-11-09T07:03Z: State: code and note done, area run and CI next.
+- **Resume:** 2026-11-09T07:03Z: State: code pushed (b5890f1b); report area passes except fn1j G12 (see STOP); CI not started.
 
 ## Plan
 1. redesign.mjs: import sameOnDisk, delete local `same`, message unchanged.
