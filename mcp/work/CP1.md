@@ -85,6 +85,16 @@ engine the page runs). Before and after the fixes; the article's numbers are thi
   (78 URLs, 81 pages, no em dash in 1660 files); `node scripts/ar-pages.mjs` PASS (39 copies); `npm run check:min` PASS
   (stamps 1264); `node scripts/csp.mjs` 142 pages; `npm run lint` 0; check-agent-memory, check-modules (217),
   check-literal-requires, check-result-lines, changelog-words, check-contracts PASS. deny-scan needs DENY_TERMS (CI only).
+- **CI, run 1** (https://github.com/Antnioo/DataArcus/actions/runs/42619148915, on 839b1506): red in fx3 C1 (the owner's
+  D-1028-05: «تجريبية», never «مختلق»; I had one «مختلق» in the Arabic p2). Fixed in 0d528475; fx3 17/17 locally.
+  **Run 2** (https://github.com/Antnioo/DataArcus/actions/runs/42622150469, on 0d528475): every MCP job green (Linux and
+  Windows); red in the two characterisation suites, sp35 (E1, A1 home; E8, A8 blog) and sp36 (S1, S2, S3, S5, S6, S7,
+  S11), each because the home page and the blog changed on purpose. Re-pinned on purpose, as RV1 round 2 did for its
+  subtitle: `SP35_RECORD=1 SP36_RECORD=1`, then every changed line checked. The only keys that moved:
+  `scripts/tests/fixtures/sp35-site.json` counters "16 2 7 8 1" -> "17 2 7 8 1" (20 lines: the article count), aos 17 ->
+  18 and cards (one more card at index 0, so the search and filter results shift by one: "2,3,7,8,10,14" ->
+  "3,4,8,9,11,15", "3,8" -> "4,9"; 40 lines); `sp36-lang.json` i18n and dict of the home page and the blog (EN and AR:
+  dict 42532 -> 43065 and 19396 -> 20082; 68 lines). Nothing else moved; both suites pass again (sp35 38, sp36 18).
 - **On the page (Chromium, 1280 and 390, EN and AR):** no page error, no horizontal scroll at 390, `dir="rtl"` on the
   Arabic copy. The first shots showed code runs (`[Margin %]`, `0.0%`) drawn reversed and «لـ» split from Copilot at a
   line end: every `<code>` in the Arabic is now inside `<bdi>`, and «لـ» is joined to Copilot with a no-break space in the
