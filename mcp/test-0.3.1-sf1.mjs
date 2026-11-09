@@ -21,7 +21,7 @@ import { writeLab, NAME } from './lab/custom-visuals-lab.mjs';
 import { SHARED_AXES } from './lab/custom-visuals-run.mjs';
 import { writeLab as writeCLab } from './lab/consistency-lab.mjs';
 import { visualText, KNOWN_TYPES } from './lib/text-format.mjs';
-import { downloadFacts } from '../scripts/check-release.mjs';
+import { downloadFacts, releasedVersion } from '../scripts/check-release.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const problems = []; let checks = 0;
@@ -242,12 +242,10 @@ try {
   const readme = read('README.md'), inst = (/## Claude Desktop \(beta\)[\s\S]*?(?=\n## )/.exec(readme) || [''])[0];
   const step = inst.split(/\n(?=\d+\. )/).find((b) => /0\.3\.0/.test(b) && /[Gg]o(?:ing)? back/.test(b)) || '';
   chk(() => /https:\/\/github\.com\/Antnioo\/dataarcus-releases\/releases\b/.test(step) && /SHA-256/.test(step) && /CHANGELOG/.test(step) && /double-click/.test(step), () => `WB-3. mcp/README.md's install section says how to go back to 0.3.0: ${step.slice(0, 300)}`);
-  // the RELEASE comment, applied as it says (step 2's three places), leaves every download line on 0.3.1
-  const rel = /<!-- RELEASE 0\.3\.1:[^>]*-->/.exec(readme);
-  const flipped = readme.replace(/(\n2\. \*\*Get the extension:\*\*[\s\S]*?)(?=\n3\. )/, (m) => m.replace(/0\.3\.0/g, '0.3.1'));
-  const facts = downloadFacts(flipped.replace(/<!--[\s\S]*?-->/g, ''));
-  chk(() => rel && !/0\.3\.0/.test((/\n2\. \*\*Get the extension:\*\*[\s\S]*?(?=\n3\. )/.exec(flipped) || ['0.3.0'])[0]) && facts.length && facts.every((f) => f.kind !== 'sha' && (f.value === '0.3.1' || f.value === 'dataarcus-0.3.1.mcpb')),
-    () => `WB-4. the RELEASE comment applied: step 2 on 0.3.1, and no download line names another version: ${JSON.stringify(facts)}`);
+  // every download line in README.md names the one released version (from check-release.mjs), never a SHA
+  const REL = releasedVersion(), facts = downloadFacts(readme.replace(/<!--[\s\S]*?-->/g, ''));
+  chk(() => facts.length && facts.every((f) => f.kind !== 'sha' && (f.value === REL || f.value === `dataarcus-${REL}.mcpb`)),
+    () => `WB-4. every download line names the one released version ${REL}, no SHA: ${JSON.stringify(facts)}`);
 } catch (e) { checks++; problems.push('stopped: ' + String(e && e.stack || e).slice(0, 600)); }
 finally { ROOTS.forEach((d) => fs.rmSync(d, { recursive: true, force: true })); }
 if (problems.length) { console.log(`FAIL script=test-0.3.1-sf1.mjs cause=${problems[0].slice(0, 160)}`); problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  sf1  ${problems.length} of ${checks} checks`); process.exit(1); }

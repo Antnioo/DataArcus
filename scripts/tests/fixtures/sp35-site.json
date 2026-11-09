@@ -1756,7 +1756,7 @@
      "gtag": [
       "[\"js\",\"Date\"]",
       "[\"config\",\"G-RC3MRC4JZH\"]",
-      "[\"event\",\"mcp_download_click\",{\"page_type\":\"power-bi-mcp/\",\"release_tag\":\"v0.3.1\",\"link_text\":\"Download 0.3.1\"}]"
+      "[\"event\",\"mcp_download_click\",{\"page_type\":\"power-bi-mcp/\",\"release_tag\":\"v<release>\",\"link_text\":\"Download <release>\"}]"
      ],
      "clarity": [
       "[\"consentv2\",{\"ad_Storage\":\"denied\",\"analytics_Storage\":\"granted\"}]",
@@ -1797,7 +1797,7 @@
      "gtag": [
       "[\"js\",\"Date\"]",
       "[\"config\",\"G-RC3MRC4JZH\"]",
-      "[\"event\",\"mcp_download_click\",{\"page_type\":\"power-bi-mcp/\",\"release_tag\":\"v0.3.1\",\"link_text\":\"Download 0.3.1\"}]",
+      "[\"event\",\"mcp_download_click\",{\"page_type\":\"power-bi-mcp/\",\"release_tag\":\"v<release>\",\"link_text\":\"Download <release>\"}]",
       "[\"event\",\"form_start\",{\"page_type\":\"power-bi-mcp/\",\"form_id\":\"beta-form\"}]"
      ],
      "clarity": [
@@ -1840,7 +1840,7 @@
      "gtag": [
       "[\"js\",\"Date\"]",
       "[\"config\",\"G-RC3MRC4JZH\"]",
-      "[\"event\",\"mcp_download_click\",{\"page_type\":\"power-bi-mcp/\",\"release_tag\":\"v0.3.1\",\"link_text\":\"Download 0.3.1\"}]",
+      "[\"event\",\"mcp_download_click\",{\"page_type\":\"power-bi-mcp/\",\"release_tag\":\"v<release>\",\"link_text\":\"Download <release>\"}]",
       "[\"event\",\"form_start\",{\"page_type\":\"power-bi-mcp/\",\"form_id\":\"beta-form\"}]",
       "[\"event\",\"beta_request\",{\"page_type\":\"power-bi-mcp/\",\"form_id\":\"beta-form\"}]"
      ],
@@ -4691,7 +4691,7 @@
      "gtag": [
       "[\"js\",\"Date\"]",
       "[\"config\",\"G-RC3MRC4JZH\"]",
-      "[\"event\",\"mcp_download_click\",{\"page_type\":\"power-bi-mcp/\",\"release_tag\":\"v0.3.1\",\"link_text\":\"نزّل الإصدار 0.3.1\"}]"
+      "[\"event\",\"mcp_download_click\",{\"page_type\":\"power-bi-mcp/\",\"release_tag\":\"v<release>\",\"link_text\":\"نزّل الإصدار <release>\"}]"
      ],
      "clarity": [
       "[\"consentv2\",{\"ad_Storage\":\"denied\",\"analytics_Storage\":\"granted\"}]",
@@ -4732,7 +4732,7 @@
      "gtag": [
       "[\"js\",\"Date\"]",
       "[\"config\",\"G-RC3MRC4JZH\"]",
-      "[\"event\",\"mcp_download_click\",{\"page_type\":\"power-bi-mcp/\",\"release_tag\":\"v0.3.1\",\"link_text\":\"نزّل الإصدار 0.3.1\"}]",
+      "[\"event\",\"mcp_download_click\",{\"page_type\":\"power-bi-mcp/\",\"release_tag\":\"v<release>\",\"link_text\":\"نزّل الإصدار <release>\"}]",
       "[\"event\",\"form_start\",{\"page_type\":\"power-bi-mcp/\",\"form_id\":\"beta-form\"}]"
      ],
      "clarity": [
@@ -4775,7 +4775,7 @@
      "gtag": [
       "[\"js\",\"Date\"]",
       "[\"config\",\"G-RC3MRC4JZH\"]",
-      "[\"event\",\"mcp_download_click\",{\"page_type\":\"power-bi-mcp/\",\"release_tag\":\"v0.3.1\",\"link_text\":\"نزّل الإصدار 0.3.1\"}]",
+      "[\"event\",\"mcp_download_click\",{\"page_type\":\"power-bi-mcp/\",\"release_tag\":\"v<release>\",\"link_text\":\"نزّل الإصدار <release>\"}]",
       "[\"event\",\"form_start\",{\"page_type\":\"power-bi-mcp/\",\"form_id\":\"beta-form\"}]",
       "[\"event\",\"beta_request\",{\"page_type\":\"power-bi-mcp/\",\"form_id\":\"beta-form\"}]"
      ],

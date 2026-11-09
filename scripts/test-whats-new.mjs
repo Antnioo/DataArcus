@@ -5,8 +5,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
+import { releasedVersion } from './check-release.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const atLeast031 = (v) => { const [a, b, c] = v.split('.').map(Number); return a > 0 || b > 3 || (b === 3 && c >= 1); };
+const RELEASED = releasedVersion();   // the released version, read in one place (check-release.mjs)
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const box = { window: {} };
 vm.runInNewContext(read('assets/js/translations/beta-page.js'), box);
@@ -84,7 +87,7 @@ for (const [lang, html] of Object.entries(pages)) {
   const hidden = /^<section id="new-031"[^>]*\shidden(?:="")?[\s>]/.test(sec), hero = (html.match(/<a [^>]*>[^<]*<i [^>]*bi-download[^>]*><\/i><span data-i18n="beta\.hero\.button">([^<]*)<\/span>/) || [])[1] || '';
   if (hidden) ok(/0\.3\.0/.test(hero) && !/0\.3\.1/.test(hero), `${lang}: the 0.3.1 section is hidden, but the download says "${hero}" (0.3.0 until the release)`);
   else {
-    ok(/0\.3\.1/.test(hero), `${lang}: the 0.3.1 section is shown, but the download says "${hero}" (show it at the release, with the 0.3.1 download)`);
+    ok(hero.includes(RELEASED) && atLeast031(RELEASED), `${lang}: the 0.3.1 section is shown, but the download says "${hero}" (want the released version ${RELEASED}, 0.3.1 or later)`);
     ok(!PLACEHOLDER.test(((T[lang].beta.new31) || {}).date || ''), `${lang}: the 0.3.1 section is shown with the date placeholder: set the release day`);
   }
   ok(html.indexOf('<section id="new-031"') < html.indexOf('<section id="new">'), `${lang}: the 0.3.1 section comes after the 0.3.0 one (newest first)`);
