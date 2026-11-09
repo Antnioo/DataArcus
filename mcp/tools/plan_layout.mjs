@@ -320,7 +320,6 @@ function lintStep(lc) { let { a, arabicNames, m0, planNames, notTranslated, reus
       if (planProblems.length) return { skipped: 'the plan is outside the tools\' limits (planProblems): change it first' };
       try {
         const sc = scopeOf(m0, { focus: a.focus, tables: a.tables });
-        if (sc.needsFocus) return { skipped: 'a large model needs a focus or tables to plan the page\'s fields' };
         return planLint({ m: m0, tables: sc.tables, design: r.design, lang: a.lang === 'ar' ? 'ar' : 'en', gallery: a.gallery, axes: m0 ? axesOf(m0, a.sharedAxes) : undefined, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null });
       } catch (e) { return { skipped: 'the planned page could not be built for the lint: ' + String(e && e.message || e).slice(0, 200) }; }
     })() };
