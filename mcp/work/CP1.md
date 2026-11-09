@@ -1,4 +1,4 @@
-State: DONE (CI green: https://github.com/Antnioo/DataArcus/actions/runs/42625021186 on 3a50c4fa; the Arabic listed for the owner under "For the owner": the page ships only after his yes)
+State: DONE (CI green: https://github.com/Antnioo/DataArcus/actions/runs/42635901639 on 5a42b615, the owner's 10 Arabic changes in; before them run 42625021186 on 3a50c4fa. Arabic APPROVED 9 Nov, D-1109-07. No PR: the hub opens it after #117)
 
 # CP1 (content): the article "Is your Power BI model ready for Copilot? How to check in 10 minutes" (EN and AR)
 
@@ -98,6 +98,9 @@ engine the page runs). Before and after the fixes; the article's numbers are thi
   "3,4,8,9,11,15", "3,8" -> "4,9"; 40 lines); `sp36-lang.json` i18n and dict of the home page and the blog (EN and AR:
   dict 42532 -> 43065 and 19396 -> 20082; 68 lines). Nothing else moved; both suites pass again (sp35 38, sp36 18).
   **Run 3** (https://github.com/Antnioo/DataArcus/actions/runs/42625021186, on 3a50c4fa): green, every job.
+  **Run 4** (https://github.com/Antnioo/DataArcus/actions/runs/42635901639, on 5a42b615, the owner's 10 changes and
+  ARABIC-STYLE.md): green, every job. Locally before the push: claims 752, fx3 17, site config (78 URLs, 81 pages),
+  ar-pages 39, stamps 1264, csp 142, lint 0, agent-memory 464; the Arabic page at 390 wide read again.
 - **On the page (Chromium, 1280 and 390, EN and AR):** no page error, no horizontal scroll at 390, `dir="rtl"` on the
   Arabic copy. The first shots showed code runs (`[Margin %]`, `0.0%`) drawn reversed and «لـ» split from Copilot at a
   line end: every `<code>` in the Arabic is now inside `<bdi>`, and «لـ» is joined to Copilot with a no-break space in the
