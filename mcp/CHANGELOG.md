@@ -4,7 +4,30 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
-## [Unreleased]: 0.3.2
+## [0.3.2]: 2026-11-09 (the version for testers, second round)
+The second version for testers. In short:
+- **The approval page says what the click writes:** every page and tooltip page it writes, and on each page every
+  visual, slicer, button and card, in plain words and in the order a person reads the page, with a picture of each
+  tooltip page in the preview.
+- **Check that a copy asks the same questions:** `check_report` with the original as `against` says, visual by visual,
+  whether an Arabic twin, a native copy, a redesign or your own copy asks the model the same question; it reads the
+  files and changes nothing.
+- **Arabic names in the model, as an option of the Arabic twin:** a script for TMDL view that gives the model's fields
+  the Arabic names you approved, for each Gulf culture.
+- **Ramadan and Eid measures with the Gulf calendar:** add_gulf_calendar can add the same Ramadan days of the Hijri
+  year before, their growth and the Eid windows for up to 5 of your measures; every rate and date is sourced.
+- **The Arabic twin, steadier:** tables reach the right edge, an Arabic label beside a value keeps the value in its
+  place, a chart under a heatmap keeps its hours in line, and a turned chart that holds a running calculation is named
+  so you can check it in Desktop.
+- **Windows:** a folder whose name begins with two dots, a .pbip that names its folder in another case, an approval
+  page the browser never opened, and a plan whose files would pass the 260-character path limit (refused before you
+  approve, with a plain message).
+- **Shorter, plainer answers:** every answer has its cap, input errors too; `timeAxis: "none"` for a report with no
+  time axis, and `lang` for the several-models answer in Arabic or English.
+- **Inside, in smaller pieces:** much of the MCP, the website and the design engine is split into files of their own,
+  shared by the website and the MCP; every report, check and answer is what it was before.
+
+Every change, newest first:
 - **Folder compares and the "shorter folder" example follow the system:** the last two places that compared folders by hand (the redesign's check that a report is on the model given, and the format script placed in the project) now use the one shared compare, and the refusal for a too-long path suggests `~/PBI` on macOS and Linux (`C:\PBI` stays on Windows).
 - **The cost calculator's "checked" date is the date of the weekly price check:** the page said 23 September while the prices were checked on 2 November; the weekly check now writes its date into the page, its Arabic text and the built-in fallback, so the three can no longer differ (no price changed).
 - **Four fixes for Windows:** a project in a folder whose name begins with two dots ("..draft") is now read and written like any other folder of the working folder (it was refused as outside, while every way out is still refused); the report a .pbip opens is found when the .pbip names its folder in another case; when the browser starts but never opens the approval page, DataArcus tries a second way on Windows and then leaves a shortcut to the page in the computer's temporary folder: on Windows DataArcus opens that folder in a window and the AI is not told where it is, on macOS and Linux the answer says where (the link itself is never given to the AI); and a plan whose deepest file would pass Windows' 260-character path limit gets no plan id, with a plain message, instead of failing half-way after the approval.

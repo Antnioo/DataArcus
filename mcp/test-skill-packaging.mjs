@@ -52,10 +52,14 @@ check(cm.name === MARKET && gm.name === MARKET && cp.name === PLUGIN && gp.name 
 // same (so does every release file name in the README), and it is the newest released version (mcp/CHANGELOG.md's newest "## [x.y.z]") or the next one being built
 const V = cp.version || '';
 const URL_OF = (v) => `https://github.com/Antnioo/dataarcus-releases/releases/download/v${v}/dataarcus-${v}.mcpb`;
+const releasedAll = [...readText(path.join(HERE, 'CHANGELOG.md')).matchAll(/^## \[(\d+\.\d+\.\d+)\]/gm)].map((x) => x[1]);
+// (9 Nov, 0.3.2) the CHANGELOG names a version the day it is built, before its release exists: until the download lines
+// move to it (after the publish), the plugin still names the version before it, which is out
+const before = releasedAll[1] || '';
 const released = ((readText(path.join(HERE, 'CHANGELOG.md')).match(/^## \[(\d+\.\d+\.\d+)\]/m) || [])[1]) || '';
 const readmeVersions = [...readText(path.join(SRC, 'README.md')).matchAll(/dataarcus-(\d+\.\d+\.\d+)/g)].map((x) => x[1]);
 const nextOf = (v) => { const [a, b, c] = v.split('.').map(Number); return [`${a}.${b}.${c + 1}`, `${a}.${b + 1}.0`, `${a + 1}.0.0`]; };
-check(/^\d+\.\d+\.\d+$/.test(V) && [gp.version, entryOf(cm).version, entryOf(gm).version].every((v) => v === V) && readmeVersions.length > 0 && readmeVersions.every((v) => v === V) && released && [released, ...nextOf(released)].includes(V),
+check(/^\d+\.\d+\.\d+$/.test(V) && [gp.version, entryOf(cm).version, entryOf(gm).version].every((v) => v === V) && readmeVersions.length > 0 && readmeVersions.every((v) => v === V) && released && [released, before, ...nextOf(released)].filter(Boolean).includes(V),
   `one version in the folder: plugin.json ${V}, Copilot ${gp.version}, marketplaces ${entryOf(cm).version}/${entryOf(gm).version}, README ${[...new Set(readmeVersions)].join('/')}; the newest release is ${released}`);
 
 // 8: Claude Code starts the released .mcpb of that version, from its URL (the plugin carries no DataArcus code)
