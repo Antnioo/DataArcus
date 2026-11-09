@@ -5,7 +5,7 @@
 - **Base:** `fix/0.3.3-sg1` from `origin/integration/0.3.3` at 8f5624e6 (LK1 merged). Push only this branch.
 - **Scope:** 11 groups SAME JOB moved into an existing shared file (no new module), 4 groups DIFFERENT written down below for the engine's allow list. No behaviour change: every answer, page and written file byte for byte the same.
 - **Expected checks:** new suite `sg1` (one parity part per moved group, red on 8f5624e6 first: the shared names do not exist there); every split test that pins the touched files' requires (sp10, sp11, sp20, sp21, sp26, sp30, sp38, sp40, sp42) passes, a new shared require allowed on purpose and said per test; no recorded fixture moves; test-contracts, check-contracts, check-modules, lint PASS; areas report, core, arabic, checker, model; site suites dd2w, theme-generator, build page.
-- **Resume:** 2026-11-09T23:31Z: State: plan pushed; next: the sg1 suite (red), then the moves group by group.
+- **Resume:** 2026-11-09T23:54Z: State: code pushed (957f7ae1); local full run and CI running; next: the numbers into this note, CI green, DONE.
 
 ## Plan (group, decision, where it goes)
 1. `text` x6 (confirm-memory, dax-reference-parser, gulf-health, model-health-tmdl, model-index, mcp shadow-model `textOf`): SAME JOB (an expression given as a string or as lines -> one text). One place: `assets/js/dax-reference-parser.js` `exprText` (its own `text` was the first; it loads first on the health page and in the worker).
@@ -30,5 +30,50 @@
 - 11. `assets/js/exam-view.js` `toast`, `assets/js/health-view.js` `toast`: already one-line calls of the one place (page-toast.js `toast` + `boxToast`, DD2W); each passes its own box id, class and time (2200 / 1800 ms).
 - 12. `mcp/lib/plans.mjs` `shown`, `mcp/lib/read-report.mjs` `cleanName`: a plan value's canonical text capped at 200 (the approval's wording) and a report name made visible and capped at 60 (the read boundary): different texts, different caps.
 
-## Lines before (wc -l of every file this job may touch)
-- total 7787 over the 34 files (the list: scratch wc-before.txt; after: the same list).
+## Before -> after
+- 15 groups: 11 SAME JOB moved (N = 11: 1, 2, 3, 4, 7, 8, 9, 10, 13, 14, 15), 4 DIFFERENT written down (M = 4: 5, 6, 11, 12); N + M = 15.
+- Copies gone: 6 `text`, 6 raw-literal readers, 2 x (entries, plain, anyOf), 3 `el`, 3 `save`, 2 hex parses, 2 `keyOf`, 2 `put`, 1 `leaves`, 1 `pathOut` + `relRoot`, 1 `relOut`; each now a call or a name for the one place.
+- Ledger: 28 -> 39 families (each moved group one family, "**One place:**", 1 place, 0 disagree); check-contracts 717 -> 843 checks; probe 39 families, 111 places, 0 disagree. "Not one question" gains the 4 DIFFERENT groups.
+- Lines (wc -l, the 34 member and library files, list in the plan): 7787 -> 7816 (+29: the shared exports and their one-line comments; the callers lose their bodies but keep a named alias where the name is used many times). Changed files: confirm-memory 274 -> 276, dax-reference-parser 192 -> 194, model-health-tmdl 332 -> 333, build-page 287 -> 289, build-usage 139 -> 141, pbip-query 489 -> 488, layout-check 341 -> 340, page-toast 35 -> 41, contrast 19 -> 22, pbir-values 51 -> 60, check-impact 168 -> 170, metric-switcher 231 -> 230, status-icons 193 -> 192, model-script 36 -> 42, redesign-kinds 161 -> 162, native-copy 158 -> 157, report-inventory 230 -> 228; the other 17 the same count (a line replaced by a line). Also: contracts-probe.mjs 722 -> 789, CONTRACTS.md 1018 -> 1187, new test-0.3.3-sg1.mjs 129.
+- Pages: build/index.html loads page-toast.min.js before build-usage.min.js; the licensing calculator (EN, AR by ar-pages --write) loads it before licensing-calculator.min.js. Every page that loads a changed .min.js has its new ?v= (build:min, stamps-write 426 checks); sitemap lastmod for the two licensing pages.
+
+## Tests before -> after
+- new `sg1`: red on 8f5624e6 first ("FAIL  sg1  67 of 71 checks": every parity check and every S check but P10, P11 and S8's two "no own copy" lines, which held already); green after: "PASS  sg1  71 checks".
+- Split guard tests (pin requires): sp10 113, sp11 21, sp20 7, sp21 11, sp26 26, sp30 21, sp38 50, sp40 28, sp41 24, sp42 22: all PASS unchanged, no new file allowed in any (no new module; the new requires are of files those guards already admit).
+- Repo checks after the last code commit: lint exit 0; test-contracts 14, check-contracts 843, check-modules 1216, check-result-lines 233, changelog-words 6, check-agent-memory 490, test-site-config PASS; contracts-probe 1355 checks (with DATAARCUS_ROOT for path-out and rel-out).
+- No recorded fixture moved (no fixture re-recorded).
+- Full MCP run and site run: (filled in from their output files below).
+- packaging/build.test.mjs: not run: there is no packaging/ folder in this repo (the bundle is built by the separate step); the new Node requires are dax-reference-parser.js (from confirm-memory.js, gulf-health.js, model-health-tmdl.js, shadow-model.mjs) and pbir-values.js (from check-impact.mjs), both files the MCP already loads (model-index.js, report-rules.js), so the bundle's file list does not grow. Said for the reviewer (L-1028-06).
+
+## Changed on purpose
+- none: no answer, page text or written file changes; the pages change only by their ?v= stamps and the one new script tag each on the build and licensing pages.
+
+## CHANGELOG line
+- none: no behaviour a person sees changes (mcp/CHANGELOG.md not touched; see Decisions).
+
+## Decisions I made
+- No new module: every group went to an existing library file whose page or worker already loads before the callers (dax-reference-parser.js loads first on the health page and in the worker; contrast.js and pbir-values.js are already read by every member; page-toast.js is the tool pages' helper file, now also on the build and licensing pages).
+- Group 3 (`el`) and group 9 (`save`) as SAME JOB though the brief's example of DIFFERENT is "two small DOM builders for different pages": these answer one question with one body; the cost is one script tag on two pages, measured by the site suites.
+- Group 13: `plain` and `anyOf` moved with `entries` (the finder named `entries`; the two beside it were the same copies in the same two files and call it).
+- Group 15: flip-cards.mjs's `put` left: it also adds a file the plan lacks, a different answer.
+- Callers keep their old local name (`text`, `lit`, `litOf`, `el`, `save`, `put`) as an alias of the one place where they use it often: no renames beyond the move.
+- check-impact.mjs still exports `litOf` (check-report.mjs re-exports it, check-language.mjs imports it): now pbir-values' litValue itself.
+- No CHANGELOG line: the change is internal; changelog-words reads only the newest section and stays as it was.
+
+## For the owner
+- none.
+
+## Risky changes
+- none in a security policy, the approval step, file writing, what an answer returns, network or processes: `putJson` writes into the plan's in-memory file list exactly as before (the same JSON, two spaces), before the approval as before; relOut and pathOut (paths in answers) are the same functions, imported. No test loses checks.
+
+## For the laptop
+- none (nothing Desktop shows changes).
+
+## Seen, not in scope
+- contracts-probe's path-out and rel-out need DATAARCUS_ROOT (model.mjs reads ROOT at import): said in the probe.
+- flip-cards.mjs `put` (add or replace) and contrast.js `luminance`'s own inline hex parse (String(hex) first) are near copies of put-json and hex-rgb with different answers: left, a family each for the next ledger.
+- HC2 changes the theme-generator and health check pages' stamps tonight too: the reviewer's merge will meet ?v= conflicts there (build:min regenerates them).
+
+## Lessons for the reviewer
+- check-modules reads every backticked name in a row's "used by" as a caller file: a function name there fails it (use it unquoted).
+- `node scripts/tests/run-all.mjs --list` does not list: it runs every site suite (cost a parallel run).
