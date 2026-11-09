@@ -252,7 +252,7 @@ function monthOrderStep(lc) { let { a, m0, noAxis, planProblems, pf } = lc;
       const sc0 = scopeOf(m0, { focus: a.focus, tables: a.tables });
       const tf = noAxis ? null : pf.timeAxis ? (fieldsAndProblems(m0.tables, { timeAxis: pf.timeAxis }).out || {}).timeAxis : sc0.needsFocus ? null : (Bind.suggest(sc0.tables, 1, relsOf(m0, a.lang === 'ar' ? 'ar' : 'en')) || {}).date;
       // (the cross-review's G6: the writer's own decision, Pbip.timeAxisPlan, said here; never a promise the writer may not keep)
-      if (tf) { const key = `${tf.t}[${tf.c}]`, tp = Pbip.timeAxisPlan(tf) || { order: 'own' };
+      if (tf) { const key = `${tf.t}[${tf.c}]`, tp = Pbip.timeAxisPlan(tf);
         const how = { own: 'The column\'s own order (a date or a number).', model: 'The model sorts this column (its sort-by column): calendar order.',
           number: tp.by ? `In month order by ${tp.by.t}[${tp.by.c}] (the report sorts it; the model is not changed).` : '',
           monthLabel: `In time order by the label itself read as a date (a report-level measure: "Apr 2018", "April 2018" and "2018-04" are read; the column has no date or sort-by column the files give a type), showing the last ${tp.last} months with data (a visual filter the user can clear); a label that can't be read keeps every month. The model is not changed; a sort-by column in the model is the lasting fix (check_model_health, MONTH_SORT).`,
