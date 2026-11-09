@@ -27,6 +27,7 @@ import { daxOption, resolveDax, applyDax } from './dax-functions.mjs';
 import * as Terms from './terminology.mjs';
 import { monthOffer as calendarOffer } from './arabic-twin.mjs';
 import { readUserFile } from './files.mjs';
+import { sameOnDisk } from './path-rules.mjs';   // (0.3.2 PH1, B-412)
 import { formatsScriptOf } from './fix-scripts.mjs';
 import { fieldsDesign, givenNames, namedFields, fieldsOf, keyOf } from './report-bind.mjs';
 import { relsOf, axesProblems, axesOf } from './report-fields.mjs';
@@ -337,7 +338,7 @@ function finishStep(rb) {
   // now: inside the plan's digest, and written by the one writeTree, all or nothing (a name taken at the write: nothing is written).
   // Already there with exactly this script: named again, not written twice
   const FS = m.projectDir ? formatsScriptOf(m, a.path, new Set(fieldsOf(bind).filter((f) => f.agg == null).map(keyOf))) : null;
-  const fsInTree = !!FS && path.resolve(FS.scriptDir) === path.resolve(m.projectDir) && nothingAt(FS.file);
+  const fsInTree = !!FS && sameOnDisk(FS.scriptDir, m.projectDir) && nothingAt(FS.file);
   if (fsInTree) r.files.splice(r.files.findIndex((f) => /\.pbip$/.test(f.path)), 0, { path: path.basename(FS.file), data: FS.script });
   return { files: r.files,
     warnings: { reportNotes, textLeftOut, leftOutVisuals, kpiCards, smallPageNote, tinyPage, designRepaired, unknown },

@@ -1,5 +1,5 @@
 {
- "about": "test-0.3.2-fn1j.mjs: plan_layout's answers and the plans' data recorded on the base (integration/0.3.2 207784c6, before the split; normalised: the plan id, the working folder, the separator, the path limit's numbers)",
+ "about": "test-0.3.2-fn1j.mjs: plan_layout's answers and the plans' data recorded on the base (integration/0.3.2 207784c6, before the split; normalised: the plan id, the working folder, the separator, the path limit's numbers and example folder)",
  "pins": {
   "A1 A01 sample": {
    "err": false,
@@ -508,8 +508,8 @@
   },
   "A1 G12 the path limit": {
    "err": false,
-   "length": 9248,
-   "sha256": "224c1fb87cd89d6105f91b6472b5c69b9f29babf507bb8f9e122fb214bc5eaa1"
+   "length": 9258,
+   "sha256": "15eceb2fce8cc30040d0d8ca2be8c2a89b4e59377fbbe11d74cf82196bfaf01b"
   },
   "A1 G13 ops, six cards in Arabic": {
    "err": false,
