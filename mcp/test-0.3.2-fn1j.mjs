@@ -1,7 +1,7 @@
 import './fixtures/sp1/seeded-random.mjs';
 import './test-env.mjs';
 // 0.3.2 FN1J (mcp/work/FN1J.md): plan_layout's register split into named steps, behaviour identical. A characterisation
-// suite recorded on the base (integration/0.3.2 207784c6, before the split): plan_layout's whole answer for 76 made-up
+// suite recorded on the base (integration/0.3.2 207784c6, before the split): plan_layout's whole answer for 90 made-up
 // plans (fixtures/fn1j-cases.mjs: one per condition of the handler's parts) and, for each plan with an id, what the plan
 // holds for the approval page and the write (Plans.planOf: writes and data; Plans.artifactOf: the exact files' digest,
 // the native copy's pin and binding). Called in this process through the registered tool (its inputs parsed by the

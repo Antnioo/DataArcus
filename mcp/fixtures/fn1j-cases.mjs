@@ -61,6 +61,18 @@ export async function writeModels(root, here) {
   t.dataColors = ['#7A3E9D', '#2E8B57', '#C0392B', '#1F618D'].concat((t.dataColors || []).slice(4)); put(th, t);
   // the terms a person confirmed earlier in the session (remembered after a write): a copy of the tiny model
   put(path.join(root, 'mem/Mem.SemanticModel/model.bim'), tiny());
+  // a month-and-year label outside a date table (read as a date by a report measure)
+  const lbl = tiny(); lbl.model.tables[0].columns.push(col('Year Month', 'string')); put(path.join(root, 'lbl/Lbl.SemanticModel/model.bim'), lbl);
+  // the custom visuals lab again, its native copy's name already taken
+  Lab.writeLab(path.join(root, 'lab2')); fs.mkdirSync(path.join(root, 'lab2', Lab.NAME + ' native.Report'), { recursive: true });
+  // a Hijri calendar (gulf-date-questions' shape): an order date and a ship date, the ship date's relationship inactive
+  const gd = { compatibilityLevel: 1567, model: { tables: [
+    { name: 'Sales', partitions: mp('Sales'), columns: [col('Order Date', 'dateTime'), col('Ship Date', 'dateTime'), col('Amount', 'double'), col('Region', 'string')],
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }] },
+    { name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime', { isKey: true }), col('Year', 'int64'), col('Month Name', 'string', { sortByColumn: 'Month Number' }), col('Month Number', 'int64'),
+      col('Hijri Year', 'int64'), col('Hijri Month Name', 'string', { sortByColumn: 'Hijri Month Number' }), col('Hijri Month Number', 'int64'), col('Is Ramadan', 'boolean'), col('Ramadan Day', 'int64')] }],
+    relationships: [{ name: 'r-order', fromTable: 'Sales', fromColumn: 'Order Date', toTable: 'Calendar', toColumn: 'Date' }, { name: 'r-ship', fromTable: 'Sales', fromColumn: 'Ship Date', toTable: 'Calendar', toColumn: 'Date', isActive: false }] } };
+  put(path.join(root, 'gd/M.SemanticModel/model.bim'), gd);
 }
 
 const FIELDS = { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin]'], measure: 'Sales[Total Sales]', timeAxis: 'Calendar[Month Name]', category: 'Sales[المنطقة]', category2: 'Sales[Product]', table: ['Sales[المنطقة]', 'Sales[Product]', 'Sales[Total Sales]', 'Sales[Margin]'], slicers: ['Sales[Product]'] };
@@ -154,5 +166,20 @@ export const CASES = [
   ['H01 colours from the report themeFrom names', { path: 'twin2', name: 'FN1J second', layout: 'exec', themeFrom: 'Second Look' }],
   ['H02 colours with two reports, none named', { path: 'twin2', name: 'FN1J two', layout: 'exec' }],
   ['H03 Arabic, terms confirmed earlier', { path: 'mem', name: 'FN1J memory', lang: 'ar', layout: 'exec', planFields: EN_FIELDS }, { REMEMBER: { path: 'mem', rows: [{ field: 'Sales[Total Sales]', ar: 'إجمالي المبيعات', status: 'approved' }, { field: 'Sales[Region]', ar: null, status: 'kept', declined: true }, { field: 'Sales[Orders]', ar: 'الطلبات', status: 'approved' }] } }],
-  ['H04 Arabic, terms confirmed earlier, the lint\'s fields', { path: 'mem', name: 'FN1J memory 2', lang: 'ar', layout: 'ops', kpis: 6 }, { REMEMBER: { path: 'mem', rows: [{ field: 'Sales[Margin]', ar: 'الهامش', status: 'approved' }, { field: 'Sales[Sales Target]', ar: null, status: 'kept', declined: true }, { field: 'Sales[Margin %]', ar: 'نسبة الهامش', status: 'approved' }] } }]
+  ['H04 Arabic, terms confirmed earlier, the lint\'s fields', { path: 'mem', name: 'FN1J memory 2', lang: 'ar', layout: 'ops', kpis: 6 }, { REMEMBER: { path: 'mem', rows: [{ field: 'Sales[Margin]', ar: 'الهامش', status: 'approved' }, { field: 'Sales[Sales Target]', ar: null, status: 'kept', declined: true }, { field: 'Sales[Margin %]', ar: 'نسبة الهامش', status: 'approved' }] } }],
+  ['H05 month order: a month-year label', { path: 'lbl', name: 'FN1J year month', planFields: { kpis: ['Sales[Total Sales]'], timeAxis: 'Sales[Year Month]', category: 'Sales[Region]' } }],
+  ['H06 custom visuals, the native name taken', { path: 'lab2', customVisualsFrom: 'lab2/Gulf Retail.Report' }],
+  ['H07 Gulf dates: a Hijri year', { path: 'gd/M.SemanticModel', name: 'FN1J hijri', layout: 'exec', planFields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]'], measure: 'Sales[Total Sales]', timeAxis: 'Calendar[Month Name]', category: 'Sales[Region]' },
+    pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1446] }], gulfDates: { dateRole: 'Sales[Order Date]', grain: 'gregorian', scope: 'year', year: 1446, hijriYearColumn: 'Calendar[Hijri Year]' } }],
+  ['H08 Gulf dates: the trend on the ship date', { path: 'gd/M.SemanticModel', name: 'FN1J ship', layout: 'exec', planFields: { kpis: ['Sales[Total Sales]'], timeAxis: 'Sales[Ship Date]', category: 'Sales[Region]' }, gulfDates: { grain: 'gregorian' } }],
+  ['H09 table fields in a narrow row (exec)', { path: 'tiny', name: 'FN1J narrow', layout: 'exec', planFields: { kpis: ['Sales[Total Sales]'], table: ['Sales[Region]', 'Sales[Total Sales]'] } }],
+  ['H10 table fields in a narrow row (ops)', { path: 'tiny', name: 'FN1J narrow ops', layout: 'ops', planFields: { kpis: ['Sales[Total Sales]'], table: ['Sales[Region]', 'Sales[Product]', 'Sales[Date]', 'Sales[Amount]', 'Sales[Cost]', 'Sales[Total Sales]', 'Sales[Margin]', 'Sales[Orders]'] } }],
+  ['H11 table fields in a narrow row (focus)', { path: 'tiny', name: 'FN1J narrow focus', layout: 'focus', planFields: { kpis: ['Sales[Total Sales]'], table: ['Sales[Region]'] } }],
+  ['H12 Arabic ops, every name given (the lint\'s fields)', { path: 'tiny', name: 'FN1J lint ar', lang: 'ar', layout: 'ops', kpis: 6, displayNames: AR_NAMES }],
+  ['H13 a category with two values (a donut)', { path: GPATH, name: 'FN1J donut', layout: 'analysis', planFields: { kpis: ['Sales[Total Sales]'], category: 'Sales[Channel]', category2: 'Sales[Product]' }, columnStats: { distinct: { 'Sales[Channel]': 2, 'Sales[Product]': 12 } } }],
+  ['H14 Arabic status icons by thresholds', { path: 'tiny', name: 'FN1J icons ar', lang: 'ar', layout: 'analysis', displayNames: Object.assign({ 'Sales[Margin %]': 'نسبة الهامش' }, AR_NAMES), planFields: { kpis: ['Sales[Total Sales]'], category: 'Sales[Region]', timeAxis: 'Calendar[Month Name]', table: ['Sales[Region]', 'Sales[Margin %]'] }, statusIcons: [{ measure: 'Sales[Margin %]', good: '>= 0.3', bad: '< 0.1' }] }],
+  ['H15 a design with the phone layout off', { path: 'tiny', name: 'FN1J no phone', design: { layout: { layout: 'exec', kpis: 3, filters: 'none', phoneLayout: false } }, planFields: EN_FIELDS }],
+  ['H16 a small page', { path: 'tiny', name: 'FN1J small', layout: 'exec', page: { w: 640, h: 360 }, planFields: EN_FIELDS }],
+  ['H17 Arabic, many English titles', { path: 'odd', name: 'FN1J many', lang: 'ar', displayNames: AR_NAMES, pages: [0, 1].map((p) => ({ name: 'P' + p, width: 1920, height: 1080, slots: many(16, (i) => ({ kind: i % 2 ? 'bar' : 'column', title: `Qzx Flux ${p}-${i}`, x: (i % 4) * 470 + 10, y: Math.floor(i / 4) * 260 + 10, w: 450, h: 240 })) })) }],
+  ['H18 both languages, many English titles', { path: 'tiny', name: 'FN1J many both', languages: 'en+ar', pages: [0, 1].map((p) => ({ name: 'P' + p, width: 1920, height: 1080, slots: many(12, (i) => ({ kind: i % 2 ? 'bar' : 'column', title: `Sales view ${p}-${i}`, x: (i % 4) * 470 + 10, y: Math.floor(i / 4) * 350 + 10, w: 450, h: 330 })) })) }]
 ];

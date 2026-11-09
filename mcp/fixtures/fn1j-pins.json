@@ -560,6 +560,120 @@
    "err": false,
    "length": 21272,
    "sha256": "1c1a3b80dc83a51b4ae4109fa6864d52e44512d1d3fd75b5ff3f9ce600f93781"
+  },
+  "A1 H05 month order: a month-year label": {
+   "err": false,
+   "length": 12080,
+   "sha256": "21a21c4456659310d6ba072a87bb6859abc52934eb490d8a9bbf8bf9b5cefb8c"
+  },
+  "A2 H05 month order: a month-year label": {
+   "length": 87544,
+   "sha256": "20406548a434e2bafb4379cd447043c831416f6966d8914f5bcb940de1fe2e91"
+  },
+  "A1 H06 custom visuals, the native name taken": {
+   "err": false,
+   "length": 28791,
+   "sha256": "92bcb3ab91c7929e71c97fb2c321b7c7dd08f44ac859ec210e00f89d670afedd"
+  },
+  "A1 H07 Gulf dates: a Hijri year": {
+   "err": false,
+   "length": 16275,
+   "sha256": "1d4267072d72963440d48cc0507841fabafc15a816e4b575ac3a67bc5af5d4f1"
+  },
+  "A2 H07 Gulf dates: a Hijri year": {
+   "length": 89530,
+   "sha256": "1dc693a79e816d8f49e03afc8989937ca1d2977ed633160b91d179aaa2797305"
+  },
+  "A1 H08 Gulf dates: the trend on the ship date": {
+   "err": false,
+   "length": 15369,
+   "sha256": "1ba83b56526531488d4ae728f454eb2b8ce6db69e109ab0d8e3aa2f98976feb7"
+  },
+  "A2 H08 Gulf dates: the trend on the ship date": {
+   "length": 85263,
+   "sha256": "02243747aa990ead294a849aa28af59571baa02240e6985ac5293cf0d5875b02"
+  },
+  "A1 H09 table fields in a narrow row (exec)": {
+   "err": false,
+   "length": 12242,
+   "sha256": "c64aaba9c1d24f8e1bc5d3b2225ea990819361576a9fbe788b9978751db64966"
+  },
+  "A2 H09 table fields in a narrow row (exec)": {
+   "length": 87387,
+   "sha256": "517a201f0d444ff89d6a38086d2fab49ed90e4ec63039f09b297e1fa752c215e"
+  },
+  "A1 H10 table fields in a narrow row (ops)": {
+   "err": false,
+   "length": 14835,
+   "sha256": "3274d112be1f9d1965c61ce71bf7a426684c5b1ced0b31a089fe8308b5e7aeb2"
+  },
+  "A2 H10 table fields in a narrow row (ops)": {
+   "length": 90667,
+   "sha256": "2f931d139eb2eeaaba6b3035c18a01e9b2cd83d233422bcb34bee6532ffe170f"
+  },
+  "A1 H11 table fields in a narrow row (focus)": {
+   "err": false,
+   "length": 9882,
+   "sha256": "53aac5d6525206c78752309fefb218e1e77cc4a1af25fcc9de0f9b8c269040f5"
+  },
+  "A2 H11 table fields in a narrow row (focus)": {
+   "length": 84758,
+   "sha256": "4ec6fe0cfeba7d51a1c9d931ca27a2351f962f53d7b94d56a9544d16ef8a4ecc"
+  },
+  "A1 H12 Arabic ops, every name given (the lint's fields)": {
+   "err": false,
+   "length": 21286,
+   "sha256": "7d9d15838353aad5a47d1f670a7be8b20c48868eb18ae9b734844c5e0a59895d"
+  },
+  "A1 H13 a category with two values (a donut)": {
+   "err": false,
+   "length": 11154,
+   "sha256": "6ffff8a6f7defd188b856826f483511731cd950eeecc2fd9c9a4d46f5099f966"
+  },
+  "A2 H13 a category with two values (a donut)": {
+   "length": 86230,
+   "sha256": "e8594afe1ecc8887f7a846d23de17d8b5e113bab603b7f54ed8ac6cc2aef090b"
+  },
+  "A1 H14 Arabic status icons by thresholds": {
+   "err": false,
+   "length": 19702,
+   "sha256": "62baedc7cdd49a09838622244ffb6538840f669332fbdebe722dd3d3a1bcd212"
+  },
+  "A2 H14 Arabic status icons by thresholds": {
+   "length": 90119,
+   "sha256": "102a491c8c402a9a709bc54aee532e2cefcdb58c3db13ac938a92efc5af5bcb3"
+  },
+  "A1 H15 a design with the phone layout off": {
+   "err": false,
+   "length": 12415,
+   "sha256": "6c05bb707f229e503c4671b37240dde614c87c614a161a998d771f557f874bb1"
+  },
+  "A2 H15 a design with the phone layout off": {
+   "length": 84779,
+   "sha256": "41e070bb60558c502bb9b3d8feda3586da7a24f4df99ff3ba3672108fc5b0eea"
+  },
+  "A1 H16 a small page": {
+   "err": false,
+   "length": 9672,
+   "sha256": "54473200ed0d6312ea8da192fd48329aaf3219d22bcb732225f4baad6a865ed1"
+  },
+  "A2 H16 a small page": {
+   "length": 42540,
+   "sha256": "3eaf4324a41f00acfe39bc5308f525a280dc3d95922e3761a035e3518082f039"
+  },
+  "A1 H17 Arabic, many English titles": {
+   "err": false,
+   "length": 21871,
+   "sha256": "b89e075b54ed7f60bd33259df36f5eac3b3286153861c0fc115b51b4830624f5"
+  },
+  "A2 H17 Arabic, many English titles": {
+   "length": 51871,
+   "sha256": "ea9a4c61aed95bf1b2990c68fa7bb7abeb488b1bbe3c413794675cd79a01e9b5"
+  },
+  "A1 H18 both languages, many English titles": {
+   "err": false,
+   "length": 29241,
+   "sha256": "f6d1e73bb304b650b45f12436e59f5744c713c73337658b6f5878464cc570830"
   }
  }
 }
