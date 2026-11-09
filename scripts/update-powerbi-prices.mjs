@@ -6,8 +6,44 @@
 // value stays and the run shows a warning instead of failing.
 // Run locally: node scripts/update-powerbi-prices.mjs
 import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { pageText, perUserPrices, ppuAddon, checkAddon } from './powerbi-prices-read.mjs';
 
+
+// ---------- the date the page shows (PC1, B-413): one date, written into every place that shows it ----------
+// The page says "checked <date>" in its note, in English and in Arabic, and keeps the date as its built-in fallback.
+// All four come from assets/data/powerbi-prices.json's "checked", written here, never typed by hand.
+export const CHECKED_PLACES = [
+  'tools/power-bi-licensing-cost-calculator.html',
+  'assets/js/translations/licensing-calculator.js',
+  'assets/js/licensing-calculator.js'
+];
+// the words, made the way the page itself formats them (assets/js/licensing-calculator.js, the "checked" line)
+export const checkedWords = (iso) => {
+  const d = new Date(iso + 'T00:00:00Z');
+  const f = (loc) => d.toLocaleDateString(loc, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+  return { en: f('en-GB'), ar: f('ar-u-nu-latn') };
+};
+// Rewrites the date in the three files (four places); returns the files that changed (relative to root).
+export const syncChecked = (root, iso) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso) || Number.isNaN(new Date(iso + 'T00:00:00Z').getTime())) throw new Error(`syncChecked: "${iso}" is not a YYYY-MM-DD date`);
+  const w = checkedWords(iso), changed = [];
+  const SPAN = /(data-p=\\?"checked\\?">)([^<]*)(<)/g;
+  const edit = (file, fn, places) => {
+    const abs = path.join(root, file), old = fs.readFileSync(abs, 'utf8');
+    let n = 0;
+    const out = fn(old, () => n++);
+    if (n !== places) throw new Error(`syncChecked: ${file} has ${n} places for the date, expected ${places}`);
+    if (out !== old) { fs.writeFileSync(abs, out); changed.push(file); }
+  };
+  edit(CHECKED_PLACES[0], (t, hit) => t.replace(SPAN, (m, a, old, z) => { hit(); return a + w.en + z; }), 1);
+  edit(CHECKED_PLACES[1], (t, hit) => t.replace(SPAN, (m, a, old, z) => { hit(); return a + (/[\u0600-\u06FF]/.test(old) ? w.ar : w.en) + z; }), 2);
+  edit(CHECKED_PLACES[2], (t, hit) => t.replace(/(checked: ')\d{4}-\d{2}-\d{2}(')/, (m, a, z) => { hit(); return a + iso + z; }), 1);
+  return changed;
+};
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
 const FILE = 'assets/data/powerbi-prices.json';
 const current = JSON.parse(fs.readFileSync(FILE, 'utf8'));
 const next = { ...current };
@@ -81,6 +117,8 @@ try {
 next.checked = new Date().toISOString().slice(0, 10);
 fs.writeFileSync(FILE, JSON.stringify(next, null, 2) + '\n');
 console.log('Saved', FILE, next);
+const synced = syncChecked(process.cwd(), next.checked);
+console.log('Date written into', synced.length ? synced.join(', ') : 'nothing (already the same)');
 
 // "::warning::" shows as a warning on the GitHub run; locally it is just a line
 warnings.forEach((w) => console.log(`::warning::${w}`));
@@ -88,4 +126,5 @@ if (problems.length) {
   console.error('\nPRICE CHECK NEEDS ATTENTION:\n- ' + problems.join('\n- '));
   console.error('The old values were kept for anything listed above.');
   process.exit(1);
+}
 }

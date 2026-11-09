@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0   # sitemap-lastmod.mjs reads each page's last commit
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -39,8 +41,16 @@ jobs:
             git config user.name "DataArcus price bot"
             git config user.email "actions@users.noreply.github.com"
             git switch -c "$BRANCH"
-            git add assets/data/powerbi-prices.json
+            # the date the calculator page shows follows the data (PC1): the script wrote it into the page, its
+            # translations and the built-in fallback; rebuild the .min.js (and the ?v= stamps on the pages that load
+            # them), commit, then move the sitemap's lastmod (it reads the commit dates) in a second commit
+            npm ci --ignore-scripts
+            npm run -s build:min
+            git add assets/data/powerbi-prices.json tools/power-bi-licensing-cost-calculator.html ar/tools/power-bi-licensing-cost-calculator.html assets/js/licensing-calculator.js assets/js/licensing-calculator.min.js assets/js/translations/licensing-calculator.js assets/js/translations/licensing-calculator.min.js
             git commit -m "Weekly Power BI price check $DAY"
+            node scripts/sitemap-lastmod.mjs --write
+            git add sitemap.xml
+            git diff --cached --quiet || git commit -m "Sitemap lastmod after the weekly price check $DAY"
             git push -u origin "$BRANCH"
             gh pr create --base main --head "$BRANCH" --title "Weekly Power BI price check $DAY" \
               --body "The weekly price check found a change in Microsoft's prices. Check the numbers in the diff, then merge."
