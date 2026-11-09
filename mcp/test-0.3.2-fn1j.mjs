@@ -1,7 +1,7 @@
 import './fixtures/sp1/seeded-random.mjs';
 import './test-env.mjs';
 // 0.3.2 FN1J (mcp/work/FN1J.md): plan_layout's register split into named steps, behaviour identical. A characterisation
-// suite recorded on the base (integration/0.3.2 207784c6, before the split): plan_layout's whole answer for 72 made-up
+// suite recorded on the base (integration/0.3.2 207784c6, before the split): plan_layout's whole answer for 76 made-up
 // plans (fixtures/fn1j-cases.mjs: one per condition of the handler's parts) and, for each plan with an id, what the plan
 // holds for the approval page and the write (Plans.planOf: writes and data; Plans.artifactOf: the exact files' digest,
 // the native copy's pin and binding). Called in this process through the registered tool (its inputs parsed by the
@@ -33,6 +33,8 @@ const { z } = await import('zod');
 const Plans = await import('./lib/plans.mjs');
 const { LIMITS } = await import('./lib/tool-limits.mjs');
 const { register } = await import('./tools/plan_layout.mjs');
+const { loadModel } = await import('./lib/model.mjs');
+const Terms = await import('./lib/terminology.mjs');
 let def = null, handler = null;
 register({ registerTool: (name, d, h) => { if (name === 'plan_layout') { def = d; handler = h; } } }, { LIMITS });
 const schema = def.inputSchema && typeof def.inputSchema.safeParse === 'function' ? def.inputSchema : z.object(def.inputSchema);
@@ -43,6 +45,7 @@ const norm = (t) => [ROOT, JSON.stringify(ROOT).slice(1, -1), ROOT.split(path.se
 const now = {}, texts = {}, got = {};
 for (const [name, args, env] of CASES) {
   if (env && env.PATH_MAX) process.env.DATAARCUS_TEST_PATH_MAX = String(ROOT.length + env.PATH_MAX);
+  if (env && env.REMEMBER) Terms.remember(loadModel(env.REMEMBER.path), env.REMEMBER.rows);
   let t, err = false, id = null;
   try {
     const parsed = schema.safeParse(args);

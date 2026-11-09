@@ -528,6 +528,38 @@
   "A2 G14 hand-placed pages in Arabic": {
    "length": 10995,
    "sha256": "37367bbbaab826eee77966ba48cb07293beb3242842515ba435693816df598c3"
+  },
+  "A1 H01 colours from the report themeFrom names": {
+   "err": false,
+   "length": 12940,
+   "sha256": "e6760d7bac007b2c98c289fc676a98e2773b86222237cff0287b73bdd65c46d3"
+  },
+  "A2 H01 colours from the report themeFrom names": {
+   "length": 93017,
+   "sha256": "963b0931caaf88be5a633bdb4286494c03a388f0e2bcac0e07da91a501203f6f"
+  },
+  "A1 H02 colours with two reports, none named": {
+   "err": false,
+   "length": 12938,
+   "sha256": "c201da6204330a11286339c6097b0e63a86bacb72c47ec30f9ba5fa9ed7d5f6d"
+  },
+  "A2 H02 colours with two reports, none named": {
+   "length": 89918,
+   "sha256": "cf0285029537353a37a1524b30f94439ab42be383f4ab8d9474d97371ef982c7"
+  },
+  "A1 H03 Arabic, terms confirmed earlier": {
+   "err": false,
+   "length": 20114,
+   "sha256": "533252c635bc8d8dd8487f91d47ae802de0090665b3eaee80500901b5caec68e"
+  },
+  "A2 H03 Arabic, terms confirmed earlier": {
+   "length": 93086,
+   "sha256": "e850824cdef1747360b4fe3594081a482ff7a21d7b5250213feb626cfd3e6aa2"
+  },
+  "A1 H04 Arabic, terms confirmed earlier, the lint's fields": {
+   "err": false,
+   "length": 21272,
+   "sha256": "1c1a3b80dc83a51b4ae4109fa6864d52e44512d1d3fd75b5ff3f9ce600f93781"
   }
  }
 }

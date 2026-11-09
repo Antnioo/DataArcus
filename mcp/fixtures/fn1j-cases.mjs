@@ -3,7 +3,8 @@
 // custom visuals, the switcher, status icons, the DAX library, shared axes, the lint's names, the exact artifact and
 // the path limit, the titles, the preview, the kinds, what is said and written, the terminology sheet, the proposal).
 // Made-up names only (no employer data); the models hold no rows except the sample project's made-up ones.
-//   await writeModels(root, here) writes them (DATAARCUS_ROOT set first: the lab's modules read it when they load); CASES: [name, args, env?] (env: variables set for that call only)
+//   await writeModels(root, here) writes them (DATAARCUS_ROOT set first: the lab's modules read it when they load); CASES: [name, args, env?]
+//   (env: PATH_MAX, the path limit for that call only; REMEMBER, terms remembered before it, as after a write)
 import fs from 'node:fs';
 import path from 'node:path';
 import { sampleFiles } from '../lib/sample-project.mjs';
@@ -52,6 +53,14 @@ export async function writeModels(root, here) {
   put(path.join(root, 'f5/Deep.SemanticModel/model.bim'), tiny());
   sampleFiles('gulf').forEach((f) => put(path.join(root, ...f.path.split('/')), f.data));
   timeLab(root, 'tl');
+  // a second report beside the twin's, with its own theme colours (the plan's colours from the report themeFrom names)
+  fs.cpSync(path.join(root, 'twin'), path.join(root, 'twin2'), { recursive: true });
+  fs.cpSync(path.join(root, 'twin2', 'Twin Sales.Report'), path.join(root, 'twin2', 'Second Look.Report'), { recursive: true });
+  put(path.join(root, 'twin2', 'Second Look.pbip'), fs.readFileSync(path.join(root, 'twin2', 'Twin Sales.pbip'), 'utf8').replace('Twin Sales.Report', 'Second Look.Report'));
+  const th = path.join(root, 'twin2', 'Second Look.Report', 'StaticResources', 'RegisteredResources', 'twin-theme.json'), t = JSON.parse(fs.readFileSync(th, 'utf8'));
+  t.dataColors = ['#7A3E9D', '#2E8B57', '#C0392B', '#1F618D'].concat((t.dataColors || []).slice(4)); put(th, t);
+  // the terms a person confirmed earlier in the session (remembered after a write): a copy of the tiny model
+  put(path.join(root, 'mem/Mem.SemanticModel/model.bim'), tiny());
 }
 
 const FIELDS = { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin]'], measure: 'Sales[Total Sales]', timeAxis: 'Calendar[Month Name]', category: 'Sales[المنطقة]', category2: 'Sales[Product]', table: ['Sales[المنطقة]', 'Sales[Product]', 'Sales[Total Sales]', 'Sales[Margin]'], slicers: ['Sales[Product]'] };
@@ -140,5 +149,10 @@ export const CASES = [
   ['G11 formats the model lacks', { path: 'tiny', name: 'FN1J formats', layout: 'exec', planFields: { kpis: ['Sales[Raw Total]', 'Sales[Margin %]'], category: 'Sales[Region]', table: ['Sales[Region]', 'Sales[Share]', 'Sales[Raw Total]'] } }],
   ['G12 the path limit', { path: 'f5', layout: 'exec', name: 'Long Path Report', planFields: { kpis: ['Sales[Total Sales]'], category: 'Sales[Region]' }, secondPage: false }, { PATH_MAX: 60 }],
   ['G13 ops, six cards in Arabic', { path: 'twin', name: 'FN1J ops ar', lang: 'ar', layout: 'ops', kpis: 6 }],
-  ['G14 hand-placed pages in Arabic', { path: 'tiny', name: 'FN1J hand ar', lang: 'ar', displayNames: AR_NAMES, pages: [{ name: 'الصفحة', width: 1280, height: 720, slots: [{ kind: 'card', field: 'Sales[Total Sales]', x: 24, y: 12, w: 300, h: 120 }, { kind: 'bar', measure: 'Sales[Total Sales]', category: 'Sales[Region]', x: 24, y: 140, w: 600, h: 400 }] }] }]
+  ['G14 hand-placed pages in Arabic', { path: 'tiny', name: 'FN1J hand ar', lang: 'ar', displayNames: AR_NAMES, pages: [{ name: 'الصفحة', width: 1280, height: 720, slots: [{ kind: 'card', field: 'Sales[Total Sales]', x: 24, y: 12, w: 300, h: 120 }, { kind: 'bar', measure: 'Sales[Total Sales]', category: 'Sales[Region]', x: 24, y: 140, w: 600, h: 400 }] }] }],
+  // (after the others: the session's memory and the second report change only these)
+  ['H01 colours from the report themeFrom names', { path: 'twin2', name: 'FN1J second', layout: 'exec', themeFrom: 'Second Look' }],
+  ['H02 colours with two reports, none named', { path: 'twin2', name: 'FN1J two', layout: 'exec' }],
+  ['H03 Arabic, terms confirmed earlier', { path: 'mem', name: 'FN1J memory', lang: 'ar', layout: 'exec', planFields: EN_FIELDS }, { REMEMBER: { path: 'mem', rows: [{ field: 'Sales[Total Sales]', ar: 'إجمالي المبيعات', status: 'approved' }, { field: 'Sales[Region]', ar: null, status: 'kept', declined: true }, { field: 'Sales[Orders]', ar: 'الطلبات', status: 'approved' }] } }],
+  ['H04 Arabic, terms confirmed earlier, the lint\'s fields', { path: 'mem', name: 'FN1J memory 2', lang: 'ar', layout: 'ops', kpis: 6 }, { REMEMBER: { path: 'mem', rows: [{ field: 'Sales[Margin]', ar: 'الهامش', status: 'approved' }, { field: 'Sales[Sales Target]', ar: null, status: 'kept', declined: true }, { field: 'Sales[Margin %]', ar: 'نسبة الهامش', status: 'approved' }] } }]
 ];
