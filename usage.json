@@ -1,37 +1,37 @@
 {
   "version": 1,
-  "generated_at": "2026-11-09T08:03Z",
+  "generated_at": "2026-11-09T08:49Z",
   "today": {
     "date": "2026-11-09",
-    "cost_usd": 46.06,
-    "tokens": 129902861,
-    "sessions": 15,
+    "cost_usd": 50.5,
+    "tokens": 148591596,
+    "sessions": 18,
     "by_kind": {
       "builder": {
-        "cost_usd": 16.54,
+        "cost_usd": 17.66,
         "count": 3
       },
       "worker": {
-        "cost_usd": 29.52,
-        "count": 12
+        "cost_usd": 31.5,
+        "count": 13
       },
       "probe": {
         "cost_usd": 0,
         "count": 0
       },
       "other": {
-        "cost_usd": 0,
-        "count": 0
+        "cost_usd": 1.34,
+        "count": 2
       }
     },
     "by_model": {
       "opus": {
-        "cost_usd": 43.16,
-        "count": 12
+        "cost_usd": 45.14,
+        "count": 13
       },
       "sonnet": {
-        "cost_usd": 2.9,
-        "count": 3
+        "cost_usd": 5.36,
+        "count": 5
       }
     }
   },
@@ -116,20 +116,20 @@
     },
     {
       "date": "2026-11-09",
-      "cost_usd": 46.06,
-      "tokens": 129902861,
-      "sessions": 15
+      "cost_usd": 50.5,
+      "tokens": 148591596,
+      "sessions": 18
     }
   ],
   "jobs": [
     {
-      "id": "CV1",
-      "title": "CV1: the CV's DataArcus facts match the site (16 articles) (B-418, D-1109-02)",
+      "id": "PH1",
+      "title": "PH1: the last two path compares call path-rules.mjs; tooLongSaid's example follows the platform (B-412, B-416)",
       "model": "sonnet",
-      "cost_usd": 0.63,
-      "tokens": 1412402,
-      "minutes": 2,
-      "finished_at": "2026-11-09T06:35Z"
+      "cost_usd": 1.75,
+      "tokens": 11175163,
+      "minutes": 82,
+      "finished_at": "2026-11-09T08:11Z"
     },
     {
       "id": "FN1J",
@@ -277,8 +277,8 @@
     }
   ],
   "workers": {
-    "count": 12,
-    "cost_usd": 29.52,
+    "count": 13,
+    "cost_usd": 31.5,
     "costliest": [
       {
         "label": "worker 02:01",
