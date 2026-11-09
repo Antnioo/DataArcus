@@ -43,7 +43,8 @@ const parse = (b) => JSON.parse(decode(b));
 // (R6, the cross-review: readJson measured with lstat and read by name, with no file check, so a page.json or theme
 // that is a link was followed outside the working folder. Now a link is refused (Linked), and the file is read through
 // the reading block's one-descriptor reader, model.mjs's readCapped, within the cap.)
-export class Linked extends Error { constructor() { super('a link: not followed'); } }
+// (0.3.3 LK1) rel: the link met on the way, by its path inside the report, when a folder on the way is the link
+export class Linked extends Error { constructor(rel) { super('a link: not followed'); if (rel) this.rel = rel; } }
 export const readJson = (f) => {
   const st = fs.lstatSync(f);
   if (st.isSymbolicLink()) throw new Linked();
@@ -56,16 +57,29 @@ export const readJson = (f) => {
 export const mustJson = (f, name) => { try { return readJson(f); } catch (e) { throw new Error(`Nothing was written: the original's ${name} could not be read (${e instanceof Linked ? 'it is a link' : 'not valid JSON, or too big'}). Open the original in Power BI Desktop and save it, then ask again.`); } };
 export const isFile = (f) => { try { return fs.lstatSync(f).isFile(); } catch (e) { return false; } };
 export const isDir = (f) => { try { return fs.lstatSync(f).isDirectory(); } catch (e) { return false; } };
+// (0.3.3 LK1, the night audit's AUD-057) a link inside the report, recorded once in sk.links by its path inside the
+// report with "/" ("definition/pages/p1/visuals"), whoever meets it (check_report's walk, the source, the inventory).
+// Measured: walk recorded the absolute path and the source the relative one, so one link counted twice in check_report.
+export const addLink = (sk, rel) => { if (!sk) return; const r = String(rel).split(path.sep).join('/'); if (!(sk.links = sk.links || []).includes(r)) sk.links.push(r); };
+// the links as both answers name them (read_report's NOT READ, check_report's notChecked and validator): the one capped,
+// screened list (shownPath, as the answers show other paths), sorted, 10 named and the rest counted.
+// -> { count, named: [paths], more, text: '"a", "b" and 2 more' }
+export const LINKS_NAMED = 10;
+export function linksSaid(sk) {
+  const all = [...new Set((sk && sk.links) || [])].sort(), named = all.slice(0, LINKS_NAMED).map(shownPath), more = all.length - named.length;
+  return { count: all.length, named, more, text: named.map((n) => `"${n}"`).join(', ') + (more ? ` and ${more} more` : '') };
+}
 // files left unread for their size, and folders past the depth, go to sk = { big, deep } (one record per call)
-export function walk(d, out, cap, depth, sk) {
-  const level = depth || 0;
+// (root: the first folder walked, given by the recursion; links are recorded relative to it)
+export function walk(d, out, cap, depth, sk, root) {
+  const level = depth || 0, top = root || d;
   if (level > REPORT_LIMITS.depth) { if (sk) sk.deep++; return out; }
   for (const e of fs.readdirSync(d, { withFileTypes: true })) {
     if (out.length >= cap) return out;
     const f = path.join(d, e.name);
     // (A4-4, audit 4: a link is never followed, and counted, so check_report can say it and hold back its validator)
-    if (e.isSymbolicLink()) { if (sk) (sk.links = sk.links || []).push(f); continue; }
-    if (e.isDirectory()) walk(f, out, cap, level + 1, sk); else if (e.isFile()) out.push(f);
+    if (e.isSymbolicLink()) { addLink(sk, path.relative(top, f)); continue; }
+    if (e.isDirectory()) walk(f, out, cap, level + 1, sk, top); else if (e.isFile()) out.push(f);
   }
   return out;
 }
@@ -199,20 +213,20 @@ export function diskSource(loc, sk) {
   const at = (rel) => {
     const parts = String(rel).split('/').filter(Boolean);
     let cur = loc.reportDir;
-    for (const p of parts.slice(0, -1)) {
+    for (const [i, p] of parts.slice(0, -1).entries()) {
       cur = path.join(cur, p);
       let st; try { st = fs.lstatSync(cur); } catch (e) { return path.join(loc.reportDir, ...parts); }
-      if (st.isSymbolicLink()) throw new Linked();
+      if (st.isSymbolicLink()) throw new Linked(parts.slice(0, i + 1).join('/'));
     }
     top = top || fs.realpathSync.native(loc.reportDir);
     const r = path.relative(top, fs.realpathSync.native(cur));
     if (outsideRel(r)) throw new Linked();
     return path.join(loc.reportDir, ...parts);
   };
-  const linked = (r) => { if (sk && !(sk.links = sk.links || []).includes(r)) sk.links.push(r); };
+  const linked = (r) => addLink(sk, r);
   // (A5-8, audit 5: a linked file or folder is left out and counted, never skipped silently)
   // (a folder is checked as the folder of a name inside it: the folder itself and every folder on the way)
-  const list = (rel, want) => { let d; try { d = path.dirname(at((rel ? rel + '/' : '') + 'x')); } catch (e) { if (e instanceof Linked) { linked(rel); return []; } throw e; } if (!isDir(d)) return []; return fs.readdirSync(d, { withFileTypes: true }).filter((e) => { if (e.isSymbolicLink()) { linked((rel ? rel + '/' : '') + e.name); return false; } return want === 'dir' ? e.isDirectory() : e.isFile(); }).map((e) => e.name); };
+  const list = (rel, want) => { let d; try { d = path.dirname(at((rel ? rel + '/' : '') + 'x')); } catch (e) { if (e instanceof Linked) { linked(e.rel || rel); return []; } throw e; } if (!isDir(d)) return []; return fs.readdirSync(d, { withFileTypes: true }).filter((e) => { if (e.isSymbolicLink()) { linked((rel ? rel + '/' : '') + e.name); return false; } return want === 'dir' ? e.isDirectory() : e.isFile(); }).map((e) => e.name); };
   return { dirs: (rel) => list(rel, 'dir'), files: (rel) => list(rel, 'file'), has: (rel) => { try { fs.lstatSync(at(rel)); return true; } catch (e) { return false; } }, json: (rel) => readJson(at(rel)), sk };
 }
 // files: the report writer's [{ path: '<Name>.Report/definition/...', data }]; only the .Report folder's files are read

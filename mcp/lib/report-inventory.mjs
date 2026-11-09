@@ -12,7 +12,7 @@
 //   refOf(field), keyOf(field), filterText(filter), typeName(type), isCustom(type), customNameOf(type), isDecor(visual)
 // No state: the answer comes from the source alone.
 import path from 'node:path';
-import { INSTRUCTION, LONG_TEXT, Linked, REPORT_LIMITS, safeName, safeText, TooBig } from './read-report.mjs';
+import { addLink, INSTRUCTION, LONG_TEXT, Linked, REPORT_LIMITS, safeName, safeText, TooBig } from './read-report.mjs';
 import { meaningInReport, VT, PV, TR } from './visual-meaning.mjs';
 
 // ---- reading a visual's parts ----
@@ -119,7 +119,7 @@ export function inventory(src, reportName, opts) {
   sk.links = sk.links || [];
   // (F-R1/F-R2, the fuzz test: one shape check where a file comes in: a file that is not a JSON object is unreadable,
   // never read on; lists are read through entries() / names() only)
-  const json = (rel) => { if (++reads > REPORT_LIMITS.files) { sk.capped = true; return null; } try { const j = src.json(rel); if (!j || typeof j !== 'object' || Array.isArray(j)) { unreadableFiles.push(rel); return null; } return j; } catch (e) { if (e instanceof TooBig) sk.big.push({ file: rel, size: e.size }); else if (e instanceof Linked) sk.links.push(rel); else if (src.has(rel)) unreadableFiles.push(rel); return null; } };
+  const json = (rel) => { if (++reads > REPORT_LIMITS.files) { sk.capped = true; return null; } try { const j = src.json(rel); if (!j || typeof j !== 'object' || Array.isArray(j)) { unreadableFiles.push(rel); return null; } return j; } catch (e) { if (e instanceof TooBig) sk.big.push({ file: rel, size: e.size }); else if (e instanceof Linked) addLink(sk, e.rel || rel); else if (src.has(rel)) unreadableFiles.push(rel); return null; } };
   // the schema versions the files name (check_report's answer): family -> versions
   const note = (j) => { const u = String((j && j.$schema) || ''), m = /\/([A-Za-z]+)\/(\d+\.\d+\.\d+)\/schema(?:[.-]embedded)?\.json$/.exec(u); if (m) (versions[m[1]] = versions[m[1]] || new Set()).add(m[2]); return j; };
   const report = note(json('definition/report.json')) || {};

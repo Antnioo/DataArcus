@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.3
+- A link inside a report (a symbolic link or a junction) is now named in `read_report` and `check_report`, at most 10
+  and then a count, and counted once (`check_report` counted one link twice); a page whose visuals folder is a link
+  says "visuals not read: its folder is a link" instead of "0 visuals". Links are still never followed.
 
 ## [0.3.2]: 2026-11-09 (the version for testers, second round)
 The second version for testers. In short:
