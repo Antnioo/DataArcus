@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-09T00:48Z",
+  "generated_at": "2026-11-09T01:02Z",
   "today": {
     "date": "2026-11-09",
-    "cost_usd": 0,
-    "tokens": 0,
-    "sessions": 0,
+    "cost_usd": 1.2,
+    "tokens": 2858169,
+    "sessions": 1,
     "by_kind": {
       "builder": {
         "cost_usd": 0,
         "count": 0
       },
       "worker": {
-        "cost_usd": 0,
-        "count": 0
+        "cost_usd": 1.2,
+        "count": 1
       },
       "probe": {
         "cost_usd": 0,
@@ -24,7 +24,12 @@
         "count": 0
       }
     },
-    "by_model": {}
+    "by_model": {
+      "opus": {
+        "cost_usd": 1.2,
+        "count": 1
+      }
+    }
   },
   "days": [
     {
@@ -107,9 +112,9 @@
     },
     {
       "date": "2026-11-09",
-      "cost_usd": 0,
-      "tokens": 0,
-      "sessions": 0
+      "cost_usd": 1.2,
+      "tokens": 2858169,
+      "sessions": 1
     }
   ],
   "jobs": [
@@ -232,9 +237,22 @@
     }
   ],
   "workers": {
-    "count": 0,
-    "cost_usd": 0,
-    "costliest": []
+    "count": 1,
+    "cost_usd": 1.2,
+    "costliest": [
+      {
+        "label": "worker 00:01",
+        "cost_usd": 1.2,
+        "minutes": 6,
+        "started": "2026-11-09T00:02Z"
+      }
+    ]
   },
-  "top": []
+  "top": [
+    {
+      "label": "worker 00:01",
+      "kind": "worker",
+      "cost_usd": 1.2
+    }
+  ]
 }
