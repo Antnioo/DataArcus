@@ -13,7 +13,7 @@
 
 ## Result (2026-11-09T20:02Z)
 - red on f3c1b7e1 first: the suite with no script and the old YAMLs failed (script missing; 15 workflow checks FAIL on the old YAML); green after: `PASS  bot-pr-files  48 checks` (read from the run's output).
-- Before -> after: the bot PR step opened the PR and waited for the owner; now `gh pr diff "$BRANCH" --name-only` feeds `scripts/bot-pr-files.mjs`; on `auto`: `gh pr merge --auto --squash` and the body says so; on `owner <path>` the body names the path. tests.yml dispatch kept. `check-modules` 1200, `check-agent-memory` 464 PASS, lint exit 0. actionlint is not in the repo (YAML parsed with python yaml).
+- Before -> after: the bot PR step opened the PR and waited for the owner; now `gh pr diff "$BRANCH" --name-only` feeds `scripts/bot-pr-files.mjs`; on `auto`: `gh pr merge --auto --squash` and the body says so; on `owner <path>` the body names the path. tests.yml dispatch kept. `check-modules` 1200, `check-agent-memory` 464 PASS, lint exit 0 (first read was tail's exit code; rerun after npm ci: 0). actionlint is not in the repo (YAML parsed with python yaml).
 - tests.yml gets one step for the suite (a website-side repo check, like test-powerbi-prices).
 
 ## CHANGELOG line
@@ -42,3 +42,5 @@ Runs "Update Power BI prices" and "Check exam skills outlines" (05:00 and 05:15 
 
 ## Lessons for the reviewer
 none.
+
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/42689156655 on fca631cc01a9b242d1b437d45500803d9dca8278 (2026-11-09T20:37Z)
