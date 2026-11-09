@@ -4,7 +4,7 @@ import './test-env.mjs';
 // exactly what they gave on the base (integration/0.3.2 at 39c46bb, before they moved to assets/js/design-metrics.js
 // and assets/js/design-state.js). Recorded on the base in fixtures/sp29-design.json (sha256 and length of each result);
 // SP29_RECORD=1 records them again (only on the base, never to make a run pass). B1 compares the same results with the
-// base engine itself (git show SP29_BASE, default 39c46bb, its four files) in the same process.
+// base engine itself (its four files saved in mcp/fixtures/hk1/sp29, 39c46bb's bytes) in the same process.
 //   D1-D12  a design's page, sizes, slots (every option), report pages, panel, rail fit, text sizes, theme, background
 //   G1      the geometry on 400 seeded random layouts;  S1  repairState on 20 broken saves, upgrade, fresh, SCHEMA
 //   I1      imageSize on made-up bytes;  B1  the base engine, live;  K1  the facade's names
@@ -15,7 +15,6 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
@@ -27,7 +26,8 @@ const sha = (b) => crypto.createHash('sha256').update(b).digest('hex').slice(0, 
 const js = (x) => sha(Buffer.from(JSON.stringify(x === undefined ? null : x), 'utf8'));
 const GOLD = path.join(HERE, 'fixtures', 'sp29-design.json');
 const E = require('../assets/js/design-engine.js');
-const BASE = process.env.SP29_BASE || '39c46bb';
+// (HK1, 0.3.3) the base's four files are saved copies (mcp/fixtures/hk1/sp29, the commit 39c46bb's bytes), not git reads
+const BASE = '39c46bb';
 
 // a seeded random source (mulberry32): the same 400 layouts on every machine
 const rng = (seed) => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -145,7 +145,7 @@ for (const name of Object.keys(got)) chk(() => gold[name] && !diff(got[name], go
   let B = null, why = '';
   try {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-sp29-base-'));
-    for (const f of ['design-engine.js', 'text-measure.js', 'design-colours.js', 'design-glass.js']) fs.writeFileSync(path.join(dir, f), execFileSync('git', ['show', `${BASE}:assets/js/${f}`], { cwd: REPO, maxBuffer: 1 << 26 }));
+    for (const f of ['design-engine.js', 'text-measure.js', 'design-colours.js', 'design-glass.js']) fs.writeFileSync(path.join(dir, f), fs.readFileSync(path.join(HERE, 'fixtures', 'hk1', 'sp29', 'assets', 'js', f)));
     B = require(path.join(dir, 'design-engine.js'));
   } catch (e) { why = String(e && e.message || e).slice(0, 200); }
   const was = B ? facts(B) : null, differ = was ? Object.keys(Object.assign({}, got, was)).filter((k) => diff(got[k], was[k]).length) : [];
