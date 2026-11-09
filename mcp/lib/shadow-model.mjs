@@ -100,7 +100,7 @@ const q = require('../../assets/js/tmdl-name.js').tmdlName;
 const ref = (t, c) => q(t) + '.' + q(c);
 const val = (v) => { const s = String(v); return /"/.test(s) || s !== s.trim() || /^'/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
 const T1 = '\t', T2 = '\t\t', T3 = '\t\t\t', T4 = '\t\t\t\t';
-const textOf = (e) => (Array.isArray(e) ? e.join('\n') : e == null ? '' : String(e));
+const textOf = require('../../assets/js/dax-reference-parser.js').exprText;   // (0.3.3 SG1) an expression as one text: its one place
 const fenced = (head, expr, depth) => { const pad = '\t'.repeat(depth + 2); return [head + ' = ```', ...textOf(expr).replace(/\r/g, '').split('\n').map((l) => (l.trim() ? pad + l : '')), pad + '```']; };
 // an M text literal and an identifier
 const mText = (s) => '"' + String(s).replace(/"/g, '""') + '"';

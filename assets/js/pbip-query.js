@@ -55,8 +55,7 @@
   const lum = Contrast.luminance;
   const contrast = Contrast.contrast;
   const mixHex = (a, b, t) => {
-    const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-    const A = p(a), B = p(b);
+    const A = Contrast.hexToRgb(a), B = Contrast.hexToRgb(b);   // (0.3.3 SG1) its one place, contrast.js
     return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join('');
   };
 

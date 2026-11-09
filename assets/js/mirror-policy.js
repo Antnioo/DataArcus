@@ -10,9 +10,9 @@
   // ---- the PBIR readers (one copy: report-mirror.js takes them from here) ----
   // (the fuzz test's F-T1..F-T3, 11 Oct: a report from anyone can hold any shape. Every read checks the shape it touches)
   const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
-  const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
   // a literal's text: pbir-values.js, its one home (0.3.2 DD1B; DD1A: sp10 P10 admits the pure shared files)
   const PV = typeof module !== 'undefined' && module.exports ? require('./pbir-values.js') : root.DAPbirValues;
+  const lit = PV.litValue;   // (0.3.3 SG1) a raw literal: its one place, pbir-values.js
   const strOf = PV.litText;
   // is a column, by its name, a date part: time-names.js, its one home (0.3.2 DD1A, the owner D-1104-15)
   const TN = typeof module !== 'undefined' && module.exports ? require('./time-names.js') : root.DATimeNames;

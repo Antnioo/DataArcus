@@ -8,7 +8,9 @@
 (function (root) {
   'use strict';
 
-  const text = (v) => (Array.isArray(v) ? v.join('\n') : v == null ? '' : String(v));
+  // an expression given as one text or as its lines (a model's JSON writes both) -> one text: the one place (0.3.3 SG1)
+  const exprText = (v) => (Array.isArray(v) ? v.join('\n') : v == null ? '' : String(v));
+  const text = exprText;
   // ---------- 1. DAX tokenizer ----------
   // Returns tokens without comments; strings are kept as a single token so their contents are ignored.
   function tokenizeDax(src) {
@@ -186,7 +188,7 @@
     return { format: report.format, pages, visuals, pageNames, refs, perVisual, ext };
   }
 
-  const api = { tokenizeDax, daxCode, collectReportRefs, visualLabel, analyzeReport };
+  const api = { tokenizeDax, daxCode, collectReportRefs, visualLabel, analyzeReport, exprText };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DADaxParser = api;
 })(typeof self !== 'undefined' ? self : this);

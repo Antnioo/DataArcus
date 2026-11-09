@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const DEFAULTS = { creators: 10, viewers: 150, premium: false, fabric: false, e5: false, billing: 'reserved', small: 2, currency: 'USD', period: 'month' };
   let state;
   try { state = { ...DEFAULTS, ...JSON.parse(localStorage.getItem(STORE) || '{}') }; } catch (e) { state = { ...DEFAULTS }; }
-  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* private mode */ } };
+  const save = () => window.DAPageToast.saveState(STORE, state);   // (0.3.3 SG1) page-toast.js, its one place
 
   // Totals in whole units; a per-user price keeps its cents when it has any (Pro $14 = AED 51.415 a month shows as
   // AED 51.42, not AED 51), so "users x price" in each option's line adds up to its total.

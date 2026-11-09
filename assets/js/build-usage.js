@@ -21,6 +21,8 @@
   else root.BuildUsage = api;
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
+  // (0.3.3 SG1) the page helpers (an element with its class and text): page-toast.js, loaded before this file on the page
+  const PT = typeof module === 'object' && module.exports ? require('./page-toast.js') : self.DAPageToast;
 
   const URL_ = 'https://raw.githubusercontent.com/Antnioo/DataArcus/build-data/usage.json';
   const VERSION = 1, MAX_JOBS = 8, MAX_TOP = 5, MAX_DAYS = 14;
@@ -58,7 +60,7 @@
     const doc = win.document, $ = (id) => doc.getElementById(id);
     if (!$('bu-panel')) return null;
     const NS = 'http://www.w3.org/2000/svg';
-    const el = (tag, cls, text) => { const e = doc.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+    const el = (tag, cls, text) => PT.el(doc, tag, cls, text);   // (0.3.3 SG1) page-toast.js, its one place
     const mk = (tag, attrs) => { const e = doc.createElementNS(NS, tag); for (const k of Object.keys(attrs || {})) e.setAttribute(k, attrs[k]); return e; };
     let costs = {}, shown = null;
 

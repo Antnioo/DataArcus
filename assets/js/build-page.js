@@ -31,6 +31,8 @@
   else { root.BuildPage = api; if (root.document) api.start(root); }
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
+  // (0.3.3 SG1) the page helpers (an element with its class and text): page-toast.js, loaded before this file on the page
+  const PT = typeof module === 'object' && module.exports ? require('./page-toast.js') : self.DAPageToast;
 
   const REPO = 'Antnioo/DataArcus';
   const API = 'https://api.github.com/repos/' + REPO;
@@ -163,7 +165,7 @@ const MAX_LOOKUPS = 40, KEEP_CALLS = 12;   // latest-commit lookups per refresh;
     const usage = win.BuildUsage ? win.BuildUsage.mount(win, client) : null;
     let timer = 0, busy = null;
 
-    const el = (tag, cls, text) => { const e = doc.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+    const el = (tag, cls, text) => PT.el(doc, tag, cls, text);   // (0.3.3 SG1) page-toast.js, its one place
     const when = (ms) => { const t = el('time', 'bp-when', ago(ms, Date.now())); t.dateTime = new Date(ms).toISOString(); t.dataset.ts = String(ms); t.title = new Date(ms).toLocaleString(); return t; };
     const link = (href, text) => { const a = el('a', 'bp-link', text); if (/^https:\/\/github\.com\//.test(href)) { a.href = href; a.target = '_blank'; a.rel = 'noopener'; } return a; };
     const pill = (result) => el('span', 'bp-pill bp-' + result, { queued: 'queued', running: 'in progress', green: 'green', red: 'red', other: 'ended' }[result] || result);

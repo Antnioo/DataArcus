@@ -8,9 +8,9 @@
  * Browser and Node (module.exports / window.DARules). The engine never writes anything. */
 (function (root) {
   'use strict';
-  const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
   // a literal's text, number and true or false, a column's set width: pbir-values.js, their one home (0.3.2 DD1B)
   const PV = typeof module !== 'undefined' && module.exports ? require('./pbir-values.js') : root.DAPbirValues;
+  const lit = PV.litValue;   // (0.3.3 SG1) a raw literal: its one place, pbir-values.js
   const num = PV.litNumber, str = PV.litText;
   const entries = (list) => (Array.isArray(list) ? list : []);
   const plain = (list) => entries(list).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e.properties || {}), {});

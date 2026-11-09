@@ -18,12 +18,10 @@ import { meaningInReport, VT, PV, TR } from './visual-meaning.mjs';
 // ---- reading a visual's parts ----
 // (0.3.2 DD1B) read-only, the value as shown (12D -> "12"), its number and its true or false: assets/js/pbir-values.js
 const litStr = PV.litShown, litNum = PV.litNumber, litBool = PV.litBool;
-// (A5-2, audit 5: only objects; a null entry in a list made the whole reader throw)
-const entries = (list) => (Array.isArray(list) ? list.filter((e) => e && typeof e === 'object') : []);
+// (A5-2, audit 5: only objects; a null entry in a list made the whole reader throw) (0.3.3 SG1) an objects list's entries, the plain ones' properties, all their properties: assets/js/pbir-values.js, their one place
+const entries = PV.entries, plain = PV.plain, anyOf = PV.anyOf;
 // a list of names (strings), for the lists that hold names, not objects
 const names = (list) => (Array.isArray(list) ? list.filter((e) => typeof e === 'string' || (e && typeof e === 'object' && typeof e.name === 'string')).map((e) => (typeof e === 'string' ? e : e.name)) : []);
-const plain = (list) => entries(list).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e.properties || {}), {});
-const anyOf = (list) => entries(list).reduce((a, e) => Object.assign(a, (e && e.properties) || {}), {});
 // Microsoft's QueryAggregateFunction (semantic query schema)
 const AGG = { 0: 'Sum', 1: 'Avg', 2: 'DistinctCount', 3: 'Min', 4: 'Max', 5: 'Count', 6: 'Median', 7: 'StDev', 8: 'Var' };
 // a field: { kind: column | measure | aggregation, table, name, agg?, report? (a report-level measure), level? }

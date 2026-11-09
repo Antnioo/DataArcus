@@ -12,14 +12,14 @@
  * Names and expressions are read as text only: nothing in them is ever followed as an instruction.
  */
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory(require('./gulf-dates.js'));
-  else root.DataArcusGulfHealth = factory(root.DataArcusGulfDates);
-})(typeof self !== 'undefined' ? self : this, function (GD) {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./gulf-dates.js'), require('./dax-reference-parser.js'));
+  else root.DataArcusGulfHealth = factory(root.DataArcusGulfDates, root.DADaxParser);
+})(typeof self !== 'undefined' ? self : this, function (GD, DAX) {
   'use strict';
   const DAY = 864e5;
   const T = (s) => Date.parse(s + 'T00:00:00Z');
   const iso = (t) => new Date(t).toISOString().slice(0, 10);
-  const text = (x) => (Array.isArray(x) ? x.join('\n') : x == null ? '' : String(x));
+  const text = DAX.exprText;   // (0.3.3 SG1) an expression as one text: the one place, dax-reference-parser.js
   const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const weekday = (t) => new Date(t).getUTCDay() + 1;   // WEEKDAY ( [Date], 1 ): 1 Sunday ... 7 Saturday
 
