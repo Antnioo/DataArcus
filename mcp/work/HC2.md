@@ -5,7 +5,8 @@
   named in Arabic. The month-name test becomes one named constant in health-rules.js. No new Arabic sentence.
 - **Expected checks:** (base) golden models' MONTH_SORT counts, per model: A1 1, A6 1, every other case 0 (E1's 8 inputs 0);
   after: the same (no golden model has an Arabic Hijri column). Website model-health, sp27 (website and MCP), dd1h unchanged.
-- **Resume:** fix and tests done; merge integration once, then CI (see the CI line below).
+- **Resume:** none; the reviewer reads and merges.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42704295908 on 19981cdac7fb3b83425a537e08a5c19047227428 (2026-11-09T21:56Z)
 
 ## Plan (written 2026-11-09T21:30Z)
 - Measure (base d8551081, health-rules.js:275): the rule's `monthLike` regex: English Gregorian and English Hijri
