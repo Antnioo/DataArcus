@@ -1,47 +1,32 @@
 {
   "version": 1,
-  "generated_at": "2026-11-08T23:02Z",
+  "generated_at": "2026-11-09T00:02Z",
   "today": {
-    "date": "2026-11-08",
-    "cost_usd": 196.09,
-    "tokens": 638937753,
-    "sessions": 41,
+    "date": "2026-11-09",
+    "cost_usd": 0,
+    "tokens": 0,
+    "sessions": 0,
     "by_kind": {
       "builder": {
-        "cost_usd": 100.1,
-        "count": 13
+        "cost_usd": 0,
+        "count": 0
       },
       "worker": {
-        "cost_usd": 94.84,
-        "count": 24
+        "cost_usd": 0,
+        "count": 0
       },
       "probe": {
-        "cost_usd": 1.15,
-        "count": 4
+        "cost_usd": 0,
+        "count": 0
       },
       "other": {
         "cost_usd": 0,
         "count": 0
       }
     },
-    "by_model": {
-      "sonnet": {
-        "cost_usd": 39.0,
-        "count": 12
-      },
-      "opus": {
-        "cost_usd": 157.09,
-        "count": 29
-      }
-    }
+    "by_model": {}
   },
   "days": [
-    {
-      "date": "2026-10-26",
-      "cost_usd": 0,
-      "tokens": 0,
-      "sessions": 0
-    },
     {
       "date": "2026-10-27",
       "cost_usd": 0,
@@ -116,9 +101,15 @@
     },
     {
       "date": "2026-11-08",
-      "cost_usd": 196.09,
-      "tokens": 638937753,
-      "sessions": 41
+      "cost_usd": 198.09,
+      "tokens": 644118264,
+      "sessions": 42
+    },
+    {
+      "date": "2026-11-09",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
     }
   ],
   "jobs": [
@@ -241,54 +232,9 @@
     }
   ],
   "workers": {
-    "count": 24,
-    "cost_usd": 94.84,
-    "costliest": [
-      {
-        "label": "cleanup",
-        "cost_usd": 19.52,
-        "minutes": 66,
-        "started": "2026-11-08T08:34Z"
-      },
-      {
-        "label": "worker 08:50",
-        "cost_usd": 7.22,
-        "minutes": 66,
-        "started": "2026-11-08T08:49Z"
-      },
-      {
-        "label": "worker 19:36",
-        "cost_usd": 9.26,
-        "minutes": 18,
-        "started": "2026-11-08T19:36Z"
-      }
-    ]
+    "count": 0,
+    "cost_usd": 0,
+    "costliest": []
   },
-  "top": [
-    {
-      "label": "TA5",
-      "kind": "builder",
-      "cost_usd": 24.04
-    },
-    {
-      "label": "cleanup",
-      "kind": "worker",
-      "cost_usd": 19.52
-    },
-    {
-      "label": "AP2",
-      "kind": "builder",
-      "cost_usd": 17.19
-    },
-    {
-      "label": "FN1H",
-      "kind": "builder",
-      "cost_usd": 16.28
-    },
-    {
-      "label": "FN1G",
-      "kind": "builder",
-      "cost_usd": 15.67
-    }
-  ]
+  "top": []
 }
