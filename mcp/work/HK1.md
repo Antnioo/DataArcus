@@ -42,7 +42,8 @@ none (test-only change; no product, page or public text changed).
 none (B-417 decided by the reviewer 9 Nov: keep the guide's 26 October date; the question is closed).
 
 ## Risky changes
-none. The six suites read saved files with the same bytes git show returned (the green runs prove the same checks and numbers); no product code, network, process or file-writing change (temp folders are still os.tmpdir()).
+- The merge gate names mcp/fixtures/hk1/dd2c/mcp/lib/plans.mjs under "the approval step". It is a byte-for-byte saved copy of commit 128285e's mcp/lib/plans.mjs, used only as text by test-0.3.2-dd2c.mjs (its `const canon =` line is read and run). It is never imported as a module and never shipped. The approval-step text in it is the old file's own comment (lines 1-6: the 0.2.9 gate inside the tools, "no tool writes a file without a plan id that was proposed by a tool and then approved with approve_plan", and who approves: the person, by a click in DataArcus's own approval window). mcp/fixtures/hk1/dd2c/mcp/lib/artifact.mjs is the same kind of copy (the other dd2c old copy).
+- The six suites read saved files with the same bytes git show returned (the green runs prove the same checks and numbers); no product code, network, process or file-writing change (temp folders are still os.tmpdir()).
 
 ## For the laptop
 `cd mcp && npm ci`, then `npm test -- report safety twin`. Nothing on Desktop.
