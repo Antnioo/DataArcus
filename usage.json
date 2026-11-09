@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-09T04:02Z",
+  "generated_at": "2026-11-09T05:02Z",
   "today": {
     "date": "2026-11-09",
-    "cost_usd": 14.27,
-    "tokens": 35839899,
-    "sessions": 6,
+    "cost_usd": 19.32,
+    "tokens": 47369335,
+    "sessions": 9,
     "by_kind": {
       "builder": {
         "cost_usd": 0,
         "count": 0
       },
       "worker": {
-        "cost_usd": 14.27,
-        "count": 6
+        "cost_usd": 19.32,
+        "count": 9
       },
       "probe": {
         "cost_usd": 0,
@@ -26,8 +26,12 @@
     },
     "by_model": {
       "opus": {
-        "cost_usd": 14.27,
-        "count": 6
+        "cost_usd": 18.58,
+        "count": 8
+      },
+      "sonnet": {
+        "cost_usd": 0.74,
+        "count": 1
       }
     }
   },
@@ -112,9 +116,9 @@
     },
     {
       "date": "2026-11-09",
-      "cost_usd": 14.27,
-      "tokens": 35839899,
-      "sessions": 6
+      "cost_usd": 19.32,
+      "tokens": 47369335,
+      "sessions": 9
     }
   ],
   "jobs": [
@@ -246,8 +250,8 @@
     }
   ],
   "workers": {
-    "count": 6,
-    "cost_usd": 14.27,
+    "count": 9,
+    "cost_usd": 19.32,
     "costliest": [
       {
         "label": "worker 02:01",
@@ -256,16 +260,16 @@
         "started": "2026-11-09T02:02Z"
       },
       {
-        "label": "worker 02:49",
-        "cost_usd": 1.85,
-        "minutes": 17,
-        "started": "2026-11-09T02:49Z"
-      },
-      {
         "label": "worker 03:01",
         "cost_usd": 3.69,
         "minutes": 27,
         "started": "2026-11-09T03:02Z"
+      },
+      {
+        "label": "worker 04:01",
+        "cost_usd": 2.68,
+        "minutes": 7,
+        "started": "2026-11-09T04:02Z"
       }
     ]
   },
@@ -281,6 +285,11 @@
       "cost_usd": 3.69
     },
     {
+      "label": "worker 04:01",
+      "kind": "worker",
+      "cost_usd": 2.68
+    },
+    {
       "label": "worker 02:49",
       "kind": "worker",
       "cost_usd": 1.85
@@ -289,11 +298,6 @@
       "label": "worker 00:47",
       "kind": "worker",
       "cost_usd": 1.71
-    },
-    {
-      "label": "worker 00:01",
-      "kind": "worker",
-      "cost_usd": 1.2
     }
   ]
 }
