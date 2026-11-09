@@ -316,14 +316,15 @@ const code = (s) => s.replace(/^\s*\/\/.*$/gm, '');
 const defines = (src, k) => new RegExp(`(^|\\n)\\s*(export\\s+)?(const|function|let|class)\\s+${k}\\b`).test(src);
 const importsOf = (src) => [...src.matchAll(/(?:^|\n)\s*import\s[^;]*?from\s+'([^']+)'|(?:^|\n)\s*import\s+'([^']+)'|import\(\s*'([^']+)'|require\(\s*'([^']+)'/g)].map((x) => x[1] || x[2] || x[3] || x[4]);
 const DISCOVERY = ['ReadError', 'walk', 'byName', 'modelsThere', 'noModelAt', 'nearestModel'];
+// (0.3.2 WN1) within: the one containment rule, path-rules.mjs, imported by model.mjs (defined there or imported from it)
 const CONTAINMENT = ['within', 'realOf', 'underRoot', 'real', 'inside', 'readCapped', 'zipParts', 'zipDirectoryCheck', 'unzipNeeded', 'notThisModel', 'linkError', 'isLink'];
 if (fs.existsSync(path.join(HERE, 'lib', 'model-discovery.mjs'))) {
   const D = await import('./lib/model-discovery.mjs'), ms = srcOf('model.mjs'), ds = srcOf('model-discovery.mjs');
   chk(() => DISCOVERY.every((k) => typeof D[k] === 'function') && M.ReadError === D.ReadError && !DISCOVERY.some((k) => defines(ms, k)) && /from '\.\/model-discovery\.mjs'/.test(ms),
     () => `P1: model-discovery.mjs exports ${DISCOVERY.filter((k) => typeof D[k] !== 'function')} missing; model.mjs re-exports its ReadError (${M.ReadError === D.ReadError}) and defines none of them (${DISCOVERY.filter((k) => defines(ms, k))})`);
   chk(() => JSON.stringify(importsOf(ds).sort()) === JSON.stringify(['../../assets/js/model-nearest.js', './model-names.mjs', 'node:fs', 'node:path']) && !/\b(openSync|readSync|readFileSync|createReadStream|realpathSync|writeFileSync|mkdirSync|rmSync|renameSync|unlinkSync|symlinkSync|process\.env)\b/.test(code(ds))
-    && !CONTAINMENT.some((k) => defines(ds, k)) && CONTAINMENT.every((k) => defines(ms, k)) && /Interface:/.test(ds),
-    () => `P2: model-discovery.mjs lists folders only (imports ${importsOf(ds)}), says its Interface, and the containment and capped reads stay in model.mjs (there: ${CONTAINMENT.filter((k) => defines(ds, k))}; missing from model.mjs: ${CONTAINMENT.filter((k) => !defines(ms, k))})`);
+    && !CONTAINMENT.some((k) => defines(ds, k)) && CONTAINMENT.every((k) => defines(ms, k) || (k === 'within' && /import \{ within\b[^}]*\} from '\.\/path-rules\.mjs'/.test(ms))) && /Interface:/.test(ds),
+    () => `P2: model-discovery.mjs lists folders only (imports ${importsOf(ds)}), says its Interface, and the containment and capped reads stay in model.mjs (there: ${CONTAINMENT.filter((k) => defines(ds, k))}; missing from model.mjs: ${CONTAINMENT.filter((k) => !defines(ms, k) && !(k === 'within' && /import \{ within\b[^}]*\} from '\.\/path-rules\.mjs'/.test(ms)))})`);
 }
 const INVENTORY = ['inventory', 'refOf', 'keyOf', 'filterText', 'typeName', 'isCustom', 'customNameOf', 'isDecor'];
 const INV_PRIVATE = ['lit', 'litStr', 'litNum', 'litBool', 'entries', 'names', 'plain', 'anyOf', 'AGG', 'fieldOf', 'safeFilters', 'topOf', 'filtersOf', 'hex', 'textOf', 'SLICERS', 'imagesIn', 'DECOR'];

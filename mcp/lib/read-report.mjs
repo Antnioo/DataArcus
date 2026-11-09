@@ -12,6 +12,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import { decode, inside, readCapped, readsLikeInstruction, real, ROOT, shownName, shownPath, visible, WITHHELD } from './model.mjs';
 import { answerOf } from './report-answer.mjs';
+import { outsideRel, sameOnDisk, sameName } from './path-rules.mjs';   // (0.3.2 WN1: F01 the one containment rule, F02 a name in another case)
 import { identityOf } from './report-identity.mjs';
 import { inventory } from './report-inventory.mjs';
 export { answerOf, READ_CAP } from './report-answer.mjs';
@@ -205,7 +206,7 @@ export function diskSource(loc, sk) {
     }
     top = top || fs.realpathSync.native(loc.reportDir);
     const r = path.relative(top, fs.realpathSync.native(cur));
-    if (r.startsWith('..') || path.isAbsolute(r)) throw new Linked();
+    if (outsideRel(r)) throw new Linked();
     return path.join(loc.reportDir, ...parts);
   };
   const linked = (r) => { if (sk && !(sk.links = sk.links || []).includes(r)) sk.links.push(r); };
@@ -262,12 +263,12 @@ export function reportIdentity(src, reportName) { return identityOf(inventory(sr
 export function existingTheme(m, want) {
   if (!m || !m.projectDir || !m.folder || !m.report || !Array.isArray(m.report.files)) return null;
   const root = path.resolve(m.projectDir), model = path.basename(m.folder).replace(/\.SemanticModel$/i, '');
-  const dirs = [...new Set(m.report.files.map((f) => path.relative(root, path.resolve(String(f.path))).split(path.sep)[0]).filter((n) => /\.Report$/i.test(n) && !n.startsWith('..')))];
+  const dirs = [...new Set(m.report.files.map((f) => path.relative(root, path.resolve(String(f.path)))).filter((r) => !outsideRel(r)).map((r) => r.split(path.sep)[0]).filter((n) => /\.Report$/i.test(n)))];
   const base = (n) => n.replace(/\.Report$/i, '');
-  const opened = (n) => { const f = path.join(root, base(n) + '.pbip'); try { if (!isFile(f)) return false; const a = readJson(f); const r = ((Array.isArray(a.artifacts) ? a.artifacts : []).find((x) => x && x.report) || {}).report; return path.resolve(root, String((r && r.path) || n)) === path.join(root, n); } catch (e) { return false; } };
+  const opened = (n) => { const f = path.join(root, base(n) + '.pbip'); try { if (!isFile(f)) return false; const a = readJson(f); const r = ((Array.isArray(a.artifacts) ? a.artifacts : []).find((x) => x && x.report) || {}).report; return sameOnDisk(path.resolve(root, String((r && r.path) || n)), path.join(root, n)); } catch (e) { return false; } };
   const read = (n) => { try { const dir = path.join(root, n); return reportIdentity(diskSource({ reportDir: dir, defDir: path.join(dir, 'definition') }, { big: [], deep: 0 }), base(n)); } catch (e) { return { ours: false, identity: null }; } };
   const all = dirs.map((n) => Object.assign({ n }, read(n))), human = all.filter((x) => !x.ours);
-  const rank = (x) => (opened(x.n) ? 0 : 2) + (base(x.n) === model ? 0 : 1);
+  const rank = (x) => (opened(x.n) ? 0 : 2) + (sameName(base(x.n), model) ? 0 : 1);
   const asked = want != null && String(want).trim() ? all.find((x) => base(x.n).toLowerCase() === String(want).trim().replace(/\.Report$/i, '').toLowerCase()) : null;
   const pick = asked || human.slice().sort((a, b) => rank(a) - rank(b) || (a.n < b.n ? -1 : a.n > b.n ? 1 : 0))[0];
   if (!pick) return null;

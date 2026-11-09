@@ -37,7 +37,9 @@ async function stepBeforeTexts(c, a0) {
   return pl;
 }
 
-const LONGP = fs.mkdtempSync(path.join(os.tmpdir(), 'hr2-')); const ROOT0 = path.join(LONGP, 'a'.repeat(120)); fs.mkdirSync(ROOT0);
+// (0.3.2 WN1, F05) on Windows a folder name of 50: with 120 the project's deepest file passes Windows' 259 characters and
+// the plan is refused before the approval; elsewhere 120 as before
+const LONGP = fs.mkdtempSync(path.join(os.tmpdir(), 'hr2-')); const ROOT0 = path.join(LONGP, 'a'.repeat(process.platform === 'win32' ? 50 : 120)); fs.mkdirSync(ROOT0);
 try {
   const ROOT = fs.realpathSync.native(ROOT0);
   fs.cpSync(path.join(HERE, 'test-models/large-synthetic'), path.join(ROOT, 'large'), { recursive: true });

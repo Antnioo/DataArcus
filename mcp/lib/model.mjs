@@ -53,7 +53,8 @@ export const nothingAt = (f) => { try { fs.lstatSync(f); return false; } catch (
 // (imported here, beside its one use, rather than at the top: this module is otherwise the reading block's)
 import { writeFileNew } from './write-io.mjs';
 export const writeNew = (f, data) => writeFileNew(f, data);
-const within = (root, p) => { const rel = path.relative(root, p); return !(rel.startsWith('..') || path.isAbsolute(rel)); };
+// (0.3.2 WN1, F01) inside or outside: the one rule, path-rules.mjs (a folder named "..draft" is inside)
+import { within, sameOnDisk } from './path-rules.mjs';
 const linkError = (p) => new ReadError('OUTSIDE_LINK', { path: p }, `"${p}" leads outside the working folder ${ROOT} through a link (a symbolic link or a junction). DataArcus reads and writes only inside the working folder.`);
 const isLink = (p) => { try { return fs.lstatSync(p).isSymbolicLink(); } catch (e) { return false; } };
 // Where a path really is: the real path of its deepest part that exists (links followed), plus the part that
@@ -419,7 +420,7 @@ function notThisModel(projectDir, r, folder) {
   if (ref.byConnection) return 'it connects to a published model, not to this model folder';
   const to = ref.byPath && typeof ref.byPath.path === 'string' ? path.resolve(projectDir, r, ref.byPath.path.replace(/\\/g, '/')) : null;
   if (!to) return 'its definition.pbir names no model, so the model it uses is not known';
-  const same = process.platform === 'win32' ? to.toLowerCase() === path.resolve(folder).toLowerCase() : to === path.resolve(folder);
+  const same = sameOnDisk(to, folder);   // (0.3.2 WN1, F02: the one comparison, path-rules.mjs)
   return same ? null : `it belongs to another model (${shownName(path.basename(to), 80)}), not to ${shownName(path.basename(folder), 80)}`;
 }
 

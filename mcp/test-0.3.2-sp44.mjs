@@ -234,7 +234,8 @@ if (httpOut) {
   const h = codeOf(src('approval-http.mjs')), win = codeOf(src('approval-window.mjs')), others = fs.readdirSync(path.join(HERE, 'lib')).filter((f) => f.endsWith('.mjs') && f !== 'approval-http.mjs' && /^approval-/.test(f)).map((f) => codeOf(src(f)));
   chk(() => /from 'node:http'/.test(h) && /from 'node:crypto'/.test(h) && /randomBytes\(24\)\.toString\('base64url'\)/.test(h) && /\[A-Za-z0-9_-\]\{20,64\}/.test(h) && /'sec-fetch-site'/.test(h) && /req\.headers\.host !== here/.test(h) && /decide\(w, d\)/.test(h) && /'Content-Security-Policy'/.test(h)
     && others.every((c) => !/node:http|node:crypto|randomBytes|sec-fetch-site|bySecret|Content-Security-Policy/.test(c))
-    && ['open', 'wait', 'state', 'close', 'launch', 'browserCommand'].every((n) => defined(win, n) || new RegExp(`function ${n}\\b`).test(win)) && /from 'node:child_process'/.test(win),
+    && ['open', 'wait', 'state', 'close', 'launch', 'launchers'] /* (0.3.2 WN1: browserCommand became launchers, F03) */
+    .every((n) => defined(win, n) || new RegExp(`function ${n}\\b`).test(win)) && /from 'node:child_process'/.test(win),
     () => 'V2. approval-http.mjs alone holds node:http, node:crypto, the secret (24 bytes, base64url), the link\'s pattern, the Host and Origin checks, the headers and the call of the decision callback; approval-window.mjs keeps open, wait, state, close and the launch');
 }
 
