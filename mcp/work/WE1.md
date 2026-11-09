@@ -16,7 +16,7 @@
   read_model without lang). check_report: no coded error reaches it (it catches loadModel): ar / en / absent answers
   identical. Schemas unchanged (defaults "en"/"auto" kept), create_report has no lang. Expected red on f3c1b7e1: 6
   (the 3 explicit-ar and the 3 explicit-en-on-Arabic-names). Every other suite unchanged; lg1 12, ar4 10, rv1 as before.
-- **Resume:** code done (49e6948a), area runs green, integration unmoved (f3c1b7e1, no merge); CI started 2026-11-09T20:29Z.
+- **Resume:** DONE (2026-11-09T20:48Z). CI green: https://github.com/Antnioo/DataArcus/actions/runs/42693441891 on d725d9df19a070809b233c30f8552b275eeec453
 
 ## Plan
 1. Measure the catch: the SDK's `validateToolInput` parses the raw arguments with the tool's schema and hands the
