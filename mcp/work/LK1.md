@@ -4,9 +4,9 @@
 - **Approval:** the reviewer's brief "LK1" (9 Nov). Owner D-1104-12 (a library of functions, fix at the source), D-1104-18 (keep building the library functions). Finding: night audit AUD-057 (B-415).
 - **Base:** `fix/0.3.3-lk1` from `origin/integration/0.3.3` at f3c1b7e1. Push only this branch.
 - **Scope:** read-report.mjs (walk records a link by its report-relative path; `Linked` carries the link met on the way; one shared helper `addLink` + `linksSaid`), report-answer.mjs (PAGE line, NOT READ line), check-report.mjs (the two links lines), report-inventory.mjs (one call: its `sk.links.push` goes through `addLink`; see Decisions). New suite lk1. Links are still never followed.
-- **CI:** (pending) run 42687668529 on c4326b8e.
+- **CI:** CI green: https://github.com/Antnioo/DataArcus/actions/runs/42687668529 on c4326b8e (attempt 2; Linux, Windows, website; macOS skipped on a branch run). Attempt 1: every MCP job green, website-suites (3) red on theme-generator "en: steps bar did not open and land on Layout" (the flake PH1 saw, a page this job does not touch); green on the re-run of the failed jobs.
 - **Expected checks:** new `lk1` red on f3c1b7e1 first (page line, names, count 1 in both answers, 12-link cap); every suite that calls read_report or check_report unchanged counts; no recorded fixture moves (no fixture holds a link); mutation run before and after, one new mutant (the dedup) killed.
-- **Resume:** 2026-11-09T19:54Z: code done (c4326b8e); CI run 42687668529 started; next: its result, the CI line here, DONE.
+- **Resume:** 2026-11-09T20:44Z: State: DONE (CI green on c4326b8e); the reviewer merges.
 
 ## Measured (step 1, on f3c1b7e1, 2026-11-09T19:31Z)
 The audit's case (twin-project copy, p1overview/visuals moved outside and linked), sk.links printed:
