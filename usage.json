@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-09T19:07Z",
+  "generated_at": "2026-11-09T19:48Z",
   "today": {
     "date": "2026-11-09",
-    "cost_usd": 86.88,
-    "tokens": 244397767,
-    "sessions": 32,
+    "cost_usd": 93.34,
+    "tokens": 261434650,
+    "sessions": 34,
     "by_kind": {
       "builder": {
-        "cost_usd": 35.03,
-        "count": 5
+        "cost_usd": 39.08,
+        "count": 6
       },
       "worker": {
-        "cost_usd": 50.51,
-        "count": 25
+        "cost_usd": 52.92,
+        "count": 26
       },
       "probe": {
         "cost_usd": 0,
@@ -26,8 +26,8 @@
     },
     "by_model": {
       "opus": {
-        "cost_usd": 81.52,
-        "count": 27
+        "cost_usd": 87.98,
+        "count": 29
       },
       "sonnet": {
         "cost_usd": 5.36,
@@ -116,12 +116,21 @@
     },
     {
       "date": "2026-11-09",
-      "cost_usd": 86.88,
-      "tokens": 244397767,
-      "sessions": 32
+      "cost_usd": 93.34,
+      "tokens": 261434650,
+      "sessions": 34
     }
   ],
   "jobs": [
+    {
+      "id": "OI033",
+      "title": "OI033: open 0.3.3 in the engine: one place names the integration branch; S3 for released versions (L-1109-27)",
+      "model": "opus",
+      "cost_usd": 4.05,
+      "tokens": 10743726,
+      "minutes": 19,
+      "finished_at": "2026-11-09T19:23Z"
+    },
     {
       "id": "CP1",
       "title": "CP1: the article: Is your Power BI model ready for Copilot? How to check in 10 minutes (EN + AR, D-1109-06)",
@@ -295,8 +304,8 @@
     }
   ],
   "workers": {
-    "count": 25,
-    "cost_usd": 50.51,
+    "count": 26,
+    "cost_usd": 52.92,
     "costliest": [
       {
         "label": "worker 02:01",
@@ -340,9 +349,9 @@
       "cost_usd": 4.64
     },
     {
-      "label": "worker 07:01",
-      "kind": "worker",
-      "cost_usd": 4.01
+      "label": "OI033",
+      "kind": "builder",
+      "cost_usd": 4.05
     }
   ]
 }
