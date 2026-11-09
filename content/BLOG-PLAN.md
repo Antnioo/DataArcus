@@ -19,6 +19,7 @@ The memory for the blog. Read it before planning or writing an article; update i
   that runs) or sourced (Microsoft Learn, official pricing).
 - **Both languages.** Every post is written in English and Arabic (the Arabic is written, not machine-sounding; right
   to left checked on the page). Gulf terms where they matter: Hijri, Ramadan, Eid, the Saturday-Sunday weekend, VAT.
+- Arabic: content/ARABIC-STYLE.md (the owner's standard, 9 Nov)
 - **Accuracy like the code.** DAX in a post is run on a real model before publishing; numbers are checked twice;
   screenshots come from our own test models, never from the owner's job.
 

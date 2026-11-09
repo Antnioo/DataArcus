@@ -14,8 +14,9 @@ State: DONE (CI green: https://github.com/Antnioo/DataArcus/actions/runs/4262502
 - **Expected checks:** claims 721 -> 752 (31 new, red first); sitemap 76 -> 78 URLs, 81 pages, 39 Arabic copies.
   **Got:** the same (see "Results"); lint 0; the MCP suite locally 230 of 230; tests.yml green on 3a50c4fa (run
   42625021186, every job on Linux and Windows; macOS skipped by the workflow) after two red runs, both said in "Results".
-- **The Arabic waits for the owner:** listed under "## For the owner"; the page ships only after his yes.
-- **Resume:** the owner's read of the Arabic ("For the owner"); the Desktop run of the one DAX measure (laptop list).
+- **The Arabic:** APPROVED by the owner 9 Nov with 10 changes (D-1109-07), applied; his standard is now
+  `content/ARABIC-STYLE.md`.
+- **Resume:** the hub's PR to main after #117; the Desktop run of the one DAX measure (laptop list).
 
 ## The article (one problem: "I want my team to use Copilot on this model: is it ready, and how do I check fast?")
 - Slug `article-power-bi-copilot-ready-check`; pillar Craft (AI-ready models); blog topic "ai" (COPILOT & AI).
@@ -102,13 +103,25 @@ engine the page runs). Before and after the fixes; the article's numbers are thi
   line end: every `<code>` in the Arabic is now inside `<bdi>`, and «لـ» is joined to Copilot with a no-break space in the
   title and the audit link. Shots kept in the session scratchpad, not committed.
 
-## For the owner (the Arabic, for your read; the page ships only after your yes)
-Every Arabic sentence of the page (the `"ar"` half of the translations file; English runs shown without their `<bdi>`;
-links as [text]). Recurring phrases reuse the earlier posts' wording: «فحص صحة النموذج», «مولّد جدول التاريخ»,
-«تدقيق الجاهزية لـ Copilot», «مخطط بيانات للذكاء الاصطناعي (AI data schema)», «إجابات موثّقة», «تعليمات للذكاء
-الاصطناعي», «النموذج الدلالي», «نموذج تجريبي» (as W's «تقارير تجريبية»), «المقسمات» (your term, E2). Please look in
-particular at: «الدقيقة 0 إلى 2» for "Minutes 0 to 2"; «تُرشّح في الاتجاهين» for "filter in both directions"; «جهة الكثير»
-for "the many side"; «تجريبي» for "made-up" twice in p2 (your D-1028-05 word; the CI test fx3 caught a first «مختلق»); the AI instructions block kept in English (the article says why).
+## For the owner: APPROVED 9 Nov with the 10 changes (D-1109-07)
+The owner's words: "agree you see what you did here in your suggestions that's what i need make it a standard in
+dataarcus". The 10 changes, applied exactly:
+1. h2, h3, h4, h5: «الدقيقة 0 إلى 2» -> «من الدقيقة 0 إلى 2» (and 2 إلى 6, 6 إلى 9, 9 إلى 10).
+2. list3_5: «علاقات تُرشّح في الاتجاهين» -> «علاقات بتصفية ثنائية الاتجاه»; later in the line «يجب أن يكون في الاتجاهين»
+   -> «يجب أن تكون ثنائية الاتجاه» (the relationship is the subject, so the verb is feminine).
+3. list3_2: «جهة الكثير» -> «طرف «متعدد» من العلاقة».
+4. p2: «بالساعة» -> «مع حساب الوقت».
+5. h1: «قبل أن تبدأ الساعة» -> «قبل أن تبدأ الفحص».
+6. exploreMore.title: «ابدأ الساعة» -> «ابدأ الفحص الآن».
+7. list2_2: «أفلت ملف .pbit على أداة» -> «اسحب ملف .pbit وأفلته في أداة».
+8. list4_3: «ودونها لا رمضان يجيب عنه Copilot» -> «ومن دونها لن يستطيع Copilot أن يجيب عن رمضان».
+9. p10: «يستطيع مالكه أن يعلّمه Approved for Copilot» -> «يستطيع مالكه أن يضع عليه علامة Approved for Copilot».
+10. h9: «أين يأتي DataArcus» -> «أين يأتي دور DataArcus».
+Everything else approved as written. The standard these changes set: `content/ARABIC-STYLE.md` (BLOG-PLAN.md's voice
+section points to it).
+
+The final Arabic, every line (the `"ar"` half of the translations file; English runs shown without their `<bdi>`; links
+as [text]):
 
 - `meta.title`: هل نموذج Power BI جاهز لـ Copilot؟ فحص في 10 دقائق
 - `meta.description`: فحص بالدقائق قبل أن يستخدم فريقك Copilot: ما يحتاجه Copilot ليعمل، وما تكشفه أداة فحص صحة النموذج المجانية، وما تصلحه، على نموذج تجريبي.
@@ -116,33 +129,33 @@ for "the many side"; «تجريبي» for "made-up" twice in p2 (your D-1028-05 
 - `header.title`: هل نموذج Power BI جاهز لـ Copilot؟ كيف تفحصه في 10 دقائق
 - `header.subtitle`: نُشر في 9 نوفمبر 2026
 - `content.p1`: يريد مديرك أن يسأل الفريق Copilot بدل انتظار صفحة تقرير جديدة. والسؤال يصل إليك: هل النموذج جاهز، وكيف تعرف ذلك قبل أن يبدأ الناس في الوثوق بالإجابات؟ نصيحة Microsoft نفسها أن تصلح النموذج أولًا، لأن التعليمات الإضافية لا تصحّح علاقات خاطئة ولا تجميعًا غير مناسب ([Microsoft Learn، قُرئت في 9 نوفمبر 2026]).
-- `content.p2`: هذه هي النسخة العملية: فحص تنجزه في نحو عشر دقائق، بالساعة. شغّلنا كل خطوة على نموذج تجريبي اسمه Sahel Electronics، متجر إلكترونيات خليجي تجريبي، فيه أربعة جداول وأربعة مقاييس وصفحة تقرير واحدة؛ لا شركة حقيقية ولا بيانات حقيقية. ولماذا تهم كل نقطة، اقرأ [فحصنا ذا النقاط السبع]؛ أما هنا فنجري الفحص فقط.
-- `content.h1`: قبل أن تبدأ الساعة: هل يعمل Copilot عندكم أصلًا؟
+- `content.p2`: هذه هي النسخة العملية: فحص تنجزه في نحو عشر دقائق، مع حساب الوقت. شغّلنا كل خطوة على نموذج تجريبي اسمه Sahel Electronics، متجر إلكترونيات خليجي تجريبي، فيه أربعة جداول وأربعة مقاييس وصفحة تقرير واحدة؛ لا شركة حقيقية ولا بيانات حقيقية. ولماذا تهم كل نقطة، اقرأ [فحصنا ذا النقاط السبع]؛ أما هنا فنجري الفحص فقط.
+- `content.h1`: قبل أن تبدأ الفحص: هل يعمل Copilot عندكم أصلًا؟
 - `content.p3`: إن كان الجواب لا، فالباقي يمكنه الانتظار. من Microsoft Learn، قُرئت في 9 نوفمبر 2026 ([تفعيل Copilot في Power BI]):
 - `content.list1_1`: السعة: يجب أن تكون مساحة عمل التقرير على Power BI Premium ‏(P1 أو أعلى) أو على سعة Fabric مدفوعة (F2 أو أعلى)، أو أن تستخدم سعة Fabric Copilot. السعات التجريبية غير مدعومة، وCopilot في Power BI Desktop لا يدعم مساحات العمل بترخيص Premium Per User ([Copilot في Power BI Desktop]).
 - `content.list1_2`: إعداد المسؤول: في بوابة إدارة Fabric، ضمن Tenant settings، الإعداد Users can use Copilot and other features powered by Azure OpenAI. تقول Microsoft إنه مفعّل افتراضيًا، ويستطيع المسؤول إيقافه أو قصره على مجموعة.
 - `content.list1_3`: الجزء الخليجي: تقول Microsoft إن Copilot يكون معطّلًا افتراضيًا إذا كان المستأجر أو السعة خارج نطاق بيانات الولايات المتحدة أو الاتحاد الأوروبي ([Microsoft Learn]). والمستأجر في الإمارات أو السعودية من هذه الحالة: لا يعمل Copilot إلا بعد أن يفعّل مسؤول Fabric الإعداد الذي يسمح بمعالجة البيانات المرسلة إلى Azure OpenAI خارج منطقتك. وهذا قرار يخص سياسة البيانات في شركتك، لا إصلاحًا في النموذج.
 - `content.list1_4`: تفعيل Q&A للنموذج: تستخدم أسئلة البيانات في Copilot المحرك نفسه الذي تستخدمه Q&A، فيجب أن تكون Q&A مفعّلة للنموذج الدلالي ([Microsoft Learn]).
 - `content.p4`: لا يلزم شيء من هذا لإجراء الفحص التالي. فهو يعمل على ملف النموذج، فتستطيع إجراءه اليوم وتشغيل Copilot لاحقًا.
-- `content.h2`: الدقيقة 0 إلى 2: شغّل فحص صحة النموذج
+- `content.h2`: من الدقيقة 0 إلى 2: شغّل فحص صحة النموذج
 - `content.list2_1`: في Power BI Desktop: File > Export > Power BI template. ملف ‎.pbit يحمل تعريف النموذج، لا البيانات التي حمّلها Power BI (وتبقى فيه الجداول الصغيرة المكتوبة يدويًا عبر Enter data والقيم المحفوظة في الفلاتر والمقسمات).
-- `content.list2_2`: أفلت ملف ‎.pbit على أداة [فحص صحة النموذج] المجانية. تعمل في متصفحك ولا يُرفع أي شيء.
+- `content.list2_2`: اسحب ملف ‎.pbit وأفلته في أداة [فحص صحة النموذج] المجانية. تعمل في متصفحك ولا يُرفع أي شيء.
 - `content.list2_3`: دوّن النتيجة وعدد الملاحظات، فستعيد الفحص بعد الإصلاحات.
 - `content.p5`: حصل Sahel Electronics على 79، مع 10 أنواع من الملاحظات على 24 عنصرًا. ليست كلها عن Copilot. ستة أنواع منها هي كذلك، وهي ما تشغل الدقائق الأربع التالية.
-- `content.h3`: الدقيقة 2 إلى 6: الملاحظات الست التي تهم Copilot
+- `content.h3`: من الدقيقة 2 إلى 6: الملاحظات الست التي تهم Copilot
 - `content.list3_1`: «أعمدة معرّفات أو سنوات أو رموز تُجمع افتراضيًا» (6 في نموذجنا، منها Calendar[Year] وProduct[ProductCode]). ضع سنة تُجمع افتراضيًا في قيم جدول، فيجمع Power BI السنوات: 2026 عن كل يوم في التقويم. وتذكر Microsoft التجميع غير المناسب ضمن ما لا تصحّحه التعليمات. الإصلاح: اجعل Summarize by على None في كل واحد منها، وضع الأرقام التي يسأل عنها الناس في مقاييس مراجَعة، كما تنصح Microsoft للحسابات المهمة للعمل.
-- `content.list3_2`: «أعمدة مفاتيح ظاهرة في جهة الكثير» (3) و«أعمدة غير مستخدمة في أي مكان» (4، اثنان منها عمودا رقم الشهر المساعدان). الحقول التي تخفيها تُستبعد من مخطط بيانات الذكاء الاصطناعي حين تُعدّه أول مرة ([Microsoft Learn]). الإصلاح: أخفِ المفاتيح والأعمدة المساعدة للترتيب، واحذف الأعمدة التي لا يستخدمها أحد (عندنا Sales[Old Notes]).
+- `content.list3_2`: «أعمدة مفاتيح ظاهرة في طرف «متعدد» من العلاقة» (3) و«أعمدة غير مستخدمة في أي مكان» (4، اثنان منها عمودا رقم الشهر المساعدان). الحقول التي تخفيها تُستبعد من مخطط بيانات الذكاء الاصطناعي حين تُعدّه أول مرة ([Microsoft Learn]). الإصلاح: أخفِ المفاتيح والأعمدة المساعدة للترتيب، واحذف الأعمدة التي لا يستخدمها أحد (عندنا Sales[Old Notes]).
 - `content.list3_3`: «أسماء أشهر أو أيام بلا عمود ترتيب» (2: Month Name وHijri Month Name). دون عمود ترتيب تُرتَّب الأشهر الهجرية أبجديًا، فيأتي جمادى الأولى قبل محرم. الإصلاح: Sort by column برقم الشهر.
 - `content.list3_4`: «جدول التقويم غير معلَّم كجدول تاريخ» (1). تحتاج إليه دوال ذكاء الوقت التقليدية، وCopilot قد يكتب DAX لأسئلة مثل النمو عن العام السابق ([Microsoft Learn]). الإصلاح: Mark as date table على العمود Date.
-- `content.list3_5`: «علاقات تُرشّح في الاتجاهين» (1، من Sales إلى Branch). تطلب Microsoft علاقات واضحة ومنطقية، والتعليمات لا تصلحها. الإصلاح: اتجاه واحد، إلا إن كنت تعرف لماذا يجب أن يكون في الاتجاهين.
+- `content.list3_5`: «علاقات بتصفية ثنائية الاتجاه» (1، من Sales إلى Branch). تطلب Microsoft علاقات واضحة ومنطقية، والتعليمات لا تصلحها. الإصلاح: اتجاه واحد، إلا إن كنت تعرف لماذا يجب أن تكون ثنائية الاتجاه.
 - `content.list3_6`: «مقاييس بلا وصف» (4)، ومعها [Margin %] بلا تنسيق وبقسمة عادية /. يقرأ Copilot الأوصاف، لكنه لا يستخدم منها إلا أول 200 حرف ([Microsoft Learn]): ابدأ بالمعنى والوحدة وما يُستثنى. وتطلب Microsoft أيضًا أن تُنسَّق النسب كنسب مئوية وأن يُقسَم الهامش من المقاييس المعتمدة. الإصلاح، بالتنسيق 0.0%:
-- `content.h4`: الدقيقة 6 إلى 9: ما لا يحسمه فحص الملف
+- `content.h4`: من الدقيقة 6 إلى 9: ما لا يحسمه فحص الملف
 - `content.p6`: يستطيع الملف أن يُظهر ما ينقص. أما هذه الأربعة فتحتاج إليك:
 - `content.list4_1`: الاسم نفسه في جدولين. كان في نموذجنا Name في جدول المنتجات وName في جدول الفروع. يقول الدليل التعليمي من Microsoft أن تتجنب تكرار أسماء الحقول بين الجداول ([Microsoft Learn])، وأداة فحص صحة النموذج لا تكشف ذلك اليوم. أعدنا تسميتهما Product Name وBranch Name.
 - `content.list4_2`: أسماء الأعمدة العربية. تقول Microsoft عن أسئلة البيانات في Copilot إن اللغة المدعومة الوحيدة هي الإنجليزية ([Microsoft Learn]). في جدول الفروع عندنا العمود «اسم الفرع» لصفحات التقرير العربية. أبقِه، وأعطه وصفًا بالإنجليزية يقول ما يحمله: Branch name in Arabic (the same branch as Branch Name).
-- `content.list4_3`: التقويم الهجري. إن كان الناس سيسألون عن رمضان، فيجب أن يعرفه النموذج: في جدول التقويم عندنا Hijri Year وHijri Month Name وIs Ramadan، ومقياس [Ramadan Sales]. ودونها لا رمضان يجيب عنه Copilot. وأداتنا [مولّد جدول التاريخ] تبني هذه الأعمدة.
+- `content.list4_3`: التقويم الهجري. إن كان الناس سيسألون عن رمضان، فيجب أن يعرفه النموذج: في جدول التقويم عندنا Hijri Year وHijri Month Name وIs Ramadan، ومقياس [Ramadan Sales]. ومن دونها لن يستطيع Copilot أن يجيب عن رمضان. وأداتنا [مولّد جدول التاريخ] تبني هذه الأعمدة.
 - `content.list4_4`: عشرة أسئلة حقيقية. تقترح Microsoft أن تبدأ بأسئلة عمل محددة، لكل منها المقياس المتوقع والتجميع وأساس التاريخ والفلاتر والنتيجة. اكتب عشرة أسئلة يطرحها فريقك كل شهر، مع الإجابات التي تثق بها اليوم. هذا هو اختبارك لاحقًا.
-- `content.h5`: الدقيقة 9 إلى 10: اكتب القائمة
+- `content.h5`: من الدقيقة 9 إلى 10: اكتب القائمة
 - `content.p7`: رتّبها كما ترتّبها Microsoft: النموذج أولًا (الملاحظات الست والفحوص الأربعة)، ثم Prep data for AI، ثم الاختبار بأسئلتك العشرة. كل إصلاح مما سبق دقيقة أو دقيقتان في Desktop؛ والأوصاف تأخذ الوقت الأطول.
 - `content.h6`: ما فعلته الإصلاحات بالنموذج التجريبي
 - `content.p8`: طبّقنا الإصلاحات على تعريف نموذج Sahel Electronics وشغّلنا محرك فحص صحة النموذج نفسه مرة أخرى. ارتفعت النتيجة من 79 إلى 98، ونزلت الملاحظات من 10 أنواع إلى نوعين: مفتاح مخفي لا يستخدمه أي مرئي (لا بأس: إنه معرّف الصف)، وتنبيه بأن النموذج بلا أدوار أمان على مستوى الصفوف، وهذا صحيح لنموذج يراه الجميع. وصيغة DAX للمقياس [Margin %] أعلاه هي التي حلّت محل القسمة العادية.
@@ -151,13 +164,13 @@ for "the many side"; «تجريبي» for "made-up" twice in p2 (your D-1028-05 
 - `content.list5_1`: مخطط بيانات للذكاء الاصطناعي (AI data schema): الجداول والأعمدة والمقاييس التي يستخدمها Copilot. وتنبّه Microsoft إلى أن Copilot حين ينشئ صفحة تقرير أو يبحث عن بيانات أو يكتب استعلام DAX يستخدم النموذج الدلالي كله ويتجاهل هذا المخطط. لذا يبقى الإخفاء والحذف مهمَّين.
 - `content.list5_2`: إجابات موثّقة (Verified answers): مرئي راجعته، مربوط بالعبارات التي يكتبها الناس (تقترح Microsoft من خمس إلى سبع عبارات لكل إجابة). وفي قائمة Microsoft نفسها تنبيه: الإجابات الموثّقة لا تعمل إذا أخفيت حقولها في النموذج، فابنِها على حقول ظاهرة ([Microsoft Learn]).
 - `content.list5_3`: تعليمات للذكاء الاصطناعي (AI instructions): مصطلحات عملك بلغة بسيطة، حتى 10,000 حرف، ولا ضمان أن يتبعها النموذج اللغوي حرفيًا ([Microsoft Learn]). وهذه تعليمات متجرنا التجريبي، بالإنجليزية لأنها لغة أسئلة البيانات اليوم:
-- `content.p10`: وحين يجهز النموذج، يستطيع مالكه أن يعلّمه Approved for Copilot في إعدادات النموذج الدلالي في الخدمة.
+- `content.p10`: وحين يجهز النموذج، يستطيع مالكه أن يضع عليه علامة Approved for Copilot في إعدادات النموذج الدلالي في الخدمة.
 - `content.h8`: ما لا يراه Copilot
 - `content.list6_1`: المقسمات في الصفحة. أسئلة البيانات في Copilot لا تطبّق الفلاتر أو المقسمات المطبّقة حاليًا على صفحة التقرير ([Microsoft Learn]). فسؤال «مبيعات هذا الشهر» يعني النموذج كله ما لم يقل السؤال أكثر.
 - `content.list6_2`: الحقول والصفحات والمرئيات المخفية، باختيارك: تصف Microsoft إخفاء الحقول للتحكم فيما يستخدمه Copilot من النموذج، وإخفاء الصفحات والمرئيات للتحكم فيما يقرؤه ملخص التقرير ([Microsoft Learn]).
 - `content.list6_3`: ما بعد أول 200 حرف من الوصف، وعناصر مجموعة الحساب، فبيانات النموذج الوصفية لا تتضمنها: اذكرها في وصف عمود مجموعة الحساب.
 - `content.list6_4`: تعليماتك، لمن يسأل: لا يرى المستخدمون تعليمات الذكاء الاصطناعي ولا مخطط بياناته. أخبر فريقك بالكلمات ما الغرض من النموذج.
-- `content.h9`: أين يأتي DataArcus
+- `content.h9`: أين يأتي دور DataArcus
 - `content.p11`: أداة [فحص صحة النموذج] تنجز الجزء القابل للقياس من الدقيقة 0 إلى 6، مجانًا وفي متصفحك. تقرأ تعريف النموذج لا بياناتك، ولا تشغّل Copilot. وحين تريد من يجري الفحص كله على نموذج حقيقي، فإن [تدقيق الجاهزية لـ Copilot] مراجعة بسعر ثابت لنموذج دلالي واحد: كل ملاحظة مع إصلاحها الدقيق، وإعداد Prep data for AI، والتقويم الخليجي إن كان عملك يسير عليه، بالعربية أو الإنجليزية.
 - `content.h10`: أسئلة
 - `content.q1`: هل أحتاج إلى تشغيل Copilot لإجراء هذا الفحص؟
@@ -167,7 +180,7 @@ for "the many side"; «تجريبي» for "made-up" twice in p2 (your D-1028-05 
 - `content.q3`: هل ترسل أداة فحص صحة النموذج نموذجي إلى أي مكان؟
 - `content.a3`: لا. تعمل في متصفحك ولا يُرفع أي شيء.
 - `content.p12`: ميزات الذكاء الاصطناعي في Power BI تتغير كل شهر، لذلك كل معلومة من Microsoft هنا مؤرَّخة. ولخلفية كل فحص، اقرأ [هل نموذج Power BI جاهز للذكاء الاصطناعي؟ فحص من 7 نقاط]؛ وللأعمدة الهجرية، [تقويم خليجي في Power BI].
-- `exploreMore.title`: ابدأ الساعة
+- `exploreMore.title`: ابدأ الفحص الآن
 - `exploreMore.subtitle`: مجانية، تعمل في متصفحك، ولا يُرفع أي شيء.
 - `exploreMore.button1`: افتح فحص صحة النموذج
 - `finalCta.title`: تريد الفحص كله على نموذجك؟
@@ -210,3 +223,6 @@ meta.title above, excerpt «فحص بالدقائق قبل أن يستخدم ف�
    region", while the evaluate page says Copilot is off by default outside the US and EU boundary; the article quotes
    the second, with its link. Worth re-reading when Microsoft updates either page.
 4. BLOG-PLAN's checklist asks for three LinkedIn posts per article: not in this brief, not written.
+5. `content/ARABIC-STYLE.md` says "A title is all Arabic or all English, never mixed", while the approved Arabic title
+   (and every earlier post's) keeps "Power BI" and "Copilot" inside it, as product names stay English (the same file's
+   last rule). Read here as: a product name inside an Arabic title is allowed; the owner may want to say so in the file.
