@@ -46,3 +46,7 @@
 - A first brief sent to a helper agent with a placeholder prompt wasted one launch; nothing changed.
 - `\b228\b` in sed missed Arabic-adjacent counts; the Arabic pages are generated, so run ar-pages after editing translations, then grep.
 - Minified one-line files need a context window, not a line, to tell PL-300's count from DP-600's.
+
+## Changed on purpose (2026-11-09T19:59Z)
+- scripts/tests/fixtures/sp34-exam.json: sp34 hashes the exam's HTML (`app`) per step, and the PL-300 steps that show a question now show the new option texts. Red first (sp34: 4 of 32 steps in S2, 18 of 76 in S4, 12 of 40 in S7, 30 of 116 in S9, 10 of 52 in S11, 4 of 56 in S13 differ from the base), then re-recorded with `SP34_RECORD=1` after the bank changed on purpose. Diff of the old and new fixture, field by field: exactly 78 lines differ, every one the `app` hash of a `pl-300` step (39 en, 39 ar); no `dp600` step, no notes, saved progress, events, toast, dialog, windows or classes value changed. Old fixture kept in the scratchpad dump; `git diff` shows each changed line (old hash to new hash).
+- No other test's expected number changed. site, tools, lang-switcher, sp13, sp24, pl300-bank green on this tree; sp34 green after the re-record (`PASS  sp34  18 checks`).
