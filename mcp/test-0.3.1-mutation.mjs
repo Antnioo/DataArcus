@@ -77,7 +77,10 @@ const MUTANTS = [
   // (WN1, F02 and F05) a name in another case; the path limit
   { id: 'D-samename', file: PR, edits: [['(caseless(platform) ? String(a).toLowerCase() === String(b).toLowerCase() : String(a) === String(b))', '(String(a) === String(b))']], guards: ['test-0.3.2-wn1.mjs'] },
   { id: 'D-pathmax', file: PR, edits: [['  return worst && worst.length > max ? Object.assign(worst, { max }) : null;', '  return null;']], guards: ['test-0.3.2-wn1.mjs'] },
-  { id: 'A-shortcut', file: 'mcp/lib/approval-window.mjs', edits: [['    try { writeShortcut(w, url); showFolder(w.shortcut.dir); } catch (e) { w.shortcut = null; }', '    w.shortcut = null;']], guards: ['test-0.3.2-wn1.mjs'] },
+  { id: 'A-shortcut', file: 'mcp/lib/approval-window.mjs', edits: [['    try { writeShortcut(w, url); } catch (e) { w.shortcut = null; lost(false); return; }', '    w.shortcut = null; lost(false); return;']], guards: ['test-0.3.2-wn1.mjs'] },
+  // (the owner D-1109-01) on Windows the answer never names the shortcut's folder or file; the folder window is opened
+  { id: 'A-winplace', file: 'mcp/lib/approval-window.mjs', edits: [["  if (pl === 'win32') return { planId, status: 'waiting'", "  if (pl === 'never') return { planId, status: 'waiting'"]], guards: ['test-0.3.2-wn1.mjs'] },
+  { id: 'A-winfolder', file: 'mcp/lib/approval-window.mjs', edits: [['async function showFolder(dir) { const o = folderOpener(dir); if (!o) return false; return !(await launch(o)); }', 'async function showFolder(dir) { return true; }']], guards: ['test-0.3.2-wn1.mjs'] },
   { id: 'D-underRoot-any', file: MO, edits: [['  return r && within(realRoot, r) ? path.join(root, path.relative(realRoot, r)) : null;', '  return full;']], guards: ['test-platform-paths.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs', 'test-0.3.0-write-safety.mjs'] },
   { id: 'D-underRoot-nolink', file: MO, edits: [['  return r && within(realRoot, r) ? path.join(root, path.relative(realRoot, r)) : null;', '  return null;']], guards: ['test-platform-paths.mjs'] },
   { id: 'D-real', file: MO, edits: [['  if (!r || !within(fs.realpathSync.native(ROOT), r)) throw linkError(', '  if (false) throw linkError(']], guards: ['test-platform-paths.mjs', 'test-0.3.0-write-safety.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs', 'test-z.mjs'] },

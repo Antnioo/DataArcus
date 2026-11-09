@@ -20,7 +20,7 @@
   escape still refused, F02 on a case-sensitive disk, R3's "shortcut removed" (vacuous there), R4, L2's plan within the
   limit). Every pinned suite green with its base count, no fixture re-recorded.
 - **Got (local, Linux):** see "Tests before -> after" below.
-- **Resume:** 2026-11-08T21:45Z: DONE (CI green on 22da9f66); the reviewer merges.
+- **Resume:** 2026-11-09T02:10Z: D-1109-01 done (Windows: no place in the answer); CI on the new head, then DONE.
 
 ## Tests before -> after
 - new: `wn1` 0 -> 33 (red on 3e7580d9 first: "FAIL  wn1  27 of 33 checks", path-rules.mjs moved aside).
@@ -76,8 +76,8 @@
 - F03: the page is watched for 10 s (DATAARCUS_SEEN_WAIT_MS can only shorten it), cut short when the launcher exits
   with an error; on Windows explorer.exe with the link is tried next (its exit code is ignored: explorer returns 1 on
   success); then a shortcut. How the person gets it: an HTML file "DataArcus approval.html" (a meta refresh and a link)
-  in a new folder of the OS temp folder (mode 700 / 600), its folder shown in a window on Windows; the answer names the
-  file and folder, never the link. Why HTML over a .url file: any browser on any system opens it, and it can be dragged
+  in a new folder of the OS temp folder (mode 700 / 600), on Windows its folder opened in a window and
+  the answer names neither (D-1109-01); on macOS and Linux the answer names the file and folder; never the link. Why HTML over a .url file: any browser on any system opens it, and it can be dragged
   into a browser that is not the default. It is removed when the plan is decided, its window closed, or the server ends.
   approve_plan answers as soon as the shortcut is written (window "not seen"), not after its 45 s wait. The approval
   page's own checks (secret, Host, Origin) are unchanged: sp44 and approval pass with the same counts.
@@ -88,7 +88,22 @@
   it probed.
 
 ## For the owner
+- A-WN1-1, answered 9 Nov (D-1109-01, his words: "(b) on Windows, leave the location out and open the folder window for
+  you; give it only on Mac and Linux"): done in the commit after ea39d6f2 (see Decisions).
 - none (approve_plan answers in English only, so no Arabic draft is needed for F03's message).
+
+## D-1109-01 (9 Nov): the shortcut's place on Windows
+- On Windows approve_plan's "not seen" answer names neither the shortcut's folder nor its file: `folderWindow`
+  "opened" and the words say DataArcus opened a folder window holding one file (or "not opened": check Windows
+  Explorer, then reopen: true). macOS and Linux unchanged (`shortcut: { file, folder }`). One pure function,
+  approval-window.mjs `notSeenAnswer(planId, shortcut, platform, shown)`; `folderOpener` picks explorer.exe (or the
+  tests' own program); `DATAARCUS_TEST_PLATFORM` (tests only) makes a test server answer as on Windows.
+- Tests first: wn1 R5 (the words on win32, darwin, linux; string logic) and R6 (through approve_plan as on Windows: no
+  path, no file name, the folder window opened on the shortcut's folder): red on ea39d6f2 first, "FAIL  wn1  5 of 38
+  checks"; after: "PASS  wn1  38 checks". Mutants A-winplace, A-winfolder new, A-shortcut retargeted (its line
+  changed): "PASS  mutation  9 checks (3 mutants, all killed)"; dry run "100 mutants checked, 0 not found once".
+- Same counts after: sp44 23, approval 32, approval-hardening 22, write-gate 7, sp23 29, approval-complete 68, r4a 32;
+  lint 0; changelog-words PASS. CHANGELOG line: Windows opens the folder and the AI is not told where it is.
 
 ## Risky changes
 - The containment rule (security policy, file writing): a folder whose name begins with ".." is now inside; every
@@ -99,8 +114,8 @@
   the person's computer (an AI app's command tool) can read it, as it can read the browser's history today.
 - A test that guards writes: `test-0.3.1-write-gate.mjs` lists approval-window.mjs's fs.mkdtempSync, chmodSync,
   writeFileSync and rmSync (the shortcut, OS temp folder only) and its spawn's why names explorer.exe (F03).
-- What an answer returns: approve_plan's "waiting" answer gains window "not seen" and `shortcut: { file, folder }` in
-  that case only; plan_layout and create_arabic_twin refuse a plan over the path limit.
+- What an answer returns: approve_plan's "waiting" answer gains window "not seen" and, on macOS and Linux,
+  `shortcut: { file, folder }` (on Windows `folderWindow` instead, no place: D-1109-01) in that case only; plan_layout and create_arabic_twin refuse a plan over the path limit.
 
 ## For the laptop
 - On Windows: a project in "C:\Smoke\..draft" read and written; a .pbip naming "demo.Report" beside "Demo.Report";

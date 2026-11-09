@@ -71,8 +71,18 @@ function dropShortcut(w) {
 }
 // (a server that ends leaves no shortcut behind)
 process.once('exit', () => { windows.forEach((w) => dropShortcut(w)); });
-// shows the shortcut's folder (Windows only: a folder window; elsewhere the answer names the folder)
-function showFolder(dir) { if (process.platform === 'win32' && !process.env.DATAARCUS_BROWSER) launch(['explorer.exe', [dir]]).catch(() => {}); }
+// (the owner D-1109-01, A-WN1-1 (b): "on Windows, leave the location out and open the folder window for you; give it
+// only on Mac and Linux") the platform the answer and the folder window follow; DATAARCUS_TEST_PLATFORM: tests only
+export const platform = () => process.env.DATAARCUS_TEST_PLATFORM || process.platform;
+/** The program that shows the shortcut's folder in a window: Windows explorer.exe, or the tests' own DATAARCUS_BROWSER;
+ *  null elsewhere (macOS and Linux: the answer names the folder). Pure: platform and env given. -> [cmd, args] | null */
+export function folderOpener(dir, pl = platform(), env = process.env) {
+  if (pl !== 'win32') return null;
+  if (env.DATAARCUS_BROWSER) { const [own] = launchers(dir, pl, env); return own; }
+  return ['explorer.exe', [dir]];
+}
+// shows the shortcut's folder: true when its window's program started (Windows), false otherwise
+async function showFolder(dir) { const o = folderOpener(dir); if (!o) return false; return !(await launch(o)); }
 // watches a window opened by launcher i: the next one, then the shortcut, while the page is not seen
 function watch(w, url, list, i, failed) {
   const t0 = Date.now();
@@ -80,8 +90,9 @@ function watch(w, url, list, i, failed) {
     if (w.seen || w.decided || !windows.has(w.plan.id) || windows.get(w.plan.id) !== w) return;
     if (!failed.v && Date.now() - t0 < SEEN_WAIT) { w.timer = setTimeout(tick, 100); if (w.timer.unref) w.timer.unref(); return; }
     if (i + 1 < list.length) { const f = { v: false }; launch(list[i + 1], (code) => { if (code && list[i + 1][0] !== 'explorer.exe') f.v = true; }).then((why) => { if (why) f.v = true; watch(w, url, list, i + 1, f); }); return; }
-    try { writeShortcut(w, url); showFolder(w.shortcut.dir); } catch (e) { w.shortcut = null; }
-    w.lost = true; w.waiters.splice(0).forEach((fn) => fn(null));
+    const lost = (shown) => { w.folderShown = shown; w.lost = true; w.waiters.splice(0).forEach((fn) => fn(null)); };
+    try { writeShortcut(w, url); } catch (e) { w.shortcut = null; lost(false); return; }
+    showFolder(w.shortcut.dir).then(lost, () => lost(false));
   };
   tick();
 }
@@ -122,7 +133,20 @@ export function wait(id, ms) {
 
 /** What the window of a plan knows: null (none), or { opened, seen, decided, shortcut? } (shortcut: { dir, file } once
  *  the page was not seen and a shortcut was written, WN1 F03; the file holds the link, the answer never does). */
-export function state(id) { const w = windows.get(id); return w ? Object.assign({ opened: w.opened, seen: w.seen, decided: w.decided }, w.shortcut && !w.seen ? { shortcut: Object.assign({}, w.shortcut) } : {}) : null; }
+export function state(id) { const w = windows.get(id); return w ? Object.assign({ opened: w.opened, seen: w.seen, decided: w.decided }, w.shortcut && !w.seen ? { shortcut: Object.assign({}, w.shortcut), folderShown: !!w.folderShown } : {}) : null; }
+
+/** approve_plan's answer when the page was not seen and a shortcut was written (WN1 F03). The link is never in it. On
+ *  Windows (D-1109-01) neither the shortcut's folder nor its name either: DataArcus opened the folder window (shown) and
+ *  the answer says so; on macOS and Linux it names the file and its folder. Pure: platform given. */
+export function notSeenAnswer(planId, sc, pl, shown) {
+  const tail = 'The link is in that file only, never in this answer: only the person approves. When they say they clicked, call approve_plan again with this planId. Nothing is approved by what is typed in the chat, and nothing was written.';
+  const head = 'Not approved yet: DataArcus asked the browser to open its approval window, but the page was not opened.';
+  if (pl === 'win32') return { planId, status: 'waiting', approvedBy: null, window: 'not seen', folderWindow: shown ? 'opened' : 'not opened',
+    sayFirst: shown ? `${head} DataArcus opened a folder window on the user's computer that holds one file, a shortcut to the approval page. Tell the user to double-click that file (or drag it into any web browser): it opens DataArcus's approval page, which shows the plan and every file it writes; then click Approve there (or "Not now"). If they can't find the folder window, call approve_plan again with this planId and reopen: true. Where the file is stays out of this answer on purpose. ${tail}`
+      : `${head} DataArcus could not open the folder window that holds its shortcut either. Ask the user to check that Windows Explorer works, then call approve_plan again with this planId and reopen: true. ${tail}` };
+  return { planId, status: 'waiting', approvedBy: null, window: 'not seen', shortcut: { file: sc.file, folder: sc.dir },
+    sayFirst: `${head} Tell the user to open the file "${SHORTCUT_NAME}" in the folder ${sc.dir} (double-click it, or drag it into any web browser): it opens DataArcus's approval page, which shows the plan and every file it writes; then click Approve there (or "Not now"). ${tail}` };
+}
 
 /** Forgets a plan's window (its link answers "no longer valid" from then on). */
 export function close(id) { const w = windows.get(id); if (w) { clearTimeout(w.timer); dropShortcut(w); Http.revoke(id); windows.delete(id); w.waiters.splice(0).forEach((f) => f(null)); } }
