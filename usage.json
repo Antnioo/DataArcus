@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-09T19:48Z",
+  "generated_at": "2026-11-09T22:04Z",
   "today": {
     "date": "2026-11-09",
-    "cost_usd": 93.34,
-    "tokens": 261434650,
-    "sessions": 34,
+    "cost_usd": 101.74,
+    "tokens": 309501059,
+    "sessions": 39,
     "by_kind": {
       "builder": {
-        "cost_usd": 39.08,
-        "count": 6
+        "cost_usd": 42.29,
+        "count": 9
       },
       "worker": {
-        "cost_usd": 52.92,
-        "count": 26
+        "cost_usd": 58.11,
+        "count": 28
       },
       "probe": {
         "cost_usd": 0,
@@ -26,12 +26,16 @@
     },
     "by_model": {
       "opus": {
-        "cost_usd": 87.98,
-        "count": 29
+        "cost_usd": 90.84,
+        "count": 30
       },
       "sonnet": {
-        "cost_usd": 5.36,
-        "count": 5
+        "cost_usd": 9.79,
+        "count": 8
+      },
+      "haiku": {
+        "cost_usd": 1.11,
+        "count": 1
       }
     }
   },
@@ -116,12 +120,39 @@
     },
     {
       "date": "2026-11-09",
-      "cost_usd": 93.34,
-      "tokens": 261434650,
-      "sessions": 34
+      "cost_usd": 101.74,
+      "tokens": 309501059,
+      "sessions": 39
     }
   ],
   "jobs": [
+    {
+      "id": "HK1",
+      "title": "HK1: six suites read fixtures, not integration-only commits; the licensing date follows the price file (B-414, B-417)",
+      "model": "haiku",
+      "cost_usd": 1.11,
+      "tokens": 16666210,
+      "minutes": 72,
+      "finished_at": "2026-11-09T20:43Z"
+    },
+    {
+      "id": "BA1",
+      "title": "BA1: weekly bot PRs that change only the 3 data files merge themselves once CI is green (D-1109-10)",
+      "model": "sonnet",
+      "cost_usd": 0.58,
+      "tokens": 2231829,
+      "minutes": 37,
+      "finished_at": "2026-11-09T20:37Z"
+    },
+    {
+      "id": "RL032L",
+      "title": "RL032L: the download lines name 0.3.2, after the owner publishes (F04)",
+      "model": "sonnet",
+      "cost_usd": 1.52,
+      "tokens": 7092815,
+      "minutes": 82,
+      "finished_at": "2026-11-09T19:52Z"
+    },
     {
       "id": "OI033",
       "title": "OI033: open 0.3.3 in the engine: one place names the integration branch; S3 for released versions (L-1109-27)",
@@ -304,8 +335,8 @@
     }
   ],
   "workers": {
-    "count": 26,
-    "cost_usd": 52.92,
+    "count": 28,
+    "cost_usd": 58.11,
     "costliest": [
       {
         "label": "worker 02:01",
