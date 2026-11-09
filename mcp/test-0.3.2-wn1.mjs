@@ -110,7 +110,8 @@ const W = path.win32, X = path.posix;
   chk(() => AW.launchers('u', 'darwin', {}).length === 1 && AW.launchers('u', 'win32', { DATAARCUS_BROWSER: '/x/b' }).length === 1, () => 'R1. one launcher on macOS and for DATAARCUS_BROWSER (the tests\' own)');
   // R2 the browser exits with 1 and never loads the page
   const quit = JSON.stringify([process.execPath, '-e', 'process.exit(1)']);
-  const s = await serverClient(ROOT, { DATAARCUS_BROWSER: quit, DATAARCUS_APPROVAL_WAIT_MS: '20000', DATAARCUS_SEEN_WAIT_MS: '1500' });
+  // (D-1109-01: on Windows the answer names no place, R6; R2-R3 are the macOS and Linux answer on every system)
+  const s = await serverClient(ROOT, { DATAARCUS_BROWSER: quit, DATAARCUS_TEST_PLATFORM: 'linux', DATAARCUS_APPROVAL_WAIT_MS: '20000', DATAARCUS_SEEN_WAIT_MS: '1500' });
   try {
     const t = await s.call('generate_theme', { brand: '#0F766E', name: 'Lost Window' }), id = t.j && t.j.plan && t.j.plan.planId;
     const t0 = Date.now(), ap = await s.call('approve_plan', { planId: id }), took = Date.now() - t0;

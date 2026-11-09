@@ -102,6 +102,9 @@
   path, no file name, the folder window opened on the shortcut's folder): red on ea39d6f2 first, "FAIL  wn1  5 of 38
   checks"; after: "PASS  wn1  38 checks". Mutants A-winplace, A-winfolder new, A-shortcut retargeted (its line
   changed): "PASS  mutation  9 checks (3 mutants, all killed)"; dry run "100 mutants checked, 0 not found once".
+- CI run 42549501774 red on ba53340b: Windows wn1 R2-R3 (written for the macOS/Linux answer, now the Windows one there)
+  and mutation's wn1 baseline; R2-R3 now set DATAARCUS_TEST_PLATFORM 'linux' (R6 is Windows): "PASS  wn1  38 checks" here
+  and with the whole run as win32. Website sp6 ("the preview differs", Linux, a page this job does not touch) red once.
 - Same counts after: sp44 23, approval 32, approval-hardening 22, write-gate 7, sp23 29, approval-complete 68, r4a 32;
   lint 0; changelog-words PASS. CHANGELOG line: Windows opens the folder and the AI is not told where it is.
 
