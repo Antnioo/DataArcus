@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-09T07:03Z",
+  "generated_at": "2026-11-09T08:03Z",
   "today": {
     "date": "2026-11-09",
-    "cost_usd": 42.05,
-    "tokens": 118189292,
-    "sessions": 14,
+    "cost_usd": 46.06,
+    "tokens": 129902861,
+    "sessions": 15,
     "by_kind": {
       "builder": {
         "cost_usd": 16.54,
         "count": 3
       },
       "worker": {
-        "cost_usd": 25.51,
-        "count": 11
+        "cost_usd": 29.52,
+        "count": 12
       },
       "probe": {
         "cost_usd": 0,
@@ -26,8 +26,8 @@
     },
     "by_model": {
       "opus": {
-        "cost_usd": 39.15,
-        "count": 11
+        "cost_usd": 43.16,
+        "count": 12
       },
       "sonnet": {
         "cost_usd": 2.9,
@@ -116,9 +116,9 @@
     },
     {
       "date": "2026-11-09",
-      "cost_usd": 42.05,
-      "tokens": 118189292,
-      "sessions": 14
+      "cost_usd": 46.06,
+      "tokens": 129902861,
+      "sessions": 15
     }
   ],
   "jobs": [
@@ -277,8 +277,8 @@
     }
   ],
   "workers": {
-    "count": 11,
-    "cost_usd": 25.51,
+    "count": 12,
+    "cost_usd": 29.52,
     "costliest": [
       {
         "label": "worker 02:01",
@@ -293,10 +293,10 @@
         "started": "2026-11-09T03:02Z"
       },
       {
-        "label": "worker 06:01",
-        "cost_usd": 3.62,
-        "minutes": 48,
-        "started": "2026-11-09T06:02Z"
+        "label": "worker 07:01",
+        "cost_usd": 4.01,
+        "minutes": 29,
+        "started": "2026-11-09T07:02Z"
       }
     ]
   },
@@ -312,6 +312,11 @@
       "cost_usd": 4.64
     },
     {
+      "label": "worker 07:01",
+      "kind": "worker",
+      "cost_usd": 4.01
+    },
+    {
       "label": "worker 03:01",
       "kind": "worker",
       "cost_usd": 3.69
@@ -320,11 +325,6 @@
       "label": "worker 06:01",
       "kind": "worker",
       "cost_usd": 3.62
-    },
-    {
-      "label": "worker 04:01",
-      "kind": "worker",
-      "cost_usd": 2.68
     }
   ]
 }
