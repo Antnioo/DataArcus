@@ -23,7 +23,6 @@
 //      set per visual type (font and size of each role's object, where Desktop draws them; text classes are not written);
 //      a report with no theme file gets one, registered in report.json (additions only).
 //      keepPositions: no place or size changes.
-import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { real, nothingAt, visible } from './model.mjs';
@@ -45,6 +44,7 @@ import { placePatches, titlePatch, tokenPatches, namePatches, twiceOf, reasonOf,
 // lib/redesign-kinds.mjs; buildCopy and verifyCopy read it
 import * as Kinds from './redesign-kinds.mjs';
 import { TOKENS, ADDED_THEME } from './redesign-kinds.mjs';
+import { sameOnDisk } from './path-rules.mjs';   // (0.3.2 PH1, B-412)
 // (0.3.2 SP19) the geometry, the D4 units and the grid are in lib/redesign-grid.mjs; unitsOf is exported here as before
 export { unitsOf };
 
@@ -93,8 +93,7 @@ function modelProblem(dir, model) {
   if (!by || !by.path) return 'the original uses a published model (a connection), not a model folder: the redesign is written next to a project\'s model only';
   if (!model || !model.folder) return 'the model given (path) is not a project\'s model folder';
   const want = path.resolve(dir, String(by.path));
-  const same = (a, b) => { try { return fs.realpathSync.native(a) === fs.realpathSync.native(b); } catch (e) { return path.resolve(a) === path.resolve(b); } };
-  return same(want, model.folder) ? null : 'the original is on another model than the one given (path): give the model its definition.pbir names';
+  return sameOnDisk(want, model.folder) ? null : 'the original is on another model than the one given (path): give the model its definition.pbir names';
 }
 
 // ---- 1. the schemas this step knows: a file of another family, or of a newer major version, stops the plan ----

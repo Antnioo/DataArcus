@@ -61,5 +61,5 @@ export function longestPath(dir, files, platform = process.platform, P = path) {
 /** longestPath in words, for a refusal before anything is written; null when every path fits. */
 export function tooLongSaid(dir, files, platform = process.platform, P = path) {
   const w = longestPath(dir, files, platform, P);
-  return w ? `its deepest file's path would be ${w.length} characters, and ${platform === 'win32' ? 'Windows and Power BI Desktop allow' : 'this system allows'} ${w.max}: use a shorter report name or move the project to a shorter folder (for example C:\\PBI), then plan again` : null;
+  return w ? `its deepest file's path would be ${w.length} characters, and ${platform === 'win32' ? 'Windows and Power BI Desktop allow' : 'this system allows'} ${w.max}: use a shorter report name or move the project to a shorter folder (for example ${platform === 'win32' ? 'C:\\PBI' : '~/PBI'}), then plan again` : null;
 }
