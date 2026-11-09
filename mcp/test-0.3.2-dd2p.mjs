@@ -10,7 +10,7 @@
 //            base deff19e (measured before DD2P, mcp/work/DD2P.md), pinned. node:zlib's own bytes for a fixed input are
 //            compared first: on a platform whose zlib writes other bytes the pictures it deflates are checked by B only
 //            (15 checks)
-//   P1-P40   the parity: every old place, run from the base's source (git show deff19e: each definition and the names it
+//   P1-P40   the parity: every old place, run from the base's source (saved in mcp/fixtures/hk1/dd2p, deff19e's bytes: each definition and the names it
 //            needs, read from the file as scripts/contracts-probe.mjs reads a nested name), and the one place on every
 //            input: one answer each. crc: design-engine, pbip-zip, glass-picture, page-picture, theme-download-ui and
 //            png-bytes crc32 (8 byte strings); png-chunk: design-engine chunk (in pngOf), glass-picture chunk (in
@@ -171,9 +171,10 @@ now.forEach(([label, usesZlib, make], i) => {
 });
 
 // ---------- P: every old place (the base's source) and the one place, one answer per input ----------
-const BASE = process.env.DD2P_BASE || 'deff19e';
+// (HK1, 0.3.3) the base's files are saved copies (mcp/fixtures/hk1/dd2p, the commit deff19e's bytes), not git reads
+const BASE_FIX = path.join(HERE, 'fixtures', 'hk1', 'dd2p');
 const baseSrc = new Map();
-const baseOf = (f) => { if (!baseSrc.has(f)) baseSrc.set(f, execFileSync('git', ['show', `${BASE}:${f}`], { cwd: REPO, maxBuffer: 1 << 26 }).toString('utf8').replace(/\r\n/g, '\n')); return baseSrc.get(f); };
+const baseOf = (f) => { if (!baseSrc.has(f)) baseSrc.set(f, fs.readFileSync(path.join(BASE_FIX, ...f.split('/')), 'utf8').replace(/\r\n/g, '\n')); return baseSrc.get(f); };
 // one definition `const name = ...;` read from a source: from its name to the ';' where its brackets close (the one
 // inside `within` when given); the old copies are one-line helpers with no brackets inside strings but balanced ones
 function definition(src, name, within) {
@@ -217,7 +218,7 @@ chk(() => engines.Zip.crc32 === P.crc32, () => 'P41. pbip-zip.js exports png-byt
   let base = null, why = '';
   try {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-dd2p-base-'));
-    const files = execFileSync('git', ['ls-tree', '--name-only', BASE, 'assets/js/'], { cwd: REPO }).toString('utf8').split('\n').filter((f) => /^assets\/js\/[^/]+\.js$/.test(f) && !/\.min\.js$/.test(f))
+    const files = fs.readdirSync(path.join(BASE_FIX, 'assets', 'js')).map((n) => 'assets/js/' + n).filter((f) => /^assets\/js\/[^/]+\.js$/.test(f) && !/\.min\.js$/.test(f))
       .concat(['mcp/lib/glass-picture.mjs', 'mcp/lib/page-picture.mjs']);
     for (const f of files) { const to = path.join(dir, ...f.split('/')); fs.mkdirSync(path.dirname(to), { recursive: true }); fs.writeFileSync(to, baseOf(f)); }
     const out = execFileSync(process.execPath, [fileURLToPath(import.meta.url)], { cwd: HERE, env: Object.assign({}, process.env, { DD2P_TREE: dir }), maxBuffer: 1 << 24 }).toString('utf8').trim().split('\n').pop();

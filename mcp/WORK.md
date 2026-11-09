@@ -7,8 +7,8 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 ## Where it stands (0.3.3)
 - 0.3.2 is on main (#117, f3c1b7e1; each job's note in `mcp/work/<ID>.md`, the list in `CHANGELOG.md`).
 - `integration/0.3.3`: builders branch from it, push only their branch; the reviewer merges; the owner merges to main.
-- 0.3.3 merged: BA1 (weekly bot PRs that change only the 3 data files merge themselves, D-1109-10).
-- 0.3.3 running: LK1 (linked visuals named), PQ1 (PL-300 bank), HK1 (suites read saved fixtures), WE1 (Arabic write errors).
+- 0.3.3 merged: BA1 (weekly bot PRs that change only the 3 data files merge themselves, D-1109-10), HK1 (suites read saved fixtures).
+- 0.3.3 running: LK1 (linked visuals named), PQ1 (PL-300 bank), WE1 (Arabic write errors).
   Held: TC1, SG1.
 
 ## Next step
