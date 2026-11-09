@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-09T03:02Z",
+  "generated_at": "2026-11-09T04:02Z",
   "today": {
     "date": "2026-11-09",
-    "cost_usd": 8.73,
-    "tokens": 21079358,
-    "sessions": 4,
+    "cost_usd": 14.27,
+    "tokens": 35839899,
+    "sessions": 6,
     "by_kind": {
       "builder": {
         "cost_usd": 0,
         "count": 0
       },
       "worker": {
-        "cost_usd": 8.73,
-        "count": 4
+        "cost_usd": 14.27,
+        "count": 6
       },
       "probe": {
         "cost_usd": 0,
@@ -26,8 +26,8 @@
     },
     "by_model": {
       "opus": {
-        "cost_usd": 8.73,
-        "count": 4
+        "cost_usd": 14.27,
+        "count": 6
       }
     }
   },
@@ -106,18 +106,27 @@
     },
     {
       "date": "2026-11-08",
-      "cost_usd": 199.22,
-      "tokens": 646604448,
-      "sessions": 43
+      "cost_usd": 214.57,
+      "tokens": 691734488,
+      "sessions": 44
     },
     {
       "date": "2026-11-09",
-      "cost_usd": 8.73,
-      "tokens": 21079358,
-      "sessions": 4
+      "cost_usd": 14.27,
+      "tokens": 35839899,
+      "sessions": 6
     }
   ],
   "jobs": [
+    {
+      "id": "WN1",
+      "title": "WN1: the Windows findings before the laptop session (Codex, B-407)",
+      "model": "opus",
+      "cost_usd": 15.35,
+      "tokens": 45130040,
+      "minutes": 377,
+      "finished_at": "2026-11-09T02:38Z"
+    },
     {
       "id": "TA5",
       "title": "TA5: Today v2.5 plan and build: the Build tab (3D DNA command center), full review and bugs, synced with the memory, a gallery, Learn (git basics), tidier tabs (D-1108-20, D-1108-21)",
@@ -237,26 +246,26 @@
     }
   ],
   "workers": {
-    "count": 4,
-    "cost_usd": 8.73,
+    "count": 6,
+    "cost_usd": 14.27,
     "costliest": [
-      {
-        "label": "worker 00:01",
-        "cost_usd": 1.2,
-        "minutes": 6,
-        "started": "2026-11-09T00:02Z"
-      },
-      {
-        "label": "worker 00:47",
-        "cost_usd": 1.71,
-        "minutes": 4,
-        "started": "2026-11-09T00:48Z"
-      },
       {
         "label": "worker 02:01",
         "cost_usd": 4.64,
         "minutes": 38,
         "started": "2026-11-09T02:02Z"
+      },
+      {
+        "label": "worker 02:49",
+        "cost_usd": 1.85,
+        "minutes": 17,
+        "started": "2026-11-09T02:49Z"
+      },
+      {
+        "label": "worker 03:01",
+        "cost_usd": 3.69,
+        "minutes": 27,
+        "started": "2026-11-09T03:02Z"
       }
     ]
   },
@@ -267,6 +276,16 @@
       "cost_usd": 4.64
     },
     {
+      "label": "worker 03:01",
+      "kind": "worker",
+      "cost_usd": 3.69
+    },
+    {
+      "label": "worker 02:49",
+      "kind": "worker",
+      "cost_usd": 1.85
+    },
+    {
       "label": "worker 00:47",
       "kind": "worker",
       "cost_usd": 1.71
@@ -275,11 +294,6 @@
       "label": "worker 00:01",
       "kind": "worker",
       "cost_usd": 1.2
-    },
-    {
-      "label": "worker 01:01",
-      "kind": "worker",
-      "cost_usd": 1.18
     }
   ]
 }
