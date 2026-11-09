@@ -110,7 +110,7 @@ const filesIn = (dir) => { const out = []; const walk = (d) => { if (!fs.existsS
 const planAndWrite = async (args) => {
   const p = await w.call('plan_layout', args), id = idOf(p); if (!id) return { p, html: '', c: { err: true, t: 'no plan: ' + short(p) }, added: [] };
   const html = await pageOf(id, true), dir = path.join(ROOT, args.path.split('/')[0]), before = filesIn(dir);
-  const c = await w.call('create_report', Object.assign({}, args, { design: p.j.design, planId: id, gulfDates: undefined }));
+  const c = await w.call('create_report', { path: args.path, planId: id });
   return { p, html, c, added: filesIn(dir).filter((f) => !before.includes(f)) };
 };
 try {

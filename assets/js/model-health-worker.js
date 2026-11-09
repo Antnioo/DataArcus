@@ -5,18 +5,17 @@
  * (c) DataArcus. All rights reserved.
  */
 /* global MHEngine, TmdlModel */
-// the engine, and the TMDL reader the MCP uses for projects saved as TMDL (Power BI Desktop's default)
-importScripts('model-health-engine.min.js?v=20261025f', 'tmdl-model.min.js?v=20261026a');
+// a model file's bytes to text and the size limits (0.3.2 DD2D: model-file.js, the MCP's too) first; the DAX tokens and report references (0.3.2 SP9), the model index (SP15), the rule texts, the rules and the questions (SP27), all before the engine; the engine, and the TMDL reader the MCP uses for projects saved as TMDL (Power BI Desktop's default)
+importScripts('model-file.min.js?v=47bc00d4a4cb', 'dax-reference-parser.min.js?v=cb66f18e1f1c', 'model-index.min.js?v=fb68d432364d', 'health-texts.min.js?v=dc21adf6917d', 'health-rules.min.js?v=23d84c4464f7', 'health-confirm.min.js?v=c9b40542eee2', 'model-health-engine.min.js?v=bb2af8492ffc', 'tmdl-model.min.js?v=f4832d0d3ac0');
 
 const post = (type, data) => self.postMessage(Object.assign({ type }, data || {}));
 
 // ---------- minimal ZIP reader (stored + deflate) ----------
 // A zip can be built to unpack to far more than it weighs (a "zip bomb"), so only the parts the check uses are read,
 // each and all together within these limits, refused before unpacking when the zip's directory says more, and stopped
-// while unpacking when the directory lies (the declared size is the most a part may give). The same numbers as the
-// MCP's reader (mcp/lib/model.mjs, PBIT_LIMITS; the evidence is in mcp/WORK.md, "The .pbit limits").
-const MB = 1024 * 1024;
-const LIMITS = { model: 64 * MB, entry: 32 * MB, total: 128 * MB, file: 300 * MB, entries: 20000 };
+// while unpacking when the directory lies (the declared size is the most a part may give). The numbers: model-file.js
+// LIMITS (0.3.2 DD2D), the one place the MCP's reader (mcp/lib/model.mjs, PBIT_LIMITS) reads too.
+const LIMITS = self.DAModelFile.LIMITS;
 async function inflateCapped(data, max) {
   const reader = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw')).getReader();
   const chunks = []; let n = 0;
@@ -95,13 +94,8 @@ function readZip(buf) {
   };
 }
 
-// Power BI writes some files as UTF-16LE, others as UTF-8 (with or without BOM)
-function decodeText(u8) {
-  if (u8.length >= 2 && u8[0] === 0xff && u8[1] === 0xfe) return new TextDecoder('utf-16le').decode(u8.subarray(2));
-  if (u8.length >= 3 && u8[0] === 0xef && u8[1] === 0xbb && u8[2] === 0xbf) return new TextDecoder('utf-8').decode(u8.subarray(3));
-  if (u8.length >= 2 && u8[1] === 0x00) return new TextDecoder('utf-16le').decode(u8);
-  return new TextDecoder('utf-8').decode(u8);
-}
+// Power BI writes some files as UTF-16LE, others as UTF-8 (with or without BOM): model-file.js decodeText (DD2D)
+const decodeText = self.DAModelFile.decodeText;
 const parseJson = (u8) => JSON.parse(decodeText(u8).replace(/^﻿/, ''));
 
 async function fromZip(buf, fileName) {

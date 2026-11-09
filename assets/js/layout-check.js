@@ -10,6 +10,10 @@
   const node = typeof module !== 'undefined' && module.exports;
   const VT = node ? require('./visual-types.js') : root.DAVisualTypes;
   const Rules = () => (node ? require('./report-rules.js') : root.DARules);
+  // a literal's text, number and true or false, a column's set width: pbir-values.js, their one home (0.3.2 DD1B)
+  const PV = node ? require('./pbir-values.js') : root.DAPbirValues;
+  // a text box's paragraphs: one text each, text-runs.js, their one home (0.3.2 DD2T)
+  const TR = node ? require('./text-runs.js') : root.DATextRuns;
 
   // ---------- the design lint (from mcp/lib/design-lint.mjs, unchanged in what it finds) ----------
   // LAYER checks (0.2.9 item 11): the design lint. It reads the reading layer's inventory (lib/read-report.mjs) and,
@@ -41,13 +45,13 @@
   };
 
   const CHARTS = /^(lineChart|areaChart|stackedAreaChart|columnChart|clusteredColumnChart|barChart|clusteredBarChart|stackedBarChart|stackedColumnChart|hundredPercentStacked\w+|line\w*ComboChart|ribbonChart|waterfallChart)$/;
-  const BARS = /^(barChart|clusteredBarChart|stackedBarChart|hundredPercentStackedBarChart)$/;
   const DATA = /Chart$|^tableEx$|^pivotTable$|^treemap$|^funnel$|^gauge$|^map$|^filledMap$|^azureMap$/;
   // (A4-9, audit 4: a time-like name by its whole words, never inside another word: "Candidate" and "Update Status" are
-  // not dates; "OrderDate", "Month-Year", "fiscal_period", «الشهر» are) a name's words: split on spaces, marks and camel case
-  const wordsOf = (name) => String(name || '').replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().split(/[^a-z0-9\u0600-\u06ff]+/).filter(Boolean).map((w) => w.replace(/^ال(?=..)/, ''));
-  const TIME_WORDS = new Set(['month', 'months', 'year', 'years', 'date', 'dates', 'week', 'weeks', 'quarter', 'quarters', 'qtr', 'period', 'periods', 'day', 'days', 'شهر', 'سنة', 'تاريخ', 'أسبوع', 'ربع', 'يوم']);
-  const TIMEY = { test: (name) => wordsOf(name).some((w) => TIME_WORDS.has(w)) };
+  // not dates; "OrderDate", "Month-Year", "fiscal_period", «الشهر» are. 0.3.2 DD1A: the words and the one list are
+  // time-names.js's, as the twin, the preview and the writer read them)
+  const TN = node ? require('./time-names.js') : root.DATimeNames;
+  const wordsOf = TN.wordsOf;
+  const TIMEY = { test: TN.isTimeName };
   const many = (name) => { const w = wordsOf(name); return (w.some((x) => /^months?$/.test(x)) && w.some((x) => /^years?$/.test(x))) || w.some((x) => /^dates?$|^تاريخ$/.test(x)); };
   // (A4-8) the reading layer's titleOff; a visual JSON when given (the reading branch's inventory keeps it, a test's too)
   const titleOff = (x) => { if (x.titleOff) return true; const t = (((((x.json || {}).visual || {}).visualContainerObjects || {}).title) || []).find((e) => e && !e.selector && e.properties && e.properties.show); const v = t && t.properties.show.expr && t.properties.show.expr.Literal && t.properties.show.expr.Literal.Value; return String(v) === 'false'; };
@@ -125,7 +129,7 @@
             add('TABLE_WIDTHS_TOO_WIDE', 'medium', p, x, `the set column widths add up to ${Math.round(widths)} in a table ${x.w} wide`, `bring the widths down to ${Math.round(x.w - 36)} in all, or widen the table`, false);
         }
         // (c) bar labels (O-4): the axis share of the width at the label size the visual or the theme sets
-        if (BARS.test(x.type) && cat.length) {
+        if (VT.isBar(x.type) && cat.length) {
           const share = (x.format && x.format.axisShare) || V('AXIS_SHARE'), pt = (x.format && x.format.axisFontSize) || inv.theme.labelSize || 10;
           const fit = Math.floor(x.w * share / 100 / pxPerChar(pt)), f = cat[cat.length - 1];
           if (isText(f) && fit < V('BAR_FIT_WARN')) add('BAR_LABELS_MAY_BE_CUT', fit < V('BAR_FIT_HIGH') ? 'high' : 'medium', p, x, `about ${fit} characters of a category name fit (visual ${x.w} wide, category axis share ${share}, label ${pt} pt); ${refOf(f)} is text, so longer names are cut with "..."`,
@@ -175,10 +179,8 @@
 // The same fields mcp/lib/read-report.mjs's inventory() gives the lint and the rules (the MCP's reader of any report
   // on disk keeps its own limits and screens), read from the files the report writer gives: [{ path, data }], paths
   // with or without the "<Name>.Report/" folder. opts.clean: how a title or text box is kept (the MCP screens it).
-  const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
-  const litStr = (p) => { const v = lit(p); return v == null ? null : /^'.*'$/s.test(String(v)) ? String(v).slice(1, -1).replace(/''/g, "'") : String(v).replace(/[DLM]$/, ''); };
-  const litNum = (p) => { const v = parseFloat(lit(p)); return isNaN(v) ? null : v; };
-  const litBool = (p) => { const v = lit(p); return v === 'true' || v === true ? true : v === 'false' || v === false ? false : null; };
+  // (the check reads a value as shown: 12D -> "12", as read_report says it)
+  const litStr = PV.litShown, litNum = PV.litNumber, litBool = PV.litBool;
   const entries = (list) => (Array.isArray(list) ? list.filter((e) => e && typeof e === 'object') : []);
   const plain = (list) => entries(list).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e.properties || {}), {});
   const anyOf = (list) => entries(list).reduce((a, e) => Object.assign(a, (e && e.properties) || {}), {});
@@ -198,7 +200,8 @@
     const top = f.type === 'TopN' ? (/"Top":\s*(\d+)/.exec(s) || /"Value":"(\d+)L"/.exec(s) || [])[1] : null;
     return Object.assign({ field, type: String(f.type || 'unknown').replace(/[^A-Za-z]/g, '').slice(0, 30) || 'unknown', set: !!f.filter }, notBlank ? { notBlank: true } : {}, top ? { top: +top } : {});
   }); } catch (e) { return []; } };
-  const textOf = (j) => { const ps = plain(((j.visual || {}).objects || {}).general).paragraphs; return (Array.isArray(ps) ? ps : []).filter((q) => q && typeof q === 'object').map((q) => entries(q.textRuns).map((r) => String(r.value == null ? '' : r.value)).join('')).join(' / ').trim(); };
+  // a text box's text on one line: its paragraphs' texts with " / " between, trimmed (the placeholder and empty-box rules)
+  const textOf = (j) => TR.paragraphTexts(plain(((j.visual || {}).objects || {}).general).paragraphs).join(' / ').trim();
   const txt = (d) => (typeof d === 'string' ? d : new TextDecoder().decode(d));
 
   function inventoryOf(files, opts) {
@@ -282,7 +285,7 @@
   // and the third of the page its middle is in: "the bar chart, top left of the page". Never its title or any text of
   // the report (the owner's decision R5: type and place only); a custom or unknown type is "a visual". x: { type, x, y,
   // w, h }; page: { w, h } (without its size, the kind alone)
-  const KINDS = [[/^(barChart|clusteredBarChart|stackedBarChart|hundredPercentStackedBarChart)$/, 'bar chart'], [/^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart)$/, 'column chart'],
+  const KINDS = [[{ test: VT.isBar }, 'bar chart'], [/^(columnChart|clusteredColumnChart|hundredPercentStackedColumnChart)$/, 'column chart'],
     [/^(lineChart|areaChart|stackedAreaChart|hundredPercentStackedAreaChart)$/, 'line chart'], [/ComboChart$/, 'combo chart'], [/^waterfallChart$/, 'waterfall chart'], [/^(donutChart|pieChart)$/, 'donut chart'],
     [/^scatterChart$/, 'scatter chart'], [/^tableEx$/, 'table'], [/^pivotTable$/, 'matrix'], [/^(card|cardVisual|multiRowCard)$/, 'card'], [/^kpi$/, 'KPI'], [/^gauge$/, 'gauge'],
     [/^(map|filledMap|azureMap|shapeMap)$/, 'map'], [/^treemap$/, 'treemap'], [/^funnel$/, 'funnel'], [/^ribbonChart$/, 'ribbon chart'], [/^slicer$|Slicer$/, 'slicer'], [/^textbox$/, 'text box'], [/^actionButton$/, 'button'],

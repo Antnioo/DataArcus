@@ -23,8 +23,13 @@
     'stackedAreaChart', 'table', 'tableEx', 'textbox', 'textSlicer', 'treemap', 'waterfallChart'
   ]);
   const NATIVE = new Set(NATIVE_TYPES);
-  // the slicers of the catalog (a visual that filters the page by its field)
-  const SLICER_TYPES = Object.freeze(['slicer', 'advancedSlicerVisual', 'listSlicer', 'textSlicer', 'filterSlicer']);
+  // the slicers Power BI Desktop makes: the one list (0.3.2 DD2Z, CONTRACTS.md vt-slicer). Measured on 5 Nov (Desktop 2.159.1231.0,
+  // lab/look032 A): the pane's Slicer is slicer, the Button slicer advancedSlicerVisual, the Input slicer textSlicer, the List slicer
+  // (Preview) listSlicer. None saves as filterSlicer (a catalog type, but not a slicer: it is 'other' everywhere)
+  const SLICER_TYPES = Object.freeze(['slicer', 'advancedSlicerVisual', 'listSlicer', 'textSlicer']);
+  // the bar charts of the catalog (horizontal bars): the one list (0.3.2 DD2V, CONTRACTS.md vt-bar). Power BI's stacked bar is
+  // barChart; 'stackedBarChart' is not a Power BI type and is no bar
+  const BAR_TYPES = Object.freeze(['barChart', 'clusteredBarChart', 'hundredPercentStackedBarChart']);
   const NOT_A_TYPE = new Set(['group', 'unknown', '']);
   const list = (x) => (Array.isArray(x) ? x : []);
   // the custom visual types a report declares (report.json), as a set of type ids
@@ -45,6 +50,7 @@
     return !NATIVE.has(t);
   }
   const isSlicer = (type) => SLICER_TYPES.includes(String(type));
-  const api = { CATALOG, NATIVE_TYPES, SLICER_TYPES, isNative, isCustom, isSlicer, customTypesOf };
+  const isBar = (type) => BAR_TYPES.includes(String(type));
+  const api = { CATALOG, NATIVE_TYPES, SLICER_TYPES, BAR_TYPES, isNative, isCustom, isSlicer, isBar, customTypesOf };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAVisualTypes = api;
 })(typeof self !== 'undefined' ? self : this);

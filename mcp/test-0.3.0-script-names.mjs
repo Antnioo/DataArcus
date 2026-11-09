@@ -40,7 +40,7 @@ const write = async (dir, lang, name, extra) => {
   const pl = await s.call('plan_layout', a), id = pl.j && pl.j.plan && pl.j.plan.planId;
   if (!id) return { pl, err: 'no plan id: ' + short(pl) };
   await s.call('approve_plan', { planId: id });
-  const cr = Object.assign({}, a, { planId: id, design: pl.j.design, fields: FIELDS }); delete cr.planFields;
+  const cr = { path: a.path, planId: id };   // (0.3.2 TK1)
   const r = await s.call('create_report', cr);
   return r.err ? { pl, err: String(r.t).slice(0, 400) } : { pl, r };
 };
@@ -95,7 +95,7 @@ try {
     const pl = await s.call('plan_layout', a), id = pl.j && pl.j.plan && pl.j.plan.planId;
     const listed = (((pl.j || {}).formats || {}).fields || []).filter((x) => !x.byHand).map((x) => x.object).sort();
     await s.call('approve_plan', { planId: id });
-    const cr = Object.assign({}, a, { planId: id, design: pl.j && pl.j.design, fields: a.planFields }); delete cr.planFields;
+    const cr = { path: a.path, planId: id };   // (0.3.2 TK1)
     const r = await s.call('create_report', cr);
     const sc = scriptIn('plain', /fix formats\.tmdl$/) || '';
     let table = null; const objs = []; sc.split('\n').forEach((l) => { let m = l.match(/^\tref table (?:'((?:[^']|'')*)'|(\S+))$/); if (m) table = (m[1] || m[2]).replace(/''/g, "'");

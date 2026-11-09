@@ -12,6 +12,7 @@
 //   GD-8  answers remembered per model; dropped when a relationship or column changes (server and engine)
 //   GD-9  nothing edits a relationship, nothing written holds USERELATIONSHIP, no seasonal uplift claim
 //   GD-10 Microsoft's validator 0 errors and check_report 0 "can break" on the reports written (EN, AR)
+//   GD-12 (0.3.2 AP1) planFields.timeAxis "none": no time axis in the plan, its text, the page or the report written
 // Fixtures: small hand-made models (made up).
 //   node test-0.3.0-gulf-date-questions.mjs
 import './test-env.mjs';
@@ -218,7 +219,7 @@ try {
       const p = await s.call('plan_layout', Object.assign({}, args, { gulfDates: A })), id = idOf(p);
       if (id) await s.call('approve_plan', { planId: id });
       const { planFields, ...rest } = args;
-      const r = id ? await s.call('create_report', Object.assign({}, rest, { fields: planFields, planId: id, design: p.j.design })) : { err: true, t: 'no plan id: ' + short(p) };
+      const r = id ? await s.call('create_report', { path: rest.path, planId: id }) : { err: true, t: 'no plan id: ' + short(p) };
       return { p, r, before, after: fs.readFileSync(bim(dir)), files: walk(path.join(ROOT, dir, name + '.Report')), pbip: `${dir}/${name}.pbip` };
     };
     const EN = await write('gd', 'en', 'Ramadan EN'), AR = await write('ar', 'ar', 'رمضان');
@@ -236,6 +237,33 @@ try {
     const hit = g.match(/uplift|outperform|grew|growth|better than|boost|(^|[\s،(])(ال)?(ارتفاع|نمو|زيادة)([\s،.)]|$)/i);
     chk(() => g.length > 50 && !/uplift|outperform|grew|growth|better than|boost|(^|[\s،(])(ال)?(ارتفاع|نمو|زيادة)([\s،.)]|$)/i.test(g), () => `GD-9e. the seasonal block makes no uplift claim: ${hit && g.slice(Math.max(0, hit.index - 120), hit.index + 40)}`);
     chk(() => /never (claim|say)/i.test(G(EN.p).sayInPlan || ''), () => `GD-9f. the plan is told never to claim a seasonal result from metadata: ${G(EN.p).sayInPlan}`);
+  }
+  // GD-12 (0.3.2 AP1, E1 round 5 (e): the person asked twice for no time field, and every new plan still put a month
+  // or year axis in, its text a trend instruction) planFields.timeAxis "none": no time axis in the plan, the page or the
+  // report (no trend chart, no month tooltip, no picker-chosen date slicer), and the plan's text says only that
+  {
+    model('gdnt', [
+      { name: 'Work Orders', columns: [{ name: 'Order ID', dataType: 'int64', sourceColumn: 'Order ID' }, { name: 'Date Key', dataType: 'dateTime', sourceColumn: 'Date Key' }, { name: 'Department', dataType: 'string', sourceColumn: 'Department' }, { name: 'Status', dataType: 'string', sourceColumn: 'Status' }, { name: 'Hours', dataType: 'double', sourceColumn: 'Hours' }],
+        measures: [{ name: 'Total Hours', expression: "SUM ( 'Work Orders'[Hours] )", formatString: '#,0.0' }, { name: 'Work Order Count', expression: "COUNTROWS ( 'Work Orders' )", formatString: '#,0' }], partitions: mp('wo') },
+      { name: 'Dim Date', columns: [{ name: 'Date', dataType: 'dateTime', sourceColumn: 'Date' }, { name: 'Year', dataType: 'int64', sourceColumn: 'Year' }, { name: 'Month', dataType: 'string', sourceColumn: 'Month', sortByColumn: 'Month Number' }, { name: 'Month Number', dataType: 'int64', sourceColumn: 'Month Number' }], partitions: mp('dd') }],
+    [{ name: 'r1', fromTable: 'Work Orders', fromColumn: 'Date Key', toTable: 'Dim Date', toColumn: 'Date' }]);
+    const PFN = { timeAxis: 'none', category: 'Work Orders[Department]', category2: 'Work Orders[Status]', slicers: ['Work Orders[Department]', 'Work Orders[Status]'] };
+    const p = await plan('gdnt', { name: 'No Time', filters: 'top', planFields: PFN }, w), id = idOf(p), T = p.t || '';
+    chk(() => id, () => `GD-12a. planFields.timeAxis "none" is a plan: plan id: ${short(p)}`);
+    const TIME = /Dim Date\[|Work Orders\[Date Key\]/;
+    chk(() => id && p.j.timeAxis && p.j.timeAxis.none === true && !p.j.timeAxis.field && /no time axis/i.test(String(p.j.timeAxis.sayInPlan || '')),
+      () => `GD-12b. the plan says no time axis, as the person asked, and names none: ${JSON.stringify(p.j && p.j.timeAxis)}`);
+    chk(() => id && !/trend's axis|how the trend|months it shows/i.test(T) && !TIME.test(T), () => `GD-12c. the plan's text keeps no trend instruction and no date field: ${(T.match(/.{0,120}(trend's axis|how the trend|months it shows|Dim Date\[|Date Key).{0,120}/i) || [''])[0]}`);
+    if (id) {
+      const n = links().length; await w.call('approve_plan', { planId: id }); for (let k = 0; k < 100 && links().length <= n; k++) await sleep(50);
+      const url = links()[n], H = url ? unesc(await req(url, 'GET')) : ''; if (url) { await req(url, 'POST', 'decision=approve'); await w.call('approve_plan', { planId: id }); }
+      chk(() => H && !TIME.test(H.replace(/<[^>]+>/g, ' ')), () => `GD-12d. the approval page names no date field: ${(H.replace(/<[^>]+>/g, ' ').match(/.{0,120}(Dim Date\[|Date Key).{0,120}/) || [''])[0]}`);
+      const out = await w.call('create_report', { path: MP('gdnt'), planId: id });
+      const dir = path.join(ROOT, 'gdnt', 'No Time.Report/definition/pages'), tree = (d) => (fs.existsSync(d) ? fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? tree(path.join(d, e.name)) : [path.join(d, e.name)])) : []);
+      const vis = tree(dir).filter((f) => /visual\.json$/.test(f)).map((f) => fs.readFileSync(f, 'utf8')), pages = tree(dir).filter((f) => /page\.json$/.test(f)).map((f) => JSON.parse(fs.readFileSync(f, 'utf8')));
+      chk(() => !out.err && vis.length > 10 && !vis.some((v) => /"lineChart"|"Entity":\s*"Dim Date"|"Property":\s*"Date Key"/.test(v)) && !pages.some((x) => /month/i.test(String(x.displayName))),
+        () => `GD-12e. the written report has no line chart, no date field and no month tooltip page: ${out.err ? short(out) : JSON.stringify({ visuals: vis.length, line: vis.filter((v) => /"lineChart"/.test(v)).length, dates: vis.filter((v) => /"Entity":\s*"Dim Date"|Date Key/.test(v)).length, pages: pages.map((x) => x.displayName) })}`);
+    }
   }
   // GD-11c (last: its answers stay in the session's memory)
   {

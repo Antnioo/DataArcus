@@ -10,21 +10,30 @@
 // t (the cards' transparency, %), rim } (0.3.1 GD2: the glass look, drawn as written) }.
 (function (root) {
   'use strict';
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // the HTML escape: html-escape.js htmlEsc, its one home (0.3.2 DD2H; the page loads it first, Node requires it)
+  const HE = typeof module !== 'undefined' && module.exports ? require('./html-escape.js') : root.DAHtmlEscape;
+  const esc = HE.htmlEsc;
+  // the bar charts: visual-types.js isBar, their one home (0.3.2 DD2V; the page loads it first, Node requires it)
+  const VT = typeof module !== 'undefined' && module.exports ? require('./visual-types.js') : root.DAVisualTypes;
   // (control and format characters out of a name: they could reorder what the picture shows)
   const clean = (s) => String(s == null ? '' : s).replace(/[\u0000-\u001F\u007F-\u009F​-‏‪-‮⁦-⁩﻿]/g, '').trim();
   const n = (v) => String(Math.round((+v || 0) * 10) / 10);
+  // (PV2) a text with no Latin letter that starts with an Arabic letter and ends with one or with a digit resolves wholly
+  // right to left (UAX 9: its digits after an Arabic letter are Arabic numbers, W2; its neutrals sit between right-to-left
+  // types, N1), so it reads the same in either paragraph
+  const AL_FIRST = /^[\u0621-\u064A\u066E-\u06D3\u06D5\u06FA-\u06FC\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFB\uFE70-\uFEFC]/;
+  const AL_LAST = /[0-9\u0660-\u0669\u06F0-\u06F9\u0621-\u065F\u066E-\u06D5\u06FA-\u06FC\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFB\uFE70-\uFEFC]$/;
   const hex = (c, d) => (/^#[0-9a-f]{6}$/i.test(String(c || '')) ? String(c) : d);
 
   // Power BI's visual types, by the shape the preview draws for them
   const KIND = [
-    [/^(barChart|clusteredBarChart|stackedBarChart|hundredPercentStackedBarChart)$/, 'bar'],
-    [/^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|waterfallChart|ribbonChart)$/, 'column'],
+    [{ test: VT.isBar }, 'bar'],
+    [/^(columnChart|clusteredColumnChart|hundredPercentStackedColumnChart|waterfallChart|ribbonChart)$/, 'column'],
     [/^(lineChart|areaChart|stackedAreaChart|hundredPercentStackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/, 'line'],
     [/^(donutChart|pieChart)$/, 'donut'],
     [/^(card|cardVisual|multiRowCard|kpi)$/, 'card'],
     [/^(tableEx|pivotTable)$/, 'table'],
-    [/^(slicer|advancedSlicerVisual|listSlicer|textSlicer)$/, 'slicer'],
+    [{ test: VT.isSlicer }, 'slicer'],
     [/^textbox$/, 'text'],
     [/^image$/, 'image'],
     [/^(actionButton|pageNavigator|bookmarkNavigator)$/, 'button'],
@@ -244,6 +253,17 @@
     (page.flags || []).concat(o.flags || []).forEach((f) => { if (f && vs[f.i] && /^(cut|overlap|small)$/.test(f.kind) && !flags.some((g) => g.i === f.i && g.kind === f.kind)) flags.push({ i: f.i, kind: f.kind }); });
     // (one line of a title that may not wrap, shortened with "…" by the writer's measure: a picture, not a measurement)
     const fit = (t, pt, room, bold, f) => { if (tw(t, pt, bold, f) <= room) return t; let k = t.length; while (k > 1 && tw(t.slice(0, k) + '…', pt, bold, f) > room) k--; return t.slice(0, k) + '…'; };
+    // (0.3.2 PV2, AR3: 8 of 14 mixed labels drawn in another order than the report writes them) on a right-to-left page
+    // each shown text is drawn as the writer writes it: after clean() (which keeps refusing a name's own marks) and after
+    // fit() and wrap() cut it, text-measure.js isolateLatin (U+2067 ... U+2069 round a text with a Latin letter); a text
+    // with no Latin letter in U+2067 ... U+2069 unless it reads the same either way (AL_FIRST, AL_LAST: not a leading
+    // digit, a last «%» or «…»); an English-only text as it is. The SVG keeps direction="ltr" and every anchor; the marks
+    // are 0 wide (textWidth counts them so)
+    const asWritten = (t) => {
+      if (!rtl || !t) return t;
+      if (/[A-Za-z]/.test(t)) { const M = measure(); return M && M.isolateLatin ? M.isolateLatin(t) : t; }
+      return AL_FIRST.test(t) && AL_LAST.test(t) ? t : '\u2067' + t + '\u2069';
+    };
     const order = vs.map((v, i) => i).sort((a, b) => ((+vs[a].z || 0) - (+vs[b].z || 0)) || a - b);
     const font = `font-family="'Segoe UI', Tahoma, Arial, sans-serif"`;
     const anchor = (al) => (al === 'center' ? 'middle' : al === 'right' ? 'end' : 'start');
@@ -266,7 +286,7 @@
         const sp = k === 'button' ? (v.nav ? 4 * kk : b.h * 0.4) : 0, room = Math.max(1, b.w - 2 * sp), shown = raw ? fit(raw, pt, room, bold, v.font) : '';
         // (a text box is top-aligned: its text's middle about 1.2 x pt below its top, measured in round 1; a button's middle)
         const mid = k === 'text' ? b.y + 1.2 * pt : b.y + b.h / 2, x = at(al, b, sp, sp), y = mid + px * 0.35;
-        const t = shown ? `<text class="t" x="${n(x)}" y="${n(y)}" ${font} font-size="${n(px)}" font-weight="${bold ? 'bold' : 'normal'}" fill="${col.ink}" text-anchor="${anchor(al)}">${esc(shown)}</text>` : '';
+        const t = shown ? `<text class="t" x="${n(x)}" y="${n(y)}" ${font} font-size="${n(px)}" font-weight="${bold ? 'bold' : 'normal'}" fill="${col.ink}" text-anchor="${anchor(al)}">${esc(asWritten(shown))}</text>` : '';
         let line = '';
         const cur = !!(v.current || (k === 'button' && v.nav && page.id && v.nav === page.id));
         if (k === 'button' && cur && shown && !barUnder(v)) {
@@ -282,7 +302,7 @@
         const hpt = +v.headerSize || 10, hpx = hpt * 4 / 3, side8 = Math.round(8 * kk), al = side(null), head = clean(v.header);
         const shown = head ? fit(head, hpt, Math.max(1, b.w - 2 * side8), false, v.headerFont || v.font) : '';
         const band = shown ? Math.min(b.h * 0.5, hpx * 1.6) : 0, x = at(al, b, side8 / 2, side8 / 2), y = b.y + 1.2 * hpt + hpx * 0.35;
-        const t = shown ? `<text class="t" x="${n(x)}" y="${n(y)}" ${font} font-size="${n(hpx)}" font-weight="normal" fill="${col.ink}" text-anchor="${anchor(al)}">${esc(shown)}</text>` : '';
+        const t = shown ? `<text class="t" x="${n(x)}" y="${n(y)}" ${font} font-size="${n(hpx)}" font-weight="normal" fill="${col.ink}" text-anchor="${anchor(al)}">${esc(asWritten(shown))}</text>` : '';
         const db = { x: b.x, y: b.y + band, w: b.w, h: Math.max(0, b.h - band) }, bw = db.w * 0.5, bx = rtl ? db.x + db.w - 6 * kk - bw : db.x + 6 * kk;
         const box = db.h > 0 ? `<rect x="${n(db.x)}" y="${n(db.y)}" width="${n(db.w)}" height="${n(db.h)}" rx="${n(8 * kk)}" fill="none" stroke="${GREY}" stroke-width="${n(u)}"/><rect x="${n(bx)}" y="${n(db.y + db.h * 0.36)}" width="${n(bw)}" height="${n(db.h * 0.28)}" rx="${n(db.h * 0.1)}" fill="${GREY}"/>` : '';
         return `<g class="v" data-i="${i}" data-kind="${k}"><rect class="box" x="${n(b.x)}" y="${n(b.y)}" width="${n(b.w)}" height="${n(b.h)}" fill="none"/>${box ? `<g class="ph">${box}</g>` : ''}${t}${end}`;
@@ -295,7 +315,7 @@
       let lines = title && fits && b.w >= px * 2 ? (v.titleWrap === false ? [fit(title, pt, room, bold, v.font)] : wrap(title, pt, room, bold, v.font)) : [];
       if (lines.length > fits) lines = lines.slice(0, fits).map((l, j, all) => (j === all.length - 1 ? fit(l + '…', pt, room, bold, v.font) : l));
       const al = side(v.titleAlign), tx = at(al, b, pl, pr), head = pt0 + lines.length * lh;
-      const t = lines.map((l, j) => `<text class="t" x="${n(tx)}" y="${n(b.y + pt0 + j * lh + (lh + px * 0.7) / 2)}" ${font} font-size="${n(px)}" font-weight="600" fill="${col.ink}" text-anchor="${anchor(al)}">${esc(l)}</text>`).join('');
+      const t = lines.map((l, j) => `<text class="t" x="${n(tx)}" y="${n(b.y + pt0 + j * lh + (lh + px * 0.7) / 2)}" ${font} font-size="${n(px)}" font-weight="600" fill="${col.ink}" text-anchor="${anchor(al)}">${esc(asWritten(l))}</text>`).join('');
       // (the placeholder below the title's lines, inside the box's padding: it shrinks by the lines the title takes)
       const ib = { x: b.x + pl, y: b.y + head + (lines.length ? 4 * kk : pad * 0.5), w: Math.max(0, b.w - pl - pr), h: Math.max(0, b.h - head - (lines.length ? 4 * kk : pad * 0.5) - pad) };
       let inner;
@@ -346,7 +366,11 @@
 
   // ---- the pages, from what the report writer writes or from the design engine's slots ----
   const txt = (d) => (typeof d === 'string' ? d : new TextDecoder().decode(d));
-  const lit = (p) => { const v = p && p.expr && p.expr.Literal && p.expr.Literal.Value; return typeof v === 'string' && /^'.*'$/s.test(v) ? v.slice(1, -1).replace(/''/g, "'") : null; };
+  // a literal's text, number and true or false, a column's set width: pbir-values.js, their one home (0.3.2 DD1B)
+  const PV = typeof module !== 'undefined' && module.exports ? require('./pbir-values.js') : root.DAPbirValues;
+  // a text box's paragraphs: one text each, text-runs.js, their one home (0.3.2 DD2T)
+  const TR = typeof module !== 'undefined' && module.exports ? require('./text-runs.js') : root.DATextRuns;
+  const lit = PV.litText;
   // a visual's title as Desktop shows it: its text, or what the report measure a Top N title is made by shows when every
   // category shows (D5: the measure's NAME is made unique, "Title: X (2)"; its DAX returns "X": the writer's
   // IF ( _s = _n, "<title>", ... )); a measure we can't read keeps the name's title
@@ -358,14 +382,12 @@
     const m = p.text && p.text.expr && p.text.expr.Measure; if (!(m && /^Title: /.test(String(m.Property || '')))) return '';
     const by = ext && ext.get(String(m.Property)); return by != null ? by : String(m.Property).slice(7);
   };
-  const textOf = (j) => ((((j.visual || {}).objects || {}).general || [])[0] || { properties: {} }).properties.paragraphs ? j.visual.objects.general[0].properties.paragraphs.map((p) => (p.textRuns || []).map((r) => String(r.value || '')).join('')).join(' ') : '';
+  // a text box's text as drawn: its first general entry's paragraphs' texts with " " between
+  const textOf = (j) => { const ps = ((((j.visual || {}).objects || {}).general || [])[0] || { properties: {} }).properties.paragraphs; return TR.paragraphTexts(ps).join(' '); };
   // J12: what Desktop draws from a visual's own settings (else the theme's): its title's size, font, weight, side, wrap and
   // padding; a text box's and a button's text and size; a card's value side; a table's columns and header size; a
   // chart's category and label size. Settings only, never a value.
-  const litOf = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
-  const numOf = (p) => { const v = litOf(p); const x = parseFloat(String(v == null ? '' : v).replace(/[DLM]$/, '')); return Number.isFinite(x) ? x : null; };
-  const strOf = (p) => { const v = litOf(p); return typeof v === 'string' && /^'.*'$/s.test(v) ? v.slice(1, -1).replace(/''/g, "'") : null; };
-  const boolOf = (p) => { const v = litOf(p); return v === 'true' || v === true ? true : v === 'false' || v === false ? false : null; };
+  const numOf = PV.litNumber, strOf = PV.litText, boolOf = PV.litBool;
   // the properties of a card's entries with no selector (or the default one), merged
   const props = (list, def) => (Array.isArray(list) ? list : []).filter((e) => e && e.properties && (!e.selector || (def && e.selector.id === 'default'))).reduce((a, e) => Object.assign(a, e.properties), {});
   const th1 = (theme, type, card, key) => { const vs = (theme && theme.visualStyles) || {}, f = (t) => (((vs[t] || {})['*'] || {})[card] || [])[0]; const e = f(type) || f('*'); return e && e[key] != null ? e[key] : null; };
@@ -376,10 +398,11 @@
   // (invertAxis; a categorical axis ignores it) or it is sorted descending by its category (or the order key it carries
   // in its tooltips), 'ltr' sorted ascending or not sorted; null when its category is not time (by its name) or it is
   // sorted by something else. Settings only, never a value; the preview's cue, never written
-  const TIME_NAME = /\b(date|dates|day|days|week|weeks|month|months|quarter|quarters|qtr|year|years|yr|fy|period|periods)\b|تاريخ|يوم|أسبوع|شهر|ربع|سنة|عام|فترة/i;
+  // (0.3.2 DD1A: the name is read by time-names.js isTimeName, its one home, as the twin, the writer and the check read it)
+  const TN = typeof module !== 'undefined' && module.exports ? require('./time-names.js') : root.DATimeNames;
   function timeDirOf(vis, c) {
     const f = c.field || {}, e = f.Column || f.Measure || ((f.Aggregation || {}).Expression || {}).Column || {};
-    if (!TIME_NAME.test(String(e.Property || '') + ' ' + nameOfProj(c))) return null;
+    if (!TN.isTimeName(String(e.Property || '') + ' ' + nameOfProj(c))) return null;
     const ax = props((vis.objects || {}).categoryAxis);
     if (boolOf(ax.invertAxis) === true && strOf(ax.axisType) !== 'Categorical') return 'rtl';
     const q = vis.query || {}, s = ((q.sortDefinition || {}).sort || [])[0];
@@ -440,13 +463,13 @@
     // (0.3.0 L2) the button slicer's buttons (its one row's columns, else 3) and a chart's dotted or hidden gridlines
     if (type === 'advancedSlicerVisual') out.pills = Math.max(1, Math.min(8, numOf(props(ob.layout).columnCount) || 3));
     // (0.3.1 FX5) the bars' thickness the writer set: a bar or column chart's equal inner and outer padding (a percent)
-    if (/^(barChart|clusteredBarChart|stackedBarChart|hundredPercentStackedBarChart|columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) {
+    if (VT.isBar(type) || /^(columnChart|clusteredColumnChart|hundredPercentStackedColumnChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) {
       const ca = props(ob.categoryAxis); if (numOf(ca.innerPadding) > 0 && numOf(ca.innerPadding) === numOf(ca.outerPadding)) out.band = numOf(ca.innerPadding);
     }
     { const va = props(ob.valueAxis); if (boolOf(va.gridlineShow) === false) out.grid = 'none'; else if (strOf(va.gridlineStyle) === 'dotted') out.grid = 'dotted'; }
     // (L1) a line's look as written: smooth, and a dot on each point (lineStyles, the entry with no selector)
     if (/^(lineChart|areaChart|stackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) { const st = props(ob.lineStyles); if (strOf(st.lineChartType) === 'smooth') out.smooth = true; if (boolOf(st.showMarker) === true) out.markers = true; }
-    if (/^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|lineChart|areaChart|stackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) {
+    if (/^(columnChart|clusteredColumnChart|hundredPercentStackedColumnChart|lineChart|areaChart|stackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) {
       const c = (((qs.Category || {}).projections) || []).find((x) => x && x.field);
       if (c) { out.category = nameOfProj(c); out.labelSize = numOf(props(ob.categoryAxis).fontSize) || +th1(theme, type, 'categoryAxis', 'fontSize') || +(tc.label || {}).fontSize || 9; }
       const td = c ? timeDirOf(vis, c) : null; if (td) out.timeDir = td;
@@ -460,7 +483,9 @@
    *  out. A card with no field and no title, or a text box with no text, is a panel (the writer's panel behind a chart,
    *  the header band, the filter rail). The visuals in their drawing
    *  order (z, then place: the writer's names are random, so they never decide it). opts: { rtl, colors, picture (GD2:
-   *  bytes -> a URL for a glass page's picture, or null) }. */
+   *  bytes -> a URL for a glass page's picture, or null), tooltips (0.3.2 TP1, D-1105-17: true also gives the tooltip
+   *  pages, after the shown pages in page order, each at its own size and marked tooltip: true; the approval page draws
+   *  them, the website's preview does not ask) }. */
   function fromFiles(files, opts) {
     const o = opts || {}, by = new Map(), res = [];
     // (GD2) the page pictures: opts.picture(bytes) gives a picture's URL for the preview when it is the glass look's (the
@@ -486,7 +511,9 @@
       const e = (((pj.objects || {}).background) || []).find((x) => x && x.properties && x.properties.image), nm = e ? lit(((e.properties.image || {}).image || {}).name) : null;
       const url = nm && pics.has(nm) ? o.picture(pics.get(nm)) : null;
       return url ? { url: String(url), t: glassT, rim: typeof rim === 'string' ? rim : null } : null; };
-    return order.map((id) => ({ id, pj: json(`${id}/page.json`) })).filter((p) => p.pj && p.pj.type !== 'Tooltip' && p.pj.visibility !== 'HiddenInViewMode').map(({ id, pj }) => {
+    // (TP1) the one place the drawn pages are chosen: the shown pages, then (opts.tooltips) the tooltip pages
+    const all = order.map((id) => ({ id, pj: json(`${id}/page.json`) })).filter((p) => p.pj), isTip = (p) => p.pj.type === 'Tooltip';
+    return all.filter((p) => !isTip(p) && p.pj.visibility !== 'HiddenInViewMode').concat(o.tooltips === true ? all.filter(isTip) : []).map(({ id, pj }) => {
       const list = [...by.keys()].filter((k) => k.startsWith(id + '/visuals/') && /\/visual\.json$/.test(k)).map((k) => json(k)).filter(Boolean)
         .sort((a, b) => ((+(a.position || {}).z || 0) - (+(b.position || {}).z || 0)) || (+(a.position || {}).y || 0) - (+(b.position || {}).y || 0) || (+(a.position || {}).x || 0) - (+(b.position || {}).x || 0));
       const byName = new Map(list.map((j) => [String(j.name), j]));
@@ -503,7 +530,7 @@
           type !== 'textbox' && shortened(title, altOf(j)) ? { titleCut: true } : {},
           (/^(card|cardVisual|multiRowCard)$/.test(type) && !hasFields(j) || type === 'textbox') && !title ? { panel: true } : {});
       }).filter(Boolean);
-      return Object.assign({ id, name: String(pj.displayName || id), w: +pj.width || 0, h: +pj.height || 0, rtl: !!o.rtl, colors: o.colors || null, visuals }, glassOf(pj) ? { glass: glassOf(pj) } : {});
+      return Object.assign({ id, name: String(pj.displayName || id), w: +pj.width || 0, h: +pj.height || 0, rtl: !!o.rtl, colors: o.colors || null, visuals }, glassOf(pj) ? { glass: glassOf(pj) } : {}, pj.type === 'Tooltip' ? { tooltip: true } : {});
     });
   }
 

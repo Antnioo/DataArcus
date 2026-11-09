@@ -7,10 +7,14 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { modelOf } from './model.mjs';
 import { besideSaid } from './plain-words.mjs';   // (0.3.1 R4A, T-9: the folder by its name and where it is)
+import { freeNamer } from './model-script.mjs';   // (0.3.2 GM1: the measures' and the pegs table's free names)
 
 const require = createRequire(import.meta.url);
 export const Cal = require('../../assets/js/calendar-generator.js');
 const GD = require('../../assets/js/gulf-dates.js');
+// (0.3.2 GM1) the Ramadan and Eid measures: the Measure Builder's own builder, shared, never copied
+const GM = require('../../assets/js/gulf-measures.js');
+const PEGS_TABLE = 'Gulf Currency Pegs', MEASURE_FOLDER = 'Ramadan and Eid';
 
 const COUNTRY_CODES = ['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn'];
 const FIXED = { 'sat-sun': 'Saturday + Sunday', 'fri-sat': 'Friday + Saturday', fri: 'Friday only', sun: 'Sunday only' };
@@ -48,10 +52,17 @@ const freeNames = (taken) => { const out = []; for (let n = 1; out.length < 2 &&
 // its DAX as the partition, the three names sorted by their numbers) and one relationship per relateTo column.
 // Mark-as-date-table stays by hand until a person has seen the ribbon with it in a script (mcp/WORK.md, D-GC2).
 // (0.3.0 C1: and the shared builder's Arabic twins, each sorted as the generator says: built.sorts)
-function scriptOf(Fix, table, columns, body, rels, more) {
-  const out = ['createOrReplace', '', `\ttable ${Fix.name(table)}`, ''], sortBy = new Map(SORTS.concat(more || []).filter(([n, by]) => columns.includes(n) && columns.includes(by)));
-  columns.forEach((c) => out.push(`\t\tcolumn ${Fix.name(c)}`, '\t\t\tisNameInferred', `\t\t\tsourceColumn: [${c.replace(/]/g, ']]')}]`, ...(sortBy.has(c) ? [`\t\t\tsortByColumn: ${Fix.name(sortBy.get(c))}`] : []), ''));
+function scriptOf(Fix, table, columns, body, rels, more, x) {
+  x = x || {};
+  const out = ['createOrReplace', '', `\ttable ${Fix.name(table)}`, ''].concat(x.measureLines || []), colDesc = x.colDesc || {}, sortBy = new Map(SORTS.concat(more || []).filter(([n, by]) => columns.includes(n) && columns.includes(by)));
+  columns.forEach((c) => out.push(...(colDesc[c] ? [`\t\t/// ${colDesc[c]}`] : []), `\t\tcolumn ${Fix.name(c)}`, '\t\t\tisNameInferred', `\t\t\tsourceColumn: [${c.replace(/]/g, ']]')}]`, ...(sortBy.has(c) ? [`\t\t\tsortByColumn: ${Fix.name(sortBy.get(c))}`] : []), ''));
   out.push(`\t\tpartition ${Fix.name(table)} = calculated`, '\t\t\tmode: import', '\t\t\tsource =', ...body.split('\n').map((l) => '\t\t\t\t\t' + l), '');
+  // (0.3.2 GM1) another new DAX table (the pegs), in the same shape: its description, its columns, its partition
+  (x.tables || []).forEach((t) => {
+    out.push(`\t/// ${t.description}`, `\ttable ${Fix.name(t.name)}`, '');
+    t.columns.forEach((c) => out.push(`\t\tcolumn ${Fix.name(c)}`, '\t\t\tisNameInferred', `\t\t\tsourceColumn: [${c.replace(/]/g, ']]')}]`, ''));
+    out.push(`\t\tpartition ${Fix.name(t.name)} = calculated`, '\t\t\tmode: import', '\t\t\tsource =', ...t.body.split('\n').map((l) => '\t\t\t\t\t' + l), '');
+  });
   // (0.3.1 GC3) isActive: false where the fact column already has its date table (Microsoft Learn, TMDL relationships)
   rels.forEach((r) => out.push(`\trelationship ${Fix.name(r.name)}`, ...(r.inactive ? ['\t\tisActive: false'] : []), `\t\tfromColumn: ${Fix.name(r.table)}.${Fix.name(r.column)}`, `\t\ttoColumn: ${Fix.name(table)}.Date`, ''));
   return out.join('\n').replace(/\n+$/, '\n');
@@ -66,7 +77,19 @@ function scriptOf(Fix, table, columns, body, rels, more) {
  * Throws an Error (with "Nothing was written.") for every refusal.
  */
 export function addGulfCalendar(m, a, env) {
-  const { Gulf, Fix, writeScript, scriptDir, scriptBase } = env;
+  // (0.3.2 FN1G) in named steps, called in the old order (each refusal where it was): gc holds what a step makes
+  const gc = { m, a, env };
+  inputsStep(gc);
+  relationshipsStep(gc);
+  basesStep(gc);
+  tableStep(gc);
+  scriptStep(gc);
+  return answerStep(gc);
+}
+
+// the country, the table's name and the years
+function inputsStep(gc) {
+  const { m, a } = gc, { Gulf } = gc.env;
   const raw = modelOf(m.tmsl).tables || [];
   const country = a.country || 'uae';
   if (!COUNTRY_CODES.includes(country)) refuse(`Unknown country "${country}": use one of ${COUNTRY_CODES.join(', ')}.`);
@@ -86,6 +109,12 @@ export function addGulfCalendar(m, a, env) {
   if (ly - fy + 1 > 60) refuse(`${fy} to ${ly} is ${ly - fy + 1} years; the calendar takes at most 60.`);
   const start = `${String(fy).padStart(4, '0')}-01-01`, end = `${String(ly).padStart(4, '0')}-12-31`;
   if (fy < 1000 || Cal.parse(start) < Cal.MIN_DATE || ly > 9999 || Cal.parse(end) > Cal.MAX_DATE) refuse(`Power BI dates run from 1 March 1900 to 31 December 9999, so ${fy} to ${ly} can't be a calendar: the first year is at least 1901.`);
+  Object.assign(gc, { raw, country, C, table, start, end });
+}
+
+// the relationships asked for (relateTo), and what each says that is not the one asked for as it is
+function relationshipsStep(gc) {
+  const { m, a, raw, table } = gc;
 
   // relationships, only for the date columns the user names. (0.3.1 GC3, the laptop's tour step 3: Sales[Date] already
   // related to the sample's Calendar[Date]) Never a second active relationship from a column that already has an active one
@@ -142,13 +171,43 @@ export function addGulfCalendar(m, a, env) {
       en: `${from} already relates to ${r.inactive.held}, so its relationship to ${to} is added inactive (Model view shows it dashed): a measure uses it with USERELATIONSHIP, for example CALCULATE ( [Your measure], USERELATIONSHIP ( ${from}, ${to} ) )`,
       ar: `العمود ${from} مرتبط من قبل بـ ${r.inactive.held}، لذا تُضاف علاقته بـ ${to} غير نشطة (تظهر متقطعة في Model view): يستعملها المقياس بـ USERELATIONSHIP، مثلًا CALCULATE ( [Your measure], USERELATIONSHIP ( ${from}, ${to} ) )` });
   });
+  Object.assign(gc, { modelRels, AUTO, rels, untyped, relWhy });
+}
+
+// the base measures of the Ramadan and Eid measures
+function basesStep(gc) {
+  const { a, raw } = gc;
+
+  // (0.3.2 GM1, RD5 g) the base measures for the Ramadan and Eid measures: each a measure of the model, named as
+  // "Table[Measure]"; at most 5. Its name goes into the DAX only as a measure reference ([Name], ] doubled); a name a
+  // fenced TMDL expression can't hold (a backtick, a control character) is refused, never cleaned
+  const asks = a.measures == null ? [] : [].concat(a.measures);
+  if (asks.length > 5) refuse('measures takes at most 5 measures.');
+  const bases = [], seen = new Set();
+  asks.forEach((x, i) => {
+    const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/);
+    if (!mk) refuse(`measures[${i}] ${JSON.stringify(String(x))} is not written as Table[Measure].`);
+    const t = raw.find((y) => key(y.name) === key(mk[1]));
+    const ms = t && (t.measures || []).find((y) => key(y.name) === key(mk[2]));
+    if (!ms) refuse(`measures[${i}] ${JSON.stringify(String(x))} is not a measure of the model (a column or a name it doesn't have can't be the base of the Ramadan and Eid measures).`);
+    if (/[`\p{Cc}]/u.test(String(ms.name))) refuse(`The measure ${JSON.stringify(`${t.name}[${ms.name}]`)} has a backtick or a control character in its name, so it can't be named in a script DataArcus writes: rename it in the model, or leave it out of measures.`);
+    const k = key(t.name) + '|' + key(ms.name);
+    if (seen.has(k)) refuse(`measures names ${JSON.stringify(`${t.name}[${ms.name}]`)} twice.`);
+    seen.add(k); bases.push({ table: String(t.name), name: String(ms.name), formatString: typeof ms.formatString === 'string' ? ms.formatString : null });
+  });
+  gc.bases = bases;
+}
+
+// the generator's table, what the check reads in it, and the notes
+function tableStep(gc) {
+  const { m, a, country, C, table, start, end, untyped } = gc, { Gulf } = gc.env;
 
   // the generator's own table for these settings (the website's defaults for what isn't asked: fiscal and relative
   // columns on, Hijri on, as the page)
   const weekend = a.weekend === 'country' || a.weekend == null ? country : a.weekend;
   if (!(COUNTRY_CODES.includes(weekend) || RULES.includes(weekend) || FIXED[weekend])) refuse(`Unknown weekend "${a.weekend}".`);
   const st = Object.assign({}, Cal.DEFAULTS, { name: table, start, end, fy: a.fiscalStart || 1, week: WEEK[a.weekStart || 'sunday'], weekend, lang: a.lang || 'en',
-    hijri: true, fiscal: true, relative: true, observed: a.announced !== false, arabicNames: a.arabicNames !== false });
+    hijri: true, fiscal: true, relative: true, observed: a.announced !== false, arabicNames: a.arabicNames !== false, vat: a.vat ? country : null });
   // (0.3.1 GC) a country whose own differing announcements are sourced (Oman: gulf-dates.js own.omn); the table keeps the
   // UAE's dates, since moving one month would need the months around it, which are not sourced
   const ownDates = (GD.own && GD.own[country]) || null;
@@ -168,12 +227,43 @@ export function addGulfCalendar(m, a, env) {
   if (st.observed && country !== 'uae' && country !== 'ksa') notes.push(ownDates
     ? `The announced dates are the UAE's. ${C.name} announced ${ownDates.reduce((n, e) => n + ['ramadan', 'fitr', 'adha'].filter((k) => e[k]).length, 0)} of them a day later from 2019 to 2026 (sourced: scripts/gulf-calendar/DATES-SOURCES.md); the table keeps the UAE's, and ${C.name} can announce a day apart again. check_model_health's gulfCalendar section compares ${C.name}'s calendar with Umm al-Qura, counts ${C.name}'s own sourced days as no difference and lists any other difference only as a note.`
     : `The announced dates are the UAE's; none of ${C.name}'s own are sourced, and ${C.name} can announce a day apart. check_model_health's gulfCalendar section compares ${C.name}'s calendar with Umm al-Qura and lists a difference only as a note, never as an error.`);
+  Object.assign(gc, { weekend, st, built, body, selfCheck, notes });
+}
+
+// the measures, the VAT column and the pegs table, the script and its file
+function scriptStep(gc) {
+  const { a, raw, table, rels, bases, C, st, built, body, notes } = gc, { Fix, writeScript, scriptDir, scriptBase } = gc.env;
 
   // the file: next to the project, a free name, never over another file; the same script asked again names its file
   // (0.3.1 AF2: the name the plan chose; the writer's refusal, a name taken or the model changed, is passed on as it is)
   if (!scriptDir) refuse('The working folder is the model folder itself, and a script is never written inside a model folder. Choose the project folder (the folder that holds the model folder) as the working folder and ask again.');
-  const script = scriptOf(Fix, table, built.columns, body, rels, built.sorts);
+  // (0.3.2 GM1) the measures on the new table (a createOrReplace of the base measure's own table would replace it: RD5
+  // a.), names never one the model or the new tables have ("... 2"), every reference following the name given
+  const free = freeNamer(raw.concat([{ name: table, columns: built.columns.map((n) => ({ name: n })) }]));
+  const pegsName = a.pegs ? free(PEGS_TABLE) : null;
+  const DAY30 = ' When this Ramadan has 30 days and the last had 29, day 30 has no partner (blank on the last Ramadan side), so the % moves by about one day\'s share; the Ramadan lengths come from the calendar, never from the data.';
+  const measureLines = [], made = [];
+  bases.forEach((b) => GM.measuresFor({ base: b.name, cal: table, dateColumn: 'Date', nameOf: (id, want) => free(want) }).forEach((x) => {
+    const m = { name: x.name, expression: x.expression, description: x.what + (x.id === 'ramLY' || x.id === 'ramPct' ? DAY30 : ''), formatString: x.pct ? '0.0%' : b.formatString || '#,0', displayFolder: MEASURE_FOLDER };
+    const lines = Fix.measure(m, 2) || Fix.measure(Object.assign(m, { formatString: '#,0' }), 2);
+    if (!lines) refuse(`The measure ${JSON.stringify(x.name)} could not be written as TMDL.`);
+    measureLines.push(...lines, ''); made.push(x.name);
+  }));
+  const vatOn = !!st.vat && built.columns.includes(Cal.VAT_COLUMN);
+  const vatWhat = `VAT in ${C.name}: the standard rate in force on the date, in percent (5 means 5 %), from DataArcus's sourced list (checked ${GD.vat && GD.vat.checked}; scripts/gulf-calendar/DATES-SOURCES.md). Not the rate a sale was charged: zero-rated and exempt supplies and transitional contracts differ. Not tax advice.`;
+  const pegRows = (GD.pegs && GD.pegs.rows) || [], dq = (v) => '"' + String(v).replace(/"/g, '""') + '"', [cy, cm, cd] = String(GD.pegs && GD.pegs.checked).split('-').map(Number);
+  const pegsTable = pegsName ? { name: pegsName, columns: ['Currency', 'Per USD', 'Regime', 'Central Bank', 'Source', 'Checked'],
+    description: `Units of each Gulf currency per 1 US dollar, each its central bank's figure (checked ${GD.pegs.checked}). The Kuwaiti dinar follows a basket of currencies: no fixed rate. Which of your amounts is in which currency is yours to say: no conversion measure is written.`,
+    body: `-- Gulf currency pegs: units per 1 US dollar, each the central bank's figure (checked ${GD.pegs.checked}). Sources: github.com/Antnioo/DataArcus, scripts/gulf-calendar/DATES-SOURCES.md\nSELECTCOLUMNS (\n    {\n${pegRows.map((r) => `        ( ${dq(r.currency)}, ${r.perUsd == null ? 'BLANK ()' : r.perUsd}, ${dq(r.perUsd == null ? 'a basket: ' + r.basket : 'fixed to the US dollar')}, ${dq(r.bank)}, ${dq(r.site)}, DATE ( ${cy}, ${cm}, ${cd} ) )`).join(',\n')}\n    },\n    "Currency", [Value1], "Per USD", [Value2], "Regime", [Value3], "Central Bank", [Value4], "Source", [Value5], "Checked", [Value6]\n)` } : null;
+  const script = scriptOf(Fix, table, built.columns, body, rels, built.sorts, { measureLines, colDesc: vatOn ? { [Cal.VAT_COLUMN]: vatWhat } : {}, tables: pegsTable ? [pegsTable] : [] });
+  if (made.length) notes.push(`The ${made.length} Ramadan and Eid measures follow ${JSON.stringify(table)}'s dates: put its columns (Hijri Year, Ramadan Day) on the visual, and relate it to your facts (relateTo, or the step by hand). A filter on another date table is not moved back a Hijri year.`);
   let file; try { file = writeScript(scriptDir, scriptBase + ' - add Gulf calendar', script); } catch (e) { if (e && (e.left || /^Nothing was written/.test(String(e.message)))) throw e; refuse('The script could not be written to ' + scriptDir + ' (' + String((e && e.code) || (e && e.message) || e) + ').'); }
+  Object.assign(gc, { pegsName, made, vatOn, vatWhat, pegRows, pegsTable, file });
+}
+
+// the answer: the dates, the steps by hand and how to apply the script
+function answerStep(gc) {
+  const { a, raw, table, start, end, country, C, modelRels, AUTO, rels, relWhy, bases, weekend, st, built, selfCheck, notes, pegsName, made, vatOn, vatWhat, pegRows, pegsTable, file } = gc, { Gulf } = gc.env;
 
   const later = st.observed ? GD.events.flatMap((e) => [['ramadan', e.ramadan, 0], ['fitr', e.fitr, 0], ['adha', e.adha, 9]].filter(([, d]) => d)
     .filter(([, d, back]) => T(d) - back * 864e5 > T(GD.checked) && T(d) >= T(start) && T(d) <= T(end)).map(([, d]) => d)).sort()[0] || null : null;
@@ -195,8 +285,11 @@ export function addGulfCalendar(m, a, env) {
       : { on: false, why: 'Umm al-Qura for every month, as the website does with the option off.' },
     relationships: rels.map((r) => `${r.table}[${r.column}] -> ${table}[Date] (many to one, single direction${r.inactive ? ', inactive' : ''})`),
     ...(relWhy.length ? { relationshipsWhy: relWhy.map((w) => w.en), relationshipsWhyAr: relWhy.map((w) => w.ar) } : {}),
+    ...(made.length ? { measures: { for: bases.map((b) => `${b.table}[${b.name}]`), count: made.length, names: made, folder: MEASURE_FOLDER } } : {}),
+    ...(vatOn ? { vatColumn: { name: Cal.VAT_COLUMN, country: country, what: vatWhat, checked: GD.vat.checked } } : {}),
+    ...(pegsName ? { pegsTable: { name: pegsName, rows: pegRows.length, columns: pegsTable.columns, checked: GD.pegs.checked, what: pegsTable.description } } : {}),
     byHand,
-    howToApply: `The script is in the file "${file.split(/[\\/]/).pop()}", ${besideSaid(path.isAbsolute(String(file)) ? path.dirname(String(file)) : null)}. Save a copy of your file first. In Power BI Desktop open TMDL view, open a new tab and paste the file's text, then choose Preview: it must show one new table ${q}${rels.length ? ' and ' + rels.length + ' new relationship' + (rels.length > 1 ? 's' : '') : ''}, and nothing changed or replaced. If Preview shows a change to a table you already have, stop: the model changed since the files were read. Preview will not warn about it: it shows a table of the same name as replaced, without an error (seen in Desktop). Then Apply, refresh the table (Home > Refresh) and do the steps by hand. Until that refresh, measures that name the new table show "Field list item has error" in the Data pane, and a query on the table fails: the refresh clears both (seen in Desktop). The script is never applied by this tool.`,
+    howToApply: `The script is in the file "${file.split(/[\\/]/).pop()}", ${besideSaid(path.isAbsolute(String(file)) ? path.dirname(String(file)) : null)}. Save a copy of your file first. In Power BI Desktop open TMDL view, open a new tab and paste the file's text, then choose Preview: it must show ${pegsName ? `two new tables, ${q}${made.length ? ` (with its ${made.length} measures)` : ''} and ${JSON.stringify(pegsName)}` : `one new table ${q}${made.length ? ` (with its ${made.length} measures)` : ''}`}${rels.length ? ' and ' + rels.length + ' new relationship' + (rels.length > 1 ? 's' : '') : ''}, and nothing changed or replaced. If Preview shows a change to a table you already have, stop: the model changed since the files were read. Preview will not warn about it: it shows a table of the same name as replaced, without an error (seen in Desktop). Then Apply, refresh the table (Home > Refresh) and do the steps by hand. Until that refresh, measures that name the new table show "Field list item has error" in the Data pane, and a query on the table fails: the refresh clears both (seen in Desktop). The script is never applied by this tool.`,
     selfCheck,
     ...(notes.length ? { notes } : {})
   };

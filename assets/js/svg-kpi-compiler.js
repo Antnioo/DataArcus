@@ -10,196 +10,18 @@
 (function (root) {
   'use strict';
 
-  // ---------- expression tree ----------
-  // Every dynamic part of the SVG is one of these nodes. evalNode() runs it in JS, dax() prints it as DAX.
-  const N = {
-    num: (n) => ({ k: 'num', n: +(+n).toFixed(6) }),       // rounded so the DAX text and the JS value are the same number
-    str: (s) => ({ k: 'str', s: s }),
-    ref: (name) => ({ k: 'ref', name: name }),            // a VAR defined earlier
-    measure: (name) => ({ k: 'measure', name: name }),
-    op: (o, a, b) => ({ k: 'op', o: o, a: a, b: b }),      // + - * / and comparisons
-    fn: (f, args) => ({ k: 'fn', f: f, args: args }),      // DIVIDE COALESCE MIN MAX ABS SIGN
-    iff: (c, a, b) => ({ k: 'if', c: c, a: a, b: b }),
-    sw: (cases, other) => ({ k: 'switch', cases: cases, other: other }), // SWITCH ( TRUE (), c1, v1, ..., other )
-    fmt: (a, pattern) => ({ k: 'fmt', a: a, p: pattern }), // FORMAT ( a, pattern, "en-US" )
-    // joins text pieces, dropping empty strings and merging neighbouring strings
-    cat: (parts) => {
-      const p = [];
-      parts.forEach((x) => { if (x.k === 'str' && x.s === '') return; const last = p[p.length - 1]; if (x.k === 'str' && last && last.k === 'str') p[p.length - 1] = { k: 'str', s: last.s + x.s }; else p.push(x); });
-      return p.length === 1 ? p[0] : p.length ? { k: 'cat', parts: p } : { k: 'str', s: '' };
-    },
-    blank: () => ({ k: 'blank' }),
-    isBlank: (a) => ({ k: 'isblank', a: a }),
-    // sparkline pieces: a small table of { Value: periods back, @v: value } and row functions over it
-    col: (name) => ({ k: 'col', name: name }),
-    spark: (o) => Object.assign({ k: 'spark' }, o),         // FILTER ( ADDCOLUMNS ( GENERATESERIES ... ), NOT ISBLANK )
-    sparkEnd: (o) => Object.assign({ k: 'sparkEnd' }, o),   // the last date of the series
-    aggx: (f, t, e) => ({ k: 'aggx', f: f, t: t, e: e }),   // MINX MAXX COUNTROWS
-    filt: (t, c) => ({ k: 'filt', t: t, c: c }),
-    concatx: (t, e, by) => ({ k: 'concatx', t: t, e: e, by: by }),
-    // the value of a model column in the current row (SELECTEDVALUE), for an SVG shown per row of a table
-    colval: (col) => ({ k: 'colval', col: col }),
-    // text that comes from the model's data, made safe for the SVG and the data URL when the measure runs
-    esc: (a) => ({ k: 'esc', a: a })
-  };
-  // what esc replaces, in this order: & first (the others write an &), then the URL characters % and #
-  const ESCAPES = [['&', '&amp;'], ['<', '&lt;'], ['>', '&gt;'], ["'", '&apos;'], ['"', '&quot;'], ['%', '%25'], ['#', '%23']];
-  // "0.00" (not "0.##") for SVG numbers: Excel-style formatting can print "12." for "0.##", which some SVG attributes reject
-  const PATTERNS = { '0.00': [2, 2, false], '#,0': [0, 0, true], '#,0.0': [1, 1, true], '#,0.00': [2, 2, true] };
+  // ---------- the expression tree and its evaluator: svg-expressions.js (0.3.2 SP12; the pages load it first) ----------
+  const X = typeof module === 'object' && module.exports ? require('./svg-expressions.js') : root.SVGKPIExpr;
+  const N = X.N, formatNumber = X.formatNumber, evalNode = X.evalNode;
 
-  // FORMAT with the en-US locale: half away from zero, like .NET
-  // Rounds the number as written (69.115 -> 69.12), not its binary value (69.11499...), like .NET and Intl do
-  function roundDecimal(abs, d) {
-    const [ip, fp = ''] = abs.toFixed(d + 6).split('.');
-    let digits = ip + fp.slice(0, d);
-    if (fp[d] >= '5') {
-      const a = digits.split(''); let i = a.length - 1;
-      while (i >= 0) { if (a[i] === '9') { a[i] = '0'; i--; } else { a[i] = String(+a[i] + 1); break; } }
-      digits = (i < 0 ? '1' : '') + a.join('');
-    }
-    return d ? digits.slice(0, digits.length - d) + '.' + digits.slice(digits.length - d) : digits;
-  }
-  function formatNumber(v, pattern) {
-    const [minD, maxD, group] = PATTERNS[pattern];
-    let s = roundDecimal(Math.abs(v), maxD);
-    const neg = v < 0 && /[1-9]/.test(s);
-    if (minD < maxD) s = s.replace(/0+$/, '').replace(/\.$/, '');
-    if (group) { const parts = s.split('.'); parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ','); s = parts.join('.'); }
-    return (neg ? '-' : '') + s;
-  }
+  // ---------- DAX printing: svg-codegen.js (0.3.2 SP16; the pages load it first): dax(n) prints the same tree as DAX ----------
+  const G = typeof module === 'object' && module.exports ? require('./svg-codegen.js') : root.SVGKPICodegen;
+  const dax = G.dax, daxStr = G.daxStr, daxMeasure = G.daxMeasure, hasControl = G.hasControl, CONTROL_MSG = G.CONTROL_MSG;
 
-  // JS evaluation. BLANK is null and follows DAX: BLANK + BLANK is BLANK, BLANK + 5 is 5,
-  // BLANK * 5 and BLANK / 5 are BLANK, and comparisons treat BLANK as 0.
-  function evalNode(n, env) {
-    const z = (x) => (x == null ? 0 : x);
-    switch (n.k) {
-      case 'num': return n.n;
-      case 'str': return n.s;
-      case 'blank': return null;
-      case 'ref': return env.vars[n.name];
-      case 'measure': return Object.prototype.hasOwnProperty.call(env.measures, n.name) ? env.measures[n.name] : null;
-      case 'colval': return env.columns && Object.prototype.hasOwnProperty.call(env.columns, n.col) ? env.columns[n.col] : null;
-      case 'esc': { const v = evalNode(n.a, env); return ESCAPES.reduce((s, e) => s.split(e[0]).join(e[1]), v == null ? '' : String(v)); }
-      case 'isblank': return evalNode(n.a, env) == null;
-      case 'op': {
-        const a = evalNode(n.a, env), b = evalNode(n.b, env);
-        switch (n.o) {
-          case '+': return a == null && b == null ? null : z(a) + z(b);
-          case '-': return a == null && b == null ? null : z(a) - z(b);
-          case '*': return a == null || b == null ? null : a * b;
-          case '/': if (!b) throw new Error('DIV0'); return a == null ? null : a / b;
-          case '<': return z(a) < z(b);
-          case '<=': return z(a) <= z(b);
-          case '>': return z(a) > z(b);
-          case '>=': return z(a) >= z(b);
-          case '=': return z(a) === z(b);
-          case '<>': return z(a) !== z(b);
-        }
-        throw new Error('op ' + n.o);
-      }
-      case 'fn': {
-        const v = n.args.map((x) => evalNode(x, env));
-        switch (n.f) {
-          case 'DIVIDE': return (v[0] == null || v[1] == null || v[1] === 0) ? null : v[0] / v[1];
-          case 'COALESCE': return v[0] == null ? v[1] : v[0];
-          case 'MIN': return Math.min(z(v[0]), z(v[1]));
-          case 'MAX': return Math.max(z(v[0]), z(v[1]));
-          case 'ABS': return Math.abs(z(v[0]));
-          case 'SIGN': return Math.sign(z(v[0]));
-        }
-        throw new Error('fn ' + n.f);
-      }
-      case 'if': return evalNode(n.c, env) ? evalNode(n.a, env) : evalNode(n.b, env);
-      case 'switch': { for (const [c, v] of n.cases) if (evalNode(c, env)) return evalNode(v, env); return evalNode(n.other, env); }
-      case 'fmt': return formatNumber(z(evalNode(n.a, env)), n.p);
-      case 'cat': return n.parts.map((p) => { const v = evalNode(p, env); return v == null ? '' : String(v); }).join('');
-      case 'col': return env.row[n.name];
-      case 'sparkEnd': return null; // dates only matter in DAX; the preview uses the test series directly
-      case 'spark': {
-        // period i = i periods back from the last one; test series are newest first
-        // complete months only: the preview treats the newest test value as a month still running and leaves it out
-        const rows = [], series = env.series || {}, skip = n.complete ? 1 : 0;
-        for (let i = 0; i < n.n; i++) {
-          const m = {}; Object.keys(series).forEach((k) => { const v = series[k][i + skip]; if (v != null && isFinite(v)) m[k] = v; });
-          const v = evalNode(n.expr, { measures: m, vars: {} });
-          if (v != null) rows.push({ Value: i, '@v': v });
-        }
-        return rows;
-      }
-      case 'filt': return evalNode(n.t, env).filter((r) => evalNode(n.c, Object.assign({}, env, { row: r })));
-      case 'aggx': {
-        const rows = evalNode(n.t, env);
-        if (n.f === 'COUNTROWS') return rows.length || null; // COUNTROWS of an empty table is BLANK
-        const vals = rows.map((r) => evalNode(n.e, Object.assign({}, env, { row: r }))).filter((v) => v != null);
-        if (!vals.length) return null;
-        return n.f === 'MINX' ? Math.min.apply(null, vals) : Math.max.apply(null, vals);
-      }
-      case 'concatx': {
-        const rows = evalNode(n.t, env).map((r) => ({ r: r, by: evalNode(n.by, Object.assign({}, env, { row: r })) }));
-        rows.sort((a, b) => b.by - a.by);
-        const out = rows.map((x) => { const v = evalNode(n.e, Object.assign({}, env, { row: x.r })); return v == null ? '' : String(v); });
-        return out.length ? out.join(' ') : null;
-      }
-    }
-    throw new Error('node ' + n.k);
-  }
-
-  // DAX printing
-  const daxStr = (s) => '"' + String(s).replace(/"/g, '""') + '"';
-  const daxNum = (n) => { const s = String(+n.toFixed(6)); return s.startsWith('.') ? '0' + s : s; };
-  // A3-4 (AUD-032): a name holding a control character (\p{Cc}: a tab, a line break) is never written into DAX: the
-  // same test as the report writer's Pbip.hasControl. compile refuses such values with an error first; this throw is
-  // the backstop, so no path can write one
-  const hasControl = (x) => /\p{Cc}/u.test(String(x));
-  const CONTROL_MSG = 'holds a control character (a tab or a line break), which DAX names can\'t hold: rename it in the model';
-  const daxMeasure = (name) => { if (hasControl(name)) throw new Error('The measure name ' + CONTROL_MSG); return '[' + String(name).replace(/\]/g, ']]') + ']'; };
-  function dax(n) {
-    switch (n.k) {
-      case 'num': return n.n < 0 ? '( ' + daxNum(n.n) + ' )' : daxNum(n.n);
-      case 'str': return daxStr(n.s);
-      case 'blank': return 'BLANK ()';
-      case 'ref': return n.name;
-      case 'measure': return daxMeasure(n.name);
-      case 'colval': return 'SELECTEDVALUE ( ' + n.col + ' )';
-      case 'esc': return ESCAPES.reduce((s, e) => 'SUBSTITUTE ( ' + s + ', ' + daxStr(e[0]) + ', ' + daxStr(e[1]) + ' )', dax(n.a) + ' & ""');
-      case 'isblank': return 'ISBLANK ( ' + dax(n.a) + ' )';
-      case 'op': return '( ' + dax(n.a) + ' ' + n.o + ' ' + dax(n.b) + ' )';
-      case 'fn': return n.f + ' ( ' + n.args.map(dax).join(', ') + ' )';
-      case 'if': return 'IF ( ' + dax(n.c) + ', ' + dax(n.a) + ', ' + dax(n.b) + ' )';
-      case 'switch': return 'SWITCH ( TRUE (), ' + n.cases.map(([c, v]) => dax(c) + ', ' + dax(v)).join(', ') + ', ' + dax(n.other) + ' )';
-      case 'fmt': return 'FORMAT ( ' + dax(n.a) + ', ' + daxStr(n.p) + ', "en-US" )';
-      case 'cat': return n.parts.map(dax).join(' & ');
-      case 'col': return '[' + n.name + ']';
-      case 'sparkEnd': {
-        const e = n.mode === 'filter' ? 'MAX ( ' + n.col + ' )' : 'CALCULATE ( MAX ( ' + n.col + ' ), LASTNONBLANK ( ' + n.col + ', ' + dax(n.expr) + ' ) )';
-        // complete months only: a month that is still running ends the line at the month before
-        return n.complete ? '( VAR __e = ' + e + ' RETURN IF ( __e = EOMONTH ( __e, 0 ), __e, EOMONTH ( __e, -1 ) ) )' : e;
-      }
-      case 'spark': {
-        const E = dax(n.end);
-        const win = {
-          month: ['EOMONTH ( ' + E + ', -[Value] - 1 ) + 1', 'EOMONTH ( ' + E + ', -[Value] )'],
-          week: [E + ' - 7 * [Value] - 6', E + ' - 7 * [Value]'],
-          day: [E + ' - [Value]', E + ' - [Value]']
-        }[n.grain];
-        return 'FILTER ( ADDCOLUMNS ( GENERATESERIES ( 0, ' + (n.n - 1) + ' ), "@v", CALCULATE ( ' + dax(n.expr) + ', ' +
-          (n.clear ? 'REMOVEFILTERS ( ' + n.table + ' ), ' : '') + 'DATESBETWEEN ( ' + n.col + ', ' + win[0] + ', ' + win[1] + ' ) ) ), NOT ( ISBLANK ( [@v] ) ) )';
-      }
-      case 'filt': return 'FILTER ( ' + dax(n.t) + ', ' + dax(n.c) + ' )';
-      case 'aggx': return n.f === 'COUNTROWS' ? 'COUNTROWS ( ' + dax(n.t) + ' )' : n.f + ' ( ' + dax(n.t) + ', ' + dax(n.e) + ' )';
-      case 'concatx': return 'CONCATENATEX ( ' + dax(n.t) + ', ' + dax(n.e) + ', " ", ' + dax(n.by) + ', DESC )';
-    }
-    throw new Error('node ' + n.k);
-  }
-
-  // ---------- SVG text safety ----------
-  // Static text is escaped for XML, then for the data URL: % and # would break the image URL.
-  const xmlEsc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&apos;').replace(/"/g, '&quot;');
-  const urlEsc = (s) => String(s).replace(/%/g, '%25').replace(/#/g, '%23');
-  const safe = (s) => urlEsc(xmlEsc(s));
-  const hexOk = (c) => /^#[0-9a-fA-F]{6}$/.test(c || '');
-  const color = (c) => (c === 'none' ? 'none' : hexOk(c) ? urlEsc(c.toLowerCase()) : '%23000000');
-  const attrNum = (n) => { const v = Math.round((+n || 0) * 100) / 100; return String(Object.is(v, -0) ? 0 : v); };
+  // ---------- SVG text safety: svg-escape.js (0.3.2 SP12; the pages load it first): literal text (safe) and
+  // attributes (hexOk, color, attrNum) apart, as before ----------
+  const S = typeof module === 'object' && module.exports ? require('./svg-escape.js') : root.SVGKPIEscape;
+  const safe = S.safe, hexOk = S.hexOk, color = S.color, attrNum = S.attrNum;
 
   // ---------- the report's theme in a design (round 13, the owner's ask: a picture that looks part of its card) ----------
   // Seen in Desktop 2.158 on 6 Oct 2026 ("SC EN light 720", "SC EN dark 1080", "SC AR dark 720"): a design that names
@@ -212,8 +34,7 @@
   // palette is an error (never a silent black). Without a palette nothing changes: the designer's page and its
   // downloads compile as before.
   const mixHex = (a, b, t) => '#' + [1, 3, 5].map((i) => { const x = parseInt(a.slice(i, i + 2), 16), y = parseInt(b.slice(i, i + 2), 16); return Math.round(x + (y - x) * t).toString(16).padStart(2, '0'); }).join('');
-  const lumOf = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4))).reduce((a, x, i) => a + x * [0.2126, 0.7152, 0.0722][i], 0);
-  const contrastOf = (a, b) => { const x = lumOf(a), y = lumOf(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const contrastOf = (typeof module === 'object' && module.exports ? require('./contrast.js') : root.DAContrast).contrast;
   const themePalette = (ui, data) => {
     const u = ui || {}, text = hexOk(u.text) ? u.text : '#1f2937', card = hexOk(u.card) ? u.card : '#ffffff', accent = hexOk(u.accent) ? u.accent : '#0f6cbd';
     const p = { text: text, card: card, background: hexOk(u.background) ? u.background : card, accent: accent, good: hexOk(u.good) ? u.good : '#2e7d32', bad: hexOk(u.bad) ? u.bad : '#c62828', neutral: hexOk(u.neutral) ? u.neutral : mixHex(text, card, 0.5),
@@ -253,9 +74,9 @@
   const VALUE_KINDS = {
     measure: (v) => N.measure(v.measure),
     column: (v) => N.colval(v._col),
-    ratio: (v, R) => N.fn('DIVIDE', [R(v.a), R(v.b)]),
-    diff: (v, R) => N.op('-', R(v.a), R(v.b)),
-    pct: (v, R) => N.fn('DIVIDE', [N.op('-', R(v.a), R(v.b)), R(v.b)])
+    ratio: (v, R) => X.VALUE_NODES.ratio(R(v.a), R(v.b)),
+    diff: (v, R) => X.VALUE_NODES.diff(R(v.a), R(v.b)),
+    pct: (v, R) => X.VALUE_NODES.pct(R(v.a), R(v.b))
   };
   // DAX variable names come from the value labels (_Sales_LY), falling back to the id for non-Latin labels
   const slug = (s) => String(s || '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40);
@@ -303,7 +124,18 @@
   }
 
   // ---------- compile ----------
+  // (0.3.2 FN1F) named steps given one context (ck), called in the old order: valuesStep, helpersStep, layerStep for
+  // each layer (it calls one step per layer kind), svgStep
   function compile(design, opts) {
+    const ck = {};
+    valuesStep(ck, design, opts);
+    helpersStep(ck);
+    (ck.d.layers || []).forEach((el, i) => layerStep(ck, el, i));
+    return svgStep(ck);
+  }
+
+  // the design's sizes, the value names and each value's VAR
+  function valuesStep(ck, design, opts) {
     const d = design || {};
     const tag = !!(opts && opts.tag);  // preview only: wrap each layer in <g data-l='n'> for the editor
     const mirror = !!d.mirror;         // a right-to-left report: the picture is mirrored (shapes flipped, texts moved)
@@ -332,7 +164,12 @@
       vars.push({ name: varName(v.id), node: make(v, R), comment: null });
       valueIds.add(v.id);
     });
+    Object.assign(ck, { d, tag, mirror, W, H, vars, errors, valueIds, varName, R, Z, fromColumn });
+  }
 
+  // the builders the layers share
+  function helpersStep(ck) {
+    const { d, vars, errors, Z } = ck;
     // A value written out in full, with its measures inline, so it can be recalculated per period
     const exprOf = (id, depth) => {
       const v = (d.values || []).find((x) => x.id === id);
@@ -372,8 +209,12 @@
     const parts = [];     // top-level SVG pieces: string or node
     const lit = (arr, s) => { const last = arr[arr.length - 1]; if (typeof last === 'string') arr[arr.length - 1] = last + s; else arr.push(s); };
     const hoist = (el, prop, node, list) => { const name = '_L' + el._i + '_' + prop; vars.push({ name: name, node: node, comment: list }); return N.ref(name); };
+    Object.assign(ck, { exprOf, dateCol, scale, cond, rules, isRatio, pctFits, parts, lit, hoist });
+  }
 
-    (d.layers || []).forEach((el, i) => {
+  // one layer: its attribute helpers, its kind's step, then the mirror, the editor's tag and "show if"
+  function layerStep(ck, el, i) {
+    const { mirror, W, tag, errors, scale, rules, cond, parts, lit, hoist } = ck;
       el = Object.assign({}, el, { _i: i + 1 });
       const b = el.bind || {};
       const out = [];
@@ -394,27 +235,64 @@
         else if (el.opacity != null && +el.opacity < 1) lit(out, " opacity='" + attrNum(el.opacity) + "'");
       };
 
+      const ly = { el, b, out, numA, colA, common, note };
+
       switch (el.type) {
-        case 'rect':
+        case 'rect': rectLayer(ck, ly); break;
+        case 'circle': circleLayer(ck, ly); break;
+        case 'line': lineLayer(ck, ly); break;
+        case 'text': textLayer(ck, ly); break;
+        case 'ring': ringLayer(ck, ly); break;
+        case 'arrow': arrowLayer(ck, ly); break;
+        case 'spark': if (sparkLayer(ck, ly) === false) return; break;
+        default:
+          errors.push('Unknown layer type: ' + el.type);
+          return;
+      }
+      // a mirrored design flips every shape around the picture's vertical middle (texts are handled above)
+      if (mirror && el.type !== 'text') { out.unshift("<g transform='translate(" + W + " 0) scale(-1 1)'>"); if (typeof out[1] === 'string') { out[1] = out[0] + out[1]; out.shift(); } lit(out, '</g>'); }
+      // The editor wraps each layer (outside any "show if") so hidden layers stay selectable
+      if (tag) lit(parts, "<g data-l='" + (el._i - 1) + "'>");
+      // Show if: the whole layer becomes "" when the condition is false
+      if (b.show && b.show.v) {
+        const shown = hoist(el, 'show', cond(b.show), note());
+        const inner = out.map((p) => (typeof p === 'string' ? N.str(p) : p));
+        parts.push(N.iff(shown, N.cat(inner), N.str('')));
+      } else out.forEach((p) => (typeof p === 'string' ? lit(parts, p) : parts.push(p)));
+      if (tag) lit(parts, '</g>');
+  }
+
+  // a rect
+  function rectLayer(ck, ly) {
+    const { el, out, numA, colA, common } = ly, { lit } = ck;
           lit(out, '<rect');
           numA('x', 'x', el.x); numA('y', 'y', el.y); numA('width', 'w', el.w); numA('height', 'h', el.h);
           if (+el.rx) lit(out, " rx='" + attrNum(el.rx) + "'");
           colA('fill', 'fill', el.fill); common(); lit(out, '/>');
-          break;
-        case 'circle':
+  }
+
+  // a circle
+  function circleLayer(ck, ly) {
+    const { out, el, numA, colA, common } = ly, { lit } = ck;
           lit(out, '<circle');
           numA('cx', 'cx', el.cx); numA('cy', 'cy', el.cy); numA('r', 'r', el.r);
           colA('fill', 'fill', el.fill); common(); lit(out, '/>');
-          break;
-        case 'line':
+  }
+
+  // a line
+  function lineLayer(ck, ly) {
+    const { el, out, numA, colA } = ly, { lit } = ck;
           lit(out, '<line');
           numA('x1', 'x1', el.x1); numA('y1', 'y1', el.y1); numA('x2', 'x2', el.x2); numA('y2', 'y2', el.y2);
           colA('stroke', 'stroke', el.stroke || '#000000');
           lit(out, " stroke-width='" + attrNum(el.sw || 1) + "'" + (el.cap === 'round' ? " stroke-linecap='round'" : ''));
           if (el.opacity != null && +el.opacity < 1) lit(out, " opacity='" + attrNum(el.opacity) + "'");
           lit(out, '/>');
-          break;
-        case 'text': {
+  }
+
+  // a text: a value with its number format, or literal text
+  function textLayer(ck, ly) {
+    const { el, b, out, numA, colA, common, note } = ly, { mirror, W, R, Z, fromColumn, isRatio, pctFits, lit, hoist } = ck;
           // Round 14, the owner's ask (6 Oct 2026; a card read 33.8% and its ring's label "0"): a text that shows a ratio
           // (a ratio or % value, or a measure marked percent: its format has a %, or the caller's format rule says so) in a
           // number format shows it as a percent: "0.0%", or "0%" where "100.0%" does not fit inside the ring around it
@@ -438,9 +316,11 @@
             out.push(r);
           } else lit(out, safe(el.text || ''));
           lit(out, '</text>');
-          break;
-        }
-        case 'ring': {
+  }
+
+  // a ring: its track and its arc
+  function ringLayer(ck, ly) {
+    const { el, b, out, colA, note } = ly, { scale, lit, hoist } = ck;
           const r = Math.max(1, +el.r || 20), C = 2 * Math.PI * r, cx = attrNum(el.cx), cy = attrNum(el.cy), sw = attrNum(el.sw || 6);
           lit(out, "<circle cx='" + cx + "' cy='" + cy + "' r='" + attrNum(r) + "' fill='none' stroke='" + color(el.track || '#1e293b') + "' stroke-width='" + sw + "'/>");
           lit(out, "<circle cx='" + cx + "' cy='" + cy + "' r='" + attrNum(r) + "' fill='none'");
@@ -453,9 +333,11 @@
             lit(out, " stroke-opacity='"); out.push(N.iff(N.op('>', p, N.num(0)), N.str('1'), N.str('0'))); lit(out, "'");
           } else lit(out, " stroke-dasharray='" + attrNum(C * Math.max(0, Math.min(1, +el.p || 0))) + ' ' + attrNum(C) + "'");
           lit(out, '/>');
-          break;
-        }
-        case 'arrow': {
+  }
+
+  // an arrow
+  function arrowLayer(ck, ly) {
+    const { el, b, out, note } = ly, { Z, lit, hoist } = ck;
           // Triangle pointing up, down, or a flat bar, chosen by the sign of the value
           const x = +el.x || 0, y = +el.y || 0, s = Math.max(4, +el.size || 16), h = s / 2;
           const P = (pts) => 'M' + pts.map((p) => attrNum(p[0]) + ' ' + attrNum(p[1])).join(' L') + ' Z';
@@ -474,13 +356,15 @@
           lit(out, "'");
           if (el.opacity != null && +el.opacity < 1) lit(out, " opacity='" + attrNum(el.opacity) + "'");
           lit(out, '/>');
-          break;
-        }
-        case 'spark': {
+  }
+
+  // a sparkline; false: the layer is left out (its error said), as the old early return
+  function sparkLayer(ck, ly) {
+    const { el, b, out, colA, note } = ly, { d, errors, valueIds, dateCol, exprOf, lit, hoist } = ck;
           // Line over the last n periods: one CALCULATE per period, scaled between the lowest and highest value
           const sv = b.series && b.series.v;
-          if (!sv || !valueIds.has(sv)) { errors.push('Sparkline "' + (el.name || 'spark') + '" needs a value'); return; }
-          if (!dateCol) { errors.push("Date column must look like 'Date'[Date]"); return; }
+          if (!sv || !valueIds.has(sv)) { errors.push('Sparkline "' + (el.name || 'spark') + '" needs a value'); return false; }
+          if (!dateCol) { errors.push("Date column must look like 'Date'[Date]"); return false; }
           const n = Math.max(2, Math.min(60, Math.round(+el.n || 12))), grain = ['month', 'week', 'day'].includes(el.grain) ? el.grain : 'month';
           const x = +el.x || 0, y = +el.y || 0, w = Math.max(1, +el.w || 100), h = Math.max(1, +el.h || 30), step = w / (n - 1);
           const expr = exprOf(sv), complete = grain === 'month' && !!el.complete;
@@ -510,25 +394,11 @@
             out.push(N.iff(N.op('>', count, N.num(0)), N.cat([N.str("<circle cx='"), F(xOf(i0)), N.str("' cy='"), F(yOf(v0)),
               N.str("' r='" + attrNum(el.dotR || 3) + "' fill='" + color(el.dotColor || el.stroke || '#00d4ff') + "'/>")]), N.str('')));
           }
-          break;
-        }
-        default:
-          errors.push('Unknown layer type: ' + el.type);
-          return;
-      }
-      // a mirrored design flips every shape around the picture's vertical middle (texts are handled above)
-      if (mirror && el.type !== 'text') { out.unshift("<g transform='translate(" + W + " 0) scale(-1 1)'>"); if (typeof out[1] === 'string') { out[1] = out[0] + out[1]; out.shift(); } lit(out, '</g>'); }
-      // The editor wraps each layer (outside any "show if") so hidden layers stay selectable
-      if (tag) lit(parts, "<g data-l='" + (el._i - 1) + "'>");
-      // Show if: the whole layer becomes "" when the condition is false
-      if (b.show && b.show.v) {
-        const shown = hoist(el, 'show', cond(b.show), note());
-        const inner = out.map((p) => (typeof p === 'string' ? N.str(p) : p));
-        parts.push(N.iff(shown, N.cat(inner), N.str('')));
-      } else out.forEach((p) => (typeof p === 'string' ? lit(parts, p) : parts.push(p)));
-      if (tag) lit(parts, '</g>');
-    });
+  }
 
+  // the picture's frame, the pieces merged, hideIf and the answer
+  function svgStep(ck) {
+    const { d, W, H, vars, errors, valueIds, varName, parts, lit } = ck;
     const bg = hexOk(d.bg) ? "<rect width='" + W + "' height='" + H + "' rx='" + attrNum(d.radius || 0) + "' fill='" + color(d.bg) + "'/>" : '';
     const open = "<svg xmlns='http://www.w3.org/2000/svg' width='" + W + "' height='" + H + "' viewBox='0 0 " + W + ' ' + H + "'>" + bg;
     const svgParts = [open].concat(parts).concat(['</svg>']);

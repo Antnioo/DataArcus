@@ -171,7 +171,7 @@ window.reportReadyArabicTranslations = {
     },
     "exploreMore": {
       "title": "Make the Arabic pages from your English ones",
-      "subtitle": "The DataArcus agent reads your report on your computer and writes its Arabic pages through your approval. It never sends your data values to the AI.",
+      "subtitle": "The DataArcus agent reads your report on your computer and writes its Arabic pages through your approval. It never sends values from your tables, filters, slicers or bookmarks to the AI app.",
       "button1": "See the DataArcus agent",
       "button2": "How to install it"
     },
@@ -352,7 +352,7 @@ window.reportReadyArabicTranslations = {
     },
     "exploreMore": {
       "title": "اكتب الصفحات العربية من صفحاتك الإنجليزية",
-      "subtitle": "يقرأ وكيل DataArcus تقريرك على جهازك ويكتب صفحاته العربية بموافقتك. ولا يرسل أي قيمة من بياناتك إلى الذكاء الاصطناعي.",
+      "subtitle": "يقرأ وكيل DataArcus تقريرك على جهازك ويكتب صفحاته العربية بموافقتك. ولا يرسل إلى تطبيق الذكاء الاصطناعي أي قيم من جداولك أو الفلاتر أو المقسمات (Slicers) أو الإشارات المرجعية.",
       "button1": "تعرّف على وكيل DataArcus",
       "button2": "طريقة تثبيته"
     },

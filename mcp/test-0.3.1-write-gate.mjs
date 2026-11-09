@@ -69,6 +69,7 @@ export function writesIn(src) {
 // ---- the list: every write the server and its library make, and why each is safe ----
 const PLAN = 'behind approve_plan\'s gate: runs only inside a tool\'s write after Plans.gate (or files.mjs withPlan / planWrites) took an approved plan id';
 const TMP = 'the temporary check copy: a folder of its own in the OS temp folder (fs.mkdtempSync), removed when the check ends; never the working folder';
+const SHORTCUT = 'the approval page\'s shortcut (0.3.2 WN1, F03): written only when the page was not opened, into a folder of its own in the OS temp folder (fs.mkdtempSync, mode 700, the file 600, \'wx\'), removed when the plan is decided, its window closed or the server ends; never the working folder';
 const TESTS = 'tests only: set by a DATAARCUS_TEST_* variable the server reads at start (a test server), never by a tool\'s input';
 const LIST = {
   'lib/write-io.mjs': {
@@ -128,7 +129,7 @@ const LIST = {
   'lib/redesign.mjs': { 'writeTree()': { n: 1, why: `writeRedesign: the copy "<name> redesigned", new files next to the original: ${PLAN}` } },
   'lib/sample-project.mjs': { 'writeTree()': { n: 1, why: `writeSample: the sample project, new files in a new folder of the working folder (writeTree refuses a name that is taken): ${PLAN}` } },
   'lib/gulf-calendar.mjs': { 'writeScript()': { n: 1, why: `the writer add_gulf_calendar passes in: its plannedWriter (the model checked again, then fix-scripts.mjs's writePlannedScript: the name the plan showed, or nothing; AF2), or scriptNameNow, which writes nothing: ${PLAN}` } },
-  'lib/approval-window.mjs': { child_process: { n: 1, why: 'spawn opens the approval page in the person\'s browser (or the tests\' browser): it starts the browser with a local URL, never a command built from a tool\'s input or a report\'s text' } },
+  'lib/approval-window.mjs': { 'fs.mkdtempSync': { n: 1, why: SHORTCUT }, 'fs.chmodSync': { n: 1, why: SHORTCUT }, 'fs.writeFileSync': { n: 1, why: SHORTCUT }, 'fs.rmSync': { n: 1, why: SHORTCUT }, child_process: { n: 1, why: 'spawn opens the approval page in the person\'s browser (or the tests\' browser): it starts the browser with a local URL (on Windows, when the page was not opened, explorer.exe with the same URL and then with the shortcut\'s temp folder: WN1, F03), never a command built from a tool\'s input or a report\'s text' } },
   'tools/add_gulf_calendar.mjs': {
     'writePlannedScript()': { n: 1, why: `plannedWriter: the full calendar's and the Arabic calendar columns' script, inside withPlan, after the model is read again, under the name the approved plan showed or nothing (AF2): ${PLAN}` },
     'addGulfCalendar()': { n: 2, why: `the write is inside add_gulf_calendar's withPlan; the call without a plan gets scriptNameNow, which writes nothing: ${PLAN}` }
@@ -174,7 +175,7 @@ chk(() => Object.values(LIST).every((calls) => Object.values(calls).every((l) =>
 
 // ---- (0.3.1 SQ14, S1-S3) Microsoft's validator runs in the server's process: its modules are read too ----
 // DataArcus loads only the package's own entry (check-report.mjs and artifact.mjs: runReportValidation and
-// getMetadataProvider; visual-meaning.mjs: getMetadataProvider). Read on 26 Oct with the version mcp/package.json pins:
+// getMetadataProvider; visual-capabilities.mjs: getMetadataProvider). Read on 26 Oct with the version mcp/package.json pins:
 // the entry and the chunk it imports take from fs only existsSync, readFileSync, readdirSync, statSync and realpathSync;
 // they write no file, temporary or not. The temporary copy the validator checks is artifact.mjs's own (TMP, above).
 // The package's cli.js and preview/ do write files (its command line's output), and DataArcus never loads them (W6).

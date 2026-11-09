@@ -26,6 +26,8 @@
   const DRILL_ROLES = ['Category', 'Rows'];
   const lit = (v) => ({ expr: { Literal: { Value: v } } });
   const litOf = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
+  // a literal's text, number and true or false, a column's set width: pbir-values.js, their one home (0.3.2 DD1B)
+  const PV = typeof module !== 'undefined' && module.exports ? require('./pbir-values.js') : root.DAPbirValues;
   // Power BI's QueryAggregateFunction: Avg 1, Min 3
   const AGG = { Avg: 1, Min: 3 }, AGG_WORD = { Avg: 'Average of', Min: 'First' };
   // (0.3.1 NC2) the heat shading's ends: a pale blue to a mid blue, both light enough for dark text
@@ -36,12 +38,12 @@
   // vendor names its flags as it likes; these are the common words (labels, regression, threshold, legend).
   function formatFacts(json) {
     const objs = ((json && json.visual) || {}).objects || {}, out = { valueLabels: false, categoryLabels: false, trend: false, thresholds: false, legend: null };
-    const isTrue = (p) => litOf(p) === true || litOf(p) === 'true';
     Object.entries(objs).forEach(([name, entries]) => list(entries).forEach((e) => {
       const props = (e && e.properties) || {}, n = name.toLowerCase();
       Object.entries(props).forEach(([k, v]) => {
         const key = k.toLowerCase();
-        if (!isTrue(v)) { if (n === 'legend' && key === 'show' && (litOf(v) === false || litOf(v) === 'false')) out.legend = false; return; }
+        const on = PV.litBool(v);
+        if (on !== true) { if (n === 'legend' && key === 'show' && on === false) out.legend = false; return; }
         if (n === 'legend' && key === 'show') out.legend = true;
         else if (/valuelabelsenabled|^showvaluelabels/.test(key) || (/valuelabel|^labels$|^datalabels$/.test(n) && /^show\d*$/.test(key))) out.valueLabels = true;
         else if (/usecategoryaslabel|^labelenabled$/.test(key) || (/categorylabel|nodelabel/.test(n) && /^show$/.test(key))) out.categoryLabels = true;

@@ -10,6 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { visitor } from './lib.mjs';
+import { generatorSource } from '../../mcp/test-source.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, headerAndRail, headerProblems, tooltipProblems, tooltipPageProblems, tableProblems, rowLabelProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from './report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -139,7 +140,7 @@ export default async function ({ browser, url }) {
       const covers = line && vs.some((v) => v.position.x <= line.x + 1 && v.position.x + v.position.width >= line.x + line.w - 1 && Math.abs(v.position.y - line.y) <= 60);
       check(line && !vs.some((v) => v.visual.visualType === 'lineChart') && covers && (r.leftOut || []).some((x) => x.kind === 'line' && x.gave), `the website's page gives the line chart's room to its neighbour: ${JSON.stringify(vs.map((v) => [v.visual.visualType, v.position.x, v.position.y, v.position.width]))} ${JSON.stringify(r.leftOut)}`);
     }
-    const tg = fs.readFileSync(path.join(HERE, '../../assets/js/theme-generator.js'), 'utf8');
+    const tg = generatorSource();   // (0.3.2 SP31: the page and its modules)
     check(/relationships: e\.relationships/.test(tg) && /relsOfTmsl|relationships:/.test(fs.readFileSync(path.join(HERE, '../../assets/js/pbip-bind.js'), 'utf8')), 'the Theme Generator must pass the model\'s relationships to the picker');
   }
 

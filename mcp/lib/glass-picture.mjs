@@ -9,14 +9,14 @@
 import zlib from 'node:zlib';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
+import { lru } from './small-cache.mjs';
 
 const require = createRequire(import.meta.url);
 const E = require('../../assets/js/design-engine.js');
+// (0.3.2 DD2P) the PNG chunk, the big-endian four bytes and the CRC-32: png-bytes.js; the small cache: small-cache.mjs
+const { be32, u32, pngChunk } = require('../../assets/js/png-bytes.js');
 
-const u32 = (b, i) => ((b[i] << 24) | (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3]) >>> 0;
-// the last few results, by the bytes' hash (the oldest out first)
-const lru = (max) => { const m = new Map(); return { get: (k) => { if (!m.has(k)) return undefined; const v = m.get(k); m.delete(k); m.set(k, v); return v; },
-  set: (k, v) => { m.delete(k); if (m.size >= max) m.delete(m.keys().next().value); m.set(k, v); } }; };
+// the last few results, by the bytes' hash (the oldest out first): small-cache.mjs lru
 const keyOf = (b) => crypto.createHash('sha1').update(b).digest('hex') + ':' + b.length;
 const pixelsKept = lru(4), previewsKept = lru(16), flipsKept = lru(8);   // (a 1920 x 1080 picture is 6.2 MB decoded)
 
@@ -56,8 +56,6 @@ function decode(b) {
 // A PNG of rgb (w x h, RGB 8 bits) in the engine's marked layout (encodePng with GLASS_MARK: signature, IHDR, the tEXt
 // "Comment\0<GLASS_MARK>" chunk right after the header, as isGlassPng reads it, IDAT, IEND), deflated by node:zlib; every
 // row filtered Up (the row above taken away: one pass, the soft picture's rows close to each other)
-const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
-const crc32 = (b) => { let c = 0xffffffff; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
 function encode(w, h, rgb) {
   const row = w * 3, raw = new Uint8Array(h * (row + 1));
   for (let y = 0; y < h; y++) {
@@ -65,10 +63,8 @@ function encode(w, h, rgb) {
     raw[q - 1] = 2;
     if (!y) raw.set(rgb.subarray(0, row), q); else for (let x = 0; x < row; x++) raw[q + x] = (rgb[p + x] - rgb[u + x]) & 255;
   }
-  const be = (v) => [v >>> 24, (v >>> 16) & 255, (v >>> 8) & 255, v & 255];
-  const chunk = (type, body) => { const c = Buffer.alloc(12 + body.length); c.set(be(body.length)); c.write(type, 4, 'latin1'); c.set(body, 8); c.set(be(crc32(c.subarray(4, 8 + body.length))), 8 + body.length); return c; };
-  return new Uint8Array(Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', Buffer.from(be(w).concat(be(h), [8, 2, 0, 0, 0]))),
-    chunk('tEXt', Buffer.from('Comment\0' + E.GLASS_MARK, 'latin1')), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]));
+  return new Uint8Array(Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), pngChunk('IHDR', Uint8Array.from(be32(w).concat(be32(h), [8, 2, 0, 0, 0]))),
+    pngChunk('tEXt', Buffer.from('Comment\0' + E.GLASS_MARK, 'latin1')), pngChunk('IDAT', zlib.deflateSync(raw)), pngChunk('IEND', new Uint8Array(0))]));
 }
 
 // A glass picture's pixels: { w, h, rgb } (rows top to bottom; the caller's own copy), or null for any other bytes

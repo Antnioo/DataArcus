@@ -4,6 +4,7 @@
 //   serverSource()  mcp/server.mjs, then each tool's module in the order server.mjs registers them (tools/list's order),
 //                   then the lib/ modules made of what server.mjs shared between its tools
 //   twinSource()    mcp/lib/arabic-twin.mjs (what others import), then its steps in the order they run
+//   generatorSource()  assets/js/theme-generator.js, then the modules it mounts (the website's Theme Generator)
 // A file that is not there yet is left out (the lists hold the files the split makes).
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,14 +16,24 @@ const there = (f) => fs.existsSync(path.join(HERE, f));
 
 // what server.mjs shared between its tools, moved to lib/ (in the order it stood in server.mjs)
 export const SERVER_LIBS = ['lib/tool-limits.mjs', 'lib/tool-answer.mjs', 'lib/tool-inputs.mjs', 'lib/plan-keys.mjs', 'lib/fix-scripts.mjs', 'lib/hidden-names.mjs',
-  'lib/report-fields.mjs', 'lib/report-inputs.mjs', 'lib/report-said.mjs', 'lib/report-run.mjs'];
+  'lib/report-fields.mjs', 'lib/report-inputs.mjs', 'lib/report-said.mjs', 'lib/report-run.mjs', 'lib/report-result.mjs', 'lib/report-bind.mjs', 'lib/report-build.mjs'];
 // the tools' modules, in the order server.mjs imports (and registers) them
 export const toolFiles = () => [...read('server.mjs').matchAll(/^import \{ register as \w+ \} from '\.\/(tools\/[a-z_]+\.mjs)';/gm)].map((m) => m[1]);
 export const serverFiles = () => ['server.mjs'].concat(toolFiles(), SERVER_LIBS.filter(there));
 export const serverSource = () => serverFiles().map(read).join('\n');
 
 // the twin's steps (lib/arabic-twin.mjs re-exports what they export)
-export const TWIN_STEPS = ['lib/twin-read.mjs', 'lib/twin-visuals.mjs', 'lib/twin-texts.mjs', 'lib/twin-model.mjs', 'lib/twin-copy.mjs', 'lib/twin-pages.mjs',
+export const TWIN_STEPS = ['lib/twin-read.mjs', 'lib/twin-visuals.mjs', 'lib/twin-texts.mjs', 'lib/twin-model.mjs', 'lib/twin-copy.mjs', 'lib/twin-text-fit.mjs', 'lib/twin-geometry.mjs', 'lib/twin-measures.mjs', 'lib/twin-pages.mjs',
   'lib/twin-plan.mjs', 'lib/twin-preview.mjs', 'lib/twin-write.mjs'];
 export const twinFiles = () => ['lib/arabic-twin.mjs'].concat(TWIN_STEPS.filter(there));
 export const twinSource = () => twinFiles().map(read).join('\n');
+
+// (0.3.2 SP28) the report writer's page: assets/js/pbip-page.js (the page assembly), then the visuals' builders it calls
+export const WRITER_PAGE = ['../assets/js/pbip-page.js', '../assets/js/pbip-visuals.js', '../assets/js/pbip-visuals-charts.js', '../assets/js/pbip-visuals-tables.js'];
+export const writerPageFiles = () => WRITER_PAGE.filter(there);
+export const writerPageSource = () => writerPageFiles().map(read).join('\n');
+
+// the website's Theme Generator (0.3.2 SP31, the split of theme-generator.js): the page's orchestration and every script
+// loader with its ?v= stamp, then its saved design, its controls and layout step, its downloads
+export const GENERATOR_FILES = ['../assets/js/theme-generator.js', '../assets/js/theme-state-ui.js', '../assets/js/theme-layout-ui.js', '../assets/js/theme-download-ui.js'];
+export const generatorSource = () => GENERATOR_FILES.filter(there).map(read).join('\n');

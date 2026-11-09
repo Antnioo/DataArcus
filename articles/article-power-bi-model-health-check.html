@@ -67,8 +67,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <link href="../assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
-  <link href="../assets/css/style.min.css?v=20261018t" rel="stylesheet">
+  <link href="../assets/css/vendor/bootstrap.min.css?v=d85327d99c7a" rel="stylesheet">
+  <link href="../assets/css/style.min.css?v=29c11a1ea13b" rel="stylesheet">
 
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
@@ -139,7 +139,7 @@
 
             <article class="article-body">
               <p data-i18n-html="content.p1">Power BI models rarely break in one day. They grow. A measure is copied to test an idea, a column is imported just in case, a page is duplicated for a meeting. Nobody deletes anything, because nobody knows what is safe to delete. A year later the model is slow to refresh, hard to change and full of things no one can explain.</p>
-              <p data-i18n-html="content.p2">So we built a free <a href='../tools/power-bi-model-health-check.html' class='text-accent'>Power BI Model Health Check</a>. To show what it finds on a model anyone can download and check for themselves, we ran it on one of Microsoft's own public samples: the <a href='https://github.com/microsoft/powerbi-desktop-samples/tree/main/powerbi-service-samples' class='text-accent' target='_blank' rel='noopener'>COVID-19 US Tracking Sample</a>, published under the MIT licence. It scored <strong>85 out of 100</strong> (a DataArcus score for this check, not a Microsoft grade). Here is what it found, and what each finding means for any model.</p>
+              <p data-i18n-html="content.p2">So we made a free <a href='../tools/power-bi-model-health-check.html' class='text-accent'>Power BI Model Health Check</a>. To show what it finds on a model that anyone can download and check for themselves, we ran it on one of Microsoft's public samples: the <a href='https://github.com/microsoft/powerbi-desktop-samples/tree/main/powerbi-service-samples' class='text-accent' target='_blank' rel='noopener'>COVID-19 US Tracking Sample</a>, published under the MIT licence. It scored <strong>85 out of 100</strong> (a DataArcus score for this check, not a Microsoft grade). Here is what it found, and what each finding means for any model.</p>
               <h2 class="mt-5 mb-3" data-i18n="content.h1">The model we checked</h2>
               <p data-i18n-html="content.p3"><strong>4 tables, 16 columns, 10 measures and 2 relationships</strong>, and a report with <strong>2 pages and 67 visuals</strong>. A small, published model, and it still has findings: every model collects them as it changes. The whole check took <strong>well under a second</strong>. <em>Updated 16 October 2026: the check now follows Microsoft's documented exceptions, so it no longer counts two calculated columns that need DAX or four text measures without a number format. The score went from 84 to 85.</em> <a href='article-power-bi-best-practice-exceptions.html' class='text-accent'>Why, rule by rule</a>.</p>
               <ul>
@@ -266,12 +266,18 @@ CALCULATE ( [Sales], KEEPFILTERS ( Sales[Channel] = &quot;Online&quot; ) )</code
       </div>
   </footer>
 
-  <script src="../assets/js/translations/common.min.js?v=20261025f" defer></script>
-  <script src="../assets/js/translations/article-power-bi-model-health-check.min.js?v=20261019a040" defer></script>
-  <script src="../assets/js/lang-manager.min.js?v=20261025a" defer></script>
+  <script src="../assets/js/translations/common.min.js?v=434124bdf3f2" defer></script>
+  <script src="../assets/js/translations/article-power-bi-model-health-check.min.js?v=ccb96d964606" defer></script>
+  <script src="../assets/js/locale-routes.min.js?v=ce1187fd5cbb" defer></script>
+  <script src="../assets/js/locale-catalog.min.js?v=1464f13d8c0b" defer></script>
+  <script src="../assets/js/locale-dom.min.js?v=faf294f00eb2" defer></script>
+  <script src="../assets/js/lang-manager.min.js?v=b4bd7c2d5f43" defer></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>
-  <script src="../assets/js/main.min.js?v=20261022d" defer></script>
+  <script src="../assets/js/site-navigation.min.js?v=73f198dd3eb3" defer></script>
+  <script src="../assets/js/site-forms.min.js?v=f7223d5bc9a2" defer></script>
+  <script src="../assets/js/site-analytics.min.js?v=9631075fe8c3" defer></script>
+  <script src="../assets/js/main.min.js?v=3fefca81e4a0" defer></script>
 </body>
 </html>

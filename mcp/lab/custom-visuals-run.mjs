@@ -37,12 +37,12 @@ export async function run(server, work, opts) {
     const pl = must(await call('plan_layout', { path: 'lab', customVisualsFrom: from, sharedAxes: SHARED_AXES }), 'plan_layout customVisualsFrom');
     out.plan = pl.customVisuals;
     must(await approve(pl.plan.planId), 'approve_plan (native copy)');
-    out.native = must(await call('create_report', { path: 'lab', planId: pl.plan.planId, customVisualsFrom: from, sharedAxes: SHARED_AXES }), 'create_report (native copy)');
+    out.native = must(await call('create_report', { path: 'lab', planId: pl.plan.planId }), 'create_report (native copy)');
     out.validator.native = validate(path.join(LAB, NAME + ' native.Report')).json;
     const rd = must(await call('plan_layout', { path: 'lab', redesignFrom: 'lab/' + NAME + ' native.Report' }), 'plan_layout redesignFrom');
     out.redesign = { counts: rd.redesign.counts, pages: rd.redesign.pages };
     must(await approve(rd.plan.planId), 'approve_plan (redesign)');
-    out.redesigned = must(await call('create_report', { path: 'lab', planId: rd.plan.planId, redesignFrom: 'lab/' + NAME + ' native.Report' }), 'create_report (redesign)');
+    out.redesigned = must(await call('create_report', { path: 'lab', planId: rd.plan.planId }), 'create_report (redesign)');
     out.validator.redesigned = validate(path.join(LAB, path.basename(String(out.redesigned.report)))).json;
   } finally { await client.close().catch(() => {}); }
   fs.writeFileSync(path.join(W, 'nc1-results.json'), JSON.stringify({ out, log }, null, 2));

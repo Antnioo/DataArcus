@@ -101,14 +101,15 @@ for (const f of files) {
   ok(!bad.length, `no regex lookbehind in site scripts (Safari before 16.4 fails on the whole file): ${bad.join(', ')}`);
 }
 // Typed text never reaches GA4 when it looks like an email address or a phone number (Google's terms forbid personal data)
-const main = fs.readFileSync(path.join(ROOT, 'assets/js/main.js'), 'utf8');
-ok(/track\('search', \{ search_term: safeTerm\(/.test(main), "main.js: the blog search must send safeTerm(...), not the raw text");
+// (0.3.2 SP35) the analytics adapter, once main.js's sections 7 and 9
+const main = fs.readFileSync(path.join(ROOT, 'assets/js/site-analytics.js'), 'utf8');
+ok(/track\('search', \{ search_term: safeTerm\(/.test(main), "site-analytics.js: the blog search must send safeTerm(...), not the raw text");
 // AUD-031 (round 20): a search term with 7 or more digits in all is redacted (a Gulf phone number is 8 digits, "5512 3456"),
 // unless every number in it is a year (19xx or 20xx), so "2024 2025" is kept; the "@" rule and the 50-character cut stay
 {
   const src = (main.match(/const safeTerm = ([^\r\n]+);\r?\n/) || [])[1];   // (a Windows checkout has CRLF line ends)
   let safe = null; try { safe = src && Function('return (' + src + ')')(); } catch (e) { safe = null; }
-  ok(typeof safe === 'function', 'main.js: safeTerm could not be read as one arrow function on one line');
+  ok(typeof safe === 'function', 'site-analytics.js: safeTerm could not be read as one arrow function on one line');
   if (typeof safe === 'function') {
     for (const q of ['5512 3456', '9876 5432', '+974 5512 3456', '050 123 4567', 'me@example.com', '1234567'])
       ok(safe(q) === '(redacted)', `safeTerm("${q}") must be "(redacted)", got "${safe(q)}"`);
@@ -165,7 +166,7 @@ ok(/track\('search', \{ search_term: safeTerm\(/.test(main), "main.js: the blog 
 }
 
 // European visitors who click Accept: Clarity gets its consent signal (it is enforced for the EEA, UK and Switzerland)
-ok(/clarity\('consentv2', \{ ad_Storage: 'denied', analytics_Storage: 'granted' \}\)/.test(main), "main.js: an explicit Accept must send Clarity consentv2 (analytics granted, ads denied)");
+ok(/clarity\('consentv2', \{ ad_Storage: 'denied', analytics_Storage: 'granted' \}\)/.test(main), "site-analytics.js: an explicit Accept must send Clarity consentv2 (analytics granted, ads denied)");
 
 // Short links: one tagging rule (ANALYTICS.md section 7) so every visit lands in a named channel, never Unassigned
 const MEDIUMS = ['social', 'paid', 'email', 'video', 'referral'];   // GA4 default channel rules recognise all five
@@ -218,13 +219,13 @@ for (const [name, t] of Object.entries(tags)) {
 
 // Y-02 (an outside review, the owner's yes, 8 Oct 2026): outbound_click sent the whole address to GA4 (the query string,
 // the fragment, any user:password part). link_url is the host without www. and the path only, at most 100 characters,
-// made by main.js's outboundUrl, run here on a made-up address
+// made by site-analytics.js's outboundUrl, run here on a made-up address
 {
-  const main = fs.readFileSync(path.join(ROOT, 'assets/js/main.js'), 'utf8');
+  const main = fs.readFileSync(path.join(ROOT, 'assets/js/site-analytics.js'), 'utf8');
   const fn = main.match(/const outboundUrl = (\(url\) => [^;]+);/);
-  ok(!!fn, 'main.js: no outboundUrl(url) helper for outbound_click');
-  ok(!/link_url:\s*url\.href/.test(main), 'main.js: outbound_click sends url.href (the query string, fragment and credentials)');
-  ok(/'outbound_click', \{[^}]{0,200}link_url:\s*outboundUrl\(url\)/.test(main), 'main.js: outbound_click must send link_url: outboundUrl(url)');
+  ok(!!fn, 'site-analytics.js: no outboundUrl(url) helper for outbound_click');
+  ok(!/link_url:\s*url\.href/.test(main), 'site-analytics.js: outbound_click sends url.href (the query string, fragment and credentials)');
+  ok(/'outbound_click', \{[^}]{0,200}link_url:\s*outboundUrl\(url\)/.test(main), 'site-analytics.js: outbound_click must send link_url: outboundUrl(url)');
   if (fn) {
     const f = new Function('return ' + fn[1])(), u = new URL('https://user:pw@www.example.com/a/b?email=x@y.com&t=123#frag'), got = f(u);
     ok(got === 'example.com/a/b', `outboundUrl gives "${got}", want "example.com/a/b"`);
@@ -235,9 +236,11 @@ for (const [name, t] of Object.entries(tags)) {
 
 // The beta page (owner 2026-10-08): its request form sends beta_request, never the home form's generate_lead
 {
-  const main = fs.readFileSync(path.join(ROOT, 'assets/js/main.js'), 'utf8');
-  ok(/handleFormSubmit\(document\.getElementById\('beta-form'\)/.test(main), 'main.js: the beta form is not sent by the form handler');
-  ok(/formId === 'beta-form'\) track\('beta_request', \{ form_id: formId \}\)/.test(main), "main.js: a sent beta form must track beta_request");
+  const main = fs.readFileSync(path.join(ROOT, 'assets/js/site-analytics.js'), 'utf8');
+  // (0.3.2 SP35) the form handler is site-forms.js
+  const forms = fs.readFileSync(path.join(ROOT, 'assets/js/site-forms.js'), 'utf8');
+  ok(/handleFormSubmit\(document\.getElementById\('beta-form'\)/.test(forms), 'site-forms.js: the beta form is not sent by the form handler');
+  ok(/formId === 'beta-form'\) track\('beta_request', \{ form_id: formId \}\)/.test(main), "site-analytics.js: a sent beta form must track beta_request");
   const page = fs.readFileSync(path.join(ROOT, 'power-bi-mcp/index.html'), 'utf8');
   ok(/<form id="beta-form" action="https:\/\/api\.web3forms\.com\/submit"/.test(page), 'power-bi-mcp/index.html: no beta-form posting to Web3Forms');
 }
@@ -246,9 +249,9 @@ for (const [name, t] of Object.entries(tags)) {
 // before the generic CTA and outbound rules (22 Oct 2026: the traffic report looked for a download event and found
 // none; the button was counted only as a cta_click among all the others)
 {
-  const main = fs.readFileSync(path.join(ROOT, 'assets/js/main.js'), 'utf8');
+  const main = fs.readFileSync(path.join(ROOT, 'assets/js/site-analytics.js'), 'utf8');
   const m = /const RELEASE_LINK = (\/.+\/[a-z]*);/.exec(main);
-  ok(m, 'main.js: no RELEASE_LINK pattern for the release links');
+  ok(m, 'site-analytics.js: no RELEASE_LINK pattern for the release links');
   if (m) {
     const re = new Function(`return ${m[1]}`)();
     const pages = ['power-bi-mcp/index.html', 'ar/power-bi-mcp/index.html'];
@@ -259,7 +262,7 @@ for (const [name, t] of Object.entries(tags)) {
     }
     ok(!re.test('https://github.com/Antnioo/DataArcus') && !re.test('https://dataarcus.com/power-bi-mcp/'), 'RELEASE_LINK matches only the releases repo');
     const iDl = main.indexOf("track('mcp_download_click'"), iCta = main.indexOf("track('cta_click'");
-    ok(iDl > 0 && iDl < iCta, "main.js: mcp_download_click must be tracked, before the generic cta_click rule");
+    ok(iDl > 0 && iDl < iCta, "site-analytics.js: mcp_download_click must be tracked, before the generic cta_click rule");
   }
 }
 
@@ -267,10 +270,10 @@ for (const [name, t] of Object.entries(tags)) {
 // tag ai_source (so each recording says who sent the visitor) and the GA4 event ai_referral (22 Oct 2026, the owner:
 // "making sure AI refers us"). Never the referrer's address (a chat link can carry a conversation id).
 {
-  const main = fs.readFileSync(path.join(ROOT, 'assets/js/main.js'), 'utf8');
+  const main = fs.readFileSync(path.join(ROOT, 'assets/js/site-analytics.js'), 'utf8');
   const src = (main.match(/const aiSourceOf = ([^\r\n]+);\r?\n/) || [])[1];
   let ai = null; try { ai = src && Function('return (' + src + ')')(); } catch (e) { ai = null; }
-  ok(typeof ai === 'function', 'main.js: aiSourceOf could not be read as one arrow function on one line');
+  ok(typeof ai === 'function', 'site-analytics.js: aiSourceOf could not be read as one arrow function on one line');
   if (typeof ai === 'function') {
     const cases = [
       ['https://chatgpt.com/', '', 'chatgpt'], ['https://chat.openai.com/c/abc', '', 'chatgpt'], ['', '?utm_source=chatgpt.com', 'chatgpt'],
@@ -283,7 +286,7 @@ for (const [name, t] of Object.entries(tags)) {
     ];
     for (const [ref, search, want] of cases) ok(ai(ref, search) === want, `aiSourceOf(${JSON.stringify(ref)}, ${JSON.stringify(search)}) must be ${want}, got ${ai(ref, search)}`);
   }
-  ok(/clarity\('set', 'ai_source', /.test(main), "main.js: the Clarity tag ai_source is not set");
+  ok(/clarity\('set', 'ai_source', /.test(main), "site-analytics.js: the Clarity tag ai_source is not set");
   const code = main.split(/\r?\n/).filter((l) => !/^\s*\/\//.test(l)).join('\n');
   const call = (code.match(/trackOnce\('ai_referral', 'ai_referral', \{[^}]*\}\)/) || [])[0] || '';
   ok(/ai_source: aiSource/.test(call) && !/referrer/i.test(call), `main.js: ai_referral must send the assistant's name, never the referrer: ${call}`);

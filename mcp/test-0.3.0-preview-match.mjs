@@ -119,15 +119,19 @@ try {
       if (!id) continue;
       const n0 = links().length, ap = s.call('approve_plan', { planId: id });
       for (let k = 0; k < 100 && links().length <= n0; k++) await sleep(50);
-      const link = links()[n0], page = await httpReq(link), svgs = [...page.matchAll(/<svg\b[\s\S]*?<\/svg>/g)].map((m) => m[0]);
+      // (0.3.2 TP1, D-1105-17: the tooltip pages are drawn too, in figures of class "tip", after the report's pages)
+      const link = links()[n0], page = await httpReq(link), figs = [...page.matchAll(/<figure([^>]*)>(<svg\b[\s\S]*?<\/svg>)/g)];
+      const svgs = figs.filter((m) => !/class="tip"/.test(m[1])).map((m) => m[2]), tipSvgs = figs.filter((m) => /class="tip"/.test(m[1])).map((m) => m[2]);
       await httpReq(link, 'decision=approve'); await ap;
-      const cr = await s.call('create_report', Object.assign({}, base, { planId: id, design: pl.j.design }));
+      const cr = await s.call('create_report', { path: base.path, planId: id });
       chk(() => !cr.err, () => `${c.id} setup: create_report writes the approved report: ${String(cr.t).slice(0, 300)}`);
       const dir = path.join(ROOT, 'large', base.name + '.Report');
       if (cr.err || !fs.existsSync(dir)) continue;
       const W = written(dir);
       if (c.names) chk(() => base.displayNames['Calendar[Year]'] === 'السنة', () => `${c.id} setup: the plan's Arabic names are approved: ${JSON.stringify(base.displayNames)}`);
       chk(() => svgs.length === W.length && W.length === 2, () => `${c.id}: the approval window draws the report's 2 pages: ${svgs.length} pictures, ${W.length} written pages`);
+      const tipsWritten = fs.readdirSync(path.join(dir, 'definition/pages'), { withFileTypes: true }).filter((e) => e.isDirectory()).filter((e) => { try { return JSON.parse(fs.readFileSync(path.join(dir, 'definition/pages', e.name, 'page.json'), 'utf8')).type === 'Tooltip'; } catch (x) { return false; } }).length;
+      chk(() => tipsWritten > 0 && tipSvgs.length === tipsWritten && figs.slice(-tipsWritten).every((m) => /class="tip"/.test(m[1])), () => `${c.id}: then one picture per tooltip page written (TP1): ${tipSvgs.length} pictures, ${tipsWritten} written tooltip pages`);
       // the writer's cut list and check_report's cut headers
       const ct = (cr.j && cr.j.chartTitles) || {}, kt = (cr.j && cr.j.kpiTitles) || {};
       const writerCut = (ct.shortened || []).length + (ct.slicerHeaders || []).length + (kt.shortened || []).length;

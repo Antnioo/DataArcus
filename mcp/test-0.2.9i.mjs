@@ -12,7 +12,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
 import { withPlans, keepEnglish } from './test-plan.mjs';
-import { serverSource, twinSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared; the twin is lib/arabic-twin.mjs and its steps)
+import { serverSource, twinSource, writerPageSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared; the twin is lib/arabic-twin.mjs and its steps)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const req = createRequire(import.meta.url);
@@ -99,9 +99,9 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
   {
     const pl = await ask('plan_layout', { layout: 'exec', path: 'i-hr', planFields: { kpis: ['Hires[Hires]'], measure: 'Hires[Hires]' }, name: 'I same', noDataMessage: false, secondPage: false }, raw), pid = pl.j && pl.j.plan && pl.j.plan.planId;
     await ask('approve_plan', { planId: pid }, raw);
-    const other = await ask('create_report', { path: 'i-hr', name: 'I other', planId: pid, design: pl.j && pl.j.design, fields: { kpis: ['Hires[Leavers]'], measure: 'Hires[Hires]' }, noDataMessage: false, secondPage: false }, raw);
-    chk(() => other.err && /approved plan/.test(other.t) && /kpis/.test(other.t), () => `G5: create_report with fields other than the approved plan's must be refused, naming them: ${short(other)}`);
-    const same = await ask('create_report', { path: 'i-hr', name: 'I same', planId: pid, design: pl.j && pl.j.design, fields: { kpis: ['Hires[Hires]'], measure: 'Hires[Hires]' }, noDataMessage: false, secondPage: false }, raw);
+    const other = await ask('create_report', { path: 'i-hr', planId: pid, fields: { kpis: ['Hires[Leavers]'], measure: 'Hires[Hires]' } }, raw);   // (0.3.2 TK1: refused at the inputs, the plan holds the fields)
+    chk(() => other.err && /approved plan/.test(other.t) && /'fields'/.test(other.t), () => `G5: create_report with fields other than the approved plan's must be refused, naming them: ${short(other)}`);
+    const same = await ask('create_report', { path: 'i-hr', planId: pid }, raw);
     chk(() => !same.err && same.j.report, () => `G5: the approved fields are written: ${short(same)}`);
   }
 
@@ -162,7 +162,7 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
   // ---------- duplicates the gate block owns: one DAX for a visual's value, one Arabic month list, one custom-visual test ----------
   {
     // (0.2.9, the writer's A3-12: the writer is five files since, pbip-export.js and its modules; AGG_DAX is in pbip-query.js)
-    const px = ['pbip-export', 'pbip-query', 'pbip-sizing', 'pbip-page', 'pbip-notes'].map((f) => path.join(REPO, 'assets/js', f + '.js')).filter((f) => fs.existsSync(f)).map((f) => fs.readFileSync(f, 'utf8')).join('\n'), Px = req('../assets/js/pbip-export.js');
+    const px = ['pbip-export', 'pbip-query', 'pbip-sizing', 'pbip-page', 'pbip-visuals', 'pbip-visuals-charts', 'pbip-visuals-tables', 'pbip-notes'].map((f) => path.join(REPO, 'assets/js', f + '.js')).filter((f) => fs.existsSync(f)).map((f) => fs.readFileSync(f, 'utf8')).join('\n'), Px = req('../assets/js/pbip-export.js');
     const twin = twinSource(), cr = fs.readFileSync(path.join(HERE, 'lib/check-report.mjs'), 'utf8'), plans = fs.readFileSync(path.join(HERE, 'lib/plans.mjs'), 'utf8');
     chk(() => (px.match(/const AGG_DAX = /g) || []).length === 1, () => `G4: one AGG_DAX in the writer: ${(px.match(/const AGG_DAX = /g) || []).length}`);
     chk(() => Array.isArray(Px.AR_MONTHS) && Px.AR_MONTHS.length === 12 && !/const MONTHS_AR = \[/.test(twin), () => 'one Arabic month list: the writer exports AR_MONTHS and the twin writes no list of its own');
@@ -260,7 +260,7 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     // own word, chosen by the title's script (pbip-page.js), not in the design engine's labels: the reviewer's (b), 13 Oct,
     // so the design-engine fixtures (which record those labels) stay as they are
     const srv = serverSource(), E = createRequire(import.meta.url)('../assets/js/design-engine.js');
-    const pgSrc = fs.readFileSync(path.join(REPO, 'assets/js/pbip-page.js'), 'utf8');
+    const pgSrc = writerPageSource();   // (0.3.2 SP28: pbip-page.js and the visuals' builders)
     chk(() => E.texts('ar').by === 'حسب' && E.texts('ar').newDesign === 'تصميم جديد' && E.texts('en').by === 'by' && !('detail' in E.texts('ar')) && !('detail' in E.texts('en')) && pgSrc.includes("'التفاصيل'") && !/texts: Object\.assign\(\{\}, texts\(a\.lang\)/.test(srv),
       () => `P3-2: by and newDesign in texts(lang), used as they are on both paths; detail the writer's own: ${JSON.stringify([E.texts('ar'), E.texts('en')].map((t) => [t.by, t.detail, t.newDesign]))}`);
   }
@@ -302,7 +302,7 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     chk(() => !sb.err && (themeOf(sb).textClasses.boldLabel || {}).fontFace === BOLD && !(themeOf(rg).textClasses || {}).boldLabel,
       () => `P3-3: a Semibold report's totals bold by the full string (textClasses.boldLabel); a regular one left to Power BI: ${sb.err ? short(sb) : JSON.stringify([themeOf(sb).textClasses.boldLabel, themeOf(rg).textClasses.boldLabel])}`);
     // both height rules take the written font (pbip-page.js)
-    const pg3 = fs.readFileSync(path.join(REPO, 'assets/js/pbip-page.js'), 'utf8');
+    const pg3 = writerPageSource();
     chk(() => (pg3.match(/tableHeight\([^;]*\.fontFace \|\| font\)/g) || []).length >= 2, () => 'P3-3: both table height rules in pbip-page.js pass the font the report writes');
   }
 }

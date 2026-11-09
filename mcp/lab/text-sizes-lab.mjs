@@ -73,7 +73,7 @@ export async function writeLab(out) {
       const n = links().length; await s.call('approve_plan', { planId: id });
       for (let k = 0; k < 100 && links().length <= n; k++) await new Promise((r) => setTimeout(r, 50));
       await req(links()[n], 'decision=approve'); await s.call('approve_plan', { planId: id });
-      const send = Object.assign({}, args, { planId: id, design: pl.j.design, fields: FIELDS }); delete send.planFields;
+      const send = { path: args.path, planId: id };   // (0.3.2 TK1: create_report takes path and planId; the plan holds the rest)
       const r = await s.call('create_report', send);
       if (r.err) throw new Error('not written: ' + r.t.slice(0, 400));
       const RD = reportDirOf(ROOT, r.j.open, name), T = E.buildTheme(pl.j.design, lang).textClasses;

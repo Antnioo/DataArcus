@@ -2,14 +2,14 @@
 // (0.3.1 S9: moved out of server.mjs as it was, no change of behaviour)
 import crypto from 'node:crypto';
 import { z } from 'zod';
-import { DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, planLayout } from './design.mjs';
+import { DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, planLayout, DEFAULT_PAGE_W, DEFAULT_PAGE_H } from './design.mjs';
 import { SWITCH_MIN, SWITCH_MAX } from './metric-switcher.mjs';
 import { reportPrint } from './read-report.mjs';
 import { LIST_MAX as ICONS_MAX } from './status-icons.mjs';
 import { USES as DAX_USES } from './dax-functions.mjs';
 import { readUserFile } from './files.mjs';
 import { GALLERY_KINDS, LIMITS } from './tool-limits.mjs';
-import { WATERFALL_RTL_INPUT, planIdInput, focusInput, tablesInput, modelPath, pageInput, slot, columnStatsShape, strictObject } from './tool-inputs.mjs';
+import { WATERFALL_RTL_INPUT, planIdInput, focusInput, tablesInput, modelPath, pageInput, slot, columnStatsShape, strictObject, keysSaid, unknownKeysSaid } from './tool-inputs.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Gallery = require('../../assets/js/visual-gallery.js');
@@ -32,7 +32,7 @@ export const CREATE_REPORT_INPUTS = {
     planId: planIdInput.describe('The approved plan id from plan_layout (made with this model\'s path), after approve_plan with the user\'s go. Required: without it nothing is written'),
     name: z.string().min(1).max(60).optional().describe('Report name (needed for a new report; customVisualsFrom names its copy after the original)'),
     title: z.string().min(1).max(80).optional().describe('The title in the report\'s header; without it the header shows the report\'s name'),
-    pages: z.array(z.object({ name: z.string(), width: z.number().int().default(1920), height: z.number().int().default(1080), slots: z.array(slot).min(1),
+    pages: z.array(z.object({ name: z.string(), width: z.number().int().default(DEFAULT_PAGE_W), height: z.number().int().default(DEFAULT_PAGE_H), slots: z.array(slot).min(1),
       background: z.string().optional().describe('PNG file for the page background, inside the DataArcus folder') })).min(1).optional()
       .describe('Hand-placed pages; or give a design instead'),
     design: z.record(z.any()).optional().describe('The design from generate_theme or plan_layout; the layout inputs below change it, as in plan_layout'),
@@ -45,7 +45,7 @@ export const CREATE_REPORT_INPUTS = {
     fields: z.object({
       kpis: z.array(z.string()).max(LIMITS.kpiCards).describe('The KPI cards\' measures, in card order; the row gets one card per measure'),
       measure: z.string().describe('The measure the charts show'),
-      timeAxis: z.string().describe('The column of the line chart\'s axis (a month or date column)'),
+      timeAxis: z.string().describe('The column of the line chart\'s axis (a month or date column), or "none" when the person asks for no time axis'),
       category: z.string().describe('The column of the bar chart (also donut, funnel, treemap)'),
       category2: z.string().describe('The column of the column chart (also map)'),
       table: z.array(z.string()).min(1).max(LIMITS.tableFields).describe('The table\'s columns and measures, in order'),
@@ -112,6 +112,24 @@ export const CREATE_REPORT_INPUTS = {
     // (0.3.1 C) the sample project: a plan of its own kind (sample), written by create_report with the same inputs
     sample: z.boolean().optional().describe('No model yet (a new user: "show me what DataArcus can do", "try the sample"): true writes a made-up Gulf retail project to try DataArcus on, after approval. In plan_layout: sample true (and lang, the user\'s language) alone, no model input: the plan says what it holds and every file. In create_report: sample true, path (the plan\'s sample.folder), lang and the approved planId, nothing else. Its answer has the tour: the next requests, each a real call on the sample'),
     restyle: z.object({ preset: z.string().max(40), brand: z.string().max(20), harmony: z.string().max(20), mode: z.enum(['light', 'dark']) }).partial().strict().optional().describe('With redesignFrom: new theme colours from the design engine (a preset, or a brand colour with a harmony; light or dark): only the colour tokens of the original\'s custom theme change (data colours, foreground, background, table accent, good, neutral, bad)'),
+};
+// (0.3.2 TK1, B-272: create_report repeated plan_layout's 55 options, about 30,000 characters of tools/list sent in every
+// conversation, though it filled every left-out one from the approved plan) create_report takes the model (path, read
+// again and compared with the plan's print) and the approved planId; the plan holds every other input (heldInputs, kept
+// with the proposal) and create_report writes from them. The gate compares their pin with the plan's as before, and the
+// files they name are read and hashed again, so what is written is still exactly what was approved
+export const WRITE_KEYS = ['path', 'planId'];
+export const CREATE_REPORT_WRITE = {
+  path: modelPath.describe('The model the plan was made with (the sample: its sample.folder)'),
+  planId: planIdInput.describe('The approved plan id (plan_layout, then approve_plan after the user\'s go). It holds every other input; without it nothing is written')
+};
+// what a plan keeps for create_report: the inputs it pinned from, the plan's fields as fields, never the model or the plan id
+export const heldInputs = (a, fields) => Object.assign(Object.fromEntries(Object.entries(a).filter(([k, v]) => v !== undefined && !['path', 'planId', 'planFields'].includes(k))), fields !== undefined ? { fields } : {});
+// create_report's words for an input it no longer takes: one the plan holds is said as such (never a bare "Unrecognized key")
+export const heldSaid = (keys) => {
+  const held = keys.filter((k) => Object.prototype.hasOwnProperty.call(CREATE_REPORT_INPUTS, k) && !WRITE_KEYS.includes(k)), other = keys.filter((k) => !held.includes(k)), one = held.length === 1;
+  return 'Nothing was written: ' + [held.length ? `${keysSaid(held)}: the approved plan holds ${one ? 'this input' : 'these inputs'} (plan_layout's), so create_report takes only path and planId: call it with those two. To change ${one ? 'it' : 'them'}, call plan_layout again with the new value${one ? '' : 's'}, show the user the new plan and wait for their go.` : '',
+    other.length ? unknownKeysSaid('the inputs of create_report', other, WRITE_KEYS) : ''].filter(Boolean).join(' ');
 };
 // What a report plan pins (audit 6, A6-1): the design as planLayout resolves it (or the hand-placed pages), the page,
 // language and direction, the fields, page filters, display names, text, subtitles and SVG designs. plan_layout stores

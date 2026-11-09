@@ -18,7 +18,7 @@
 //   T9  verifyCopy refuses: a removal outside the allowlist, one not in the plan, report.json changed (not added), an
 //       added file the plan does not add
 //   T10 metadata only: no title, text box text or value in any answer; the approval page lists the text set and removals
-//   T11 the gate: create_report without the plan's consistentText writes nothing
+//   T11 the gate: create_report with another consistentText than the plan's writes nothing (0.3.2: the plan holds it)
 //   node test-0.3.1-cs1.mjs
 import './test-env.mjs';
 import fs from 'node:fs';
@@ -112,7 +112,7 @@ try {
 
     // ---------- T4: the write ----------
     await call(s, 'approve_plan', { planId: pl.j.plan.planId });
-    const w = await call(s, 'create_report', { path: MODEL, redesignFrom: FROM, planId: pl.j.plan.planId, consistentText: 'report' });
+    const w = await call(s, 'create_report', { path: MODEL, planId: pl.j.plan.planId });
     const OUT = path.join(L.root, 'Store Ops redesigned.Report');
     chk(() => !w.err && w.j.written === true, () => `T4. the copy is written: ${short(w)}`);
     chk(() => print(REP) === ORIG, () => 'T4. the original is byte-identical');
@@ -144,15 +144,16 @@ try {
     try {
       const p2 = await call(s3, 'plan_layout', { path: MODEL, redesignFrom: FROM, consistentText: 'report', keepPositions: true });
       await call(s3, 'approve_plan', { planId: p2.j.plan.planId });
-      const no = await call(s3, 'create_report', { path: MODEL, redesignFrom: FROM, planId: p2.j.plan.planId });
-      chk(() => no.err && /Nothing was written/.test(no.t) && !fs.existsSync(path.join(L2.root, 'Store Ops redesigned.Report')), () => `T11. create_report without the plan's consistentText writes nothing: ${short(no)}`);
+      // (0.3.2 TK1, B-272: the plan holds consistentText, so it can't be left out any more) another value: nothing written
+      const no = await call(s3, 'create_report', { path: MODEL, planId: p2.j.plan.planId, consistentText: 'theme' });
+      chk(() => no.err && /Nothing was written/.test(no.t) && !fs.existsSync(path.join(L2.root, 'Store Ops redesigned.Report')), () => `T11. create_report with another consistentText than the plan's writes nothing: ${short(no)}`);
       // ---------- T5: keepPositions ----------
       const pk = (p2.j.redesign.patches || []);
       chk(() => !pk.some((x) => /^\/position\//.test(x.pointer || '')) && (p2.j.redesign.pages || []).every((p) => p.changes.every((c) => !c.from)) && p2.j.redesign.text.removed === REMOVALS,
         () => `T5. keepPositions: no position patch, no move; the same ${REMOVALS} removals: ${JSON.stringify(pk.filter((x) => /position/.test(x.pointer || '')).slice(0, 3))}`);
       const p3 = await call(s3, 'plan_layout', { path: MODEL, redesignFrom: FROM, consistentText: 'report', keepPositions: true });
       await call(s3, 'approve_plan', { planId: p3.j.plan.planId });
-      const w3 = await call(s3, 'create_report', { path: MODEL, redesignFrom: FROM, planId: p3.j.plan.planId, consistentText: 'report', keepPositions: true });
+      const w3 = await call(s3, 'create_report', { path: MODEL, planId: p3.j.plan.planId });
       const R2 = path.join(L2.root, 'Store Ops.Report'), O2 = path.join(L2.root, 'Store Ops redesigned.Report');
       chk(() => !w3.err && rels(R2).filter((r) => /visual\.json$/.test(r)).every((r) => JSON.stringify(rd(path.join(R2, r)).position) === JSON.stringify(rd(path.join(O2, r)).position)), () => `T5. keepPositions writes every position as it was: ${short(w3)}`);
       // ---------- T7: consistentText "theme" ----------
@@ -169,7 +170,7 @@ try {
         const u = ((p5.j.redesign.text || {}).untouched || []).find((x) => x.visual === 'cardBasket');
         chk(() => p5.j.plan && u && /does not know/.test(u.why) && /cardVisual/.test(u.why) && !p5.j.redesign.patches.some((x) => x.visual === 'cardBasket'), () => `T8. an unknown visual type: untouched and listed: ${JSON.stringify(u)}`);
         await call(s4, 'approve_plan', { planId: p5.j.plan.planId });
-        await call(s4, 'create_report', { path: MODEL, redesignFrom: FROM, planId: p5.j.plan.planId, consistentText: 'report', keepPositions: true });
+        await call(s4, 'create_report', { path: MODEL, planId: p5.j.plan.planId });
         chk(() => fs.readFileSync(f).equals(fs.readFileSync(vfile(path.join(L3.root, 'Store Ops redesigned.Report'), P1, 'cardBasket'))), () => 'T8. its file is byte-identical in the copy');
       } finally { await s4.close(); }
     } finally { await s3.close(); }
@@ -179,7 +180,7 @@ try {
     try {
       const p6 = await call(s5, 'plan_layout', { path: MODEL, redesignFrom: FROM, consistentText: 'report' });
       await call(s5, 'approve_plan', { planId: p6.j.plan.planId });
-      const w6 = await call(s5, 'create_report', { path: MODEL, redesignFrom: FROM, planId: p6.j.plan.planId, consistentText: 'report' });
+      const w6 = await call(s5, 'create_report', { path: MODEL, planId: p6.j.plan.planId });
       const TR = 'StaticResources/RegisteredResources/store-ops-theme.json', A = path.join(L4.root, 'Store Ops.Report'), B = path.join(L4.root, 'Store Ops redesigned.Report');
       const d6 = fs.existsSync(path.join(B, TR)) ? diff(rd(path.join(A, TR)), rd(path.join(B, TR))) : ['missing'];
       chk(() => !w6.err && d6.length && d6.every((p) => lib.THEME_STYLE_AT.test(p)) && d6.includes('/visualStyles/card/*/title/0/fontSize'), () => `T6. the report's theme: only its visual styles' font and size (CS2): ${JSON.stringify(d6)} ${short(w6)}`);

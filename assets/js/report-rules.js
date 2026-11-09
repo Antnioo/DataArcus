@@ -9,8 +9,9 @@
 (function (root) {
   'use strict';
   const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
-  const num = (p) => parseFloat(lit(p));
-  const str = (p) => { const v = lit(p); return v == null ? '' : String(v).replace(/^'|'$/g, '').replace(/''/g, "'"); };
+  // a literal's text, number and true or false, a column's set width: pbir-values.js, their one home (0.3.2 DD1B)
+  const PV = typeof module !== 'undefined' && module.exports ? require('./pbir-values.js') : root.DAPbirValues;
+  const num = PV.litNumber, str = PV.litText;
   const entries = (list) => (Array.isArray(list) ? list : []);
   const plain = (list) => entries(list).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e.properties || {}), {});
   const withId = (list, id) => entries(list).filter((e) => e && e.selector && e.selector.id === id).reduce((a, e) => Object.assign(a, e.properties || {}), {});
@@ -59,20 +60,21 @@
     'matrix', 'multiRowCard', 'pageNavigator', 'pivotTable', 'qnaVisual', 'rdlVisual', 'scorecard', 'shape', 'slicer', 'table', 'tableEx', 'textbox']);
   const VisualTypes = () => { try { return typeof module !== 'undefined' && module.exports ? require('./visual-types.js') : root.DAVisualTypes || null; } catch (e) { return null; } };
   const defaultTitle = (type) => { const V = VisualTypes(); return DEFAULT_TITLE_OFF.includes(type) ? 'off' : V && V.NATIVE_TYPES && V.NATIVE_TYPES.includes(type) ? 'on' : 'not known'; };
+  // text-measure.js: the text widths, the measured heights, the 8-60 range and the measured fonts, the one copy the
+  // report writer uses too (audit 4's A4-5: the rules never load the writer; 0.3.2 OP1: one place for every fact)
+  const TM = () => (typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure);
+  const textWidth = () => TM().textWidth;
   // The text rules were measured in these fonts; on another font a finding is an estimate (a note, never an error)
-  const MEASURED_FONTS = ['segoe ui', 'tahoma'];
-  const measuredFont = (f) => !f || MEASURED_FONTS.includes(String(f).toLowerCase().replace(/^'|'$/g, '').split(',')[0].trim());
+  const measuredFont = (f) => TM().measuredFont(f);
   // The measured numbers, in page units (a point size takes the same page units on any page, as measured). The one
   // copy: scripts/tests/report-check.mjs takes them from here (MEASURED).
-  const BOX = (t, n) => Math.ceil(10 + 1.8 * t * (n || 1));        // a text box: 10 + 1.8 x pt a line
-  const BTN_H = (t) => Math.ceil(6 + 1.6 * t);                     // a button's one line (Arabic needs the 6)
+  const BOX = (t, n) => TM().boxH(t, n);                           // a text box: 10 + 1.8 x pt a line
+  const BTN_H = (t, n) => TM().buttonH(t, n);                      // a button: 6 + 1.6 x pt a line (Arabic needs the 6)
   const BTN_TW = (t, n) => 0.45 * 4 / 3 * t * n;                   // a button's text, 0.45 em a character
-  // a button with an icon: its text measured with the per-letter widths, + 10 (round 10, M3); the widths are
-  // text-measure.js's, the one copy the report writer uses too (audit 4's A4-5: the rules never load the writer)
-  const textWidth = () => (typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure).textWidth;
+  // a button with an icon: its text measured with the per-letter widths, + 10 (round 10, M3)
   const BTN_ICON_TW = (text, t, font) => textWidth()(text, t, false, font) + 10;
   const CH = (t) => t * 0.55 * 4 / 3;                              // a text box's character, 0.55 em
-  const SLICER = (t) => Math.ceil(16 + 4 * t);                     // a dropdown slicer, title and box
+  const SLICER = (t) => TM().slicerH(t);                           // a dropdown slicer, title and box: 16 + 4 x pt
   const PAGE_TWO_LINES = (t, font) => (/^tahoma/i.test(String(font || '')) ? 3.2 : 3.5) * t;   // a page button's two lines
   // (A4-6, audit 4) the lines a page button shows at a height: two only when two fit (SRC.pageWrap), one when one does
   const PAGE_LINES = (h, t, font) => (h + 0.5 >= PAGE_TWO_LINES(t, font) ? 2 : h + 0.5 >= BTN_H(t) ? 1 : 0);
@@ -86,7 +88,7 @@
   // (SRC.barRows; the writer's tooltip charts and the design engine's categoryFit count the same)
   const TIP_ROWS = (h, axis) => Math.floor((h - 45 - 8 - (axis ? 38 : 0)) / 22.2);
   const TIP_ROWS_6 = (h) => Math.floor((h - 40) / 27);             // a tooltip bar chart at 8pt labels: 27 a bar + 40 (SRC.tipTrend)
-  const MEASURED = { BOX, BTN_H, BTN_TW, BTN_ICON_TW, CH, SLICER, PAGE_TWO_LINES, PAGE_LINES, PAGE_TW, TEXT_MID, TIP_ROWS, TIP_ROWS_6, PHONE_W: 323, TEXT_MIN: 8, TEXT_MAX: 60 };
+  const MEASURED = { BOX, BTN_H, BTN_TW, BTN_ICON_TW, CH, SLICER, PAGE_TWO_LINES, PAGE_LINES, PAGE_TW, TEXT_MID, TIP_ROWS, TIP_ROWS_6, PHONE_W: 323, get TEXT_MIN() { return TM().TEXT_MIN; }, get TEXT_MAX() { return TM().TEXT_MAX; } };
   const ps1 = (x, c) => entries(((((x.json.visual || {}).query || {}).queryState || {}).Values || {}).projections).indexOf(c.p) + 1;
   const isPageButton = (x) => x.type === 'actionButton' && str(plain(((x.json.visual || {}).visualContainerObjects || {}).visualLink).type) === 'PageNavigation';
   const STATES = ['default', 'hover', 'press', 'pressed', 'disabled', 'selected'];
@@ -96,7 +98,7 @@
   // (with its icon, as wide as the button is high), a page button one line (one), or two lines (half) when two fit its
   // height (two)
   function buttonNeed(x, R) {
-    const o = (x.json.visual || {}).objects || {}, tx = look(o.text), t = num(tx.fontSize) || R.labelSize, text = str(tx.text), n = text.length;
+    const o = (x.json.visual || {}).objects || {}, tx = look(o.text), t = num(tx.fontSize) || R.labelSize, text = str(tx.text) ?? '', n = text.length;
     if (!n) return null;
     if (isPageButton(x)) {
       const font = str(tx.fontFamily) || R.font, one = Math.ceil(PAGE_TW(text, t, font)), two = Math.ceil(PAGE_TWO_LINES(t, font)), half = Math.ceil((one - 10) / 2 + 10);
@@ -104,7 +106,7 @@
     }
     if (lit(plain(o.text).show) === 'false') return null;
     const icon = (str(look(o.icon).shapeType) || 'blank') !== 'blank' && lit(plain(o.icon).show) !== 'false';
-    return { page: false, t, n, font: str(tx.fontFamily), icon, needH: BTN_H(t), needW: Math.ceil(icon ? BTN_ICON_TW(text, t, str(tx.fontFamily)) + x.h : BTN_TW(t, n)) };
+    return { page: false, t, n, font: str(tx.fontFamily) ?? '', icon, needH: BTN_H(t), needW: Math.ceil(icon ? BTN_ICON_TW(text, t, str(tx.fontFamily)) + x.h : BTN_TW(t, n)) };
   }
 
   // (0.2.9.1, B-173: the one measurement of a table header, for TABLE_HEADER_CUT and the Arabic twin, which widens each
@@ -115,10 +117,11 @@
   // measure Desktop has drawn an Arabic header whole in (0.71 seen, 0.70 kept) it is cut, from there up to needW it MAY
   // be cut (lowW). Latin letters were measured on the safe side: a Latin header has no band (lowW = needW).
   const AR_HEADER_WHOLE = 0.7;
-  const AR_LETTER = /[\u0600-\u06FF\uFB50-\uFEFF]/;
+  // (0.3.2 DD1F: an Arabic letter is arabic-script.js's hasArabic, its one home; CONTRACTS.md 1f)
+  const AS = typeof module !== 'undefined' && module.exports ? require('./arabic-script.js') : root.DAArabicScript;
   function headerNeed(text, t, font, sc) {
     const w = textWidth()(text, t, true, font), pad = 24 * sc, needW = Math.ceil(w + pad);
-    return { needW, lowW: AR_LETTER.test(String(text)) ? Math.min(needW, Math.floor(AR_HEADER_WHOLE * w + pad)) : needW };
+    return { needW, lowW: AS.hasArabic(text) ? Math.min(needW, Math.floor(AR_HEADER_WHOLE * w + pad)) : needW };
   }
   // A table's columns with a set width (columnWidth, selector { metadata: queryRef }) and their header's need. json: the
   // visual.json; theme: the theme's JSON (its tableEx sizes) or null; font: the report's (its label's) font; sc: the
@@ -129,7 +132,7 @@
     const th = ((((theme || {}).visualStyles || {}).tableEx || {})['*']) || {}, first = (list, k) => (Array.isArray(list) && list[0] && typeof list[0] === 'object' ? list[0][k] : undefined);
     const t = num(hp.fontSize) || +first(th.columnHeaders, 'fontSize') || +first(th.values, 'fontSize') || 10, f = str(hp.fontFamily) || font;
     if (String(lit(hp.wordWrap)) === 'true' || !Array.isArray(o.columnWidth)) return { t, font: f, cols: [] };
-    const widthOf = (ref) => { const e = o.columnWidth.find((x) => x && x.selector && x.selector.metadata === ref && x.properties && Number.isFinite(num(x.properties.value))); return e ? num(e.properties.value) : null; };
+    const widthOf = (ref) => PV.columnWidth(o.columnWidth, ref);
     const ps = entries((((v.query || {}).queryState || {}).Values || {}).projections).filter((p) => p && typeof p.queryRef === 'string');
     const cols = ps.filter((p) => (widthOf(p.queryRef) || 0) > 1).map((p) => {
       const text = String(p.displayName != null ? p.displayName : p.nativeQueryRef || ''), width = widthOf(p.queryRef), m = headerNeed(text, t, f, sc);
@@ -146,7 +149,7 @@
       run(R, out) {
         R.visuals.forEach((x) => {
           const sizes = [];
-          const walk = (o) => { if (!o || typeof o !== 'object') return; for (const [k, v] of Object.entries(o)) { if (/^(fontSize|textSize)$/.test(k) && v && v.expr) sizes.push(num(v)); else if (k === 'textStyle' && v && v.fontSize) sizes.push(parseFloat(v.fontSize)); else walk(v); } };
+          const walk = (o) => { if (!o || typeof o !== 'object') return; for (const [k, v] of Object.entries(o)) { if (/^(fontSize|textSize)$/.test(k) && v && v.expr) sizes.push(num(v) ?? NaN); else if (k === 'textStyle' && v && v.fontSize) sizes.push(parseFloat(v.fontSize)); else walk(v); } };
           walk((x.json.visual || {}).objects); walk((x.json.visual || {}).visualContainerObjects);
           const bad = sizes.filter((t) => !isNaN(t) && (t < 8 || t > 60));
           if (bad.length) out(x, `${bad.length} text size${bad.length === 1 ? '' : 's'} outside 8-60pt (${bad.join(', ')}pt)`, 'Use sizes from 8 to 60pt: Power BI refuses a theme outside that range, and on a visual such a size draws badly.');
@@ -250,7 +253,7 @@
       run(R, out) {
         R.visuals.forEach((x) => {
           const t = plain(((x.json.visual || {}).visualContainerObjects || {}).visualTooltip);
-          if (t.type && str(t.type) !== 'Canvas' && str(t.type) !== 'Default' && t.section) out(x, `the tooltip page is linked with type "${str(t.type).replace(/[^A-Za-z]/g, '').slice(0, 20)}"`, 'Use type "Canvas" with the tooltip page\'s name in "section"; otherwise Desktop shows its default tooltip.');
+          if (t.type && str(t.type) !== 'Canvas' && str(t.type) !== 'Default' && t.section) out(x, `the tooltip page is linked with type "${String(str(t.type) ?? '').replace(/[^A-Za-z]/g, '').slice(0, 20)}"`, 'Use type "Canvas" with the tooltip page\'s name in "section"; otherwise Desktop shows its default tooltip.');
         });
       } },
     { id: 'IMAGE_FIT', group: 'selectors', severity: 'warning', source: SRC.round0,
@@ -361,7 +364,7 @@
           if (NOT_DATA.includes(x.type) || fields < 2) return;
           [['title', 'title'], ['subTitle', 'subtitle']].forEach(([card, said]) => {
             const t = entries((v.visualContainerObjects || {})[card]).filter((e) => e && !e.selector && e.properties);
-            const noText = !t.some((e) => e.properties.text !== undefined && !(lit(e.properties.text) !== undefined && !str(e.properties.text).trim()));
+            const noText = !t.some((e) => e.properties.text !== undefined && !(lit(e.properties.text) !== undefined && !(str(e.properties.text) ?? '').trim()));
             const shown = t.filter((e) => e.properties.show !== undefined), on = shown.length ? lit(shown[shown.length - 1].properties.show) === 'true' : null;
             // (FX3b) no "show" set (a missing title card, the owner's hand-made charts): the type's default title, from the
             // catalog; a subtitle is off unless switched on

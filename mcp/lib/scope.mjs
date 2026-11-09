@@ -3,11 +3,12 @@
 // Code starts warning, and far below Claude Desktop's limit. Small models answer exactly as before.
 import { marked, modelOf, nameOut, shownName, summary, withNamesNote } from './model.mjs';
 import { takenNames } from './report-names.mjs';
+import { ANSWER_MAX } from './answer.mjs';
 
-export const LIMIT = 40000;
+export const LIMIT = ANSWER_MAX;   // (0.3.2 TK1, B-283: the one answer limit, lib/answer.mjs)
 // (0.3.0 Q1) where an answer that lists objects cuts its own lists: 15% under LIMIT, so the last backstop (answer.mjs
 // capAnswer, which halves whatever list is longest) never has to cut it, and a growth of the parts not cut stays under
-export const AIM = 34000;
+export const AIM = ANSWER_MAX * 0.85;   // 34,000
 const size = (o) => JSON.stringify(o, null, 2).length;
 const lc = (s) => String(s == null ? '' : s).toLowerCase();
 const raw = (m) => modelOf(m.tmsl);

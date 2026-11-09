@@ -1,20 +1,25 @@
 // The Arabic twin, step 5: the pages mirrored (assets/js/report-mirror.js, the writer's engine) and fitted for the
 // Arabic texts: buttons, text boxes, table headers, phone tabs, the panels a text box must not become.
+// (0.3.2 SP11: the text fitting in twin-text-fit.mjs; SP26: the geometry, badges, tables, grids, indentation and the
+// icon's room, in twin-geometry.mjs; SP40: the measure rewiring, in twin-measures.mjs; buildTwin keeps the order,
+// keepSize last)
 // (0.3.1 S9: moved out of lib/arabic-twin.mjs as it was, no change of behaviour; arabic-twin.mjs re-exports what others import)
 import { safeName } from './read-report.mjs';
 import { isObj, pageOf } from './twin-read.mjs';
-import { num, posOf, typeOf, litStr, Ls, overlaps, holdsBox, absBox } from './twin-visuals.mjs';
-import { pageBoxes } from './page-picture.mjs';
-import { arabicDax, titleMeasuresOf, textMeasuresOf, autoTitlesOf, autoSentence, subtitleMeasuresOf } from './twin-texts.mjs';
-import { waterfallFacts } from './twin-model.mjs';
+import { posOf, typeOf, Ls, absBox } from './twin-visuals.mjs';
+import { autoTitlesOf, autoSentence, subtitleMeasuresOf } from './twin-texts.mjs';
 import { langButton } from './twin-copy.mjs';
+import { HIDDEN_W, fitButtons, fitTextboxes, fitHeaders } from './twin-text-fit.mjs';
+import { boxOk, badgesWithText, aroundTables, underGrids, indentToEnd, iconRoom } from './twin-geometry.mjs';
+import { twinMeasures } from './twin-measures.mjs';
+export { keptAtMirrorLine } from './twin-geometry.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
-const Rules = require('../../assets/js/report-rules.js');
 const Sizing = require('../../assets/js/pbip-sizing.js');
 const TextMeasure = require('../../assets/js/text-measure.js');
-const Q = require('../../assets/js/pbip-query.js');
+// a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
+const { litText, litNumber } = require('../../assets/js/pbir-values.js');
 
 // (0.3.1 TT1, the owner, 27 Oct: a title is wholly Arabic or wholly English) a visual's title and alt text the person left
 // English, isolated as a whole as the writer isolates an Arabic report's English title (text-measure.js isolateWhole)
@@ -25,176 +30,12 @@ function wholeTitles(vco) {
   Object.keys(WHOLE).forEach((k) => (Array.isArray(vco[k]) ? vco[k] : []).forEach((e) => {
     const p = isObj(e) && isObj(e.properties) ? e.properties[WHOLE[k]] : null, v = p && isObj(p.expr) && isObj(p.expr.Literal) ? p.expr.Literal.Value : null;
     if (typeof v !== 'string' || !/^'.*'$/s.test(v)) return;
-    const t = litStr(p), w = TextMeasure.isolateWhole(t);
+    const t = litText(p), w = TextMeasure.isolateWhole(t);
     if (w !== t) { e.properties[WHOLE[k]] = Ls(w); n++; }
   }));
   return n;
 }
 
-// A button narrower than its Arabic text (check_report's buttonNeed) is widened: first toward its end (its left in the
-// twin), the visuals beside it in its row moving with it, then toward its start; inside its page or group, never over a
-// visual it did not overlap. A shape just under or over it (the page's underline) follows it. What can't fit is said.
-function fitButtons(page, visuals, ctx, at) {
-  const out = { buttons: [], buttonsCut: [] }, byName = {};
-  visuals.forEach((v) => { if (isObj(v) && v.name != null) byName[v.name] = v; });
-  const parentOf = (v) => (v.parentGroupName != null ? String(v.parentGroupName) : '');
-  const widthOf = (v) => { const g = v.parentGroupName != null ? byName[v.parentGroupName] : null; return g ? (posOf(g) || {}).width : isObj(page) ? page.width : NaN; };
-  const vOver = (a, b) => a.y < b.y + b.height - 0.5 && b.y < a.y + a.height - 0.5;
-  const attachedTo = (v) => { const p = posOf(v); return visuals.filter((s) => s !== v && /^(shape|basicShape)$/.test(typeOf(s)) && parentOf(s) === parentOf(v) && posOf(s)).filter((s) => { const q = posOf(s);
-    return !vOver(p, q) && q.x >= p.x - 2 && q.x + q.width <= p.x + p.width + 2 && q.width <= p.width && Math.min(Math.abs(q.y - (p.y + p.height)), Math.abs(p.y - (q.y + q.height))) <= 8; }); };
-  const shift = (v, d) => { posOf(v).x = Mirror.round(posOf(v).x + d); attachedTo(v).forEach((s) => { posOf(s).x = Mirror.round(posOf(s).x + d); }); };
-  // (0.3.1 MX6, the fuzz lab's B1-1: a chart beside a slicer that gave a button its width was pushed to x -59) the boxes
-  // as they were, and whether every box the fitting changed is still inside its page or group: else it is put back
-  const snap = () => new Map(visuals.filter((x) => posOf(x)).map((x) => [x, { x: posOf(x).x, width: posOf(x).width }]));
-  const fits = (was) => [...was].every(([x, o]) => { const q = posOf(x); if (q.x === o.x && q.width === o.width) return true; const W = widthOf(x); return !Number.isFinite(W) || (q.x >= -0.5 && q.x + q.width <= W + 0.5); });
-  const back = (was) => was.forEach((o, x) => { posOf(x).x = o.x; posOf(x).width = o.width; });
-  // (MX6, the lab's M1-1: a group beside a button moved 28 and the plan only counted it) every visual the fitting moved
-  // or narrowed, by name, for the plan's movedByRule
-  const moved = (was, but) => [...was].filter(([x, o]) => x !== but && (posOf(x).x !== o.x || posOf(x).width !== o.width)).map(([x, o]) => ({ visual: String(x.name),
-    rule: posOf(x).width !== o.width && typeOf(x) === 'slicer' ? 'gave width to a button beside it' : 'moved with a button beside it' }));
-  out.moves = [];
-  visuals.forEach((v) => {
-    const p = posOf(v); if (typeOf(v) !== 'actionButton' || !p) return;
-    let b; try { b = Rules.buttonNeed({ json: v, type: 'actionButton', h: p.height, w: p.width }, ctx.text); } catch (e) { b = null; }
-    if (!b || p.width + 0.5 >= b.needW) return;
-    const start = snap();
-    try { fitOne(v, p, b); } finally {
-      // (its underline, widened with it, is named in its own entry: withLine; the others in movedByRule)
-      const m = moved(start, v), own = new Set(attachedTo(v).map((s) => String(s.name))), e = out.buttons.concat(out.buttonsCut).filter((x) => x.visual === safeName(String(v.name)) && x.page === safeName(at));
-      const lines = e.length ? m.filter((x) => own.has(x.visual)) : [];
-      if (lines.length) e.forEach((x) => { x.withLine = lines.map((l) => safeName(l.visual)); });
-      out.moves.push(...m.filter((x) => !lines.includes(x)));
-    }
-  });
-  return out;
-  function fitOne(v, p, b) {
-    const W = widthOf(v); if (!Number.isFinite(W)) return;
-    const grow = Math.ceil(b.needW - p.width), lines = attachedTo(v);
-    // the room: the container, or a panel it sits on (a sibling holding it whole); the row: siblings beside it
-    const sibs = visuals.filter((x) => x !== v && posOf(x) && parentOf(x) === parentOf(v) && !lines.includes(x));
-    const holds = sibs.filter((x) => { const q = posOf(x); return q.x <= p.x + 0.5 && q.x + q.width >= p.x + p.width - 0.5 && q.y <= p.y + 0.5 && q.y + q.height >= p.y + p.height - 0.5; });
-    const lo = Math.max(0, ...holds.map((x) => posOf(x).x)), hi = Math.min(W, ...holds.map((x) => posOf(x).x + posOf(x).width));
-    const row = sibs.filter((x) => !holds.includes(x) && vOver(p, posOf(x)));
-    const left = row.filter((x) => posOf(x).x + posOf(x).width <= p.x + 0.5), right = row.filter((x) => posOf(x).x >= p.x + p.width - 0.5);
-    const roomL = Math.max(0, (left.length ? Math.min(...left.map((x) => posOf(x).x)) : p.x) - lo), roomR = Math.max(0, hi - (right.length ? Math.max(...right.map((x) => posOf(x).x + posOf(x).width)) : p.x + p.width));
-    const firstL = ctx.rtl, a1 = Math.min(grow, Math.floor(firstL ? roomL : roomR)), a2 = Math.min(grow - a1, Math.floor(firstL ? roomR : roomL));
-    let dl = firstL ? a1 : a2, dr = firstL ? a2 : a1;
-    const was0 = snap();
-    left.forEach((x) => shift(x, -dl)); right.forEach((x) => shift(x, dr));
-    p.x = Mirror.round(p.x - dl); p.width = Mirror.round(p.width + dl + dr);
-    lines.forEach((s) => { const q = posOf(s); q.x = Mirror.round(q.x - dl); q.width = Mirror.round(q.width + dl + dr); });
-    if (!fits(was0)) { back(was0); dl = 0; dr = 0; }
-    // (0.3.1 FX1, D-1028-02: the twin is identical, so the Reset keeps its icon; the laptop's part 3: the sample's Reset,
-    // 159 wide beside three dropdown slicers in the top strip, got 20 of free room and lost its icon) still too narrow:
-    // (a) as the writer lays a strip out (pbip-page.js: the Reset as wide as its text and icon need, the dropdown slicers
-    // sharing the rest), the slicers beside it in its row give the width, equally, each kept at least 160 x k (the
-    // writer's strip minimum, k = the page's height / 1080), the visuals between them moving with them
-    let narrowed = 0, sized = null;
-    const kk = isObj(page) && Number.isFinite(page.height) && page.height > 0 ? page.height / 1080 : 1;
-    if (!b.page && p.width + 0.5 < b.needW) {
-      const slack = (x) => (typeOf(x) === 'slicer' ? Math.max(0, Math.floor(posOf(x).width - 160 * kk)) : 0);
-      const sides = (firstL ? [left, right] : [right, left]).map((list) => ({ list, toLeft: list === left }));
-      for (const S of sides) {
-        let want = Math.ceil(b.needW - p.width);
-        const sl = S.list.filter((x) => slack(x) > 0); if (want <= 0 || !sl.length) continue;
-        const share = new Map(sl.map((x) => [x, 0]));
-        // (each takes an equal share, up to what it can give; what one can't give, the others share)
-        while (want > 0) { const open = sl.filter((x) => share.get(x) < slack(x)); if (!open.length) break; const each = Math.max(1, Math.floor(want / open.length));
-          for (const x of open) { if (want <= 0) break; const d = Math.min(each, slack(x) - share.get(x), want); share.set(x, share.get(x) + d); want -= d; } }
-        const take = [...share.values()].reduce((a, d) => a + d, 0); if (!take) continue;
-        let off = take; const was = snap();
-        // the near side first: each visual moves by what is still to give, a slicer then gives its share
-        S.list.slice().sort((a, c) => (S.toLeft ? posOf(c).x - posOf(a).x : posOf(a).x - posOf(c).x)).forEach((x) => {
-          const d = share.get(x) || 0; shift(x, S.toLeft ? -off : off);
-          if (d) { const q = posOf(x); if (S.toLeft) q.x = Mirror.round(q.x + d); q.width = Mirror.round(q.width - d); off -= d; } });
-        if (S.toLeft) p.x = Mirror.round(p.x - take);
-        p.width = Mirror.round(p.width + take);
-        lines.forEach((s) => { const q = posOf(s); if (S.toLeft) q.x = Mirror.round(q.x - take); q.width = Mirror.round(q.width + take); });
-        // (MX6) only where the room exists: a visual it moves would leave its page or group, nothing is borrowed this side
-        if (!fits(was)) { back(was); continue; }
-        narrowed += sl.filter((x) => share.get(x)).length;
-      }
-    }
-    // (b) else its text at the largest size, down to 8pt, at which its Arabic and its icon fit side by side (the writer's
-    // rule for a slicer's header and a KPI card's title: the largest size, down to 8, at which it is whole)
-    if (!b.page && b.icon && p.width + 0.5 < b.needW && Array.isArray(v.visual.objects.text)) {
-      const te = v.visual.objects.text.find((e) => isObj(e) && isObj(e.properties) && e.properties.text), tx = te ? litStr(te.properties.text) : '', font = b.font;
-      let t = Math.floor(b.t) - 1; while (t >= 8 && Math.ceil(Rules.MEASURED.BTN_ICON_TW(tx, t, font) + p.height) > p.width + 0.5) t--;
-      if (t >= 8) { v.visual.objects.text.forEach((e) => { if (isObj(e) && isObj(e.properties) && 'fontSize' in e.properties) e.properties.fontSize = { expr: { Literal: { Value: t + 'D' } } }; }); sized = { from: b.t, to: t }; }
-    }
-    if (narrowed || sized) {
-      const b3 = Rules.buttonNeed({ json: v, type: 'actionButton', h: p.height, w: p.width }, ctx.text);
-      if (b3 && p.width + 0.5 >= b3.needW) {
-        const moved0 = (dl ? left.length : 0) + (dr ? right.length : 0);
-        out.buttons.push(Object.assign({ page: safeName(at), visual: safeName(String(v.name)), kind: 'button', needs: b3.needW, width: p.width }, moved0 ? { moved: moved0 } : {},
-          narrowed ? { slicersNarrowed: narrowed } : {}, sized ? { textSize: sized } : {},
-          { iconKept: `its icon and its Arabic text side by side, on one line: ${[narrowed ? `the ${narrowed === 1 ? 'slicer' : `${narrowed} slicers`} beside it in its row gave the width (as the writer lays out a strip)` : '', sized ? `its text at ${sized.to}pt (was ${sized.from}pt), the largest size at which both fit` : ''].filter(Boolean).join('; ')}` }));
-        return;
-      }
-    }
-    const what = Object.assign({ page: safeName(at), visual: safeName(String(v.name)), kind: b.page ? 'page button' : 'button', needs: b.needW, width: p.width }, narrowed ? { slicersNarrowed: narrowed } : {});
-    const moved = (dl ? left.length : 0) + (dr ? right.length : 0);
-    // (SQ4, X2-S1: the bilingual demo's Arabic Reset button, 201 wide in its 201-wide rail, was cut) still too narrow with
-    // its icon, but wide enough for its text alone: its icon is switched off, as the writer does where the icon and the
-    // text don't fit side by side (pbip-sizing.js resetFit: shapeType blank, no icon size). (FX1: only where neither the
-    // slicers beside it nor a smaller text, down to 8pt, give it room)
-    const icons = isObj(v.visual.objects) && Array.isArray(v.visual.objects.icon) ? v.visual.objects.icon.filter((e) => isObj(e) && isObj(e.properties) && 'shapeType' in e.properties) : [];
-    if (!b.page && b.icon && icons.length && p.width + 0.5 < b.needW && p.width + 0.5 >= Math.ceil(Rules.MEASURED.BTN_TW(b.t, b.n))) {
-      icons.forEach((e) => { e.properties.shapeType = Ls('blank'); delete e.properties.iconSize; });
-      const b2 = Rules.buttonNeed({ json: v, type: 'actionButton', h: p.height, w: p.width }, ctx.text);
-      out.buttons.push(Object.assign({}, what, { needs: b2 ? b2.needW : what.needs, iconOff: 'its icon and its Arabic text do not fit side by side here: the icon is switched off (as the writer does in a narrow place), the text on one line' }, moved ? { moved } : {}));
-      return;
-    }
-    if (dl + dr > 0 || narrowed) out.buttons.push(Object.assign({}, what, moved ? { moved } : {}));
-    if (p.width + 0.5 < b.needW) out.buttonsCut.push(Object.assign({}, what, { room: p.width, why: `its Arabic text needs ${b.needW} wide; its ${v.parentGroupName != null ? 'group' : 'page'} and the visuals beside it leave ${p.width}: give a shorter Arabic text, or Power BI cuts it` }));
-  }
-}
-// (0.3.1 R1: a real user's Arabic title kept its English box, 54 high, and wrapped: about 97 needed) A text box whose
-// Arabic needs more lines than its height holds (check_report's TEXTBOX_FITS: 10 + 1.8 x pt a line, the lines wrapped at
-// 0.55 em a character) is widened toward its end first (the left on an Arabic page), then toward its start, into the free
-// room of its page or group; then, if it still needs more, made taller into the free room under it. It is never laid
-// over another visual (one holding it whole, its panel, aside) nor over the box kept for the language button (reserved);
-// the visuals beside it don't move. A text box the mirror kept with the visual it sits on or names (a badge on a tile, the
-// names beside a bar list: report-mirror.js unitsOf) keeps its place there (skip). What still can't fit is said (textboxesCut)
-function fitTextboxes(page, visuals, ctx, at, reserved, skip) {
-  const out = { textboxes: [], textboxesCut: [] }, byName = {};
-  visuals.forEach((v) => { if (isObj(v) && v.name != null) byName[v.name] = v; });
-  const runsOf = (v) => { const g = isObj(v.visual.objects) && Array.isArray(v.visual.objects.general) ? v.visual.objects.general.find((e) => isObj(e) && isObj(e.properties) && Array.isArray(e.properties.paragraphs)) : null;
-    return g ? g.properties.paragraphs.filter(isObj).map((pa) => (Array.isArray(pa.textRuns) ? pa.textRuns.filter(isObj) : [])) : []; };
-  visuals.forEach((v) => {
-    const p = posOf(v); if (typeOf(v) !== 'textbox' || !p || (skip && skip.has(String(v.name)))) return;
-    const paras = runsOf(v), size = (r) => parseFloat(isObj(r.textStyle) ? r.textStyle.fontSize : '') || ctx.text.labelSize;
-    const lens = paras.map((rs) => rs.reduce((a, r) => a + String(r.value == null ? '' : r.value).length, 0)), sizes = paras.map((rs) => Math.max(0, ...rs.map(size)));
-    if (!lens.some(Boolean)) return;
-    const top = Math.max(...sizes), lines = (w) => paras.reduce((n, rs, i) => n + Math.max(1, Math.ceil(lens[i] * Rules.MEASURED.CH(sizes[i] || top) / Math.max(1, w - 10))), 0), need = (w) => Rules.MEASURED.BOX(top, lines(w));
-    if (p.height + 0.5 >= need(p.width)) return;
-    const g = v.parentGroupName != null ? byName[v.parentGroupName] : null, A = absBox(visuals, v), off = { x: A.x - p.x, y: A.y - p.y };
-    const box = g ? absBox(visuals, g) : { x: 0, y: 0, width: isObj(page) ? page.width : NaN, height: isObj(page) ? page.height : NaN };
-    if (!box || !Number.isFinite(box.width) || !Number.isFinite(box.height)) return;
-    const obst = visuals.filter((x) => x !== v && isObj(x) && !isObj(x.visualGroup) && posOf(x)).map((x) => absBox(visuals, x)).filter((b) => b && !holdsBox(b, A)).concat(reserved || []);
-    const free = (b) => b.x >= box.x - 0.5 && b.x + b.width <= box.x + box.width + 0.5 && b.y >= box.y - 0.5 && b.y + b.height <= box.y + box.height + 0.5 && !obst.some((o) => overlaps(o, b));
-    const room = (side) => { let d = 0; while (d < 4000 && free(side < 0 ? { x: A.x - d - 1, y: A.y, width: A.width + d + 1, height: A.height } : { x: A.x, y: A.y, width: A.width + d + 1, height: A.height })) d++; return d; };
-    const first = ctx.rtl ? -1 : 1, r1 = room(first), r2 = room(-first);
-    let g1 = 0, g2 = 0;
-    while (need(A.width + g1 + g2) > A.height + 0.5 && (g1 < r1 || g2 < r2)) { if (g1 < r1) g1++; else g2++; }
-    // (as little as needed: it stops growing as soon as its lines fit)
-    const dl = first < 0 ? g1 : g2, dr = first < 0 ? g2 : g1, before = { width: p.width, height: p.height };
-    A.x -= dl; A.width += dl + dr;
-    let h = A.height; const want = need(A.width);
-    if (want > h + 0.5) { let d = 0; while (h + d < want && free({ x: A.x, y: A.y, width: A.width, height: h + d + 1 })) d++; h += d; }
-    p.x = Mirror.round(A.x - off.x); p.width = Mirror.round(A.width); p.height = Mirror.round(Math.max(p.height, Math.min(h, Math.ceil(want))));
-    const what = { page: safeName(at), visual: safeName(String(v.name)), needs: { width: Math.ceil(A.width), height: Math.ceil(need(p.width)) }, was: before, now: { width: p.width, height: p.height } };
-    if (p.width !== before.width || p.height !== before.height) out.textboxes.push(what);
-    if (p.height + 0.5 < need(p.width)) out.textboxesCut.push(Object.assign({}, what, { why: `its Arabic text needs ${lines(p.width)} line${lines(p.width) === 1 ? '' : 's'} of ${top}pt, ${Math.ceil(need(p.width))} high, in ${p.width} wide; the room beside and under it holds ${p.height}: give a shorter Arabic text, or Power BI shows a scrollbar or cuts it` }));
-  });
-  return out;
-}
-// A table column with a set width (DataArcus's tables) narrower than its Arabic header (check_report's own measure,
-// report-rules.js headerNeed: bold, + 24 a page of 1080 high, the writer's cellRoom) takes the table's spare width, then
-// width from its text columns down to their own need; a number column is never narrowed. What can't fit is said in
-// headersCut: cut: 'cut' under the share of the measure Desktop has drawn an Arabic header whole in, else 'may be cut'
-// (0.2.9.1, B-173: Desktop 2.159 drew one whole that the measure called cut). Headers set to wrap: none.
-const HIDDEN_W = 10;
 // (0.3.1 MX2, laptop part 8: Fintech's task matrix, written as a table, and its roadmap) a reversed table wider than its
 // box: Power BI lays a table from its left edge and scrolls to the right, so the English first columns (now the last)
 // were behind the scroll. When every column has its own width, the columns English shows are put first (at the left),
@@ -223,7 +64,7 @@ function keepView(page, visuals, at) {
     const qs = isObj(v.visual.query) && isObj(v.visual.query.queryState) && isObj(v.visual.query.queryState.Values) ? v.visual.query.queryState.Values : null, ps = qs && Array.isArray(qs.projections) ? qs.projections : null;
     if (!ps || ps.length < 2 || !ps.every((x) => isObj(x) && typeof x.queryRef === 'string')) return;
     const entry = (x) => v.visual.objects.columnWidth.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === x.queryRef && isObj(y.properties));
-    const w = (x) => { const e = entry(x); return e ? num(e.properties.value) : null; };
+    const w = (x) => { const e = entry(x); return e ? litNumber(e.properties.value) : null; };
     const setW = (x, n) => { entry(x).properties.value = { expr: { Literal: { Value: Mirror.round(n) + 'D' } } }; };
     if (!ps.every((x) => Number.isFinite(w(x)))) return;
     const hidden = ps.filter((x) => w(x) < HIDDEN_W), vis = ps.filter((x) => w(x) >= HIDDEN_W);
@@ -233,6 +74,10 @@ function keepView(page, visuals, at) {
     let i = vis.length, used = 0; while (i > 0 && used + w(vis[i - 1]) <= room + 0.5) { used += w(vis[i - 1]); i--; }
     const whole = vis.slice(i);
     if (!whole.length) return;
+    // (0.3.2 TT1, B-290: MX2's watchlist, its 4-wide Department, ended as a sliver after the names) a table that fits puts
+    // its hidden columns first too, as a wider one does: at the left end, where Power BI starts the table against the
+    // box's edge, as English's sits at its left; the names end at the room's edge. Widths unchanged
+    if (i === 0 && hidden.length && ps.slice(0, hidden.length).some((x) => !hidden.includes(x))) qs.projections = hidden.concat(vis);
     if (i === 0) { const slack = room - 1 - used; if (slack >= 0.5) { setW(vis[0], w(vis[0]) + slack); out.push({ page: safeName(at), visual: safeName(String(v.name)), shown: vis.length, behind: 0 }); } return; }
     const part = vis[i - 1], slice = room - used;
     let shown, behind;
@@ -242,118 +87,40 @@ function keepView(page, visuals, at) {
   });
   return out;
 }
-// (0.3.1 MX7, laptop part 12: Call Center's hour chart 52c8e333 starts 27 left of its heatmap's grid and ends 8 right of
-// it in English; mirrored about its own box it started 8 left and ended 27 right, its bars still left to right, so they
-// stood a cell right of their hours) a matrix keeps its columns in English's left-to-right order (Power BI's matrix has
-// no right-to-left setting), so a chart lined up with its grid keeps English's offset from the grid's left edge: the
-// grid's left is the box's x, its left padding and its row header strip (the row field's columnWidth: 1 when the twin
-// writes its names beside, English's when set, else not counted on either side). Lined up: same parent, a chart with a
-// category axis, its span shared with the matrix's box by 0.8 of the narrower, under it (its top below the matrix's
-// middle, within 24 of its bottom) or over it (the mirror of that). Kept inside its page or group; named in movedByRule.
-// (0.3.1 MX8, laptop part 13: Call Center's hour chart 52c8e333 moved under its grid kept the general mirror inside it:
-// its padding swapped put every bar 16-23 px right of its hour; ER's c1e3e190, its Ascending sort turned Descending, put
-// hour 23's bar under «00») the grid beside it keeps English's left-to-right order, so the chart keeps English's inside
-// too: its container padding, its value and category axis cards (axis side, a time axis's inversion) and its sort, as
-// English has them (absent stays absent); only moved. Before the labels are written, so an axis title still takes its Arabic
-function keepInside(en, tw) {
-  const ev = en.visual, tv = tw.visual; if (!isObj(ev) || !isObj(tv)) return;
-  const put = (bag, k, from) => { if (isObj(from) && from[k] !== undefined) bag[k] = JSON.parse(JSON.stringify(from[k])); else delete bag[k]; };
-  if (isObj(tv.query)) put(tv.query, 'sortDefinition', ev.query);
-  if (!isObj(tv.objects)) tv.objects = {};
-  ['valueAxis', 'categoryAxis'].forEach((k) => put(tv.objects, k, ev.objects));
-  if (!isObj(tv.visualContainerObjects)) tv.visualContainerObjects = {};
-  put(tv.visualContainerObjects, 'padding', ev.visualContainerObjects);
-}
-const GRID_CHARTS = /^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|lineChart|areaChart|stackedAreaChart|hundredPercentStackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart|ribbonChart)$/;
-// the first visual (by name) the chart j would newly cover at x: one it does not overlap in English (boxes on the page,
-// groups added; a heatmap's names table, extra, as its matrix)
-function landsOn(pg, r, extra, j, x) {
-  const ct = r.visuals[j], was = posOf(ct).x; posOf(ct).x = x;
-  try {
-    // (B2new-8) a group's own box counts too (pageBoxes leaves groups out): its place on the page, its parents added
-    const boxes = (vs) => { const m = pageBoxes(vs), by = new Map(vs.filter((v) => isObj(v) && v.name != null).map((v) => [String(v.name), v]));
-      by.forEach((v, n) => { if (!isObj(v.visualGroup) || v.isHidden) return; const p = posOf(v); if (!p) return; const b = { x: p.x, y: p.y, w: p.width, h: p.height };
-        let g = v.parentGroupName, d = 0; while (g != null && by.has(String(g)) && d++ < 10) { const q = posOf(by.get(String(g))); if (!q) return; b.x += q.x; b.y += q.y; g = by.get(String(g)).parentGroupName; }
-        m.set(n, b); }); return m; };
-    const en = boxes(pg.visuals.map((v) => v.json)), ar = boxes(r.visuals.concat((extra || []).map((e) => e.json))), me = String(ct.name);
-    const fromOf = new Map((extra || []).map((e) => [String(e.json.name), e.from])), a = ar.get(me), e0 = en.get(me);
-    if (!a || !e0) return null;
-    const meet = (p, q) => Math.max(0, Math.min(p.x + p.w, q.x + q.w) - Math.max(p.x, q.x)) * Math.max(0, Math.min(p.y + p.h, q.y + q.h) - Math.max(p.y, q.y));
-    for (const [n, b] of [...ar].sort((u, v) => (u[0] < v[0] ? -1 : 1))) {
-      if (n === me || meet(a, b) <= 4) continue;
-      const eb = en.get(fromOf.has(n) ? String(fromOf.get(n)) : n);
-      if (!eb || meet(e0, eb) <= 0) return safeName(String(n));
-    }
-    return null;
-  } finally { posOf(ct).x = was; }
-}
-function underGrids(pg, r, pageW, extra) {
-  const lit0 = (p) => (p && p.expr && p.expr.Literal ? parseFloat(String(p.expr.Literal.Value).replace(/D$/, '')) : NaN);
-  const qs = (v) => (isObj(v) && isObj(v.visual) && isObj(v.visual.query) && isObj(v.visual.query.queryState) ? v.visual.query.queryState : {});
-  const has = (v, k) => isObj(qs(v)[k]) && Array.isArray(qs(v)[k].projections) && qs(v)[k].projections.length > 0;
-  const pad = (v) => { const e = (isObj(v.visual.visualContainerObjects) && Array.isArray(v.visual.visualContainerObjects.padding) ? v.visual.visualContainerObjects.padding : []).find((x) => isObj(x) && !x.selector && isObj(x.properties) && x.properties.left !== undefined); const n = e ? lit0(e.properties.left) : 0; return Number.isFinite(n) ? n : 0; };
-  const strip = (v) => { const rq = qs(v).Rows.projections[0] && qs(v).Rows.projections[0].queryRef, cw = isObj(v.visual.objects) && Array.isArray(v.visual.objects.columnWidth) ? v.visual.objects.columnWidth : [];
-    const e = cw.find((x) => isObj(x) && isObj(x.selector) && x.selector.metadata === rq && isObj(x.properties)); const n = e ? lit0(e.properties.value) : NaN; return Number.isFinite(n) ? n : null; };
-  const parent = (v) => (v.parentGroupName != null ? String(v.parentGroupName) : '');
-  const widthIn = (v) => { const g = parent(v) ? r.visuals.find((x) => isObj(x) && String(x.name) === parent(v)) : null; return g ? (posOf(g) || {}).width : pageW; };
-  pg.visuals.forEach((m, i) => {
-    const en = m.json, tw = r.visuals[i];
-    if (!isObj(en) || !isObj(tw) || Mirror.kindOf(en) !== 'matrix' || !has(en, 'Rows') || !has(en, 'Columns') || !posOf(en) || !posOf(tw)) return;
-    const sEn = strip(en), sTw = strip(tw), both = sEn != null && sTw != null;
-    const leftEn = posOf(en).x + pad(en) + (both ? sEn : 0), leftTw = posOf(tw).x + pad(tw) + (both ? sTw : 0), hb = posOf(en);
-    pg.visuals.forEach((c, j) => {
-      const ce = c.json, ct = r.visuals[j], cb = posOf(ce), q = posOf(ct);
-      if (j === i || !cb || !q || parent(ce) !== parent(en) || !GRID_CHARTS.test(String(ce.visual && ce.visual.visualType)) || !has(ce, 'Category')) return;
-      const share = Math.min(cb.x + cb.width, hb.x + hb.width) - Math.max(cb.x, hb.x);
-      if (share < 0.8 * Math.min(cb.width, hb.width)) return;
-      const under = cb.y >= hb.y + hb.height / 2 && cb.y <= hb.y + hb.height + 24, over = cb.y + cb.height <= hb.y + hb.height / 2 && cb.y + cb.height >= hb.y - 24;
-      if (!under && !over) return;
-      const W = widthIn(ct), want = leftTw + (cb.x - leftEn), x = Mirror.round(Number.isFinite(W) ? Math.max(0, Math.min(W - q.width, want)) : want);
-      // (0.3.1 MX8, the night lab's B2new-1..12 on a6000a27: the chart moved with its grid landed on a visual it did not
-      // overlap in English) moved there it must cover nothing it did not cover in English (a heatmap's names table
-      // counts as its matrix); else it keeps its plain mirror, said
-      const hit = landsOn(pg, r, extra, j, x);
-      if (hit) { (r.moved = r.moved || []).push({ visual: String(ct.name), rule: 'kept at its mirror, not lined up with its heatmap\'s grid: there it would cover ' + hit + ', which it does not in English' }); return; }
-      q.x = x;
-      keepInside(ce, ct);
-      (r.moved = r.moved || []).push({ visual: String(ct.name), rule: 'kept lined up with its heatmap\'s grid, as English: its offset, padding, axis side and sort (the grid reads left to right)' + (Math.abs(x - want) > 0.01 ? ', moved to stay inside its page' : '') });
-    });
-  });
-}
-function fitHeaders(page, visuals, origByName, ctx, at) {
-  const out = { headers: [], headersCut: [] }, sc = isObj(page) && Number.isFinite(page.height) ? page.height / 1080 : 1;
+// (0.3.2 TR1, B-275: the owner, 1 Nov, "in matrices we could switch columns but in tables it's not yet done why?") Power BI
+// lays a table from its left edge: a reversed table narrower than its box kept its blank at the right, so its first
+// English column (now the last) did not reach the box's right edge. keepView lays out a table that has a width for
+// every column; a table Power BI sizes itself (English gives no width, or some only) and that has no auto-size behaviour of its own
+// gets "grow to fit" (columnHeaders.columnAdjustment, Microsoft: "Columns automatically expand to fill the visual
+// container"), in its unselected columnHeaders entry, every other property kept. Only a table English drew as a table
+// (a matrix written as one keeps its own route). No width is computed and no data read (RD1 b275, choice A).
+// Returns [{ page, visual }] for the plan
+const GROW = { expr: { Literal: { Value: "'growToFit'" } } };
+function growTables(visuals, origByName, at) {
+  const out = [];
   visuals.forEach((v) => {
-    const p = posOf(v); if (typeOf(v) !== 'tableEx' || !p || !isObj(v.visual.objects) || !Array.isArray(v.visual.objects.columnWidth)) return;
-    const o = v.visual.objects, H = Rules.tableHeaders(v, ctx.theme, ctx.text.font, sc), T = H.t, font = H.font;
-    if (!H.cols.length) return;
-    const entry = (ref) => o.columnWidth.find((e) => isObj(e) && isObj(e.selector) && e.selector.metadata === ref && isObj(e.properties) && Number.isFinite(num(e.properties.value)));
-    const widthOf = (ref) => { const e = entry(ref); return e ? num(e.properties.value) : null; };
-    const setW = (ref, w) => { entry(ref).properties.value = { expr: { Literal: { Value: w + 'D' } } }; };
-    const head = (x) => String(x.displayName != null ? x.displayName : x.nativeQueryRef || '');
-    const m = (x) => Rules.headerNeed(head(x), T, font, sc), need = (x) => m(x).needW;
-    // (MX3: no column gives its width for another's header any more, so which are text columns no longer matters here)
-    const cols = H.cols.map((c) => c.p);
-    let spare = Math.floor(p.width - 36 * sc - o.columnWidth.filter((e) => isObj(e) && isObj(e.properties)).reduce((a, e) => a + (num(e.properties.value) || 0), 0));
-    // (0.3.1 MX2, Fintech p1's watchlist: its first column, 4 wide in English, came out a cut sliver «القسم») a column
-    // the original hides (narrower than HIDDEN_W) stays hidden: never widened for its header
-    cols.filter((x) => widthOf(x.queryRef) >= HIDDEN_W && widthOf(x.queryRef) + 0.5 < need(x)).forEach((x) => {
-      let short = need(x) - Math.floor(widthOf(x.queryRef)), got = 0;
-      const take = Math.min(short, Math.max(0, spare)); spare -= take; got += take; short -= take;
-      // (0.3.1 MX3, laptop part 9: Fintech's task names narrowed 327 -> 134 and wrapped on three lines, the watchlist's
-      // project names cut "P054 - SEPA Pl...") no column is narrowed for another's header: each keeps its English width,
-      // a header grows only into the box's spare room; what still does not fit is said (headersCut)
-      if (got) setW(x.queryRef, Math.floor(widthOf(x.queryRef)) + got);
-      const w = widthOf(x.queryRef), what = { page: safeName(at), visual: safeName(String(v.name)), column: safeName(x.queryRef), needs: need(x), width: w };
-      if (got) out.headers.push(what);
-      if (short <= 0) return;
-      // (MX3: one short why per column, the measure said once in the plan's sayInPlan: the plan's texts keep their room)
-      if (w + 0.5 >= m(x).lowW) out.headersCut.push(Object.assign({}, what, { cut: 'may be cut', lowW: m(x).lowW, why: 'Power BI may cut it: look in Desktop' }));
-      else out.headersCut.push(Object.assign({}, what, { cut: 'cut', lowW: m(x).lowW, why: 'Power BI cuts it: a shorter Arabic name' }));
-    });
+    const o = isObj(v) ? origByName[v.name] : null;
+    if (typeOf(v) !== 'tableEx' || !o || typeOf(o) !== 'tableEx') return;
+    const qs = isObj(v.visual.query) && isObj(v.visual.query.queryState) && isObj(v.visual.query.queryState.Values) ? v.visual.query.queryState.Values : null, ps = qs && Array.isArray(qs.projections) ? qs.projections : null;
+    if (!ps || ps.length < 2 || !ps.every((x) => isObj(x) && typeof x.queryRef === 'string')) return;
+    // (sized column by column: keepView's. Read on English's table: the twin's own row label route gives English's text
+    // column a width of 0, hidden, which is not the person's sizing)
+    const oq = isObj(o.visual.query) && isObj(o.visual.query.queryState) && isObj(o.visual.query.queryState.Values) && Array.isArray(o.visual.query.queryState.Values.projections) ? o.visual.query.queryState.Values.projections : [];
+    const ocw = isObj(o.visual.objects) && Array.isArray(o.visual.objects.columnWidth) ? o.visual.objects.columnWidth : [];
+    const hasW = (x) => ocw.some((y) => isObj(y) && isObj(y.selector) && isObj(x) && y.selector.metadata === x.queryRef && isObj(y.properties) && litNumber(y.properties.value) != null);
+    if (!oq.length || oq.every(hasW)) return;
+    const obj = isObj(v.visual.objects) ? v.visual.objects : null;
+    const ch = obj && Array.isArray(obj.columnHeaders) ? obj.columnHeaders : null;
+    if (ch && ch.some((e) => isObj(e) && isObj(e.properties) && e.properties.columnAdjustment !== undefined)) return;   // (its own adjustment: kept)
+    if (obj && obj.columnHeaders !== undefined && !ch) return;   // (a shape not expected: left as it is)
+    const objects = v.visual.objects = obj || {}, list = objects.columnHeaders = ch || [];
+    let e = list.find((x) => isObj(x) && !x.selector && isObj(x.properties));
+    if (!e) { e = { properties: {} }; list.push(e); }
+    e.properties.columnAdjustment = GROW;
+    out.push({ page: safeName(at), visual: safeName(String(v.name)) });
   });
   return out;
 }
-
 // (0.3.0 D3, the laptop's proof of rc.2: «التفاصيل» kept the English tab's 55 wide on the phone and wrapped, "التفاصيـ / ل")
 // The page tabs of a phone row (page buttons with the same phone top), already mirrored: each as wide as its Arabic name
 // by the writer's phone rule (pbip-sizing.js phoneTabWidth: one line, bold, at the phone's 10pt), laid from the row's
@@ -362,9 +129,8 @@ function fitHeaders(page, visuals, origByName, ctx, at) {
 // hold them. A row whose names can't all fit is shared in proportion, and said (tabsCut).
 function fitPhoneTabs(pg, visuals, mobiles, ctx, out) {
   const W = Mirror.PHONE_W, G = Sizing.PHONE_TAB.gap, box = (m) => (m && isObj(m.position) && ['x', 'y', 'width', 'height'].every((k) => Number.isFinite(m.position[k])) ? m.position : null);
-  const lit = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") : null);
-  const isTab = (v) => typeOf(v) === 'actionButton' && /PageNavigation/i.test(String(lit((((v.visual.visualContainerObjects || {}).visualLink || []).find((e) => isObj(e) && isObj(e.properties)) || { properties: {} }).properties.type)));
-  const textOf = (v) => { const es = isObj(v.visual.objects) && Array.isArray(v.visual.objects.text) ? v.visual.objects.text.filter((e) => isObj(e) && isObj(e.properties)) : [], t = es.map((e) => lit(e.properties.text)).find((x) => x != null), f = es.map((e) => lit(e.properties.fontFamily)).find((x) => x != null); return { text: t, font: f || ctx.text.font }; };
+  const isTab = (v) => typeOf(v) === 'actionButton' && /PageNavigation/i.test(String(litText((((v.visual.visualContainerObjects || {}).visualLink || []).find((e) => isObj(e) && isObj(e.properties)) || { properties: {} }).properties.type)));
+  const textOf = (v) => { const es = isObj(v.visual.objects) && Array.isArray(v.visual.objects.text) ? v.visual.objects.text.filter((e) => isObj(e) && isObj(e.properties)) : [], t = es.map((e) => litText(e.properties.text)).find((x) => x != null), f = es.map((e) => litText(e.properties.fontFamily)).find((x) => x != null); return { text: t, font: f || ctx.text.font }; };
   const tabs = visuals.map((v, i) => ({ v, m: mobiles[i], i })).filter((x) => isObj(x.v) && isObj(x.v.visual) && isTab(x.v) && box(x.m) && textOf(x.v).text != null);
   const orig = (x) => box(pg.visuals[x.i].mobile.json);
   const rows = [];
@@ -391,183 +157,7 @@ function fitPhoneTabs(pg, visuals, mobiles, ctx, out) {
     const x0 = Math.min(gb.x, ...kids.map((q) => q.x)), x1 = Math.max(gb.x + gb.width, ...kids.map((q) => q.x + q.width));
     gb.x = Mirror.round(x0); gb.width = Mirror.round(x1 - x0); });
 }
-const EXT_SCHEMA = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json';
 
-// (0.3.0 X1) a visual of the Arabic pages moved to the Arabic copy of a report measure (rename: "Entity\0name" -> the
-// copy's name): the field, its queryRef and every selector naming it, and its nativeQueryRef, as Power BI names a
-// measure's projection ("Entity.Name", "Name")
-function rewireMeasures(vj, rename) {
-  const refs = new Map();
-  rename.forEach((to, k) => { const [entity, from] = k.split('\u0000'); refs.set(entity + '.' + from, { ref: entity + '.' + to, from, to }); });
-  const walk = (o) => {
-    if (Array.isArray(o)) { o.forEach(walk); return; }
-    if (!isObj(o)) return;
-    const ms = isObj(o.Measure) ? o.Measure : null, src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
-    if (src && src.Schema === 'extension' && rename.has(src.Entity + '\u0000' + ms.Property)) ms.Property = rename.get(src.Entity + '\u0000' + ms.Property);
-    const r = typeof o.queryRef === 'string' ? refs.get(o.queryRef) : null;
-    if (r && o.nativeQueryRef === r.from) o.nativeQueryRef = r.to;
-    Object.keys(o).forEach((k) => { if (typeof o[k] === 'string' && refs.has(o[k])) o[k] = refs.get(o[k]).ref; else walk(o[k]); });
-  };
-  walk(vj);
-}
-
-// (0.3.1 TW1, M1-S2: the twin's mirrored table had no "Total": Power BI writes it only in the first projection's column,
-// and only when that is a column of text (measured, round 10), and the reversed columns put a number first) A table whose
-// original starts with a column of text and shows a number takes the writer's right-to-left table (pbip-query.js
-// rowLabelOf, round 23, proven in Desktop 2.158 on 8 Oct): that column first at width 0 (hidden; it keeps the rows, their
-// order and what a click filters), the numbers as mirrored, and at the right the report measure "Row label: <Column>"
-// (rowLabelDax: the row's name, «الإجمالي» on the total row) under the column's header, with the column's width. A name
-// with a control character, or a number Power BI sums in a way DAX can't name, keeps the table as mirrored (AUD-032).
-// isText(t, c): the model's type allows text; extMeasure(t, want, expression): the measure's free name. Returns
-// "Table[Row label: ...]" or null
-const fieldOk = (f) => isObj(f) && isObj(f.Expression) && isObj(f.Expression.SourceRef) && !f.Expression.SourceRef.Schema && typeof f.Expression.SourceRef.Entity === 'string' && typeof f.Property === 'string';
-function rowLabelTable(vj, isText, extMeasure) {
-  const qs = typeOf(vj) === 'tableEx' && isObj(vj.visual.query) && isObj(vj.visual.query.queryState) ? vj.visual.query.queryState : null, ps = qs && isObj(qs.Values) && Array.isArray(qs.Values.projections) ? qs.Values.projections : null;
-  if (!ps || ps.length < 2 || !ps.every((p) => isObj(p) && isObj(p.field) && typeof p.queryRef === 'string')) return null;
-  const last = ps[ps.length - 1], col = last.field.Column;
-  if (!fieldOk(col) || !isText(col.Expression.SourceRef.Entity, col.Property)) return null;
-  const f = { t: col.Expression.SourceRef.Entity, c: col.Property }, rest = ps.slice(0, -1);
-  const vals = rest.filter((p) => (isObj(p.field.Measure) && !(isObj(p.field.Measure.Expression) && isObj(p.field.Measure.Expression.SourceRef) && p.field.Measure.Expression.SourceRef.Schema)) || (isObj(p.field.Aggregation) && p.displayName !== ' '));
-  const okVal = (p) => (p.field.Measure ? fieldOk(p.field.Measure) : isObj(p.field.Aggregation.Expression) && fieldOk(p.field.Aggregation.Expression.Column) && Q.AGG_DAX[p.field.Aggregation.Function] != null);
-  const names = (p) => (p.field.Measure ? [p.field.Measure.Expression.SourceRef.Entity, p.field.Measure.Property] : [p.field.Aggregation.Expression.Column.Expression.SourceRef.Entity, p.field.Aggregation.Expression.Column.Property]);
-  if (!vals.length || !vals.every(okVal) || [f.t, f.c].concat(...vals.map(names)).some((n) => Q.hasControl(n))) return null;
-  const name = extMeasure(f.t, Q.ROW_LABEL + Q.shown(f.c), Q.rowLabelDax(f, 'الإجمالي', vals)), ref = f.t + '.' + name;
-  qs.Values.projections = [last].concat(rest, [{ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: f.t } }, Property: name } }, queryRef: ref, nativeQueryRef: name, displayName: last.displayName != null ? last.displayName : (last.nativeQueryRef || f.c) }]);
-  const o = vj.visual.objects = isObj(vj.visual.objects) ? vj.visual.objects : {}, cw = o.columnWidth = Array.isArray(o.columnWidth) ? o.columnWidth : [];
-  const w = cw.find((e) => isObj(e) && isObj(e.selector) && e.selector.metadata === last.queryRef && isObj(e.properties));
-  if (w) cw.push({ properties: { value: w.properties.value }, selector: { metadata: ref } });
-  if (w) w.properties.value = { expr: { Literal: { Value: '0D' } } }; else cw.push({ properties: { value: { expr: { Literal: { Value: '0D' } } } }, selector: { metadata: last.queryRef } });
-  const cf = o.columnFormatting = Array.isArray(o.columnFormatting) ? o.columnFormatting : [];
-  cf.push({ properties: { alignment: Ls('Right'), styleHeader: { expr: { Literal: { Value: 'true' } } }, styleValues: { expr: { Literal: { Value: 'true' } } }, styleTotal: { expr: { Literal: { Value: 'true' } } } }, selector: { metadata: ref } });
-  return f.t + '[' + name + ']';
-}
-
-// ---- the twin's pages, built in memory (the plan shows what they fit; the write writes exactly them) ----
-// labels: by the mirror engine's ids (the report's own names). Returns { pages: [{ rel, page, visuals: [json] }],
-// applied, ext (the twin's reportExtensions.json or null), titleMeasures, fitted }
-// (0.3.1 MP1, the laptop's part 4b: a KPI icon landed on its own title «المكالمات») a small visual on a bigger one is kept
-// at its place on it (Mirror's units: what a bigger visual draws inside does not flip). Where text does turn right, the
-// small visual goes to the other end with it, as the boxes' own padding does:
-// - (MP1b, laptop part 6: Fintech's «فهمت» over its help text) it lies on a text box whose text turns right (that text
-//   box its host or not): to the text box's other end;
-// - it sits on a text box, or on a visual whose own title turns right (a card's title): to that visual's other end;
-// - (MP1b, part 6: Call Center's 4 KPI icons) kept at its place it would lie on another visual it did not touch in
-//   English (a title mirrored beside it): mirrored on its own (to the host's other end).
-// A text box whose paragraphs are all centred turns nothing.
-const textTurns = (v) => (isObj(v) && isObj(v.visual) && isObj(v.visual.objects) && Array.isArray(v.visual.objects.general) ? v.visual.objects.general : [])
-  .some((e) => isObj(e) && isObj(e.properties) && Array.isArray(e.properties.paragraphs) && e.properties.paragraphs.some((pa) => isObj(pa) && pa.horizontalTextAlignment !== 'center'));
-const boxOk = (v) => isObj(v) && isObj(v.position) && ['x', 'y', 'width', 'height'].every((k) => Number.isFinite(v.position[k]));
-const litOf = (p) => (isObj(p) && isObj(p.expr) && isObj(p.expr.Literal) ? String(p.expr.Literal.Value).replace(/^'|'$/g, '') : null);
-const titleAlign = (v) => { const t = isObj(v) && isObj(v.visual) && isObj(v.visual.visualContainerObjects) && Array.isArray(v.visual.visualContainerObjects.title) ? v.visual.visualContainerObjects.title.find((e) => isObj(e) && !e.selector && isObj(e.properties)) : null;
-  return t && litOf(t.properties.show) !== 'false' ? String(litOf(t.properties.alignment) || 'left').toLowerCase() : null; };
-const titleTurns = (en, ar) => { const a = titleAlign(en), b = titleAlign(ar); return a != null && b === 'right' && a !== 'right'; };
-const overlapOf = (a, b) => Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
-function badgesWithText(pg, r) {
-  const en = new Map(pg.visuals.filter((v) => isObj(v.json)).map((v) => [String(v.json.name), v.json])), ar = new Map((r.visuals || []).filter(isObj).map((v) => [String(v.name), v]));
-  const within = (b0, t0, t1) => Mirror.round(t1.position.x + t0.position.width - (b0.position.x - t0.position.x) - b0.position.width);
-  ((r.units && r.units.on) || []).forEach((u) => {
-    const h0 = en.get(String(u.host)), b0 = en.get(String(u.visual)), h1 = ar.get(String(u.host)), b1 = ar.get(String(u.visual));
-    if (![h0, b0, h1, b1].every(boxOk)) return;
-    const sib = [...en.entries()].filter(([n, v]) => n !== String(u.visual) && n !== String(u.host) && boxOk(v) && boxOk(ar.get(n)) && String(v.parentGroupName || '') === String(b0.parentGroupName || '') && !v.visualGroup);
-    // a text box under it whose text turns right
-    const t = sib.find(([, v]) => Mirror.kindOf(v) === 'textbox' && textTurns(v) && overlapOf(v.position, b0.position) >= b0.position.width * b0.position.height / 2);
-    const moved = (x, rule) => { if (x !== b1.position.x) { b1.position.x = x; (r.moved = r.moved || []).push({ visual: String(u.visual), rule }); } };
-    if (t) { moved(within(b0, t[1], ar.get(t[0])), 'a small visual on a text box: to its other end with the text'); return; }
-    // its host's text or title turns right
-    if ((Mirror.kindOf(h0) === 'textbox' && textTurns(h0)) || titleTurns(h0, h1)) { moved(within(b0, h0, h1), 'a small visual on a visual whose text or title turns right: to its other end'); return; }
-    // kept, it would lie on another visual it did not touch in English
-    if (sib.some(([n, v]) => overlapOf(ar.get(n).position, b1.position) > 0 && overlapOf(v.position, b0.position) <= 0)) moved(within(b0, h0, h1), 'a small visual kept on its host would cover another: mirrored on its own');
-  });
-}
-// (0.3.1 MP1c, laptop part 7: ER's weekday bars over the heatmap's row headers; Call Center's small bar chart over the
-// ratings table, its count labels on the stars) a matrix keeps its row headers at its left, and a table of one column is
-// not reversed: both stay left to right inside. A bar chart drawn over one of them keeps its place on it and its bars'
-// direction (as Mirror keeps a badge on its host, and T-6 a bar list's direction); a visual that overlapped a matrix on
-// its right part (away from its row headers) is narrowed on its side facing the matrix by the overlap in the twin, so
-// it does not lie on the row headers (inside its own mirrored box: it stays on its panel)
-// (0.3.1 MP1d, laptop part 8: Desktop keeps a table's columns at its left edge in the twin too, whatever their number)
-// a matrix, or a table of any number of columns, as page-picture.mjs's check decides it
-const staysLtr = (v) => Mirror.kindOf(v) === 'matrix' || Mirror.kindOf(v) === 'table';
-function aroundTables(pg, r, opts) {
-  const list = pg.visuals.map((v) => v.json), byName = new Map(list.filter(isObj).map((v) => [String(v.name), v])), arAt = new Map((r.visuals || []).map((v, i) => [isObj(v) ? String(v.name) : '', i]));
-  const widthOf = (v) => { const g = v.parentGroupName != null ? byName.get(String(v.parentGroupName)) : null; return g && boxOk(g) ? g.position.width : pageOf(pg).width; };
-  list.filter((m) => boxOk(m) && staysLtr(m) && arAt.has(String(m.name))).forEach((m0) => {
-    const m1 = r.visuals[arAt.get(String(m0.name))];
-    list.filter((v) => v !== m0 && boxOk(v) && !v.visualGroup && String(v.parentGroupName || '') === String(m0.parentGroupName || '') && arAt.has(String(v.name))).forEach((v0) => {
-      const i = arAt.get(String(v0.name)), v1 = r.visuals[i], a = v0.position, b = m0.position, ov = overlapOf(a, b); if (!ov || !boxOk(v1) || !boxOk(m1)) return;
-      if (Mirror.kindOf(v0) === 'bar' && ov >= a.width * a.height * 0.75 && Number.isFinite(a.z) && Number.isFinite(b.z) && a.z > b.z) {
-        let k; try { k = Mirror.mirrorVisual(v0, widthOf(v0), Object.assign({}, opts, { keepDirection: true })).json; } catch (e) { return; }
-        if (!isObj(k) || !isObj(k.position)) return;
-        // (0.3.1 MX6, the fuzz lab's B1-3: a bar 57 left of its table's left edge, the table mirrored to x 0, went to x -57)
-        // the kept offset is clamped to its page or group; a bar wider than its page or group can't be kept inside: said
-        const W = widthOf(v0), want = Mirror.round(m1.position.x + a.x - b.x), x = Mirror.round(Math.max(0, Math.min(want, W - k.position.width)));
-        k.position.x = x; r.visuals[i] = k;
-        (r.moved = r.moved || []).push({ visual: String(v0.name), rule: 'a bar chart over a table or matrix that stays left to right: kept on it, its bars\' direction kept' + (k.position.width > W + 0.5 ? `; wider (${a.width}) than its ${v0.parentGroupName != null ? 'group' : 'page'} (${W}): it cannot fit inside` : x !== want ? `; moved ${Mirror.round(Math.abs(x - want))} to stay inside its ${v0.parentGroupName != null ? 'group' : 'page'}` : '') }); return;
-      }
-      // (a matrix only: its row headers are at its left in both languages)
-      if (Mirror.kindOf(m0) !== 'matrix') return;
-      // (0.3.1 MP1d, laptop part 8: a column chart under the heatmap, overlapping only its bottom, was cut to 6.67 wide, a
-      // card behind a matrix of its own box to 0.92) only a visual in the matrix's side margin: its left edge in the
-      // matrix's right half, its right edge past the matrix's, its overlap a strip (a third of its own width at most, a
-      // quarter of the matrix's) beside the matrix's rows for half its height or more; never one that covers the
-      // matrix, lies under or behind it, or touches only its top or bottom edge
-      const p1 = v1.position, q1 = m1.position, ow = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x), oh = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
-      const margin = a.x > b.x + b.width / 2 && a.x + a.width > b.x + b.width && ow > 0 && ow <= a.width / 3 && ow <= b.width / 4 && oh >= a.height / 2;
-      if (margin && overlapOf(p1, q1) > 0 && p1.x < q1.x) { p1.width = Mirror.round(q1.x - p1.x); (r.moved = r.moved || []).push({ visual: String(v0.name), rule: 'in a matrix\'s side margin: narrowed off its row headers' }); }
-    });
-  });
-}
-// (0.3.1 MP1c, laptop part 7: Call Center's KPI titles ["\t\t\t\t\t", "Calls"], the word under the mirrored icon) on a text
-// box paragraph the twin turns right, the runs of only tabs or spaces at its start (indentation) move to its end, so
-// the room they kept stays on the side of the icon; after the labels (the runs' ids are those the plan listed)
-const paragraphsIn = (o) => { const g = isObj(o) && isObj(o.visual) && isObj(o.visual.objects) ? o.visual.objects.general : isObj(o) && isObj(o.objects) ? o.objects.general : null;
-  return (Array.isArray(g) ? g : []).flatMap((e) => (isObj(e) && isObj(e.properties) && Array.isArray(e.properties.paragraphs) ? e.properties.paragraphs : [])); };
-function indentToEnd(en, ar) {
-  const ep = paragraphsIn(en), ap = paragraphsIn(ar);
-  ap.forEach((pa, i) => {
-    const was = isObj(ep[i]) ? ep[i].horizontalTextAlignment : undefined;
-    if (!isObj(pa) || pa.horizontalTextAlignment !== 'right' || was === 'right' || was === 'center' || !Array.isArray(pa.textRuns)) return;
-    let k = 0; while (k < pa.textRuns.length - 1 && isObj(pa.textRuns[k]) && typeof pa.textRuns[k].value === 'string' && /^[ \t\u00A0]+$/.test(pa.textRuns[k].value)) k++;
-    if (k && pa.textRuns.slice(k).some((x) => isObj(x) && typeof x.value === 'string' && x.value.trim())) pa.textRuns = pa.textRuns.slice(k).concat(pa.textRuns.slice(0, k));
-  });
-}
-// (0.3.1 MP1d, laptop part 8: «متوسط مدة المكالمة (بالثواني)» touched its clock icon: the Arabic, wider than the
-// English, outgrew the tab stops that kept the icon's room) where a small visual lies, after the mirror and the text
-// fitting, on the end of a text box its text runs to (its paragraphs right-aligned: its right end), the text box ends
-// ICON_GAP before it: its width reduced on that side, whatever the text's width
-// (0.3.1 MP1f, laptop part 9: Call Center's four KPI boxes narrowed by the icon's width, 52.6 px, so every right-aligned
-// line, not only the title, moved left: Talk Time's sparkline crossed «3m 46s», two comparison lines wrapped and the box
-// scrolled) the narrowing is checked against the box's other paragraphs: a box with any other line keeps its width, and
-// the icon's room goes to the title's paragraph only (the one English indented, else the first with text): its end
-// spaces or tabs become one run of no-break spaces as wide as the room, measured (text-measure.js, the run's size),
-// where tab stops gave a room the wider Arabic outgrew (part 8). A box of one paragraph still ends before the icon
-const ICON_GAP = 4, NBSP = '\u00A0', BLANK = /^[ \t\u00A0]+$/;
-const runText = (pa) => (isObj(pa) && Array.isArray(pa.textRuns) ? pa.textRuns.map((r) => (isObj(r) && typeof r.value === 'string' ? r.value : '')).join('') : '');
-function titleRoom(ps, room) {
-  let k = ps.findIndex((pa) => Array.isArray(pa.textRuns) && pa.textRuns.length > 1 && BLANK.test(String((pa.textRuns[pa.textRuns.length - 1] || {}).value || '')) && runText(pa).trim());
-  if (k < 0) k = ps.findIndex((pa) => runText(pa).trim());
-  if (k < 0) return;
-  const rs = ps[k].textRuns; let n = rs.length; while (n > 1 && isObj(rs[n - 1]) && BLANK.test(String(rs[n - 1].value || ''))) n--;
-  const like = rs[n] || [...rs.slice(0, n)].reverse().find((r) => isObj(r) && String(r.value || '').trim()) || {};
-  const pt = parseFloat(isObj(like.textStyle) ? like.textStyle.fontSize : '') || 12, space = TextMeasure.textWidth(' ', pt);
-  const run = Object.assign(JSON.parse(JSON.stringify(like)), { value: NBSP.repeat(Math.max(1, Math.ceil(room / space - 1e-9))) });
-  ps[k].textRuns = rs.slice(0, n).concat([run]);
-}
-function iconRoom(visuals, moved) {
-  const list = (visuals || []).filter((v) => boxOk(v) && !v.visualGroup);
-  list.filter((t) => Mirror.kindOf(t) === 'textbox').forEach((t) => {
-    const ps = paragraphsIn(t);
-    if (!ps.length || !ps.every((pa) => isObj(pa) && pa.horizontalTextAlignment === 'right')) return;
-    const tp = t.position;
-    list.forEach((i) => {
-      const ip = i.position; if (i === t || String(i.parentGroupName || '') !== String(t.parentGroupName || '') || ip.width > tp.width / 3 || ip.height > tp.height * 1.5 || overlapOf(ip, tp) < ip.width * ip.height / 2) return;
-      const w = ip.x - ICON_GAP - tp.x;
-      if (!(ip.x + ip.width / 2 > tp.x + tp.width * 3 / 4 && w >= 10 && w < tp.width)) return;
-      if (ps.filter((pa) => runText(pa).trim()).length > 1) { titleRoom(ps, tp.width - w); return; }
-      tp.width = Mirror.round(w); if (moved) moved.push({ visual: String(t.name), rule: 'a text box ends before the icon on its end' });
-    });
-  });
-}
 // (0.3.1 MP1d, the owner, 1 Nov, on part 7 vs part 8: Call Center's heatmap row cut to a sliver and nothing caught it)
 // the twin never shrinks a visual. Run last on each page, after every rule (the mirror, the badges, the tables, the
 // fitting): a visual narrower or lower than KEEP_MIN of its English size, or a bar or column chart under CHART_MIN px
@@ -589,68 +179,20 @@ export function keepSize(enVisuals, arVisuals, W, shared) {
   });
   return out;
 }
+// ---- the twin's pages, built in memory (the plan shows what they fit; the write writes exactly them) ----
+// labels: by the mirror engine's ids (the report's own names). Returns { pages: [{ rel, page, visuals: [json] }],
+// applied, ext (the twin's reportExtensions.json or null), titleMeasures, fitted }
 export function buildTwin(P, labels) {
   const { R } = P, opts = { timeRightToLeft: P.timeRightToLeft !== false, waterfallRtl: P.waterfallRtl, dateTables: P.dateTables, dateColumns: P.dateColumns, textColumns: P.textColumns };
-  // (D1) a waterfall's measures go into the twin's own reportExtensions.json (the original's copied, or a new one), each
-  // name free of the model's and the report's; the same DAX in the same table is one measure
-  const wfWritten = [];
-  opts.waterfall = Object.assign(waterfallFacts(P.model), { theme: R.theme, extMeasure: (t, want, expression, dataType, formatString) => {
-    if (!ext) ext = { $schema: EXT_SCHEMA, name: 'extension', entities: [] };
-    let e = ext.entities.find((x) => isObj(x) && x.name === t); if (!e) ext.entities.push(e = { name: t, measures: [] }); if (!Array.isArray(e.measures)) e.measures = [];
-    const had = wfWritten.find((x) => x.t === t && x.expression === expression); if (had) return had.m;
-    const names = takenAnywhere(); let m = want; for (let k = 2; names.has(m.toLowerCase()); k++) m = want + ' (' + k + ')';
-    e.measures.push(Object.assign({ name: m, dataType, expression }, formatString ? { formatString } : {})); wfWritten.push({ t, m, expression }); return m; } });
+  // (0.3.2 SP40) the twin's measures (twin-measures.mjs): its own copy of reportExtensions.json, the title, text,
+  // waterfall and row label measures, each name free; the mirror's waterfall takes its measures from it
+  const M = twinMeasures(P, labels);
+  opts.waterfall = M.waterfall;
   const TC = P.R.theme && isObj(P.R.theme.textClasses) ? P.R.theme.textClasses : {}, lab = isObj(TC.label) ? TC.label : {};
   const ctx = { text: { labelSize: +lab.fontSize || 10, font: lab.fontFace || 'Segoe UI' }, theme: R.theme };
-  let applied = 0;
-  // the title measures: the twin's own Arabic ones, named "Title AR: ...", beside the original's (which stay as they are)
-  const tms = titleMeasuresOf(R), rename = new Map(), written = [];
-  let ext = R.ext ? JSON.parse(JSON.stringify(R.ext)) : null;
-  // (D1: a measure's name is unique across the whole model, report measures included, without case (writer P3): the
-  // waterfall's names are checked against every table's and every report measure's)
-  const takenAnywhere = () => new Set([].concat(...((ext && ext.entities) || []).map((e) => (isObj(e) && Array.isArray(e.measures) ? e.measures.map((x) => (isObj(x) ? x.name : '')) : [])),
-    ...((P.model && P.model.tables) || []).map((t) => (t.columns || []).map((c) => c.name).concat((t.measures || []).map((c) => c.name)))).map((n) => String(n).toLowerCase()));
-  const taken = (entity) => { const e = ext.entities.find((x) => isObj(x) && x.name === entity), t = P.model && (P.model.tables || []).find((x) => x.name === entity);
-    return new Set([].concat((e && Array.isArray(e.measures) ? e.measures : []).map((x) => isObj(x) ? x.name : ''), t ? (t.columns || []).map((c) => c.name).concat((t.measures || []).map((c) => c.name)) : []).map((n) => String(n).toLowerCase())); };
-  tms.filter((x) => x.pd.branches && ext).forEach((x) => {
-    const ls = x.pd.branches.map((b) => (labels['titleText:' + b.template] != null ? labels['titleText:' + b.template] : null));
-    if (ls.every((l) => l == null)) return;
-    const e = ext.entities.find((y) => isObj(y) && y.name === x.entity), base = /^Title: /.test(x.name) ? 'Title AR: ' + x.name.slice(7) : 'Title AR: ' + x.name, names = taken(x.entity);
-    let name = base; for (let k = 2; names.has(name.toLowerCase()); k++) name = base + ' (' + k + ')';
-    e.measures.push(Object.assign(JSON.parse(JSON.stringify(x.measure)), { name, expression: arabicDax(x.pd, ls) }));
-    rename.set(x.entity + '\u0000' + x.name, name); written.push(safeName(x.entity + '[' + name + ']'));
-  });
-  // (0.3.0 D3) the report's other text measures a visual shows (the empty state): rewritten in the twin's own copy of
-  // reportExtensions.json (the original's file is only read), each text as approved
-  let rewritten = 0;
-  // (0.3.0 X1) both languages in one report: the English pages keep the measure as it is, the Arabic pages get their own
-  // ("No data AR: ..."), each name free as the waterfall's are, and their visuals are moved to it (textRename)
-  const textRename = new Map();
-  if (ext) textMeasuresOf(R).filter((x) => x.pd.branches).forEach((x) => {
-    const ls = x.pd.branches.map((b) => (b.template && labels['measureText:' + b.template] != null ? labels['measureText:' + b.template] : null));
-    if (ls.every((l) => l == null)) return;
-    const e = ext.entities.find((y) => isObj(y) && y.name === x.entity), m = e && Array.isArray(e.measures) ? e.measures.find((y) => isObj(y) && y.name === x.name) : null;
-    if (!m) return;
-    if (P.same) {
-      const base = /^No data: /.test(x.name) ? 'No data AR: ' + x.name.slice(9) : x.name + ' AR', names = takenAnywhere();
-      let name = base; for (let k = 2; names.has(name.toLowerCase()); k++) name = base + ' (' + k + ')';
-      e.measures.push(Object.assign(JSON.parse(JSON.stringify(m)), { name, expression: arabicDax(x.pd, ls) }));
-      textRename.set(x.entity + '\u0000' + x.name, name);
-    } else m.expression = arabicDax(x.pd, ls);
-    rewritten++; applied++;
-  });
-  // (TW1, M1-S2) the tables' row labels: each in the twin's reportExtensions.json, named free as the waterfall's are; the
-  // same DAX in the same table is one measure
-  const rlWritten = [], tables = [];
-  const typeIn = (t, c) => { const tb = P.model && (P.model.tables || []).find((x) => x.name === t), cl = tb && (tb.columns || []).find((x) => x.name === c); return cl ? String(cl.dataType || '') : ''; };
-  const isText = (t, c) => /^(|string|text|unknown)$/i.test(typeIn(t, c));
-  const rowLabelMeasure = (t, want, expression) => {
-    if (!ext) ext = { $schema: EXT_SCHEMA, name: 'extension', entities: [] };
-    let e = ext.entities.find((x) => isObj(x) && x.name === t); if (!e) ext.entities.push(e = { name: t, measures: [] }); if (!Array.isArray(e.measures)) e.measures = [];
-    const had = rlWritten.find((x) => x.t === t && x.expression === expression); if (had) return had.m;
-    const names = takenAnywhere(); let m = want; for (let k = 2; names.has(m.toLowerCase()); k++) m = want + ' (' + k + ')';
-    e.measures.push({ name: m, dataType: 'Text', expression }); rlWritten.push({ t, m, expression }); return m; };
-  const keptInView = [], laidOut = [], fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [], textboxes: [], textboxesCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 }, sizeKept = [], ruleMoves = [];
+  let applied = M.applied;
+  const tables = [];
+  const keptInView = [], laidOut = [], grown = [], fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [], textboxes: [], textboxesCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 }, sizeKept = [], ruleMoves = [];
   const pages = R.pages.map((pg) => {
     let page = pg.page;
     if (isObj(pg.page)) { page = JSON.parse(JSON.stringify(pg.page)); if (labels['page:' + pg.id] != null) { page.displayName = labels['page:' + pg.id]; applied++; } }
@@ -681,12 +223,8 @@ export function buildTwin(P, labels) {
       // (TB1b) a subtitle given by a measure: written only as its approved Arabic (a fixed subtitle)
       subtitleMeasuresOf(vj).forEach(({ i }) => { const ar = labels[`text:${pg.id}/${vj.name}/c.subTitle.${i}.text`]; if (ar != null && String(ar).trim()) { vj.visual.visualContainerObjects.subTitle[i].properties.text = Ls(String(ar)); applied++; } });
       if (isObj(vj) && isObj(vj.visual)) wholeTitles(vj.visual.visualContainerObjects);
-      if (textRename.size) rewireMeasures(vj, textRename);
-      if (!P.keepLtr(pg)) { const rl = rowLabelTable(vj, isText, rowLabelMeasure); if (rl) tables.push({ page: safeName(pg.id), visual: safeName(String(vj.name)), measure: safeName(rl) }); }
-      if (!P.keepLtr(pg)) Mirror.rowLabelStyle(vj);   // (0.3.1 MX1) the row label column keeps its text column's colours
-      const t = isObj(vj) && isObj(vj.visual) && isObj(vj.visual.visualContainerObjects) && Array.isArray(vj.visual.visualContainerObjects.title) ? vj.visual.visualContainerObjects.title : [];
-      t.forEach((e) => { const ms = isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) && isObj(e.properties.text.expr.Measure) ? e.properties.text.expr.Measure : null, src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
-        if (src && src.Schema === 'extension' && rename.has(src.Entity + '\u0000' + ms.Property)) { ms.Property = rename.get(src.Entity + '\u0000' + ms.Property); applied++; } });
+      // (0.3.0 X1, TW1, MX1, the title measures) its measures: the Arabic copies, the table's row label, the title's own
+      { const m = M.rewire(vj, pg.id, !P.keepLtr(pg)); applied += m.applied; if (m.table) tables.push(m.table); }
     });
     if (!P.keepLtr(pg)) r.visuals.forEach((vj, i) => { if (pg.visuals[i] && Mirror.kindOf(vj) === 'textbox') indentToEnd(pg.visuals[i].json, vj); });
     // (the fitting reads and changes only the twin's copies)
@@ -696,6 +234,8 @@ export function buildTwin(P, labels) {
       try { const h = fitHeaders(page, r.visuals, origByName, c, pg.id); fitted.headers.push(...h.headers); fitted.headersCut.push(...h.headersCut); } catch (e) { /* a shape not expected: left as it is */ }
       // (0.3.1 MX2) after the headers' widths: a wide table keeps the English view
       if (c.rtl) { try { keepView(page, r.visuals, pg.id).forEach((k) => { laidOut.push(k.page + '/' + k.visual); if (k.behind) keptInView.push(k); }); } catch (e) { /* a shape not expected: left as it is */ } }
+      // (0.3.2 TR1) a table Power BI sizes itself: its columns fill its box
+      if (c.rtl) { try { grown.push(...growTables(r.visuals, origByName, pg.id)); } catch (e) { /* a shape not expected: left as it is */ } }
       // (0.3.1 R1) the text boxes; in one report with both languages, the box the language button will take is kept free
       try { const lb = P.same && !c.noButton(pg) ? langButton(page, r.visuals, [], 'ar', '', 'reserved', R.theme) : null, keep = lb && lb.json ? [absBox(r.visuals.concat([lb.json]), lb.json)] : [];
         const u = r.units || { on: [], bars: [] }, kept = new Set(u.on.map((x) => String(x.visual)).concat(u.bars.map((x) => String(x.names))));
@@ -703,7 +243,7 @@ export function buildTwin(P, labels) {
       if (!P.keepLtr(pg)) iconRoom(r.visuals, (r.moved = r.moved || []));
     }
     // (MP1d) last, on every mirrored page: no visual comes out smaller than the guard allows
-    (r.moved || []).forEach((m) => ruleMoves.push({ where: safeName(pg.id) + '/' + safeName(m.visual), rule: m.rule }));
+    (r.moved || []).forEach((m) => ruleMoves.push(Object.assign({ where: safeName(pg.id) + '/' + safeName(m.visual), rule: m.rule }, m.ruleAr ? { ruleAr: m.ruleAr } : {})));
     if (!P.keepLtr(pg)) { try { keepSize(pg.visuals.map((v) => v.json), r.visuals, pageOf(pg).width, new Set(extra.map((x) => x.from))).forEach((k) => sizeKept.push({ where: safeName(pg.id) + '/' + safeName(k.visual), what: k.what })); } catch (e) { /* a shape not expected: left as it is */ } }
     // (0.3.0 D3) the phone layout: mirrored as the page is (a page kept left to right keeps its phone layout too), its
     // texts as approved, each page tab as wide as its Arabic name by the writer's own rule
@@ -719,17 +259,7 @@ export function buildTwin(P, labels) {
     if (mobiles.some(Boolean)) { phone.pages++; if (!P.keepLtr(pg)) { try { fitPhoneTabs(pg, r.visuals, mobiles, ctx, phone); } catch (e) { /* a shape not expected: left as it is */ } } }
     return { pg, page, visuals: r.visuals, mobiles, extra };
   });
-  // (0.3.1 TB1c, the laptop's part 5: the write said "translated: 0 ... stays as the model gives it" of two measure
-  // titles written as approved fixed Arabic) a title measure no title of the twin's pages still shows was replaced by
-  // approved fixed Arabic titles: fixed, not "not translated"
-  const shownTitle = new Set(); pages.forEach((x) => x.visuals.forEach((vj) => { const t = isObj(vj) && isObj(vj.visual) && isObj(vj.visual.visualContainerObjects) && Array.isArray(vj.visual.visualContainerObjects.title) ? vj.visual.visualContainerObjects.title : [];
-    t.forEach((e) => { const ms = isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) && isObj(e.properties.text.expr.Measure) ? e.properties.text.expr.Measure : null, src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
-      if (src) shownTitle.add((src.Schema === 'extension' ? 'ext' : 'model') + '\u0000' + src.Entity + '\u0000' + ms.Property); }); }));
-  const stillShown = (x) => shownTitle.has((x.own ? 'ext' : 'model') + '\u0000' + x.entity + '\u0000' + x.name);
-  const notTranslated = tms.filter((x) => !x.pd.branches && stillShown(x)).map((x) => ({ what: 'Chart title (from a title measure)', measure: safeName(x.entity + '[' + x.name + ']'), why: x.pd.why }));
-  const fixedTitles = tms.filter((x) => !x.pd.branches && !stillShown(x)).map((x) => ({ measure: safeName(x.entity + '[' + x.name + ']'), why: 'every title it gave is written as its approved fixed Arabic title (it no longer changes with the selection)' }));
-  // (0.3.0 D3) the original's own title measures the twin's charts no longer use: left in the twin's file as they are
-  // (X1: in one report the English pages still show them)
-  const notShown = P.same ? [] : [...rename.keys()].map((k) => { const [entity, name] = k.split('\u0000'); return { measure: safeName(entity + '[' + name + ']'), now: safeName(entity + '[' + rename.get(k) + ']'), why: 'the original\'s title measure: the twin\'s charts use their own Arabic one instead; left in the twin\'s reportExtensions.json as it is, and no visual of the twin shows it' }; });
-  return { pages, applied, phone, notShown, sizeKept, ruleMoves, keptInView, laidOut, ext: written.length || rewritten || wfWritten.length || rlWritten.length ? ext : null, tables, fitted, titleMeasures: tms.length ? Object.assign({ measures: tms.length, translated: written.length, written, notTranslated }, fixedTitles.length ? { fixed: fixedTitles } : {}) : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
+  // (the measures: what is said of them, from the twin's pages as built)
+  const S = M.said(pages);
+  return { pages, applied, phone, notShown: S.notShown, sizeKept, ruleMoves, keptInView, laidOut, grown, ext: S.ext, tables, fitted, titleMeasures: S.titleMeasures, waterfallMeasures: S.waterfallMeasures, textMeasures: S.textMeasures };
 }

@@ -45,6 +45,10 @@ jobs:
       - name: Every .min.js is built from its source
         run: node scripts/check-min.mjs
 
+      # (B-336, ST1 0.3.2) the ?v= stamps made by the build (scripts/stamps.mjs): red on made-up trees, green on the real one
+      - name: The ?v= stamps are what the build makes (made-up trees and the real one)
+        run: node scripts/test-stamps.mjs
+
       - name: The shipped code loads every module by a literal path (packaging stages only what it can name, B-196)
         run: node scripts/test-literal-requires.mjs && node scripts/check-literal-requires.mjs
 
@@ -54,6 +58,14 @@ jobs:
       # (A1, 0.3.1) what a new session reads first stays small: caps, job summaries, links and the task routes resolve
       - name: The agent's startup pack within its caps; every link and task route resolves
         run: node scripts/test-agent-memory.mjs && node scripts/check-agent-memory.mjs
+
+      # (MD1, 0.3.2) mcp/docs/MODULES.md "## Every module": one row per module file, every row's file and caller real
+      - name: Every module has its one row in MODULES.md
+        run: node scripts/test-modules.mjs && node scripts/check-modules.mjs
+
+      # (CL1, 0.3.2) mcp/docs/CONTRACTS.md: every place of every family still there, the ledger and the probe agree
+      - name: Every place in the contract ledger is still there
+        run: node scripts/test-contracts.mjs && node scripts/check-contracts.mjs
 
       - name: The MCP CHANGELOG's [Unreleased] section is in plain words (no internal codes; users read it)
         run: node scripts/test-changelog-words.mjs && node scripts/changelog-words.mjs
@@ -348,15 +360,36 @@ jobs:
   # /private/var) shows here; test-platform-paths.mjs is the test written for those. Not a required check until the
   # owner makes it one; the .mcpb keeps "win32" until one real Mac run by a person (the engine's PACKAGING.md).
   mcp-macos-parts:
-    runs-on: macos-latest
+    # (CI1, D-1104-02) macOS runs only where the reviewer merges: a push to main or integration/*, a pull request to
+    # main, a manual run on main, integration/* or check/*; a manual run on a builder branch (fix/*, rd/* ...) skips
+    # it and runs Linux and Windows only (L-1103-13: macOS shards dropped unqueued). The same expression on mcp-macos.
+    if: >-
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/integration/')))
+      || (github.event_name == 'pull_request' && github.base_ref == 'main')
+      || (github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main'
+      || startsWith(github.ref, 'refs/heads/integration/') || startsWith(github.ref, 'refs/heads/check/')))
+    # (CI2, 4 Nov 2026) the standard Intel runner (docs.github.com "GitHub-hosted runners": "macOS | 4 | 14 GB | 14 GB |
+    # Intel | macos-15-intel, macos-26-intel"), not macos-latest (macOS 26 arm64, 3 M1): on 4 Nov arm64 shards were
+    # cancelled unqueued, "The job was not acquired by Runner of type hosted even after multiple attempts", with the
+    # notice "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times".
+    runs-on: macos-15-intel
     timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
-        # (SPD) each shard k: test.mjs's part k (SHARDS in mcp/test.mjs; a SKIP in shard 0) and the mcp/tests.json suites the
-        # plan deals to shard k on this OS by their measured seconds (planShards, mcp/test-times.json), each suite once;
-        # --keep-going: every suite runs; ci-sum checks every shard against the same plan
-        shard: [0, 1, 2, 3, 4]
+        # (CI2) 3 jobs, not 5 (each job a chance to wait for a runner): each runs its plan shards in turn, the same plan
+        # shards k 0-4 as Linux and Windows (test.mjs's part k, a SKIP in shard 0, and the mcp/tests.json suites
+        # planShards deals to k on macOS by mcp/test-times.json), each with its own log and manifest, so ci-sum checks
+        # every shard against the same plan and counts each suite once. Grouped by the seconds measured on this Intel
+        # runner (run 41891982211: shards 0-4 928, 585, 860, 545, 566 s; 2 jobs of 0-2 and 3-4 hit the 40 minutes):
+        # 928, 1405 and 1151 s. --keep-going, and a failed shard does not stop the next one; the job fails at its end.
+        include:
+          - job: 0
+            shards: 0
+          - job: 1
+            shards: 2 3
+          - job: 2
+            shards: 1 4
     defaults:
       run:
         shell: bash
@@ -375,25 +408,36 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: MCP checks on macOS, shard ${{ matrix.shard }} of 4
+      - name: MCP checks on macOS, shards ${{ matrix.shards }} of 4
         env:
-          DA_SHARD: ${{ matrix.shard }}/4
           DA_SUITE_TIMEOUT: 2100
         run: |
           mkdir -p ../ci-logs
-          npm test -- --keep-going --log-dir "../ci-logs/mcp-shard-${{ matrix.shard }}-full" 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"
+          rc=0
+          for k in ${{ matrix.shards }}; do
+            echo "::group::shard $k of 4"
+            DA_SHARD="$k/4" npm test -- --keep-going --log-dir "../ci-logs/mcp-shard-$k-full" 2>&1 | tee "../ci-logs/mcp-shard-$k.log" || rc=1
+            echo "::endgroup::"
+          done
+          exit $rc
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: mcp-macos-parts-${{ matrix.shard }}
+          name: mcp-macos-parts-${{ matrix.job }}
           path: ci-logs/
           if-no-files-found: error
           retention-days: 7
 
   mcp-macos:
     needs: [mcp-macos-parts]
-    if: always()
+    # (CI1) always() as before where macOS runs (a failed, cancelled or skipped shard fails this check); on a builder
+    # branch the same expression is false, so this check is skipped with its shards, never failed: not required there
+    if: >-
+      always() && ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/integration/')))
+      || (github.event_name == 'pull_request' && github.base_ref == 'main')
+      || (github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main'
+      || startsWith(github.ref, 'refs/heads/integration/') || startsWith(github.ref, 'refs/heads/check/'))))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

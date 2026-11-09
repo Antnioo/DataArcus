@@ -13,6 +13,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
+import { writerPageSource } from './test-source.mjs';
 import { elicitClient } from './test-audit6.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..'), require = createRequire(import.meta.url);
@@ -89,8 +90,8 @@ const lit = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value)
 // ---------- E: 0.2.9-writer-S6, iconH and the tooltip page's size ----------
 {
   const src = (f) => fs.readFileSync(path.join(REPO, 'assets/js', f), 'utf8');
-  chk(() => !/iconH/.test(src('pbip-sizing.js')) && !/iconH/.test(src('pbip-page.js')), () => 'E1. iconH (never called) is gone from pbip-sizing.js and pbip-page.js');
-  chk(() => !/320 x 240/.test(src('pbip-page.js')) && /320 x 284 tooltip page/.test(src('pbip-page.js')), () => 'E2. pbip-page.js names the tooltip page as written, 320 x 284 (never 320 x 240)');
+  chk(() => !/iconH/.test(src('pbip-sizing.js')) && !/iconH/.test(writerPageSource()), () => 'E1. iconH (never called) is gone from pbip-sizing.js and the writer\'s page files (pbip-page.js, pbip-visuals*.js)');
+  chk(() => !/320 x 240/.test(writerPageSource()) && /320 x 284 tooltip page/.test(writerPageSource()), () => 'E2. the writer\'s page files (pbip-page.js, pbip-visuals*.js) name the tooltip page as written, 320 x 284 (never 320 x 240)');
 }
 
 // ---------- B6: the write's answer says it (plan_layout, the click, create_report, on a made-up model) ----------
@@ -106,7 +107,7 @@ const ROOT = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataa
     const args = { path: 'sq1', name: 'SQ1 narrow', pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'slicer', x: 20, y: 20, w: 160, h: 80 }] }] };   // (two slicers of 6 beside a 124 Reset, as written before)
     const pl = await s.call('plan_layout', args), planId = pl.j && pl.j.plan && pl.j.plan.planId;
     await s.call('approve_plan', { planId });
-    const x = await s.call('create_report', Object.assign({ planId }, args)), said = JSON.stringify(x.j || x.t);
+    const x = await s.call('create_report', { path: args.path, planId: planId }), said = JSON.stringify(x.j || x.t);
     chk(() => !x.err && /too narrow for it: Reset filters on/.test(said) && /"visual":"Reset filters"/.test(said), () => `B6. create_report says the Reset button was left out of the too narrow slot (its notes and leftOutVisuals): ${said.slice(0, 600)}`);
   } finally { await s.close(); }
 }

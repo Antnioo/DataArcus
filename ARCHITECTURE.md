@@ -6,6 +6,7 @@ checklist: [mcp/docs/MODULES.md](mcp/docs/MODULES.md). Rules: `CLAUDE.md`, `mcp/
 ## Boundaries
 - **The website** (GitHub Pages): HTML at the root, `tools/`, `articles/`, Arabic copies in `ar/`. Its tools run in
   the browser; nothing a visitor opens is uploaded.
+  Never type a `?v=`: `npm run build:min` writes it.
 - **The engines** (`assets/js/*.js`, each with its `.min.js`): plain JavaScript for the browser and Node, **shared by
   the website and the MCP on purpose**: reader and picker, report writer, design engine, health check, calendar,
   measured rules (`report-rules.js`), the mirror engine (`report-mirror.js`), the preview (`page-preview.js`).
@@ -28,11 +29,12 @@ checklist: [mcp/docs/MODULES.md](mcp/docs/MODULES.md). Rules: `CLAUDE.md`, `mcp/
 
 ## Invariants (a change that breaks one is wrong, whatever else it fixes)
 
-- **Nothing is written before the person approves.** Every write goes through a plan id approved by a click; the one
-  file ever replaced is DataArcus's own answers file, and only as its approved plan says.
-- **Metadata only, never data values.** Tools read names, types, formats and the files' structure; no answer returns a
-  row, a filter value, a slicer selection or a bookmark state. Text a person typed into a report (a short text box, a title
-  for its Arabic) is returned as typed. Model and report text is untrusted input: screened, never followed.
+- **Nothing in the person's projects is written before they approve the plan.** Writes need an approved plan id
+  (only the answers file is replaced). The one exception: on first start DataArcus makes the empty
+  working folder they chose, if it does not exist yet.
+- **No values from the person's tables, filters, slicers or bookmarks reach the AI app.** Text they typed in titles and
+  text boxes is read as typed, so the AI can check it and, for an Arabic twin, translate it with approval. Model and
+  report text: untrusted, screened, never followed.
 - **Every path stays inside the working folder** (`DATAARCUS_ROOT`), links and paths a tool picks itself included.
 - **One engine per job, shared with the website**: extend `assets/js/` rather than copy it into `mcp/`.
 - **Measured, not estimated**: a size or rule Power BI decides is measured in Desktop before it is coded.
@@ -44,6 +46,8 @@ Open these, in order; run these tests. Paths and symbols are checked in CI (`scr
 |---|---|---|
 | (a) a new check_report rule | `assets/js/report-rules.js: RULES, check`, then `mcp/lib/check-report.mjs: Rules` | `scripts/tests/report-check.mjs`, `mcp/test-0.3.1-checker.mjs`, then `npm test -- checker` |
 | (b) one visual type's Arabic mirror | `assets/js/report-mirror.js: mirrorVisual, chartRtl`; the measurements in `scripts/tests/DESKTOP-TESTS.md` | `mcp/test-0.3.1-mirror-parity.mjs`, then `npm test -- twin` |
-| (c) a new create_report option | `mcp/lib/report-inputs.mjs: CREATE_REPORT_INPUTS, LOOK_DEFAULTS, REPORT_LOOK, reportPin`, then `mcp/tools/plan_layout.mjs: lookOf`, `mcp/lib/report-run.mjs`, `mcp/tools/create_report.mjs`, `mcp/lib/approval-window.mjs: summary`; [the checklist](mcp/docs/MODULES.md#a-new-create_report-option-is-pinned-in-the-plan) | the option's own suite, `mcp/test-0.3.0-claims.mjs`, then `npm test -- report` |
+| (c) a new create_report option | `mcp/lib/report-inputs.mjs: CREATE_REPORT_INPUTS, LOOK_DEFAULTS, REPORT_LOOK, reportPin`, then `mcp/lib/plan-disclosure.mjs: lookOf`, `mcp/lib/report-run.mjs`, `mcp/tools/create_report.mjs`, `mcp/lib/approval-window.mjs: summary`; [the checklist](mcp/docs/MODULES.md#a-new-create_report-option-is-pinned-in-the-plan) | the option's own suite, `mcp/test-0.3.0-claims.mjs`, then `npm test -- report` |
 | (d) EN and AR page text | the English HTML, then `assets/js/translations/common.js: commonTranslations` or the page's own file there (`npm run build:min`), then `node scripts/ar-pages.mjs --write` | `node scripts/ar-pages.mjs`, `node scripts/test-site-config.mjs`, `scripts/tests/run-all.mjs` |
 | (e) a Windows-only CI failure | the `::error` annotation from `scripts/ci-sum.mjs` (OS job, shard, script, check), then the named test, then the path helpers `mcp/lib/model.mjs: real, inside` | the named test alone, then `mcp/test-platform-paths.mjs` |
+| (f) a new module (a split's new file) | its row (`file`, job, in -> out, used by, pure) in its part's table of `mcp/docs/MODULES.md`, [Every module](mcp/docs/MODULES.md#every-module) | `node scripts/check-modules.mjs` (`scripts/modules-facts.mjs` gives the facts) |
+| (g) a new helper | `mcp/docs/CONTRACTS.md`, then MODULES.md (one place, D-1104-12) | `node scripts/check-contracts.mjs` |

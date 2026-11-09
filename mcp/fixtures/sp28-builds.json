@@ -1,0 +1,145 @@
+{
+ "about": "test-0.3.2-sp28.mjs: the shared writer's files and result for 14 made-up reports, recorded on the base (one fixed seed for the ids)",
+ "builds": {
+  "B1 the sample download, EN, exec 1280 x 720, two pages": {
+   "files": {
+    "count": 94,
+    "sha256": "2e30eb76b2ae32de98260ea9a07e304be6271ff00d86ba8a91a42e22fa57f201"
+   },
+   "result": {
+    "length": 2056,
+    "sha256": "865d30144e7b8e17e636c0cc689df652ba2501b05be33c70cbedc964b57a662b"
+   }
+  },
+  "B2 the sample download, AR, analysis 1920 x 1080, the rail, transparent": {
+   "files": {
+    "count": 52,
+    "sha256": "436a1404be4c53d99ceb19953eca530cbceac1a527fa01147079242921bcb328"
+   },
+   "result": {
+    "length": 1537,
+    "sha256": "09e4c27f663efb6a953b0a9ec01658c7c20e389e9d0bed0585baae14f147b138"
+   }
+  },
+  "B3 EN own model, exec, gradient colours, quiet grid, \"No data\", two pages": {
+   "files": {
+    "count": 94,
+    "sha256": "f75998cda4231153b0957ba41f3826de4f38996db767b66f697b5454361a35b2"
+   },
+   "result": {
+    "length": 3232,
+    "sha256": "22acc63fa5dbb1236e460688899ee3807e630985fb4034e26ea18cac0fc86670"
+   }
+  },
+  "B4 EN own model, analysis 1920 x 1080, filters on top, pills, dotted grid, straight lines": {
+   "files": {
+    "count": 51,
+    "sha256": "30bb00db0b45115f6a2463872e402f9a996fdd95362a8e11218e51474a9295a1"
+   },
+   "result": {
+    "length": 2012,
+    "sha256": "57565c2d727e2055a708a42497c19be0382c2b235299e9904aadaead0da7fb6d"
+   }
+  },
+  "B5 AR own model, ops, mirrored axes, the slide-in panel, pills": {
+   "files": {
+    "count": 108,
+    "sha256": "0b58e03aa034a587b47f17a19c76af3d83de3cff7d0b0014444395b75264f5fa"
+   },
+   "result": {
+    "length": 4155,
+    "sha256": "563cc6665bf546331e6e7d70a85a4dddaa4a77ab9bd3e7abb5c5eecea94c9a85"
+   }
+  },
+  "B6 EN hand-placed: every kind of visual, SVG cards and columns, subtitles, full values": {
+   "files": {
+    "count": 49,
+    "sha256": "aeb5f4c7c2522a008a129ec1e2c22e1dac7b33e18aeddf1e3486bf57ba2654cd"
+   },
+   "result": {
+    "length": 1566,
+    "sha256": "8774f9e8601ad80852184af35aec5b2e3556e6632f86be4ac5e097ca3a77fcf9"
+   }
+  },
+  "B7 EN hand-placed: column charts that change kind (days, many names, two values, a quarter, Day Short), Top N": {
+   "files": {
+    "count": 37,
+    "sha256": "fa6102ae13b9f8d5928f178fb4b4d325d66e43fd88ee4f95e8e78f18c47f5f2c"
+   },
+   "result": {
+    "length": 1769,
+    "sha256": "b4a5d73561d5f38fb5cb5905a14a7610068d87e022e43a0d76fd7c9e32651b01"
+   }
+  },
+  "B8 EN hand-placed: a column chart by many names and by quarter, a two-valued bar, many fields in a narrow table": {
+   "files": {
+    "count": 31,
+    "sha256": "98624c38e9ea285ef053726039afe1b163360518bb53d4ab49ccb76f8e71abce"
+   },
+   "result": {
+    "length": 2231,
+    "sha256": "54ffad44a6bc58aa61e4069c36533f71c29ec1127651c265ef5796f82fb3cf15"
+   }
+  },
+  "B9 AR hand-placed: a right-to-left table with its row label, twin titles renamed, a matrix of months": {
+   "files": {
+    "count": 36,
+    "sha256": "65710dafd5e7c56f88bb301a2fbea1908d0556d92de3e4f6107a4c82735fc0ca"
+   },
+   "result": {
+    "length": 1564,
+    "sha256": "4eb4b6265a961deea3f3071ff3153373a831d0a89271a8c5f575d99c25072ad6"
+   }
+  },
+  "B10 EN gallery: combo in two units, waterfall, small multiples, a mirrored-off AR twin of it next": {
+   "files": {
+    "count": 28,
+    "sha256": "8b829da9681a525d7d2fb21f786f2b91eeca6b58f84b10f6b8d4130b78bf0684"
+   },
+   "result": {
+    "length": 1076,
+    "sha256": "8ceeeb6dae2cd6340ac1891b603128dbec2044d0934453f3ebb4121f27adc13e"
+   }
+  },
+  "B11 AR gallery, mirrored: the waterfall drawn from the right, native waterfall, multiples": {
+   "files": {
+    "count": 39,
+    "sha256": "76656f89859e520b98422bcaa85c2e09bd80874280a40f18c5dacc62bf6d81cb"
+   },
+   "result": {
+    "length": 3079,
+    "sha256": "55742b96ce26d877e9c1cd8ab7bb6fd396cc96406540cf8ff2e0d5bc2e2827da"
+   }
+  },
+  "B12 EN small cards: blank text kept, a percent card, a control character, no phone layout, grid none": {
+   "files": {
+    "count": 28,
+    "sha256": "ff7594c8b8064aabfe5776c238e1424ea0252eed1edd868ee97d9dc3841e200e"
+   },
+   "result": {
+    "length": 2038,
+    "sha256": "4f87003c39d0d6c650a1d9cee95a43c5a79772936a2d2ed4adfbb19859034feb"
+   }
+  },
+  "B13 EN two pages with page filters, a logo file, the strip, a long title": {
+   "files": {
+    "count": 92,
+    "sha256": "0547f9ef795360b5abe6c13f8e3d671384c62b74c2f7e1d4ec416901491a5ec1"
+   },
+   "result": {
+    "length": 3366,
+    "sha256": "b5d3129c687ca861d1a8923dca8c7e6a818400c67f1298cb22b322ff4e2dd8df"
+   }
+  },
+  "B14 AR own model, exec 1920 x 1080, a day table, mirrored, tight rows, no data card": {
+   "files": {
+    "count": 39,
+    "sha256": "c30406d9420d4e07d55005f36d4e9b94e99cbe99756240539d8cdb573610eb08"
+   },
+   "result": {
+    "length": 1557,
+    "sha256": "299ae2a0f026e75bfdd9b047014d6972e9a7746e17f4ed3a82a5a2afc1ff1fe2"
+   }
+  }
+ }
+}

@@ -70,7 +70,7 @@ const listsModels = (r) => r.err && /Twin Sales\.SemanticModel/.test(r.t) && /ca
   const calls = [
     ['read_model', { path: TYPO }], ['suggest_fields', { path: TYPO }], ['plan_layout', { path: TYPO }],
     ['check_model_health', { path: TYPO }], ['add_gulf_calendar', { path: TYPO }],
-    ['create_report', { path: TYPO, planId: id, name: 'MR1 report', design }]
+    ['create_report', { path: TYPO, planId: id }]
   ];
   chk(() => id && design, () => `P0. the probe: plan_layout on the real model gives a plan id and its design: ${short(plan)}`);
   n = 0;

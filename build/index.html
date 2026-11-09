@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/ https://cdn.jsdelivr.net/npm/three@0.160.0/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; img-src 'self' data: blob:; connect-src https://api.github.com https://raw.githubusercontent.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Build room - DataArcus</title>
+  <meta name="robots" content="noindex" />
+  <meta name="description" content="A live view of what is being built for DataArcus, read straight from the public GitHub repository in your browser." />
+  <link rel="canonical" href="https://dataarcus.com/build/" />
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/assets/img/favicon-48.png" sizes="48x48" type="image/png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#0a0f1c" />
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link href="/assets/css/vendor/bootstrap.min.css?v=d85327d99c7a" rel="stylesheet">
+  <link href="/assets/css/style.min.css?v=29c11a1ea13b" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
+  </noscript>
+  
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bp-text: #e8eefc; --bp-dim: #93a3c4; --bp-glass: rgba(255,255,255,.055); --bp-edge: rgba(255,255,255,.14); --bp-running: #ffb02e; --bp-red: #ff6b6b; --bp-green: #2dd4bf; --bp-stopped: #9a8cc9; --bp-idle: #7aa2ff; }
+    html { background: #04060f; }
+    body { background: radial-gradient(1200px 700px at 50% -10%, #14234d 0%, #0a1230 45%, #04060f 100%) no-repeat; }
+    .interactive-bg { display: none; }
+    .bp { padding: var(--page-top) 0 var(--page-bottom); color: var(--bp-text); font-family: 'Manrope', 'Inter', system-ui, sans-serif; }
+    .bp-kicker { color: var(--bp-idle); font-weight: 600; letter-spacing: .18em; text-transform: uppercase; font-size: .78rem; margin-bottom: 8px; }
+    .bp-title { font-weight: 300; font-size: clamp(1.8rem, 5vw, 3rem); line-height: 1.1; letter-spacing: -.01em; color: #fff; overflow-wrap: anywhere; }
+    .bp-lead, .bp-sub, .bp-dim { color: var(--bp-dim); }
+    .bp-sub, .bp-dim { font-size: .85rem; }
+    .bp h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 2px; color: #fff; }
+    .bp-text { color: var(--bp-text); }
+    .bp-note { border: 1px solid var(--bp-running); border-radius: 14px; padding: 8px 14px; color: var(--bp-running); font-size: .9rem; background: var(--bp-glass); }
+    .bp-hero { position: relative; margin: 22px 0 8px; }
+    .bp-hero::before { content: ""; position: absolute; inset: 8% 18%; background: radial-gradient(closest-side, rgba(91,140,255,.35), rgba(167,139,250,.16) 55%, transparent); filter: blur(28px); pointer-events: none; }
+    .bp-helix { position: relative; height: 460px; }
+    .bh-canvas, .bh-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; }
+    .bh-label { position: absolute; z-index: 3; max-width: min(320px, 86%); padding: 10px 14px; border-radius: 16px; background: rgba(14,22,48,.72); border: 1px solid var(--bp-edge); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); pointer-events: none; font-size: .8rem; }
+    .bh-l0 { font-weight: 800; color: #fff; letter-spacing: .08em; } .bh-l { font-family: 'JetBrains Mono', ui-monospace, monospace; color: var(--bp-dim); font-size: .75rem; overflow-wrap: anywhere; }
+    .bp-legend { position: relative; display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; justify-content: center; text-align: center; font-size: .8rem; }
+    .bp-k::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: currentColor; margin-right: 6px; }
+    .bp-strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+    .bp-stat, .bp-panel, .bp-row { background: var(--bp-glass); border: 1px solid var(--bp-edge); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+    .bp-stat { border-radius: 22px; padding: 14px 10px; text-align: center; min-width: 0; }
+    .bp-num { display: block; font-weight: 200; font-size: clamp(2rem, 6vw, 3.4rem); line-height: 1.05; }
+    .bp-lab { display: block; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--bp-dim); }
+    .bp-t-running .bp-num { color: var(--bp-running); } .bp-t-red .bp-num { color: var(--bp-red); } .bp-t-green .bp-num, .bp-t-merged .bp-num { color: var(--bp-green); } .bp-t-open .bp-num { color: var(--bp-idle); }
+    .bp-panel { border-radius: 26px; padding: 20px 22px; min-width: 0; margin-top: 18px; }
+    .bp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; }
+    .bp-list { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 12px; }
+    .bp-cards { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+    .bp-row { position: relative; border-radius: 18px; padding: 12px 14px; overflow: hidden; min-width: 0; }
+    .bp-live { border-color: rgba(255,176,46,.55); }
+    .bp-top, .bp-run, .bp-tele { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+    .bp-run { margin-top: 6px; font-size: .85rem; }
+    .bp-msg { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; margin-top: 8px; padding-left: 10px; border-left: 2px solid var(--bp-edge); font: .8rem 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace; min-width: 0; }
+    .bp-text, .bp-branch { overflow-wrap: anywhere; min-width: 0; }
+    .bp-code { font-weight: 800; font-size: 1.1rem; letter-spacing: .06em; color: #fff; }
+    .bp-branch, .bp-sha { font: .75rem 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace; color: var(--bp-dim); }
+    .bp-tele { margin-top: 8px; font: .72rem 'JetBrains Mono', ui-monospace, monospace; color: var(--bp-dim); }
+    .bp-when { color: var(--bp-dim); font-size: .75rem; white-space: nowrap; }
+    .bp-link { color: var(--bp-idle); font-size: .85rem; }
+    .bp-pill { border-radius: 999px; padding: 1px 11px; font-weight: 700; font-size: .72rem; letter-spacing: .04em; border: 1px solid currentColor; }
+    .bp-green { color: var(--bp-green); } .bp-red { color: var(--bp-red); } .bp-running, .bp-queued { color: var(--bp-running); } .bp-other, .bp-stopped { color: var(--bp-stopped); } .bp-idle { color: var(--bp-idle); }
+    .bp-bar { display: block; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--bp-running), #ff6b6b, var(--bp-running), transparent); background-size: 200% 100%; animation: bp-slide 1.6s linear infinite; }
+    .bp-timeline { border-left: 2px solid var(--bp-edge); margin-left: 6px; padding-left: 14px; }
+    .bp-timeline .bp-row { background: transparent; border: 0; padding: 4px 0; backdrop-filter: none; overflow: visible; }
+    .bp-timeline .bp-row::before { content: ""; position: absolute; left: -21px; top: 12px; width: 10px; height: 10px; border-radius: 50%; background: var(--bp-green); box-shadow: 0 0 10px var(--bp-green); }
+    .bp-timeline .bp-msg { border: 0; padding: 0; margin: 0; }
+    .bp-release { font-weight: 300; font-size: 1.6rem; color: var(--bp-green); overflow-wrap: anywhere; margin-top: 8px; }
+    .bp-pending { color: var(--bp-running); }
+    .bp-empty { color: var(--bp-dim); }
+    .bu-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; }
+    .bu-big { display: flex; flex-wrap: wrap; gap: 8px 40px; margin-top: 10px; }
+    .bu-big .bp-num { color: var(--bp-running); } .bu-big > div + div .bp-num { color: var(--bp-idle); }
+    .bu-h3 { font-size: .8rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--bp-dim); margin: 18px 0 0; }
+    .bu-list { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 6px; }
+    .bu-row, .bu-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; min-width: 0; }
+    .bu-row { justify-content: flex-start; font-size: .9rem; }
+    .bu-name, .bu-code { font-weight: 600; color: #fff; overflow-wrap: anywhere; min-width: 0; }
+    .bu-code { font-weight: 800; letter-spacing: .06em; }
+    .bu-val { font-weight: 300; color: var(--bp-green); font-variant-numeric: tabular-nums; }
+    .bu-chip { border: 1px solid var(--bp-edge); border-radius: 999px; padding: 0 9px; font-size: .7rem; color: var(--bp-dim); }
+    .bu-job { padding: 8px 0; border-top: 1px solid var(--bp-edge); min-width: 0; }
+    .bu-job:first-child { border-top: 0; }
+    .bu-title { margin-top: 4px; font-size: .8rem; color: var(--bp-dim); overflow-wrap: anywhere; }
+    .bu-chart { margin-top: 10px; } .bu-svg { display: block; width: 100%; height: auto; max-width: 100%; }
+    .bu-track { fill: rgba(255,255,255,.04); } .bu-bar { fill: var(--bp-idle); } .bu-bar:hover { fill: var(--bp-green); }
+    .bu-axis { stroke: var(--bp-edge); stroke-width: 1; } .bu-tick { fill: var(--bp-dim); font: 11px 'JetBrains Mono', ui-monospace, monospace; }
+    @keyframes bp-slide { to { background-position: -200% 0; } }
+    @media (prefers-reduced-motion: reduce) { .bp-bar { animation: none; } }
+    @media (max-width: 767px) { .bp-grid { grid-template-columns: minmax(0, 1fr); } .bp-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; } .bu-grid { grid-template-columns: minmax(0, 1fr); } .bp-panel { padding: 16px; border-radius: 22px; } .bp-helix { height: 380px; } }
+  </style>
+</head>
+<body>
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/#hero">
+        <img src="/assets/img/logo.svg" alt="DataArcus logo" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/#services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="/portfolio.html">Showcases</a></li>
+          <li class="nav-item"><a class="nav-link" href="/tools/">Free Tools</a></li>
+          <li class="nav-item"><a class="nav-link" href="/power-bi-mcp/" data-i18n="nav.agent">AI Agent (beta)</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#contact">Contact</a></li>
+        </ul>
+        <a href="/#contact" class="btn btn-accent ms-lg-3">Book a Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="bp">
+      <div class="container">
+        <p class="bp-kicker">Build room</p>
+        <h1 class="bp-title">What is being built right now</h1>
+        <p class="bp-lead">Your browser reads the public GitHub repository directly. DataArcus stores nothing and receives nothing from this page. <span id="bp-updated">Loading...</span></p>
+        <p id="bp-limit" class="bp-note" role="status" hidden></p>
+        <p id="bp-warn" class="bp-note" role="status" hidden></p>
+
+        <div class="bp-hero">
+          <div id="bp-line" class="bp-helix" aria-hidden="true"></div>
+          <p class="bp-legend"><span class="bp-k bp-running">running CI</span><span class="bp-k bp-red">red</span><span class="bp-k bp-green">done or merged</span><span class="bp-k bp-stopped">no push for 2 h</span><span class="bp-dim">One strand is the integration branch (merges today are its nodes), the other the builder branches; each rung is a job, newest at the top. Hover or tap a rung.</span></p>
+        </div>
+
+        <div class="bp-strip" aria-label="Telemetry">
+          <div class="bp-stat bp-t-running"><span class="bp-num" id="bp-n-running">-</span><span class="bp-lab">running</span></div>
+          <div class="bp-stat bp-t-red"><span class="bp-num" id="bp-n-red">-</span><span class="bp-lab">red</span></div>
+          <div class="bp-stat bp-t-green"><span class="bp-num" id="bp-n-done">-</span><span class="bp-lab">done today</span></div>
+          <div class="bp-stat bp-t-merged"><span class="bp-num" id="bp-n-merged">-</span><span class="bp-lab">merged today</span></div>
+          <div class="bp-stat bp-t-open"><span class="bp-num" id="bp-n-open">-</span><span class="bp-lab">open branches</span></div>
+        </div>
+
+        <section class="bp-panel">
+          <h2>Builders at work</h2>
+          <p class="bp-sub">Branches with a push in the last 24 hours, newest first.</p>
+          <ul id="bp-builders" class="bp-list bp-cards"><li class="bp-empty">Loading...</li></ul>
+        </section>
+        <div class="bp-grid">
+          <section class="bp-panel">
+            <h2>CI now</h2>
+            <p class="bp-sub">tests.yml runs in progress or finished in the last 3 hours.</p>
+            <ul id="bp-ci" class="bp-list"><li class="bp-empty">Loading...</li></ul>
+          </section>
+          <section class="bp-panel">
+            <h2>Integration today</h2>
+            <p class="bp-sub">Merges in the last 24 hours. Head: <span id="bp-head"></span></p>
+            <ul id="bp-merges" class="bp-list bp-timeline"><li class="bp-empty">Loading...</li></ul>
+          </section>
+        </div>
+        <section class="bp-panel">
+          <h2>Release</h2>
+          <p class="bp-sub">The version on the integration branch against the latest release.</p>
+          <p id="bp-release" class="bp-release">Loading...</p>
+        </section>
+        <section class="bp-panel" id="bu-panel">
+          <h2>Fuel</h2>
+          <p class="bp-sub">What the builders and workers used today, read from <code>usage.json</code> on the public <code>build-data</code> branch. Costs in US dollars. <span id="bu-updated"></span></p>
+          <p id="bu-status" class="bp-note" role="status" hidden></p>
+          <div class="bu-big">
+            <div><span class="bp-num" id="bu-cost">-</span><span class="bp-lab">spent today</span></div>
+            <div><span class="bp-num" id="bu-tokens">-</span><span class="bp-lab">tokens today</span></div>
+          </div>
+          <div class="bu-grid">
+            <div><h3 class="bu-h3">Builders, workers, probes</h3><ul id="bu-kinds" class="bu-list"></ul></div>
+            <div><h3 class="bu-h3">By model</h3><ul id="bu-models" class="bu-list"></ul></div>
+          </div>
+          <h3 class="bu-h3">Last 14 days, cost per day</h3>
+          <div id="bu-chart" class="bu-chart"></div>
+          <div class="bu-grid">
+            <div><h3 class="bu-h3">Last finished jobs</h3><ul id="bu-jobs" class="bu-list"></ul></div>
+            <div><h3 class="bu-h3">Costliest today</h3><ul id="bu-top" class="bu-list"></ul></div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="/#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="/assets/img/logo.svg" alt="DataArcus logo" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3">Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent">Power BI</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent">Data Engineering</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent">Analytics</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent">Consulting</a></li>
+              <li class="mb-2"><a href="/tools/" class="text-white-50 text-decoration-none hover-accent">Free Power BI &amp; Fabric Tools</a></li>
+              <li class="mb-2"><a href="/power-bi-mcp/" class="text-white-50 text-decoration-none hover-accent">DataArcus for Power BI</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/#about" class="text-white-50 text-decoration-none hover-accent">About</a></li>
+              <li class="mb-2"><a href="/portfolio.html" class="text-white-50 text-decoration-none hover-accent">Showcases</a></li>
+              <li class="mb-2"><a href="/#contact" class="text-white-50 text-decoration-none hover-accent">Contact</a></li>
+              <li class="mb-2"><a href="/blog.html" class="text-white-50 text-decoration-none hover-accent">Blog</a></li>
+              <li class="mb-2"><a href="/privacy.html" class="text-white-50 text-decoration-none hover-accent">Privacy</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span>All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0">Made in Dubai</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
+  <script src="/assets/js/site-navigation.min.js?v=73f198dd3eb3" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" integrity="sha384-qOkzR5Ke/XkQxuGVJ9hpFEpDlcoLtWwVYhnJf06cLIZa2vaIptSqaubivErzmD5O" crossorigin="anonymous" defer></script>
+  <script src="/assets/js/build-helix.min.js?v=47574ab39deb" defer></script>
+  <script src="/assets/js/build-usage.min.js?v=28f103e3dcf5" defer></script>
+  <script src="/assets/js/build-page.min.js?v=e257225aab4c" defer></script>
+</body>
+</html>

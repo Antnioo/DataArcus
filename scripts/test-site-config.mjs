@@ -1,5 +1,6 @@
 // The website's configuration files, checked on every push (owner's rule 2026-10-06: any website change runs a check
 // on all site config files). No network: it reads the repo as GitHub Pages publishes it.
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -85,6 +86,32 @@ for (const u of locs) {
 const scriptsWith = (dir) => fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true }).flatMap((f) => f.isDirectory() ? (f.name === 'node_modules' ? [] : scriptsWith(path.join(dir, f.name))) : /\.m?js$/.test(f.name) && !/\.min\.js$/.test(f.name) ? [path.join(dir, f.name)] : []);
 for (const f of ['scripts', 'mcp'].flatMap(scriptsWith)) ok(!/import\.meta\.url\)\.pathname/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')), `${f}: builds a path from the module URL's pathname (use fileURLToPath)`);
 
+// No em dash (U+2014) in the repository's own text (the owner, 27 Oct, D-1027-15; 0.3.2 ED1): every tracked page,
+// translation, script, style, data and note file, outside the job notes (mcp/work/), the changelog's history and
+// Bootstrap's vendor files. A page or translation may not write it as an entity either. The one exception is a
+// word-for-word quote of someone else's page (QUOTED): written &mdash; in the sources, and as the character itself in
+// the generated Arabic copy (ar-pages.mjs saves the page as the browser serialises it). Code that recognises the
+// character names it by its escape (\u2014).
+const EM = String.fromCharCode(0x2014);
+const DASH_TEXT = /\.(html|m?js|cjs|css|json|md|ya?ml|txt|xml|svg|webmanifest|tmdl|dax|tsv)$/i;
+const DASH_SKIP = /^(mcp\/work\/|mcp\/CHANGELOG\.md$|assets\/css\/vendor\/|node_modules\/)/;
+// file: why its one literal em dash stays (MCP code, out of the website's scope; a regex that strips a trailing dash)
+const DASH_ALLOWED = { 'mcp/lib/redesign.mjs': 1 };
+// Microsoft's bi-directional relationship guidance, quoted in the best-practice-exceptions article (EN and AR)
+const QUOTED = ["must be bi-directional&mdash;it isn't possible to configure otherwise"].flatMap((q) => [q, q.replace('&mdash;', EM)]);
+let dashFiles = [];
+try { dashFiles = execFileSync('git', ['ls-files', '-z'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).split('\0').filter((f) => f && DASH_TEXT.test(f) && !DASH_SKIP.test(f) && exists(f)); }
+catch (e) { fails.push(`em dash check: git ls-files failed (${e.message})`); }
+ok(dashFiles.length > 500, `em dash check: only ${dashFiles.length} tracked text files (expected the whole repository)`);
+for (const f of dashFiles) {
+  const t = QUOTED.reduce((s, q) => s.split(q).join(''), read(f)), lit = t.split(EM).length - 1;
+  ok(lit === (DASH_ALLOWED[f] || 0), `${f}: ${lit} em dash(es) (U+2014): use a comma, a colon, parentheses or " - "`);
+  if (/\.(html|js)$/.test(f)) {
+    const left = t.match(/&mdash;|&#8212;|&#x2014;/gi);
+    ok(!left, `${f}: writes an em dash as ${left && left[0]} outside a quoted title`);
+  }
+}
+
 // the AI agent's public pages say what the MCP server has (0.2.9, the audit's A7-10): the number of tools, in English
 // and Arabic, a line for each tool on the beta page, and check_report (not create_report) named as the offline check
 {
@@ -144,6 +171,21 @@ for (const f of ['scripts', 'mcp'].flatMap(scriptsWith)) ok(!/import\.meta\.url\
   }
 }
 
+// (0.3.2 SP24) the Model Health Check's text downloads are built in health-downloads.js: both tool pages load it once,
+// before model-health.js, which calls it
+for (const f of ['tools/power-bi-model-health-check.html', 'ar/tools/power-bi-model-health-check.html']) {
+  const h = read(f), a = h.indexOf('health-downloads.min.js?v='), b = h.indexOf('js/model-health.min.js?v=');
+  ok(a >= 0 && a < b && h.split('health-downloads.min.js?v=').length === 2, `${f}: must load health-downloads.min.js once, before model-health.min.js (SP24)`);
+}
+// (0.3.2 SP32) the split of model-health.js, finished: the worker's lifecycle, then the page's own script; each once
+for (const f of ['tools/power-bi-model-health-check.html', 'ar/tools/power-bi-model-health-check.html']) {
+  const h = read(f), b = h.indexOf('js/model-health.min.js?v=');
+  for (const m of ['health-worker-client', 'health-fix-plan', 'health-view']) {
+    const a = h.indexOf(m + '.min.js?v=');
+    ok(a >= 0 && a < b && h.split(m + '.min.js?v=').length === 2, `${f}: must load ${m}.min.js once, before model-health.min.js (SP32)`);
+  }
+}
+
 // The Arabic copies at /ar/ (mcp/plans/ARABIC-INDEXING.md, option 2): each page in scripts/ar-pages.mjs's PAIRS and its
 // copy name each other (hreflang en, ar, x-default = English, fully qualified), each names itself as canonical, the copy
 // is lang="ar" dir="rtl" with its title, description and Open Graph in Arabic within the limits search results show,
@@ -165,8 +207,8 @@ for (const f of ['scripts', 'mcp'].flatMap(scriptsWith)) ok(!/import\.meta\.url\
   const onDisk = exists('ar') ? fs.readdirSync(path.join(ROOT, 'ar'), { recursive: true }).map((f) => 'ar/' + f.split(path.sep).join('/')).filter((f) => f.endsWith('.html')) : [];
   // every public page has its copy: the pages outside the sitemap are exactly the ones lang-manager's hasArCopy() leaves
   // English (404.html, a -lab page), so the links it rewrites at run time go to copies that exist
-  const want = pages.map((p) => p.split(path.sep).join('/')).filter((p) => !p.startsWith('ar/') && !/^404\.html$|-lab\.html$/.test(p)).sort();
-  ok(JSON.stringify(want) === JSON.stringify([...PAIRS].sort()), `the pages with an Arabic copy (the sitemap) must be every page but 404.html and -lab pages: missing ${want.filter((p) => !PAIRS.includes(p)).join(', ') || '-'}, extra ${PAIRS.filter((p) => !want.includes(p)).join(', ') || '-'}`);
+  const want = pages.map((p) => p.split(path.sep).join('/')).filter((p) => !p.startsWith('ar/') && !/^404\.html$|-lab\.html$|^build\/index\.html$/.test(p)).sort();
+  ok(JSON.stringify(want) === JSON.stringify([...PAIRS].sort()), `the pages with an Arabic copy (the sitemap) must be every page but 404.html, -lab pages and build/: missing ${want.filter((p) => !PAIRS.includes(p)).join(', ') || '-'}, extra ${PAIRS.filter((p) => !want.includes(p)).join(', ') || '-'}`);
   for (const f of onDisk) ok(PAIRS.map(arFile).includes(f), `${f}: an Arabic copy with no English page in scripts/ar-pages.mjs PAIRS`);
   for (const en of PAIRS) {
     const ar = arFile(en);
@@ -213,4 +255,4 @@ for (const f of ['scripts', 'mcp'].flatMap(scriptsWith)) ok(!/import\.meta\.url\
 }
 
 if (fails.length) { console.error(`FAIL  site config: ${fails.length} problem(s)\n- ` + fails.join('\n- ')); process.exit(1); }
-console.log(`PASS  site config: _config, CNAME, robots, sitemap (${locs.length} URLs), icons, manifest, security.txt, llms.txt, ${pages.length} pages`);
+console.log(`PASS  site config: _config, CNAME, robots, sitemap (${locs.length} URLs), icons, manifest, security.txt, llms.txt, ${pages.length} pages, no em dash in ${dashFiles.length} files`);

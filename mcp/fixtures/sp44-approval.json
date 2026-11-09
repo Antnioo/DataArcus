@@ -1,0 +1,2793 @@
+{
+ "about": "SP44: each approval page (sha256 and length) and every HTTP answer (status, headers without Date, Content-Length checked, body as sha256 and length) for 12 made-up plans from the real server, and the window's life in process (expiry, close, a callback that throws, reopen, a long body, wait), recorded on integration/0.3.2 4d97158 (before approval-view.mjs and approval-http.mjs). Markers as in sp23 (test-0.3.2-sp44.mjs).",
+ "pages": {
+  "report-en": {
+   "sha256": "19f71938ca192461f24ee3a17be21faf09fab0fd531a67b5b2ee61a4c769fdc6",
+   "length": 101444
+  },
+  "report-ar": {
+   "sha256": "4fb781875239769e8034eb602e6a6d848e37b40d38b451edf6c233708ffdd1f3",
+   "length": 103933
+  },
+  "report-cap": {
+   "sha256": "3824a49be3c63aa8bb9522825f5d93f9774a16d2c929001ddda9b8cc0a1ef15a",
+   "length": 54207
+  },
+  "report-hostile": {
+   "sha256": "ddf8351e6b801590830b6a9b34cc4e801a9f4099563259061b3a07dfc80d434b",
+   "length": 101654
+  },
+  "twin": {
+   "sha256": "2fdcf814fba7489b932a92fb23ec788af18db474d6d2bc91ffc569ad2b7c8f5a",
+   "length": 22849
+  },
+  "copy": {
+   "sha256": "edb73fb31c2e8b560d123f8a422db7898ded6963f5f0b06bfba43ba310df4202",
+   "length": 40331
+  },
+  "theme-en": {
+   "sha256": "4f7cbe87bc2dab07883386dc0bc59a3d6cba78b7e89fa3a1684ce17cebd329eb",
+   "length": 6057
+  },
+  "theme-ar": {
+   "sha256": "851b33433209366297f1ca4a656fb8d7a0b4969ee8244beb14315beabe24c989",
+   "length": 6061
+  },
+  "redesign": {
+   "sha256": "2e484ca9fa690d1d1bef0e711898ee08764fe1474ab29ed464e0247a28807184",
+   "length": 15477
+  },
+  "calendar-ar": {
+   "sha256": "249c221a4276e1c283bdd91bc0ac48fc70936b9ed3fe600ed38942716c55155c",
+   "length": 6859
+  },
+  "scripts": {
+   "sha256": "1da92558ea3685de1a600e17ee85c65af300aff5eafc6361c74fd02c93abd955",
+   "length": 4924
+  },
+  "sample": {
+   "sha256": "a6cb3fd1027d4c7d1ed67b956b0d96d2e17ffc1d35f8daac14b3395554e7a74a",
+   "length": 7324
+  }
+ },
+ "answers": {
+  "report-en": {
+   "page": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true
+   },
+   "wrongSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "shortSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "wrongHost": {
+    "code": 421,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "5c8f233fd4005e54e43acf8ee4a746b1f2461c7a53009d04a1c6a6b61adb6638",
+     "length": 10
+    }
+   },
+   "wrongOrigin": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "nullCrossSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "noOriginNoSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "wrongMethod": {
+    "code": 405,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "371b26886bee5e559d5016b17b1479cb7a9154865da5a0f11563580ea99ff033",
+     "length": 18
+    }
+   },
+   "notADecision": {
+    "code": 400,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "beforeClick": {
+    "err": false,
+    "status": "waiting",
+    "approvedBy": null
+   },
+   "click": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "3ed060c4322fd027842343cfb2d48a76e01a2996b67efc2e1a7170fe318f2f96",
+     "length": 2330
+    }
+   },
+   "secondClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "3ed060c4322fd027842343cfb2d48a76e01a2996b67efc2e1a7170fe318f2f96",
+     "length": 2330
+    }
+   },
+   "afterClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "3ed060c4322fd027842343cfb2d48a76e01a2996b67efc2e1a7170fe318f2f96",
+     "length": 2330
+    }
+   },
+   "answer": {
+    "err": false,
+    "status": "approved",
+    "approvedBy": "user-in-browser"
+   }
+  },
+  "report-ar": {
+   "page": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true
+   },
+   "wrongSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "shortSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "wrongHost": {
+    "code": 421,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "5c8f233fd4005e54e43acf8ee4a746b1f2461c7a53009d04a1c6a6b61adb6638",
+     "length": 10
+    }
+   },
+   "wrongOrigin": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "nullCrossSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "noOriginNoSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "wrongMethod": {
+    "code": 405,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "371b26886bee5e559d5016b17b1479cb7a9154865da5a0f11563580ea99ff033",
+     "length": 18
+    }
+   },
+   "notADecision": {
+    "code": 400,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "beforeClick": {
+    "err": false,
+    "status": "waiting",
+    "approvedBy": null
+   },
+   "click": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "2a22cbe87f3cef1ab567293fe73bc9efcae96a3b930261b1846f63cadb07cd53",
+     "length": 2361
+    }
+   },
+   "secondClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "2a22cbe87f3cef1ab567293fe73bc9efcae96a3b930261b1846f63cadb07cd53",
+     "length": 2361
+    }
+   },
+   "afterClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "2a22cbe87f3cef1ab567293fe73bc9efcae96a3b930261b1846f63cadb07cd53",
+     "length": 2361
+    }
+   },
+   "answer": {
+    "err": false,
+    "status": "approved",
+    "approvedBy": "user-in-browser"
+   }
+  },
+  "report-cap": {
+   "page": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true
+   },
+   "wrongSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "shortSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "wrongHost": {
+    "code": 421,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "5c8f233fd4005e54e43acf8ee4a746b1f2461c7a53009d04a1c6a6b61adb6638",
+     "length": 10
+    }
+   },
+   "wrongOrigin": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "nullCrossSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "noOriginNoSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "wrongMethod": {
+    "code": 405,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "371b26886bee5e559d5016b17b1479cb7a9154865da5a0f11563580ea99ff033",
+     "length": 18
+    }
+   },
+   "notADecision": {
+    "code": 400,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "beforeClick": {
+    "err": false,
+    "status": "waiting",
+    "approvedBy": null
+   },
+   "click": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "76f8e9fb35646bece582501274bec3aa61e5f806dc0d3db5e7b450fe9390d756",
+     "length": 2345
+    }
+   },
+   "secondClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "76f8e9fb35646bece582501274bec3aa61e5f806dc0d3db5e7b450fe9390d756",
+     "length": 2345
+    }
+   },
+   "afterClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "76f8e9fb35646bece582501274bec3aa61e5f806dc0d3db5e7b450fe9390d756",
+     "length": 2345
+    }
+   },
+   "answer": {
+    "err": true,
+    "status": null,
+    "approvedBy": null,
+    "t": {
+     "sha256": "83324bc260e9ca200fc4872dd67a3f21ac87851c05b9cdaccadcf4ec85bb75b3",
+     "length": 170
+    }
+   }
+  },
+  "report-hostile": {
+   "page": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true
+   },
+   "wrongSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "shortSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "wrongHost": {
+    "code": 421,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "5c8f233fd4005e54e43acf8ee4a746b1f2461c7a53009d04a1c6a6b61adb6638",
+     "length": 10
+    }
+   },
+   "wrongOrigin": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "nullCrossSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "noOriginNoSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "wrongMethod": {
+    "code": 405,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "371b26886bee5e559d5016b17b1479cb7a9154865da5a0f11563580ea99ff033",
+     "length": 18
+    }
+   },
+   "notADecision": {
+    "code": 400,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "beforeClick": {
+    "err": false,
+    "status": "waiting",
+    "approvedBy": null
+   },
+   "click": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "3ed060c4322fd027842343cfb2d48a76e01a2996b67efc2e1a7170fe318f2f96",
+     "length": 2330
+    }
+   },
+   "secondClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "3ed060c4322fd027842343cfb2d48a76e01a2996b67efc2e1a7170fe318f2f96",
+     "length": 2330
+    }
+   },
+   "afterClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "3ed060c4322fd027842343cfb2d48a76e01a2996b67efc2e1a7170fe318f2f96",
+     "length": 2330
+    }
+   },
+   "answer": {
+    "err": false,
+    "status": "approved",
+    "approvedBy": "user-in-browser"
+   }
+  },
+  "twin": {
+   "page": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true
+   },
+   "wrongSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "shortSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "wrongHost": {
+    "code": 421,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "5c8f233fd4005e54e43acf8ee4a746b1f2461c7a53009d04a1c6a6b61adb6638",
+     "length": 10
+    }
+   },
+   "wrongOrigin": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "nullCrossSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "noOriginNoSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "wrongMethod": {
+    "code": 405,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "371b26886bee5e559d5016b17b1479cb7a9154865da5a0f11563580ea99ff033",
+     "length": 18
+    }
+   },
+   "notADecision": {
+    "code": 400,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "beforeClick": {
+    "err": false,
+    "status": "waiting",
+    "approvedBy": null
+   },
+   "click": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "2a22cbe87f3cef1ab567293fe73bc9efcae96a3b930261b1846f63cadb07cd53",
+     "length": 2361
+    }
+   },
+   "secondClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "2a22cbe87f3cef1ab567293fe73bc9efcae96a3b930261b1846f63cadb07cd53",
+     "length": 2361
+    }
+   },
+   "afterClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "2a22cbe87f3cef1ab567293fe73bc9efcae96a3b930261b1846f63cadb07cd53",
+     "length": 2361
+    }
+   },
+   "answer": {
+    "err": false,
+    "status": "approved",
+    "approvedBy": "user-in-browser"
+   }
+  },
+  "copy": {
+   "page": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true
+   },
+   "wrongSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "shortSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "wrongHost": {
+    "code": 421,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "5c8f233fd4005e54e43acf8ee4a746b1f2461c7a53009d04a1c6a6b61adb6638",
+     "length": 10
+    }
+   },
+   "wrongOrigin": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "nullCrossSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "noOriginNoSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "wrongMethod": {
+    "code": 405,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "371b26886bee5e559d5016b17b1479cb7a9154865da5a0f11563580ea99ff033",
+     "length": 18
+    }
+   },
+   "notADecision": {
+    "code": 400,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "beforeClick": {
+    "err": false,
+    "status": "waiting",
+    "approvedBy": null
+   },
+   "click": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "91ea07535d99afdc5b8ce7df67fca368c9eba96a4ab80c5c9c204e4fe040ba93",
+     "length": 2372
+    }
+   },
+   "secondClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "91ea07535d99afdc5b8ce7df67fca368c9eba96a4ab80c5c9c204e4fe040ba93",
+     "length": 2372
+    }
+   },
+   "afterClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "91ea07535d99afdc5b8ce7df67fca368c9eba96a4ab80c5c9c204e4fe040ba93",
+     "length": 2372
+    }
+   },
+   "answer": {
+    "err": true,
+    "status": null,
+    "approvedBy": null,
+    "t": {
+     "sha256": "83324bc260e9ca200fc4872dd67a3f21ac87851c05b9cdaccadcf4ec85bb75b3",
+     "length": 170
+    }
+   }
+  },
+  "theme-en": {
+   "page": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true
+   },
+   "wrongSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "shortSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "wrongHost": {
+    "code": 421,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "5c8f233fd4005e54e43acf8ee4a746b1f2461c7a53009d04a1c6a6b61adb6638",
+     "length": 10
+    }
+   },
+   "wrongOrigin": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "nullCrossSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "noOriginNoSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "wrongMethod": {
+    "code": 405,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "371b26886bee5e559d5016b17b1479cb7a9154865da5a0f11563580ea99ff033",
+     "length": 18
+    }
+   },
+   "notADecision": {
+    "code": 400,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "beforeClick": {
+    "err": false,
+    "status": "waiting",
+    "approvedBy": null
+   },
+   "click": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "3ed060c4322fd027842343cfb2d48a76e01a2996b67efc2e1a7170fe318f2f96",
+     "length": 2330
+    }
+   },
+   "secondClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "3ed060c4322fd027842343cfb2d48a76e01a2996b67efc2e1a7170fe318f2f96",
+     "length": 2330
+    }
+   },
+   "afterClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "3ed060c4322fd027842343cfb2d48a76e01a2996b67efc2e1a7170fe318f2f96",
+     "length": 2330
+    }
+   },
+   "answer": {
+    "err": false,
+    "status": "approved",
+    "approvedBy": "user-in-browser"
+   }
+  },
+  "theme-ar": {
+   "page": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true
+   },
+   "wrongSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "shortSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "wrongHost": {
+    "code": 421,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "5c8f233fd4005e54e43acf8ee4a746b1f2461c7a53009d04a1c6a6b61adb6638",
+     "length": 10
+    }
+   },
+   "wrongOrigin": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "nullCrossSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "noOriginNoSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "wrongMethod": {
+    "code": 405,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "371b26886bee5e559d5016b17b1479cb7a9154865da5a0f11563580ea99ff033",
+     "length": 18
+    }
+   },
+   "notADecision": {
+    "code": 400,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "beforeClick": {
+    "err": false,
+    "status": "waiting",
+    "approvedBy": null
+   },
+   "click": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "2a22cbe87f3cef1ab567293fe73bc9efcae96a3b930261b1846f63cadb07cd53",
+     "length": 2361
+    }
+   },
+   "secondClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "2a22cbe87f3cef1ab567293fe73bc9efcae96a3b930261b1846f63cadb07cd53",
+     "length": 2361
+    }
+   },
+   "afterClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "2a22cbe87f3cef1ab567293fe73bc9efcae96a3b930261b1846f63cadb07cd53",
+     "length": 2361
+    }
+   },
+   "answer": {
+    "err": false,
+    "status": "approved",
+    "approvedBy": "user-in-browser"
+   }
+  },
+  "redesign": {
+   "page": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true
+   },
+   "wrongSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "shortSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "wrongHost": {
+    "code": 421,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "5c8f233fd4005e54e43acf8ee4a746b1f2461c7a53009d04a1c6a6b61adb6638",
+     "length": 10
+    }
+   },
+   "wrongOrigin": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "nullCrossSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "noOriginNoSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "wrongMethod": {
+    "code": 405,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "371b26886bee5e559d5016b17b1479cb7a9154865da5a0f11563580ea99ff033",
+     "length": 18
+    }
+   },
+   "notADecision": {
+    "code": 400,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "beforeClick": {
+    "err": false,
+    "status": "waiting",
+    "approvedBy": null
+   },
+   "click": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "76f8e9fb35646bece582501274bec3aa61e5f806dc0d3db5e7b450fe9390d756",
+     "length": 2345
+    }
+   },
+   "secondClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "76f8e9fb35646bece582501274bec3aa61e5f806dc0d3db5e7b450fe9390d756",
+     "length": 2345
+    }
+   },
+   "afterClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "76f8e9fb35646bece582501274bec3aa61e5f806dc0d3db5e7b450fe9390d756",
+     "length": 2345
+    }
+   },
+   "answer": {
+    "err": true,
+    "status": null,
+    "approvedBy": null,
+    "t": {
+     "sha256": "83324bc260e9ca200fc4872dd67a3f21ac87851c05b9cdaccadcf4ec85bb75b3",
+     "length": 170
+    }
+   }
+  },
+  "calendar-ar": {
+   "page": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true
+   },
+   "wrongSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "shortSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "wrongHost": {
+    "code": 421,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "5c8f233fd4005e54e43acf8ee4a746b1f2461c7a53009d04a1c6a6b61adb6638",
+     "length": 10
+    }
+   },
+   "wrongOrigin": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "nullCrossSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "noOriginNoSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "wrongMethod": {
+    "code": 405,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "371b26886bee5e559d5016b17b1479cb7a9154865da5a0f11563580ea99ff033",
+     "length": 18
+    }
+   },
+   "notADecision": {
+    "code": 400,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "beforeClick": {
+    "err": false,
+    "status": "waiting",
+    "approvedBy": null
+   },
+   "click": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "2a22cbe87f3cef1ab567293fe73bc9efcae96a3b930261b1846f63cadb07cd53",
+     "length": 2361
+    }
+   },
+   "secondClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "2a22cbe87f3cef1ab567293fe73bc9efcae96a3b930261b1846f63cadb07cd53",
+     "length": 2361
+    }
+   },
+   "afterClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "2a22cbe87f3cef1ab567293fe73bc9efcae96a3b930261b1846f63cadb07cd53",
+     "length": 2361
+    }
+   },
+   "answer": {
+    "err": false,
+    "status": "approved",
+    "approvedBy": "user-in-browser"
+   }
+  },
+  "scripts": {
+   "page": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true
+   },
+   "wrongSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "shortSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "wrongHost": {
+    "code": 421,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "5c8f233fd4005e54e43acf8ee4a746b1f2461c7a53009d04a1c6a6b61adb6638",
+     "length": 10
+    }
+   },
+   "wrongOrigin": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "nullCrossSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "noOriginNoSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "wrongMethod": {
+    "code": 405,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "371b26886bee5e559d5016b17b1479cb7a9154865da5a0f11563580ea99ff033",
+     "length": 18
+    }
+   },
+   "notADecision": {
+    "code": 400,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "beforeClick": {
+    "err": false,
+    "status": "waiting",
+    "approvedBy": null
+   },
+   "click": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "3ed060c4322fd027842343cfb2d48a76e01a2996b67efc2e1a7170fe318f2f96",
+     "length": 2330
+    }
+   },
+   "secondClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "3ed060c4322fd027842343cfb2d48a76e01a2996b67efc2e1a7170fe318f2f96",
+     "length": 2330
+    }
+   },
+   "afterClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "3ed060c4322fd027842343cfb2d48a76e01a2996b67efc2e1a7170fe318f2f96",
+     "length": 2330
+    }
+   },
+   "answer": {
+    "err": false,
+    "status": "approved",
+    "approvedBy": "user-in-browser"
+   }
+  },
+  "sample": {
+   "page": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true
+   },
+   "wrongSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "shortSecret": {
+    "code": 404,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "wrongHost": {
+    "code": 421,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "5c8f233fd4005e54e43acf8ee4a746b1f2461c7a53009d04a1c6a6b61adb6638",
+     "length": 10
+    }
+   },
+   "wrongOrigin": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "nullCrossSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "noOriginNoSite": {
+    "code": 403,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "64e28b15de3ade7d1e035f240ac4508033bddfcf9cfb938070366d1b52058e0a",
+     "length": 60
+    }
+   },
+   "wrongMethod": {
+    "code": 405,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/plain; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "371b26886bee5e559d5016b17b1479cb7a9154865da5a0f11563580ea99ff033",
+     "length": 18
+    }
+   },
+   "notADecision": {
+    "code": 400,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "b40d5035b1d70db0d4e038def56e81c1a611a25897690536d714a1822c289361",
+     "length": 2388
+    }
+   },
+   "beforeClick": {
+    "err": false,
+    "status": "waiting",
+    "approvedBy": null
+   },
+   "click": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "76f8e9fb35646bece582501274bec3aa61e5f806dc0d3db5e7b450fe9390d756",
+     "length": 2345
+    }
+   },
+   "secondClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "76f8e9fb35646bece582501274bec3aa61e5f806dc0d3db5e7b450fe9390d756",
+     "length": 2345
+    }
+   },
+   "afterClick": {
+    "code": 200,
+    "headers": [
+     "cache-control: no-store",
+     "connection: close",
+     "content-security-policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+     "content-type: text/html; charset=utf-8",
+     "referrer-policy: same-origin",
+     "transfer-encoding: chunked",
+     "x-content-type-options: nosniff",
+     "x-frame-options: DENY"
+    ],
+    "lenOk": true,
+    "body": {
+     "sha256": "76f8e9fb35646bece582501274bec3aa61e5f806dc0d3db5e7b450fe9390d756",
+     "length": 2345
+    }
+   },
+   "answer": {
+    "err": true,
+    "status": null,
+    "approvedBy": null,
+    "t": {
+     "sha256": "83324bc260e9ca200fc4872dd67a3f21ac87851c05b9cdaccadcf4ec85bb75b3",
+     "length": 170
+    }
+   }
+  }
+ },
+ "life": {
+  "l1": {
+   "sha256": "af790f05c82d6e9b571713557083cd05d392c7301b85e04068a92fffcb90543a",
+   "length": 5775
+  },
+  "l2": {
+   "sha256": "1426aaf0a6206dfef7997f68bc5b9bcef3ad09b083c3891828c1c318f5ccfdc6",
+   "length": 2936
+  },
+  "l3": {
+   "sha256": "83b7cc413a78d6e0bae839121fee95692f1203c1146f9df7708acae4cd79f3d8",
+   "length": 5753
+  },
+  "l4": {
+   "sha256": "2db8c3c27527dc973106e80b3c87e77dee74d11ac2353396fe54fbd2c3b627d9",
+   "length": 247
+  },
+  "l5": {
+   "sha256": "16eede84658e58efac5058409bebcac64744e5faa81a2b000bf8d888ac815ab0",
+   "length": 76
+  },
+  "l6": {
+   "sha256": "8a1d17951e8192dbb95eee84d5416fdf901c7361754971ca571e4e9f7c43a218",
+   "length": 2994
+  },
+  "l7page": {
+   "sha256": "3b9c33ad946bbd552b3ba1d75bf73aeee621c747222bdd0c6b2df116d82ea8af",
+   "length": 3647
+  },
+  "l7html": {
+   "sha256": "3b9c33ad946bbd552b3ba1d75bf73aeee621c747222bdd0c6b2df116d82ea8af",
+   "length": 3647
+  }
+ }
+}

@@ -58,7 +58,7 @@ export async function writeVariants(out) {
     const n = links().length; await s.call('approve_plan', { planId: id });
     for (let k = 0; k < 100 && links().length <= n; k++) await new Promise((r) => setTimeout(r, 50));
     await req(links()[n], 'decision=approve'); await s.call('approve_plan', { planId: id });
-    const r = await s.call('create_report', Object.assign({ planId: id, design: pl.j.design, fields: FIELDS }, args));
+    const r = await s.call('create_report', { path: args.path, planId: id });
     if (r.err) throw new Error('not written: ' + r.t.slice(0, 300));
     const RD = path.join(ROOT, 'pills/Pills Variants.Report/definition'), P = path.join(RD, 'pages');
     const rd = (f) => JSON.parse(fs.readFileSync(f, 'utf8')), wr = (f, j) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, JSON.stringify(j, null, 2)); };
@@ -166,7 +166,7 @@ export async function writeVariants(out) {
       const m = links().length; await s.call('approve_plan', { planId: id2 });
       for (let k = 0; k < 100 && links().length <= m; k++) await new Promise((r) => setTimeout(r, 50));
       await req(links()[m], 'decision=approve'); await s.call('approve_plan', { planId: id2 });
-      const w = await s.call('create_report', Object.assign({ planId: id2, design: p2.j.design, fields: FIELDS }, a));
+      const w = await s.call('create_report', { path: a.path, planId: id2 });
       const ck = w.err ? null : await s.call('check_report', { path: 'pills/' + nm + '.pbip' });
       reports.push({ name: nm, pbip: path.join(ROOT, 'pills', nm + '.pbip'), slicers: w.j && w.j.slicerStyle ? w.j.slicerStyle.slicers.map((x) => `${x.field}: ${x.written}`) : (w.err ? w.t.slice(0, 200) : []),
         check: ck && ck.j ? { validator: ck.j.validator.errors, canBreak: ck.j.impact.kinds.canBreak.count } : null });

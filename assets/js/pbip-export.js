@@ -14,8 +14,6 @@
   const Notes = (typeof module !== 'undefined' && module.exports ? require('./pbip-notes.js') : root.DAPbipNotes), Page = (typeof module !== 'undefined' && module.exports ? require('./pbip-page.js') : root.DAPbipPage);
   // the visual gallery (0.3, J8: combo, waterfall, small multiples, behind the design's gallery flag); optional in the browser
   const Gallery = (typeof module !== 'undefined' && module.exports ? require('./visual-gallery.js') : root.DAGallery || null);
-  // (SQ15b, J18-S2: the isolate rule, text-measure.js, loaded first on the website)
-  const Measure = (typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure);
   const {
     AR_MONTHS, HEX6, PF_KINDS, SCHEMA, TYPES, bool, daxNames, guid, hasControl, isTime, json,
     mixHex, obj, pageFilterOf, pfLiteral, rnd, timeAxisPlan
@@ -25,92 +23,14 @@
   const BOLD_TOTAL = "'Segoe UI Bold', wf_segoe-ui_bold, helvetica, arial, sans-serif";
 
 
-  // ---------- zip (stored) ----------
-  const CRC = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
-  const crc32 = (u) => { let c = 0xffffffff; for (let i = 0; i < u.length; i++) c = CRC[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
-  function zip(files) {
-    const enc = new TextEncoder(), parts = [], central = [];
-    let offset = 0;
-    const d = new Date(), time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
-    files.forEach((f) => {
-      const name = enc.encode(f.path), data = typeof f.data === 'string' ? enc.encode(f.data) : f.data, crc = crc32(data);
-      const h = new DataView(new ArrayBuffer(30));
-      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
-      h.setUint16(10, time, true); h.setUint16(12, date, true); h.setUint32(14, crc, true); h.setUint32(18, data.length, true); h.setUint32(22, data.length, true);
-      h.setUint16(26, name.length, true); h.setUint16(28, 0, true);
-      parts.push(new Uint8Array(h.buffer), name, data);
-      const c = new DataView(new ArrayBuffer(46));
-      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, 0, true);
-      c.setUint16(12, time, true); c.setUint16(14, date, true); c.setUint32(16, crc, true); c.setUint32(20, data.length, true); c.setUint32(24, data.length, true);
-      c.setUint16(28, name.length, true); c.setUint32(42, offset, true);
-      central.push(new Uint8Array(c.buffer), name);
-      offset += 30 + name.length + data.length;
-    });
-    const size = central.reduce((a, p) => a + p.length, 0), e = new DataView(new ArrayBuffer(22));
-    e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, size, true); e.setUint32(16, offset, true);
-    const all = parts.concat(central, [new Uint8Array(e.buffer)]), out = new Uint8Array(all.reduce((a, p) => a + p.length, 0));
-    let at = 0; all.forEach((p) => { out.set(p, at); at += p.length; });
-    return out;
-  }
+  // the stored ZIP (pbip-zip.js) and the sample model (pbip-sample.js), 0.3.2 SP5: in Node required here, in the browser
+  // loaded before this file (theme-generator.js's BUILDER list)
+  const { zip, crc32 } = (typeof module !== 'undefined' && module.exports ? require('./pbip-zip.js') : root.DAPbipZip);
+  const Sample = (typeof module !== 'undefined' && module.exports ? require('./pbip-sample.js') : root.DAPbipSample);
+  // the bidi isolation (pbip-bidi.js, 0.3.2 SP43: the generated file map and the model's names in, the isolated map out):
+  // an Arabic build's texts, and isolateFiles on this file's API as before (the MCP's terminology.mjs reads it here)
+  const { isolateFiles } = (typeof module !== 'undefined' && module.exports ? require('./pbip-bidi.js') : root.DAPbipBidi);
 
-  // ---------- sample data: a small sales table so the report opens looking finished ----------
-  const T = {
-    en: { table: 'Sample Data', month: 'Month', monthNo: 'Month No', category: 'Category', region: 'Region', revenue: 'Revenue', cost: 'Cost', orders: 'Orders', customers: 'Customers',
-      months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], cats: ['Electronics', 'Home', 'Fashion', 'Sports'], regions: ['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman'],
-      m: { rev: 'Total Revenue', ord: 'Total Orders', aov: 'Avg Order Value', mar: 'Margin %', cus: 'Total Customers', rpc: 'Revenue per Customer' } },
-    ar: { table: 'بيانات تجريبية', month: 'الشهر', monthNo: 'رقم الشهر', category: 'الفئة', region: 'المنطقة', revenue: 'الإيرادات', cost: 'التكلفة', orders: 'الطلبات', customers: 'العملاء',
-      months: AR_MONTHS, cats: ['إلكترونيات', 'المنزل', 'أزياء', 'رياضة'], regions: ['دبي', 'أبوظبي', 'الشارقة', 'عجمان'],
-      m: { rev: 'إجمالي الإيرادات', ord: 'إجمالي الطلبات', aov: 'متوسط قيمة الطلب', mar: 'هامش الربح %', cus: 'إجمالي العملاء', rpc: 'الإيراد لكل عميل' } }
-  };
-  function sampleModel(t) {
-    const rows = [];
-    t.months.forEach((mo, mi) => t.cats.forEach((ca, ci) => {
-      const base = 42000 + ci * 9000 + mi * 1800 + ((mi * 7 + ci * 13) % 9) * 1500, orders = Math.round(base / (180 + ci * 35));
-      rows.push('{' + [daxNames.string(mo), mi + 1, daxNames.string(ca), daxNames.string(t.regions[(mi + ci) % 4]), base, Math.round(base * (0.58 + ci * 0.04)), orders, Math.round(orders * 0.72)].join(', ') + '}');
-    }));
-    const tb = t.table, col = (name, dataType, extra) => Object.assign({ type: 'calculatedTableColumn', name, dataType, isNameInferred: true, isDataTypeInferred: true, sourceColumn: '[' + name + ']' }, extra || {});
-    const expr = 'DATATABLE(' + [t.month, 'STRING', t.monthNo, 'INTEGER', t.category, 'STRING', t.region, 'STRING', t.revenue, 'DOUBLE', t.cost, 'DOUBLE', t.orders, 'INTEGER', t.customers, 'INTEGER'].map((x, i) => (i % 2 ? x : daxNames.string(x))).join(', ') + ', {' + rows.join(', ') + '})';
-    const R = daxNames.column(tb, t.revenue), m = t.m;
-    return {
-      name: tb,
-      columns: [
-        col(t.month, 'string', { sortByColumn: t.monthNo, summarizeBy: 'none' }),
-        col(t.monthNo, 'int64', { isHidden: true, summarizeBy: 'none' }),
-        col(t.category, 'string', { summarizeBy: 'none' }),
-        col(t.region, 'string', { summarizeBy: 'none', dataCategory: 'City' }),
-        col(t.revenue, 'double', { isHidden: true, summarizeBy: 'sum', formatString: '#,0' }),
-        col(t.cost, 'double', { isHidden: true, summarizeBy: 'sum', formatString: '#,0' }),
-        col(t.orders, 'int64', { isHidden: true, summarizeBy: 'sum', formatString: '#,0' }),
-        col(t.customers, 'int64', { isHidden: true, summarizeBy: 'sum', formatString: '#,0' })
-      ],
-      partitions: [{ name: tb, mode: 'import', source: { type: 'calculated', expression: expr } }],
-      measures: [
-        { name: m.rev, expression: 'SUM(' + R + ')', formatString: '#,0' },
-        { name: m.ord, expression: 'SUM(' + daxNames.column(tb, t.orders) + ')', formatString: '#,0' },
-        { name: m.aov, expression: 'DIVIDE([' + m.rev + '], [' + m.ord + '])', formatString: '#,0.0' },
-        { name: m.mar, expression: 'DIVIDE(SUM(' + R + ') - SUM(' + daxNames.column(tb, t.cost) + '), SUM(' + R + '))', formatString: '0.0%' },
-        { name: m.cus, expression: 'SUM(' + daxNames.column(tb, t.customers) + ')', formatString: '#,0' },
-        { name: m.rpc, expression: 'DIVIDE([' + m.rev + '], [' + m.cus + '])', formatString: '#,0' }
-      ]
-    };
-  }
-  // Which fields each kind of visual shows. The sample data and a user's own model both come in this shape:
-  // { kpis: [f], measure: f, date: f, cats: { bar, column, donut, funnel, treemap, map }, y: { funnel, gauge },
-  //   table: [f], slicers: [f], tip: { card, cat, y, date } }, where f is a bound field (see proj above); tip.date is the
-  // month field for the tooltip's trend (optional: without it the report has the one tooltip page by category)
-  function sampleBind(t) {
-    const C = (c) => ({ t: t.table, c }), Me = (m) => ({ t: t.table, m }), m = t.m;
-    return {
-      // (the margin is a percent, formatted 0.0% in the sample model: its card shows that format, see cardObjects; round
-      // 12, the owner's rule: the "#,0" measures show their whole numbers, the "#,0.0" average automatic units)
-      kpis: [m.rev, m.ord, m.aov, m.mar, m.cus, m.rpc].map((x) => Object.assign(Me(x), x === m.mar ? { pct: true, pctFormat: '0.0%' } : x === m.aov ? {} : { wholeFormat: '#,0' })), measure: Me(m.rev), date: C(t.month),
-      cats: { bar: C(t.category), column: C(t.region), donut: C(t.category), funnel: C(t.category), treemap: C(t.category), map: C(t.region) },
-      y: { funnel: Me(m.ord), gauge: Me(m.mar) },
-      table: [C(t.region), Me(m.rev), Me(m.ord), Me(m.mar)],
-      slicers: [C(t.region), C(t.category), C(t.month)],
-      tip: { card: Object.assign(Me(m.rev), { wholeFormat: '#,0' }), cat: C(t.category), y: Me(m.ord), date: C(t.month) }
-    };
-  }
   /**
    * 0.2.9, audit 3's A3-9: build's contract, written down and checked at its top (checkBuild). The writer reads nothing
    * else from its caller. Sizes are page units (the page's own width and height).
@@ -137,7 +57,7 @@
    * @property {string} [cardFormat]  the card's format with kpiValues "full"
    * @property {string} [tableFormat]  a table column's format
    *
-   * @typedef {Object} Bind  the fields of each visual (sampleBind gives the sample's)
+   * @typedef {Object} Bind  the fields of each visual (pbip-sample.js bind gives the sample's)
    * @property {Field[]} [kpis]  one per KPI card, in order
    * @property {Field} [measure]  the main measure (line chart, cards, table titles)
    * @property {Field} [date]  the line chart's time axis (null: the line charts give their room away, fitSlots)
@@ -328,27 +248,14 @@
   // the slots the report gets. o: build's input (the pages' png not needed)
   function fitOptions(o) {
     const lang = o.lang === 'ar' ? 'ar' : 'en', rtl = !!o.rtl, font = o.font || 'Segoe UI', W = o.texts || {};
-    const own = !!(o.model && (o.model.byPath || o.model.byConnection)), sample = !!o.sample && !own, B = own ? (o.bind || null) : sample ? sampleBind(T[lang]) : null;
+    const own = !!(o.model && (o.model.byPath || o.model.byConnection)), sample = !!o.sample && !own, B = own ? (o.bind || null) : sample ? Sample.bind(lang) : null;
     const PAGES = o.pages && o.pages.length ? o.pages : [{ name: o.pageName, page: o.page, slots: o.slots }], { base } = nameOf(o, W);
     const ts = Page.themeSizes(o), c = Object.assign({ o, B, own, PAGES, base, rtl, font, W }, ts, Sizing.make({ font, LABEL: ts.LABEL }));
     return PAGES.map((pg) => Page.fitOf(c, pg));
   }
-  /** @param {BuildInput} o @returns {BuildResult} */
-  function build(o) {
-    checkBuild(o);
-    // (0.3, J7) the report theme's data colours at 3:1 on the card before anything reads them (design-engine toContrast;
-    // a colour already at 3:1 is kept exactly): every chart, fade and second colour below is chosen from these
-    const themeCard = ((((((((o.theme || {}).visualStyles || {})['*'] || {})['*'] || {}).background || [])[0] || {}).color || {}).solid || {}).color;
-    const readable = A11y.readable(o.theme, ((o.ui || {}).card) || themeCard);
-    if (readable.changed.length) o = Object.assign({}, o, { theme: readable.theme });
-    const lang = o.lang === 'ar' ? 'ar' : 'en', t = T[lang], rtl = !!o.rtl, u = o.ui, font = o.font || 'Segoe UI';
-    const W = o.texts || {};
-    // the data: the sample table, the user's own model (o.model: { byPath } or { byConnection }), or none
-    const own = !!(o.model && (o.model.byPath || o.model.byConnection));
-    const sample = !!o.sample && !own;
-    const B = own ? (o.bind || null) : sample ? sampleBind(t) : null;
-    // the notes: what the writer did that its caller should tell (pbip-notes.js)
-    const n = Notes.make(o), { noData, rowLabels, timeExt } = n;
+  // build's steps (0.3.2 FN1I: build's parts as named steps, code moved; each is given what it reads and returns what
+  // later lines use). The bars' colours and the mirror asked:
+  function chartLookOf({ o, rtl, u }) {
     // bars that fade by value (o.chartColors 'gradient', round 13): the two ends, or null when the colour cannot fade
     const barBase = ((o.theme || {}).dataColors || [])[0] || (u || {}).accent, GRAD = o.chartColors === 'gradient' && u ? Engine.fadeEnds(barBase, u.card) : null;   // (P3, N25: the strong end is the colour itself, never past it)
     // (polish round P1, RESCORE-5: bank's deep teal, its colour 2, never appeared) the second bar or column chart of a
@@ -359,6 +266,10 @@
     const chartColors = { asked: o.chartColors === 'gradient', ends: GRAD, base: barBase, charts: 0, ends2: GRAD2, base2: GRAD2 ? bar2 : null, second: 0, keys: {} };
     // charts mirrored for a right-to-left report (o.chartAxes 'mirrored', round 13; see mirrorChart)
     const MIRROR = rtl && o.chartAxes === 'mirrored', chartAxes = { asked: o.chartAxes || null, rtl, charts: 0 };
+    return { GRAD, GRAD2, chartColors, MIRROR, chartAxes };
+  }
+  // the axes that are continuous:
+  function continuousOf({ o, B }) {
     // (0.3.1 M1: the twin's rules, report-mirror.js) the columns a chart's axis is continuous on, "Table.Column": a date or a
     // number, from the model's types (o.model.columns, the MCP's) and the bound fields' own; such an axis ignores the sort
     // and is reversed by categoryAxis.invertAxis
@@ -367,13 +278,20 @@
       const walk = (x, depth) => { if (!x || typeof x !== 'object' || depth > 4) return; if (Array.isArray(x)) return x.forEach((y) => walk(y, depth + 1));
         if (typeof x.t === 'string' && typeof x.c === 'string' && x.agg == null && (num(x.type) || x.num)) out.add(x.t + '.' + x.c); Object.values(x).forEach((y) => walk(y, depth + 1)); };
       walk(B, 0); return [...out]; })();
+    return CONTINUOUS;
+  }
+  // the quiet gridlines:
+  function quietGridOf({ o, u }) {
     // Quiet gridlines (o.quietGrid, round 13; seen in Desktop 2.158 on 6 Oct, "GE EN dark": on a dark design the value
     // axis's gridlines were near-white lines across the panel, louder than the data; with valueAxis.gridlineColor written
     // on the chart they are quiet): the text colour mixed 85% into the card, on the report's line, bar and column
     // charts, unless the theme sets its own gridlines (its chart style "dotted" or "off").
     const themeGrid = ['lineChart', 'clusteredBarChart', 'clusteredColumnChart'].some((t) => { const va = (((((o.theme || {}).visualStyles || {})[t] || {})['*'] || {}).valueAxis || [])[0]; return !!va && ('gridlineShow' in va || 'gridlineColor' in va); });
     const GRID = o.quietGrid && u && HEX6.test(String(u.text)) && HEX6.test(String(u.card)) && !themeGrid ? mixHex(u.text, u.card, 0.85) : null;
-    const NODATA = own && o.noDataMessage !== false;   // on by default since round 22 (the owner's rule: every part passed in Desktop on the night of 6-7 Oct); noDataMessage: false leaves it out
+    return GRID;
+  }
+  // the report's names, its files' names and its pages (each page's id: rnd(), in page order):
+  function namesOf({ o, W, B, rtl }) {
     const { base, theirs } = nameOf(o, W);
     const slug = base.replace(/[^\w-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'report';
     const R = base + '.Report', M = base + '.SemanticModel', D = R + '/definition';
@@ -386,12 +304,10 @@
     // two panels, two line charts in its box (to: 'two panels')
     const galleryNotes = [];
     if (Gallery) PAGES.forEach((pg) => { if (Array.isArray(pg.slots) && pg.slots.some((s) => s && Gallery.isKind(s.kind))) pg.slots = [].concat(...pg.slots.map((s) => { const r = Gallery.resolve(s, B, !!o.gallery, rtl); if (r.note) galleryNotes.push(Object.assign({ page: pg.name || base }, r.note)); return r.slots || [r.slot]; })); });
-    const files = [];
-    // a report for a local model is unzipped into the user's project folder, so it has no folder of its own
-    const add = (path, data) => files.push({ path: (theirs ? '' : base + '/') + path, data });
-    const align = rtl ? 'right' : 'left';
-    const edge = mixHex(u.text, u.card, 0.85);
-
+    return { base, theirs, R, M, D, themeFile, logoFile, PAGES, galleryNotes };
+  }
+  // the project shortcut, the report pointer and the semantic model:
+  function projectFiles({ add, o, own, sample, lang, base, R, M }) {
     // project shortcut, report pointer, semantic model
     add(base + '.pbip', json({ $schema: SCHEMA.pbip, version: '1.0', artifacts: [{ report: { path: R } }], settings: { enableAutoRecovery: true } }));
     const datasetRef = own ? (o.model.byPath ? { byPath: { path: '../' + String(o.model.byPath).replace(/^.*\//, '') } } : { byConnection: { connectionString: o.model.byConnection } })
@@ -407,11 +323,13 @@
       compatibilityLevel: 1567,
       model: {
         culture, dataAccessOptions: { legacyRedirects: true, returnErrorValuesAsNull: true }, defaultPowerBIDataSourceVersion: 'powerBI_V3', sourceQueryCulture: culture,
-        tables: sample ? [sampleModel(t)] : [],
+        tables: sample ? [Sample.model(lang)] : [],
         annotations: [{ name: '__PBI_TimeIntelligenceEnabled', value: '0' }, { name: 'PBI_ProTooling', value: '["DevMode"]' }]
       }
     }));
-
+  }
+  // the theme, the backgrounds, the logo, version.json and report.json:
+  function resourceFiles({ add, o, R, D, themeFile, logoFile, PAGES }) {
     // resources: the theme, the background, the logo
     // inside a project the theme carries the name report.json references, its file name with .json (Microsoft's
     // theming reference: customTheme.name, the registered item's name and path and the theme's own "name" must be equal)
@@ -439,7 +357,9 @@
       },
       annotations: [{ name: 'generatedBy', value: 'DataArcus Power BI Theme & Layout Generator (dataarcus.com)' }]
     }));
-
+  }
+  // the tooltip pages' names (rnd(): tipName, tipBinding, then the trend's) and tipFor:
+  function tooltipKit({ B }) {
     // pages
     const tipName = rnd(), tipBinding = rnd(), bookmarks = [];
     // Two tooltip pages when the bind has a month (tip.date): the trend page shows the hovered item's measure by month,
@@ -460,23 +380,13 @@
         t = { kind, m, cat, name: first ? (kind === 'trend' ? trend.name : tipName) : rnd(), binding: first ? (kind === 'trend' ? trend.binding : tipBinding) : rnd() };
         tipPages.push(t); }
       return t; };
-    add(D + '/pages/pages.json', '');
-    const pagesFile = files[files.length - 1];
-
-    // 0.2.9, audit 3's A3-12: the context the writer's modules share (pbip-query.js, pbip-sizing.js, pbip-page.js): this
-    // report's settings, its files, and its notes; then the report's own measures and the visuals' look
-    const c = Object.assign({
-      B, CONTINUOUS, D, GRAD, GRAD2, GRID, MIRROR, NODATA, PAGES, W, add, align, base, bookmarks,
-      chartAxes, chartColors, edge, font, lang, logoFile, o, own, rtl, same, sameField, tip, tipBinding,
-      tipFor, tipName, tipPages, trend, u, n
-    }, n);
-    Object.assign(c, Query.measures(c));
-    Object.assign(c, Page.kit(c));
-
+    return { tipName, tipBinding, bookmarks, tip, trend, same, sameField, tipPages, tipFor };
+  }
+  // the report's own SVG measures (reportExtensions.json):
+  function svgMeasures({ o, add, D, files }) {
     // Report-level measures (o.svgColumns: [{ page, t, m, expression }]): definition/reportExtensions.json, in the shape
     // Desktop accepted in D-P1: one entity per model table, each measure a text with the data category Image URL.
     // The model is not touched: these measures exist only in the report.
-    const svgDone = {};
     let extFile = null;   // reportExtensions.json, written again after the pages when a ring picture drops its number (round 18)
     if ((o.svgColumns || []).length || (o.svgCards || []).length) {
       const entities = [];
@@ -484,11 +394,10 @@
       add(D + '/reportExtensions.json', json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities }));
       extFile = { entry: files[files.length - 1], entities };
     }
-    Object.assign(c, { svgDone, extFile });
-
-    // the report's pages (pbip-page.js)
-    PAGES.forEach((pg, pageIndex) => Page.write(c, pg, pageIndex));
-
+    return extFile;
+  }
+  // the Reset buttons' bookmarks:
+  function bookmarkFiles({ bookmarks, add, D }) {
     // Reset buttons: one data-only bookmark per page that brings that page's slicers back to "All"
     if (bookmarks.length) {
       bookmarks.forEach((b) => add(D + '/bookmarks/' + b.name + '.bookmark.json', json(b.group
@@ -502,11 +411,9 @@
             explorationState: { version: '1.3', activeSection: b.page, sections: { [b.page]: { visualContainers: Object.fromEntries(b.targets.map((n) => [n, {}])) } } } })));
       add(D + '/bookmarks/bookmarks.json', json({ $schema: SCHEMA.bookmarks, items: bookmarks.map((b) => ({ name: b.name })) }));
     }
-
-    // the tooltip pages (pbip-page.js); six: the trend kept to its last 6 months
-    const six = Page.tooltips(c);
-    pagesFile.data = json({ $schema: SCHEMA.pages, pageOrder: PAGES.map((pg) => pg.id).concat(tip ? tipPages.filter((t) => t.kind === 'cat').concat(tipPages.filter((t) => t.kind === 'trend')).map((t) => t.name) : [tipName]), activePageName: PAGES[0].id });
-
+  }
+  // the "No data", row-label and time-axis measures:
+  function extMeasures({ noData, rowLabels, timeExt, extFile, add, D }) {
     // the "No data" measures (round 19): into the report's extensions, beside the SVG measures where there are some
     // (round 23: and the tables' row-label measures after them)
     // (0.2.9 part 2: and the time axes' measures, DateTime and Integer; written after the tooltip pages, which add some)
@@ -516,7 +423,9 @@
       if (extFile) extFile.changed = true; else add(D + '/reportExtensions.json', json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: ents }));
     }
     if (extFile && extFile.changed) extFile.entry.data = json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: extFile.entities });
-
+  }
+  // the .gitignore and the README:
+  function repoFiles({ o, W, add, base, theirs }) {
     // git: keep local and cached files out of source control
     // in someone's project folder these would replace their own files, so they are left out there
     // (0.3.1 TT2) o.namesNote: the Arabic names the person approved before the website's Arabic download, and each kept
@@ -526,6 +435,9 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base) + (o.namesNote || ''));
     } else if (o.namesNote) add(base + '.README.md', '# ' + base + o.namesNote);
+  }
+  // what build returns: alt text, the Arabic isolation, the notes:
+  function resultOf({ o, files, lang, rtl, readable, n, base, chartColors, chartAxes, tip, tipPages, six, galleryNotes }) {
     // (0.3, J7) alt text from each data visual's role and fields, tab stops in reading order, decorative parts out of it
     const a11y = Object.assign(A11y.apply(files.filter((f) => typeof f.data === 'string'), { lang, rtl }), { colours: readable.changed, card: readable.card || null });
     // (SQ15b, J18-S2) an Arabic report's texts, the alt texts above included: each Latin run inside Arabic text (an
@@ -539,65 +451,69 @@
     if (o.grid === 'dotted' || o.grid === 'none') out.grid = { asked: o.grid, charts: n.gridCharts.n };
     return o.gallery || galleryNotes.length ? Object.assign(out, { gallery: galleryNotes }) : out;
   }
+  /** @param {BuildInput} o @returns {BuildResult} */
+  function build(o) {
+    checkBuild(o);
+    // (0.3, J7) the report theme's data colours at 3:1 on the card before anything reads them (design-engine toContrast;
+    // a colour already at 3:1 is kept exactly): every chart, fade and second colour below is chosen from these
+    const themeCard = ((((((((o.theme || {}).visualStyles || {})['*'] || {})['*'] || {}).background || [])[0] || {}).color || {}).solid || {}).color;
+    const readable = A11y.readable(o.theme, ((o.ui || {}).card) || themeCard);
+    if (readable.changed.length) o = Object.assign({}, o, { theme: readable.theme });
+    const lang = o.lang === 'ar' ? 'ar' : 'en', rtl = !!o.rtl, u = o.ui, font = o.font || 'Segoe UI';
+    const W = o.texts || {};
+    // the data: the sample table, the user's own model (o.model: { byPath } or { byConnection }), or none
+    const own = !!(o.model && (o.model.byPath || o.model.byConnection));
+    const sample = !!o.sample && !own;
+    const B = own ? (o.bind || null) : sample ? Sample.bind(lang) : null;
+    // the notes: what the writer did that its caller should tell (pbip-notes.js)
+    const n = Notes.make(o), { noData, rowLabels, timeExt } = n;
+    const { GRAD, GRAD2, chartColors, MIRROR, chartAxes } = chartLookOf({ o, rtl, u });
+    const CONTINUOUS = continuousOf({ o, B });
+    const GRID = quietGridOf({ o, u });
+    const NODATA = own && o.noDataMessage !== false;   // on by default since round 22 (the owner's rule: every part passed in Desktop on the night of 6-7 Oct); noDataMessage: false leaves it out
+    const { base, theirs, R, M, D, themeFile, logoFile, PAGES, galleryNotes } = namesOf({ o, W, B, rtl });
+    const files = [];
+    // a report for a local model is unzipped into the user's project folder, so it has no folder of its own
+    const add = (path, data) => files.push({ path: (theirs ? '' : base + '/') + path, data });
+    const align = rtl ? 'right' : 'left';
+    const edge = mixHex(u.text, u.card, 0.85);
 
+    projectFiles({ add, o, own, sample, lang, base, R, M });
+    resourceFiles({ add, o, R, D, themeFile, logoFile, PAGES });
 
-  // A report's visible texts isolated (0.3.0 J18; moved here from the MCP's terminology.mjs by SQ15b, J18-S2, so the
-  // website's Arabic download is isolated as the MCP's report), in its files ({ path, data }) as the writer built them: the
-  // formatting literals of pages, visuals and phone layouts (titles, alt texts, text boxes, button texts and tooltips), text
-  // box runs, the display names of projections, page and bookmark names, and the texts of the report's Text measures
-  // (their DAX string literals). Never a filter's values, a measure's or visual's name, or anything else. names: the
-  // approved Arabic names whose Latin runs are isolated (isolateNames); o.all (F1, the owner's decision of 20 Oct: the
-  // held-back line): EVERY mixed Arabic/Latin text (isolateLatin), a name kept in English inside an Arabic text too, page
-  // and tooltip tab names included (the proof: the Arabic tooltip tab "Tooltip · Month Short" read with the English
-  // first). Returns how many texts changed.
-  const lit = (v) => (v && v.expr && v.expr.Literal && typeof v.expr.Literal.Value === 'string' && /^'.*'$/s.test(v.expr.Literal.Value) ? v.expr.Literal.Value : null);
-  // (0.3.1 TT1) whole: a visual's title text and alt text (its title, said whole) that are English, isolated as a whole
-  // (isolateWhole); parent: the object the properties belong to ('title', 'general')
-  const TITLED = { title: 'text', general: 'altText' };
-  function walkVisual(o, change, whole, parent) {
-    if (Array.isArray(o)) { o.forEach((x) => walkVisual(x, change, whole, parent)); return; }
-    if (!o || typeof o !== 'object') return;
-    for (const [k, v] of Object.entries(o)) {
-      if (k === 'filterConfig' || k === 'selector') continue;
-      if (k === 'properties' && v && typeof v === 'object' && !Array.isArray(v)) Object.entries(v).forEach(([pk, p]) => { const L = lit(p); if (L) { const raw = L.slice(1, -1).replace(/''/g, "'"), out = (whole && TITLED[parent] === pk ? whole(change(raw)) : change(raw)); if (out !== raw) p.expr.Literal.Value = "'" + out.replace(/'/g, "''") + "'"; } });
-      if (k === 'textRuns' && Array.isArray(v)) v.forEach((r) => { if (r && typeof r.value === 'string') { const out = change(r.value); if (out !== r.value) r.value = out; } });
-      if (k === 'projections' && Array.isArray(v)) v.forEach((p) => { if (p && typeof p.displayName === 'string') { const out = change(p.displayName); if (out !== p.displayName) p.displayName = out; } });
-      walkVisual(v, change, whole, k);
-    }
-  }
-  // (0.3.1 BD2) a Text measure's literals take the isolates (V1) and, where one did, the whole text is wrapped at run time
-  // in U+2067 ... U+2069 (the measured rule, text-measure.js isolateLatin), once: a text joined from parts at run time
-  // is wrapped whole, never each part
-  const WRAP_OPEN = 'UNICHAR ( 8295 ) & ( ', WRAP_CLOSE = ' ) & UNICHAR ( 8297 )';
-  const daxTexts = (expr, change) => {
-    let hit = false;
-    const out = String(expr).replace(/"((?:[^"]|"")*)"/g, (m, inner) => { const raw = inner.replace(/""/g, '"'), o = change(raw); if (o === raw) return m; hit = true; return '"' + o.replace(/"/g, '""') + '"'; });
-    return hit && !(out.startsWith(WRAP_OPEN) && out.endsWith(WRAP_CLOSE)) ? WRAP_OPEN + out + WRAP_CLOSE : out;
-  };
-  function isolateFiles(files, names, o) {
-    // names: the approved Arabic names with a Latin run (the others need nothing), longest first
-    const list = [...new Set((names || []).map(String).filter((x) => Measure.ARABIC.test(x) && /[A-Za-z]/.test(x) && !Measure.ISOLATED.test(x)))].sort((a, b) => b.length - a.length);
-    const all = !!(o && o.all);
-    if (!list.length && !all) return 0;
-    let n = 0; const change = (s) => { const out = all ? Measure.isolateLatin(s) : Measure.isolateNames(s, list); if (out !== s) n++; return out; };
-    // (0.3.1 TT1, the owner's rule of 27 Oct) an Arabic build (all): an English title or alt text isolated as a whole
-    const whole = all ? (s) => { const out = Measure.isolateWhole(s); if (out !== s) n++; return out; } : null;
-    // a DAX literal is a part of its measure's text: its isolates only, the wrap goes round the whole expression (daxTexts)
-    const part = (s) => { let out = all ? Measure.isolateRuns(s) : Measure.isolateNames(s, list); if (out !== s && !all && Measure.wrapped(out)) out = out.slice(1, -1); if (out !== s) n++; return out; };
-    for (const f of files || []) {
-      if (typeof f.data !== 'string' || !/\.Report\/.+\.json$/.test(String(f.path))) continue;
-      const p = String(f.path); let j; try { j = JSON.parse(f.data); } catch (e) { continue; }
-      if (!j || typeof j !== 'object') continue;
-      const before = n;
-      if (/\/(page|visual|mobile)\.json$/.test(p)) { if (/\/page\.json$/.test(p) && typeof j.displayName === 'string') j.displayName = change(j.displayName); walkVisual(/\/page\.json$/.test(p) ? j.objects : j, change, whole); }
-      else if (/\.bookmark\.json$/.test(p) && typeof j.displayName === 'string') j.displayName = change(j.displayName);
-      else if (/\/reportExtensions\.json$/.test(p) && Array.isArray(j.entities)) j.entities.forEach((e) => (e && Array.isArray(e.measures) ? e.measures : []).forEach((m) => { if (m && m.dataType === 'Text' && typeof m.expression === 'string') m.expression = daxTexts(m.expression, part); }));
-      if (n !== before) f.data = JSON.stringify(j, null, 2) + (/\n$/.test(f.data) ? '\n' : '');
-    }
-    return n;
+    const { tipName, tipBinding, bookmarks, tip, trend, same, sameField, tipPages, tipFor } = tooltipKit({ B });
+    add(D + '/pages/pages.json', '');
+    const pagesFile = files[files.length - 1];
+
+    // 0.2.9, audit 3's A3-12: the context the writer's modules share (pbip-query.js, pbip-sizing.js, pbip-page.js): this
+    // report's settings, its files, and its notes; then the report's own measures and the visuals' look
+    const c = Object.assign({
+      B, CONTINUOUS, D, GRAD, GRAD2, GRID, MIRROR, NODATA, PAGES, W, add, align, base, bookmarks,
+      chartAxes, chartColors, edge, font, lang, logoFile, o, own, rtl, same, sameField, tip, tipBinding,
+      tipFor, tipName, tipPages, trend, u, n
+    }, n);
+    Object.assign(c, Query.measures(c));
+    Object.assign(c, Page.kit(c));
+
+    const svgDone = {};
+    const extFile = svgMeasures({ o, add, D, files });
+    Object.assign(c, { svgDone, extFile });
+
+    // the report's pages (pbip-page.js)
+    PAGES.forEach((pg, pageIndex) => Page.write(c, pg, pageIndex));
+
+    bookmarkFiles({ bookmarks, add, D });
+
+    // the tooltip pages (pbip-page.js); six: the trend kept to its last 6 months
+    const six = Page.tooltips(c);
+    pagesFile.data = json({ $schema: SCHEMA.pages, pageOrder: PAGES.map((pg) => pg.id).concat(tip ? tipPages.filter((t) => t.kind === 'cat').concat(tipPages.filter((t) => t.kind === 'trend')).map((t) => t.name) : [tipName]), activePageName: PAGES[0].id });
+
+    extMeasures({ noData, rowLabels, timeExt, extFile, add, D });
+    repoFiles({ o, W, add, base, theirs });
+    return resultOf({ o, files, lang, rtl, readable, n, base, chartColors, chartAxes, tip, tipPages, six, galleryNotes });
   }
 
   // AR_MONTHS: the one Arabic month list (the cross-review's duplicates: the twin uses it too)
-  const api = { build, isolateFiles, zip, crc32, textWidth, columnRoom, cellRoom, hasControl, daxNames, pageFilterOf, fitOptions, timeAxisPlan, barNameShare, AR_MONTHS: T.ar.months.slice() };
+  const api = { build, isolateFiles, zip, crc32, textWidth, columnRoom, cellRoom, hasControl, daxNames, pageFilterOf, fitOptions, timeAxisPlan, barNameShare, AR_MONTHS: AR_MONTHS.slice() };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbip = api;
 })(typeof self !== 'undefined' ? self : this);

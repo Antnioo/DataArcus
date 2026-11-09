@@ -1,0 +1,205 @@
+{
+  "_about": "Made-up usage.json in the shape the engine's usage.py writes (version 1), for scripts/tests/build-page.mjs (BF2). Invented numbers; no session id, no prompt, no real person.",
+  "version": 1,
+  "generated_at": "2026-11-08T14:15Z",
+  "today": {
+    "date": "2026-11-08",
+    "cost_usd": 21.35,
+    "tokens": 66185000,
+    "sessions": 6,
+    "by_kind": {
+      "builder": {
+        "cost_usd": 12.1,
+        "count": 2
+      },
+      "worker": {
+        "cost_usd": 8.4,
+        "count": 3
+      },
+      "probe": {
+        "cost_usd": 0.85,
+        "count": 1
+      },
+      "other": {
+        "cost_usd": 0,
+        "count": 0
+      }
+    },
+    "by_model": {
+      "opus": {
+        "cost_usd": 15.6,
+        "count": 4
+      },
+      "sonnet": {
+        "cost_usd": 5.75,
+        "count": 2
+      }
+    }
+  },
+  "days": [
+    {
+      "date": "2026-10-26",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-10-27",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-10-28",
+      "cost_usd": 3.5,
+      "tokens": 10850000,
+      "sessions": 1
+    },
+    {
+      "date": "2026-10-29",
+      "cost_usd": 8.25,
+      "tokens": 25575000,
+      "sessions": 3
+    },
+    {
+      "date": "2026-10-30",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-10-31",
+      "cost_usd": 12.5,
+      "tokens": 38750000,
+      "sessions": 4
+    },
+    {
+      "date": "2026-11-01",
+      "cost_usd": 6.75,
+      "tokens": 20925000,
+      "sessions": 2
+    },
+    {
+      "date": "2026-11-02",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-11-03",
+      "cost_usd": 9.1,
+      "tokens": 28210000,
+      "sessions": 3
+    },
+    {
+      "date": "2026-11-04",
+      "cost_usd": 14.4,
+      "tokens": 44640000,
+      "sessions": 4
+    },
+    {
+      "date": "2026-11-05",
+      "cost_usd": 4.2,
+      "tokens": 13020000,
+      "sessions": 2
+    },
+    {
+      "date": "2026-11-06",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-11-07",
+      "cost_usd": 7.7,
+      "tokens": 23870000,
+      "sessions": 2
+    },
+    {
+      "date": "2026-11-08",
+      "cost_usd": 21.35,
+      "tokens": 66185000,
+      "sessions": 6
+    }
+  ],
+  "jobs": [
+    {
+      "id": "AA1",
+      "title": "AA1: a made-up earlier job <b>bold?</b>",
+      "model": "opus",
+      "cost_usd": 7.25,
+      "tokens": 22400000,
+      "minutes": 95,
+      "finished_at": "2026-11-08T13:03Z"
+    },
+    {
+      "id": "ZY9",
+      "title": "ZY9: another made-up job",
+      "model": "sonnet",
+      "cost_usd": 1.5,
+      "tokens": 4100000,
+      "minutes": 22,
+      "finished_at": "2026-11-08T11:40Z"
+    },
+    {
+      "id": "XW8",
+      "title": "XW8: a third made-up job",
+      "model": "opus",
+      "cost_usd": 4.85,
+      "tokens": 15200000,
+      "minutes": 61,
+      "finished_at": "2026-11-08T09:12Z"
+    }
+  ],
+  "workers": {
+    "count": 3,
+    "cost_usd": 8.4,
+    "costliest": [
+      {
+        "label": "made-up cleanup",
+        "cost_usd": 4.1,
+        "minutes": 40,
+        "started": "2026-11-08T08:34Z"
+      },
+      {
+        "label": "worker 10:53",
+        "cost_usd": 2.6,
+        "minutes": 30,
+        "started": "2026-11-08T10:54Z"
+      },
+      {
+        "label": "worker 12:10",
+        "cost_usd": 1.7,
+        "minutes": 20,
+        "started": "2026-11-08T12:10Z"
+      }
+    ]
+  },
+  "top": [
+    {
+      "label": "AA1",
+      "kind": "builder",
+      "cost_usd": 7.25
+    },
+    {
+      "label": "XW8",
+      "kind": "builder",
+      "cost_usd": 4.85
+    },
+    {
+      "label": "made-up cleanup",
+      "kind": "worker",
+      "cost_usd": 4.1
+    },
+    {
+      "label": "worker 10:53",
+      "kind": "worker",
+      "cost_usd": 2.6
+    },
+    {
+      "label": "worker 12:10",
+      "kind": "worker",
+      "cost_usd": 1.7
+    }
+  ]
+}

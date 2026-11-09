@@ -7,7 +7,8 @@ import zlib from 'node:zlib';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const load = (file) => { const m = { exports: {} }; new Function('module', 'exports', 'self', fs.readFileSync(path.join(ROOT, 'assets/js', file), 'utf8'))(m, m.exports, undefined); return m.exports; };
+// (0.3.2 SP9) a file's require (the engine's dax-reference-parser.js) loads its neighbour the same way, minified or not
+const load = (file) => { const m = { exports: {} }; new Function('module', 'exports', 'self', 'require', fs.readFileSync(path.join(ROOT, 'assets/js', file), 'utf8'))(m, m.exports, undefined, (dep) => load(path.basename(dep).replace(/(\.min)?\.js$/, /\.min\.js$/.test(file) ? '.min.js' : '.js'))); return m.exports; };
 
 // Pairs saved from the same open model in Power BI Desktop: File > Save as (TMDL project) and File > Export > Power BI template
 export const PAIRS = ['tmdl-health', 'tmdl-ramadan'];
@@ -241,6 +242,17 @@ export default async function run() {
     { name: 'Sales Data', filterExpression: '[Qty] > 0', columnPermissions: [{ name: 'Price', metadataPermission: 'none' }] },
     { name: 'Calendar', filterExpression: '[Year] = 2025' }] }], 'roles');
   eq([(m.model.perspectives || []).map((p) => p.name), (m.model.cultures || []).map((c) => c.name)], [['Finance'], ['ar-AE']], 'perspectives and cultures');
+  // (0.3.2 AN1, RD10's gaps) a culture's translations keep every table (gap 1: the last one only was kept), and Learn's
+  // keyword "culture" is read like Desktop's "cultureInfo", its "ref" too (gap 2: 0 cultures, silently)
+  {
+    const tr = ['\ttranslations', '\t\tmodel Model', '\t\t\ttable Sales', '\t\t\t\tcaption: المبيعات', "\t\t\t\tcolumn 'Order Date'", '\t\t\t\t\tcaption: تاريخ الطلب',
+      '\t\t\ttable Calendar', '\t\t\t\tmeasure Year', '\t\t\t\t\tcaption: السنة', ''];
+    const g1 = T.fromFiles([{ path: 'definition/model.tmdl', text: 'model Model\n\tculture: en-US\n\nref cultureInfo ar-AE\n' }, { path: 'definition/cultures/ar-AE.tmdl', text: ['cultureInfo ar-AE', ''].concat(tr).join('\n') }]);
+    const tabs = (((((g1.model.cultures || [])[0] || {}).translations || {}).model || {}).tables || []);
+    eq(tabs.map((t) => [t.name, t.caption || null, (t.columns || []).map((c) => c.caption), (t.measures || []).map((c) => c.caption)]), [['Sales', 'المبيعات', ['تاريخ الطلب'], []], ['Calendar', null, [], ['السنة']]], 'a culture\'s translations keep every table');
+    const g2 = T.fromFiles([{ path: 'definition/model.tmdl', text: 'model Model\n\tculture: en-US\n\nref culture ar-SA\nref culture ar-AE\n' }, { path: 'definition/cultures/ar-AE.tmdl', text: ['culture ar-AE', ''].concat(tr).join('\n') }, { path: 'definition/cultures/ar-SA.tmdl', text: 'culture ar-SA\n' }]);
+    eq([(g2.model.cultures || []).map((c) => c.name), g2.model.culture], [['ar-SA', 'ar-AE'], 'en-US'], 'Learn\'s keyword "culture" read like "cultureInfo", in its ref order');
+  }
   // the health engine reads it
   const r = H.analyze(m, null);
   eq([r.stats.tables, r.stats.measures, r.stats.relationships], [1, 2, 2], 'health engine on the TMDL model');

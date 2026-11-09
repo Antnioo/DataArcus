@@ -67,7 +67,7 @@ export async function approvalWindow({ check, ROOT, fs = fs0 }) {
     chk(() => /^http:\/\/127\.0\.0\.1:\d+\/approve\/[A-Za-z0-9_-]{30,}$/.test(link), () => `W-01. the window was opened on 127.0.0.1 with a secret link: ${link}`);
     const secret = link.split('/').pop();
     chk(() => secret && !w.t.includes(secret) && !pl.t.includes(secret) && !/127\.0\.0\.1/.test(w.t), () => 'W-01. no answer holds the window\'s link or its secret');
-    const early = await s.call('create_report', { path: 'aw', planId: pid, name: 'Window Test', title, fields: { kpis: ['Sales[Total Sales]'], category: 'Sales[Region]' }, secondPage: false, design: pl.j.design });
+    const early = await s.call('create_report', { path: 'aw', planId: pid });
     chk(() => early.err && /not approved yet/.test(early.t) && /approval window/.test(early.t) && !fs.existsSync(path.join(ROOT, 'aw', 'Window Test.Report')), () => `W-01. before the click the plan writes nothing: ${short(early)}`);
 
     // ---------- W-02: the page ----------
@@ -78,8 +78,11 @@ export async function approvalWindow({ check, ROOT, fs = fs0 }) {
     chk(() => /Second page[\s\S]*no/.test(page.t) && /Executive summary/.test(page.t), () => 'W-02. the page shows the layout and options');
 
     // ---------- W-09: the preview of the planned page, above Approve ----------
-    const svgs = (t) => [...t.matchAll(/<svg\b[\s\S]*?<\/svg>/g)].map((m) => m[0]);
-    const pics = svgs(page.t);
+    // (0.3.2 TP1, D-1105-17) the report pages' pictures; the tooltip pages' are drawn after them, in figures of class "tip"
+    const figs = (t) => [...t.matchAll(/<figure([^>]*)>(<svg\b[\s\S]*?<\/svg>)/g)];
+    const svgs = (t) => figs(t).filter((m) => !/class="tip"/.test(m[1])).map((m) => m[2]);
+    const pics = svgs(page.t), tipAt = figs(page.t).findIndex((m) => /class="tip"/.test(m[1]));
+    chk(() => tipAt > 0 && figs(page.t).slice(tipAt).every((m) => /class="tip"/.test(m[1])), () => `W-09. the tooltip pages drawn after the report's pages (TP1): ${figs(page.t).map((m) => m[1] || 'page').join(', ')}`);
     chk(() => pics.length === 1 && page.t.indexOf('<svg') < page.t.indexOf('Approve</button>') && /class="card preview"/.test(page.t), () => `W-09. one picture of the planned page, above Approve: ${pics.length} picture(s)`);
     chk(() => pics.every((x) => /data-kind="card"/.test(x) && /data-kind="(bar|column|line)"/.test(x) && />preview<\/text>/.test(x)), () => 'W-09. the picture draws the plan\'s cards and charts and says "preview"');
     chk(() => !/<script/i.test(page.t) && pics.join('').includes('Sales &lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;more&quot;'), () => 'W-09. the title in the picture is escaped text (no markup from it)');
@@ -111,7 +114,7 @@ export async function approvalWindow({ check, ROOT, fs = fs0 }) {
     const later = await req(link, { method: 'POST', origin: here, body: 'decision=decline' });
     const ok = await s.call('approve_plan', { planId: pid });
     chk(() => /Approved\./.test(later.t) && !ok.err && ok.j.status === 'approved' && ok.j.approvedBy === 'user-in-browser' && ok.j.allows.join() === 'create_report', () => `W-04. approved by the person in the window (a later "Not now" changes nothing): ${short(ok)}`);
-    const wrote = await s.call('create_report', { path: 'aw', planId: pid, name: 'Window Test', title, fields: { kpis: ['Sales[Total Sales]'], category: 'Sales[Region]' }, secondPage: false, design: pl.j.design });
+    const wrote = await s.call('create_report', { path: 'aw', planId: pid });
     chk(() => !wrote.err && fs.existsSync(path.join(ROOT, 'aw', 'Window Test.Report')), () => `W-04. the approved plan writes its report: ${short(wrote)}`);
     chk(() => !wrote.err && wrote.j.check && /Power BI Desktop would show/.test(wrote.j.check.summary) && Number.isInteger(wrote.j.check.desktop) && Array.isArray(wrote.j.check.problems), () => `W-13. create_report says what the check before writing found: ${short(wrote)}`);
     chk(() => !early.err === false && !(early.j && early.j.check), () => 'W-13. before the click nothing is written and nothing is checked: the check never approves');

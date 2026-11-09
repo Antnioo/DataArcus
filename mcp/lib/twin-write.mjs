@@ -12,8 +12,9 @@ import { pathOut, json, isObj, EXT, BOOKMARKS, jsonAt } from './twin-read.mjs';
 import { rawLabels, sortKeys, normTerms } from './twin-texts.mjs';
 import { modelOf } from './twin-model.mjs';
 import { digestOf } from './artifact.mjs';
-import { newPlatform } from './twin-copy.mjs';
+import { newPlatform, addedTaken } from './twin-copy.mjs';
 import { planTwin } from './twin-plan.mjs';
+import { culturesOf } from './model-culture.mjs';
 import { RES, registered } from './twin-pictures.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
@@ -31,7 +32,7 @@ function scriptName(dir, base, text) {
 }
 /** (0.3.1 K2, an outside architecture review of 25 Oct: the write built the twin again and wrote that rebuild, with a
  *  .platform logical id of its own) the exact files the twin writes, built once from a plan's P, as create_report's plan
- *  keeps its own (tools/plan_layout.mjs: exactArtifact): the copied report's files (the original's unchanged files read
+ *  keeps its own (lib/plan-artifact.mjs: exactArtifact): the copied report's files (the original's unchanged files read
  *  now), its own reportExtensions.json when the original has none, .platform with the logical id the plan chose
  *  (P.logicalId), the month script when offered and not already there, and the .pbip last; paths from the project
  *  folder. Returns { files, digest (lib/artifact.mjs: digestOf), logicalId, applied, month }. */
@@ -47,7 +48,11 @@ export function twinTree(P) {
     visuals.forEach((vj, i) => out.set(pg.visuals[i].rel, json(vj)));
     (mobiles || []).forEach((m, i) => { if (m) out.set(pg.visuals[i].mobile.rel, json(m)); });
     // (0.3.1 MX3) a visual the twin adds to the page (a heatmap's names beside it), in the page's own folder
-    (extra || []).forEach((x) => { const rel = pg.rel.slice(0, pg.rel.lastIndexOf('/') + 1) + 'visuals/' + x.json.name + '/visual.json'; out.set(rel, json(x.json)); added3.push(rel); });
+    // (0.3.2 HM1, B-296) never over a visual it did not build: a folder of the original's (without case: one folder on
+    // Windows and macOS) or a file already set is a hard error, nothing written (twin-plan.mjs freeAddedNames names it free)
+    (extra || []).forEach((x) => { const dir = pg.rel.slice(0, pg.rel.lastIndexOf('/') + 1) + 'visuals/' + x.json.name + '/', rel = dir + 'visual.json';
+      if (out.has(rel) || R.files.some((f) => f.toLowerCase().startsWith(dir.toLowerCase()))) throw new Error(addedTaken(x.json.name, pg.id));
+      out.set(rel, json(x.json)); added3.push(rel); });
   });
   if (P.built.ext) out.set(EXT, json(P.built.ext));
   // (0.3.1 MP1) the Arabic pages' flipped pictures, registered in the twin's report.json (the original's picture stays too)
@@ -80,8 +85,15 @@ export function twinTree(P) {
     if (f.free) tree.push({ path: path.basename(f.file), data: P.month.script });
     month = { scriptFile: pathOut(f.file), column: P.month.column, table: P.month.table, howToApply: P.month.howToApply };
   }
+  // (0.3.2 AN1) the Arabic names script (modelNames), the month script's way: a file that already holds exactly it is named, not written again
+  let names = null;
+  if (P.names && P.names.offered) {
+    const f = scriptName(loc.project, `${P.outBase} - Arabic names`, P.names.script);
+    if (f.free) tree.push({ path: path.basename(f.file), data: P.names.script });
+    names = { scriptFile: pathOut(f.file), cultures: P.names.cultures, captions: P.names.captions, howToApply: P.names.howToApply, howToApplyAr: P.names.howToApplyAr, seenIn: P.names.seenIn };
+  }
   tree.push({ path: path.basename(twinPbip), data: json(pbip) });
-  return { files: tree, digest: digestOf(tree), logicalId: P.logicalId, applied, month };
+  return { files: tree, digest: digestOf(tree), logicalId: P.logicalId, applied, month, names };
 }
 /** (D6, the laptop proof of rc.2: the twin's approval page said one sentence) every file the twin writes, by its path in
  *  the folder it is written in: the paths of the plan's exact files (twinTree) */
@@ -104,11 +116,13 @@ export function writeTwin(a, plan, art) {
   const flatOf = (x) => JSON.stringify([...(Array.isArray(x) ? x : [])].map(String).sort());
   if (a.matrixAsTable != null && flatOf(a.matrixAsTable) !== flatOf(d.matrixAsTable)) throw new Error('Nothing was written: matrixAsTable differs from the approved plan\'s. Make the plan again with the matrices the user chose, show it and wait for their go.');
   // (0.3.0 J18) the plan's terms: a call with planId that gives other ones is refused
+  // (0.3.2 AN1) the Arabic names script's cultures are the plan's too
+  if (a.modelNames != null && JSON.stringify(culturesOf(a.modelNames)) !== JSON.stringify(d.modelNames || [])) throw new Error('Nothing was written: modelNames differs from the approved plan\'s. Make the plan again with the cultures the user wants, show it and wait for their go.');
   if (a.terms && JSON.stringify(normTerms(a.terms)) !== JSON.stringify(d.terms || {})) throw new Error('Nothing was written: these terms differ from the terms of the approved plan. Show the user the new terminology sheet, get a new plan id for it (call this tool without planId), and wait for the user\'s go.');
   // (K2) the plan's exact files: kept in this session only (a restart, or more than the newest 64 plans, drops them)
   if (!art || !Array.isArray(art.files)) throw new Error('Nothing was written: the files kept for this plan are gone (DataArcus keeps a plan\'s exact files in this session of the server only). Make the plan again (call this tool without planId), show it to the user and wait for their go.');
   // (K2) built again with the plan's inputs and its logical id, for comparison only: what is written is the kept files
-  const P = planTwin({ path: a.path, labels: d.labels || {}, terms: d.terms || {}, memory: false, timeRightToLeft: d.timeRightToLeft, waterfallRtl: d.waterfallRtl, arabicMonth: d.arabicMonth, mirrorPicturePages: d.mirrorPicturePages, flipPictures: d.flipPictures, matrixAsTable: d.matrixAsTable, into: d.into, tabsShown: d.tabsShown, logicalId: art.logicalId });
+  const P = planTwin({ path: a.path, labels: d.labels || {}, terms: d.terms || {}, memory: false, timeRightToLeft: d.timeRightToLeft, waterfallRtl: d.waterfallRtl, arabicMonth: d.arabicMonth, mirrorPicturePages: d.mirrorPicturePages, flipPictures: d.flipPictures, matrixAsTable: d.matrixAsTable, into: d.into, tabsShown: d.tabsShown, ...(d.modelNames ? { modelNames: d.modelNames } : {}), logicalId: art.logicalId });
   // (B-154) the model the plan read (for the month column and the dates), as it was at the go
   if ('modelPrint' in d && (P.modelPrint || null) !== (d.modelPrint || null)) throw new Error(modelChanged(plan.id));
   const { loc, R } = P;
@@ -127,9 +141,9 @@ export function writeTwin(a, plan, art) {
   const extAdded = !P.copy && !!P.built.ext && !R.files.includes(EXT), month = art.month;
   return { written: true, report: pathOut(twinDir), pbip: pathOut(twinPbip), files: P.copy ? P.copy.files.length + 1 : R.files.length + 1 + (extAdded ? 1 : 0) + (R.hasPlatform ? 0 : 1) + (P.built.addedPictures || []).length, pages: P.copy ? P.copy.pairs.length * 2 : P.answer.pages.length,
     ...(P.answer.languages ? { languages: P.answer.languages } : {}), mirrors: P.answer.mirrors, cannot: P.answer.cannot, ...(P.answer.notFullyArabic ? { notFullyArabic: P.answer.notFullyArabic } : {}),
-    labelsApplied: art.applied, textsWithoutLabel: P.answer.labels.withoutLabel, notTranslated: P.answer.notTranslated, phone: P.answer.phone, original: 'only read: not changed', arabicMonth: month,
+    labelsApplied: art.applied, textsWithoutLabel: P.answer.labels.withoutLabel, notTranslated: P.answer.notTranslated, phone: P.answer.phone, original: 'only read: not changed', arabicMonth: month, ...(art.names ? { arabicModelNames: art.names } : {}),
     ...(P.answer.fitted ? { fitted: P.answer.fitted } : {}), ...(P.answer.titleMeasures ? { titleMeasures: P.answer.titleMeasures } : {}),
     exact: { digest: art.digest, files: art.files.length, note: 'These are the files the plan built before the go, written byte for byte (the digest is the plan\'s).' },
     // (SQ4, AF1-S1) the .pbip's name screened, as the pbip field above (a folder's name is untrusted input)
-    nextSteps: `Open "${pathOut(twinPbip).split('/').pop()}" in Power BI Desktop (the original stays as it was), look at every page, and check it with check_report. Tell the user what cannot be mirrored (cannot)${P.month.offered ? ' and how to apply the month script' : ''}.` };
+    nextSteps: `Open "${pathOut(twinPbip).split('/').pop()}" in Power BI Desktop (the original stays as it was), look at every page, and check it with check_report. Tell the user what cannot be mirrored (cannot)${P.month.offered ? ' and how to apply the month script' : ''}${art.names ? ' and how to apply the Arabic names script (arabicModelNames)' : ''}.` };
 }

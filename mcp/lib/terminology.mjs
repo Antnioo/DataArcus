@@ -64,8 +64,8 @@ export function reportOf(files) {
   return { pages, ext: measuresOf(ext) };
 }
 export const measuresOf = (ext) => new Map((isObj(ext) && Array.isArray(ext.entities) ? ext.entities : []).flatMap((e) => (isObj(e) && Array.isArray(e.measures) ? e.measures : []).filter(isObj).map((m) => [e.name + '\u0000' + m.name, String(m.expression || '')])));
-const lit = (v) => (v && v.expr && v.expr.Literal && typeof v.expr.Literal.Value === 'string' && /^'.*'$/s.test(v.expr.Literal.Value) ? v.expr.Literal.Value : null);
-const litText = (v) => { const L = lit(v); return L ? L.slice(1, -1).replace(/''/g, "'") : null; };
+// a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
+const { litText } = require('../../assets/js/pbir-values.js');
 // the texts a container property shows: its literal, or the DAX texts of the report measure it names
 function shown(v, ext) {
   const t = litText(v); if (t != null) return [t];

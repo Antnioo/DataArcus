@@ -162,7 +162,7 @@ try {
     const h2 = await hook('hp2/Health Test.SemanticModel/model.bim');
     try {
       const pl = await h2.call('plan_layout', { path: 'hp2', name: 'Late Report', layout: 'exec' }); await h2.call('approve_plan', { planId: pl.j.plan.planId });
-      const before = rels(ROOT), x = await h2.call('create_report', { path: 'hp2', name: 'Late Report', planId: pl.j.plan.planId, design: pl.j.design }); answers.push(x.t);
+      const before = rels(ROOT), x = await h2.call('create_report', { path: 'hp2', planId: pl.j.plan.planId }); answers.push(x.t);
       chk(() => x.err && /^Nothing was written: the model changed/.test(x.t) && !added(before).length, () => `T07-10. create_report: an edit between the last read and the first write is refused, nothing on disk: ${short(x)} ${JSON.stringify(added(before)).slice(0, 300)}`);
     } finally { await h2.close(); }
   }
@@ -175,7 +175,7 @@ try {
     const id = reportPlan.j && reportPlan.j.plan && reportPlan.j.plan.planId;
     chk(() => id && reportPlan.j.formats && reportPlan.j.formats.scriptAfterGo && reportPlan.j.kindChanges && reportPlan.j.kindChanges.slots[0].why, () => `T09 setup. the report plan has a plan id, a format script and a measured kind change: ${short(reportPlan)}`);
     reportPage = await pageOf(id, true);
-    reportOut = await call(w, 'create_report', { path: 'hp', name: 'Disclosure', colors: { accent: '#F4B183' }, planId: id, design: reportPlan.j.design });
+    reportOut = await call(w, 'create_report', { path: 'hp', planId: id });
     chk(() => !reportOut.err && reportOut.j.written !== false, () => `T09 setup. the report is written: ${short(reportOut)}`);
   }
   const PAGE = unesc(reportPage);
@@ -213,7 +213,7 @@ try {
     const pl = await call(w, 'plan_layout', { path: TWIN('rd'), redesignFrom: 'rd/Twin Sales.pbip' }), id = pl.j && pl.j.plan && pl.j.plan.planId;
     chk(() => id, () => `T08 setup. the redesign gets a plan id: ${short(pl)}`);
     const html = id ? await pageOf(id, true) : '', H = unesc(html);
-    const out = id ? await call(w, 'create_report', { path: TWIN('rd'), redesignFrom: 'rd/Twin Sales.pbip', planId: id }) : { err: true, t: 'no plan' };
+    const out = id ? await call(w, 'create_report', { path: TWIN('rd'), planId: id }) : { err: true, t: 'no plan' };
     chk(() => !out.err && out.j.written === true, () => `T08 setup. the redesign is written: ${short(out)}`);
     const src = rels(path.join(ROOT, 'rd/Twin Sales.Report'));
     const missing = src.filter((r) => !H.includes('Twin Sales redesigned.Report/' + r));

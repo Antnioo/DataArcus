@@ -49,7 +49,7 @@ const report = async (args, plan) => {
   const pl = await s.call('plan_layout', Object.assign({}, plan || {}, { path: args.path, name: args.name, secondPage: true }, args.lang ? { lang: args.lang } : {}, args.focus ? { focus: args.focus } : {}, args.pages ? { pages: args.pages } : {}, args.fields ? { planFields: args.fields } : {}));
   if (!pl.j || !pl.j.plan || !pl.j.plan.planId) return { pl, r: pl };
   await s.call('approve_plan', { planId: pl.j.plan.planId });
-  const r = await s.call('create_report', Object.assign({}, args, { planId: pl.j.plan.planId }, args.pages ? {} : { design: pl.j.design }));
+  const r = await s.call('create_report', { path: args.path, planId: pl.j.plan.planId });
   return { pl, r };
 };
 

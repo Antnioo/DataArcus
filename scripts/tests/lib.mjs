@@ -70,7 +70,8 @@ export async function launch() {
 }
 
 // The languages a page is tested in: an Arabic copy (ar/..., scripts/ar-pages.mjs) is Arabic whatever ?lang= says
-export const langsOf = (p) => (p.startsWith('ar/') ? ['ar'] : ['en', 'ar']);
+// (0.3.2 BF1) build/ (the unlisted live build page) is English only and loads no language scripts, like the go/ links
+export const langsOf = (p) => (p.startsWith('ar/') ? ['ar'] : p.startsWith('build/') ? ['en'] : ['en', 'ar']);
 
 // The HTML pages of the site (the go/ short links are redirects, not pages)
 // git runs without a shell, so the pattern needs no quotes (Windows' cmd.exe keeps single quotes and finds nothing)
@@ -86,7 +87,7 @@ export const pages = () => {
  * plainDesign (default true; 0.3.1 GD1): the Theme Generator's first visit opens on the glass look, so a visitor starts
  * with the design the page saved on a first visit before that (E.repairState(null): no look, plain), the path the
  * website's suites were written for; false for a true first visit (theme-generator.mjs, GD1).
- * Returns { ctx, pg, errs, hits } — errs collects page errors and console errors, hits counts analytics requests.
+ * Returns { ctx, pg, errs, hits }: errs collects page errors and console errors, hits counts analytics requests.
  */
 export async function visitor(browser, { viewport = [1440, 900], timezone = 'Asia/Dubai', consent = 'denied', downloads = false, motion = 'no-preference', plainDesign = true } = {}) {
   const ctx = await browser.newContext({ viewport: { width: viewport[0], height: viewport[1] }, timezoneId: timezone, acceptDownloads: downloads, reducedMotion: motion });

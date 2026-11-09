@@ -15,7 +15,7 @@
   const HIJRI = ['محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'];
   const QUARTER = 'الربع', FISCAL_YEAR = 'السنة المالية', FISCAL_QUARTER = 'الربع المالي';
   // a flag's two labels (true, false). An Eid flag's false is «أيام أخرى» ("other days"): a pill reading «لا» ("no")
-  // alone says nothing of what it answers, and «—» reads as a blank value
+  // alone says nothing of what it answers, and a dash alone reads as a blank value
   // (0.3.0 F7, the E1 Arabic review's F-4) each pair says exactly the flag's true and false: a public holiday on a weekday
   // is not a working day and not the weekend, so Is Working Day's false is «يوم عطلة» (a day off: a weekend or a
   // holiday) and Is Weekend's false «خارج عطلة نهاية الأسبوع» (not the weekend), as Ramadan's is «خارج رمضان»

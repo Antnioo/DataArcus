@@ -4,6 +4,283 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
+## [0.3.2]: 2026-11-09 (the version for testers, second round)
+The second version for testers. In short:
+- **The approval page says what the click writes:** every page and tooltip page it writes, and on each page every
+  visual, slicer, button and card, in plain words and in the order a person reads the page, with a picture of each
+  tooltip page in the preview.
+- **Check that a copy asks the same questions:** `check_report` with the original as `against` says, visual by visual,
+  whether an Arabic twin, a native copy, a redesign or your own copy asks the model the same question; it reads the
+  files and changes nothing.
+- **Arabic names in the model, as an option of the Arabic twin:** a script for TMDL view that gives the model's fields
+  the Arabic names you approved, for each Gulf culture.
+- **Ramadan and Eid measures with the Gulf calendar:** add_gulf_calendar can add the same Ramadan days of the Hijri
+  year before, their growth and the Eid windows for up to 5 of your measures; every rate and date is sourced.
+- **The Arabic twin, steadier:** tables reach the right edge, an Arabic label beside a value keeps the value in its
+  place, a chart under a heatmap keeps its hours in line, and a turned chart that holds a running calculation is named
+  so you can check it in Desktop.
+- **Windows:** a folder whose name begins with two dots, a .pbip that names its folder in another case, an approval
+  page the browser never opened, and a plan whose files would pass the 260-character path limit (refused before you
+  approve, with a plain message).
+- **Shorter, plainer answers:** every answer has its cap, input errors too; `timeAxis: "none"` for a report with no
+  time axis, and `lang` for the several-models answer in Arabic or English.
+- **Inside, in smaller pieces:** much of the MCP, the website and the design engine is split into files of their own,
+  shared by the website and the MCP; every report, check and answer is what it was before.
+
+Every change, newest first:
+- **Folder compares and the "shorter folder" example follow the system:** the last two places that compared folders by hand (the redesign's check that a report is on the model given, and the format script placed in the project) now use the one shared compare, and the refusal for a too-long path suggests `~/PBI` on macOS and Linux (`C:\PBI` stays on Windows).
+- **The cost calculator's "checked" date is the date of the weekly price check:** the page said 23 September while the prices were checked on 2 November; the weekly check now writes its date into the page, its Arabic text and the built-in fallback, so the three can no longer differ (no price changed).
+- **Four fixes for Windows:** a project in a folder whose name begins with two dots ("..draft") is now read and written like any other folder of the working folder (it was refused as outside, while every way out is still refused); the report a .pbip opens is found when the .pbip names its folder in another case; when the browser starts but never opens the approval page, DataArcus tries a second way on Windows and then leaves a shortcut to the page in the computer's temporary folder: on Windows DataArcus opens that folder in a window and the AI is not told where it is, on macOS and Linux the answer says where (the link itself is never given to the AI); and a plan whose deepest file would pass Windows' 260-character path limit gets no plan id, with a plain message, instead of failing half-way after the approval.
+- **Every answer has its cap, input errors too; the two promises say what the code does:** a call whose input fails a tool's schema is answered short (what was wrong at the first five places, "and N more", how to call again), where it was the whole validator message (46,772 characters for 300 invalid items). Wording only: DataArcus never sends values from your tables, filters, slicers or bookmarks to the AI app (text you typed in titles and text boxes is read as typed), and nothing in your projects is written before you approve the plan (the one exception: the empty working folder you chose is made on first start).
+- **The approval page says exactly what is written:** each page's slicers, buttons and cards are listed in the order a
+  person reads the page (right to left on an Arabic page); each card is named by the measure it shows, and the "no data"
+  message boxes over the charts are counted on their own line, never as cards. When the colours leave no room for the
+  glass look's soft page picture (the page's own text already stands under 4.5:1 on the page colour), the plan and the
+  approval page say the cards sit on the plain page colour, with no picture, instead of promising one.
+- **The approval page draws the tooltip pages too:** its preview now shows a picture of each tooltip page the click
+  writes, after the report's pages, at the tooltip page's own size and captioned as a tooltip page. The preview still
+  draws at most 12 pictures: the report's pages come first, and any tooltip page left out is counted.
+- **The approval page's options in plain words:** the page no longer shows a code word, an input's key, a theme key or
+  Power BI's visual type keys: a redesign names each visual's kind ("button", "column chart", "table") and each theme
+  colour it changes ("text colour"), and the card look says to ask for the plain look.
+- **The approval page names every visual, slicer and button the click writes:** a new report's approval page lists each
+  page it writes, the tooltip pages too, and on it every visual by kind and count, each slicer by its field, each button
+  by where it goes and each chart by the field it groups by; a chart written as another kind says which page it is on.
+- **The plan names every card the report writes:** plan_layout now lists, page by page, each card and the measure it
+  shows, the card each tooltip page holds too (a report planned with no KPI cards still has one on each tooltip page,
+  showing the value a reader points at, and the plan did not say so).
+- **No time axis when the person asks for none:** plan_layout and create_report take `timeAxis: "none"` in the plan's
+  fields: the report gets no trend chart, no month tooltip and no date slicer DataArcus would add, and the plan says so.
+- **The person's language decides the several-models answer:** read_model, suggest_fields and check_model_health take
+  an optional `lang`: with `"ar"` the answer about several models in one folder is in Arabic even when the folder and
+  model names are English; with `"en"`, in English. Without it the names decide, as before.
+- **Several models in one folder, said in Arabic:** when a folder holds several models at the same level and the folder or a model name is in Arabic, the reading tools now say so in Arabic («نموذجين» for two, «N نماذج» for three or more); the English message is unchanged.
+- **Mixed Arabic and English titles in the preview, in the report's order:** on an Arabic page, the approval window's
+  preview and the theme generator's preview now draw a title such as «Sales YTD الإجمالي» or «هامش الربح %» in the order
+  the report writes it, the English word read first from the right, instead of in another order.
+- **A text box that holds only a number is text:** a text box that holds only a number, such as 0, is now seen as text by
+  the accessibility check (it keeps its Tab stop and gets its alt text) and drawn in the preview, as the report check and
+  read_report already read it.
+- **One answer to "is this text Arabic?":** a title or a name typed with Arabic presentation forms (such as «ﻻ») or
+  with letters from the Arabic supplement is now treated as Arabic everywhere: the report writer joins it with «حسب»,
+  create_report writes its story sentence and its count word in Arabic, the Arabic twin reads it as already Arabic, and
+  the report check measures it as an Arabic header.
+- **A name with a hyphen is written in quotes:** a table or column name with a hyphen (Sales-2024) is now written in
+  quotes ('Sales-2024') in the health check's fix scripts and the measure builder, as every other DataArcus script writes it.
+- **One answer to "is this column a date part?":** the Arabic twin, the approval preview, the report writer and the
+  report check now read a column's name the same way (OrderDate, FiscalYear, Qtr, FY, a bare «شهر» or «هجري» are time
+  in all four), so a twin chart by fiscal year now keeps its time axis as a time axis, and the preview's time arrow and
+  the check's time-axis notes agree with it. «المدير العام» (general manager) is not a date part, while «العام المالي»
+  (the fiscal year) still is: «عام» counts as time only as the first word of a name.
+- **The health check now finds the sort column the report writer finds:** a month or day name whose number column has
+  no type in the model files is now sorted by that number column in the fix script, as the report writer sorts it,
+  instead of the script adding a second number column of its own.
+- **A report's settings, read the same everywhere:** a text with an apostrophe in it (a page named it's) is read as it
+  is by the Arabic twin and the redesign, a background's transparency written as a whole number (60L) counts in the
+  contrast check, and a table's column widths are read the same by the check, the twin and the picture columns of a new
+  report (a width the picture columns could not read no longer stops them).
+- **The site now asks which model, as the MCP does:** choose a folder with two models side by side and the page names both
+  and asks you to choose the model's own folder, instead of quietly using the first one by name.
+- **The theme generator's Arabic message for two models:** a folder with two models side by side now reads «نموذجين»
+  instead of «2 نماذج»; three or more keep «نماذج», and the English sentence is the same.
+- **The Arabic twin, a visual in a broken group:** a visual inside a group whose size is not a usable number (a width
+  of 0, below 0, or text) is now mirrored, kept on its table and given room for its button inside its page, the same
+  frame every step uses; before, one step could place it in the broken group and another in the page.
+- **Inside the MCP, the readers:** finding which model a path or a name means, and working out what a report holds
+  (its pages, visuals, fields and texts), each have a file of their own; every path is still checked inside your working
+  folder before anything is read, and read_model and read_report answer exactly as before.
+- **Inside the Arabic twin, the charts, the texts and the badges:** the right-to-left rules of the charts, the texts a
+  reader sees with their Arabic, and the visuals mirrored as one (a badge on its tile, a bar list and its names) each
+  have a file of their own; every twin page, phone layout and right-to-left chart is exactly what it was before.
+- **Inside the MCP, the approval window:** the approval page's HTML and the window's web side (its one-time link, the
+  checks that a click comes from the page itself) each have a file of their own; every page, every answer of the window
+  and every check is exactly what it was before, and only the person's click in DataArcus's own window approves a plan.
+- **Inside the report writer and the MCP's report build:** the Arabic text isolation (website and MCP), one report's
+  build from its fields and design, and the plan's exact report and its check each have a file of their own; every
+  report, website download, plan and written file is exactly what it was before.
+- **Inside the MCP, the redesign's text and changes:** the consistent copy's text and the changes a redesign makes to its
+  copy (places, titles, theme colours, the copy's name) each have a file of their own; every redesign plan, check and
+  written file is exactly what it was before.
+- **Inside the website's shared scripts:** navigation and effects, the forms, and the analytics with the cookie
+  banner each have a file of their own, and only the analytics file talks to Google Analytics or Clarity (after
+  consent, as before); every page looks and behaves exactly as before.
+- **Inside the design engine, the layout and the saved designs:** the page layout and text sizes, and the reading and
+  repair of saved designs, each have a file of their own, shared by the website and the MCP; every theme, layout and
+  saved design is exactly what it was before.
+- **Inside the Model Health Check page:** the worker that reads your file, the Fix plan's scripts and the page's views
+  each have a file of their own; the page shows, counts and copies exactly what it did before, and a file dropped while
+  another is still being checked stops that check, as before.
+- **Inside the practice exams (DP-600 and PL-300):** the grading, the timed mock exam, the saved progress and study
+  plan, and the screens each have a file of their own; every screen, score, timer and saved answer is what it was before.
+- **Inside the Model Health Check and the practice exams, in smaller steps:** the health check's rules, its page's views
+  and the exams' screens are each made by short named steps instead of one long function; every finding, screen, score
+  and click is what it was before.
+- **Inside the Model Health Check's engine, its "Please confirm" questions and the Gulf calendar check, in smaller
+  steps:** each is made by short named steps instead of one long function; every finding, question, score, text and fix
+  is what it was before, on the website and from the MCP.
+- **Inside the approval page, check_report and the reading of each visual, in smaller steps:** what the approval page
+  says each click writes, check_report's answer and what each visual is read as are each made by short named steps
+  instead of one long function; every page, finding and reading is byte for byte what it was before.
+- **Inside add_gulf_calendar, the Gulf date questions and the English and Arabic copy, in smaller steps:** the Gulf
+  calendar's script and answer, plan_layout's date questions and the copy holding both languages are each made by short
+  named steps instead of one long function; every script, question, text and file is byte for byte what it was before.
+- **Inside the Theme Generator's layout panel and the website's Power BI project download, in smaller steps:** each is
+  made by short named steps instead of one long function; every control, preview, saved choice and downloaded file is
+  byte for byte what it was before.
+- **Inside the field picker, create_report's build and the SVG KPI Designer's DAX, in smaller steps:** which fields
+  are picked and in what order, every file create_report writes and every DAX measure the designer compiles are each
+  made by short named steps instead of one long function; all of them are byte for byte what they were before.
+- **Inside create_report's answer, check_model_health and the report writer's visuals, in smaller steps:** what
+  create_report tells after a write, every answer and fix script of the model health check, and each visual the
+  report writer writes are each made by short named steps instead of one long function; all of them are byte for
+  byte what they were before, and the tool's name, description and inputs are unchanged.
+- **Inside plan_layout, in smaller steps:** the plan's model read, its names, layout, checks against the limits, date
+  questions, options, exact report, titles, preview and answer are each made by short named steps instead of one long
+  function; every answer, problem and plan held for the approval page is byte for byte what it was before, and the
+  tool's name, description and inputs are unchanged.
+- **Inside the Theme Generator's downloads, the site's navigation and the SVG KPI Designer's panels, in smaller
+  steps:** each is made by short named steps instead of one long function; every download, menu, counter, panel and
+  click is what it was before.
+- **Inside the report page writer, the Arabic twin's plan and the shadow model, in smaller steps:** each is made by
+  short named steps instead of one long function; every file written, every line of the twin's plan and every shadow
+  model file is byte for byte what it was before.
+- **Inside the report writer:** each visual of a report page (the title and logo, the cards, the charts, the tables
+  and the slicers, and their phone layout) is made in files of their own; every report, on the website and from the MCP,
+  is byte for byte what it was before.
+- **Inside the Model Health Check, the rules and the questions:** the checks that find problems and the "Please
+  confirm" questions each have a file of their own; every check, on the website and from the MCP, gives the same
+  findings, score, skipped checks and questions as before.
+- **Check that a copy asks the same questions:** `check_report` takes the original report as `against` and says, visual
+  by visual, whether the copy (an Arabic twin, a native copy, a redesign or your own) asks the model the same question:
+  the same fields, totals, filters, sort, Top N and visual calculations, the same display units and decimals, or only
+  another order. It reads the files only and changes nothing; filter values and slicer selections are compared, never
+  shown; it does not run the queries, so it never says the numbers themselves are the same.
+- **Arabic twin tables reach the right edge:** a table whose column widths Power BI works out itself now has its
+  columns fill its box on the Arabic pages, so its first English column ends at the box's right edge, as a matrix's
+  does; a table with a width for every column, or with its own column sizing setting, is left exactly as it was.
+- **Arabic names in the model, as an option of the Arabic twin:** ask for it and the twin also writes a script you
+  apply in TMDL view that gives the model's fields the Arabic names you approved, for each Gulf culture; nothing else
+  is written, every name left in English is listed with why, and the names show in the Power BI service (Desktop keeps
+  the model's own names).
+- **The macOS tests run where changes are merged:** the full test run on macOS now runs on the main and release
+  branches, on pull requests to main and on the check before each merge, no longer on every work branch; Linux and
+  Windows still run everywhere, as before.
+- **Ramadan and Eid measures with the Gulf calendar:** add_gulf_calendar can add, for up to 5 of your measures, the
+  same Ramadan days of the Hijri year before (not the Gregorian last year, which pairs no Ramadan day with its own),
+  its growth and the Eid windows, the website's own measures; on request also a dated standard VAT rate column for
+  your country and a table of the Gulf currency pegs (the Kuwaiti dinar a basket, with no rate). Every rate and date
+  is sourced; nothing is tax advice, and your amounts are never read.
+- **Three small Arabic twin fixes:** a table header grows into its table's free room even when the table keeps widths
+  for fields it no longer shows (those settings stay as they are); a column the English hides stays hidden at the
+  table's left end, never as a thin strip after the names; a chart kept where the plain mirror puts it under a heatmap
+  says, in English and Arabic, how many pixels it stands off the grid's cells.
+- **Inside the Model Health Check, the downloads:** the findings list, the HTML and Markdown documentation and the
+  measures list are made in a file of their own; every file you download has the same name and the same text as before.
+- **An Arabic label beside a value reads in order:** in the Arabic twin, a card or title that joins your approved
+  Arabic words with a value of the model (a day, an hour, a count) keeps each value in its place, so "Thursday" or
+  "11:00 PM" no longer swaps with the Arabic around it; your words are written exactly as you approved them.
+- **Inside the Arabic twin:** the rules that say what kind a visual is, which chart axis is time and what keeps reading
+  left to right inside a mirrored visual have a file of their own; every twin and every right-to-left chart is exactly
+  what it was before.
+- **The twin says when a turned chart holds a running calculation:** its plan names each visual it turns right to
+  left that holds a running sum, moving average, previous, next, first, last or rank calculation, in English and
+  Arabic, so its numbers can be checked against the original in Desktop; the twin itself is written as before.
+- **The twin's approval page shows the turned charts to check:** each visual the twin turns right to left that holds
+  a running or neighbour calculation is listed on the page you approve, with what to check in Desktop; offset, index,
+  window, range and row number calculations are now named too.
+- **A chart under a heatmap that cannot move:** when lining it up under the heatmap's grid would cover another
+  visual, it stays where the plain mirror puts it but keeps its English sort, value axis and padding, so its hours still
+  read left to right like the grid above it.
+- **The day names beside a heatmap never replace a visual of the report:** they take a free name on their page, the
+  plan and the approval page name them, a heatmap whose padded rows may not all fit keeps its own row names, and their box is the
+  heatmap's own height with no scrollbar.
+- **A large plan is no longer cut:** a plan close to the answer limit (one report in English and Arabic with every
+  option on) says once what it repeated (the flip cards' back and helper measure names, the confirmed date), so every
+  flip card stays in the plan; smaller plans read exactly as before.
+- **The texts to label in Arabic come in one order:** the bilingual plan and the Arabic twin list the texts the way a
+  person reads the report (page by page, top to bottom, then left to right), the same on every run.
+- **Every text that stays English is listed:** the bilingual plan's step before the Arabic texts (every option on) is
+  no longer cut; it says each reason once, with its texts under it, so the person sees every text to label.
+- **Shorter tool descriptions and answers:** fewer tokens in every conversation; every answer, errors too, within the
+  cap.
+- **Inside the MCP:** the words a report plan says are kept in one file of their own; every plan says exactly what it
+  said before.
+- **Inside the MCP:** the sample project's plan and a redesign's plan are made in a file of their own; each plan says
+  and does exactly what it did before.
+- **Inside the report writer:** the zip file and the sample sales data each have a file of their own; every download,
+  on the website and from the MCP, is byte for byte what it was before.
+- **Inside the website's field picker:** the list where you choose a field for each visual has a file of its own; it
+  shows the same choices in the same order and the download is byte for byte what it was before.
+- **Inside the website's model choice:** reading the project folder or the model file you choose has a file of its
+  own; the same models are read, the same files are refused, and the same messages are shown.
+- **Inside the field suggestions:** reading a model's fields and ranking which one goes in each visual each have a
+  file of their own, on the website and in the MCP; every suggestion is the same, in the same order.
+- **Inside the report writer:** the tooltip pages (the card and the bars shown when a chart is hovered) are made in a
+  file of their own; every report, on the website and from the MCP, is byte for byte what it was before.
+- **Inside the Model Health Check, again:** the model's index (its tables, columns, measures and what each one uses)
+  is in a file of its own and is never changed once built; every check gives the same findings, unused fields, score and
+  questions as before.
+- **Inside the MCP, the redesign:** placing a report's visuals on the grid (and keeping a visual laid over another with
+  it) is in a file of its own; every redesign plan moves, keeps and explains each visual exactly as before.
+- **Inside the Model Health Check:** reading DAX and the fields a report uses is in a file of its own; every check, on
+  the website and from the MCP, gives the same findings, unused fields, score and questions as before.
+- **Inside the report writer:** the page buttons and the filter panels (the tabs, the slicers with their Reset, the
+  slide-in panel) are made in a file of their own; every report, on the website and from the MCP, is byte for byte what
+  it was before.
+- **Inside the SVG KPI picture maker:** the formulas behind a picture and the escaping of its text have files of their
+  own; every picture and DAX measure, on the website and from the MCP, is exactly what it was before.
+- **Inside the MCP, custom visuals:** the words that read a custom visual's roles and name are in a file of their own;
+  every custom visual is read as the same kind, with the same confidence and the same native choices as before.
+- **Inside the SVG KPI picture maker, again:** the code that writes a picture's DAX measure has a file of its own; every
+  measure it writes, on the website and from the MCP, is exactly what it was before.
+- **Inside the MCP, check_report:** the code that tells each page's language has a file of its own; every page is told
+  the same language, and every check gives the same answer as before.
+- **Inside the MCP, the report's answer:** what create_report says after writing a report is put together in one file
+  of its own; every answer and every written file is exactly what it was before.
+- **Inside the MCP, read_report:** what read_report says and a report's own colours (the theme identity a new design
+  starts from) are each worked out in a file of their own, which reads no file itself; every answer is exactly what it
+  was before.
+- **Inside the MCP, the report's fields:** how a report picks and names its fields and their number formats is in one
+  file of its own; every plan, answer and written file is exactly what it was before.
+- **Inside the design engine, colours and the glass look:** the colour math and the glass look each have a file of
+  their own, shared by the website and the MCP; every theme, picture and layout is exactly what it was before.
+- **The website, steadier and plainer:** the Model Health Check article no longer jumps when its font arrives on a
+  phone, and the site's own pages and scripts no longer use the long dash (a quote of Microsoft's guidance keeps it).
+- **Inside the Arabic twin:** widening its buttons, text boxes and table headers to their Arabic texts has a file of
+  its own; every twin and its plan are byte for byte what they were before.
+- **Inside the Arabic twin, its layout:** keeping a small icon with its text, a chart on a table or under a heatmap's
+  grid, a text box's indentation and the room beside its icon have a file of their own; every twin and its plan are
+  byte for byte what they were before.
+- **Inside the Arabic twin, its measures:** the twin's own Arabic title and "No data" measures, its waterfall and
+  table row label measures, and moving each visual to them have a file of their own; every twin and its plan are
+  byte for byte what they were before.
+- **Inside the MCP, the model reader:** the screen that marks names reading like instructions, how a name is shown,
+  the column types and the KPI list each have a file of their own; read_model answers exactly as before.
+- **Inside the MCP, the approval page:** what each approval page and the app's own prompt say about a plan is put
+  together in one file of its own; every page and prompt is exactly what it was before, and only the click in
+  DataArcus's own window approves a plan, as before.
+- **Inside the SVG KPI Designer:** what you have drawn, which layer is picked and the undo history are kept in a file
+  of their own; every edit, undo and redo, export and import works exactly as before.
+- **Inside the MCP, the redesign's allowed changes:** each kind of change a redesign may make to its copy (the grid,
+  titles, theme colours, the copy's name, consistent text) is one entry in a file of its own, which the copy's check
+  reads; nothing new is allowed, and every redesign plan, check and written file is exactly what it was before.
+- **Inside the SVG KPI Designer, dragging and the panels:** moving and resizing on the canvas, and the layer list,
+  the properties and the data panels each have a file of their own; every click, drag, edit, undo and redo works
+  exactly as before.
+- **Inside the MCP, custom visuals, the native choice:** checking a native visual against Microsoft's rules, ranking
+  the native visuals that could replace a custom one, and what the plan says about the one chosen each have a file of
+  their own; every custom visual gets the same native choice, confidence, losses and plan line as before, and nothing is
+  replaced until you approve it.
+- **Inside the Theme Generator page:** the saved design, the colour and layout controls, and the downloads (with the
+  reminder when a downloaded file is out of date) each have a file of their own; the page shows, saves and downloads
+  exactly what it did before.
+- **Inside the MCP, check_report, finished:** checking the files against Microsoft's bundled schemas, telling what each
+  finding means for Power BI Desktop, and keeping the report's own names and values out of the answer each have a file
+  of their own; every check gives the same answer as before, and a check that did not run is still said, never a pass.
+- **Inside the website's language switch:** which pages have an Arabic copy and which translations each page uses,
+  loading the translations, and putting them on the page (its text, direction and share previews) each have a file of
+  their own; every page opens in the same language, reads and switches exactly as before.
+
 ## [0.3.1]: 2026-11-04 (the version for testers)
 Given to testers on 3 Nov 2026, after the last test in Power BI Desktop passed: every Arabic twin of the test reports
 opens, every page reads right to left, and Microsoft's validator finds nothing in a twin that its English report does

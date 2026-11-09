@@ -124,8 +124,7 @@ try {
     chk(() => pl.j && pl.j.plan && pl.j.plan.planId, () => `C-1 plan_layout ${label} gives a plan: ${pl.err ? pl.t.slice(0, 400) : JSON.stringify(Object.keys(pl.j)) + ' ' + JSON.stringify(pl.j.planProblems || pl.j.gulfDates || '').slice(0, 900)}`);
     const id = await approve(`plan_layout ${label}`, pl); if (!id) return null;
     // (0.3.1 MR1, B-270: gulfDates is plan_layout's input only; create_report never had it and dropped it silently, now it refuses it)
-    const { gulfDates, ...forCreate } = args;
-    const r = await call(`create_report ${label}`, 'create_report', Object.assign({ path: MP, focus: FOCUS, planId: id, design: pl.j.design }, forCreate));
+    const r = await call(`create_report ${label}`, 'create_report', { path: MP, planId: id });
     chk(() => !r.err && written(label, r), () => `C-1 create_report ${label}: ${short(r)}`);
     return r;
   };
@@ -168,7 +167,7 @@ try {
         () => `C-2 ${label}: redesignPages gives one page's lists whole: ${one.err ? one.t.slice(0, 300) : JSON.stringify((P1 || []).map((p) => [p.id, (p.changes || []).length, p.changesNotListed, (p.notChanged || []).length, p.notChangedNotListed]))}`);
     }
     const id = await approve(`plan_layout ${label}`, rp);
-    const rr = id ? await call(`create_report ${label}`, 'create_report', { path: MP, redesignFrom: from, planId: id, restyle: { preset: 'Midnight' } }) : null;
+    const rr = id ? await call(`create_report ${label}`, 'create_report', { path: MP, planId: id }) : null;
     chk(() => rr && !rr.err && written(label, rr), () => `C-1 create_report ${label}: ${short(rr || rp)}`);
   }
 

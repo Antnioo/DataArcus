@@ -130,7 +130,7 @@ try {
     const first = await s.call('plan_layout', args), pl = lang === 'ar' ? await s.call('plan_layout', Object.assign({}, args, dn)) : first;
     const id = pl.j && pl.j.plan && pl.j.plan.planId; if (!id) return { pl, first, err: 'no plan: ' + String(pl.t).slice(0, 300) };
     const ap = await s.call('approve_plan', { planId: id });
-    const r = await s.call('create_report', Object.assign({ path: MP, focus: 'Web Orders', lang, name, planId: id, design: pl.j.design }, dn));
+    const r = await s.call('create_report', { path: MP, planId: id });
     const dir = path.join(ROOT, 'large', name + '.Report');
     return { pl, first, ap, r, files: fs.existsSync(dir) ? readReport(dir) : {} };
   };

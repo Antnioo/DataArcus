@@ -23,16 +23,30 @@
 //      set per visual type (font and size of each role's object, where Desktop draws them; text classes are not written);
 //      a report with no theme file gets one, registered in report.json (additions only).
 //      keepPositions: no place or size changes.
-import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { real, nothingAt, visible } from './model.mjs';
-import { safeName, safeText, readJson, readBytes, isFile, locate as readerLocate, strictFiles, inventory, diskSource, isCustom, INSTRUCTION, LONG_TEXT, reportPrint, refOf } from './read-report.mjs';
-import { buildTheme, themeDesign } from './design.mjs';
+import { safeName, safeText, readJson, readBytes, isFile, locate as readerLocate, strictFiles, inventory, diskSource, isCustom, reportPrint, refOf } from './read-report.mjs';
 import { writeTree } from './files.mjs';
 import { digestOf } from './artifact.mjs';
 import { newPlatform } from './twin-copy.mjs';
-import { ROLES, CLASSES, KNOWN_TYPES, TEXT_POINTER, THEME_STYLE_AT, visualText, countsOf, mixedOf, textSetOf, facesOf, boldItalicOf, shownValue, themeValue, rolesOf } from './text-format.mjs';
+import { ROLES, THEME_STYLE_AT } from './text-format.mjs';
+import { box, shownBox, unitsOf, gridPage } from './redesign-grid.mjs';
+import { createRequire } from 'node:module';
+// a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
+const { litText } = createRequire(import.meta.url)('../../assets/js/pbir-values.js');
+// (0.3.2 SP38) the text restyling (the consistent copy's text) is in lib/redesign-text.mjs
+import { textPlan } from './redesign-text.mjs';
+// (0.3.2 SP38) the allowlisted patch records (place and size, titles, theme tokens, the copy's name) and why a visual is
+// kept are in lib/redesign-patches.mjs; the copy and its check below never call it
+import { placePatches, titlePatch, tokenPatches, namePatches, twiceOf, reasonOf, schemaOf } from './redesign-patches.mjs';
+// (0.3.2 PK1) the patch kinds (the allowlist, the file kinds, the added files, the values the write chooses) are in
+// lib/redesign-kinds.mjs; buildCopy and verifyCopy read it
+import * as Kinds from './redesign-kinds.mjs';
+import { TOKENS, ADDED_THEME } from './redesign-kinds.mjs';
+import { sameOnDisk } from './path-rules.mjs';   // (0.3.2 PH1, B-412)
+// (0.3.2 SP19) the geometry, the D4 units and the grid are in lib/redesign-grid.mjs; unitsOf is exported here as before
+export { unitsOf };
 
 export const SUFFIX = ' redesigned';
 // the new report's name: "<name> redesigned" within 30 characters (the writer's name limit, kept from step 1): the
@@ -79,15 +93,13 @@ function modelProblem(dir, model) {
   if (!by || !by.path) return 'the original uses a published model (a connection), not a model folder: the redesign is written next to a project\'s model only';
   if (!model || !model.folder) return 'the model given (path) is not a project\'s model folder';
   const want = path.resolve(dir, String(by.path));
-  const same = (a, b) => { try { return fs.realpathSync.native(a) === fs.realpathSync.native(b); } catch (e) { return path.resolve(a) === path.resolve(b); } };
-  return same(want, model.folder) ? null : 'the original is on another model than the one given (path): give the model its definition.pbir names';
+  return sameOnDisk(want, model.folder) ? null : 'the original is on another model than the one given (path): give the model its definition.pbir names';
 }
 
 // ---- 1. the schemas this step knows: a file of another family, or of a newer major version, stops the plan ----
 // (the newest each family has in Microsoft's published schemas as DataArcus writes and reads them; a newer major version
 // may move what the allowlist names, so it is never patched blind)
 const SCHEMAS = { report: 3, page: 2, pagesMetadata: 1, visualContainer: 2, visualContainerMobileState: 2, bookmark: 2, bookmarksMetadata: 1, versionMetadata: 1, reportExtension: 1, definitionProperties: 2, platformProperties: 2 };
-const schemaOf = (j) => { const m = /\/([A-Za-z]+)\/(\d+)\.\d+\.\d+\/schema(?:[.-]embedded)?\.json$/.exec(String((j && j.$schema) || '')); return m ? { family: m[1], major: +m[2] } : null; };
 function schemaProblems(dir, files, notes) {
   const out = [];
   notes = notes || [];
@@ -109,270 +121,9 @@ function schemaProblems(dir, files, notes) {
   return out;
 }
 
-// ---- 3. the allowlist: the only JSON pointers a redesign may change, by kind of file ----
-const TITLE_AT = (i) => `/visual/visualContainerObjects/title/${i}/properties/text/expr/Literal/Value`;
-export const TOKENS = ['dataColors', 'foreground', 'background', 'tableAccent', 'good', 'neutral', 'bad'];
-// (0.3.1 CS1) a visual's own text settings (removed: TEXT_POINTER, text-format.mjs's roles only), and report.json's custom
-// theme and its resource item (additions only: verifyCopy); (CS2) the text set in the theme's visual styles, a role's font
-// and size per known type (THEME_STYLE_AT), no longer its text classes (Desktop 2.159 did not draw them: mcp/work/CS2.md)
-const ALLOW = {
-  visual: [/^\/position\/(x|y|width|height)$/, /^\/visual\/visualContainerObjects\/title\/\d+\/properties\/text\/expr\/Literal\/Value$/, TEXT_POINTER],
-  platform: [/^\/metadata\/displayName$/, /^\/config\/logicalId$/],
-  theme: [new RegExp(`^/(${TOKENS.join('|')})(/\\d+)?$`), THEME_STYLE_AT],
-  report: [/^\/themeCollection\/customTheme\/(name|reportVersionAtImport|type)$/, /^\/resourcePackages\/\d+\/(name|type)$/, /^\/resourcePackages\/\d+\/items\/\d+\/(name|path|type)$/]
-};
-const kindOf = (rel, themeRel) => (/^definition\/pages\/[^/]+\/visuals\/[^/]+\/visual\.json$/.test(rel) ? 'visual' : rel === '.platform' ? 'platform' : themeRel && rel === themeRel ? 'theme' : rel === 'definition/report.json' ? 'report' : null);
-// (CS1) the theme file a consistent copy adds when the report has none, in the report's registered resources
-export const ADDED_THEME = 'DataArcusText.json';
-const allowed = (kind, ptr) => !!kind && ALLOW[kind].some((re) => re.test(ptr));
-const obj = (x) => (x && typeof x === 'object' && !Array.isArray(x) ? x : null);
+// ---- 3. the allowlist: the only JSON pointers a redesign may change, by kind of change (lib/redesign-kinds.mjs) ----
+export { TOKENS, ADDED_THEME };
 export { THEME_STYLE_AT };
-
-// what a redesign never moves, with why
-const KEEP = {
-  textbox: 'a text box: kept where it is (the header and the lines drawn around it belong together)',
-  shape: 'a shape: kept where it is (it frames or underlines other visuals)', basicShape: 'a shape: kept where it is (it frames or underlines other visuals)',
-  image: 'an image: kept where it is', actionButton: 'a button: kept where it is, with its action (page or bookmark)',
-  pageNavigator: 'the page navigator: kept where it is', bookmarkNavigator: 'a bookmark navigator: kept where it is'
-};
-const TABLES = ['tableEx', 'pivotTable'];
-const box = (v) => ({ x: Math.round(v.x * 10) / 10, y: Math.round(v.y * 10) / 10, w: Math.round(v.w * 10) / 10, h: Math.round(v.h * 10) / 10 });
-const shownBox = (b) => ({ x: Math.round(b.x), y: Math.round(b.y), w: Math.round(b.w), h: Math.round(b.h) });
-const overlap = (a, b) => a.x < b.x + b.w - 0.5 && b.x < a.x + a.w - 0.5 && a.y < b.y + b.h - 0.5 && b.y < a.y + a.h - 0.5;
-
-// ---- 0.3.0 D4: a visual laid over another is one unit with it (the laptop's rc.1/rc.2 proof on the lab's "Dense Ops":
-// the "No data" cards took slots of their own and stood beside their charts, which were squeezed). By geometry and
-// z-order only (the report's own positions, never a text): v lies on c when v's box is inside c's (1 of tolerance), and
-// the boxes are the same (any z: the writer's "No data" card is one layer below its chart, pbip-page.js) or v is smaller
-// and above c. Same box: the data visual hosts (OVER kinds are the overlay), then the lower z, then the name. A visual's
-// host is the smallest it lies on, followed to the outermost (the unit's lead). A text box, shape or image hosts only
-// when at most one other visual (not one of DECOR) lies on it: a panel behind a chart is a unit, a backdrop or a frame
-// behind several charts is not.
-const TOL = 1;
-const OVER = ['card', 'cardVisual', 'multiRowCard', 'textbox', 'shape', 'basicShape', 'image', 'actionButton'];
-const DECOR = ['textbox', 'shape', 'basicShape', 'image'];
-const inside = (a, c) => a.x >= c.x - TOL && a.y >= c.y - TOL && a.x + a.w <= c.x + c.w + TOL && a.y + a.h <= c.y + c.h + TOL;
-const sameBox = (a, c) => Math.abs(a.x - c.x) <= TOL && Math.abs(a.y - c.y) <= TOL && Math.abs(a.x + a.w - c.x - c.w) <= TOL && Math.abs(a.y + a.h - c.y - c.h) <= TOL;
-const rank = (it) => [OVER.includes(it.type) ? 1 : 0, it.z, it.name];
-const precedes = (a, b) => { const x = rank(a), y = rank(b); for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] < y[i]; return false; };
-export function unitsOf(items) {
-  const lies = (v, c) => v !== c && inside(v.b, c.b) && (sameBox(v.b, c.b) ? precedes(c, v) : c.z < v.z);
-  const hosts = new Set(items.filter((c) => !DECOR.includes(c.type) || items.filter((v) => !DECOR.includes(v.type) && lies(v, c)).length <= 1));
-  const hostOf = new Map();
-  items.forEach((v) => {
-    const cs = items.filter((c) => hosts.has(c) && lies(v, c)).sort((a, b) => a.b.w * a.b.h - b.b.w * b.b.h || (precedes(a, b) ? -1 : 1));
-    if (cs.length) hostOf.set(v, cs[0]);
-  });
-  // (the order above has no cycle: a host is bigger, or the same box and before; the guard is for safety)
-  items.forEach((v) => { let h = hostOf.get(v), n = 0; while (h && hostOf.has(h) && n++ < items.length) h = hostOf.get(h); if (h) v.lead = h; });
-  items.forEach((v) => { v.overlays = items.filter((o) => o.lead === v); });
-}
-// an overlay's new box: an edge on its lead's edge stays on it; otherwise it keeps its size and its distance from the
-// lead's nearer edge, inside the lead's new box
-function follow(o, from, to) {
-  const axis = (p, s, P, S, nP, nS) => {
-    const a = p - P, e = P + S - (p + s), onA = Math.abs(a) <= TOL, onE = Math.abs(e) <= TOL;
-    if (onA && onE) return [nP, nS];
-    let w = Math.min(s, nS), q = onA ? nP : onE ? nP + nS - w : a <= e ? nP + a : nP + nS - e - w;
-    q = Math.max(nP, Math.min(q, nP + nS - w));
-    return [Math.round(q * 10) / 10, Math.round(w * 10) / 10];
-  };
-  const [x, w] = axis(o.x, o.w, from.x, from.w, to.x, to.w), [y, h] = axis(o.y, o.h, from.y, from.h, to.y, to.h);
-  return { x, y, w, h };
-}
-
-// ---- the grid: each page's top-level native visuals in rows, on equal margins and gaps (the design engine's 720-tall
-// grid: 16 between visuals and at the page's edges, 8 a step, in page units h/720), heights equal in a row, never
-// smaller for a table (a shorter table draws a scrollbar: the laptop's PROOF-rc24 block 2 (d)), never a new overlap
-// with anything that stays, never off the page. A row that can't be placed so keeps its place, and says why.
-// (0.3.1 RD1: NC1's lab found rows touching, y 248 and 248, and gaps of 8 to 24: each row was placed on its own) The rows
-// are placed top to bottom: a row sits 16 below what lies above it (a row placed before it, or a visual that stays: a
-// text box, shape, image, custom visual, group, or a row that keeps its place) when it was within 32 of it, else on
-// its own top (on the 8 step, never closer than 16); the same at its sides and, for a row with nothing below it, at the
-// page's bottom (16 above it when it ended within 32). A row's height is its own (equal in the row), cut only at the
-// page's bottom or above what stays below it. A row that fails (a table smaller, off the page, a new overlap) keeps
-// its place and the page is placed again with it as one more visual that stays. When what stays keeps a row from the
-// page's margin of 16, the plan says so (margins).
-function gridPage(page, items) {
-  const u = page.h / 720, M = Math.round(16 * u), G = Math.round(16 * u), S = Math.max(1, Math.round(8 * u));
-  const snap = (v) => Math.round(v / S) * S;
-  // (D4) a unit is one row member, placed by its lead's box; its overlays follow the lead and never take a slot
-  const movable = items.filter((x) => x.movable && !x.lead).sort((a, b) => a.b.y - b.b.y || a.b.x - b.b.x);
-  const withOverlays = (placed) => placed.concat(...placed.map(([v, b]) => (v.overlays || []).map((o) => [o, follow(o.b, v.b, b)])));
-  // rows: a visual joins a row when it shares most of its height with every visual already in it
-  const rows = [];
-  movable.forEach((v) => {
-    const row = rows.find((r) => r.every((o) => Math.min(o.b.y + o.b.h, v.b.y + v.b.h) - Math.max(o.b.y, v.b.y) >= 0.6 * Math.max(o.b.h, v.b.h)));
-    if (row) row.push(v); else rows.push([v]);
-  });
-  rows.forEach((r) => r.sort((a, b) => a.b.x - b.b.x));
-  const span = rows.map((r) => ({ left: Math.min(...r.map((v) => v.b.x)), right: Math.max(...r.map((v) => v.b.x + v.b.w)), top: Math.min(...r.map((v) => v.b.y)), bottom: Math.max(...r.map((v) => v.b.y + v.b.h)) }));
-  const order = rows.map((r, i) => i).sort((i, j) => span[i].top - span[j].top || span[i].left - span[j].left);
-  const members = rows.map((r) => r.concat(...r.map((v) => v.overlays || [])));
-  const rowOf = new Map(); members.forEach((all, i) => all.forEach((v) => rowOf.set(v, i)));
-  const xs = (a, b) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 0.5, ys = (a, b) => Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 0.5;
-  const edges = (b) => ({ left: b.x, right: b.x + b.w, top: b.y, bottom: b.y + b.h });
-  const kept = new Set(), why = new Map();
-  let plan = new Map(), margins = [];
-  for (let pass = 0; pass <= rows.length; pass++) {
-    plan = new Map(); margins = [];
-    // what stays: every visual in no row (and not an overlay of a placed row), and the rows that keep their place
-    const stays = items.filter((x) => !rowOf.has(x) || kept.has(rowOf.get(x)));
-    const place = new Map(), failed = [];
-    // the obstacles of row i: what stays, except what it already overlapped in the original (a backdrop behind it)
-    const obstaclesOf = (i) => stays.filter((o) => !members[i].some((v) => overlap(v.b, o.b)));
-    const said = (i, side, o, at) => margins.push(`the grid's margin of ${M} is not kept at the ${side} of ${rows[i].map((v) => safeName(v.name)).join(', ')}: ${safeName(o.name)} (${isCustom(o.type) ? 'a custom visual' : safeName(o.type)}) stays where it is ${side === 'top' ? 'above' : 'beside'} it, so the row keeps ${G} from it, ${Math.round(at)} from the page's edge`);
-    order.filter((i) => !kept.has(i)).forEach((i) => {
-      const s = span[i], obs = obstaclesOf(i).map((o) => [o, edges(o.b)]);
-      // the sides: the page's margin, or 16 from what stays beside the row
-      let L = s.left < 2 * M ? M : snap(s.left), R = s.right > page.w - 2 * M ? page.w - M : snap(s.right);
-      obs.filter(([, e]) => ys(e, s) && e.right <= s.left + TOL).forEach(([o, e]) => { const want = s.left - e.right < 2 * G ? e.right + G : Math.max(L, e.right + G); if (want > L) { if (s.left < 2 * M) said(i, 'left', o, want); L = want; } else if (s.left - e.right < 2 * G) L = want; });
-      obs.filter(([, e]) => ys(e, s) && e.left >= s.right - TOL).forEach(([o, e]) => { const want = e.left - s.right < 2 * G ? e.left - G : Math.min(R, e.left - G); if (want < R) { if (s.right > page.w - 2 * M) said(i, 'right', o, page.w - want); R = want; } else if (e.left - s.right < 2 * G) R = want; });
-      const sx = { left: Math.min(L, s.left), right: Math.max(R, s.right) };
-      // the top: 16 below what lies above (a row placed before it, by its new place; what stays), or the page's margin
-      const above = obs.filter(([, e]) => xs(e, sx) && e.bottom <= s.top + TOL).map(([o, e]) => ({ o, was: e.bottom, now: e.bottom }))
-        .concat([...place.entries()].filter(([j, p]) => span[j].top < s.top && xs({ left: p.L, right: p.R }, sx)).map(([j, p]) => ({ o: null, was: span[j].bottom, now: p.B })));
-      let T = s.top < 2 * M ? M : snap(s.top);
-      if (above.length) {
-        // (what it sat close to sets its top; what was far above only keeps it 16 away)
-        T = Math.max(...above.map((a) => a.now + G));
-        if (!above.some((a) => s.top - a.was < 2 * G)) T = Math.max(T, snap(s.top));
-        const first = above.find((a) => a.o && a.now + G === T);
-        if (s.top < 2 * M && T > M && first) said(i, 'top', first.o, T);
-      }
-      // the bottom: its own height; 16 above what stays below it when it was within 32; the page's margin when nothing is below
-      let B = T + (s.bottom - s.top);
-      const below = obs.filter(([, e]) => xs(e, sx) && e.top >= s.bottom - TOL);
-      const rowsBelow = order.some((j) => j !== i && !kept.has(j) && span[j].top > s.top && xs(span[j], sx));
-      below.forEach(([, e]) => { B = e.top - s.bottom < 2 * G ? e.top - G : Math.min(B, e.top - G); });
-      if (!below.length && !rowsBelow) B = page.h - s.bottom < 2 * M ? page.h - M : Math.min(B, page.h - M);
-      else if (!below.length) B = Math.min(B, page.h - M);
-      place.set(i, { L, R, T, B });
-      const sum = rows[i].reduce((a, v) => a + v.b.w, 0), avail = R - L - (rows[i].length - 1) * G;
-      let x = L; const leads = rows[i].map((v, k) => { const w = k === rows[i].length - 1 ? R - x : Math.round(avail * v.b.w / sum); const b = { x, y: T, w, h: B - T }; x += w + G; return [v, b]; });
-      const placed = withOverlays(leads);
-      const tableSmaller = placed.find(([v, b]) => TABLES.includes(v.type) && (b.w < v.b.w - 0.01 || b.h < v.b.h - 0.01));
-      const off = placed.find(([, b]) => b.x < 0 || b.y < 0 || b.w < 8 || b.h < 8 || b.x + b.w > page.w + 0.01 || b.y + b.h > page.h + 0.01);
-      if (tableSmaller) failed.push([i, `its row keeps its place: ${safeName(tableSmaller[0].name)} (a table) would get smaller and could draw a scrollbar`]);
-      else if (off) failed.push([i, 'its row keeps its place: on the grid it would leave the page']);
-      else placed.forEach(([v, b]) => plan.set(v, b));
-    });
-    // never a new overlap: a row whose place overlaps anything it did not overlap before keeps its place
-    if (!failed.length) {
-      const at = (v) => plan.get(v) || v.b;
-      for (let a = 0; a < items.length && !failed.length; a++) for (let b = a + 1; b < items.length && !failed.length; b++) {
-        const p = items[a], q = items[b];
-        if ((plan.has(p) || plan.has(q)) && overlap(at(p), at(q)) && !overlap(p.b, q.b)) { const mv = plan.has(p) ? p : q, other = mv === p ? q : p; failed.push([rowOf.get(mv), `its row keeps its place: on the grid it would overlap ${safeName(other.name)}`]); }
-      }
-    }
-    if (!failed.length) break;
-    // one row at a time (the first in the page's order), then the page again; after 20 passes every row that fails at
-    // once (a page of many rows stays quick)
-    failed.sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
-    (pass < 20 ? failed.slice(0, 1) : failed).forEach(([i, w]) => { kept.add(i); members[i].forEach((v) => why.set(v, w)); });
-  }
-  kept.forEach((i) => members[i].forEach((v) => plan.delete(v)));
-  return { plan, why, gap: G, margins };
-}
-
-const twiceOf = (p) => { const names = p.visuals.map((v) => v.id); return new Set(names.filter((n, i) => names.indexOf(n) !== i)); };
-function reasonOf(v, twice) {
-  if (twice.has(v.id)) return 'its name is used twice on the page, so a patch could not name it';
-  if (v.type === 'group') return 'a group: it and its visuals keep their places (the group places them)';
-  if (v.group) return `inside the group ${safeName(v.groupName || v.group)}: the group places it`;
-  if (isCustom(v.type)) return 'a custom visual: copied as it is, never moved or changed';
-  if (KEEP[v.type]) return KEEP[v.type];
-  if (v.hidden) return 'hidden in the original (shown by a bookmark or a button): kept where it is';
-  if (!schemaOf(v.json) || schemaOf(v.json).family !== 'visualContainer') return 'its file names no visual schema';
-  return null;
-}
-// (0.3.1 CS1) why a visual's text is not made consistent (null: it is): the visuals the grid would place (its own
-// reasons), on a page that is not a tooltip page, of a type whose text roles are known
-function textWhy(p, v, twice) {
-  if (p.kind === 'Tooltip') return 'on a tooltip page: kept as it is';
-  if (v.type === 'textbox') return 'a text box: its text runs are its author\'s, with their own fonts, kept as they are';
-  const r = reasonOf(v, twice);
-  if (r) return r.replace(/(kept where it is|keep their places|the group places it|never moved or changed)/, (m) => ({ 'kept where it is': 'its text kept as it is', 'keep their places': 'keep their text settings', 'the group places it': 'its text kept as it is', 'never moved or changed': 'never changed' })[m]);
-  if (!KNOWN_TYPES.has(v.type)) return `a visual type DataArcus does not know the text roles of (${safeName(v.type)}): its text settings are kept as they are`;
-  return null;
-}
-
-// (0.3.1 CS1) the consistent copy's text: the text set, the removals, what is kept and why; and, for every redesign,
-// the classes that show more than one font or size (mixed)
-function textPlan(inv, files, themeRel, mode, dir) {
-  const items = [], untouched = [];
-  inv.pages.forEach((p) => { const twice = twiceOf(p); p.visuals.filter((v) => v.type !== 'group').forEach((v) => {
-    const why = textWhy(p, v, twice);
-    if (!why) items.push({ p, v, json: v.json });
-    else untouched.push({ page: p.name, visual: safeName(v.id), type: isCustom(v.type) ? 'custom ' + safeName(v.type) : safeName(v.type), why });
-  }); });
-  const theme = themeRel ? inv.themeJson || {} : null, counts = countsOf(items, theme), mixed = mixedOf(counts), boldItalic = boldItalicOf(items);
-  const out = { mixed: mixed.map((x) => x.said), ...(boldItalic ? { boldOrItalic: `${boldItalic} visual${boldItalic === 1 ? ' sets' : 's set'} bold or italic of ${boldItalic === 1 ? 'its' : 'their'} own` } : {}) };
-  if (!mode) return { out, patches: [], perVisual: new Map(), problems: [] };
-  const set = textSetOf(counts, mode, facesOf(items)), patches = [], perVisual = new Map(), kept = [], problems = [], removed = [];
-  const said = (cls, prop) => { const x = set[cls] || {}; return shownValue(prop, prop === 'family' ? x.family : prop === 'size' ? x.size : null); };
-  items.forEach(({ p, v }) => {
-    const t = visualText(v.json), list = [];
-    t.overrides.forEach((o) => {
-      patches.push({ op: 'remove', page: p.id, visual: v.id, file: v.file, pointer: o.pointer, from: o.raw });
-      const row = { class: o.cls, property: o.property, from: shownValue(o.prop, o.value), to: said(o.cls, o.prop) };
-      list.push(row); removed.push(Object.assign({ page: p.name, visual: safeName(v.id) }, row));
-    });
-    t.kept.forEach((k) => kept.push({ page: p.name, visual: safeName(v.id), class: k.cls, property: k.property, why: k.why }));
-    if (list.length) perVisual.set(v, list);
-  });
-  // (CS2) the theme: the set's font and size as visual styles, per listed type and role object ("*" preset), where
-  // Desktop draws them (Microsoft's base theme sets titles there, DataArcus's themes every text size); a class whose set
-  // is the theme's is not written; nothing else of a style entry changes (its colour stays)
-  const want = new Map();   // type -> object -> { property: value }
-  items.forEach(({ v }) => rolesOf(v.type).forEach((r) => { const x = set[r.cls]; if (!x) return;
-    const props = Object.assign({}, x.face != null ? { [r.props.family]: x.face } : {}, x.size != null ? { [r.props.size]: x.size } : {});
-    if (!Object.keys(props).length) return;
-    const m = want.get(v.type) || new Map(); want.set(v.type, m); m.set(r.object, Object.assign(m.get(r.object) || {}, props)); }));
-  const ptr = (t, o) => `/visualStyles/${t}/*/${o}`, styleSet = [];
-  let themeSaid = 'not changed: the theme\'s own text settings govern every listed visual';
-  if (want.size) {
-    if (themeRel) {
-      const vs = (obj(inv.themeJson) && obj(inv.themeJson.visualStyles)) || {};
-      want.forEach((m, t) => m.forEach((props, o) => {
-        const arr = ((obj(vs[t]) || {})['*'] || {})[o];
-        if (arr === undefined) { patches.push({ file: themeRel, pointer: ptr(t, o), from: null, to: [props], create: true }); return; }
-        if (!Array.isArray(arr)) { problems.push(`consistentText: the theme's visual style for ${safeName(t)} ${safeName(o)} is not a list, so the text set can't be written there: fix the theme file (or apply it again in Power BI Desktop), then plan again.`); return; }
-        const i = arr.findIndex((e) => obj(e) && (e.$id === undefined || e.$id === 'default'));
-        if (i < 0) { patches.push({ file: themeRel, pointer: `${ptr(t, o)}/${arr.length}`, from: null, to: props }); return; }
-        Object.entries(props).forEach(([k, val]) => { if (arr[i][k] !== val) { patches.push({ file: themeRel, pointer: `${ptr(t, o)}/${i}/${k}`, from: arr[i][k] === undefined ? null : arr[i][k], to: val });
-          if (arr[i][k] !== undefined) styleSet.push(`${t} ${o} ${k} ${typeof arr[i][k] === 'string' || typeof arr[i][k] === 'number' ? arr[i][k] : 'set'} -> ${val}`); } });
-      }));
-      themeSaid = `${path.basename(themeRel)}: the text set is written as its visual styles (per visual type: titles, axes, labels, table text), where Power BI Desktop draws them; its text classes, colours and everything else are copied as they are`;
-    } else {
-      let rep = null; try { rep = readJson(path.join(dir, 'definition', 'report.json')); } catch (e) { rep = null; }
-      const tcol = (rep && rep.themeCollection && typeof rep.themeCollection === 'object') ? rep.themeCollection : {};
-      if (tcol.customTheme) problems.push('consistentText: the report\'s theme is one of Power BI\'s own (not a theme file in the report), so its text settings can\'t be written: in Power BI Desktop, View > Themes > Customize current theme > Apply (the theme becomes a file in the report), save, then plan again. Or use consistentText "theme".');
-      else if (files.includes(`StaticResources/RegisteredResources/${ADDED_THEME}`)) problems.push(`consistentText: the report already holds a file ${ADDED_THEME} that is not its theme: rename it in the report's folder, then plan again.`);
-      else {
-        const rel = `StaticResources/RegisteredResources/${ADDED_THEME}`, pk = Array.isArray(rep && rep.resourcePackages) ? rep.resourcePackages : null, item = { name: ADDED_THEME, path: ADDED_THEME, type: 'CustomTheme' };
-        const ver = (tcol.baseTheme && typeof tcol.baseTheme.reportVersionAtImport === 'string') ? tcol.baseTheme.reportVersionAtImport : '5.61';
-        const visualStyles = {}; want.forEach((m, t) => { visualStyles[t] = { '*': Object.fromEntries([...m].map(([o, props]) => [o, [props]])) }; });
-        patches.push({ op: 'add', file: rel, to: { name: ADDED_THEME, visualStyles } });   // (its name is its file's, as Desktop writes it: PBIR_THEME_FILE_NAME_MISMATCH)
-        patches.push({ file: 'definition/report.json', pointer: '/themeCollection/customTheme', from: null, to: { name: ADDED_THEME, reportVersionAtImport: ver, type: 'RegisteredResources' }, create: true });
-        const i = pk ? pk.findIndex((x) => x && x.type === 'RegisteredResources' && Array.isArray(x.items)) : -1;
-        if (i >= 0) patches.push({ file: 'definition/report.json', pointer: `/resourcePackages/${i}/items/${pk[i].items.length}`, from: null, to: item });
-        else if (pk) patches.push({ file: 'definition/report.json', pointer: `/resourcePackages/${pk.length}`, from: null, to: { name: 'RegisteredResources', type: 'RegisteredResources', items: [item] } });
-        else patches.push({ file: 'definition/report.json', pointer: '/resourcePackages', from: null, to: [{ name: 'RegisteredResources', type: 'RegisteredResources', items: [item] }] });
-        themeSaid = `the report has no theme file (only Power BI's base theme): the copy adds ${ADDED_THEME} with the text set alone, as visual styles per visual type (titles, axes, labels, table text), where Power BI Desktop draws them; no text class and no colour (colours and the rest stay the base theme's), and names it in report.json`;
-      }
-    }
-  }
-  // a theme's own visual style for a type wins over its text class: said; (CS2) its font and size are set to the text set
-  const styles = []; items.forEach(({ v }) => rolesOf(v.type).forEach((r) => ['family', 'size'].forEach((prop) => { const tv = themeValue(theme, r.cls, prop, v.type, r.object, r.props); if (tv.style && !styles.includes(`${tv.style} ${r.props[prop]}`)) styles.push(`${tv.style} ${r.props[prop]}`); })));
-  Object.assign(out, {
-    mode, set: Object.entries(set).map(([cls, x]) => ({ class: cls, what: CLASSES[cls], font: shownValue('family', x.family), size: shownValue('size', x.size), ...(x.shownBy.family || x.shownBy.size ? { alreadyShownBy: x.shownBy } : {}) })),
-    boldItalic: 'a theme\'s text class holds no bold or italic (Microsoft\'s theme schema): each visual\'s own bold and italic is removed, so the theme\'s default governs',
-    theme: themeSaid, removed: removed.length, removedHow: 'each visual\'s removals are listed with its changes (pages[].changes[].text: class, property, from -> to)', ...(kept.length ? { kept } : {}), ...(untouched.length ? { untouched } : {}),
-    ...(styles.length ? { themeStyles: `the theme sets these for a visual type itself, which governs over its text class: ${styles.map(safeName).join(', ')}${styleSet.length ? `; set to the text set: ${styleSet.map(safeName).join(', ')}` : '; kept as they are'}` } : {})
-  });
-  return { out, patches, perVisual, problems };
-}
 
 // ---- the plan ----
 // reportPath: the original (its .pbip or .Report folder); model: loadModel's answer for its model;
@@ -392,7 +143,8 @@ export function planRedesign(reportPath, model, opts) {
   const patches = [], pages = [];
   // (CS1) the text: worked out first, so each visual's removals are listed with its other changes
   const themeRel0 = inv.themeFile && files.includes(inv.themeFile) ? inv.themeFile : null;
-  const TX = textPlan(inv, files, themeRel0, o.consistentText || null, loc.dir);
+  let rep = null; try { rep = readJson(path.join(loc.dir, 'definition', 'report.json')); } catch (e) { rep = null; }
+  const TX = textPlan(inv, files, themeRel0, o.consistentText || null, rep);
   TX.problems.forEach((x) => problems.push(x));
   const titles = o.titles || {}, titleKeys = new Set(Object.keys(titles)), titleSeen = new Set();
   inv.pages.forEach((p) => {
@@ -426,24 +178,15 @@ export function planRedesign(reportPath, model, opts) {
       const shown = { visual: safeName(v.id), type: isCustom(v.type) ? 'custom ' + safeName(v.type) : safeName(v.type),
         fields: Object.values(v.fields || {}).flat().map((f) => (f.kind === 'other' ? '(an expression)' : refOf(f))), place: `${Math.round(v.x)},${Math.round(v.y)} ${Math.round(v.w)}x${Math.round(v.h)}` };
       if (b && ['x', 'y', 'w', 'h'].some((k) => Math.abs(b[k] - it.b[k]) >= 0.5)) {
-        // the patch is on the visual's own position: a top-level visual's place is on the page
-        const pos = v.json.position || {};
-        [['x', 'x'], ['y', 'y'], ['w', 'width'], ['h', 'height']].forEach(([k, f]) => { if (Math.abs(b[k] - it.b[k]) >= 0.5) patches.push({ page: p.id, visual: v.id, file: v.file, pointer: '/position/' + f, from: pos[f], to: b[k] }); });
+        placePatches(p, v, it.b, b).forEach((x) => patches.push(x));
         Object.assign(change, { from: shownBox(it.b), to: shownBox(b) });
         if (b.w < it.b.w - 0.5) change.narrower = `${Math.round(it.b.w - b.w)} narrower: its row is placed on the grid, with margins and gaps of ${grid.gap}`;
       }
       if (titleKeys.has(key)) {
         titleSeen.add(key);
-        const t = String(titles[key]), arr = ((v.json.visual || {}).visualContainerObjects || {}).title, i = Array.isArray(arr) ? arr.findIndex((e) => e && e.properties && e.properties.text && e.properties.text.expr && e.properties.text.expr.Literal && !e.selector) : -1;
-        const r = reason(v);
-        if (r && !KEEP[v.type]) problems.push(`titles: ${safeName(key)} is not changed (${r}); leave it out of titles.`);
-        else if (i < 0) problems.push(`titles: ${safeName(key)} has no static title of its own (a title from a measure, or none): only a static title is changed; leave it out of titles.`);
-        else if (INSTRUCTION.test(t)) problems.push(`titles: the text for ${safeName(key)} reads like an instruction to an AI assistant: not written.`);
-        else if (!t.trim() || t.length > LONG_TEXT || /[\p{Cc}\p{Cf}]/u.test(t)) problems.push(`titles: the text for ${safeName(key)} must be 1 to ${LONG_TEXT} characters, with no control characters.`);
-        else {
-          const old = String(arr[i].properties.text.expr.Literal.Value), to = `'${t.replace(/'/g, "''")}'`;
-          if (old !== to) { patches.push({ page: p.id, visual: v.id, file: v.file, pointer: TITLE_AT(i), from: old, to }); change.title = { to: t }; }
-        }
+        const tp = titlePatch(p, v, key, titles[key], reason(v));
+        if (tp.problem) problems.push(tp.problem);
+        if (tp.patch) { patches.push(tp.patch); change.title = { to: tp.title }; }
       }
       if (TX.perVisual.has(v)) change.text = TX.perVisual.get(v);
       records.set(v, { it, shown, change, why: (p.kind === 'Tooltip' ? 'on a tooltip page: kept as it is' : null) || (it && (grid.why.get(it) || unitWhy.get(it))) || reason(v) || (o.keepPositions ? 'kept where it is (keepPositions)' : 'already on the grid') });
@@ -468,18 +211,12 @@ export function planRedesign(reportPath, model, opts) {
   let theme = null;
   const themeRel = inv.themeFile && files.includes(inv.themeFile) ? inv.themeFile : null;
   if (o.restyle && Object.keys(o.restyle).length) {
-    if (!themeRel) problems.push('restyle: the original has no custom theme file (only Power BI\'s base theme), so there are no theme tokens to change: leave restyle out.');
-    else {
-      const td = themeDesign(Object.assign({}, o.restyle, { pageTint: false }));
-      td.repaired.forEach((x) => problems.push(`restyle.${x.field}: ${x.why}.`));
-      const built = buildTheme(td.design, 'en'), th = inv.themeJson || {}, tokens = {};
-      TOKENS.forEach((k) => { if (built[k] !== undefined && JSON.stringify(built[k]).toLowerCase() !== JSON.stringify(th[k] === undefined ? null : th[k]).toLowerCase()) { tokens[k] = built[k]; patches.push({ file: themeRel, pointer: '/' + k, from: th[k] === undefined ? null : th[k], to: built[k] }); } });
-      theme = { file: path.basename(themeRel), tokens, keeps: 'everything else in the theme file (fonts, visual styles, text classes) is copied as it is' };
-    }
+    const rs = tokenPatches(o.restyle, themeRel, inv.themeJson);
+    rs.problems.forEach((x) => problems.push(x)); rs.patches.forEach((x) => patches.push(x)); theme = rs.theme;
   }
   TX.patches.forEach((x) => patches.push(x));
-  // the copy's own name and id: .platform names the report, and its logical id is the item's id in a workspace
-  if (files.includes('.platform')) patches.push({ file: '.platform', pointer: '/metadata/displayName', from: null, to: loc.name }, { file: '.platform', pointer: '/config/logicalId', from: null, to: 'a new id' });
+  // the copy's own name and id (.platform)
+  namePatches(files, loc.name).forEach((x) => patches.push(x));
 
   // the copy, built and checked now; the write builds and checks it again
   const src = Object.fromEntries(files.map((r) => [r, readBytes(path.join(loc.dir, ...r.split('/')))]));
@@ -544,7 +281,7 @@ export function buildCopy(src, patches, logicalId) {
   byFile.forEach((list, rel) => {
     if (!(rel in src)) throw new Error(`Nothing was written: the patched file ${safeName(rel)} is not in the original`);
     const j = parse(src[rel]);
-    list.forEach((x) => setAt(j, x.pointer, x.pointer === '/config/logicalId' ? logicalId : x.to, !!x.create, x.op === 'remove'));
+    list.forEach((x) => setAt(j, x.pointer, Kinds.chosenAtWrite(x.pointer) ? logicalId : x.to, !!x.create, x.op === 'remove'));
     out[rel] = json2(j);
   });
   return out;
@@ -562,7 +299,7 @@ const diffs = (a, b, at = '') => {
 // every reference between the report's files that could dangle, as "what -> target" when the target is missing
 export function danglingOf(files) {
   const J = (r) => { try { return parse(files[r]); } catch (e) { return null; } };
-  const L = (o) => (o && o.expr && o.expr.Literal ? String(o.expr.Literal.Value).replace(/^'|'$/g, '') : null);
+  const L = litText;   // (DD1B: a link's page, bookmark or tooltip page, read by the one reader)
   const out = [], pageIds = new Set(Object.keys(files).map((r) => /^definition\/pages\/([^/]+)\/page\.json$/.exec(r)).filter(Boolean).map((m) => m[1]));
   const names = {}; Object.keys(files).forEach((r) => { const m = /^definition\/pages\/([^/]+)\/visuals\/[^/]+\/visual\.json$/.exec(r); if (m) { const j = J(r); (names[m[1]] = names[m[1]] || new Map()).set(j && j.name, j); } });
   const meta = J('definition/pages/pages.json') || {};
@@ -610,28 +347,30 @@ export function verifyCopy(src, out, patches, themeRel) {
   const lost = a.filter((r) => !(r in out)), added = b.filter((r) => !(r in src));
   if (lost.length) fail(`${lost.length} file(s) of the original missing (e.g. ${safeName(lost[0])}${lost.some((r) => /page\.json$/.test(r)) ? ': a page lost' : ''})`);
   const adds = new Map(patches.filter((x) => x.op === 'add').map((x) => [x.file, x]));
-  const extra = added.filter((r) => !adds.has(r) || !/^StaticResources\/RegisteredResources\/[^/]+\.json$/.test(r) || !Buffer.from(out[r]).equals(json2(adds.get(r).to)));
+  const extra = added.filter((r) => !adds.has(r) || !Kinds.addRuleOf(r) || !Buffer.from(out[r]).equals(json2(adds.get(r).to)));
   if (extra.length) fail(`${extra.length} file(s) not in the original (e.g. ${safeName(extra[0])})`);
-  // (CS2) an added theme holds its name and allowlisted theme pointers only (the text set's visual styles)
-  adds.forEach((x, r) => { const off = diffs(undefined, x.to).filter((p) => p !== '/name' && !allowed('theme', p)); if (off.length) fail(`${safeName(r)} adds ${safeName(off[0])}, outside the allowlist`); });
-  const tr = themeRel || [...adds.keys()][0] || (() => { try { const ct = (parse(src['definition/report.json']).themeCollection || {}).customTheme; return ct && ct.name ? `StaticResources/RegisteredResources/${path.basename(String(ct.name))}` : null; } catch (e) { return null; } })();
+  // each added file by its kind's rule (CS2: an added theme holds its name and allowlisted theme pointers only)
+  adds.forEach((x, r) => { const why = Kinds.addRefused(r, x.to, { src, out }); if (why) fail(`${safeName(r)} ${why}`); });
+  const ctx = { themeRel: Kinds.themeFileOf(src, [...adds.keys()], themeRel) };
   const want = new Map(); patches.filter((x) => x.op !== 'add').forEach((x) => want.set(x.file + '#' + x.pointer, x));
   let changedFiles = 0;
   for (const r of a) {
     if (Buffer.from(src[r]).equals(Buffer.from(out[r]))) continue;
     changedFiles++;
-    const kind = kindOf(r, tr);
+    const kind = Kinds.fileKindOf(r, ctx);
     if (!kind) fail(`${safeName(r)} changed, a file the allowlist never changes`);
     let x, y; try { x = parse(src[r]); y = parse(out[r]); } catch (e) { fail(`${safeName(r)} changed and is not JSON`); }
     for (const p of diffs(x, y)) {
-      if (!allowed(kind, p)) fail(`${safeName(r)} changed at ${safeName(p)}, outside the allowlist`);
-      // (CS1) report.json only gains (the custom theme and its resource item): nothing of the original changes
-      if (kind === 'report' && p.split('/').slice(1).reduce((o, k) => (o == null ? o : o[k]), x) !== undefined) fail(`${safeName(r)} changed at ${safeName(p)}, which was already in the original`);
+      if (!Kinds.allowed(kind, p)) fail(`${safeName(r)} changed at ${safeName(p)}, outside the allowlist`);
+      // the kind's own rule (CS1: report.json only gains, the custom theme and its resource item)
+      const at = (j) => p.split('/').slice(1).reduce((o, k) => (o == null ? o : o[k]), j);
+      const why = Kinds.changeRefused(kind, { rel: r, pointer: p, before: at(x), after: at(y), json: y, src, out });
+      if (why) fail(`${safeName(r)} changed at ${safeName(p)}, ${why}`);
       // (a patch of a whole token, dataColors, covers the pointers inside it)
       const w = want.get(r + '#' + p) || [...want.values()].find((x) => x.file === r && x.pointer && p.startsWith(x.pointer + '/'));
       if (!w) fail(`${safeName(r)} changed at ${safeName(p)}, which is not one of the plan's patches`);
       const got = w.pointer.split('/').slice(1).reduce((o, k) => (o == null ? o : o[k]), y);
-      if (w.pointer !== '/config/logicalId' && (w.op === 'remove' ? got !== undefined : JSON.stringify(got) !== JSON.stringify(w.to))) fail(`${safeName(r)} at ${safeName(p)} is not the plan's value`);
+      if (!Kinds.chosenAtWrite(w.pointer) && (w.op === 'remove' ? got !== undefined : JSON.stringify(got) !== JSON.stringify(w.to))) fail(`${safeName(r)} at ${safeName(p)} is not the plan's value`);
     }
   }
   const before = danglingOf(src), after = danglingOf(out), fresh = after.filter((x) => !before.includes(x));

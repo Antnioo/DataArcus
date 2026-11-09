@@ -10,13 +10,14 @@
 //   B3  the approval page shows both halves, every file grouped and counted; one click writes once
 //   B4  A3's sweep on the Arabic half: no Latin run the plan does not list as kept in English
 //   B5  every 0.3.0 option on: written, the pills synced, validator 0 errors, check_report 0 "can break", the sweep
-//       0 unlisted, every answer under 40,000 characters
+//       0 unlisted, every answer under 40,000 characters, no plan with an id cut (0.3.2 HR1)
 //   B6  X1's EN-AR copy syncs a pill slicer pair too (every slicer kind Microsoft's catalog says can sync)
 // (0.3.1, ported onto today's code: the Arabic half is the EN-AR copy's own build, so R1's language buttons and V1's
 // approval-page pairs come with it; the parity suite, test-0.3.1-mirror-parity.mjs, compares it with the copy)
 //   B2k R1's language buttons: the text colour set (a page tab's look, or the plain button's own colour with its
 //       container off); B2l the button in its page's Tab order (it adds no pair against the reading order)
 //   B3e V1's pictures: the approval page draws each English page beside its Arabic page (2 report pages: 2 pairs)
+//   B3f (0.3.2 TP1) then its tooltip pages, both halves, one by one, captioned as tooltip pages
 // Fixture: the golden model (mcp/test-models/large-synthetic, made up).   node test-0.3.1-bilingual-report.mjs
 import './test-env.mjs';
 import fs from 'node:fs';
@@ -56,8 +57,12 @@ const log = path.join(ROOT, 'links.txt'), links = () => (fs.existsSync(log) ? fs
 const linkAt = async (i) => { for (let k = 0; k < 100 && links().length <= i; k++) await sleep(50); return links()[i] || ''; };
 const s = await serverClient(ROOT, {});
 const w = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' });
-let biggest = { n: 0, tool: '' };
-const call = async (c, tool, args) => { const r = await c.call(tool, args); if (String(r.t).length > biggest.n) biggest = { n: String(r.t).length, tool }; return r; };
+let biggest = { n: 0, tool: '' }; const cutBy = [];
+// (0.3.2 HR1) a capped answer is under 40,000 by construction: a plan the person approves (a plan id) that was cut
+// (truncated.cut, capAnswer's) fails B5h too. A step before the plan id (the Arabic texts not given yet) can still be
+// cut: HR1's note, "For the owner"
+const call = async (c, tool, args) => { const r = await c.call(tool, args); if (String(r.t).length > biggest.n) biggest = { n: String(r.t).length, tool };
+  if (r.j && r.j.truncated && r.j.truncated.cut && r.j.plan && r.j.plan.planId) cutBy.push(`${tool} "${args && args.name}" ${String(r.t).length}: ${JSON.stringify(r.j.truncated.cut)}`); return r; };
 
 // the person: answers the Gulf date and shared-axes questions, approves an Arabic name for every field but one (declined:
 // kept in English), then an Arabic text for every text the terms do not give
@@ -116,18 +121,21 @@ try {
       () => `B3a. the approval page shows both halves (pairs, buttons, sync, the terminology sheet): ${txt.slice(0, 500)}`);
     B.__files = +((txt.match(/(\d+) files:/) || [])[1] || 0);
     chk(() => B.__files >= 180 && /Pages \(8\)/.test(txt) && /Phone layouts/.test(txt) && /Project file \(1\)/.test(txt), () => `B3b. every file grouped and counted (8 pages): ${(txt.match(/\d+ files:.{0,300}/) || [''])[0]}`);
-    // (V1) each English report page drawn beside its Arabic page (tooltip pages are not drawn)
-    const figs = (html.match(/<figure>/g) || []).length, caps = [...html.matchAll(/<figcaption[^>]*>([^:<]*):/g)].map((x) => x[1].trim());
+    // (V1) each English report page drawn beside its Arabic page; (0.3.2 TP1) the tooltip pages after the pairs, one by one
+    const figs = (html.match(/<figure>/g) || []).length, allCaps = [...html.matchAll(/<figcaption[^>]*>([^:<]*):/g)].map((x) => x[1].trim()), caps = allCaps.filter((c) => !/^Tooltip page /.test(c));
+    const tipFigs = (html.match(/<figure class="tip"/g) || []).length;
+    chk(() => tipFigs > 0 && allCaps.slice(caps.length).join('|') === Array.from({ length: tipFigs }, (_, i) => `Tooltip page ${i + 1}`).join('|'),
+      () => `B3f. (TP1) then each tooltip page of both halves, one by one, captioned as a tooltip page: ${tipFigs} tooltip figures, captions ${JSON.stringify(allCaps)}`);
     chk(() => (html.match(/class="pair"/g) || []).length === 2 && figs === 4 && caps.join('|') === 'English page 1|Arabic page 1|English page 2|Arabic page 2',
       () => `B3e. the approval page draws 2 page pairs (4 pictures, English beside Arabic): ${figs} figures, captions ${JSON.stringify(caps)}`);
     if (url) { await req(url, 'POST', 'decision=approve'); await w.call('approve_plan', { planId: pid }); } }
-  const wr = await call(w, 'create_report', Object.assign(withoutDesign(args), { planId: pid, design: pl.j.design }));
+  const wr = await call(w, 'create_report', { path: args.path, planId: pid });
   const REP = path.join(ROOT, 'large/Orders.Report');
   chk(() => !wr.err && fs.existsSync(REP) && wr.j.bilingual && wr.j.bilingual.pairs === 4, () => `B2c. one report written, the answer says its pairs: ${short(wr)}`);
   const added = filesOf(ROOT).filter((f) => !all0.has(f) && f !== 'links.txt');
   chk(() => added.length === B.__files && added.every((f) => /^large\/Orders(\.Report\/|\.pbip$| - [^/]+\.tmdl$)/.test(f)) && !fs.existsSync(path.join(ROOT, 'large/Orders (EN-AR).Report')),
     () => `B3c. exactly the files the approval page counted, all of this report (${added.length} vs ${B.__files}): ${JSON.stringify(added.filter((f) => !/^large\/Orders\.Report\//.test(f)))}`);
-  const again = await call(w, 'create_report', Object.assign(withoutDesign(args), { planId: pid, design: pl.j.design }));
+  const again = await call(w, 'create_report', { path: args.path, planId: pid });
   chk(() => again.err && filesOf(ROOT).length === all0.size + added.length + (fs.existsSync(log) && !all0.has('links.txt') ? 1 : 0), () => `B3d. one click writes once: the same planId again is refused, nothing written: ${short(again)}`);
   chk(() => JSON.stringify(hashes(MODEL)) === JSON.stringify(before), () => 'B2d. the model folder is untouched');
   const F = fs.existsSync(REP) ? readReport(REP) : {}, PJ = F['definition/pages/pages.json'] || {}, ord = PJ.pageOrder || [];
@@ -199,7 +207,7 @@ try {
     if (id) {
       await s.call('approve_plan', { planId: id });
       const send = withoutDesign(q.args); send.fields = q.args.planFields;
-      const r = await call(s, 'create_report', Object.assign(send, { planId: id, design: q.pl.j.design }));
+      const r = await call(s, 'create_report', { path: send.path, planId: id });
       const RA = path.join(ROOT, 'large/Orders All.Report'), FA = fs.existsSync(RA) ? readReport(RA) : {}, oa = (FA['definition/pages/pages.json'] || {}).pageOrder || [];
       const half = oa.length / 2, ENA = oa.slice(0, half), ARA = oa.slice(half), pj = (p) => FA[`definition/pages/${p}/page.json`] || {};
       const vA = (p) => Object.entries(FA).filter(([f]) => f.startsWith(`definition/pages/${p}/visuals/`) && f.endsWith('/visual.json')).map(([, j]) => j);
@@ -217,12 +225,12 @@ try {
       chk(() => ENA.every((p) => pj(p).visibility === undefined || pj(p).type === 'Tooltip') && ARA.every((p) => pj(p).visibility === 'HiddenInViewMode'), () => `B5g. the Arabic half hidden in the tabs, the English shown: ${oa.map((p) => pj(p).visibility || 'shown')}`);
     }
   }
-  chk(() => biggest.n > 0 && biggest.n < 40000, () => `B5h. every answer under 40,000 characters: the largest ${biggest.n} (${biggest.tool})`);
+  chk(() => biggest.n > 0 && biggest.n < 40000 && !cutBy.length, () => `B5h. every answer under 40,000 characters, no plan with an id cut: the largest ${biggest.n} (${biggest.tool}); cut: ${cutBy.join('; ') || 'none'}`);
 
   // ---------- B6: X1's copy syncs the pills too ----------
   {
     const q = await call(s, 'plan_layout', Object.assign({ name: 'Pills EN', slicerStyle: 'pills', planFields: { slicers: ['Calendar[Is Weekend]', 'Coupon[Coupon Region]'] } }, base, { filters: 'top' })), id = q.j && q.j.plan && q.j.plan.planId;
-    if (id) { await s.call('approve_plan', { planId: id }); await s.call('create_report', Object.assign({ name: 'Pills EN', slicerStyle: 'pills', fields: { slicers: ['Calendar[Is Weekend]', 'Coupon[Coupon Region]'] }, planId: id, design: q.j.design }, base, { filters: 'top' })); }
+    if (id) { await s.call('approve_plan', { planId: id }); await s.call('create_report', { path: base.path, planId: id }); }
     const t = await call(s, 'create_arabic_twin', { path: 'large/Pills EN.pbip', into: 'same' }), tid = t.j && t.j.plan && t.j.plan.planId;
     if (tid) { await s.call('approve_plan', { planId: tid }); await s.call('create_arabic_twin', { path: 'large/Pills EN.pbip', into: 'same', planId: tid }); }
     const FP = fs.existsSync(path.join(ROOT, 'large/Pills EN (EN-AR).Report')) ? readReport(path.join(ROOT, 'large/Pills EN (EN-AR).Report')) : {};

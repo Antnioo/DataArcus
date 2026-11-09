@@ -281,7 +281,7 @@ const fx = (x) => (x.j && x.j.fixes) || {};
   const ms = [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )' }];
   model('c0', null, ms); model('c1', null, ms); model('c2', null, ms);
   const plan = async (s, dir) => { const pl = await s.call('plan_layout', { path: dir, layout: 'exec', name: 'R4 Report', noDataMessage: false }), id = pl.j && pl.j.plan && pl.j.plan.planId; await s.call('approve_plan', { planId: id }); return { id, design: pl.j && pl.j.design }; };
-  const make = (s, dir, p) => s.call('create_report', { path: dir, name: 'R4 Report', planId: p.id, design: p.design, noDataMessage: false });
+  const make = (s, dir, p) => s.call('create_report', { path: dir, planId: p.id });
   let s = await serverClient(ROOT); const n = (await make(s, 'c0', await plan(s, 'c0'))).j; await s.close();
   const N = n && n.written;
   chk(() => N > 3 && n.formats && n.formats.fixScriptFile, () => `C0. a report on this model writes ${N} files and a format script: ${JSON.stringify(n).slice(0, 300)}`);

@@ -10,6 +10,7 @@ import { CG_CONFIGS, MB_CONFIGS, read } from './capture-gulf-baseline.mjs';
 const require = createRequire(import.meta.url);
 const G = require('../../assets/js/gulf-dates.js');
 const BASE = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/tests/fixtures/gulf-calendar/baseline.json'), 'utf8'));
+const GM1 = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/tests/fixtures/gulf-calendar/gm1-measures.json'), 'utf8'));
 const CG = '/tools/dax-calendar-table-generator.html', MB = '/tools/dax-measure-builder.html';
 const DAY = 864e5;
 const T = (s) => Date.parse(s + 'T00:00:00Z');
@@ -123,6 +124,12 @@ export default async function ({ browser, url }) {
     const got = await read(browser, url, MB, 'dataarcus-measure-builder', c);
     check(got.script === want.script && got.tmdl === want.tmdl, `measure builder ${JSON.stringify(c).slice(0, 80)}: output differs from before the pack`);
     if (got.errs.length) problems.push(`measure builder: ${got.errs.join(' | ')}`);
+  }
+  // (0.3.2 GM1) the 8 Ramadan and Eid measures come from the shared builder (gulf-measures.js) since: the page writes
+  // what it wrote on the base (fixtures/gulf-calendar/gm1-measures.json, 3 settings x EN, AR)
+  for (const want of GM1.mb) {
+    const got = await read(browser, url, MB, 'dataarcus-measure-builder', want.saved, want.lang);
+    check(got.script === want.script && got.tmdl === want.tmdl && !got.errs.length, `measure builder ${want.lang} ${JSON.stringify(want.saved).slice(0, 80)}: the Ramadan and Eid output differs from the base's${got.errs.length ? ': ' + got.errs.join(' | ') : ''}`);
   }
 
   // ---------- 3. Announced Ramadan and Eid dates ----------
@@ -321,6 +328,16 @@ export default async function ({ browser, url }) {
     check(!off.length, `gulf-health and the generator disagree: ${off.join('; ')}`);
     const other = model.replace(/"Is Weekend", .*,\n/, '"Is Weekend", WEEKDAY ( [Date], 2 ) > 5,\n');
     check(!!GH && other !== model && days(other, 'uae') === 'cannot tell', `gulf-health on another form of Is Weekend: ${GH ? days(other, 'uae') : 'no gulf-health.js'} (want "cannot tell")`);
+  }
+
+  // ---------- 7b. HJ1 (D-1105-16): the no-Hijri finding's Arabic is the owner's approved text, word for word ----------
+  {
+    const GHA = require('../../assets/js/gulf-health.js');
+    const m = { model: { tables: [{ name: 'Calendar', columns: [{ name: 'Date', dataType: 'dateTime' }], partitions: [] }] } };
+    const f = GHA.analyze(m, { country: 'uae', asOf: '2026-10-03' }).findings.find((x) => x.id === 'GC_NO_HIJRI');
+    check(!!f && f.title === 'The calendar has no Hijri dates', `GC_NO_HIJRI English title: ${f && f.title}`);
+    check(!!f && f.ar.title === 'التقويم لا يحتوي على تواريخ هجرية', `GC_NO_HIJRI Arabic title: ${f && f.ar.title}`);
+    check(!!f && f.ar.why === 'يتحرك رمضان والعيد نحو 11 يومًا كل عام، ومن دون السنة الهجرية والشهر الهجري واليوم الهجري، لا يستطيع التقرير إلا مقارنة الأشهر الميلادية، فيخلط رمضان بالأيام العادية.', `GC_NO_HIJRI Arabic sentence: ${f && f.ar.why}`);
   }
 
   // ---------- 8. The Calendar Generator reads right in Arabic (live-site reports of 2026-10-04) ----------

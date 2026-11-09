@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
+import { generatorSource } from './test-source.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -36,7 +37,8 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   chk(() => E.FHD_TEXT === 1.25, () => `T1a. design-engine exports FHD_TEXT = 1.25 (the owner's decision): ${E.FHD_TEXT}`);
   chk(() => typeof E.textScale === 'function' && E.textScale(720) === 1 && E.textScale(1080) === 1.25 && E.textScale(2160) === 2 && E.textScale(360) === 0.75,
     () => `T1b. textScale: 1 at 720, 1.25 at 1080, 2 at 2160, 0.75 at 360: ${get(() => [720, 1080, 2160, 360].map(E.textScale))}`);
-  const de = src('../assets/js/design-engine.js');
+  // (0.3.2 SP29) the text sizes live in design-metrics.js (DAEngine re-exports them)
+  const de = src('../assets/js/design-metrics.js');
   chk(() => (de.match(/FHD_TEXT = /g) || []).length === 1 && /const sizeAt = \(n, h\) => [^\n]*textScale\(h\)/.test(de) && !/h \/ 720\) \* 2/.test(de),
     () => 'T1c. FHD_TEXT is set once and sizeAt reads textScale (no second copy of the page factor for text)');
   chk(() => /D-1027-16/.test(de) && /Codex/.test(de), () => 'T1d. the constant names the owner\'s decision (D-1027-16) and its source (Codex\'s text-sizes review)');
@@ -59,7 +61,7 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   chk(() => !odd.length, () => `T2g. every size a half point within 8-60: ${odd.slice(0, 10).join(', ')}`);
   // the website loads the .min.js: the Theme Generator shows the same numbers
   chk(() => same(get(() => sizesOf(themeAt('1920x1080', 0, 0, Emin))), want(12.5, 15, 35, 22.5)), () => `T2h. design-engine.min.js (the website's Theme Generator) writes the same 1080 sizes: ${JSON.stringify(get(() => sizesOf(themeAt('1920x1080', 0, 0, Emin))))}`);
-  const tg = src('../assets/js/theme-generator.js');
+  const tg = generatorSource();   // (0.3.2 SP31: the page and its modules)
   chk(() => /E\.buildTheme\(state/.test(tg) && !/fontSize\s*:/.test(tg) && !/sizeAt|textScale/.test(tg), () => 'T2i. the Theme Generator builds its theme through the engine only (no text size of its own)');
 }
 
@@ -70,7 +72,7 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
     () => `T3a. themeScaleOf gives the theme's page and its text factor: 720 ${JSON.stringify(sc)}, 1080 ${JSON.stringify(sc1)}`);
   const up = get(() => E.scaleTheme(t720, E.textScale(1080) / sc.f));
   chk(() => same(sizesOf(up), sizesOf(t1080)), () => `T3b. a 720 theme rescaled to 1080 by the text factors is the 1080 theme: ${JSON.stringify(get(() => sizesOf(up)))}`);
-  const rr = src('lib/report-run.mjs');
+  const rr = src('lib/report-run.mjs') + '\n' + src('lib/report-build.mjs');   // (0.3.2 SP43: the hand-placed pages' theme is scaled in report-build.mjs)
   chk(() => /textScale\(hs\[0\]\) \/ sc\.f/.test(rr) && !/hs\[0\] \/ themeH/.test(rr), () => 'T3c. create_report rescales one of our themes by the text factors, never by the page heights');
 }
 

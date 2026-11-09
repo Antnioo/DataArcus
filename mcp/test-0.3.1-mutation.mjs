@@ -27,7 +27,16 @@ const GUARD_TIMEOUT = process.env.DA_MUTATION_GUARD_TIMEOUT ? +process.env.DA_MU
 // equivalent: a mutant no test can kill without a hook in product code, with why; listed, not run (T1.md)
 // guards: the existing suites (mcp/), the first expected to kill first. only: the platforms where the mutant means
 // something (NFC/NFD: macOS keeps one folder for both forms, so normalising changes nothing there).
-const PL = 'mcp/lib/plans.mjs', MO = 'mcp/lib/model.mjs', WI = 'mcp/lib/write-io.mjs', FI = 'mcp/lib/files.mjs', CR = 'mcp/lib/check-report.mjs', AW = 'mcp/lib/approval-window.mjs';
+const PL = 'mcp/lib/plans.mjs', MO = 'mcp/lib/model.mjs', WI = 'mcp/lib/write-io.mjs', FI = 'mcp/lib/files.mjs', CR = 'mcp/lib/check-report.mjs', CI = 'mcp/lib/check-impact.mjs', AD = 'mcp/lib/approval-disclosure.mjs', AV = 'mcp/lib/approval-view.mjs', MDI = 'mcp/lib/model-discovery.mjs', RI = 'mcp/lib/report-inventory.mjs';   // (0.3.2 SP23: what each approval page says moved to AD; SP41: each finding's kind moved to CI; SP42: discovery to MDI, the report inventory to RI; SP44: the approval page's HTML to AV)
+// (0.3.2 SP22) the untrusted-text screen and the shown names moved to model-names.mjs, the KPI list to model-metadata.mjs
+const MN = 'mcp/lib/model-names.mjs', MM = 'mcp/lib/model-metadata.mjs';
+const PR = 'mcp/lib/path-rules.mjs';   // (0.3.2 WN1: the path rules, one copy each)
+// (0.3.2 SM1) the approval window's HTTP side and check_report's one redaction boundary, with the suites that guard them
+const AH = 'mcp/lib/approval-http.mjs', RD = 'mcp/lib/check-redact.mjs';
+const AHG = ['test-0.3.2-sp44.mjs', 'test-approval.mjs'], RDG = ['test-0.3.2-sp41.mjs'];   // (the suites that kill them, mcp/work/SM1.md)
+// (0.3.2 SM2) plan_layout's exact artifact, with the suites that guard it (mcp/work/SM2.md)
+const PA = 'mcp/lib/plan-artifact.mjs';
+const PAG = ['test-0.3.1-fx2.mjs'];   // (S1-S4 kill them; sp43, en-ar-copy, bilingual-report and twin-artifact pass with either mutant: SM2.md)
 const MUTANTS = [
   // 1. the approval gate
   { id: 'G-unapproved', file: PL, edits: [["if (p.status !== 'approved') throw new Error(`Nothing was written: plan", "if (false) throw new Error(`Nothing was written: plan"]], guards: ['test-0.2.9.mjs', 'test-z.mjs', 'test-approval-hardening.mjs', 'test-audit6.mjs'] },
@@ -56,10 +65,22 @@ const MUTANTS = [
   // (0.3.1 AF2, the release audit) the native copy writes its plan's files or nothing; a plan's file name, never another; check_model_health's last model check
   { id: 'AF-copy-digest', file: 'mcp/lib/native-copy.mjs', edits: [['if (digestOf(art.files) !== art.digest || T.digest !== art.digest) throw', 'if (false) throw']], guards: ['test-0.3.1-audit-writes.mjs'] },
   { id: 'AF-taken-name', file: 'mcp/lib/fix-scripts.mjs', edits: [['  if (taken) throw taken;\n', '  if (taken) return f;\n']], guards: ['test-0.3.1-audit-writes.mjs'] },
-  { id: 'AF-health-model', file: 'mcp/tools/check_model_health.mjs', edits: [['    if (write) sameModelBeforeWrite(planId, () => loadModel(p).print, print0);\n', '']], guards: ['test-0.3.1-audit-writes.mjs'] },
+  { id: 'AF-health-model', file: 'mcp/tools/check_model_health.mjs', edits: [['  if (write) sameModelBeforeWrite(planId, () => loadModel(p).print, print0);\n', '']], guards: ['test-0.3.1-audit-writes.mjs'] },
 
   // 2. path safety
-  { id: 'D-within', file: MO, edits: [["const within = (root, p) => { const rel = path.relative(root, p); return !(rel.startsWith('..') || path.isAbsolute(rel)); };", 'const within = (root, p) => { const rel = path.relative(root, p); return !path.isAbsolute(rel); };']], guards: ['test-0.2.9d.mjs', 'test-platform-paths.mjs', 'test-audit6.mjs', 'test-0.3.0-write-safety.mjs'] },
+  // (0.3.2 WN1, F01) the one containment rule moved to path-rules.mjs (outsideRel); D-within as before, and the new rule's parts
+  { id: 'D-within', file: PR, edits: [["return r === '..' || sepsOf(P).some((s) => r.startsWith('..' + s)) || P.isAbsolute(r);", 'return P.isAbsolute(r);']], guards: ['test-0.3.2-wn1.mjs', 'test-0.2.9d.mjs', 'test-platform-paths.mjs', 'test-audit6.mjs', 'test-0.3.0-write-safety.mjs'] },
+  { id: 'D-within-prefix', file: PR, edits: [["return r === '..' || sepsOf(P).some((s) => r.startsWith('..' + s)) || P.isAbsolute(r);", "return r.startsWith('..') || P.isAbsolute(r);"]], guards: ['test-0.3.2-wn1.mjs'] },
+  { id: 'D-within-parent', file: PR, edits: [["return r === '..' || sepsOf(P).some((s) => r.startsWith('..' + s)) || P.isAbsolute(r);", "return sepsOf(P).some((s) => r.startsWith('..' + s)) || P.isAbsolute(r);"]], guards: ['test-0.3.2-wn1.mjs', 'test-0.2.9d.mjs'] },
+  { id: 'D-within-drive', file: PR, edits: [["return r === '..' || sepsOf(P).some((s) => r.startsWith('..' + s)) || P.isAbsolute(r);", "return r === '..' || sepsOf(P).some((s) => r.startsWith('..' + s));"]], guards: ['test-0.3.2-wn1.mjs'] },
+  { id: 'D-within-winsep', file: PR, edits: [["const sepsOf = (P) => (P.sep === '\\\\' ? ['\\\\', '/'] : ['/']);", "const sepsOf = (P) => [P.sep];"]], guards: ['test-0.3.2-wn1.mjs'] },
+  // (WN1, F02 and F05) a name in another case; the path limit
+  { id: 'D-samename', file: PR, edits: [['(caseless(platform) ? String(a).toLowerCase() === String(b).toLowerCase() : String(a) === String(b))', '(String(a) === String(b))']], guards: ['test-0.3.2-wn1.mjs'] },
+  { id: 'D-pathmax', file: PR, edits: [['  return worst && worst.length > max ? Object.assign(worst, { max }) : null;', '  return null;']], guards: ['test-0.3.2-wn1.mjs'] },
+  { id: 'A-shortcut', file: 'mcp/lib/approval-window.mjs', edits: [['    try { writeShortcut(w, url); } catch (e) { w.shortcut = null; lost(false); return; }', '    w.shortcut = null; lost(false); return;']], guards: ['test-0.3.2-wn1.mjs'] },
+  // (the owner D-1109-01) on Windows the answer never names the shortcut's folder or file; the folder window is opened
+  { id: 'A-winplace', file: 'mcp/lib/approval-window.mjs', edits: [["  if (pl === 'win32') return { planId, status: 'waiting'", "  if (pl === 'never') return { planId, status: 'waiting'"]], guards: ['test-0.3.2-wn1.mjs'] },
+  { id: 'A-winfolder', file: 'mcp/lib/approval-window.mjs', edits: [['async function showFolder(dir) { const o = folderOpener(dir); if (!o) return false; return !(await launch(o)); }', 'async function showFolder(dir) { return true; }']], guards: ['test-0.3.2-wn1.mjs'] },
   { id: 'D-underRoot-any', file: MO, edits: [['  return r && within(realRoot, r) ? path.join(root, path.relative(realRoot, r)) : null;', '  return full;']], guards: ['test-platform-paths.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs', 'test-0.3.0-write-safety.mjs'] },
   { id: 'D-underRoot-nolink', file: MO, edits: [['  return r && within(realRoot, r) ? path.join(root, path.relative(realRoot, r)) : null;', '  return null;']], guards: ['test-platform-paths.mjs'] },
   { id: 'D-real', file: MO, edits: [['  if (!r || !within(fs.realpathSync.native(ROOT), r)) throw linkError(', '  if (false) throw linkError(']], guards: ['test-platform-paths.mjs', 'test-0.3.0-write-safety.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs', 'test-z.mjs'] },
@@ -72,9 +93,9 @@ const MUTANTS = [
   { id: 'R-ancestors', file: 'mcp/lib/read-report.mjs', edits: [['  const at = (rel) => {\n    const parts', "  const at = (rel) => { return path.join(loc.reportDir, ...String(rel).split('/').filter(Boolean));\n    const parts"]], guards: ['test-0.3.1-audit-readers.mjs'] },
   // (SQ6) the reader: two models at one depth read silently as the first (SQ15a: the owner's yes); a .pbit link followed; a .pbit that changed while read used
   // (SQ15a) a KPI's target expression returned as text; an image file name returned unscreened
-  { id: 'R-kpi-quoted', file: MO, edits: [["target: !k ? 'none' : k.expression ? 'an expression' :", "target: !k ? 'none' : k.expression ? String(x.kpi.targetExpression) :"]], guards: ['test-0.3.1-sq15a.mjs'] },
-  { id: 'R-image-screen', file: 'mcp/lib/read-report.mjs', edits: [['x.images = imgs.map(safeName);', 'x.images = imgs;']], guards: ['test-0.3.1-sq15a.mjs'] },
-  { id: 'R-model-tie', file: MO, edits: [['  if (tied.length > 1) {', '  if (false) {']], guards: ['test-0.3.1-reader-seen.mjs'] },
+  { id: 'R-kpi-quoted', file: MM, edits: [["target: !k ? 'none' : k.expression ? 'an expression' :", "target: !k ? 'none' : k.expression ? String(x.kpi.targetExpression) :"]], guards: ['test-0.3.1-sq15a.mjs'] },
+  { id: 'R-image-screen', file: RI, edits: [['x.images = imgs.map(safeName);', 'x.images = imgs;']], guards: ['test-0.3.1-sq15a.mjs'] },
+  { id: 'R-model-tie', file: MDI, edits: [['  if (tied.length > 1) {', '  if (false) {']], guards: ['test-0.3.1-reader-seen.mjs'] },
   { id: 'R-pbit-link', file: MO, edits: [["  if (isLink(f)) throw linkRefused('file');\n  let fd;\n  try { fd = fs.openSync(f, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0)); } catch (e) { if (e.code === 'ELOOP') throw linkRefused('file'); throw e; }", "  let fd = fs.openSync(f, 'r');"]], guards: ['test-0.3.1-reader-seen.mjs'], only: ['linux', 'darwin'] },
   { id: 'R-pbit-changed', file: MO, edits: [['if (n !== size0 || st.size !== size0 || after.size !== st.size || after.mtimeMs !== st.mtimeMs) throw changedWhileRead();', 'if (false) throw changedWhileRead();']], guards: ['test-0.3.1-reader-seen.mjs'] },
 
@@ -94,32 +115,32 @@ const MUTANTS = [
   { id: 'W-answers-identity', file: 'mcp/lib/answers.mjs', edits: [['const same = (a, b) => !!a && !!b && a.dev === b.dev && a.ino === b.ino && a.size', 'const same = (a, b) => !!a && !!b && a.size']], guards: ['test-0.3.0-answers-safety.mjs', 'test-confirm-memory.mjs'] },
 
   // 4. the privacy promise: the instruction screen, and no data value in an answer
-  { id: 'S-ignore', file: MO, edits: [["  [/\\b(ignore|disregard|forget|override)\\b[^.]{0,40}\\b(rules?|instructions?|prompt|above|previous)\\b/i, 'asks to ignore instructions'],\n", '']], guards: ['test-audit-oct.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs'] },
-  { id: 'S-arabic-ignore', file: MO, edits: [["  [/(تجاهل|تجاهلي|تجاهلوا|انس|انسى|اترك)\\s+((كل|جميع)\\s+)?(ال)?(تعليمات|اوامر|قواعد)/, 'asks to ignore instructions'],\n", '']], guards: ['test-audit-oct.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs'] },
-  { id: 'S-tool', file: MO, edits: [["  [new RegExp(`\\\\b(${TOOL_NAMES.join('|')})\\\\b`, 'i'), 'names a DataArcus tool'],\n", '']], guards: ['test-audit-oct.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs'] },
-  { id: 'S-approval', file: MO, edits: [["'claims an approval'],\n  [/\\[\\s*(user|system|assistant)", "'claims an approval'].slice(0, 0).concat([/(?!)/, 'claims an approval']),\n  [/\\[\\s*(user|system|assistant)"]], guards: ['test-audit-oct.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs'] },
-  { id: 'S-data', file: MO, edits: [["|\\bsend\\b[^.]{0,30}\\b(rows?|data|values?)\\b[^.]{0,20}\\bto\\b/i, 'asks for data values'],", "|\\bsend\\b[^.]{0,30}\\b(rows?|data|values?)\\b[^.]{0,20}\\bto\\b/i, 'asks for data values'].slice(0, 0).concat([/(?!)/, 'asks for data values']),"]], guards: ['test-audit-oct.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs'] },
-  { id: 'S-path', file: MO, edits: [["  [/(^|[\\s\"'(])\\.\\.[\\\\/]|\\b[a-z]:\\\\|(^|\\s)~[\\\\/]|^\\\\\\\\|\\s\\\\\\\\[a-z0-9]|", "  [/(^|[\\s\"'(])\\.\\.[\\\\/]|(^|\\s)~[\\\\/]|"]], guards: ['test-audit-oct.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs'] },
-  { id: 'S-nfkc', file: MO, edits: [["const plainArabic = (s) => String(s).normalize('NFKC').replace(/[\\p{Cf}\\p{Cc}]/gu, '')", 'const plainArabic = (s) => String(s)']], guards: ['test-audit6.mjs', 'test-audit-oct.mjs', 'test-0.2.9d.mjs'] },
-  { id: 'S-lookalike', file: MO, edits: [["  .replace(/[\\u0370-\\u03FF\\u0400-\\u04FF\\u0500-\\u052F]/g, (ch) => LOOKALIKE[ch] || ch)", '  ']], guards: ['test-audit-oct.mjs', 'test-audit6.mjs', 'test-0.2.9d.mjs'] },
-  { id: 'S-shown', file: MO, edits: [['export const shownName = (s, cap = 60) => { if (readsLikeInstruction(s)) return WITHHELD;', 'export const shownName = (s, cap = 60) => {']], guards: ['test-0.2.9d.mjs', 'test-audit6.mjs', 'test-audit-oct.mjs'] },
+  { id: 'S-ignore', file: MN, edits: [["  [/\\b(ignore|disregard|forget|override)\\b[^.]{0,40}\\b(rules?|instructions?|prompt|above|previous)\\b/i, 'asks to ignore instructions'],\n", '']], guards: ['test-audit-oct.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs'] },
+  { id: 'S-arabic-ignore', file: MN, edits: [["  [/(تجاهل|تجاهلي|تجاهلوا|انس|انسى|اترك)\\s+((كل|جميع)\\s+)?(ال)?(تعليمات|اوامر|قواعد)/, 'asks to ignore instructions'],\n", '']], guards: ['test-audit-oct.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs'] },
+  { id: 'S-tool', file: MN, edits: [["  [new RegExp(`\\\\b(${TOOL_NAMES.join('|')})\\\\b`, 'i'), 'names a DataArcus tool'],\n", '']], guards: ['test-audit-oct.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs'] },
+  { id: 'S-approval', file: MN, edits: [["'claims an approval'],\n  [/\\[\\s*(user|system|assistant)", "'claims an approval'].slice(0, 0).concat([/(?!)/, 'claims an approval']),\n  [/\\[\\s*(user|system|assistant)"]], guards: ['test-audit-oct.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs'] },
+  { id: 'S-data', file: MN, edits: [["|\\bsend\\b[^.]{0,30}\\b(rows?|data|values?)\\b[^.]{0,20}\\bto\\b/i, 'asks for data values'],", "|\\bsend\\b[^.]{0,30}\\b(rows?|data|values?)\\b[^.]{0,20}\\bto\\b/i, 'asks for data values'].slice(0, 0).concat([/(?!)/, 'asks for data values']),"]], guards: ['test-audit-oct.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs'] },
+  { id: 'S-path', file: MN, edits: [["  [/(^|[\\s\"'(])\\.\\.[\\\\/]|\\b[a-z]:\\\\|(^|\\s)~[\\\\/]|^\\\\\\\\|\\s\\\\\\\\[a-z0-9]|", "  [/(^|[\\s\"'(])\\.\\.[\\\\/]|(^|\\s)~[\\\\/]|"]], guards: ['test-audit-oct.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs'] },
+  { id: 'S-nfkc', file: MN, edits: [["const plainArabic = (s) => String(s).normalize('NFKC').replace(/[\\p{Cf}\\p{Cc}]/gu, '')", 'const plainArabic = (s) => String(s)']], guards: ['test-audit6.mjs', 'test-audit-oct.mjs', 'test-0.2.9d.mjs'] },
+  { id: 'S-lookalike', file: MN, edits: [["  .replace(/[\\u0370-\\u03FF\\u0400-\\u04FF\\u0500-\\u052F]/g, (ch) => LOOKALIKE[ch] || ch)", '  ']], guards: ['test-audit-oct.mjs', 'test-audit6.mjs', 'test-0.2.9d.mjs'] },
+  { id: 'S-shown', file: MN, edits: [['export const shownName = (s, cap = 60) => { if (readsLikeInstruction(s)) return WITHHELD;', 'export const shownName = (s, cap = 60) => {']], guards: ['test-0.2.9d.mjs', 'test-audit6.mjs', 'test-audit-oct.mjs'] },
   { id: 'S-suspicious', file: MO, edits: [['readsLikeInstruction(t.name) ? { suspicious: true } : {}', '{}']], guards: ['test-0.2.9f.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs', 'test-audit-oct.mjs'] },
   { id: 'S-nameOut', file: 'mcp/lib/answer.mjs', edits: [['export const nameOut = (s) => (FORMAT.test(String(s)) ?', 'export const nameOut = (s) => (false ?']], guards: ['test-audit6.mjs', 'test-z.mjs', 'test-0.2.9d.mjs'] },
   { id: 'V-rows', file: MO, edits: [['    hiddenColumns: t.columns.filter((c) => c.isHidden).length,', '    hiddenColumns: t.columns.filter((c) => c.isHidden).length, source: JSON.stringify((((modelOf(m.tmsl).tables || []).find((x) => x.name === t.name) || {}).partitions || []).map((x) => x.source || null)),']], guards: ['test-0.2.9d.mjs', 'test-0.3.0-large-model-caps.mjs', 'test-audit6.mjs', 'test-models/golden-baseline.mjs'] },
   { id: 'V-title', file: 'mcp/lib/redesign.mjs', edits: [['const shown = { visual: safeName(v.id),', 'const shown = { title: JSON.stringify(((v.json.visual || {}).visualContainerObjects || {}).title || null), visual: safeName(v.id),']], guards: ['test-0.3.0-approval-disclosure.mjs', 'test-0.3-redesign.mjs'] },
   // (0.3.1 CS1) the consistent copy removes a visual's own text settings only: one more pointer kind in the allowlist (any visual object) must be refused
-  { id: 'CS-allow', file: 'mcp/lib/redesign.mjs', edits: [[String.raw`/^\/visual\/visualContainerObjects\/title\/\d+\/properties\/text\/expr\/Literal\/Value$/, TEXT_POINTER],`, String.raw`/^\/visual\/visualContainerObjects\/title\/\d+\/properties\/text\/expr\/Literal\/Value$/, TEXT_POINTER, /^\/visual\/objects\//],`]], guards: ['test-0.3.1-cs1.mjs'] },
+  { id: 'CS-allow', file: 'mcp/lib/redesign-kinds.mjs', edits: [[String.raw`{ file: 'visual', pointers: [TEXT_POINTER] }`, String.raw`{ file: 'visual', pointers: [TEXT_POINTER, /^\/visual\/objects\//] }`]], guards: ['test-0.3.1-cs1.mjs'] },
   // (0.3.1 CS2) the theme pointers a consistent copy may set are a role's font and size only: any visual style property (a colour, a background) must be refused
   { id: 'CS-style', file: 'mcp/lib/text-format.mjs', edits: [['/(?:${[r.props.family, r.props.size].join(\'|\')})`).join(\'|\')})$`);', '/[A-Za-z]+`).join(\'|\')})$`);']], guards: ['test-0.3.1-cs2.mjs'] },
 
   // 5. check_report: "can break" versus a note
-  { id: 'C-schema', file: CR, edits: [["  if (f.origin === 'schema') return 'canBreak';", "  if (f.origin === 'schema') return 'dataarcusRule';"]], guards: ['test-0.2.9-checks.mjs', 'test-0.2.9-a4.mjs', 'test-0.3.0-check.mjs'] },
-  { id: 'C-desktopOpens', file: CR, edits: [['  PBIR_THEME_FILE_NAME_MISMATCH: () => true,\n', '']], guards: ['test-0.2.9-a4.mjs', 'test-0.2.9-checks.mjs', 'test-0.3.0-check.mjs'] },
-  { id: 'C-known', file: CR, edits: [["if (f.known) return 'desktopOpens'; const t = DESKTOP_OPENS", 'const t = DESKTOP_OPENS']], guards: ['test-0.3.1-validator-gap.mjs', 'test-0.2.9-a4.mjs', 'test-0.2.9-checks.mjs', 'test-0.3.0-check.mjs'] },
+  { id: 'C-schema', file: CI, edits: [["  if (f.origin === 'schema') return 'canBreak';", "  if (f.origin === 'schema') return 'dataarcusRule';"]], guards: ['test-0.2.9-checks.mjs', 'test-0.2.9-a4.mjs', 'test-0.3.0-check.mjs'] },
+  { id: 'C-desktopOpens', file: CI, edits: [['  PBIR_THEME_FILE_NAME_MISMATCH: () => true,\n', '']], guards: ['test-0.2.9-a4.mjs', 'test-0.2.9-checks.mjs', 'test-0.3.0-check.mjs'] },
+  { id: 'C-known', file: CI, edits: [["if (f.known) return 'desktopOpens'; const t = DESKTOP_OPENS", 'const t = DESKTOP_OPENS']], guards: ['test-0.3.1-validator-gap.mjs', 'test-0.2.9-a4.mjs', 'test-0.2.9-checks.mjs', 'test-0.3.0-check.mjs'] },
   // (0.3.1 P3A) the two validator warnings Desktop was measured to draw: back to "can break"
-  { id: 'C-maylook', file: CR, edits: [["if (f.severity === 'warning' && Object.hasOwn(DESKTOP_DRAWS, f.rule)) return 'mayLook'; ", '']], guards: ['test-0.3.1-p3a.mjs'] },
+  { id: 'C-maylook', file: CI, edits: [["if (f.severity === 'warning' && Object.hasOwn(DESKTOP_DRAWS, f.rule)) return 'mayLook'; ", '']], guards: ['test-0.3.1-p3a.mjs'] },
   // (0.3.1 TB2) the validator codes measured on reports Desktop opened: back to "can break"
-  { id: 'C-opened', file: CR, edits: [["if (Object.hasOwn(DESKTOP_OPENED, f.rule)) return 'openedInDesktop'; ", '']], guards: ['test-0.3.1-tb2.mjs', 'test-0.3.1-p3a.mjs'] },
+  { id: 'C-opened', file: CI, edits: [["if (Object.hasOwn(DESKTOP_OPENED, f.rule)) return 'openedInDesktop'; ", '']], guards: ['test-0.3.1-tb2.mjs', 'test-0.3.1-p3a.mjs'] },
   { id: 'C-image', file: CR, edits: [["rule: 'IMAGE_MEASURE_PENDING', severity: 'note'", "rule: 'IMAGE_MEASURE_PENDING', severity: 'error'"]], guards: ['test-0.3.0-flip-cards.mjs', 'test-0.3.1-dax-functions.mjs'] },
   { id: 'C-icon', file: CR, edits: [["rule: 'ICON_MEASURE_PENDING', severity: 'note'", "rule: 'ICON_MEASURE_PENDING', severity: 'error'"]], guards: ['test-0.3.0-theme-icons.mjs', 'test-0.3.0-flip-cards.mjs'] },
   { id: 'C-dax', file: CR, edits: [["rule: 'DAX_MEASURE_PENDING', severity: 'note'", "rule: 'DAX_MEASURE_PENDING', severity: 'error'"]], guards: ['test-0.3.1-dax-functions.mjs'] },
@@ -127,11 +148,27 @@ const MUTANTS = [
   { id: 'C-validator-sev', file: CR, edits: [["severity: known ? 'note' : d.severity === 'error' ? 'error' :", "severity: known ? 'note' : d.severity === 'error' ? 'warning' :"]], guards: ['test-0.2.9-checks.mjs', 'test-0.3.0-check.mjs', 'test-0.2.9-a4.mjs'] },
   // 6. the approval page says what the click writes (SQ3): the writes in Arabic line for line and escaped, what was not
   // checked in the app's prompt, a pair's English page drawn in English
-  { id: 'A-writesAr-match', file: AW, edits: [['Array.isArray(s.writesAr) && s.writesAr.length === w.plan.writes.length ?', 'Array.isArray(s.writesAr) ?']], guards: ['test-0.3.1-sq3.mjs'] },
-  { id: 'A-writesAr-esc', file: AW, edits: [['<li dir="auto">${isoText(named(WA[i]), true)}</li>', '<li dir="auto">${named(WA[i])}</li>']], guards: ['test-0.3.1-sq3.mjs'] },
-  { id: 'A-prompt-notChecked', file: AW, edits: [['  if (nc.length) lines.push(cut(`Not checked before writing:', '  if (false) lines.push(cut(`Not checked before writing:']], guards: ['test-0.3.1-sq3.mjs'] },
-  { id: 'A-pair-lang', file: AW, edits: [["fig(PP[e], `${W.enPage} ${i + 1}`, 'en')", 'fig(PP[e], `${W.enPage} ${i + 1}`)']], guards: ['test-0.3.1-sq3.mjs'] },
-  { id: 'C-fieldparam', file: CR, edits: [["rule: 'FIELD_PARAMETER_TITLE', severity: 'warning'", "rule: 'FIELD_PARAMETER_TITLE', severity: 'error'"]], guards: ['test-0.3.0-metric-switcher.mjs', 'test-0.3.0-check.mjs', 'test-0.3.1-checker.mjs'] }
+  { id: 'A-writesAr-match', file: AV, edits: [['Array.isArray(s.writesAr) && s.writesAr.length === w.plan.writes.length ?', 'Array.isArray(s.writesAr) ?']], guards: ['test-0.3.1-sq3.mjs'] },
+  { id: 'A-writesAr-esc', file: AV, edits: [['<li dir="auto">${isoText(named(WA[i]), true)}</li>', '<li dir="auto">${named(WA[i])}</li>']], guards: ['test-0.3.1-sq3.mjs'] },
+  { id: 'A-prompt-notChecked', file: AD, edits: [['  if (nc.length) lines.push(cut(`Not checked before writing:', '  if (false) lines.push(cut(`Not checked before writing:']], guards: ['test-0.3.1-sq3.mjs'] },
+  { id: 'A-pair-lang', file: AV, edits: [["fig(PP[e], `${W.enPage} ${i + 1}`, 'en')", 'fig(PP[e], `${W.enPage} ${i + 1}`)']], guards: ['test-0.3.1-sq3.mjs'] },
+  { id: 'C-fieldparam', file: CR, edits: [["rule: 'FIELD_PARAMETER_TITLE', severity: 'warning'", "rule: 'FIELD_PARAMETER_TITLE', severity: 'error'"]], guards: ['test-0.3.0-metric-switcher.mjs', 'test-0.3.0-check.mjs', 'test-0.3.1-checker.mjs'] },
+  // 7. (0.3.2 SM1: the owner, D-1104-14 "add the security mutants to DD1 too", B-329) the approval window's HTTP checks,
+  // one mutant each, and check_report's redaction (mcp/work/SM1.md)
+  { id: 'AH-host', file: AH, edits: [['if (req.headers.host !== here) {', 'if (false) {']], guards: AHG },
+  { id: 'AH-link', file: AH, edits: [[String.raw`const m = /^\/approve\/([A-Za-z0-9_-]{20,64})$/.exec(`, String.raw`const m = /\/approve\/([A-Za-z0-9_-]+)/.exec(`]], guards: AHG },
+  { id: 'AH-expiry', file: AH, edits: [['if (!w || (w.expires && Date.now() > w.expires)) {', 'if (!w) {']], guards: AHG },
+  { id: 'AH-method', file: AH, edits: [["if (req.method !== 'POST') {", 'if (false) {']], guards: AHG },
+  { id: 'AH-origin', file: AH, edits: [["if (!(origin === 'http://' + here || ((!origin || origin === 'null') && site === 'same-origin'))) {", 'if (false) {']], guards: AHG },
+  { id: 'AH-body', file: AH, edits: [['body += c; if (body.length > 1000) req.destroy();', 'body += c;']], guards: AHG },
+  { id: 'AH-once', file: AH, edits: [["if (!w.decided && (d === 'approve' || d === 'decline')) hooks.decide(w, d);", "if (d === 'approve' || d === 'decline') hooks.decide(w, d);"]], guards: AHG },
+  { id: 'AH-revoke', file: AH, edits: [['if (secret) { bySecret.delete(secret); secretOf.delete(id); }', 'if (secret) { secretOf.delete(id); }']], guards: AHG },
+  { id: 'RD-scrub', file: RD, edits: [[String.raw`.join('<report>').replace(/(^|[\s([])(['"“”‘’])[^'"“”‘’]{0,400}\2(?=$|[\s:,;.)\]])/g, '$1<text>');`, ".join('<report>');"], ['  if (left.length >= 2) s =', '  if (false) s =']], guards: RDG },
+  { id: 'RD-mask', file: RD, edits: [[String.raw`export const maskValues = (m) => String(m || '').replace(/['"][^'"]*['"]/g, '<value>');`, "export const maskValues = (m) => String(m || '');"]], guards: RDG },
+  // (0.3.2 SM2, D-1104-14 "add the security mutants to DD1 too"; B-330, the last item) two branches of plan_layout's exact artifact
+  // that no suite caught: a design's overlap blocks the plan (FX2's C23), and the EN-AR copy's plan offers no Arabic month script
+  { id: 'PA-overlap', file: PA, edits: [['ab.design && !ab.pages ? { blockOverlap: true } : {}', '{}']], guards: PAG },
+  { id: 'PA-month', file: PA, edits: [['arabicMonth: false, waterfallRtl: ab.waterfallRtl', 'arabicMonth: true, waterfallRtl: ab.waterfallRtl']], guards: PAG }
 ];
 
 // (0.3.1 T1, Windows) a mutant's text is written with "\n"; a Windows checkout has the files with CRLF, so each text is
@@ -177,7 +214,7 @@ function runGuard(copy, guard) {
     child.on('close', (code, signal) => {
       clearTimeout(timer);
       const result = outText.trim().split('\n').filter((l) => /^(PASS|FAIL|SKIP) {2}/.test(l)).pop() || outText.trim().split('\n').pop() || '';
-      resolve({ failed: signal !== 'SIGKILL' && (code !== 0 || /^FAIL/.test(result)), timedOut: signal === 'SIGKILL', result: result.slice(0, 160), seconds: (Date.now() - t) / 1000 });
+      resolve({ failed: signal !== 'SIGKILL' && (code !== 0 || /^FAIL/.test(result)), timedOut: signal === 'SIGKILL', result: result.slice(0, 160), failLines: outText.split('\n').filter((l) => /^FAIL/.test(l)).slice(0, 5).map((l) => l.slice(0, 200)), seconds: (Date.now() - t) / 1000 });
     });
   });
 }
@@ -215,7 +252,13 @@ async function pool(jobs, work) {
   await Promise.all(copies.map(async (copy) => { while (next < jobs.length) { const j = jobs[next++]; await work(copy, j); } }));
 }
 await pool(guards, async (copy, g) => { const r = await runGuard(copy, g); baseline.set(g, r); });
-for (const g of guards) { const r = baseline.get(g); ok(!r.failed && !r.timedOut, r.timedOut ? `baseline: ${g} timed out on the unmutated copy (${GUARD_TIMEOUT / 1000}s): a pass by it would mean nothing` : `baseline: ${g} fails on the unmutated copy (${r.result}): a kill by it would mean nothing`); }
+for (const g of guards) {
+  const r = baseline.get(g);
+  if (!ok(!r.failed && !r.timedOut, r.timedOut ? `baseline: ${g} timed out on the unmutated copy (${GUARD_TIMEOUT / 1000}s): a pass by it would mean nothing` : `baseline: ${g} fails on the unmutated copy (${r.result}): a kill by it would mean nothing`)) {
+    // (FL1, B-379: name the failing checks so the next flake names itself)
+    for (const l of (r.failLines || [])) console.log(`  ${g}: ${l}`);
+  }
+}
 const badBaseline = new Set(guards.filter((g) => baseline.get(g).failed || baseline.get(g).timedOut));
 await pool(mutants, async (copy, m) => {
   const a = apply(copy, m);

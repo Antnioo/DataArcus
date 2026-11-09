@@ -60,8 +60,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 
-  <link href="/assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
-  <link href="/assets/css/style.min.css?v=20261018t" rel="stylesheet">
+  <link href="/assets/css/vendor/bootstrap.min.css?v=d85327d99c7a" rel="stylesheet">
+  <link href="/assets/css/style.min.css?v=29c11a1ea13b" rel="stylesheet">
 
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
@@ -201,10 +201,10 @@
 
               <h2 class="mt-5 mb-3" data-i18n="beta.safe.title">ما الذي يجعله آمنًا</h2>
               <ul>
-                <li data-i18n="beta.safe.model">لا يغيّر نموذجك أبدًا ولا يكتب فوق ملفاتك: كل تقرير جديد، بجانب نموذجك. الملف الوحيد الذي يستبدله هو ملف إجاباته الخاص، وبعد موافقتك فقط.</li>
+                <li data-i18n="beta.safe.model">لا يُكتب أي شيء في مشاريعك قبل أن توافق على الخطة. الاستثناء الوحيد: عند أول تشغيل ينشئ DataArcus مجلد العمل الفارغ الذي اخترته إذا لم يكن موجودًا بعد. لا يغيّر نموذجك أبدًا ولا يكتب فوق ملفاتك: كل تقرير جديد، بجانب نموذجك. الملف الوحيد الذي يستبدله هو ملف إجاباته الخاص، وبعد موافقتك فقط.</li>
                 <li data-i18n="beta.safe.ask">يكتب فقط داخل المجلد الذي تختاره (ونسخة فحص خاصة في المجلد المؤقت لجهازك، تُحذف عند انتهاء الفحص).</li>
                 <li data-i18n="beta.safe.validator">تفحص أداة check_report أي تقرير بصيغة PBIR دون اتصال بمدقّق التقارير من Microsoft.</li>
-                <li data-i18n-html="beta.safe.data">يقرأ الملفات على جهازك ليفحصها ويأخذ بصمتها. وما يرسله إلى Claude هو أسماء نموذجك وتقريرك وبنيتهما (الجداول والأعمدة والمقاييس والتنسيقات والصفحات والمرئيات)، والنصوص القصيرة المكتوبة في صفحات التقرير: أسماء الصفحات ومربعات النص القصيرة، وعناوينه أيضًا عند إنشاء النسخة العربية، وقد تحمل رقمًا أو اسمًا. ولا يرسل أبدًا صفوف الجداول ولا قيم الفلاتر أو المقسمات ولا حالات الإشارات المرجعية. ما يراه تطبيق الذكاء الاصطناعي: <a href="https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#3-metadata-only-no-data-values" class="text-accent" target="_blank" rel="noopener">PRIVACY.md</a>. الحدود الثلاثة في صفحة واحدة: <a href="https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#on-one-page" class="text-accent" target="_blank" rel="noopener">ملخص الخصوصية</a>.</li>
+                <li data-i18n-html="beta.safe.data">لا يرسل DataArcus إلى تطبيق الذكاء الاصطناعي أي قيم من جداولك أو الفلاتر أو المقسمات أو الإشارات المرجعية. النص الذي كتبته بنفسك في العناوين ومربعات النص يُقرأ كما كتبته، ليتحقق منه الذكاء الاصطناعي، ولتتم ترجمته بموافقتك إن كان لديك توأم عربي. يقرأ الملفات على جهازك ليفحصها ويأخذ بصمتها، وما يرسله إلى Claude هو أسماء نموذجك وتقريرك وبنيتهما (الجداول والأعمدة والمقاييس والتنسيقات والصفحات والمرئيات) وذلك النص الذي كتبته. ما يراه تطبيق الذكاء الاصطناعي: <a href="https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#3-metadata-only-no-data-values" class="text-accent" target="_blank" rel="noopener">PRIVACY.md</a>. الحدود الثلاثة في صفحة واحدة: <a href="https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#on-one-page" class="text-accent" target="_blank" rel="noopener">ملخص الخصوصية</a>.</li>
               </ul>
 
               <h2 class="mt-5 mb-3" data-i18n="beta.req.title">المتطلبات والحدود</h2>
@@ -312,13 +312,19 @@
       </div>
   </footer>
 
-  <script src="/assets/js/translations/common.min.js?v=20261025f" defer=""></script>
-  <script src="/assets/js/translations/beta-page.min.js?v=20261104rl031" defer=""></script>
-  <script src="/assets/js/lang-manager.min.js?v=20261025a" defer=""></script>
+  <script src="/assets/js/translations/common.min.js?v=434124bdf3f2" defer=""></script>
+  <script src="/assets/js/translations/beta-page.min.js?v=0996c8f7eed2" defer=""></script>
+  <script src="/assets/js/locale-routes.min.js?v=ce1187fd5cbb" defer=""></script>
+  <script src="/assets/js/locale-catalog.min.js?v=1464f13d8c0b" defer=""></script>
+  <script src="/assets/js/locale-dom.min.js?v=faf294f00eb2" defer=""></script>
+  <script src="/assets/js/lang-manager.min.js?v=b4bd7c2d5f43" defer=""></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer=""></script>
-  <script src="/assets/js/main.min.js?v=20261022d" defer=""></script>
+  <script src="/assets/js/site-navigation.min.js?v=73f198dd3eb3" defer=""></script>
+  <script src="/assets/js/site-forms.min.js?v=f7223d5bc9a2" defer=""></script>
+  <script src="/assets/js/site-analytics.min.js?v=9631075fe8c3" defer=""></script>
+  <script src="/assets/js/main.min.js?v=3fefca81e4a0" defer=""></script>
 
 
 </body></html>

@@ -1,0 +1,13 @@
+{
+  "name": "dataarcus-rd-ar3",
+  "private": true,
+  "description": "AR3 R&D only: Arabic shaping (harfbuzzjs) and bidi (bidi-js) measured against the page preview. Not shipped.",
+  "scripts": {
+    "test": "node proof.mjs"
+  },
+  "devDependencies": {
+    "@expo-google-fonts/noto-sans-arabic": "0.4.3",
+    "bidi-js": "1.1.0",
+    "harfbuzzjs": "1.6.4"
+  }
+}

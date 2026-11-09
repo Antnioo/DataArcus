@@ -162,5 +162,14 @@ fs.rmSync(ROOT, { recursive: true, force: true });
   () => 'T1: TOOLS.md has a row for each of flipCards, statusIcons, metricSwitcher and gallery, with what it writes and its limits');
 }
 
+{
+  // (0.3.2 SM2, D-1104-14, B-330) plan-artifact.mjs's two branches no run reached, each run in a clean process (fixtures/sm2-artifact.mjs)
+  const sm2 = (mode) => { const r = spawnSync(process.execPath, [path.join(HERE, 'fixtures', 'sm2-artifact.mjs'), mode], { encoding: 'utf8', timeout: 120000 }); try { return JSON.parse(r.stdout.trim().split('\n').pop()); } catch (e) { return { err: String(r.stderr || r.stdout).slice(0, 300) }; } };
+  const over = sm2('overlap'), clear = sm2('clear'), mo = sm2('month');
+  chk(() => over.status === 'blocked' && over.blocking.length > 0 && over.blocking.every((b) => b === 'OVERLAP') && over.byRule.OVERLAP > 0, () => `S1 (PA-overlap): a design whose chart sits over its table's first rows blocks the plan with OVERLAP: ${JSON.stringify(over)}`);
+  chk(() => clear.status === 'pass' && !(clear.byRule || {}).OVERLAP && clear.blocking.length === 0, () => `S2: the same design without the overlap is not blocked: ${JSON.stringify(clear)}`);
+  chk(() => mo.plain && mo.plain.offered === true && mo.plain.table === 'Calendar' && /Arabic/.test(mo.plain.column || ''), () => `S3 (PA-month): a plain twin of a model with a date table offers the Arabic month script: ${JSON.stringify(mo.plain)}`);
+  chk(() => mo.copy && mo.copy.offered === false && !mo.copy.script && !mo.copy.column, () => `S4: the EN-AR copy's plan of the same model offers no Arabic month script: ${JSON.stringify(mo.copy)}`);
+}
 if (problems.length) { console.log(`FAIL script=test-0.3.1-fx2.mjs cause=${problems.length} of ${checks} checks failed`); problems.forEach((p) => console.log('      - ' + p)); console.log(`FAIL  fx2  ${checks} checks, ${problems.length} failed`); process.exit(1); }
 console.log(`PASS  fx2  ${checks} checks`);

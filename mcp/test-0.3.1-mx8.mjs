@@ -6,7 +6,7 @@ import './test-env.mjs';
 //           f2c68e52, sorted Ascending) keeps English's padding, axis cards and sort, only moved: bar k under hour k's
 //           cell edges as in English; named in movedByRule with why; a chart under no grid keeps the general mirror
 //   N1-N8   the heatmap's names table: its blank header the matrix's header outline, its values the row headers',
-//           one row of the matrix's text more room below (same top), kept inside its page
+//           its box the matrix's (0.3.2 HM1: was one row of its text more room below), inside its page
 //   node test-0.3.1-mx8.mjs
 import fs from 'node:fs';
 import os from 'node:os';
@@ -119,11 +119,11 @@ try {
   chk(() => nm && lit(plain(nm, 'columnHeaders', 'outlineStyle')) === '0D', () => `N1. its blank header takes the matrix's column header outline (Call Center: 0, none; a table's default draws a line under it): ${nm && J(nm.visual.objects.columnHeaders)}`);
   chk(() => nm && lit(plain(nm, 'columnHeaders', 'wordWrap')) === 'false' && lit(plain(nm, 'values', 'wordWrap')) === 'false', () => `N2 (guard, MX7). word wrap off on its header and values: ${nm && J(nm.visual.objects.values)}`);
   chk(() => nm && lit(plain(nm, 'values', 'outlineStyle')) === '0D', () => `N3. its values take the matrix's row headers' outline (0, none): ${nm && J(nm.visual.objects.values)}`);
-  chk(() => nm && hm && Math.abs(nm.position.y - hm.position.y) < 0.01 && nm.position.height >= hm.position.height + row(10) - 0.01, () => `N4. the same top (its rows level with the grid's) and one row of the matrix's text (${r2(row(10))}) more room below than the matrix: no vertical scrollbar: ${nm && J(nm.position)} under ${hm && J(hm.position)}`);
+  chk(() => nm && hm && Math.abs(nm.position.y - hm.position.y) < 0.01 && Math.abs(nm.position.height - hm.position.height) < 0.01, () => `N4. the same top (its rows level with the grid's) and, 0.3.2 HM1 (B-300), exactly the matrix's height (MX8's one row more, ${r2(row(10))}, drew a horizontal scrollbar in part 14): ${nm && J(nm.position)} under ${hm && J(hm.position)}`);
   const cwN = nm && (nm.visual.objects.columnWidth || []).find((e) => e.selector && e.selector.metadata === DAY[0].queryRef);
-  chk(() => nm && cwN && Math.abs(num(cwN.properties.value) - nm.position.width) < 0.01 && Math.abs(hm.position.x + hm.position.width - nm.position.x) < 0.01, () => `N5 (guard). its column the box's width, beside the grid (no horizontal scrollbar): ${nm && J(nm.position)}`);
-  chk(() => en && eh && Math.abs(en.position.y - eh.position.y) < 0.01 && en.position.height >= eh.position.height + row(11) - 0.01 && lit(plain(en, 'grid', 'textSize')) === '11D', () => `N6. ER at 11pt: one row of 11pt (${r2(row(11))}) more: ${en && J(en.position)}`);
-  chk(() => ln && lh && ln.position.y + ln.position.height <= 720 + 0.01 && ln.position.height > lh.position.height, () => `N7. at a page's bottom the room below is kept inside the page: ${ln && J(ln.position)}`);
+  chk(() => nm && cwN && Math.abs(num(cwN.properties.value) - (nm.position.width - 4)) < 0.01 && Math.abs(hm.position.x + hm.position.width - nm.position.x) < 0.01, () => `N5 (guard; 0.3.2 HM1, B-300: the box less 4). its column the box's width, beside the grid (no horizontal scrollbar): ${nm && J(nm.position)}`);
+  chk(() => en && eh && Math.abs(en.position.y - eh.position.y) < 0.01 && Math.abs(en.position.height - eh.position.height) < 0.01 && lit(plain(en, 'grid', 'textSize')) === '11D', () => `N6. ER at 11pt: 0.3.2 HM1 (B-300) exactly the matrix's height (was one row of 11pt, ${r2(row(11))}, more): ${en && J(en.position)}`);
+  chk(() => ln && lh && ln.position.y + ln.position.height <= 720 + 0.01 && Math.abs(ln.position.height - lh.position.height) < 0.01, () => `N7. at a page's bottom inside the page (0.3.2 HM1, B-300: the matrix's own box): ${ln && J(ln.position)}`);
   chk(() => nm && Math.abs(nm.position.width - (STRIP - 1 + 6)) < 0.01, () => `N8 (guard, MX7). its width the strip less 1 plus a cell's padding (43.06): ${nm && nm.position.width}`);
 } catch (e) { problems.push('threw: ' + String(e && e.stack || e).slice(0, 600)); }
 

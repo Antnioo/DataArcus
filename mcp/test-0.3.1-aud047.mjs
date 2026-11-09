@@ -107,13 +107,11 @@ const s = await serverClient(ROOT);
 try {
   const dCols = (x) => { const d = x.j && (x.j.tables || []).find((t) => t.table === 'Dates'); return d ? d.columns.length : null; };
   // I. the intact model (its plan's design is the one create_report is given below)
-  let D = null;
   {
     const r = await s.call('read_model', { path: 'intact' }), h = await s.call('check_model_health', { path: 'intact' }), p = await s.call('plan_layout', { path: 'intact', layout: 'exec', lang: 'en' });
     chk(() => !r.err && dCols(r) === 5 && !('unreadable' in r.j), () => `I1. the intact model: read_model's Dates 5 columns, no unreadable: ${short(r)}`);
     chk(() => !h.err && h.j.score.overall === 92 && !('unreadable' in h.j) && !('scoreWithheld' in h.j), () => `I2. the intact model: health score 92, no unreadable: ${short(h)}`);
     chk(() => !p.err && p.j.plan && p.j.plan.planId, () => `I3. the intact model: plan_layout plans: ${short(p)}`);
-    D = p.j && p.j.design;
   }
   // W. whole files: no unreadable, the score as with the break (92; the shorter file its own), planned
   for (const [k, v] of Object.entries(WHOLE)) {
@@ -133,7 +131,7 @@ try {
     { const sf = await s.call('suggest_fields', { path: k }), su = sf.j && sf.j.unreadable;
       chk(() => !sf.err && Object.keys(sf.j)[0] === 'unreadable' && MESSAGE.test(su.message) && su.skipped[0].file === DATES && !LEAK.test(sf.t), () => `M5-${k}. suggest_fields: unreadable first: ${short(sf)}`); }
     chk(() => !LEAK.test(r.t) && !LEAK.test(h.t), () => `M4-${k}. no text of the file in either answer: ${(r.t.match(LEAK) || h.t.match(LEAK) || [''])[0]}`);
-    const p = await s.call('plan_layout', { path: k, layout: 'exec', lang: 'en' }), c = await s.call('create_report', { path: k, name: 'R ' + k, design: D }), g = await s.call('add_gulf_calendar', { path: k, country: 'uae', firstYear: 2026, lastYear: 2026 });
+    const p = await s.call('plan_layout', { path: k, layout: 'exec', lang: 'en' }), c = await s.call('create_report', { path: k }), g = await s.call('add_gulf_calendar', { path: k, country: 'uae', firstYear: 2026, lastYear: 2026 });
     for (const [tool, x] of [['plan_layout', p], ['create_report', c], ['add_gulf_calendar', g]]) {
       chk(() => x.err && /could not be read: Plain Orders\.SemanticModel\/definition\/tables\/Dates\.tmdl \(/.test(x.t) && /fix the file in Power BI Desktop or your editor and ask again/.test(x.t) && /Nothing was planned/.test(x.t), () => `P1-${k}. ${tool} refuses, with the same message: ${short(x)}`);
     }
@@ -153,7 +151,7 @@ try {
     const args = { path: 'twin', name: 'Twin base', layout: 'exec', lang: 'en' };
     const pl = await w.call('plan_layout', args), planId = pl.j && pl.j.plan && pl.j.plan.planId;
     await w.call('approve_plan', { planId });
-    const cr = await w.call('create_report', Object.assign({ planId, design: pl.j && pl.j.design }, args));
+    const cr = await w.call('create_report', { path: args.path, planId: planId });
     const pbip = 'twin/Twin base.pbip', ok0 = !cr.err && fs.existsSync(path.join(ROOT, pbip));
     const before = ok0 ? await w.call('create_arabic_twin', { path: pbip }) : { err: true, t: 'no report: ' + short(cr) };
     chk(() => !before.err, () => `P2a. guard: the twin plans on the intact model: ${short(before)}`);

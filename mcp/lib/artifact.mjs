@@ -16,13 +16,13 @@ import { createRequire } from 'node:module';
 import { inventory, memorySource, REPORT_LIMITS } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
 import { rulesInput, knownGap, impactOf } from './check-report.mjs';
+import { outsideRel } from './path-rules.mjs';   // (0.3.2 WN1, F01: the one containment rule)
+import { canon } from './canon.mjs';   // (0.3.2 DD2C) one JSON form (object keys sorted, undefined left out): the same values always hash the same
 
 const require = createRequire(import.meta.url);
 const Rules = require('../../assets/js/report-rules.js');
 
 export const sha = (b) => crypto.createHash('sha256').update(b).digest('hex');
-// one JSON form (object keys sorted, undefined left out), so the same values always hash the same
-const canon = (v) => JSON.stringify(v === undefined ? null : v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().filter((key) => x[key] !== undefined).map((key) => [key, x[key]])) : x));
 
 /** The digest of a project's files: sha256 over the sorted lines "path NUL sha256(bytes) LF" (paths as written). */
 export const digestOf = (files) => sha(files.map((f) => String(f.path) + '\0' + sha(typeof f.data === 'string' ? Buffer.from(f.data) : f.data) + '\n').sort().join(''));
@@ -56,7 +56,7 @@ async function validate(files, mem) {
     // (0.3.1 P3A) each finding's kind as check_report gives it (impactOf, one copy): create_report says the same verdict
     const out = { ran: true, errors: 0, warnings: 0, known: 0, byRule: {}, files: [], kinds: { canBreak: 0, openedInDesktop: 0, mayLook: 0, desktopOpens: 0 }, said: {} };
     for (const [code, d] of Object.entries(s.diagnostics || {})) for (const it of (d.items || [])) {
-      const file = it.file && path.isAbsolute(String(it.file)) ? path.relative(reportDir, String(it.file)).split(path.sep).join('/') : null, inside = file && !file.startsWith('..') ? file : null;
+      const file = it.file && path.isAbsolute(String(it.file)) ? path.relative(reportDir, String(it.file)).split(path.sep).join('/') : null, inside = file && !outsideRel(file) ? file : null;
       let known = null; if (inside && /visual\.json$/.test(inside)) { try { known = knownGap(code, it.path, JSON.parse(mem.get(inside))); } catch (e) { known = null; } }
       const rule = /^[A-Z0-9_]{3,60}$/.test(code) ? code : 'VALIDATOR';
       if (known) { out.known++; continue; }

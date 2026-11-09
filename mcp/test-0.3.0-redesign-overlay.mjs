@@ -112,7 +112,7 @@ try {
 
   // ---------- O4: the written copy ----------
   await s.call('approve_plan', { planId: pl.j.plan.planId });
-  const out = await s.call('create_report', { path: MODEL('ov'), redesignFrom: FROM('ov'), planId: pl.j.plan.planId });
+  const out = await s.call('create_report', { path: MODEL('ov'), planId: pl.j.plan.planId });
   chk(() => !out.err && out.j.written === true, () => `O4. the copy is written: ${short(out)}`);
   const box = (d, v) => { const p = rd(path.join(d, 'definition/pages/p1overview/visuals', v, 'visual.json')).position; return { x: p.x, y: p.y, w: p.width, h: p.height }; };
   if (fs.existsSync(OUT)) {

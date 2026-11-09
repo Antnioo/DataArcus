@@ -26,7 +26,6 @@
   // ---------- small helpers ----------
   const lit = (v) => ({ expr: { Literal: { Value: v } } });
   const str = (s) => lit("'" + String(s).replace(/'/g, "''") + "'");
-  const S0 = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") : '');
   const bool = (b) => lit(b ? 'true' : 'false');
   const num = (n) => lit(n + 'D');
   const color = (hex) => ({ solid: { color: str(hex) } });
@@ -52,8 +51,9 @@
     return [h.slice(0, 8), h.slice(8, 12), h.slice(12, 16), h.slice(16, 20), h.slice(20, 32)].map((p) => p.join('')).join('-');
   };
   // contrast of two colours (WCAG): the page's marks keep the accent colour only where it can be read on the card
-  const lum = (hex) => { const v = [1, 3, 5].map((i) => parseInt(String(hex).slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4))); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
-  const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const Contrast = typeof module !== 'undefined' && module.exports ? require('./contrast.js') : root.DAContrast;
+  const lum = Contrast.luminance;
+  const contrast = Contrast.contrast;
   const mixHex = (a, b, t) => {
     const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
     const A = p(a), B = p(b);
@@ -117,15 +117,15 @@
   // a bar or column chart by a text category (byValue) is sorted by its measure, largest first; a time category (a
   // month, day, week, quarter or year, Hijri ones too, a name the model sorts, a number) keeps its own order
   // (round 23 part 5, the review's 9: whole words, so "Holiday Package" or "Candidate" is a text category)
-  const TIME_WORDS = /\b(month|day|weekday|week|quarter|year|hijri|date|period)s?\b|(^|\s)(الشهر|اليوم|الأسبوع|الربع|السنة|هجري|الهجري)(\s|$)/i;
   // (part 6, the re-review's 1: a name is split into its words first, at CamelCase, "_", "-" and digits: MonthName,
-  // Month_Name, FiscalYear, WeekNum, اسم_الشهر are time; "Holiday Package" and "Candidate" are not)
-  const wordsOf = (n) => String(n).replace(/([a-z])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2').replace(/[_\-\d]+/g, ' ');
+  // Month_Name, FiscalYear, WeekNum, اسم_الشهر are time; "Holiday Package" and "Candidate" are not. 0.3.2 DD1A: the
+  // words and the one list are time-names.js isTimeName's, as the twin, the preview and the check read them)
+  const TN = typeof module !== 'undefined' && module.exports ? require('./time-names.js') : root.DATimeNames;
   // 0.2.9, audit 3's A3-8: the field picker marks a time category (time: true or false, or its kind: a day, week,
   // month, quarter, year, date, period or Hijri category is time; any other kind is not) and its mark decides; the
-  // name's words (TIME_WORDS) only where the picker gives no mark ("Day Type" with a kind of its own is a category)
+  // name's words (time-names.js isTimeName) only where the picker gives no mark ("Day Type" with a kind of its own is a category)
   const TIME_KINDS = /^(date|day|weekday|week|month|quarter|year|period|hijri|time)s?$/i;
-  const isTime = (f) => (f.time != null ? !!f.time : f.kind != null ? TIME_KINDS.test(String(f.kind)) : TIME_WORDS.test(wordsOf(f.c)));
+  const isTime = (f) => (f.time != null ? !!f.time : f.kind != null ? TIME_KINDS.test(String(f.kind)) : TN.isTimeName(f.c));
   const sorted = (query, f, byValue) => {
     if (!query || !f) return query;
     if (!f.sortBy) {
@@ -320,7 +320,9 @@
   // Round 14, the owner's ask (6 Oct 2026): a title is never half Arabic, half English. "A by B" joins two names of the
   // same script with that script's word ("إجمالي المبيعات حسب اسم اليوم", "Total Sales by Day Name"); when only one of
   // the two names is Arabic, the title is the measure's name alone (plan_layout proposes Arabic names to approve).
-  const AR_LETTERS = /[\u0600-\u06FF]/;
+  // (0.3.2 DD1F: an Arabic letter is arabic-script.js's, its one home; CONTRACTS.md 1f. AR_LETTERS stays exported, the
+  // same object: pbip-bidi, pbip-tooltip, pbip-page and visual-gallery read it)
+  const AR_LETTERS = (typeof module !== 'undefined' && module.exports ? require('./arabic-script.js') : root.DAArabicScript).ARABIC;
   const byTitle = (a, by, b) => {
     if (!a || !b) return a || null;
     const ar = AR_LETTERS.test(a);
@@ -475,10 +477,10 @@
   }
 
   const api = {
-    S, SCHEMA, lit, str, S0, bool, num, color, obj, resource, LINE_WIDTH, lineStyle,
+    S, SCHEMA, lit, str, bool, num, color, obj, resource, LINE_WIDTH, lineStyle,
     json, rnd, guid, lum, contrast, mixHex, fieldCol, fieldMea, q, fname,
     shown, AGG, fieldAgg, isValue, proj, tproj, label, hasControl, daxSafe, daxNames,
-    TYPES, CHARTS, TIME_WORDS, wordsOf, TIME_KINDS, isTime, sorted, HEX6, gradientEnds, gradientFill,
+    TYPES, CHARTS, TIME_KINDS, isTime, sorted, HEX6, gradientEnds, gradientFill,
     mirrorChart, orderHelper, orderedBy, inOrder, isTextField, Bind, nameLike, YEARISH, KIND_ROWS, catKind,
     AR_MONTHS, NAMES, namesOf, tableFields, ROW_LABEL, rowLabelOf, rowLabelProj, AGG_DAX, valueDax, monthLabel,
     labelMonth, timeAxisPlan, rowLabelDax, CAT_KINDS, bindQuery, AR_LETTERS, byTitle, bindTitle, bindStory, kpiLabel, PF_KINDS, pfLiteral, pageFilterOf, measures

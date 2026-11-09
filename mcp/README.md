@@ -1,8 +1,8 @@
 # DataArcus MCP
 
 DataArcus designs and checks Power BI reports on your own model, from Claude: it reads your model's names, types and
-formats (never its data values), plans each page with you, and writes a new report only after you approve the plan in
-its approval window. It works next to Microsoft's Power BI Authoring MCP server (model edits, DAX queries) and the
+formats (never values from your tables, filters, slicers or bookmarks), plans each page with you, and writes a new
+report only after you approve the plan in its approval window. It works next to Microsoft's Power BI Authoring MCP server (model edits, DAX queries) and the
 Power BI Desktop bridge (reload, screenshots).
 
 This page is the user guide. Every tool's options and answers in detail: [TOOLS.md](TOOLS.md). How DataArcus is
@@ -26,7 +26,7 @@ For testers on Windows: download the file, check it with one command, then insta
    Install Extension..., then pick the `.mcpb` file. Settings > Extensions then shows "DataArcus for Power BI".
    **To update**, open the new `.mcpb` the same way: the button says Update, then Windows asks Install.
 4. **Choose the working folder** when asked (the setting is called **Working folder**): the folder that holds your
-   `.pbip` projects. DataArcus reads and writes only inside it; put in it only models whose names, types and formats
+   `.pbip` projects (if it does not exist yet, DataArcus makes it empty on first start; nothing else is written before you approve a plan). DataArcus reads and writes only inside it; put in it only models whose names, types and formats
    you may share with Claude.
 5. **Check it:** in a new chat, ask "list your DataArcus tools". Claude lists 11 tools (`read_model`, `suggest_fields`,
    `check_model_health`, `plan_layout`, `approve_plan`, `create_report`, `create_arabic_twin`, `read_report`, `check_report`, `generate_theme`, `add_gulf_calendar`).
@@ -49,7 +49,7 @@ For testers on Windows: download the file, check it with one command, then insta
 
 | Tool | In plain words |
 |---|---|
-| `read_model` | Reads your model's tables, columns, measures and date tables: names, types and formats, never data values. Changes nothing. |
+| `read_model` | Reads your model's tables, columns, measures and date tables: names, types and formats, never values from your tables. Changes nothing. |
 | `suggest_fields` | Suggests which measures and columns go in each KPI card, chart, table and slicer. Changes nothing. |
 | `check_model_health` | The Model Health Check, the same engine as the website's: a score and every finding with where its rule comes from. Fix scripts for you to apply yourself, written only after you approve. |
 | `add_gulf_calendar` | A Gulf date table (Hijri dates, Ramadan and Eid, the country's weekend) as a TMDL script you apply yourself in Power BI Desktop, written only after you approve. |
@@ -77,12 +77,14 @@ and a page under 1920 wide with the filters on top (preview) work, and the plan 
 
 ## Safety
 What stays on the machine and what the AI app sees: `PRIVACY.md`. What DataArcus promises: `PRODUCT_SPEC.md`.
+- **Data:** DataArcus never sends values from your tables, filters, slicers or bookmarks to the AI app. Text you typed yourself in titles and text boxes is read as typed, so the AI can check it and, for an Arabic twin, translate it with your approval.
+- **Writes:** Nothing in your projects is written before you approve the plan. The one exception: on first start, DataArcus makes the empty working folder you chose, if it does not exist yet.
 - Every path must be inside one folder, the working folder: `DATAARCUS_ROOT`. Anything outside is refused, also when a link (symbolic link or junction) inside the folder leads outside it, and also for the paths a tool picks itself (the model folder a `.pbip` points at).
 - `DATAARCUS_ROOT` must be set: without it (or empty) the server starts but every tool refuses and says why; it never uses the folder it starts in. For the current folder set `DATAARCUS_ROOT=.` on purpose. A folder that doesn't exist yet is created on start when its parent exists.
 - The version is read from `mcp/package.json`. Tools declare what they do to files: five only read (`readOnlyHint`: `read_model`, `suggest_fields`, `plan_layout`, `read_report`, `check_report`); `generate_theme`, `create_report`, `create_arabic_twin`, `check_model_health` (its fix scripts) and `add_gulf_calendar` add files (`destructiveHint: false`), and only with an approved plan id; `check_model_health` also replaces or empties its own answers file (below), only as its approved plan says; `approve_plan` writes no file. `check_model_health` and `add_gulf_calendar` are also `idempotentHint: true`: a second plan on the same model names the same files and writes nothing new (the others write another file under a free name).
 - Never edit a report's or model's files yourself (no script or file tool): ask DataArcus for a plan (check_report's fixWith names it), show it, wait for approval. (The server's instructions give the AI app this rule too.)
 - Nothing is overwritten: every write is a new file (`create_report` refuses to write if any file already exists); the one exception is DataArcus's own answers file next to a model, replaced only as its approved plan says and only if it is still the file DataArcus checked. A write that fails part-way removes what that call created and names anything it could not remove.
-- DataArcus reads files on your machine to check and fingerprint them (whole files, hashed; a model's definition can hold "Enter data" or DATATABLE rows, and a report's files hold saved filter, slicer and bookmark values); it never returns data values from them to Claude. A report's short text boxes (`read_report`) and its titles and texts (`create_arabic_twin`, for their Arabic) are returned as typed: a person may have typed a figure or a name there.
+- DataArcus reads files on your machine to check and fingerprint them (whole files, hashed; a model's definition can hold "Enter data" or DATATABLE rows, and a report's files hold saved filter, slicer and bookmark values); it never returns values from your tables, filters, slicers or bookmarks to Claude. A report's short text boxes (`read_report`) and its titles and texts (`create_arabic_twin`, for their Arabic) are returned as typed: a person may have typed a figure or a name there.
 - Keep employer or client files you may not share out of that folder.
 
 ## Install (Windows, in the DataArcus folder)

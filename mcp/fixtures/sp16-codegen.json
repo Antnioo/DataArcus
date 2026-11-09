@@ -1,0 +1,267 @@
+{
+ "D1 starter ring": "0caba3f022523b2c7b1b087c:1345",
+ "D2 starter trend": "ffbe20d0e843ffdc2ff3fa91:1261",
+ "D3 starter bar": "723c8cdbcf0a481778f96b40:1803",
+ "D4 starter pill": "e3647bbae939cd271860057f:1225",
+ "D5 starter spark": "366fdad6e487e0ff2beafdf7:3029",
+ "D6 starter card": "7838c109acca1cc0598c0622:4483",
+ "D7 starter ramadan": "3840701b981e831e4a942964:3220",
+ "D8 A quotes, markup, ]]>, a script tag": [
+  [
+   "_Sales",
+   "[Sales]"
+  ],
+  [
+   "_Target",
+   "[Target]"
+  ],
+  [
+   "_Sales_LY",
+   "[Sales LY]"
+  ],
+  [
+   "_Achievement",
+   "DIVIDE ( _Sales, _Target )"
+  ],
+  [
+   "_Growth_vs_LY",
+   "DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )"
+  ],
+  [
+   "_L2_text",
+   "\"&lt;i&gt;&quot;AED&quot;&lt;/i&gt; &amp; \" & FORMAT ( IF ( ( ABS ( COALESCE ( _Sales, 0 ) ) < 0.5 ), 0, COALESCE ( _Sales, 0 ) ), \"#,0\", \"en-US\" ) & \" ]]&gt;&lt;script&gt;x()&lt;/script&gt;\""
+  ],
+  [
+   "_svg",
+   "\"<svg xmlns='http://www.w3.org/2000/svg' width='300' height='60' viewBox='0 0 300 60'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>He said &quot;hi&quot; &amp; &apos;bye&apos; &lt;b&gt;x&lt;/b&gt; ]]&gt; &lt;script&gt;alert(1)&lt;/script&gt; 100%25 %231</text><text x='10' y='40' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\" & _L2_text & \"</text></svg>\""
+  ]
+ ],
+ "D9 A javascript: in a text and a colour": [
+  [
+   "_Sales",
+   "[Sales]"
+  ],
+  [
+   "_Target",
+   "[Target]"
+  ],
+  [
+   "_Sales_LY",
+   "[Sales LY]"
+  ],
+  [
+   "_Achievement",
+   "DIVIDE ( _Sales, _Target )"
+  ],
+  [
+   "_Growth_vs_LY",
+   "DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )"
+  ],
+  [
+   "_L2_fill",
+   "SWITCH ( TRUE (), ( COALESCE ( _Achievement, 0 ) < 1 ), \"%23000000\", \"%23abcdef\" )"
+  ],
+  [
+   "_svg",
+   "\"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='50' viewBox='0 0 200 50'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>&lt;a href=&apos;javascript:alert(1)&apos;&gt;click&lt;/a&gt;</text><rect x='0' y='0' width='10' height='10' fill='\" & _L2_fill & \"' stroke='%23000000' stroke-width='1'/></svg>\""
+  ]
+ ],
+ "D10 A Arabic label with RTL marks, mirrored": [
+  [
+   "_sales",
+   "[المبيعات]"
+  ],
+  [
+   "_target",
+   "[الهدف]"
+  ],
+  [
+   "_ach",
+   "DIVIDE ( _sales, _target )"
+  ],
+  [
+   "_L2_text",
+   "\"‏«\" & FORMAT ( IF ( ( ABS ( ( COALESCE ( _ach, 0 ) * 100 ) ) < 0.05 ), 0, ( COALESCE ( _ach, 0 ) * 100 ) ), \"#,0.0\", \"en-US\" ) & \"%25\" & \"»‎\""
+  ],
+  [
+   "_L3_p",
+   "MIN ( MAX ( COALESCE ( _ach, 0 ), 0 ), 1 )"
+  ],
+  [
+   "_svg",
+   "\"<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80' viewBox='0 0 240 80'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>‏المبيعات ‫من‬ الهدف‎ &lt;&amp;&gt;</text><text x='230' y='50' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='end' fill='%23111111'>\" & _L2_text & \"</text><g transform='translate(240 0) scale(-1 1)'><circle cx='40' cy='40' r='30' fill='none' stroke='%231e293b' stroke-width='6'/><circle cx='40' cy='40' r='30' fill='none' stroke='%2300d4ff' stroke-width='6' transform='rotate(-90 40 40)' stroke-dasharray='\" & FORMAT ( ( _L3_p * 188.4956 ), \"0.00\", \"en-US\" ) & \" 188.5' stroke-opacity='\" & IF ( ( _L3_p > 0 ), \"1\", \"0\" ) & \"'/></g></svg>\""
+  ]
+ ],
+ "D11 A measure names with ] and doubled quotes": [
+  [
+   "_Net_x",
+   "[Net ]]Sales[ \"q\"]"
+  ],
+  [
+   "_B",
+   "[Tgt\"\"]"
+  ],
+  [
+   "_C",
+   "( _Net_x - _B )"
+  ],
+  [
+   "_L1_text",
+   "\"say &quot;&quot;hi&quot;&quot; \" & IF ( ( COALESCE ( _C, 0 ) > 0 ), \"+\", \"\" ) & FORMAT ( IF ( ( ABS ( COALESCE ( _C, 0 ) ) < 0.005 ), 0, COALESCE ( _C, 0 ) ), \"#,0.00\", \"en-US\" )"
+  ],
+  [
+   "_svg",
+   "\"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\" & _L1_text & \"</text></svg>\""
+  ]
+ ],
+ "D12 A very long numbers": [
+  [
+   "_X",
+   "[X]"
+  ],
+  [
+   "_Y",
+   "[Y]"
+  ],
+  [
+   "_R",
+   "DIVIDE ( _X, _Y )"
+  ],
+  [
+   "_L1_text",
+   "IF ( ( ABS ( COALESCE ( _X, 0 ) ) >= 1000000 ), FORMAT ( IF ( ( ABS ( ( COALESCE ( _X, 0 ) / 1000000 ) ) < 0.05 ), 0, ( COALESCE ( _X, 0 ) / 1000000 ) ), \"#,0.0\", \"en-US\" ) & \"M\", IF ( ( ABS ( COALESCE ( _X, 0 ) ) >= 1000 ), FORMAT ( IF ( ( ABS ( ( COALESCE ( _X, 0 ) / 1000 ) ) < 0.05 ), 0, ( COALESCE ( _X, 0 ) / 1000 ) ), \"#,0.0\", \"en-US\" ) & \"K\", FORMAT ( IF ( ( ABS ( COALESCE ( _X, 0 ) ) < 0.5 ), 0, COALESCE ( _X, 0 ) ), \"#,0\", \"en-US\" ) ) )"
+  ],
+  [
+   "_L2_text",
+   "FORMAT ( IF ( ( ABS ( ( COALESCE ( _R, 0 ) * 100 ) ) < 0.05 ), 0, ( COALESCE ( _R, 0 ) * 100 ) ), \"#,0.0\", \"en-US\" ) & \"%25\""
+  ],
+  [
+   "_L3_w",
+   "( ( -1000000000 ) + ( MIN ( MAX ( ( ( COALESCE ( _R, 0 ) - ( -1000000000000 ) ) / 2000000000000 ), 0 ), 1 ) * 2000000000 ) )"
+  ],
+  [
+   "_svg",
+   "\"<svg xmlns='http://www.w3.org/2000/svg' width='2000' height='8' viewBox='0 0 2000 8'><text x='123456789012345660' y='0' font-family='Segoe UI, sans-serif' font-size='Infinity' font-weight='400' text-anchor='start' fill='%23111111'>\" & _L1_text & \"</text><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\" & _L2_text & \"</text><rect x='1.23' y='10' width='\" & FORMAT ( IF ( ( ABS ( _L3_w ) < 0.005 ), 0, _L3_w ), \"0.00\", \"en-US\" ) & \"' height='3' fill='%23123456'/><line x1='0' y1='0' x2='100000000000' y2='1' stroke='%23ffffff' stroke-width='0.13'/></svg>\""
+  ]
+ ],
+ "D13 A a column value with markup": [
+  [
+   "_Name",
+   "SELECTEDVALUE ( 'Cust''s'[Na]]me] )"
+  ],
+  [
+   "_Val",
+   "SELECTEDVALUE ( 'Sales'[Amount] )"
+  ],
+  [
+   "_L1_text",
+   "\"&lt;\" & SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( _Name & \"\", \"&\", \"&amp;\" ), \"<\", \"&lt;\" ), \">\", \"&gt;\" ), \"'\", \"&apos;\" ), \"\"\"\", \"&quot;\" ), \"%\", \"%25\" ), \"#\", \"%23\" ) & \"&gt;\""
+  ],
+  [
+   "_L2_text",
+   "SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( FORMAT ( IF ( ( ABS ( COALESCE ( _Val, 0 ) ) < 0.05 ), 0, COALESCE ( _Val, 0 ) ), \"#,0.0\", \"en-US\" ) & \"\", \"&\", \"&amp;\" ), \"<\", \"&lt;\" ), \">\", \"&gt;\" ), \"'\", \"&apos;\" ), \"\"\"\", \"&quot;\" ), \"%\", \"%25\" ), \"#\", \"%23\" )"
+  ],
+  [
+   "_svg",
+   "\"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='30' viewBox='0 0 200 30'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\" & _L1_text & \"</text><text x='100' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23111111'>\" & _L2_text & \"</text></svg>\""
+  ]
+ ],
+ "D14 A percent and hash in static text and a theme name": [
+  [
+   "_Sales",
+   "[Sales]"
+  ],
+  [
+   "_Target",
+   "[Target]"
+  ],
+  [
+   "_Sales_LY",
+   "[Sales LY]"
+  ],
+  [
+   "_Achievement",
+   "DIVIDE ( _Sales, _Target )"
+  ],
+  [
+   "_Growth_vs_LY",
+   "DIVIDE ( ( _Sales - _Sales_LY ), _Sales_LY )"
+  ],
+  [
+   "_svg",
+   "\"<svg xmlns='http://www.w3.org/2000/svg' width='120' height='30' viewBox='0 0 120 30'><text x='10' y='20' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>100%25 %231 %2523 %2525 &amp;amp; &amp;%23x3c;</text><text x='10' y='28' font-family='Segoe UI, sans-serif' font-size='12' font-weight='400' text-anchor='start' fill='%23000000'>x</text></svg>\""
+  ]
+ ],
+ "D15 B errors: control characters, unknown kinds, ops and layers": "d61c15cc9adb82ef8d89436f:855",
+ "D16 B sparkline with area, dot, weeks, mirror, quoted date column": "6db8ed24f862cdbd40367445:3100",
+ "D17 B shapes bound: opacity, show, arrow down-good, ring static": "f071db719d5cd40abd8e0a32:1712",
+ "D18 B empty and default": "fe628681e38bb846340d697b:108",
+ "D19 nested IF": [
+  [
+   "_x",
+   "IF ( ( [Sales] > 1000 ), IF ( ( [Target] < 0 ), \"negative\", IF ( ( [Sales] = [Target] ), \"equal\", \"big\" ) ), \"small\" )"
+  ]
+ ],
+ "D20 nested SWITCH in IF": [
+  [
+   "_x",
+   "IF ( ISBLANK ( [Missing] ), SWITCH ( TRUE (), ( DIVIDE ( [Sales], [Target] ) >= 1 ), \"met\", ( DIVIDE ( [Sales], [Target] ) >= 0.8 ), SWITCH ( TRUE (), ( [Sales] <> 0 ), \"close\", \"zero\" ), \"far\" ), \"known\" )"
+  ]
+ ],
+ "D21 division by zero": [
+  [
+   "_x",
+   "( [Sales] / 0 )"
+  ]
+ ],
+ "D22 DIVIDE by zero and by BLANK": [
+  [
+   "_x",
+   "FORMAT ( COALESCE ( DIVIDE ( [Sales], 0 ), ( -1 ) ), \"#,0\", \"en-US\" ) & \"|\" & FORMAT ( COALESCE ( DIVIDE ( [Sales], [Missing] ), ( -2 ) ), \"#,0\", \"en-US\" )"
+  ]
+ ],
+ "D23 a column with spaces and brackets": [
+  [
+   "_x",
+   "\"<text>\" & SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SELECTEDVALUE ( 'My Sales Table'[Unit [Price]] (AED)] ) & \"\", \"&\", \"&amp;\" ), \"<\", \"&lt;\" ), \">\", \"&gt;\" ), \"'\", \"&apos;\" ), \"\"\"\", \"&quot;\" ), \"%\", \"%25\" ), \"#\", \"%23\" ) & \"</text>\""
+  ]
+ ],
+ "D24 Arabic text": [
+  [
+   "_x",
+   "\"‏المبيعات: \" & SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SELECTEDVALUE ( 'العملاء'[الاسم] ) & \"\", \"&\", \"&amp;\" ), \"<\", \"&lt;\" ), \">\", \"&gt;\" ), \"'\", \"&apos;\" ), \"\"\"\", \"&quot;\" ), \"%\", \"%25\" ), \"#\", \"%23\" ) & \" «هدف»‎ \" & FORMAT ( [Sales], \"#,0.0\", \"en-US\" )"
+  ]
+ ],
+ "D25 scientific notation": [
+  [
+   "_x",
+   "FORMAT ( 2.5e+21, \"#,0\", \"en-US\" ) & \" \" & FORMAT ( ( 0 * 1000000000 ), \"#,0.00\", \"en-US\" ) & \" \" & FORMAT ( 6.02e+23, \"0.00\", \"en-US\" )"
+  ]
+ ],
+ "D26 negative and tiny numbers": [
+  [
+   "_x",
+   "FORMAT ( ( ( -3.25 ) + 0 ), \"#,0.00\", \"en-US\" ) & \" \" & FORMAT ( ( -0.004 ), \"#,0.0\", \"en-US\" ) & \" \" & FORMAT ( ( 0 - 1234567.891 ), \"#,0.00\", \"en-US\" )"
+  ]
+ ],
+ "D27 BLANK arithmetic and the functions": [
+  [
+   "_x",
+   "IF ( ISBLANK ( ( BLANK () + BLANK () ) ), \"b+b blank\", \"b+b not blank\" ) & \";\" & IF ( ISBLANK ( ( BLANK () * 5 ) ), \"b*5 blank\", \"b*5 not blank\" ) & \";\" & FORMAT ( ( BLANK () - 5 ), \"#,0\", \"en-US\" ) & \";\" & FORMAT ( MIN ( [Sales], [Target] ), \"#,0\", \"en-US\" ) & \";\" & FORMAT ( MAX ( ( -2 ), 3 ), \"#,0\", \"en-US\" ) & \";\" & FORMAT ( ABS ( ( -7.5 ) ), \"#,0.0\", \"en-US\" ) & \";\" & FORMAT ( SIGN ( ( -7.5 ) ), \"#,0\", \"en-US\" ) & \";\" & IF ( ( BLANK () = 0 ), \"blank is 0\", \"blank is not 0\" )"
+  ]
+ ],
+ "D28 every escape and a measure name with ] and quotes": [
+  [
+   "_x",
+   "SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( \"<a href=\"\"x\"\">&'100%' #1</a>\" & \"\", \"&\", \"&amp;\" ), \"<\", \"&lt;\" ), \">\", \"&gt;\" ), \"'\", \"&apos;\" ), \"\"\"\", \"&quot;\" ), \"%\", \"%25\" ), \"#\", \"%23\" ) & \" \" & SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( [Net ]]]] \"q\" [x]]] & \"\", \"&\", \"&amp;\" ), \"<\", \"&lt;\" ), \">\", \"&gt;\" ), \"'\", \"&apos;\" ), \"\"\"\", \"&quot;\" ), \"%\", \"%25\" ), \"#\", \"%23\" ) & \" \" & FORMAT ( [Net ]]]] \"q\" [x]]], \"#,0\", \"en-US\" )"
+  ]
+ ],
+ "E1": {
+  "agree": 140,
+  "left_out": 29,
+  "disagree": [
+   "D25 _x: evaluator \"3 0.00 6.03\", DAX \"2,500,000,000,000,000,000,000 0.00 602000000000000000000000.00\"",
+   "D26 _x: evaluator \"-3.25 0.0 -1,234,567.89\", DAX \"-3.25 -0.0 -1,234,567.89\""
+  ]
+ }
+}

@@ -24,6 +24,9 @@ export const modelPath = z.string().describe('A Power BI project folder, its .Se
 
 export const pageInput = z.union([z.enum(['1920x1080', '1280x720', '960x720']), z.object({ w: z.number(), h: z.number() })])
   .describe('Power BI page size: 1920x1080 (default), 1280x720, 960x720, or { w, h } (640-3840 x 360-2160, shaped 4:3 to 2.4:1; other sizes are fitted as the website does)');
+// (0.3.2 LG1, D-1105-16) the person's language for a reading tool's answer words (the "several models" error): optional,
+// no default, so without it read-words.mjs keeps AR4's rule (Arabic letters in the path or a tied folder)
+export const readLangInput = z.enum(['en', 'ar']).optional().describe('The language the user writes in: pass "ar" when the user writes in Arabic (even when the folder names are English), "en" when in English; then an answer about which model is meant is said in it');
 export const langInput = z.enum(['en', 'ar']).default('en').describe('Language of the report: names in it, and right to left when dir is not given');
 export const slot = z.object({
   kind: z.enum(VISUAL_KINDS),
@@ -36,8 +39,12 @@ export const columnStatsShape = () => z.object({ rows: z.record(z.string(), z.nu
 // (0.3.1 MR1, B-270: the MCP review) a tool's inputs as a strict object: an input the tool does not have (a misspelled
 // option) is refused and named, never stripped silently (the agent would believe its option applied). zod's own words
 // ("Unrecognized key") do not say what to do; these do. Every tools/*.mjs registers its inputSchema through it.
-export const unknownKeysSaid = (what, keys, known) => `Unrecognized key${keys.length === 1 ? '' : 's'} ${keys.map((k) => `'${String(k).slice(0, 60)}'`).join(', ')}; ${what} are: ${known.join(', ')}. Call again without ${keys.length === 1 ? 'it' : 'them'} (or with the input you meant).`;
-const strictAs = (what, shape) => z.strictObject(shape, { error: (iss) => (iss.code === 'unrecognized_keys' ? unknownKeysSaid(what, iss.keys, Object.keys(shape)) : undefined) });
+// (0.3.2 TK1, B-281) at most KEYS_SHOWN keys named, and how many more
+const KEYS_SHOWN = 20;
+export const keysSaid = (keys) => keys.slice(0, KEYS_SHOWN).map((k) => `'${String(k).slice(0, 60)}'`).join(', ') + (keys.length > KEYS_SHOWN ? ` and ${keys.length - KEYS_SHOWN} more` : '');
+export const unknownKeysSaid = (what, keys, known) => `Unrecognized key${keys.length === 1 ? '' : 's'} ${keysSaid(keys)}; ${what} are: ${known.join(', ')}. Call again without ${keys.length === 1 ? 'it' : 'them'} (or with the input you meant).`;
+const strictAs = (what, shape, said) => z.strictObject(shape, { error: (iss) => (iss.code === 'unrecognized_keys' ? (said || ((keys) => unknownKeysSaid(what, keys, Object.keys(shape))))(iss.keys) : undefined) });
 // a tool's whole inputs; and an option object inside them that a person types by hand (MR1.md "Decisions")
-export const strictInputs = (tool, shape) => strictAs(`the inputs of ${tool}`, shape);
+// (0.3.2 TK1) said(keys): a tool's own words for its unknown keys (create_report: the ones the approved plan holds)
+export const strictInputs = (tool, shape, said) => strictAs(`the inputs of ${tool}`, shape, said);
 export const strictObject = (option, shape) => strictAs(`the keys of ${option}`, shape);

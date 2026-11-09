@@ -58,16 +58,21 @@ try {
     const pl = await w.call('plan_layout', { path: rel, layout: 'exec', name: 'Paths' });
     const pid = pl.j && pl.j.plan && pl.j.plan.planId;
     if (pid) await w.call('approve_plan', { planId: pid });
-    const cr = pid ? await w.call('create_report', { path: rel, name: 'Paths', planId: pid, design: pl.j.design }) : pl;
-    chk(() => !cr.err && fs.existsSync(path.join(dir, 'Paths.pbip')), () => `${k}. create_report writes "Paths" in "${rel}": ${short(cr)}`);
+    const cr = pid ? await w.call('create_report', { path: rel, planId: pid }) : pl;
+    // (0.3.2 WN1, F05) on Windows a path over 259 characters is refused at plan time, with a plain message (Power BI
+    // Desktop keeps the 260 limit: Microsoft's "Power BI Desktop projects", considerations 4); elsewhere written as before
+    const refused = k === 'long' && process.platform === 'win32';
+    if (refused) chk(() => !pid && /characters/.test(pl.t) && !fs.existsSync(path.join(dir, 'Paths.pbip')), () => `${k}. Windows: plan_layout refuses "Paths" in "${rel}" (a path over 259 characters), nothing written: ${short(pl)}`);
+    else chk(() => !cr.err && fs.existsSync(path.join(dir, 'Paths.pbip')), () => `${k}. create_report writes "Paths" in "${rel}": ${short(cr)}`);
     const tp = await w.call('create_arabic_twin', { path: rel + '/Twin Sales.pbip' });
     const tid = tp.j && tp.j.plan && tp.j.plan.planId;
     if (tid) await w.call('approve_plan', { planId: tid });
     const tw = tid ? await w.call('create_arabic_twin', { path: rel + '/Twin Sales.pbip', planId: tid }) : tp;
-    chk(() => !tw.err && fs.readdirSync(dir).some((f) => /AR\.pbip$/.test(f)), () => `${k}. create_arabic_twin writes the twin in "${rel}": ${short(tw)}`);
+    if (refused) chk(() => !tid && tp.err && /characters/.test(tp.t) && !fs.readdirSync(dir).some((f) => /AR\.pbip$/.test(f)), () => `${k}. Windows: create_arabic_twin refuses the twin in "${rel}" (over 259 characters), nothing written: ${short(tp)}`);
+    else chk(() => !tw.err && fs.readdirSync(dir).some((f) => /AR\.pbip$/.test(f)), () => `${k}. create_arabic_twin writes the twin in "${rel}": ${short(tw)}`);
     const realDir = fs.realpathSync.native(dir) + path.sep, added = files(ROOT).filter((f) => !before.has(f));
     const outside = added.filter((f) => !fs.realpathSync.native(f).startsWith(realDir));
-    chk(() => added.length > 20 && !outside.length, () => `${k}. every file written is inside "${rel}" (${added.length} written): outside ${JSON.stringify(outside.slice(0, 3))}`);
+    chk(() => (refused ? added.length === 0 : added.length > 20) && !outside.length, () => `${k}. every file written is inside "${rel}" (${added.length} written): outside ${JSON.stringify(outside.slice(0, 3))}`);
   }
   const tm = await w.call('read_model', { path: 'crlf-tmdl' });
   chk(() => !tm.err && ['Orders', 'Dates'].every((t) => tablesOf(tm).includes(t)), () => `crlf. read_model reads a TMDL project with CRLF line ends: ${short(tm)}`);

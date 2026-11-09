@@ -38,7 +38,7 @@ export async function v029k({ call, check, ROOT, fs = fs0 }) {
     chk(() => !hb.length, () => `A1-11: the health check's format rule agrees: ${hb.join('; ')}`);
     const FM = (() => { try { return req('../assets/js/field-meaning.js'); } catch (e) { return null; } })();
     const src = (f) => fs.readFileSync(path.join(REPO, 'assets/js', f), 'utf8');
-    chk(() => FM && typeof FM.percentFromName === 'function' && typeof FM.hasCurrency === 'function' && !/const NOT_PCT =/.test(src('model-health-tmdl.js')) && !/const PCT = \(x\) => \/%\//.test(src('pbip-bind.js')),
+    chk(() => FM && typeof FM.percentFromName === 'function' && typeof FM.hasCurrency === 'function' && !/const NOT_PCT =/.test(src('model-health-tmdl.js')) && !/const PCT = \(x\) => \/%\//.test(['pbip-bind.js', 'field-catalog.js', 'field-suggest.js'].filter((f) => fs.existsSync(path.join(REPO, 'assets/js', f))).map(src).join('\n')),
       () => 'A1-11: one shared rule, assets/js/field-meaning.js, used by the picker and the health engine (no copy left in either)');
   }
 

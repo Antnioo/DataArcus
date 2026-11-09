@@ -61,7 +61,8 @@ export const textColumnsOf = (m) => (m ? (m.tables || []).flatMap((t) => (t.colu
 export const continuousColumnsOf = (m) => (m ? [...new Set(dateColumnsOf(m).concat(...(m.tables || []).map((t) => (t.columns || []).filter((c) => NUMBER.test(String(c.dataType || ''))).map((c) => t.name + '.' + c.name))))] : []);
 
 // ---- the Arabic month column: a TMDL script offered when the model has one date table and no Arabic month ----
-const tmdlName = (n) => (/^[A-Za-z_][A-Za-z0-9_]*$/.test(n) ? n : "'" + String(n).replace(/'/g, "''") + "'");
+// a TMDL name: the one rule, assets/js/tmdl-name.js (0.3.2 DD2N)
+const tmdlName = require('../../assets/js/tmdl-name.js').tmdlName;
 const daxCol = (t, c) => "'" + String(t).replace(/'/g, "''") + "'[" + String(c).replace(/]/g, ']]') + ']';
 // (0.3.0 C1, the owner, 21 Oct) the full set of Arabic calendar columns (the shared builder, arabic-calendar.js): the
 // Arabic twins of what the date table has (months, days, quarters, fiscal year and quarter, Hijri months, the flags'

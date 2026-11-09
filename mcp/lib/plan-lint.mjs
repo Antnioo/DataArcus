@@ -22,6 +22,8 @@ const LC = require('../../assets/js/layout-check.js');
 import { NAMES } from './design-lint.mjs';
 import { safeText } from './read-report.mjs';
 import { planBinding } from './report-run.mjs';   // (SQ15b, 0.2.9-reader-S8: create_report's page and binding, not a copy)
+import { rulesInput, filledLanguages } from './check-report.mjs';   // (0.3.2 AP2: each page's language, the native copy's own reading)
+const { readingOrder } = require('../../assets/js/report-a11y.js');   // (0.3.2 AP2: the order a reader meets, the writer's Tab order)
 
 const PNG1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4AWMAAQAABQABNtCI3QAAAABJRU5ErkJggg==', 'base64');
 
@@ -130,8 +132,9 @@ export function planPreview(a) {
     let slots = p.slots; p.slots.filter((s) => s.kind === 'text' && !s.text).forEach((t) => { slots = absorb(slots.filter((s) => s !== t), t); });
     return Preview.fromSlots(slots, p.page, { name: p.name, rtl, colors }); }), from: 'slots' };
   // (0.3.1 GD2) a glass page drawn on a small copy of its picture (glass-picture.mjs), the approval page's only
-  const files = inReport(b.r), pages = Preview.fromFiles(files, { rtl, colors, picture: (bytes) => glassPreviewUrl(bytes) });
-  const inv = inventory(memorySource(files), 'the planned report'), shown = inv.pages.filter((p) => p.kind !== 'Tooltip' && !p.hidden);
+  // (0.3.2 TP1, D-1105-17) the tooltip pages the click writes too, after the shown pages (fromFiles' order), each flagged
+  const files = inReport(b.r), pages = Preview.fromFiles(files, { rtl, colors, picture: (bytes) => glassPreviewUrl(bytes), tooltips: true });
+  const inv = inventory(memorySource(files), 'the planned report'), shown = inv.pages.filter((p) => p.kind !== 'Tooltip' && !p.hidden).concat(inv.pages.filter((p) => p.kind === 'Tooltip'));
   pages.forEach((p, k) => {
     const ip = shown[k]; if (!ip) return;
     const found = lint(inv, a.m.tables, null, { pages: [ip.n] }).findings.filter((f) => FLAG_OF[f.rule]), flags = [];
@@ -186,4 +189,64 @@ export function aggregationAnswer(g, lang) {
     out.askFirst = 'Ask the user each pleaseConfirm question before the plan is approved, as a question, not a finding. The report is written as planned either way: when the answer is yes, the measure needs period-end logic in the model (for example CLOSINGBALANCEMONTH, or CALCULATE with LASTDATE), which DataArcus does not write or change.';
   }
   return out;
+}
+
+// (0.3.2 AP1, E1 round 5: the approval page named 3 slicers and one page while the click wrote 6 slicers, 6 buttons and
+// two tooltip pages) what each page of the planned report holds, read back from the exact files the write writes (the
+// reading layer, from memory): every page in order (a tooltip page or a hidden one marked), and on it every visual by
+// its kind, counted; the slicers by their field, the buttons by where they go, the charts by the field they group by.
+// Field names only (metadata), never a value. files: the exact artifact's files ("<name>.Report/..."). Returns
+// [{ n, name, tooltip, hidden, visuals, slicers: [field], buttons: [{ to: 'page' | 'bookmark' | 'other', name }],
+//   kinds: [{ type, count, by: [field] }], cards: [{ shows: [measure] }] (each card by the model measures it shows),
+//   messageCards (the "no data" message cards laid over charts), usedBy?: [page name] (a tooltip page: the pages whose visuals show it) }],
+//   each list in reading order (rows top to bottom, each row in the page's reading direction); [] when the report can't be read back.
+const BY_ROLES = ['Category', 'Rows', 'Axis', 'Legend', 'Series', 'Values'], CARD_TYPES = /^(cardVisual|card|multiRowCard|kpi)$/;
+export function pagesWritten(files) {
+  let inv = null;
+  try { inv = inventory(memorySource(inReport({ files: files || [] })), 'the planned report'); } catch (e) { inv = null; }
+  if (!inv) return [];
+  const tips = new Map();
+  inv.pages.forEach((p) => p.visuals.forEach((x) => { if (x.tooltipPage) { const u = tips.get(x.tooltipPage) || []; if (!u.includes(p.name)) u.push(p.name); tips.set(x.tooltipPage, u); } }));
+  // (0.3.2 AP2, A-PF2-1, D-1108-07: AP1's sort read rx and ry, keys the inventory deletes, so the lists kept the files'
+  // order) each page's visuals as a person reads them: rows top to bottom, each row left to right, right to left on a
+  // right-to-left page (report-a11y.js readingOrder, the writer's own Tab order; each page's language as the native copy
+  // reads it, check-language.mjs filledLanguages: language buttons, the pages that link to it, its own texts)
+  let langs = {};
+  try { langs = filledLanguages(inv, rulesInput(inv).R).pages; } catch (e) { langs = {}; }
+  const inOrder = (p) => readingOrder(p.visuals.map((v) => ({ x: +v.x || 0, y: +v.y || 0, w: +v.w || 0, h: +v.h || 0, v })), langs[p.id] === 'ar' || langs[p.id] === 'he' ? 'rtl' : 'ltr').map((b) => b.v);
+  return inv.pages.map((p) => {
+    const slicers = [], buttons = [], kinds = new Map(), cards = [];
+    let messageCards = 0;
+    inOrder(p).forEach((x) => {
+      const cols = BY_ROLES.flatMap((r) => (x.fields && x.fields[r]) || []).filter((f) => f && f.kind === 'column').map((f) => `${f.table}[${f.name}]`);
+      if (x.slicer) { slicers.push(cols[0] || '(a field)'); return; }
+      if (x.type === 'actionButton') { const m = /^(\w+)(?: -> (?:bookmark|page) "(.*)")?/.exec(String(x.action || '')) || [];
+        buttons.push({ to: m[1] === 'PageNavigation' ? 'page' : m[1] === 'Bookmark' ? 'bookmark' : 'other', name: m[2] || null }); return; }
+      // (0.3.2 PF2, B-383: kpis 0 and the tooltip pages' own cards, unnamed in the plan) each card by the model measures
+      // it shows; a card showing report measures only is a "no data" message laid over a chart (noDataMessage), counted apart
+      if (CARD_TYPES.test(x.type)) { const all = Object.values(x.fields || {}).flat().filter((f) => f && f.kind === 'measure'), shows = all.filter((f) => !f.report).map((f) => `${f.table}[${f.name}]`);
+        if (shows.length) cards.push({ shows: [...new Set(shows)] }); else if (all.length) messageCards++; }
+      const k = kinds.get(x.type) || { type: x.type, count: 0, by: [] }; k.count++;
+      if (cols[0] && !/^(cardVisual|card|multiRowCard|kpi|textbox|shape|image|group|tableEx|pivotTable)$/.test(x.type)) k.by.push(cols[0]);
+      kinds.set(x.type, k);
+    });
+    return Object.assign({ n: p.n, name: p.name, tooltip: p.kind === 'Tooltip', hidden: !!p.hidden, visuals: p.visualCount, slicers, buttons, kinds: [...kinds.values()],
+      // (the cards in the page's reading order, as every list here: inOrder)
+      cards, messageCards }, p.kind === 'Tooltip' ? { usedBy: tips.get(p.name) || [] } : {});
+  });
+}
+
+// (0.3.2 PF2, B-383; the owner's standing rule: the plan the person approves says what the click writes) every card
+// visual the planned report writes, page by page, from pagesWritten (the exact files): the KPI cards of a page's top row
+// (kpis: 0 leaves the row out) and each tooltip page's own card, written whatever kpis is. A page with no card visual is
+// not listed; the "no data" message cards (messageCards) are said by the design lint (COVER_CARDS); KPI cards drawn as
+// pictures (flipCards, svgCards) by their own part. Field names only (metadata).
+// kpis: the plan's card count (null: hand-placed pages); PW: pagesWritten(files). Returns { kpis, pages: [{ page,
+// tooltip?, cards: [measures] }] (40 pages, 12 cards each at most), sayInPlan }, or null when nothing was read back.
+export function cardsWritten(PW, kpis) {
+  if (!Array.isArray(PW) || !PW.length) return null;
+  const all = PW.filter((x) => (x.cards || []).length).map((x) => Object.assign({ page: String(x.name) }, x.tooltip ? { tooltip: true } : {}, { cards: x.cards.slice(0, 12).map((c) => c.shows.join(', ')) }));
+  const tips = all.some((x) => x.tooltip), pages = all.slice(0, 40);
+  return Object.assign({ kpis, pages }, all.length > 40 ? { notListed: all.length - 40 } : {}, {
+    sayInPlan: `Say in the plan each card in pages (the measure it shows): ${kpis === 0 ? 'kpis 0 writes no KPI card on the report pages' : 'the KPI cards (as pictures: said in flipCards, svgCards)'}${tips ? '; each tooltip page\'s own card shows the measure at the point a reader hovers, whatever kpis is' : ''}.` });
 }

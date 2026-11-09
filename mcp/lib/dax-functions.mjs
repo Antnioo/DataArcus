@@ -23,6 +23,10 @@ import { targetOf, kpiSaid } from './status-icons.mjs';
 import { besideSaid } from './plain-words.mjs';   // (0.3.1 R4A, T-9: the folder by its name and where it is)
 
 const require = createRequire(import.meta.url);
+// a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
+const { litText, columnWidth } = require('../../assets/js/pbir-values.js');
+// is this text Arabic: arabic-script.js, its one home (0.3.2 DD1F; CONTRACTS.md 1f)
+const { hasArabic } = require('../../assets/js/arabic-script.js');
 const Fix = require('../../assets/js/model-health-tmdl.js'), Pbip = require('../../assets/js/pbip-export.js'), E = require('../../assets/js/design-engine.js');
 const dax = Pbip.daxNames;
 
@@ -149,8 +153,7 @@ export function coloursOf(ui) {
 // ---------- the measures DataArcus writes with the library (each one call of a function) ----------
 const lit = (v) => ({ expr: { Literal: { Value: v } } }), str = (s) => lit("'" + String(s).replace(/'/g, "''") + "'"), bool = (b) => lit(b ? 'true' : 'false');
 const obj = (p) => [{ properties: p }];
-const litOf = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value) : '');
-const textOf = (p) => litOf(p).replace(/^'|'$/g, '').replace(/''/g, "'");
+const textOf = litText;
 const measureRef = (t, m) => ({ Measure: { Expression: { SourceRef: { Entity: t } }, Property: m } });
 const WORDS = { en: { period: 'last year', units: null }, ar: { period: 'العام الماضي', units: UNITS_AR } };
 // (0.3.1 SQ2, L6-S2) the value's text as the flip cards say it, K/M/B in the report's language: the number, then in
@@ -171,7 +174,7 @@ export const cardDax = (t, mo, title, cal, c, w, h, lang) => { const mref = dax.
 // (0.3.1 TT1, the owner, 27 Oct: a title is wholly Arabic or wholly English) the Arabic sentence only for an Arabic noun;
 // an English noun takes the English sentence in an Arabic report too (the leader is a data value: the plan says it may
 // be in the other language)
-export const storyLang = (noun, lang) => (lang === 'ar' && /[\u0600-\u06FF]/.test(String(noun)) ? 'ar' : 'en');
+export const storyLang = (noun, lang) => (lang === 'ar' && hasArabic(noun) ? 'ar' : 'en');
 export const storyDax = (t, mo, cat, noun, cal, lang0) => { const lang = storyLang(noun, lang0), mref = dax.column(t, mo.name), cref = dax.column(cat.t, cat.c);
   return [`VAR _top = TOPN ( 1, FILTER ( VALUES ( ${cref} ), NOT ISBLANK ( ${mref} ) ), ${mref}, DESC )`, `VAR _k = MAXX ( _top, ${cref} )`,
     `VAR _v = CALCULATE ( ${mref}, TREATAS ( { _k }, ${cref} ) )`, `VAR _s = ${valueDax(mo, mref, lang)}`,
@@ -213,7 +216,7 @@ export function applyDax(files, o) {
   // only into their slack, in proportion. Too little room: no picture column, told.)
   const fitPictures = (v, cols) => {
     const vis = v.j.visual, ps = vis.query.queryState.Values.projections, cw = ((vis.objects || {}).columnWidth || []), sc = (pageH.get(v.path.replace(/\/visuals\/[^/]+\/visual\.json$/, '')) || 1080) / 1080;
-    const widthOf = (p) => { const e = cw.find((x) => x.selector && x.selector.metadata === p.queryRef); return e ? +String(e.properties.value.expr.Literal.Value).replace(/D$/, '') : null; };
+    const widthOf = (p) => columnWidth(cw, p.queryRef);
     const shown = ps.filter((p) => widthOf(p) !== 0 && p.displayName !== ' ');
     const need = (p) => Math.ceil(Pbip.columnRoom(p, tt, o.font || 'Segoe UI') - 10 + 24 * sc);
     const box = Math.round(v.j.position.width) - 36, others = shown.reduce((a, p) => a + need(p), 0);

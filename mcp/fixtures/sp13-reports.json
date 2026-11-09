@@ -1,0 +1,149 @@
+{
+ "about": "test-0.3.2-sp13.mjs: create_report's answers and the written files recorded on the base (normalised: the plan id, the working folder and the path separator)",
+ "runs": {
+  "T1 EN glass 1920 x 1080, rail at the start, two pages": {
+   "plan": {
+    "err": false,
+    "length": 13142,
+    "sha256": "c7f05b54b94cef598c259c1a34fe676bd29a750a16b93c43b14845c60976f662"
+   },
+   "report": {
+    "err": false,
+    "length": 10199,
+    "sha256": "79e747c8262f2906ba21af4dd8a1a87dbcb7fe891e78858360a6ab04689fbe3f"
+   },
+   "files": {
+    "count": 89,
+    "sha256": "7791f74a5c5a7abd6ddecf8d7cbbf63e85c0ce11faacb4917957c8e963bcb14d"
+   }
+  },
+  "T2 EN plain 1280 x 720, strip on top": {
+   "plan": {
+    "err": false,
+    "length": 14332,
+    "sha256": "916f02f769d10e98a2d472752f1b4fd02bda763eb10768af54ff3a14cd250ca2"
+   },
+   "report": {
+    "err": false,
+    "length": 11004,
+    "sha256": "c14dcbd8d5d7d46970208b4a838636b4c87ad85fe4381971b54dfa22f683f458"
+   },
+   "files": {
+    "count": 104,
+    "sha256": "8ca48c5ee6595813efcdd436010a5ece3317231ca26ba0640b63c988ad37736d"
+   }
+  },
+  "T3 AR glass 1920 x 1080, slide-in panel, names approved": {
+   "plan": {
+    "err": false,
+    "length": 17872,
+    "sha256": "ba0166cf677398f03dc223f170349dc1f6175a2fb3ee54f6dff23aac93d05fc6"
+   },
+   "report": {
+    "err": false,
+    "length": 9721,
+    "sha256": "c6143c2a72bc132bac92e20fae177bf8cac53314f5be5b6fcafea2e1ec561528"
+   },
+   "files": {
+    "count": 87,
+    "sha256": "8ffbe491cc6113c4bd19711fbc3435652bd05cde8c29b5c5d72522309b976e8e"
+   }
+  },
+  "T4 AR plain 1280 x 720, strip on top, names approved": {
+   "plan": {
+    "err": false,
+    "length": 20066,
+    "sha256": "20b98475d9f235bc0da36873f6657f8ad51fbaac6a773ea6d59e7419ecbfbbe3"
+   },
+   "report": {
+    "err": false,
+    "length": 10331,
+    "sha256": "f521a71b5dcf3c775c796cbeec953508d56767f7a91b74ee87f3808dbc1146fb"
+   },
+   "files": {
+    "count": 103,
+    "sha256": "f4dcf0681f1372be6c63f0a17212ee502cb7e86dce98e82b5d99669edd350dad"
+   }
+  },
+  "T5 EN glass 1280 x 720 on the twin, slide-in panel": {
+   "plan": {
+    "err": false,
+    "length": 13615,
+    "sha256": "2288c33fbb590e67f5999f4c3cafd8bbd62bcea543af1c0aac0dbb33bc7fb1e2"
+   },
+   "report": {
+    "err": false,
+    "length": 8666,
+    "sha256": "7f785b38502b37500471089ae7961ac3657888d749fce6646b217945fa755683"
+   },
+   "files": {
+    "count": 135,
+    "sha256": "e87226170812c0d75b01685241737fcefdc3583c1541aeb55b7a6e19e5153452"
+   }
+  },
+  "T6 hand-placed, 8 pages, tabs on two rows": {
+   "plan": {
+    "err": false,
+    "length": 11094,
+    "sha256": "cafa224eb5530c4cfd66485f8f554161f2921472bf7a81288d84db0f696a9cd0"
+   },
+   "report": {
+    "err": false,
+    "length": 6526,
+    "sha256": "b02bb89931f93dd5ed37de8b74dfa65a7eb8f6c79da35d4c8485e002993ce919"
+   },
+   "files": {
+    "count": 334,
+    "sha256": "2407a0229d710fd4fc8a4a525f557cfe9cf9d70a44f4ae8e88f6bbc23f97143e"
+   }
+  },
+  "T7 hand-placed AR on the twin, 6 pages, a low header, a small slicer slot": {
+   "plan": {
+    "err": false,
+    "length": 20213,
+    "sha256": "0cd81b486f930b9d7b402be9dde46a2ed3c5a0d9feac340250b3b6e3aab5ad0d"
+   },
+   "report": {
+    "err": false,
+    "length": 13912,
+    "sha256": "3fe14a15702ab1511a18157327d80a14418ff2f1a47b0c67451719e25bbfc5cf"
+   },
+   "files": {
+    "count": 126,
+    "sha256": "d755caa8ed66b6cbbf67842ad9180ec882da0f12c4933e8307add57b2cca77ec"
+   }
+  },
+  "T8 hand-placed EN, 7 pages, a low header, a narrow strip": {
+   "plan": {
+    "err": false,
+    "length": 11372,
+    "sha256": "a0f38d626025faf34395cb2544ea8a978472289a7a58b8fab9e8c1d85de21aba"
+   },
+   "report": {
+    "err": false,
+    "length": 8390,
+    "sha256": "84a0616df4e1a5ca0685c89bafa8b8006c3590d61e484815e130b97be8f6ff53"
+   },
+   "files": {
+    "count": 184,
+    "sha256": "c270f4a1232ec8c2371d9f556e97817e42d92908c9dd6235d2fb9d115cb1bcdc"
+   }
+  },
+  "T9 hand-placed AR on the twin, 4 pages, a header too low for tabs: single buttons": {
+   "plan": {
+    "err": false,
+    "length": 19959,
+    "sha256": "7cc5c064a675c35d42019fe1b9cb5ba7d8e9736b0e78b10a9a13fa316cf620bc"
+   },
+   "report": {
+    "err": false,
+    "length": 9485,
+    "sha256": "64686a37546eda41617422c8f9451061c39c76be98d413736c714a661db934be"
+   },
+   "files": {
+    "count": 161,
+    "sha256": "824dc248432f4e8f46f1426489b9f96e90a08251d12eaeceeba48a3940ed85b3"
+   }
+  }
+ }
+}

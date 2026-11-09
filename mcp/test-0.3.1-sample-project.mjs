@@ -98,16 +98,16 @@ try {
 
   // ---------- C4-C7: the gate and the write ----------
   const pw = await call(w, 'plan_layout', { sample: true }), pid = pw.j && pw.j.plan && pw.j.plan.planId, folder = pw.j && pw.j.sample && pw.j.sample.folder;
-  const early = await call(w, 'create_report', { sample: true, path: folder || 'Gulf Retail Sample', planId: pid });
+  const early = await call(w, 'create_report', { path: folder || 'Gulf Retail Sample', planId: pid });
   chk(() => early.err && /Nothing was written/.test(early.t) && JSON.stringify(hashes(ROOT)) === JSON.stringify(before), () => `C4. create_report before the approval: refused, nothing written: ${short(early)}`);
   const html = await approve(pid), txt = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
   chk(() => /Sample project/.test(txt) && /16 files/.test(txt) && /Model \(TMDL\) \(9\)/.test(txt) && /Empty report \(6\)/.test(txt) && /Project file \(1\)/.test(txt) && !/About the script/.test(txt) && /made up/i.test(txt),
     () => `C5. the approval page: "Sample project", 16 files grouped (model 9, report 6, project file 1), what is made up, no script section: ${txt.slice(0, 700)}`);
-  const other = await call(w, 'create_report', { sample: true, path: 'Somewhere Else', planId: pid });
+  const other = await call(w, 'create_report', { path: 'Somewhere Else', planId: pid });
   chk(() => other.err && /Nothing was written/.test(other.t) && !fs.existsSync(path.join(ROOT, 'Somewhere Else')), () => `C7. another folder than the approved one: refused, nothing written: ${short(other)}`);
-  const wr = await call(w, 'create_report', { sample: true, path: folder, planId: pid }), WJ = wr.j || {};
+  const wr = await call(w, 'create_report', { path: folder, planId: pid }), WJ = wr.j || {};
   const added = filesOf(ROOT).filter((f) => !(f in before));
-  const again = await call(w, 'create_report', { sample: true, path: folder, planId: pid });
+  const again = await call(w, 'create_report', { path: folder, planId: pid });
   chk(() => !wr.err && WJ.written === true && added.length === 16 && added.every((f) => f.startsWith('Gulf Retail Sample/')) && JSON.stringify(added.map((f) => f.replace(/^Gulf Retail Sample\//, ''))) === JSON.stringify((pw.j.sample.files || []).map((f) => f.replace(/^Gulf Retail Sample\//, '')).sort())
     && again.err && filesOf(ROOT).length === added.length + Object.keys(before).length,
     () => `C6. after the approval: exactly the 16 listed files, all in the sample's folder; the same plan again refused: ${added.length} ${again.err} ${short(wr)} ${JSON.stringify(added).slice(0, 400)} again: ${short(again)}`);
@@ -131,7 +131,7 @@ try {
   const tour = WJ.tour || [], step = (tool) => tour.find((x) => x.call && x.call.tool === tool && (tool !== 'plan_layout' || !x.call.args.languages)) || { call: { args: {} } };
   const t1 = step('plan_layout'), { pl, args } = await planReport(t1.call.args), rid = pl.j && pl.j.plan && pl.j.plan.planId;
   if (rid) await approve(rid);
-  const send = Object.assign({}, args, { planId: rid, design: pl.j && pl.j.design, fields: args.planFields }); delete send.planFields;
+  const send = { path: args.path, planId: rid };   // (0.3.2 TK1: the plan holds the rest)
   const rep = rid ? await call(w, 'create_report', send) : { err: true, t: 'no plan: ' + short(pl) };
   // (on Windows create_report's `open` is written with the OS separator; the tour's paths with /: both are the same path)
   const slash = (x) => (typeof x === 'string' ? x.replace(/\\/g, '/') : x);
@@ -151,13 +151,13 @@ try {
   const first = hashes(path.join(ROOT, 'Gulf Retail Sample'));
   const p3 = await call(w, 'plan_layout', { sample: true }), pid3 = p3.j && p3.j.plan && p3.j.plan.planId;
   if (pid3) await approve(pid3);
-  const w3 = pid3 ? await call(w, 'create_report', { sample: true, path: p3.j.sample.folder, planId: pid3 }) : { err: true, t: short(p3) };
+  const w3 = pid3 ? await call(w, 'create_report', { path: p3.j.sample.folder, planId: pid3 }) : { err: true, t: short(p3) };
   chk(() => p3.j.sample.folder === 'Gulf Retail Sample 2' && !w3.err && filesOf(path.join(ROOT, 'Gulf Retail Sample 2')).length === 16 && JSON.stringify(hashes(path.join(ROOT, 'Gulf Retail Sample'))) === JSON.stringify(first),
     () => `C16. a second sample: "Gulf Retail Sample 2", the first untouched: ${short(p3)} ${short(w3)}`);
   const p4 = await call(w, 'plan_layout', { sample: true }), pid4 = p4.j && p4.j.plan && p4.j.plan.planId, f4 = p4.j && p4.j.sample && p4.j.sample.folder;
   if (pid4) await approve(pid4);
   if (f4) { fs.mkdirSync(path.join(ROOT, f4)); fs.writeFileSync(path.join(ROOT, f4, 'mine.txt'), 'the person\'s own file'); }
-  const w4 = pid4 ? await call(w, 'create_report', { sample: true, path: f4, planId: pid4 }) : { err: true, t: '' };
+  const w4 = pid4 ? await call(w, 'create_report', { path: f4, planId: pid4 }) : { err: true, t: '' };
   chk(() => f4 === 'Gulf Retail Sample 3' && w4.err && /Nothing was written/.test(w4.t) && JSON.stringify(filesOf(path.join(ROOT, f4))) === '["mine.txt"]', () => `C17. a folder taken after the plan: refused, nothing written over: ${short(w4)}`);
 
   // ---------- C18: no real company, no employer data ----------
@@ -180,7 +180,7 @@ try {
     () => `C20. the tour: 4 steps, each a real tool with real inputs: ${badCalls.join('; ')} ${JSON.stringify(tour).slice(0, 400)}`);
   const pa = await call(w, 'plan_layout', { sample: true, lang: 'ar' }), pida = pa.j && pa.j.plan && pa.j.plan.planId;
   if (pida) await approve(pida);
-  const wa = pida ? await call(w, 'create_report', { sample: true, path: pa.j.sample.folder, lang: 'ar', planId: pida }) : { err: true, t: short(pa) };
+  const wa = pida ? await call(w, 'create_report', { path: pa.j.sample.folder, planId: pida }) : { err: true, t: short(pa) };
   chk(() => !wa.err && (wa.j.tour || []).length === 4 && wa.j.tour.every((x) => AR.test(x.ask)) && tour.every((x) => !AR.test(x.ask)) && AR.test(wa.j.sayFirst || ''),
     () => `C21. an Arabic request: the tour in Arabic (and in English otherwise): ${short(wa)}`);
   const pdesc = (tl.plan_layout || {}).description || '';

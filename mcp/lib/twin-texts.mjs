@@ -10,6 +10,8 @@ import * as Terms from './terminology.mjs';
 import { TEXT_CAP, isObj, pageOf } from './twin-read.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
+// a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
+const { litBool } = require('../../assets/js/pbir-values.js');
 const Mirror = require('../../assets/js/report-mirror.js');
 const Rules = require('../../assets/js/report-rules.js');
 
@@ -79,8 +81,25 @@ function parseTitleDax(expr0, o) {
 }
 // the measure's DAX with the Arabic texts (one per branch, its {n} the branch's variables); a branch without a label keeps its own
 const daxText = (t) => '"' + String(t).replace(/"/g, '""') + '"';
+// (0.3.2 LV1, the owner's ER twin shot, 1 Nov: «الأكثر ازدحامًا: اليوم:Thursday الساعة:11:00 PM», the value glued and out
+// of reading order) in an Arabic label each value of the model is written in a first-strong isolate, UNICHAR ( 8296 ) &
+// value & UNICHAR ( 8297 ) (text-measure.js runs(), pbip-query.js isoNum), and a right-to-left mark, UNICHAR ( 8207 ), at
+// an end of the text that is a value (text-measure.js ends()). UNICHAR, not the marks inside the strings: the label's
+// texts stay byte for byte as approved, and no invisible character goes into the DAX. A label with no Arabic letter, or
+// a branch with no value, is written as before.
+const ISO_IN = 'UNICHAR ( 8296 )', ISO_OUT = 'UNICHAR ( 8297 )', RLM_DAX = 'UNICHAR ( 8207 )';
+function isoValues(pieces) {   // pieces: [{ v: variable } | { t: text }] of an Arabic label
+  const out = pieces.map((p) => (p.v != null ? `${ISO_IN} & ${p.v} & ${ISO_OUT}` : daxText(p.t)));
+  const blank = (p) => p.t != null && !p.t.trim();
+  const a = pieces.findIndex((p) => !blank(p)), z = pieces.length - 1 - [...pieces].reverse().findIndex((p) => !blank(p));
+  if (a >= 0 && pieces[a].v != null) out[a] = `${RLM_DAX} & ${out[a]}`;
+  if (z >= 0 && pieces[z].v != null) out[z] = `${out[z]} & ${RLM_DAX}`;
+  return out;
+}
 export function arabicDax(pd, labels) {
-  const one = (b, label) => { if (label == null) label = b.template; const out = []; String(label).split(/(\{\d+\})/).forEach((x) => { const v = /^\{(\d+)\}$/.exec(x); if (v) out.push(b.vars[+v[1] - 1]); else if (x) out.push(daxText(x)); }); return out.length ? out.join(' & ') : '""'; };
+  const one = (b, label) => { if (label == null) label = b.template; const pieces = []; String(label).split(/(\{\d+\})/).forEach((x) => { const v = /^\{(\d+)\}$/.exec(x); if (v) pieces.push({ v: b.vars[+v[1] - 1] }); else if (x) pieces.push({ t: x }); });
+    const out = TextMeasure.ARABIC.test(String(label)) && pieces.some((p) => p.v != null) ? isoValues(pieces) : pieces.map((p) => (p.v != null ? p.v : daxText(p.t)));
+    return out.length ? out.join(' & ') : '""'; };
   const bs = pd.branches.map((b, i) => one(b, labels[i]));
   return (pd.ret ? pd.prefix + 'RETURN ' : '') + (pd.cond != null ? `IF ( ${pd.cond}, ${bs[0]}, ${bs[1]} )` : bs[0]);
 }
@@ -140,7 +159,6 @@ const safeId = (raw) => (!INSTRUCTION.test(raw) && visible(raw) === raw && raw.l
 // [{ key: 'title' | 'subTitle', i (the entry), id (the text's id, as an explicit one's), vals, cats: [{ ref, name }] }]
 const AUTO_CATS = new Set(['Category', 'Series', 'Legend', 'Rows', 'Columns', 'Axis', 'Group', 'Details']), AUTO_SKIP = new Set(['Tooltips']);
 const AUTO_KINDS = new Set(['button', 'textbox', 'shape', 'image', 'group', 'unreadable']);
-const isOn = (p) => isObj(p) && isObj(p.expr) && isObj(p.expr.Literal) && String(p.expr.Literal.Value) === 'true';
 const hasText = (p) => p !== undefined && p !== null && !(isObj(p) && isObj(p.expr) && isObj(p.expr.Literal) && /^'\s*'$/.test(String(p.expr.Literal.Value)));
 // (0.3.1 TB1, the laptop's part 4: AdventureWorks' chart on a field parameter kept its English title, never listed) a
 // visual on a field parameter: its automatic title follows the field chosen. Each entry says it (param: the parameter's
@@ -158,7 +176,7 @@ export function autoTitlesOf(pageId, json) {
   if (vals.length + cats.length < (param != null ? 1 : 2)) return [];   // (one field: its own name, no "by" to compose)
   const vco = isObj(json.visual.visualContainerObjects) ? json.visual.visualContainerObjects : {}, where = pageId + '/' + json.name, out = [];
   ['title', 'subTitle'].forEach((key) => (Array.isArray(vco[key]) ? vco[key] : []).forEach((e, i) => {
-    if (!isObj(e) || e.selector || !isObj(e.properties) || !isOn(e.properties.show) || hasText(e.properties.text)) return;
+    if (!isObj(e) || e.selector || !isObj(e.properties) || litBool(e.properties.show) !== true || hasText(e.properties.text)) return;
     out.push(Object.assign({ key, i, id: key === 'title' ? 'title:' + where : `text:${where}/c.subTitle.${i}.text`, vals, cats, where }, param != null ? { param } : {}));
   }));
   // (0.3.1 FX3b, the owner's hand-made charts: no title card at all) no "show" set and no text: the type's default title
@@ -202,11 +220,30 @@ const DYNAMIC = {
   column: (c) => DYNAMIC.said(`A title given by the column ${safeName(c)} (the value chosen in it)`, `عنوان يعطيه العمود «${safeName(c)}» (القيمة المختارة فيه)`),
   param: (t) => DYNAMIC.said(`Power BI's title of a visual on the field parameter ${safeName(t)}, composed from the field chosen (if another field of the visual has an Arabic name, Power BI composes it from both)`, `عنوان Power BI لمرئي على معلمة الحقول «${safeName(t)}»، يُركَّب من الحقل المختار (وإن كان لحقل آخر في المرئي اسم عربي ركّبه Power BI من الاثنين)`)
 };
+// (0.3.2 DT1, B-294: bilingual.texts came out in a different order from run to run) the order the texts are listed in,
+// decided once: the order a person reads the report. Pages in the report's order (pages.json, readOriginal); on a page,
+// its visuals top to bottom, then left to right (position y, then x), a tie by z, tabOrder, the visual's type and its
+// texts (what a person sees), its file last (reached only when all of that is the same: never a random id while
+// anything shown differs); in a visual, its texts in their place (Mirror.textsOfVisual). Bookmarks in the Bookmarks
+// pane's order (bookmarks.json), the rest by their shown name. Only the order of the list: each text, its where and
+// its label slot are as before. The twin's build and copy keep readOriginal's order (by file).
+const num = (x) => (Number.isFinite(+x) ? +x : 0);
+const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+export function readingOrder(visuals) {
+  const key = (v) => { const j = isObj(v.json) ? v.json : {}, p = isObj(j.position) ? j.position : {}, vis = isObj(j.visual) ? j.visual : isObj(j.visualGroup) ? j.visualGroup : {};
+    let shown = ''; try { shown = Mirror.textsOfVisual('', j).map((t) => String(t.text)).join('\n'); } catch (e) { shown = ''; }
+    return [num(p.y), num(p.x), num(p.z), num(p.tabOrder), String(vis.visualType || (isObj(j.visualGroup) ? 'group' : '')), shown + '\u0000' + String(isObj(j.visualGroup) ? j.visualGroup.displayName || '' : ''), String(v.rel || '')]; };
+  const keyed = visuals.map((v) => [key(v), v]);
+  return keyed.sort(([a], [b]) => { for (let i = 0; i < a.length; i++) { const c = typeof a[i] === 'number' ? a[i] - b[i] : cmp(a[i], b[i]); if (c) return c; } return 0; }).map(([, v]) => v);
+}
+const bookmarksInOrder = (R) => { const at = new Map((R.bookmarkOrder || []).map((n, i) => [n, i])), shown = (b) => String(typeof b.json.displayName === 'string' ? b.json.displayName : '');
+  return R.bookmarks.slice().sort((a, b) => { const x = at.has(String(a.json.name)) ? at.get(String(a.json.name)) : Infinity, y = at.has(String(b.json.name)) ? at.get(String(b.json.name)) : Infinity;
+    return x !== y ? (x < y ? -1 : 1) : cmp(shown(a), shown(b)) || cmp(String(a.rel || ''), String(b.rel || '')); }); };
 export function textsOf(R) {
   const all = [], seen = new Set(), names = fieldNamesOf(R);
   const translatable = new Set(titleMeasuresOf(R).filter((x) => x.own && x.pd.branches).map((x) => x.entity + '\u0000' + x.name));
   const add = (t, where) => { if (seen.has(t.id)) return; seen.add(t.id); all.push(Object.assign(t, where)); };
-  R.pages.forEach((pg) => {
+  R.pages.forEach((pg0) => { const pg = Object.assign({}, pg0, { visuals: readingOrder(pg0.visuals) });   // (DT1: the reading order)
     add({ id: 'page:' + pg.id, kind: 'page', text: typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : '' }, { page: pg.id });
     // (rc.22, B-138: a page button kept its English text in the twin) a button that goes to a page knows that page
     const goesTo = (j) => { const l = ((((j || {}).visual || {}).visualContainerObjects || {}).visualLink || []).find((e) => e && e.properties) || {}, p = l.properties || {}, lit = (x) => (x && x.expr && x.expr.Literal ? String(x.expr.Literal.Value).replace(/^'|'$/g, '') : null);
@@ -247,7 +284,7 @@ export function textsOf(R) {
     // (0.3.0 D3) the phone layout's own texts: the header text box, a card's full title the writer wrapped for the phone
     pg.visuals.forEach((v) => { if (v.mobile) Mirror.textsOfMobile(pg.id, v.json, v.mobile.json).forEach((t) => add(Object.assign(t, { phone: true }), { page: pg.id, visual: String(v.json.name) })); });
   });
-  R.bookmarks.forEach((b) => add({ id: 'bookmark:' + b.json.name, kind: 'bookmark', text: typeof b.json.displayName === 'string' ? b.json.displayName : '' }, {}));
+  bookmarksInOrder(R).forEach((b) => add({ id: 'bookmark:' + b.json.name, kind: 'bookmark', text: typeof b.json.displayName === 'string' ? b.json.displayName : '' }, {}));
   // (SQ4, X1-S2) a bookmark group's name (bookmarks.json), shown in the Bookmarks pane above its bookmarks
   (R.bookmarkGroups || []).forEach((g) => add({ id: 'bookmarkGroup:' + g.name, kind: 'bookmarkGroup', text: g.displayName }, {}));
   // (rc.24) each visible text of the report's title measures, one per text across the report (the measures listed)

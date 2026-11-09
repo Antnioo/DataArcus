@@ -70,7 +70,7 @@ try {
     const id = repPlan.j && repPlan.j.plan && repPlan.j.plan.planId;
     chk(() => id, () => `T-1 setup. the report gets a plan id: ${short(repPlan)}`);
     repHtml = id ? await pageOf(id, true) : '';
-    repOut = id ? await w.call('create_report', { path: 'hp/Sales', name: 'Testers', planId: id, design: repPlan.j.design }) : { err: true, t: 'no plan' };
+    repOut = id ? await w.call('create_report', { path: 'hp/Sales', planId: id }) : { err: true, t: 'no plan' };
     chk(() => !repOut.err, () => `T-1 setup. the report is written: ${short(repOut)}`);
   }
   {

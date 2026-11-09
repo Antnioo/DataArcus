@@ -10,12 +10,16 @@
   'use strict';
   // the one field-meaning rule (assets/js/field-meaning.js, shared with the field picker: the block audit's A1-11, 11 Oct)
   const FM = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./field-meaning.js') : root.DataArcusFieldMeaning;
+  // the sort-column rule (0.3.2 DD1H): sort-column.js, its one home; the page loads it before this file
+  const SC = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./sort-column.js') : root.DASortColumn;
+  // the TMDL name rule (0.3.2 DD2N): tmdl-name.js, its one home; the page loads it before this file
+  const TN = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./tmdl-name.js') : root.DATmdlName;
   const TAB = '\t';
   const ind = (n) => TAB.repeat(n);
   const text = (v) => (Array.isArray(v) ? v.join('\n') : v == null ? '' : String(v));
 
-  // Names: quote unless plain; escape single quotes by doubling
-  const name = (n) => (/^[A-Za-z_][A-Za-z0-9_-]*$/.test(n) ? n : "'" + String(n).replace(/'/g, "''") + "'");
+  // Names: bare when plain, else in single quotes with ' doubled (a hyphen is quoted): tmdl-name.js
+  const name = TN.tmdlName;
   // Single-line property values; refuse values that would break the line
   const safeValue = (v) => typeof v === 'string' && !/[\r\n]/.test(v);
   // TMDL strips leading and trailing double quotes and whitespace from a property value, so a value with either
@@ -148,28 +152,13 @@
   }
 
   // ---------- round 2: sort columns and number formats as ready scripts (shared by the website and the MCP) ----------
-  // Month and weekday names sort A to Z unless the model gives them a sort-by column. sortColumnFor finds the number
-  // column of the same table to sort by: a year-month number for "Month Year", a weekday number for a day name, a
-  // month number for a month name; a Hijri or fiscal name only by a Hijri or fiscal number; a column the files give no
-  // type for (a DAX table's) only when its name says it is a number. (assets/js/pbip-bind.js has the same rule for the
-  // report writer: keep the two alike; mcp/test.mjs compares them.)
-  const NAME_LIKE = /(^|\s|_)(month|day|weekday)\s*_?(name|short)$|^(day of week|weekday|mmm|mmmm)$|short\s*month|month\s*-?\s*year|^month\s*year$|^(اسم\s*)?(الشهر|اليوم)$/i;
-  const sortKind = (n) => (/month|الشهر/i.test(n) && /year|السنة/i.test(n) ? 'yearMonth' : /day|week|اليوم/i.test(n) ? 'day' : 'month');
-  const SORT_BY = {
-    yearMonth: /^(year\s*-?\s*month|month\s*-?\s*year|yyyymm)\s*(no|num|number|index|key|sort|order|id)?$/i,
-    day: /(weekday|day\s*of\s*week)\s*(no|num|number|index)?$|^weekday$|^رقم\s*اليوم$/i,
-    month: /month\s*(no|num|number|index)$|^month$|month\s*of\s*year|^رقم\s*الشهر$/i
-  };
-  const FAMILY = /hijri|fiscal|هجري|مالي/i;
-  const family = (n) => (String(n).match(FAMILY) || [''])[0].toLowerCase();
-  function sortColumnFor(columns, colName) {
-    if (!NAME_LIKE.test(String(colName).replace(FAMILY, '').trim())) return null;
-    const kind = sortKind(colName), fam = family(colName);
-    const type = (c) => String(c.dataType || (c.type === 'calculatedTableColumn' || c.isDataTypeInferred ? 'unknown' : 'string')).toLowerCase(), plain = (c) => String(c.name).replace(FAMILY, '').trim();
-    const numberName = /(no|num|number|index|key|sort|order|id)$|day\s*of\s*week|month\s*of\s*year|^رقم/i;
-    const ok = (c) => c.name !== colName && family(c.name) === fam && SORT_BY[kind].test(plain(c)) && (/^(int64|double|decimal|number)$/.test(type(c)) || (type(c) === 'unknown' && numberName.test(plain(c))));
-    return (columns || []).find(ok) || null;
-  }
+  // Month and weekday names sort A to Z unless the model gives them a sort-by column: which number column sorts such a
+  // name is the one rule in sort-column.js (0.3.2 DD1H), the report writer's too (field-catalog.js; D-1104-12). Its type
+  // reader here (DD1H's decision): a column of the model files with no dataType is unknown, never text, whether a DAX
+  // table's or a data column's (RULES-POWERBI.md: a missing type read as text gives wrong findings; tmdl-model.js
+  // reads it as unknown too), so it is the rule's own colType; a model given with no column list has no sort column.
+  const { sortKind, family } = SC;
+  const sortColumnFor = (columns, colName) => SC.sortColumnFor(columns || [], colName, SC.colType);
   const noSortColumn = (n) => ({ yearMonth: 'no year-month number column (like 202401)', day: 'no weekday number column', month: 'no month number column' })[sortKind(n)];
   const WEEK_STARTS = ['sunday', 'monday', 'saturday'];
   const tref = (t) => "'" + String(t).replace(/'/g, "''") + "'", cref = (t, c) => tref(t) + '[' + String(c).replace(/]/g, ']]') + ']';

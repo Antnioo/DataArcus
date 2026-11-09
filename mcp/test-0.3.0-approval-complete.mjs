@@ -11,6 +11,16 @@ import './test-env.mjs';
 //   A6 approve_plan's "waiting" says a later click still counts and to call approve_plan again
 //   A1-5 the written twin: Microsoft's validator 0 errors, check_report 0 "can break"
 //   A7 hostile names on the new pages are escaped and shown as text
+//   A9 (0.3.2 AP1, E1 round 5: the page named 3 slicers and one page; the click wrote 9 slicers, 3 reset buttons, a
+//      second bar chart and tooltip pages) a first own report of a made-up service model, English and Arabic: the page
+//      names every page the click writes (the tooltip pages too) and, page by page, every visual by its kind, counted,
+//      the slicers by field, the buttons by where they go, the charts by their field (read back from the written
+//      files here); no "Other visuals: chosen by DataArcus" with nothing listed; the changed kind names its page
+//   A10 (0.3.2 PL1, E1 round 5 finding 6: option labels read as jargon) the options in plain words, English and Arabic:
+//      no input key, no chart.look, no visual type key or theme key on the report or redesign page (in process)
+//   A11 (TP1, D-1105-17: the preview also draws the tooltip pages) the Service model's two tooltip pages drawn after its
+//      report pages, each at its own size and captioned as a tooltip page (English and Arabic); within the cap of 12 the
+//      report's pages come first and the tooltip pages left out are counted (in process)
 //   node test-0.3.0-approval-complete.mjs
 import fs from 'node:fs';
 import os from 'node:os';
@@ -163,9 +173,120 @@ try {
         () => `A8 ${lang}. the plan and its approval page name the file the click writes: planned ${c.p.j && c.p.j.scriptAfterGo}, written ${c.file}: ${short(c.out)}`);
     }
   }
+  // ---------- A9: every page, visual, slicer and button the click writes is named on the page (AP1) ----------
+  {
+    const col = (name, dataType, extra) => Object.assign({ name, dataType, sourceColumn: name, summarizeBy: 'none' }, extra || {});
+    const part = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"A"}, {}) in Source' } }];
+    const SM = path.join(ROOT, 'svc', 'Service.SemanticModel'); fs.mkdirSync(SM, { recursive: true });
+    wr(path.join(SM, 'model.bim'), { compatibilityLevel: 1567, model: { culture: 'en-US', tables: [
+      { name: 'Work Orders', columns: [col('Order ID', 'int64'), col('Date Key', 'dateTime', { formatString: 'yyyy-mm-dd' }), col('Department', 'string'), col('Status', 'string'), col('Hours', 'double', { summarizeBy: 'sum' })],
+        measures: [{ name: 'Work Order Count', expression: "COUNTROWS ( 'Work Orders' )", formatString: '#,0' }, { name: 'Total Hours', expression: "SUM ( 'Work Orders'[Hours] )", formatString: '#,0.0' }], partitions: part('wo') },
+      { name: 'Dim Date', columns: [col('Date', 'dateTime', { formatString: 'yyyy-mm-dd' }), col('Year', 'int64'), col('Month', 'string', { sortByColumn: 'Month Number' }), col('Month Number', 'int64')], partitions: part('dd') }],
+      relationships: [{ name: 'r1', fromTable: 'Work Orders', fromColumn: 'Date Key', toTable: 'Dim Date', toColumn: 'Date' }] } });
+    wr(path.join(SM, 'definition.pbism'), { version: '4.0', settings: {} });
+    const AR = { 'Work Orders[Total Hours]': 'إجمالي الساعات', 'Work Orders[Work Order Count]': 'عدد أوامر العمل', 'Work Orders[Department]': 'القسم', 'Work Orders[Status]': 'الحالة', 'Work Orders[Hours]': 'الساعات', 'Work Orders[Order ID]': 'رقم الأمر',
+      'Work Orders[Date Key]': 'التاريخ', 'Dim Date[Date]': 'التاريخ', 'Dim Date[Year]': 'السنة', 'Dim Date[Month]': 'الشهر', 'Dim Date[Month Number]': 'رقم الشهر' };
+    // the written report, read here from its files: each page's name, kind, visuals by type, slicers' fields, buttons
+    const measuresOf = (v) => Object.values((v.visual.query || {}).queryState || {}).flatMap((r) => r.projections || []).map((p) => p.field && p.field.Measure).filter(Boolean);
+    const readBack = (dir) => { const pd = path.join(dir, 'definition/pages'), order = rd(path.join(pd, 'pages.json')).pageOrder;
+      return order.map((id, i) => { const pj = rd(path.join(pd, id, 'page.json')), vs = tree(path.join(pd, id, 'visuals')).filter((f) => /visual\.json$/.test(f)).map(rd), types = {}, slicers = [];
+        const cards = []; let buttons = 0, messages = 0; vs.forEach((v) => { const t = v.visualGroup ? 'group' : v.visual.visualType;
+          if (t === 'slicer') { const pr = ((((v.visual.query || {}).queryState || {}).Values || {}).projections || [])[0], c = pr && pr.field && pr.field.Column; slicers.push(c ? `${c.Expression.SourceRef.Entity}[${c.Property}]` : '?'); }
+          else if (t === 'actionButton') buttons++;
+          // (0.3.2 AP2, A-PF2-2, changed on purpose: each card by the model measures it shows; a card of report measures
+          // only is a "no data" message box, counted on its own line, never as a card)
+          else if (t === 'cardVisual' && measuresOf(v).length) { const own = measuresOf(v).filter((m) => !m.Expression.SourceRef.Schema).map((m) => m.Property); if (own.length) cards.push([...new Set(own)]); else messages++; }
+          else types[t] = (types[t] || 0) + 1; });
+        return { n: i + 1, name: pj.displayName, tooltip: pj.type === 'Tooltip', w: pj.width, h: pj.height, visuals: vs.length, types, slicers, buttons, cards, messages }; }); };
+    const EN = { clusteredBarChart: ['bar chart', 'bar charts'], clusteredColumnChart: ['column chart', 'column charts'], lineChart: ['line chart', 'line charts'], cardVisual: ['card', 'cards'], tableEx: ['table', 'tables'], textbox: ['text box', 'text boxes'], shape: ['shape', 'shapes'], group: ['group', 'groups'] };
+    const ARW = { clusteredBarChart: 'مخططات شريطية', clusteredColumnChart: 'مخططات عمودية', lineChart: 'مخططات خطية', cardVisual: 'بطاقات', tableEx: 'جداول', textbox: 'مربعات نص', shape: 'أشكال', group: 'مجموعات مرئيات' };
+    const n1 = (n, w) => `${n} ${n === 1 ? w[0] : w[1]}`;
+    for (const lang of ['en', 'ar']) {
+      const a = Object.assign({ path: 'svc/Service.SemanticModel', name: `Service ${lang}`, lang, filters: 'top', planFields: { slicers: ['Dim Date[Year]', 'Work Orders[Department]', 'Work Orders[Status]'], category: 'Work Orders[Department]', category2: 'Work Orders[Status]' } }, lang === 'ar' ? { displayNames: AR } : {});
+      const p = await w.call('plan_layout', a), id = p.j && p.j.plan && p.j.plan.planId;
+      chk(() => id, () => `A9 ${lang} setup. the service model's plan gets a plan id: ${short(p)}`);
+      if (!id) continue;
+      const raw = unesc((await pageOf(id, true)).html), H = raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+      const out = await w.call('create_report', { path: a.path, planId: id });
+      chk(() => !out.err, () => `A9 ${lang} setup. the report is written after the click: ${short(out)}`);
+      const pages = out.err ? [] : readBack(path.join(ROOT, 'svc', `Service ${lang}.Report`));
+      chk(() => pages.length === 4 && pages.filter((x) => x.tooltip).length === 2 && pages.reduce((s0, x) => s0 + x.slicers.length, 0) === 6, () => `A9 ${lang} setup. written: 4 pages (2 tooltip pages), 6 slicers: ${JSON.stringify(pages)}`);
+      const head = lang === 'ar' ? 'ما تحويه كل صفحة' : 'What each page holds', at = H.indexOf(head), S = at < 0 ? '' : H.slice(at);
+      chk(() => at >= 0 && new RegExp(`${head} \\(${pages.length}\\)`).test(H), () => `A9-1 ${lang}. the page has "${head} (${pages.length})": ${H.slice(H.indexOf(lang === 'ar' ? 'الحقول' : 'Fields'), H.indexOf(lang === 'ar' ? 'الحقول' : 'Fields') + 400)}`);
+      // each page's part: from its label to the next page's
+      const partOf = (x) => { const lab = lang === 'ar' ? `الصفحة ${x.n}: «${x.name}»` : `Page ${x.n}: ${x.name}`, i = S.indexOf(lab), nx = pages[x.n] ? S.indexOf(lang === 'ar' ? `الصفحة ${x.n + 1}: «` : `Page ${x.n + 1}: `, i + 1) : -1; return i < 0 ? '' : S.slice(i, nx > i ? nx : i + 1500); };
+      for (const x of pages) {
+        const P = partOf(x), want = (lang === 'ar'
+          ? [`المرئيات: ${x.visuals}`].concat(x.tooltip ? ['صفحة تلميح'] : [], x.slicers.length ? [`المقسمات: ${x.slicers.length} (`].concat(x.slicers.map((f) => `«${f}»`)) : [], x.buttons ? [`الأزرار: ${x.buttons}`] : [], Object.entries(x.types).map(([t, n]) => `${ARW[t] || t}: ${n}`), x.cards.length ? [`البطاقات: ${x.cards.length} (`].concat(x.cards.flat().map((m) => `«${m}»`)) : [], x.messages ? [`مربعات رسالة «لا توجد بيانات» : ${x.messages}`] : [])
+          : [`${x.visuals} visuals`].concat(x.tooltip ? ['a tooltip page'] : [], x.slicers.length ? [`${n1(x.slicers.length, ['slicer', 'slicers'])}: `].concat(x.slicers) : [], x.buttons ? [n1(x.buttons, ['button', 'buttons'])] : [], Object.entries(x.types).map(([t, n]) => n1(n, EN[t] || [t, t])), x.cards.length ? [`${n1(x.cards.length, ['card', 'cards'])}: `].concat(x.cards.flat()) : [], x.messages ? [n1(x.messages, ['"no data" message box', '"no data" message boxes'])] : []));
+        const missing = want.filter((t) => !P.includes(t));
+        chk(() => P && !missing.length, () => `A9-2 ${lang}. page ${x.n} "${x.name}" is named with everything on it: missing ${JSON.stringify(missing)} in ${JSON.stringify(P.slice(0, 600))}`);
+      }
+      // (b) no heading or row that names nothing; (c) the kind written in place of another names its page
+      chk(() => !/Other visuals chosen by DataArcus from the model(?!: every one is named below)/.test(H) && !/المرئيات الأخرى يختارها DataArcus من النموذج(?!: كلها مذكورة أدناه)/.test(H), () => `A9-3 ${lang}. "Other visuals: chosen by DataArcus" points to the list: ${H.slice(H.indexOf(lang === 'ar' ? 'المرئيات الأخرى' : 'Other visuals'), H.indexOf(lang === 'ar' ? 'المرئيات الأخرى' : 'Other visuals') + 200)}`);
+      chk(() => (lang === 'ar' ? /في الصفحة 1 «ملخص تنفيذي»/.test(H.slice(H.indexOf('مكتوب بنوع آخر'))) : /on page 1 "Executive summary"/.test(H.slice(H.indexOf('Written as another kind')))), () => `A9-4 ${lang}. the chart written as another kind names its page: ${H.slice(H.indexOf(lang === 'ar' ? 'مكتوب بنوع آخر' : 'Written as another kind'), H.indexOf(lang === 'ar' ? 'مكتوب بنوع آخر' : 'Written as another kind') + 300)}`);
+      // A11 (TP1, D-1105-17): the preview draws each tooltip page the click writes, after the report pages, at its own size
+      const PV = raw.slice(raw.indexOf('class="card preview"')), figs = [...PV.matchAll(/<figure([^>]*)>(<svg[^>]*>)[\s\S]*?<figcaption[^>]*>([\s\S]*?)<\/figcaption><\/figure>/g)].map((m) => ({ attrs: m[1], svg: m[2], cap: m[3].replace(/<[^>]+>/g, '').trim() }));
+      const tips = pages.filter((x) => x.tooltip), reps = pages.filter((x) => !x.tooltip), tf = figs.slice(reps.length);
+      chk(() => tips.length === 2 && figs.length === reps.length + tips.length, () => `A11-1 ${lang}. one picture per page written, the ${tips.length} tooltip pages too: ${figs.length} pictures (${JSON.stringify(figs.map((f) => f.cap))})`);
+      chk(() => figs.slice(0, reps.length).every((f, i) => f.cap.startsWith(lang === 'ar' ? `الصفحة ${i + 1}: «${reps[i].name}»` : `Page ${i + 1}: ${reps[i].name}`)), () => `A11-2 ${lang}. the report pages first, as before: ${JSON.stringify(figs.map((f) => f.cap))}`);
+      chk(() => tips.every((x, i) => tf[i] && tf[i].cap.startsWith(lang === 'ar' ? `صفحة تلميح ${i + 1}: «${x.name}»` : `Tooltip page ${i + 1}: ${x.name}`)), () => `A11-3 ${lang}. then each tooltip page, captioned as one: ${JSON.stringify(tf.map((f) => f.cap))}`);
+      chk(() => tips.every((x, i) => tf[i] && new RegExp(`viewBox="0 0 ${x.w} ${x.h}" width="${x.w}" height="${x.h}"`).test(tf[i].svg) && /class="tip"/.test(tf[i].attrs)), () => `A11-4 ${lang}. each tooltip page at its own size (${tips.map((x) => `${x.w} x ${x.h}`).join(', ')}), not stretched to the report page's width: ${JSON.stringify(tf.map((f) => f.attrs + f.svg))}`);
+      chk(() => figs.slice(0, reps.length).every((f) => / width="800"/.test(f.svg) && !/class="tip"/.test(f.attrs)), () => `A11-5 ${lang}. the report pages drawn as before (800 wide): ${JSON.stringify(figs.slice(0, reps.length).map((f) => f.attrs + f.svg))}`);
+    }
+  }
 } finally {
   await w.close();
   try { fs.rmSync(ROOT, { recursive: true, force: true }); } catch (e) { /* a temp folder */ }
+}
+
+// ---------- A10: the options in plain words, no code word (0.3.2 PL1, E1 round 5 finding 6), in process ----------
+{
+  const Approval = await import('./lib/approval-window.mjs');
+  const labels = (h) => [...h.matchAll(/<td class="k"[^>]*>([\s\S]*?)<\/td>/g)].map((m) => m[1]).filter((x) => !/<code/.test(x)).map((x) => unesc(x.replace(/<[^>]+>/g, '')).trim());
+  const plan = { id: 'plan-pl1000000001', kind: 'report', writes: ['the report "Service Pages.Report"'] };
+  const KEYS = ['pageFilters', 'text', 'subtitles', 'svgColumns', 'svgCards'];
+  for (const lang of ['en', 'ar']) {
+    const cr = { name: 'Service Pages', lang, design: { layout: {} }, pageFilters: [{ field: 'Work Orders[Status]', values: ['Open'] }], text: 'Open orders fell this month.',
+      subtitles: { trend: 'Work orders by month' }, svgColumns: [{ label: 'Progress', design: { w: 80, h: 16, values: [], layers: [] } }], svgCards: [{ card: 1, design: { w: 40, h: 40, values: [], layers: [] } }] };
+    const H = Approval.approvalHtml(plan, Approval.summary('report', { pins: { create_report: cr }, look: { look: 'glass', chosenBy: 'default' } })), L = labels(H);
+    chk(() => !/chart\.look/.test(unesc(H)) && (lang === 'ar' ? /اطلب الشكل العادي/ : /ask for the plain look/).test(unesc(H)), () => `A10-1 ${lang}. the card look says how to get plain cards in words, never chart.look: ${unesc(H).slice(unesc(H).indexOf(lang === 'ar' ? 'شكل البطاقات' : 'Card look'), unesc(H).indexOf(lang === 'ar' ? 'شكل البطاقات' : 'Card look') + 400)}`);
+    chk(() => KEYS.every((k) => !L.includes(k)), () => `A10-2 ${lang}. no option is named by its input key: ${JSON.stringify(L.filter((x) => KEYS.includes(x)))}`);
+    const want = lang === 'ar' ? ['فلاتر الصفحات', 'الجملة في مربع النص', 'العناوين الفرعية للمخططات', 'صور صغيرة في صفوف الجدول', 'صور صغيرة بجانب بطاقات المؤشرات']
+      : ['Page filters', 'Sentence in the text box', 'Chart subtitles', 'Small pictures in table rows', 'Small pictures beside KPI cards'];
+    chk(() => want.every((w) => L.includes(w)), () => `A10-3 ${lang}. each such option in plain words: missing ${JSON.stringify(want.filter((w) => !L.includes(w)))} in ${JSON.stringify(L)}`);
+  }
+  const v = (visual, type, extra) => Object.assign({ visual, type, fields: ['Work Orders[Department]'], place: '40,90 300x140' }, extra || {});
+  const shown = { original: 'Service', newReport: 'Service redesigned.Report', keptAsIs: { pages: 1 },
+    text: { mode: 'common', set: [], boldItalic: 'kept', theme: 'not changed', removed: 0, untouched: [v('btnGo', 'actionButton', { page: 'Overview', why: 'a button: its text kept as it is' })] },
+    theme: { file: 'service-theme.json', tokens: { dataColors: ['#0f766e', '#2563eb'], foreground: '#1f2937', background: '#ffffff', tableAccent: '#0f766e', good: '#059669', neutral: '#d97706', bad: '#dc2626' } },
+    pages: [{ page: 'Overview', changes: [v('colDept', 'clusteredColumnChart', { from: { x: 40, y: 250, w: 600, h: 430 }, to: { x: 40, y: 246, w: 602, h: 430 } })],
+      notChanged: [v('btnGo', 'actionButton', { why: 'a button: kept where it is' }), v('tblOrders', 'tableEx', { why: 'kept' }), v('nav', 'pageNavigator', { why: 'kept' }), v('slDept', 'slicer', { why: 'kept' }), v('note', 'textbox', { why: 'kept' }), v('gauge', 'custom acmeGauge0123456789ABCDEF', { why: 'a custom visual: copied as it is' })] }] };
+  const R = labels(Approval.approvalHtml({ id: 'plan-pl1000000002', kind: 'redesign', writes: [] }, Approval.summary('redesign', { shown })));
+  const TYPES = /\((actionButton|clusteredColumnChart|tableEx|pageNavigator|textbox|custom acmeGauge)\b/;
+  chk(() => R.length && !R.some((x) => TYPES.test(x)), () => `A10-4. no redesign row names a visual by its type key: ${JSON.stringify(R.filter((x) => TYPES.test(x)))}`);
+  const RW = ['Overview: btnGo (button', 'Overview: colDept (column chart of', 'Overview: tblOrders (table of', 'Overview: nav (page navigator of', 'Overview: slDept (slicer of', 'Overview: note (text box of', 'Overview: gauge (custom visual acmeGauge0123456789ABCDEF of'];
+  chk(() => RW.every((w) => R.some((x) => x.startsWith(w))), () => `A10-5. each visual's kind in words: missing ${JSON.stringify(RW.filter((w) => !R.some((x) => x.startsWith(w))))} in ${JSON.stringify(R)}`);
+  const TK = /: (dataColors|foreground|background|tableAccent|good|neutral|bad)$/;
+  const TW = ['data colours', 'text colour', 'background colour', 'table accent colour', 'colour for good results', 'colour for neutral results', 'colour for bad results'].map((w) => `Theme service-theme.json: ${w}`);
+  chk(() => !R.some((x) => TK.test(x)) && TW.every((w) => R.includes(w)), () => `A10-6. the theme's changes in words, never its keys: ${JSON.stringify(R.filter((x) => /^Theme /.test(x)))}`);
+}
+
+// ---------- A11 (TP1): the tooltip pages inside the preview's cap; the report's pages come first (in process) ----------
+{
+  const V = await import('./lib/approval-view.mjs'), MAX = V.PREVIEW_PAGES_MAX;
+  const pg = (name, tooltip) => Object.assign({ name, w: tooltip ? 320 : 1280, h: tooltip ? 284 : 720, visuals: [{ type: 'cardVisual', x: 10, y: 10, w: 200, h: 100, title: 'Total' }] }, tooltip ? { tooltip: true } : {});
+  const page = (nr, nt, lang) => V.approvalHtml({ id: 'plan-tp1000000001', kind: 'report', writes: ['the report "Cap.Report"'] }, { title: 'Report', kind: 'report', lang: lang || 'en', sections: [], files: null,
+    previews: { lang: lang || 'en', pages: Array.from({ length: nr }, (_, i) => pg(`R${i + 1}`)).concat(Array.from({ length: nt }, (_, i) => pg(`T${i + 1}`, true))) } });
+  const caps = (h) => [...h.matchAll(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/g)].map((m) => unesc(m[1].replace(/<[^>]+>/g, '')).trim());
+  const a = page(MAX - 1, 3), ca = caps(a);
+  chk(() => MAX === 12 && ca.length === MAX && ca.filter((c) => /^Tooltip page /.test(c)).length === 1 && /^Tooltip page 1: T1/.test(ca[MAX - 1]) && /2 more tooltip pages not drawn here/.test(unesc(a)), () => `A11-6. 11 report pages and 3 tooltip pages: the 11 and 1 tooltip page drawn, 2 counted: ${JSON.stringify(ca)} ${unesc(a).match(/<p class="note">[^<]*/g)}`);
+  const b = page(MAX + 1, 2), cb = caps(b);
+  chk(() => cb.length === MAX && cb.every((c) => /^Page /.test(c)) && /1 more pages not drawn here|1 more page not drawn here/.test(unesc(b)) && /2 more tooltip pages not drawn here/.test(unesc(b)), () => `A11-7. 13 report pages and 2 tooltip pages: 12 report pages drawn (they win the cap), 1 page and 2 tooltip pages counted: ${JSON.stringify(cb)} ${unesc(b).match(/<p class="note">[^<]*/g)}`);
+  const c = page(2, 1, 'ar'), cc = caps(c);
+  chk(() => cc.length === 3 && /^صفحة تلميح 1: «T1»/.test(cc[2]), () => `A11-8. the Arabic caption (approved, D-1108-07): ${JSON.stringify(cc)}`);
+  const d = page(3, 0);
+  chk(() => !/class="tip"|Tooltip page|tooltip pages? not drawn/.test(d), () => 'A11-9. a plan with no tooltip page: no tooltip picture and no tooltip line');
 }
 
 if (problems.length) { console.log(`FAIL  approval-complete  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }

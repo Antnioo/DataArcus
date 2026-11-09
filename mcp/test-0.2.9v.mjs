@@ -186,9 +186,9 @@ export async function v029visuals({ check }) {
       { path: 'definition/pages/p1/visuals/c/visual.json', data: JSON.stringify(Object.assign(vj('c', 'filterSlicer', { Values: [col('Orders', 'Region')] }), { position: { x: 0, y: 500, z: 0, width: 10, height: 10 } })) }];
     let inv = null; try { inv = RR.inventory(memorySource(files), 'R'); } catch (e) { /* below */ }
     const by = inv ? Object.fromEntries(inv.pages[0].visuals.map((v) => [v.id, v])) : {};
-    chk(() => JSON.stringify(inv.customVisuals.map((c) => c.type || c)) === '["heatMap"]' && by.a.meaning && !by.b.meaning && by.c.slicer === true && RR.typeName('scorecard') === 'scorecard' && RR.typeName('drilldownpie') === 'custom drilldownpie',
-      () => `A5-6 + A6-13: read_report: a type the report declares custom is custom (heatMap here), a catalog type is not (scorecard), filterSlicer is a slicer, a plain-word id is custom: ${JSON.stringify(inv && { custom: inv.customVisuals, v: inv.pages[0].visuals.map((v) => [v.id, v.type, !!v.meaning, !!v.slicer]) })}`); }
-  chk(() => VT.SLICER_TYPES.includes('filterSlicer') && VT.SLICER_TYPES.every((t) => catalog.includes(t)), () => 'A5-6: the slicers come from the catalog, filterSlicer among them');
+    chk(() => JSON.stringify(inv.customVisuals.map((c) => c.type || c)) === '["heatMap"]' && by.a.meaning && !by.b.meaning && !by.c.slicer && RR.typeName('scorecard') === 'scorecard' && RR.typeName('drilldownpie') === 'custom drilldownpie',
+      () => `A5-6 + A6-13: read_report: a type the report declares custom is custom (heatMap here), a catalog type is not (scorecard), filterSlicer is not a slicer (DD2Z: Desktop never saves one as a slicer), a plain-word id is custom: ${JSON.stringify(inv && { custom: inv.customVisuals, v: inv.pages[0].visuals.map((v) => [v.id, v.type, !!v.meaning, !!v.slicer]) })}`); }
+  chk(() => !VT.SLICER_TYPES.includes('filterSlicer') && VT.SLICER_TYPES.every((t) => catalog.includes(t)), () => 'A5-6: the slicers come from the catalog, filterSlicer not among them (DD2Z: Desktop makes four, none saves as filterSlicer)');
   chk(() => ['scorecard', 'heatMap', 'filterSlicer', 'aiNarratives'].every((t) => meaningOf({ type: t, fields: {} }).why === 'a Power BI visual: kept as it is'), () => 'A5-6: the meaning module asks the same catalog (scorecard, heatMap, filterSlicer, aiNarratives are Power BI\'s own)');
   // every chosen native visual takes its roles by Microsoft's capabilities (role names, kinds, counts)
   const { nativeFor, fitsCapabilities } = M;
@@ -477,12 +477,12 @@ export async function v029visualsTools({ call, check, ROOT, fs }) {
   chk(() => !JSON.stringify(cv).match(/Total Sales|Margin %|Region\b/), () => `C3: the plan's replacement lines carry no field name (the report's names are untrusted; the fields are read_report's): ${JSON.stringify(cv).slice(0, 400)}`);
   chk(() => pl.j.plan && pl.j.plan.planId && (pl.j.plan.writesAfterGo || []).some((w) => /Twin Sales native/.test(w)), () => `C4: the plan says it writes "Twin Sales native" and has a plan id: ${short(pl)}`);
   const id = pl.j && pl.j.plan && pl.j.plan.planId;
-  const no = await ask('create_report', { path: 'cvt', planId: id, customVisualsFrom: 'cvt/Twin Sales.Report' });
+  const no = await ask('create_report', { path: 'cvt', planId: id });
   chk(() => no.err && /not approved/.test(no.t) && !fs.existsSync(path.join(P, 'Twin Sales native.Report')), () => `C5: before the user's go, nothing is written: ${short(no)}`);
   await ask('approve_plan', { planId: id });
-  const other = await ask('create_report', { path: 'cvt', planId: id, customVisualsFrom: 'cvt/Twin Sales.pbip' });
-  chk(() => other.err && /differ/.test(other.t), () => `C6: another customVisualsFrom than the approved one is refused: ${short(other)}`);
-  const made = await ask('create_report', { path: 'cvt', planId: id, customVisualsFrom: 'cvt/Twin Sales.Report' });
+  const other = await ask('create_report', { path: 'cvt', planId: id, customVisualsFrom: 'cvt/Twin Sales.pbip' });   // (0.3.2 TK1: another value than the plan's, refused at the inputs: the plan holds it)
+  chk(() => other.err && /differ|approved plan holds/.test(other.t), () => `C6: another customVisualsFrom than the approved one is refused: ${short(other)}`);
+  const made = await ask('create_report', { path: 'cvt', planId: id });
   const ND = path.join(P, 'Twin Sales native.Report'), NPG = path.join(ND, 'definition/pages/p1overview/visuals');
   const vt = (id2) => { try { return J(path.join(NPG, id2, 'visual.json')).visual.visualType; } catch (e) { return null; } };
   chk(() => made.j && made.j.written && made.j.replaced === 9 && vt('cvFacet') === 'clusteredColumnChart' && vt('cvBars') === 'clusteredBarChart' && vt('cvBars_2') === 'clusteredBarChart' && vt('cvBubble') === 'scatterChart' && vt('cvPlan') === 'tableEx' && vt('cvNet') === CV.cvNet
@@ -503,26 +503,26 @@ export async function v029visualsTools({ call, check, ROOT, fs }) {
     const miss = tree(NPG).filter((f) => f.endsWith('visual.json')).map((f) => J(f)).filter((j) => j.visual && Object.values(CV).every((t) => t !== j.visual.visualType) && VP.getVisualEntry(j.visual.visualType))
       .filter((j) => { const e = VP.getVisualEntry(j.visual.visualType), q = (j.visual.query || {}).queryState || {}; return !e.requiredRoles.every((r) => ((q[r] || {}).projections || []).length) || Object.entries(e.maxPerRole).some(([r, mx]) => ((q[r] || {}).projections || []).length > mx); });
     chk(() => miss.length === 0, () => `C10b: every native visual written has its required roles, none over its maximum: ${JSON.stringify(miss.map((j) => [j.name, j.visual.visualType, Object.keys(j.visual.query.queryState)]))}`); }
-  const again = await ask('create_report', { path: 'cvt', planId: id, customVisualsFrom: 'cvt/Twin Sales.Report' });
+  const again = await ask('create_report', { path: 'cvt', planId: id });
   chk(() => again.err && /already used|already there/.test(again.t), () => `C11: a plan writes once: ${short(again)}`);
   // N9 (rc.4, round 9): a plan made with display names writes with the call that leaves them out (the plan's own are used);
   // the same names passed back write too; other names are refused
   { const DN = { 'Sales[Product]': 'Product line' }, clean = () => { fs.rmSync(ND, { recursive: true, force: true }); fs.rmSync(path.join(P, 'Twin Sales native.pbip'), { force: true }); };
     const planned = async () => { clean(); const x = await ask('plan_layout', { path: 'cvt', customVisualsFrom: 'cvt/Twin Sales.Report', displayNames: DN }), i = x.j && x.j.plan && x.j.plan.planId; await ask('approve_plan', { planId: i }); return i; };
     const i1 = await planned();
-    const diff = await ask('create_report', { path: 'cvt', planId: i1, customVisualsFrom: 'cvt/Twin Sales.Report', displayNames: { 'Sales[Product]': 'Item' } });
-    chk(() => diff.err && /differ/.test(diff.t) && /displayNames/.test(diff.t) && !fs.existsSync(ND), () => `N9: other display names than the approved ones are refused: ${short(diff)}`);
-    const omit = await ask('create_report', { path: 'cvt', planId: i1, customVisualsFrom: 'cvt/Twin Sales.Report' });
+    const diff = await ask('create_report', { path: 'cvt', planId: i1, displayNames: { 'Sales[Product]': 'Item' } });   // (0.3.2 TK1: another value than the plan's, refused at the inputs: the plan holds it)
+    chk(() => diff.err && /differ|approved plan holds/.test(diff.t) && /displayNames/.test(diff.t) && !fs.existsSync(ND), () => `N9: other display names than the approved ones are refused: ${short(diff)}`);
+    const omit = await ask('create_report', { path: 'cvt', planId: i1 });
     chk(() => omit.j && omit.j.written && fs.existsSync(ND), () => `N9: the call without displayNames writes with the approved plan's: ${short(omit)}`);
     const i2 = await planned();
-    const same = await ask('create_report', { path: 'cvt', planId: i2, customVisualsFrom: 'cvt/Twin Sales.Report', displayNames: DN });
+    const same = await ask('create_report', { path: 'cvt', planId: i2 });
     chk(() => same.j && same.j.written, () => `N9: the approved display names passed back write too: ${short(same)}`); }
   // a report changed after the plan: refused
   fs.rmSync(ND, { recursive: true, force: true }); fs.rmSync(path.join(P, 'Twin Sales native.pbip'), { force: true });
   const pl2 = await ask('plan_layout', { path: 'cvt', customVisualsFrom: 'cvt/Twin Sales.Report' }), id2 = pl2.j && pl2.j.plan && pl2.j.plan.planId;
   await ask('approve_plan', { planId: id2 });
   const f = path.join(PG, 'cvFacet/visual.json'), j = J(f); j.visual.query.queryState.Values1.projections.push(mea('Sales', 'Orders')); W(f, j);
-  const changed = await ask('create_report', { path: 'cvt', planId: id2, customVisualsFrom: 'cvt/Twin Sales.Report' });
+  const changed = await ask('create_report', { path: 'cvt', planId: id2 });
   chk(() => changed.err && /changed since the plan/.test(changed.t) && !fs.existsSync(ND), () => `C12: the report changed after the plan: nothing written: ${short(changed)}`);
 }
 

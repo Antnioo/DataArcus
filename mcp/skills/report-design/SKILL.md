@@ -34,7 +34,7 @@ report files are written by `create_report` for a new report, or by Microsoft's 
    DataArcus wrote are skipped; when the model has several of the user's, name them (`colours.otherReports`) and use
    `themeFrom` for the one the user picks. A preset, a palette or a brand colour the user asks for always wins.
 4. **Layout and the plan's check.** `plan_layout` with that design, the model (`path`) and the plan's fields
-   (`planFields`, the shape of `create_report`'s `fields`): the layout (exec, analysis, ops, focus), KPI cards,
+   (`planFields`: `kpis`, `measure`, `timeAxis`, `category`, `category2`, `table`, `slicers`, each as `Table[Field]`): the layout (exec, analysis, ops, focus), KPI cards,
    filters, page size. The page is 1920 x 1080 unless the user asks for another size, an Arabic report too
    (`pageSize.chosenBy`). It checks the plan against the tools' limits (`limits`: 3 slicers, 6 KPI cards,
    8 table fields...) and the model: a plan within them gets a `planId`; `planProblems` means change the plan and call again.
@@ -50,11 +50,10 @@ report files are written by `create_report` for a new report, or by Microsoft's 
    click Approve there and call `approve_plan` again when they say they did (`reopen: true` if they closed it). "Not
    now" refuses: ask what to change. No tool writes
    a file without an approved `planId` (the theme file, the report, fix scripts, the Gulf calendar script).
-6. **Build.** `create_report` with the `planId`, the design (and the same layout choices) and the approved plan's fields in
-   `fields` (`kpis`, `measure`, `timeAxis`, `category`, `category2`, `table`, `slicers`, each as `Table[Field]`): what
-   is given is bound as given, what is left out is picked automatically. Read `boundFields` in the answer and tell
+6. **Build.** `create_report` with `path` and the approved `planId` only: the plan holds the design, the layout choices,
+   the fields (given ones bound as given, the rest picked automatically) and every option. Read `boundFields` in the answer and tell
    the user anything that differs from the plan. When the request limits the report to part of the data ("Ramadan
-   only", "the UAE only"), pass a page filter in `pageFilters` (`[{ field: "Calendar[Is Ramadan]", values: [true] }]`: a
+   only", "the UAE only"), give `plan_layout` a page filter in `pageFilters` (`[{ field: "Calendar[Is Ramadan]", values: [true] }]`: a
    column and its values, never a measure), show it in the plan, and tell the user it is in the Filters pane. A filter
    on Is Ramadan keeps every Ramadan of the calendar: for "this Ramadan" add a second filter on the calendar's Hijri year
    and ask the user which Hijri year (the tools never return data values, so never guess it).
@@ -162,7 +161,7 @@ them from the same model open in Power BI Desktop:
   write nothing and offer the closest supported ones (the list is the tools' `limits.visuals`).
 - **The visual gallery** (`combo`, `waterfall`, `smallMultiples`: Power BI's own line and clustered column chart,
   waterfall chart and small multiples) is used only when the user asks for one, never proposed or chosen unasked: a
-  hand-placed slot of that kind, or `gallery` in `plan_layout` and `create_report` (`true`, or a list of kinds) on a
+  hand-placed slot of that kind, or `gallery` in `plan_layout` (`true`, or a list of kinds) on a
   design. Each is written only where its fields fit: a waterfall is one measure that adds up over an ordered category
   whose number of members the model makes known, at most 12 members (months, quarters, stages); a combo is two measures
   over a time or ordered axis in ONE unit, scale and ISO
@@ -178,7 +177,7 @@ them from the same model open in Power BI Desktop:
 - **Line charts are smooth by default** (`smoothLines`, pinned by the plan): monotone curves that never swing past the
   data, with a dot on each point so every value stays findable; the line of a combo too. Pass `smoothLines: false`
   (straight, no dots) for a jagged series where every swing matters (daily stock, a sensor), and say it in the plan.
-- **Look options** (`slicerStyle`, `grid` in `plan_layout` and `create_report`; the plan pins them, show them with the
+- **Look options** (`slicerStyle`, `grid` in `plan_layout`; the plan pins them, show them with the
   plan): `slicerStyle: "pills"` writes Power BI's button slicer (rounded buttons on one row, a calm fill, the selected
   one in the accent) for a field whose 2-6 values the model's metadata makes known (true/false, a quarter, a calculated
   column of a few texts): it fits a short choice the user flips often; every other slicer stays the rounded dropdown

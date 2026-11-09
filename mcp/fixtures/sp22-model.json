@@ -1,0 +1,88 @@
+{
+ "about": "SP22: sha256 and length of read_model's whole answer for 14 models (R1-R14), the error answers (E1-E3), every shown name (N1), the column types (T1) and the KPIs (K1), recorded on integration/0.3.2 1ed6089 (before the names and the metadata moved out of model.mjs). Never re-record to make a run pass.",
+ "record": {
+  "R1": {
+   "length": 874,
+   "sha256": "e802c100aa6cc7bfd4de15ace4d03c836cb2276057487d65c88d654dd5a79429"
+  },
+  "R2": {
+   "length": 554,
+   "sha256": "34b90f947a84727b0a6150fac017453fea4e5f592a238eeb97cf4e7da6895ba2"
+  },
+  "R3": {
+   "length": 732,
+   "sha256": "a7f7957e2827a379f69c3ae08dbc10a279941d163e9b692e698700be7767e99c"
+  },
+  "R4": {
+   "length": 728,
+   "sha256": "54fdbe205681d80c92cd61d191d55a109f81b8d1cdafaab97e9e23d9f2e3f463"
+  },
+  "R5": {
+   "length": 1410,
+   "sha256": "98fd2ea00cccd83cab976b355419ec0d78ae8980b038ba4aaf8bbe176f3f6b8b"
+  },
+  "R6": {
+   "length": 634,
+   "sha256": "cbecaa24fba4970ce91c0bdd1b0da66e4113ab3c9f60166058011328aeee535c"
+  },
+  "R7": {
+   "length": 1065,
+   "sha256": "9e37aa043e24f0b59126f324ad18f8dd57a96244da5ebe87ea8298a87f7da1a6"
+  },
+  "R8": {
+   "length": 950,
+   "sha256": "a71b113e96113c3420b86810fe60b405f9c7fcb71dbf1c21f2f3ec2799262b31"
+  },
+  "R9": {
+   "length": 2645,
+   "sha256": "8fbaf2bf0cb2ebc6e07c67ea118b016ee4e568c79878d74b95b430f482dcf545"
+  },
+  "R10": {
+   "length": 1753,
+   "sha256": "ef556ba56b65b94eb2d09a2f1553a89ed3e2ef33b6be96af93820295a89e66b4"
+  },
+  "R11": {
+   "length": 978,
+   "sha256": "45be18bf5e7b690e82fe9b929235d961eba38a8b1db6951dde6e919402cdbfd1"
+  },
+  "R12": {
+   "length": 13122,
+   "sha256": "e5d8b8b0527600a5729b9b5d5e611d2a59a73facae3ac8ee7c7a6421aebaf408"
+  },
+  "R13": {
+   "length": 10063,
+   "sha256": "f2e80df73afd062862d0ca14e5e480aed3c3c911cf1a6e5a50868bca141db283"
+  },
+  "R14": {
+   "length": 36786,
+   "sha256": "7ec91b369a757746096eebaa67dce28671d4052829adb81a2246853f38ab19d1"
+  },
+  "E1": {
+   "length": 243,
+   "sha256": "b4ca0be2016b0217ac3cec30b81f791610b6a72bd0e74eb4a6a8110b25f44273"
+  },
+  "E2": {
+   "length": 296,
+   "sha256": "aca84fc2ae5eabf9bceaf25dea68ef4d48789666485f4a5de89d893271537b73"
+  },
+  "E3": {
+   "length": 183,
+   "sha256": "c5ef5e16fa83b08f3fe4076a93a66060f52da634014d15afc9676b5488cde652"
+  },
+  "N1": {
+   "length": 573644,
+   "sha256": "91571b9541ff1660078bcfefcadb27fd47d6ef7356562ab9d96aeef8824c63d8"
+  },
+  "T1": {
+   "length": 4734,
+   "sha256": "00b47b46822ca8b53876aeed2ea796a261ddf3ea1740951b49f1bbb8aecab1ff"
+  },
+  "K1": {
+   "length": 3961,
+   "sha256": "6ae1c1feea7a09a2657c025ee9c8d0d7379530b7a9a2d3c651d7535708866543"
+  },
+  "cap": {
+   "tables": 131
+  }
+ }
+}

@@ -1,0 +1,55 @@
+{
+ "about": "test-0.3.2-sp1.mjs: plan_layout's answers recorded on the base (normalised: the plan id and the working folder)",
+ "answers": {
+  "P1 sample": {
+   "err": false,
+   "length": 3142,
+   "sha256": "8f387ae0223ad4969ecbc3d7c423235508ea1ac6ae36f054bb5586da2ce1e833"
+  },
+  "P2 layout only, a page size asked": {
+   "err": false,
+   "length": 6898,
+   "sha256": "d1da574a59fec01e10c12f20c56760735c4675b32e7d620c33e5e50df0f5de7d"
+  },
+  "P3 English on a model": {
+   "err": false,
+   "length": 11354,
+   "sha256": "b353a7c9db28b7e1c769b8a4808d5ad041930e31760d7009f2545c944b547b1f"
+  },
+  "P4 Arabic, names approved": {
+   "err": false,
+   "length": 17109,
+   "sha256": "74f9f77f690a1ce4b102e29dd30a74f9426d262fc81ed379e3a8e08c19ac27f4"
+  },
+  "P5 Arabic, no names": {
+   "err": false,
+   "length": 20591,
+   "sha256": "099e6a928c76eeeb13dec93333e6844c2c1759444af96a3be05f0d6df7170cf3"
+  },
+  "P6 bilingual": {
+   "err": false,
+   "length": 26254,
+   "sha256": "3022294d3195f6dc3971d1e63347b8ac935c45cf8d03a637f3461c0bfca67785"
+  },
+  "P7 redesign": {
+   "err": false,
+   "length": 8228,
+   "sha256": "3458e5821e83c891f16c2e9f94bdec408cd11acf75ae23b6a0b53d24f3143b73"
+  },
+  "P8 hand-placed pages": {
+   "err": false,
+   "length": 11074,
+   "sha256": "209159cfd86ef7e3cfc3a018a7d3fb176729de09aabe16d818409c2d2b1ea647"
+  },
+  "P10 Arabic, a field no list names": {
+   "err": false,
+   "length": 18388,
+   "sha256": "cf05c663472ca5b6fb8cc17f0a08f731a664dbf908ad3eab283243f809e865d9"
+  },
+  "P9 options and scripts": {
+   "err": false,
+   "length": 17428,
+   "sha256": "f608aa5c6c3853085c0fd62d440a0d54f2f721dab370a7efcf26906a2bcafbde"
+  }
+ }
+}

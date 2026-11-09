@@ -160,7 +160,9 @@ try {
   const tt = at('p2fin', 'mxTasks'), ml = at('p2fin', 'mxMiles');
   chk(() => slack(tt, 'Task Name', 327), () => `T1. Fintech p3 tasks (1002 in 1098): the names at the right of the room, the slack at the left: ${tt && JSON.stringify(lay(tt))}`);
   chk(() => slack(ml, 'Milestone', 238), () => `T2. Fintech p3 milestones: the same: ${ml && JSON.stringify(lay(ml))}`);
-  chk(() => tt && ml && lay(tt)[0].w >= 126 && lay(ml)[0].w >= 181 && lay(tt).slice(1, -1).every((c, i) => c.w === [104, 114, 107, 130, 94][i]), () => `T3. the slack goes to the leftmost column; the others keep their English widths: ${tt && JSON.stringify(lay(tt))}`);
+  // (0.3.2 TT1, B-289, moved on purpose: the two stale entries no longer count in the headers' spare room, so its 72 go
+  // to the Arabic headers in order: Actual Hours 104 -> 164, its need; Planned Hours 114 -> 126, still "may be cut")
+  chk(() => tt && ml && lay(tt)[0].w >= 126 && lay(ml)[0].w >= 181 && lay(tt).slice(1, -1).every((c, i) => c.w === [164, 126, 107, 130, 94][i]), () => `T3. the slack goes to the leftmost column; the others keep their English widths, the headers grown into the spare room: ${tt && JSON.stringify(lay(tt))}`);
   // ---------- K: the names at their English width, English's second column in view ----------
   const rt = at('p3ret', 'tblRetention'), rl = rt ? lay(rt) : [], rr = rt ? room(rt, SC) : 0, iN = rl.findIndex((c) => /Customer ID/.test(c.ref));
   chk(() => iN >= 0 && Math.abs(rl[iN].w - 93) < 0.5 && Math.abs(rl[iN].x + rl[iN].w - rr) < 0.5, () => `K1. RepeatIQ retention: the names keep their English 93 and end the view: ${JSON.stringify(rl)} room ${rr}`);

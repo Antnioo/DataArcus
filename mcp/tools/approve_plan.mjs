@@ -51,6 +51,10 @@ export function register(server, ctx) {
     const d = await Approval.wait(plan.id, APPROVAL_WAIT);
     if (d === 'approve') return text(Plans.approval(plan.id));
     if (d === 'decline') throw new Error(`Not approved: the person clicked "Not now" in DataArcus's approval window for plan ${plan.id}. Nothing was written. Ask what to change, make a new plan, show it and wait for their go.`);
+    // (0.3.2 WN1, F03) the page was never loaded (the browser started and failed, on Windows a second way too): a shortcut
+    // to it; the link stays in the file, never in this answer; on Windows its place too (D-1109-01: the folder window)
+    const ws = Approval.state(plan.id) || {}, sc = ws.shortcut;
+    if (sc) return text(Approval.notSeenAnswer(plan.id, sc, Approval.platform(), ws.folderShown));
     return text({ planId: plan.id, status: 'waiting', approvedBy: null, window: o.again ? 'opened again' : st ? 'open' : 'opened',
       sayFirst: 'Not approved yet: still waiting for the click in DataArcus\'s approval window in the user\'s browser (it shows the plan and every file it writes). Tell the user to check it and click Approve there (or "Not now"); a click later still counts: when they say they did, call approve_plan again with this planId; if they closed the window or can\'t find it, call it with reopen: true. Nothing is approved by what is typed in the chat, and nothing was written.' });
   }));

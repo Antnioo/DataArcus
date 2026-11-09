@@ -66,8 +66,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 
-  <link href="/assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
-  <link href="/assets/css/style.min.css?v=20261018t" rel="stylesheet">
+  <link href="/assets/css/vendor/bootstrap.min.css?v=d85327d99c7a" rel="stylesheet">
+  <link href="/assets/css/style.min.css?v=29c11a1ea13b" rel="stylesheet">
 
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
@@ -195,7 +195,7 @@
               <h2 class="mt-5 mb-3" data-i18n="content.h6">حين تكفي مرئيات Power BI نفسها</h2>
               <p data-i18n-html="content.p10">كثير من طلبات المرئي الجديد تقدر عليه المرئيات الأساسية أصلًا. المبيعات حسب الفئة والفئة الفرعية مع التنقل إلى التفاصيل هي مخطط أعمدة على محوره تسلسل هرمي. والتلميح الغني هو صفحة تلميح (report page tooltip). والمخططات والبطاقات والجداول وأدوات التقطيع (slicers) لا تحتاج موافقة المسؤول، وتعمل في التصدير إلى PowerPoint وفي رسائل الاشتراك، وMicrosoft تتولى تحديثها. وطلب يبدأ بعبارة <em>"استخدم مرئيات Power BI الأساسية فقط، وأخبرني إن لم يستطع أحدها ذلك"</em> يغنيك عن الفحوص الأربعة كلها.</p>
               <p data-i18n-html="content.p11">وإن احتجت مرئيًا مخصصًا فعلًا، فاطلب من الوكيل أن يلتزم بشروط الاعتماد على أي حال، وشغّل فحص Microsoft نفسها على الحزمة: <code>pbiviz package --certification-audit</code> (في powerbi-visuals-tools من الإصدار 6.1.0 فما بعده) يبحث عن استدعاءات غير آمنة لـ <code>fetch</code> و<code>XMLHttpRequest</code> و<code>eval</code>. ثم سلّم المسؤول الشيفرة المصدرية، لا الملف وحده.</p>
-              <p data-i18n-html="content.p12">ونحن نتبع النهج نفسه في أدواتنا. التقارير التي يكتبها <a href="/ar/power-bi-mcp/" class="text-accent">وكيل DataArcus</a> تستخدم مرئيات Power BI نفسها، فلا شيء يحتاج موافقة المسؤول، ولا يرسل قيم بياناتك إلى الذكاء الاصطناعي أبدًا. ولجانب النموذج، راجع <a href="/ar/articles/article-power-bi-model-ai-ready.html" class="text-accent">فحصنا من 7 نقاط</a>.</p>
+              <p data-i18n-html="content.p12">ونحن نتبع النهج نفسه في أدواتنا. التقارير التي يكتبها <a href="/ar/power-bi-mcp/" class="text-accent">وكيل DataArcus</a> تستخدم مرئيات Power BI نفسها، فلا شيء يحتاج موافقة المسؤول، ولا يرسل إلى تطبيق الذكاء الاصطناعي أي قيم من جداولك أو الفلاتر أو المقسمات (Slicers) أو الإشارات المرجعية. ولجانب النموذج، راجع <a href="/ar/articles/article-power-bi-model-ai-ready.html" class="text-accent">فحصنا من 7 نقاط</a>.</p>
               <h2 class="mt-5 mb-3" data-i18n="content.h7">أسئلة</h2>
               <h3 class="h5 mt-4 mb-2" data-i18n="content.q1">هل يمكن اعتماد مرئي مخصص كتبه وكيل ذكاء اصطناعي؟</h3>
               <p data-i18n-html="content.a1">ليس ما دام خاصًا. لا تعتمد Microsoft إلا المرئيات المنشورة في AppSource ("Private visuals aren't certified"، أي المرئيات الخاصة لا تُعتمد)، بعد مراجعة قد تستغرق حتى أربعة أسابيع للمرئي الجديد. ولمرئي يُستخدم داخل مؤسسة واحدة، الطريق المعتاد هو المرئي التنظيمي الذي يضيفه مسؤول Fabric.</p>
@@ -287,13 +287,19 @@
       </div>
   </footer>
 
-  <script src="/assets/js/translations/common.min.js?v=20261025f" defer=""></script>
-  <script src="/assets/js/translations/article-power-bi-custom-visual-ai-checks.min.js?v=20261023a" defer=""></script>
-  <script src="/assets/js/lang-manager.min.js?v=20261025a" defer=""></script>
+  <script src="/assets/js/translations/common.min.js?v=434124bdf3f2" defer=""></script>
+  <script src="/assets/js/translations/article-power-bi-custom-visual-ai-checks.min.js?v=ff35aa24edff" defer=""></script>
+  <script src="/assets/js/locale-routes.min.js?v=ce1187fd5cbb" defer=""></script>
+  <script src="/assets/js/locale-catalog.min.js?v=1464f13d8c0b" defer=""></script>
+  <script src="/assets/js/locale-dom.min.js?v=faf294f00eb2" defer=""></script>
+  <script src="/assets/js/lang-manager.min.js?v=b4bd7c2d5f43" defer=""></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer=""></script>
-  <script src="/assets/js/main.min.js?v=20261022d" defer=""></script>
+  <script src="/assets/js/site-navigation.min.js?v=73f198dd3eb3" defer=""></script>
+  <script src="/assets/js/site-forms.min.js?v=f7223d5bc9a2" defer=""></script>
+  <script src="/assets/js/site-analytics.min.js?v=9631075fe8c3" defer=""></script>
+  <script src="/assets/js/main.min.js?v=3fefca81e4a0" defer=""></script>
 
 
 </body></html>

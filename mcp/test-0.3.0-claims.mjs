@@ -22,7 +22,7 @@ for (const k of ['data', 'approve_plan', 'l3', 't3', 'validator']) { EN[k] = key
 
 // S1 (since 0.3.0 S1 read_report returns no static title; the twin returns titles, up to 200 characters, for their Arabic)
 check(!/short titles as typed/.test(EN.data) && /text boxes/.test(EN.data) && /twin/.test(EN.data), `A2-S1. beta-page en safe.data says read_report's titles are sent: "${EN.data.slice(0, 200)}"`);
-check(!/عناوينه القصيرة/.test(AR.data) && /مربعات النص/.test(AR.data) && /النسخة العربية/.test(AR.data), 'A2-S1. beta-page ar safe.data says the same as the English (text boxes; titles for the twin)');
+check(!/عناوينه القصيرة/.test(AR.data) && /مربعات النص/.test(AR.data) && /توأم عربي/.test(AR.data), 'A2-S1. beta-page ar safe.data says the same as the English (text boxes; titles for the twin)');
 // S2 (an app with MCP elicitation asks in its own prompt: no browser window opens)
 check(/own approval prompt/.test(EN.approve_plan), 'A2-S2. beta-page en approve_plan says an app with its own approval prompt asks there instead');
 check(/نافذة موافقة خاصة به/.test(AR.approve_plan), 'A2-S2. beta-page ar approve_plan says the same');
@@ -44,7 +44,7 @@ check(g.some((x) => x.label === 'Flip cards script' && x.paths.length === 1) && 
 const sm = summary('report', { outputs: ['R.Report/definition/report.json', 'R - flip cards.tmdl'], pins: { create_report: {} } }).files || [];
 check(sm.some((x) => x.label === 'Flip cards script') && !sm.some((x) => x.label === 'Format script'), 'A2-A1. the report page\'s file list says "Format script" for the flip cards\' script');
 // A2 the 3:1 rule for a data colour is WCAG 2.1's non-text contrast (1.4.11); Power BI's accessibility page states none
-const aw = read('./lib/approval-window.mjs');
+const aw = read('./lib/approval-window.mjs') + read('./lib/approval-disclosure.mjs') + read('./lib/approval-view.mjs') + read('./lib/approval-http.mjs');   // (0.3.2 SP23: what the page says moved there; SP44: its HTML, its HTTP side)
 check(!/Power BI's accessibility basics/.test(aw) && /WCAG 2\.1/.test(aw), 'A2-A2. the approval page credits the 3:1 rule for data colours to "Power BI\'s accessibility basics"');
 // A3 the app's prompt: the contrast it gives is the approved colour's, said as such, with the written colour's own
 const ps = promptSummary('report', { colours: { changed: [{ from: '#f4b183', to: '#c55a11', contrast: 1.9 }], card: '#ffffff' } });
@@ -108,7 +108,7 @@ check(/2\.159\.883\.0/.test(mreadme) && !/to the latest version/.test(mreadme) &
 // The forbidden words, in every file that speaks for DataArcus (EN and AR): no "first"/"only" of its kind, no
 // official, certified, partner, AI-powered; nothing on Microsoft's Power BI Report skill comparison; nothing of 0.3.1
 const SPEAK = ['./PRIVACY.md', './README.md', './TOOLS.md', '../README.md', './server.mjs', './lib/agent-text.mjs', './skills/report-design/SKILL.md',
-  './lib/approval-window.mjs', '../power-bi-mcp/index.html', '../ar/power-bi-mcp/index.html', '../assets/js/translations/beta-page.js'];
+  './lib/approval-window.mjs', './lib/approval-disclosure.mjs', './lib/approval-view.mjs', './lib/approval-http.mjs', '../power-bi-mcp/index.html', '../ar/power-bi-mcp/index.html', '../assets/js/translations/beta-page.js'];
 const BANNED = [
   [/\b(?:world'?s|our) first\b|\bthe first (?:MCP|tool|Power BI tool|of its kind)\b|\bfirst of its kind\b|\bonly (?:tool|MCP) (?:that|to|for)\b|\bthe only (?:tool|MCP|one that)\b/i, 'a first-of-kind or only-one claim'],
   [/\bofficial\b(?! (?:weekend|announcement|Ramadan|dates?|Microsoft))/i, '"official" said of DataArcus'],
@@ -131,7 +131,7 @@ for (const f of SPEAK) {
 // validator offline, the schemas and DataArcus's measured rules. No answer it builds says the report opens in Desktop or
 // is not broken as the result of a check (a measured Desktop fact, like a kind's own sentence, is not such a claim).
 {
-  const CHECK_SAID = ['./lib/check-report.mjs', './lib/arabic-lens.mjs', './lib/agent-text.mjs', './tools/check_report.mjs', './TOOLS.md'];
+  const CHECK_SAID = ['./lib/check-report.mjs', './lib/check-impact.mjs', './lib/check-schema.mjs', './lib/arabic-lens.mjs', './lib/agent-text.mjs', './tools/check_report.mjs', './TOOLS.md'];
   const OLD = [/the report opens in Power BI Desktop/i, /it is not broken/i, /passes the checks that ran/i, /; Desktop opens the report with/i, /a report Desktop opens is not broken/i, /Nothing found that breaks the report/i];
   for (const f of CHECK_SAID) { const t = flat(f); for (const re of OLD) { const m = re.exec(t); check(!m, `RB-5. ${f} says, as a check's result, what only Power BI Desktop can show: "${m ? t.slice(Math.max(0, m.index - 40), m.index + 80) : ''}"`); } }
 }
@@ -184,7 +184,9 @@ check(/`languages: "en\+ar"`/.test(pl) && /`bilingual`/.test(pl) && /`sample`/.t
 check(/`sample: true`/.test(cr) && /made-up/.test(cr) && /never a row/.test(cr) && /`languages: "en\+ar"`/.test(cr), 'D5-P3. PRIVACY.md\'s create_report row does not say the sample writes a made-up project (never a row in the answer) and what languages "en+ar" returns');
 // (changed on purpose, 0.3.1 CX2, Codex's F06: the approval page draws at most 12 pages or pairs)
 check(/draws up to 12 Arabic pages/.test(pv) && !/draws each Arabic page/.test(pv) && /the same `\.mcpb`/.test(pv), 'D5-P4. PRIVACY.md does not say the approval page draws the twin\'s Arabic pages on your computer, nor that the plugin installs the same .mcpb');
-check(/Checked against 0\.3\.1/.test(pv.slice(0, 600)), 'D5-P5. PRIVACY.md\'s header is not checked against 0.3.1');
+// (3 Nov, the 0.3.2 release prep) the version being shipped, read where it is set (mcp/package.json), never a literal
+const PKG_V = JSON.parse(read('./package.json')).version;
+check(pv.slice(0, 600).includes(`Checked against ${PKG_V}`), `D5-P5. PRIVACY.md's header is not checked against ${PKG_V} (mcp/package.json's version)`);
 // D5-S PRODUCT_SPEC.md: 0.3.1's three options said, and the platforms as the release says them
 check(/0\.3\.1/.test(spec) && /`lens: "arabic"`/.test(spec) && /`languages: "en\+ar"`/.test(spec) && /`sample: true`/.test(spec), 'D5-S1. PRODUCT_SPEC.md says nothing of 0.3.1 (the Arabic lens, languages "en+ar", the sample)');
 check(/Writes Power BI projects on Windows, macOS and Linux; open them in Power BI Desktop on Windows, or deploy the project to Fabric/.test(spec), 'D5-S2. PRODUCT_SPEC.md does not say the platforms in the release\'s words');
@@ -351,12 +353,12 @@ const PRIV3 = /github\.com\/Antnioo\/DataArcus\/blob\/main\/mcp\/PRIVACY\.md#3-m
 const CLIENTS = /github\.com\/Antnioo\/DataArcus\/blob\/main\/mcp\/README\.md#other-mcp-clients-and-platforms-developers/;
 const DS1_EN = { lic: [[/PPU or capacity raises both limits: PPU allows models up to 100 GB and 48 scheduled refreshes a day; on a Fabric capacity the model size depends on its SKU, with 48 scheduled refreshes a day/, 'DS1-1. the PPU and capacity limits'], [LEARN_PPU, 'DS1-1. the PPU FAQ link'], [LEARN_PLAN, 'DS1-1. the licenses comparison link']],
   home: [[/the short texts typed on report pages \(titles, text boxes\), which can hold a figure or a name; never table rows, filter or slicer values, or bookmark states/, 'DS1-2. the exact metadata sentence'], [PRIV, 'DS1-2. PRIVACY.md link (the site test reads it as ending in mcp/PRIVACY.md)']],
-  mcp: [[/which can hold a figure or a name\. Never table rows, filter or slicer values, or bookmark states/, 'DS1-2. the exact metadata sentence'], [PRIV3, 'DS1-2. PRIVACY.md section 3 link'],
+  mcp: [[/never sends values from your tables, filters, slicers or bookmarks to the AI app\. Text you typed yourself in titles and text boxes is read as typed, so the AI can check it and, for an Arabic twin, translate it with your approval/, 'DS1-2. the exact metadata sentence'], [PRIV3, 'DS1-2. PRIVACY.md section 3 link'],
     [/Arabic titles in Arabic reports, even from an English-named model/, 'DS1-3. the Arabic titles heading'], [/Anything kept in English is listed, with why, before you approve/, 'DS1-3. what is kept in English'],
     [/Claude Code, VS Code \(agent mode\) or Cursor, on Windows, macOS or Linux/, 'DS1-4. the other clients'], [CLIENTS, 'DS1-4. the README setup notes link'], [/VS Code and Cursor not yet tried/, 'DS1-4. tried as the README says'], [/one-click \.mcpb is for Windows/, 'DS1-4. the .mcpb stays Windows']] };
 const DS1_AR = { lic: [[/ويزيد PPU أو السعة كلا الحدّين: يسمح PPU بنماذج حتى 100 غيغابايت و48 تحديثًا مجدولًا يوميًا، وفي سعة Fabric يتوقف حجم النموذج على فئة السعة \(SKU\) مع 48 تحديثًا مجدولًا يوميًا/, 'DS1-1. the PPU and capacity limits (AR)'], [LEARN_PPU, 'DS1-1. the PPU FAQ link (AR)'], [LEARN_PLAN, 'DS1-1. the licenses comparison link (AR)']],
   home: [[/والنصوص القصيرة المكتوبة في صفحات التقرير \(العناوين ومربعات النص\) وقد تحمل رقمًا أو اسمًا؛ ولا ترسل أبدًا صفوف الجداول ولا قيم الفلاتر أو المقسمات (?:\(Slicers\) )?ولا حالات الإشارات المرجعية/, 'DS1-2. the exact metadata sentence (AR)'], [PRIV, 'DS1-2. PRIVACY.md link (AR)']],
-  mcp: [[/وقد تحمل رقمًا أو اسمًا\. ولا يرسل أبدًا صفوف الجداول ولا قيم الفلاتر أو المقسمات ولا حالات الإشارات المرجعية/, 'DS1-2. the exact metadata sentence (AR)'], [PRIV3, 'DS1-2. PRIVACY.md section 3 link (AR)'],
+  mcp: [[/لا يرسل DataArcus إلى تطبيق الذكاء الاصطناعي أي قيم من جداولك أو الفلاتر أو المقسمات(?: \(Slicers\))? أو الإشارات المرجعية\. النص الذي كتبته بنفسك في العناوين ومربعات النص يُقرأ كما كتبته/, 'DS1-2. the exact metadata sentence (AR)'], [PRIV3, 'DS1-2. PRIVACY.md section 3 link (AR)'],
     [/عناوين عربية في التقارير العربية، حتى من نموذج بأسماء إنجليزية/, 'DS1-3. the Arabic titles heading (AR)'], [/وكل ما يبقى بالإنجليزية تذكره الخطة، مع السبب، قبل موافقتك/, 'DS1-3. what is kept in English (AR)'],
     [/Claude Code أو VS Code \(وضع الوكيل\) أو Cursor، على Windows أو macOS أو Linux/, 'DS1-4. the other clients (AR)'], [CLIENTS, 'DS1-4. the README setup notes link (AR)'], [/ولم يُجرَّب VS Code وCursor بعد/, 'DS1-4. tried as the README says (AR)'], [/ملف \.mcpb للتثبيت بنقرة واحدة فهو لـ Windows/, 'DS1-4. the .mcpb stays Windows (AR)']] };
 const halves = (t, page) => page === 'home' ? [t.split(/\bar: \{/)[0], t.split(/\bar: \{/)[1] || ''] : [enHalf(t), arHalf(t)];

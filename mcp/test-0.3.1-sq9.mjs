@@ -83,7 +83,8 @@ try {
   {
     const n = LIMITS.tables, names = Array.from({ length: (n || 0) + 1 }, (_, i) => 'T' + i);
     chk(() => Number.isInteger(n) && n > 0, () => `T1. LIMITS.tables is the tools' one table limit: ${n}`);
-    for (const t of ['read_model', 'suggest_fields', 'plan_layout', 'create_report']) {
+    // (0.3.2 TK1, B-272: create_report has no tables input since 0.3.2; the plan holds it, plan_layout takes it)
+    for (const t of ['read_model', 'suggest_fields', 'plan_layout']) {
       const s = D[t].inputSchema.shape.tables;
       chk(() => ok(s, names.slice(0, n)) && !ok(s, names), () => `T2. ${t}: tables takes ${n} names and refuses ${n + 1}`);
     }

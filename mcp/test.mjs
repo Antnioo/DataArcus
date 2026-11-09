@@ -276,6 +276,11 @@ check(!r.err && JSON.stringify(r.j.columnTypes && r.j.columnTypes.alreadyTyped) 
   const mismatch = [];
   for (const dataType of ['unknown', 'int64', 'string']) for (const n of colsM) { const cs = colsM.map((x) => ({ name: x, dataType: /name|short|اسم/i.test(x) ? 'string' : dataType }));
     const a = (Bn.sortColumnFor(cs, n) || {}).name, b = typeof Tm.sortColumnFor === 'function' ? (Tm.sortColumnFor(cs, n) || {}).name : 'no function'; if (a !== b) mismatch.push(`${n} (${dataType}): ${a} vs ${b}`); }
+  // (0.3.2 DD1H: the inputs above give every column a type and no suffix; these give none, the Arabic suffix, Hijri and
+  // fiscal names, so a stale copy shows: one answer for both, the rule in assets/js/sort-column.js)
+  const untyped = ['Month Name', 'Month Number', 'Day Name (Arabic)', 'Month Name (Arabic)', 'Day of Week Number', 'Hijri Month Name', 'Hijri Month Number', 'Fiscal Month Name', 'Fiscal Month No', 'Month Year', 'Year Month Number', 'اسم الشهر', 'رقم الشهر', 'Month'];
+  for (const typed of [false, true]) for (const n of untyped) { const cs = untyped.map((x) => Object.assign({ name: x }, typed ? { dataType: /name|year$|اسم/i.test(x) ? 'string' : 'int64' } : {}));
+    const a = (Bn.sortColumnFor(cs, n) || {}).name, b = typeof Tm.sortColumnFor === 'function' ? (Tm.sortColumnFor(cs, n) || {}).name : 'no function'; if (a !== b) mismatch.push(`${n} (${typed ? 'typed' : 'no dataType'}): ${a} vs ${b}`); }
   check(!mismatch.length, `sort column rule differs between the report writer and the health check: ${mismatch.slice(0, 4).join(' | ')}`);
 }
 
@@ -519,8 +524,11 @@ for (const [w, h] of [[3840, 2160], [640, 360]]) {
 // pages or a design, never both or neither
 r = await tryCall('create_report', { path: 'bim-project', name: 'Both', pages: [page], design: gp.err ? {} : gp.j.design });
 check(r.err && /pages or a design/.test(r.t), `create_report with both: ${r.t.slice(0, 120)}`);
-r = await tryCall('create_report', { path: 'bim-project', name: 'Neither' });
-check(r.err && /pages or a design/.test(r.t), `create_report with neither: ${r.t.slice(0, 120)}`);
+// (0.3.2 TK1, B-272: a plan always holds its pages or the design it resolved; plan_layout without either plans the
+// default layout) create_report given neither, only a name, is refused at its inputs and writes nothing
+{ const before = fs.readdirSync(path.join(ROOT, 'bim-project')).join('|');
+  r = await rawCall('create_report', { path: 'bim-project', name: 'Neither' });
+  check(r.err && /Nothing was written/.test(r.t) && fs.readdirSync(path.join(ROOT, 'bim-project')).join('|') === before, `create_report with neither: ${r.t.slice(0, 120)}`); }
 
 // a design from generate_theme passes straight through: same colours, same page, positions for that page
 const gt = await tryCall('generate_theme', { name: 'Chain', brand: '#0f4c5c', harmony: 'analogous', layout: { page: '1280x720' } });
@@ -1078,7 +1086,9 @@ if (part('round4')) {
   // (sample.pbit moved 11 Oct 2026, the audit of the reading block's A1-5: a .pbit's three hidden automatic date tables,
   // LocalDateTable_*, were listed on the file route while the folder route left them out; one result now leaves them
   // out on every route. Before: '7d20d9242374:4518'; the other nine tables unchanged)
-  const SMALL_ANSWERS = { 'tmdl-project': '63cfd0805729:893', 'bim-project': 'ccbcc917fc9e:1344', 'dax-project': '4502344299d5:2099', 'sample.pbit': '2063aaafa581:4008' };
+  // (0.3.2 TK1, B-273: every answer flat JSON, the same content. Before: '63cfd0805729:893', 'ccbcc917fc9e:1344',
+  // '4502344299d5:2099', '2063aaafa581:4008')
+  const SMALL_ANSWERS = { 'tmdl-project': 'fb33c3957b46:577', 'bim-project': '7f931e2ea8c6:903', 'dax-project': 'bba7e87d2c43:1494', 'sample.pbit': '982d08f5abdc:2642' };
   const small = {};
   for (const p of ['tmdl-project', 'bim-project', 'dax-project', 'sample.pbit']) { const x = await ask('read_model', { path: p }); const t = x.t.split(String.fromCharCode(92, 92)).join('/'); small[p] = x.err ? 'error' : crypto.createHash('md5').update(t).digest('hex').slice(0, 12) + ':' + t.length; }
   chk(() => JSON.stringify(small) === JSON.stringify(SMALL_ANSWERS), () => `read_model on the small fixtures changed: ${JSON.stringify(small)}`);
@@ -1262,8 +1272,9 @@ if (part('round5')) {
       chk(() => res.every((re) => re.test(ins)), () => `the server's instructions miss the rule "${what}": ${res.filter((re) => !re.test(ins))}`);
       chk(() => res.every((re) => re.test(skill)), () => `the report-design skill misses the rule "${what}": ${res.filter((re) => !re.test(skill))}`);
     }
-    const cr = tl.create_report.description, dn = tl.create_report.inputSchema.properties.displayNames.description, ch = tl.check_model_health.description;
-    chk(() => /show the (user the )?plan/i.test(cr) && /wait for/i.test(cr) && /closest supported/i.test(cr) && /what (its|the) value (really )?is/i.test(cr), () => `create_report's description must carry: plan and wait, the closest supported visuals, a true card label: ${cr.slice(0, 300)}`);
+    // (0.3.2 TK1, B-272: create_report takes path and planId; the plan's choices and their rules are plan_layout's, the same definitions)
+    const cr = tl.create_report.description, pl = tl.plan_layout.description, dn = tl.plan_layout.inputSchema.properties.displayNames.description, ch = tl.check_model_health.description;
+    chk(() => /show the (user the )?plan/i.test(cr) && /wait for/i.test(cr) && /closest supported/i.test(pl) && /what (its|the) value (really )?is/i.test(pl), () => `create_report's description must carry: plan and wait, the closest supported visuals, a true card label: ${cr.slice(0, 300)}`);
     chk(() => /only names the user gave or approved/i.test(dn) && /never show a name the user has not approved/i.test(dn) && /never renamed/i.test(dn), () => `displayNames must say only approved names are written (B-88): ${dn}`);
     chk(() => /Calendar Generator/.test(ch) && /never write (the )?calendar DAX/i.test(ch) && /not (part of the score|scored)/i.test(ch) && /new file/i.test(ch), () => `check_model_health's description must carry the Gulf calendar rule and say the scripts go to new files: ${ch.slice(0, 300)}`);
     for (const n of ['read_model', 'suggest_fields', 'check_model_health', 'create_report']) chk(() => /untrusted/i.test(tl[n].description), () => `${n}'s description must say that names in the model are untrusted text`);
@@ -1347,8 +1358,9 @@ if (part('round6')) {
     const ins = String(client.getInstructions() || ''), tl = Object.fromEntries((await client.listTools()).tools.map((t) => [t.name, t]));
     const skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8').replace(/\r\n/g, '\n');
     chk(() => /fields/.test(ins) && /approved/i.test(ins), () => 'the server\'s instructions must say to pass the approved plan\'s fields to create_report');
-    chk(() => /`fields`/.test(skill) && /approved/i.test(skill), () => 'the skill must say to pass the approved plan\'s fields in `fields`');
-    chk(() => /fields/.test(tl.create_report.description) && /approved plan/i.test(tl.create_report.description) && !!tl.create_report.inputSchema.properties.fields, () => `create_report's description must say to pass the approved plan's fields: ${tl.create_report.description.slice(0, 200)}`);
+    // (0.3.2 TK1, B-272) the plan's fields go to plan_layout (planFields); create_report takes path and the approved planId
+    chk(() => /`planFields`/.test(skill) && /`create_report` with `path` and the approved `planId` only/.test(skill), () => 'the skill must say the plan\'s fields go in `planFields` and create_report takes path and the approved planId');
+    chk(() => /fields/.test(tl.create_report.description) && /approved plan/i.test(tl.create_report.description) && /plan holds/.test(tl.create_report.description) && !!tl.plan_layout.inputSchema.properties.planFields, () => `create_report's description must say the approved plan holds the fields (planFields, plan_layout) (0.3.2 TK1): ${tl.create_report.description.slice(0, 200)}`);
     chk(() => ins.length <= INSTRUCTIONS_MAX, () => `the server's instructions are ${ins.length} characters (${INSTRUCTIONS_MAX} at most)`);   // (A7-4: one cap)
   }
 
@@ -1638,7 +1650,8 @@ if (part('round8')) {
 
   // 7. Microsoft's validator finds no error in the reports with page filters; the tool and the skill say when to pass one
   {
-    const tools = await client.listTools(), cr = tools.tools.find((t) => t.name === 'create_report'), skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8');
+    // (0.3.2 TK1, B-272) pageFilters is plan_layout's input (the same definition); create_report takes path and planId
+    const tools = await client.listTools(), cr = tools.tools.find((t) => t.name === 'plan_layout'), skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8');
     chk(() => ramDir && txtDir && errors(ramDir) === '0' && errors(txtDir) === '0' && /pageFilters/.test(cr.description) && cr.inputSchema.properties.pageFilters && /pageFilters/.test(skill),
       () => `Microsoft's validator on the reports with page filters: ${ramDir ? errors(ramDir) : 'not written'}, ${txtDir ? errors(txtDir) : 'not written'}; pageFilters in the tool's description ${/pageFilters/.test(cr.description)}, in its inputs ${!!cr.inputSchema.properties.pageFilters}, in the skill ${/pageFilters/.test(skill)}`);
   }
@@ -1707,7 +1720,8 @@ if (part('round9')) {
     chk(() => !one.err && (one.j.reportNotes || []).some((n) => /every Ramadan/i.test(n) && /Calendar\[Hijri Year\]/.test(n) && /ask the user/i.test(n)) && /every Ramadan/i.test(one.j.pageFilters[0].note),
       () => `a filter on Is Ramadan alone must say it keeps every Ramadan, name Calendar[Hijri Year] and say to ask the user for the year: ${JSON.stringify(one.j && [one.j.reportNotes, one.j.pageFilters])} ${short(one)}`);
     const other = await ask('create_report', { path: 'filter-project', name: 'R9 Open', design: focus, secondPage: false, pageFilters: [{ field: 'Shop Sales[Is Open]', values: [true] }] });
-    const tools = await client.listTools(), cr = tools.tools.find((t) => t.name === 'create_report'), skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8');
+    // (0.3.2 TK1, B-272) pageFilters is plan_layout's input (the same definition); create_report takes path and planId
+    const tools = await client.listTools(), cr = tools.tools.find((t) => t.name === 'plan_layout'), skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8');
     chk(() => !other.err && !(other.j.reportNotes || []).some((n) => /every Ramadan/i.test(n)) && !('note' in other.j.pageFilters[0]) && /Hijri year/i.test(cr.inputSchema.properties.pageFilters.description) && /Hijri year/i.test(skill) && /ask the user/i.test(skill),
       () => `a flag that is not Ramadan gets no such note; the tool and the skill say one Ramadan needs the Hijri year, asked from the user: ${JSON.stringify(other.j && other.j.reportNotes)} ${short(other)}`);
   }
@@ -2434,10 +2448,11 @@ if (part('round10')) {
     // 3. the server's rule 3 covers a page filter
     const info = client.getInstructions ? client.getInstructions() : '';
     chk(() => /page filter/i.test(info) && /3\. /.test(info) && !/with no filter added: never label/.test(info), () => `the server's rule 3 must say a card follows the page filters: ${String(info).slice(0, 700)}`);
-    // 4. the pages of the SVG KPI Designer and the Calendar Generator load their scripts with a version (a stamp as
-    // the site writes them: 8 digits, then letters or digits, such as 20261025a or 20261025gc2; check:min holds the rest)
-    const html = (f) => fs.readFileSync(path.join(REPO, 'tools', f), 'utf8');
-    chk(() => ['svg-kpi-compiler', 'svg-kpi-templates', 'svg-kpi-designer'].every((s) => new RegExp(`${s}\\.min\\.js\\?v=\\d{8}[a-z0-9]*"`).test(html('svg-kpi-designer.html'))) && /calendar-generator\.min\.js\?v=\d{8}[a-z0-9]*"/.test(html('dax-calendar-table-generator.html')),
+    // 4. the pages of the SVG KPI Designer and the Calendar Generator load their scripts with a version (ST1: the
+    // stamp the build writes, the file's content stamp from the one helper, scripts/stamps.mjs; check:min holds the rest)
+    const html = (f) => fs.readFileSync(path.join(REPO, 'tools', f), 'utf8'), { stampOf } = await import('../scripts/stamps.mjs');
+    const stamped = (page, s) => html(page).includes(`${s}.min.js?v=${stampOf(path.join(REPO, 'assets/js', s + '.min.js'))}"`);
+    chk(() => ['svg-kpi-compiler', 'svg-kpi-templates', 'svg-kpi-designer'].every((s) => stamped('svg-kpi-designer.html', s)) && stamped('dax-calendar-table-generator.html', 'calendar-generator'),
       () => 'the SVG KPI Designer page and the Calendar Generator page must load their scripts with ?v=');
     // 5. a column bound to a size or a colour rule of an SVG design must be a number column
     const badCol = { w: 160, h: 24, values: [{ id: 'c', label: 'Region', kind: 'column', column: 'Sales[Region]' }], layers: [{ type: 'rect', x: 0, y: 6, w: 0, h: 12, fill: '#0f6cbd', bind: { w: { v: 'c', d0: 0, d1: 1, r0: 0, r1: 160 } } }] };
@@ -2938,9 +2953,10 @@ if (part('pbit-limits')) {
     const M = await import(new URL('./lib/model.mjs', import.meta.url).href);
     const z = zipOf([{ name: 'DataModelSchema', data: schema, deflate: true }].concat([1, 2, 3].map((i) => ({ name: `Report/definition/pages/p${i}/page.json`, data: Buffer.alloc(400, 32), deflate: true }))));
     let err = ''; try { M.unzipNeeded(z, { entry: 1000, model: 1000, total: 900, file: 1e6, entries: 100 }); } catch (e) { err = String(e.message); }
-    const worker = fs.readFileSync(path.join(REPO, 'assets/js/model-health-worker.js'), 'utf8');
+    // (0.3.2 DD2D) the numbers live in assets/js/model-file.js, which the worker and model.mjs both read
+    const worker = fs.readFileSync(path.join(REPO, 'assets/js/model-health-worker.js'), 'utf8'), shared = fs.readFileSync(path.join(REPO, 'assets/js/model-file.js'), 'utf8');
     const L = M.PBIT_LIMITS || {}, MB = 1024 * 1024;
-    check(/total/i.test(err) && L.model === 64 * MB && L.entry === 32 * MB && L.total === 128 * MB && L.file === 300 * MB && new RegExp(`model: 64 \\* MB, entry: 32 \\* MB, total: 128 \\* MB, file: 300 \\* MB, entries: ${L.entries}\\b`).test(worker),
+    check(/total/i.test(err) && L.model === 64 * MB && L.entry === 32 * MB && L.total === 128 * MB && L.file === 300 * MB && new RegExp(`model: 64 \\* MB, entry: 32 \\* MB, total: 128 \\* MB, file: 300 \\* MB, entries: ${L.entries}\\b`).test(shared) && /const LIMITS = self\.DAModelFile\.LIMITS;/.test(worker),
       `the total of the parts read must be capped, and the website's worker must carry the same limits: "${err}" ${JSON.stringify(L)}`);
   }
 }
@@ -3719,8 +3735,9 @@ if (part('round12b')) {
   // round 9's seen-not-in-scope: create_report's description said a KPI card shows its measure "(no filter is added)";
   // with a page filter the card is filtered, as the same description says two sentences later
   {
-    const d = ((await client.listTools()).tools.find((t) => t.name === 'create_report') || {}).description || '';
-    chk(() => !/no filter is added/.test(d) && /page filter/i.test(d) && /cards included/.test(d), () => `create_report's description must not say a card gets no filter: ${d.slice(0, 900)}`);
+    // (0.3.2 TK1, B-272: the page filters are plan_layout's input; the card rule moved there with them)
+    const tl2 = (await client.listTools()).tools, d = (tl2.find((t) => t.name === 'plan_layout') || {}).description || '', dc = (tl2.find((t) => t.name === 'create_report') || {}).description || '';
+    chk(() => !/no filter is added/.test(d + dc) && /page filter/i.test(d) && /cards included/.test(d), () => `create_report's description must not say a card gets no filter: ${d.slice(0, 900)}`);
   }
   // round 12: a table is put in calendar order by the report now; modelNotes said "tables and slicers still show months
   // in alphabetical order": only slicers do
@@ -4243,7 +4260,7 @@ if (part('round17')) {
     const pl = await call2('plan_layout', { layout: 'exec', kpis: 2, path: 'Shop', name: 'R17', secondPage: false }); out.push(pl);
     // (0.2.9, the gate: the report is written with the plan approved, as an agent must)
     await call2('approve_plan', { planId: JSON.parse(pl.t).plan.planId });
-    out.push(await call2('create_report', { path: 'Shop', name: 'R17', design: JSON.parse(pl.t).design, secondPage: false, planId: JSON.parse(pl.t).plan.planId }));
+    out.push(await call2('create_report', { path: 'Shop', planId: JSON.parse(pl.t).plan.planId }));
     out.push(await call2('create_report', { path: 'Shop/Shop.SemanticModel', name: 'R17b', design: JSON.parse(pl.t).design }));
     out.push(await call2('add_gulf_calendar', { path: 'Shop', firstYear: 2025, lastYear: 2026, asOf: '2026-10-06' }), await call2('add_gulf_calendar', { path: 'Shop', firstYear: 2025 }));
     await c2.close();

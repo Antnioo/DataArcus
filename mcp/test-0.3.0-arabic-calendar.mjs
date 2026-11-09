@@ -59,7 +59,7 @@ const write = async (args) => {
   const pl = await s.call('plan_layout', args), id = pl.j && pl.j.plan && pl.j.plan.planId;
   if (!id) return { pl, err: 'no plan id: ' + JSON.stringify((pl.j || {}).planProblems || pl.t).slice(0, 400) };
   await s.call('approve_plan', { planId: id });
-  const send = Object.assign({}, args, { planId: id, design: pl.j.design, fields: args.planFields }); delete send.planFields;
+  const send = { path: args.path, planId: id };   // (0.3.2 TK1: the plan holds the rest)
   const r = await s.call('create_report', send);
   return r.err ? { pl, err: String(r.t).slice(0, 500) } : { pl, r };
 };

@@ -61,7 +61,7 @@ try {
     const said = p.j && (mode === 'redesignFrom' ? p.j.redesign : p.j.customVisuals);
     chk(() => id && art && /^[0-9a-f]{64}$/.test(art.digest) && said && said.exact && said.exact.digest === art.digest, () => `${tag}1. the plan keeps the exact files and says their digest: ${short(p)}`);
     approve(id);
-    const w = await call('create_report', Object.assign(args(dir), { planId: id })), disk = onDisk(D, [out + '.Report', out + '.pbip']);
+    const w = await call('create_report', { path: args(dir).path, planId: id }), disk = onDisk(D, [out + '.Report', out + '.pbip']);
     chk(() => !w.err && disk.length === art.files.length && digestOf(disk) === art.digest, () => `${tag}2. the written tree is the plan's digest: ${short(w)}; ${disk.length} files on disk, ${art && art.files.length} kept`);
     chk(() => art.logicalId && logicalId(path.join(D, out + '.Report/.platform')) === art.logicalId, () => `${tag}3. the written .platform's logical id is the plan's`);
     // the .pbip next to the report changed after the go (the print of a .Report path does not read it)
@@ -69,7 +69,7 @@ try {
     const p2 = await call('plan_layout', args(dir + '2')), id2 = idOf(p2);
     approve(id2);
     editPbip(path.join(E, 'Twin Sales.pbip'));
-    const w2 = await call('create_report', Object.assign(args(dir + '2'), { planId: id2 }));
+    const w2 = await call('create_report', { path: args(dir + '2').path, planId: id2 });
     chk(() => w2.err && /^Nothing was written/.test(w2.t), () => `${tag}4. a file the prints don't see, changed after the go: refused: ${short(w2)}`);
     chk(() => listing(E) === before && !fs.existsSync(path.join(E, out + '.Report')), () => `${tag}5. nothing was written`);
   }
@@ -148,10 +148,10 @@ try {
     chk(() => art && p.j.formats && p.j.formats.scriptAfterGo === script && art.files.some((f) => f.path === script), () => `AF-C1. the format script the plan names is one of the plan's exact files: ${short(p)} ${JSON.stringify(art && art.files.filter((f) => !/\//.test(f.path)).map((f) => f.path))}`);
     approve(id);
     fs.writeFileSync(path.join(D, script), OTHER);
-    const before = listing(D), w = await call('create_report', Object.assign({ planId: id, design: p.j.design }, A));
+    const before = listing(D), w = await call('create_report', { path: A.path, planId: id });
     chk(() => w.err && /^Nothing was written/.test(w.t) && listing(D) === before && fs.readFileSync(path.join(D, script), 'utf8') === OTHER, () => `AF-C2. its name taken after the go: refused, nothing written: ${short(w)}`);
     fs.rmSync(path.join(D, script));
-    const w2 = await call('create_report', Object.assign({ planId: id, design: p.j.design }, A)), disk = onDisk(D, ['Fmt.Report', 'Fmt.pbip'].concat(art ? art.files.filter((f) => !/\//.test(f.path) && !/\.pbip$/.test(f.path)).map((f) => f.path) : []));
+    const w2 = await call('create_report', { path: A.path, planId: id }), disk = onDisk(D, ['Fmt.Report', 'Fmt.pbip'].concat(art ? art.files.filter((f) => !/\//.test(f.path) && !/\.pbip$/.test(f.path)).map((f) => f.path) : []));
     chk(() => !w2.err && digestOf(disk) === art.digest, () => `AF-C3. the same plan writes once the name is free, the written files the plan's digest: ${short(w2)}`);
   }
 

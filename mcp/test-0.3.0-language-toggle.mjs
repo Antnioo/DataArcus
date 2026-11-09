@@ -62,7 +62,7 @@ try {
   const pl = await s.call('plan_layout', { path: MP, focus: 'Web Orders', lang: 'en', layout: 'exec', name: 'Orders EN', secondPage: true });
   const id0 = pl.j && pl.j.plan && pl.j.plan.planId;
   if (id0) await s.call('approve_plan', { planId: id0 });
-  const en = id0 ? await s.call('create_report', { path: MP, focus: 'Web Orders', lang: 'en', name: 'Orders EN', planId: id0, design: pl.j.design }) : { err: true, t: 'no plan' };
+  const en = id0 ? await s.call('create_report', { path: MP, planId: id0 }) : { err: true, t: 'no plan' };
   const ORDER = fs.existsSync(ORIG) ? rd(path.join(ORIG, 'definition/pages/pages.json')).pageOrder : [];
   const pageJ = (dir, pid) => rd(path.join(dir, 'definition/pages', pid, 'page.json'));
   const visualsOf = (dir, pid) => { const d = path.join(dir, 'definition/pages', pid, 'visuals'); return fs.existsSync(d) ? fs.readdirSync(d).map((n) => ({ n, v: rd(path.join(d, n, 'visual.json')), m: fs.existsSync(path.join(d, n, 'mobile.json')) ? rd(path.join(d, n, 'mobile.json')) : null })) : []; };

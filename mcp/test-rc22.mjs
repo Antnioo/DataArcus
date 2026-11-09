@@ -62,7 +62,7 @@ const report = async (args, plan) => {
   const pl = await s.call('plan_layout', Object.assign({}, plan || {}, { path: args.path, name: args.name }, args.pages ? { pages: args.pages } : {}, args.lang ? { lang: args.lang } : {}, args.fields ? { planFields: args.fields } : {}, args.colors ? { colors: args.colors } : {}, args.focus ? { focus: args.focus } : {}, args.secondPage === false ? { secondPage: false } : {}));
   if (!pl.j || !pl.j.plan || !pl.j.plan.planId) return { pl, r: pl };
   await approve(s, pl.j.plan.planId);
-  const r = await s.call('create_report', Object.assign({}, args, { planId: pl.j.plan.planId }, args.pages ? {} : { design: pl.j.design }));
+  const r = await s.call('create_report', { path: args.path, planId: pl.j.plan.planId });
   return { pl, r };
 };
 const pagesOf = (rep) => { const dir = path.join(ROOT, rep, 'definition/pages'), order = rd(path.join(dir, 'pages.json')).pageOrder;
@@ -113,7 +113,7 @@ try {
     const before = new Set(fs.readdirSync(path.join(ROOT, 'arabic')));
     const pl = await s.call('plan_layout', { path: 'arabic', name: 'Listed', lang: 'ar', layout: 'exec', secondPage: false });
     await approve(s, pl.j.plan.planId);
-    const r = await s.call('create_report', { path: 'arabic', name: 'Listed', lang: 'ar', secondPage: false, planId: pl.j.plan.planId, design: pl.j.design });
+    const r = await s.call('create_report', { path: 'arabic', planId: pl.j.plan.planId });
     const made = fs.readdirSync(path.join(ROOT, 'arabic')).filter((n) => !before.has(n));
     const listed = pl.j.plan.writesAfterGo.join(' ').split('<name>').join('Listed');
     chk(() => !r.err && made.length >= 2 && made.every((n) => listed.includes(n)), () => `B-141. create_report's plan lists every file written: written ${made.join(', ')} | listed ${listed}`);
@@ -152,7 +152,7 @@ try {
   {
     const pl = await w.call('plan_layout', { path: 'health', name: 'Order Test', layout: 'exec', secondPage: false });
     const id = pl.j.plan.planId;
-    const noName = await w.call('create_report', { path: 'health', planId: id, design: pl.j.design, secondPage: false });
+    const noName = await w.call('create_report', { path: 'health', planId: id });
     chk(() => noName.err && /not approved yet/.test(noName.t), () => `B-134. a plan not approved yet is said first (or with the missing input): ${noName.t.slice(0, 300)}`);
     const t1 = await w.call('generate_theme', { brand: '#123456', name: 'Refused Theme' }), tid = t1.j.plan.planId, n = links().length;
     await w.call('approve_plan', { planId: tid }); const tl = await linkAt(n);

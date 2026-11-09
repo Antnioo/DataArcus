@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
-import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
+import { serverSource, writerPageSource, generatorSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const req = createRequire(import.meta.url);
@@ -19,7 +19,7 @@ export function v029w({ check }) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const get = (fn) => { try { return fn(); } catch (e) { return { threw: String(e && e.message || e) }; } };
   const Px = req('../assets/js/pbip-export.js'), E = req('../assets/js/design-engine.js');
-  const src = () => ['pbip-export.js', 'pbip-query.js', 'pbip-sizing.js', 'pbip-page.js', 'pbip-notes.js'].map((f) => path.join(REPO, 'assets/js', f)).filter((f) => fs.existsSync(f)).map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+  const src = () => ['pbip-export.js', 'pbip-query.js', 'pbip-sizing.js', 'pbip-page.js', 'pbip-visuals.js', 'pbip-visuals-charts.js', 'pbip-visuals-tables.js', 'pbip-notes.js'].map((f) => path.join(REPO, 'assets/js', f)).filter((f) => fs.existsSync(f)).map((f) => fs.readFileSync(f, 'utf8')).join('\n');
   const L = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value) : undefined), S = (p) => { const v = L(p); return v == null ? undefined : v.replace(/^'|'$/g, '').replace(/''/g, "'"); };
   // a report on a made-up model, the way the MCP and the website call the writer: a designed page (or hand-placed slots)
   const build = (bind, o = {}) => {
@@ -216,7 +216,7 @@ export function v029w({ check }) {
       () => `A2-3: E.fitSlots drops a kind (touching slots merged, the room to the visual beside), grows the header, fits the rail to its items, never changes its input: ${JSON.stringify(out)}`);
     chk(() => typeof E.absorb === 'function' && JSON.stringify(fit(sl, {}).slots) === copy, () => 'A2-3: E.absorb is the engine\'s; with no options fitSlots moves nothing');
     // the writer measures (tabs, the rail's slicers and Reset), the engine moves: no slot rule left in the writer
-    const pgSrc = fs.readFileSync(path.join(REPO, 'assets/js/pbip-page.js'), 'utf8');
+    const pgSrc = writerPageSource();   // (0.3.2 SP28: pbip-page.js and the visuals' builders)
     chk(() => !/function absorb|function dropLines|const grown = |const railFit = |SLOT_GAP/.test(pgSrc) && /fitSlots/.test(pgSrc) && typeof Px.fitOptions === 'function' && !fs.existsSync(path.join(HERE, 'lib/slots.mjs')),
       () => 'A2-3: absorb, dropLines, grown and railFit are gone from the writer (it calls E.fitSlots with Pbip.fitOptions), and mcp/lib/slots.mjs is deleted');
     // the report's visuals sit exactly on the fitted slots: a designed report on a model with no time axis, two pages
@@ -234,7 +234,7 @@ export function v029w({ check }) {
     chk(() => written.length === 2 && written.every((w, i) => w.length && w.every((b) => onSlot(b, planned[i]))) && fo.every((f) => (f.dropKinds || []).includes('line')),
       () => `A2-3: every chart and table of the report is on a slot of fitSlots(slots, fitOptions): written ${JSON.stringify(written)} fitted ${JSON.stringify(planned)} ${r.threw || ''} ${fo && fo.threw || ''}`);
     // the website's PNG and plan_layout take the same fitting
-    const tg = fs.readFileSync(path.join(REPO, 'assets/js/theme-generator.js'), 'utf8'), srv = serverSource();
+    const tg = generatorSource(), srv = serverSource();   // (0.3.2 SP31: the page and its modules)
     chk(() => /fitSlots/.test(tg) && /fitOptions/.test(tg) && !/dropLines/.test(tg) && /fitOptions/.test(srv), () => 'A2-3: the website\'s background PNG and plan_layout fit the slots with the writer\'s options');
   }
 
@@ -415,7 +415,7 @@ export function v029w({ check }) {
     chk(() => tp.width === 376 && bar.position.width === 352 && share / 100 * bar.position.width - 18 >= need && tp.vs.every((v) => v.position.x + v.position.width <= tp.width),
       () => `T8: the Top 6 tooltip holds a 31-letter name (${need.toFixed(0)}): page ${tp && tp.width}, chart ${bar && bar.position.width}, share ${share}`);
     // S3 (writer round 8): one table of constants for a table's rows (pbip-sizing.js TABLE_ROWS), used by both height rules
-    const Zs = req('../assets/js/pbip-sizing.js'), pgSrc = fs.readFileSync(path.join(REPO, 'assets/js/pbip-page.js'), 'utf8');
+    const Zs = req('../assets/js/pbip-sizing.js'), pgSrc = writerPageSource();
     chk(() => Zs.TABLE_ROWS && typeof Zs.tableHeight === 'function' && !/1\.415 \* t/.test(pgSrc) && (pgSrc.match(/tableHeight\(/g) || []).length >= 2,
       () => 'S3: the table row rule lives in pbip-sizing.js TABLE_ROWS, and pbip-page.js has no row constant of its own');
     // D18 (RESCORE-1: "$4,344,705.7026" in a table): a measure the format rule leaves alone keeps its model format on the

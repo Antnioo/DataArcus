@@ -80,7 +80,7 @@ try {
   const pl = await s.call('plan_layout', { path: MP, focus: 'Web Orders', lang: 'en', layout: 'exec', name: 'Orders EN', secondPage: true });
   const id0 = pl.j && pl.j.plan && pl.j.plan.planId;
   if (id0) await s.call('approve_plan', { planId: id0 });
-  const en = id0 ? await s.call('create_report', { path: MP, focus: 'Web Orders', lang: 'en', name: 'Orders EN', planId: id0, design: pl.j.design }) : { err: true, t: 'no plan' };
+  const en = id0 ? await s.call('create_report', { path: MP, planId: id0 }) : { err: true, t: 'no plan' };
   const p0 = await s.call('create_arabic_twin', { path: 'large/Orders EN.pbip' }), T0 = (p0.j && p0.j.texts) || [];
   let k = 0; const L = {}; T0.filter((t) => t.text != null).forEach((t) => { L[t.id] = t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من {2}: نص ${++k}` : `نص ${++k}`); });
   const p1 = await s.call('create_arabic_twin', { path: 'large/Orders EN.pbip', into: 'same', labels: L }), pid = p1.j && p1.j.plan && p1.j.plan.planId;

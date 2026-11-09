@@ -69,7 +69,7 @@ try {
   // ---------- H-3: the twin's plan and check_report on the twin, by the same measure ----------
   const pl = await s.call('plan_layout', { path: 'large', focus: 'Web Orders', name: 'Golden', layout: 'exec' });
   await s.call('approve_plan', { planId: pl.j.plan.planId });
-  const made = await s.call('create_report', { path: 'large', focus: 'Web Orders', name: 'Golden', planId: pl.j.plan.planId, design: pl.j.design });
+  const made = await s.call('create_report', { path: 'large', planId: pl.j.plan.planId });
   chk(() => !made.err, () => `setup. the golden report is written: ${short(made)}`);
   const ck0 = await s.call('check_report', { path: 'large/Golden.Report' });
   chk(() => !ck0.err && !(ck0.j.findings || []).some((f) => f.rule === 'TABLE_HEADER_CUT'), () => `H-3. the English golden report: no header cut (the writer gives each column its header): ${ck0.err ? ck0.t : JSON.stringify((ck0.j.findings || []).filter((f) => f.rule === 'TABLE_HEADER_CUT'))}`);
