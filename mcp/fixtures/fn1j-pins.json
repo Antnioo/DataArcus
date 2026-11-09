@@ -1,0 +1,679 @@
+{
+ "about": "test-0.3.2-fn1j.mjs: plan_layout's answers and the plans' data recorded on the base (integration/0.3.2 207784c6, before the split; normalised: the plan id, the working folder, the separator, the path limit's numbers)",
+ "pins": {
+  "A1 A01 sample": {
+   "err": false,
+   "length": 3142,
+   "sha256": "8f387ae0223ad4969ecbc3d7c423235508ea1ac6ae36f054bb5586da2ce1e833"
+  },
+  "A2 A01 sample": {
+   "length": 2777,
+   "sha256": "bcf311801c2d48bf51fa3b4d1b176b1d6dcaab0f5425595b93353d9485b3bbf6"
+  },
+  "A1 A02 sample in Arabic": {
+   "err": false,
+   "length": 3142,
+   "sha256": "8f387ae0223ad4969ecbc3d7c423235508ea1ac6ae36f054bb5586da2ce1e833"
+  },
+  "A2 A02 sample in Arabic": {
+   "length": 3594,
+   "sha256": "5645e666448fbeb376206fb3d0e9bbb9eb4087bef5502aa53cf26806c62ddc30"
+  },
+  "A1 A03 redesign refused (a new report option)": {
+   "err": false,
+   "length": 219,
+   "sha256": "a10e2448a8819aa1fb67ff585bd83bb88ec635f19f12cedfb6c596aa93249559"
+  },
+  "A1 A04 redesign": {
+   "err": false,
+   "length": 8564,
+   "sha256": "ba1530a579dae495ad0286d9e5994e5ee2d90b45f41430e92bc950031048ca93"
+  },
+  "A2 A04 redesign": {
+   "length": 11993,
+   "sha256": "db3f0bfc94a7dde9cc902264896ed08560e126d97d31b3246ca1ee0c70dd5667"
+  },
+  "A1 B01 layout only, a page size": {
+   "err": false,
+   "length": 6898,
+   "sha256": "d1da574a59fec01e10c12f20c56760735c4675b32e7d620c33e5e50df0f5de7d"
+  },
+  "A1 B02 English, readable names": {
+   "err": false,
+   "length": 11355,
+   "sha256": "f3c1e1ae01e67c39639239372d253bd26c2a089dab2235c4c582220696d799ed"
+  },
+  "A2 B02 English, readable names": {
+   "length": 89252,
+   "sha256": "0e1bafc47b9818334671a6156cc7fd91f9381a8684f0a0aaebe0e9c9977ad6c0"
+  },
+  "A1 B03 English, a name given": {
+   "err": false,
+   "length": 12411,
+   "sha256": "a75ec2093c15f81e72d267d7aa853a6488ce60107c10241b1578a4d481751d29"
+  },
+  "A2 B03 English, a name given": {
+   "length": 90342,
+   "sha256": "a9b2fa4607425b0c5c0059d4646cb6361d270d7913d568fe654157f403fd2b15"
+  },
+  "A1 B04 a name that cannot be written": {
+   "err": true,
+   "length": 195,
+   "sha256": "9016b3c43da7828a1a8d68d7ea1066c575ae5635324a4ed55132e6db68f62d45"
+  },
+  "A1 B05 Arabic, names approved": {
+   "err": false,
+   "length": 18351,
+   "sha256": "e0eff21f1070c0476da2a3dba8fa2bd25415816a4b7ddb7f433e290ddf397b7e"
+  },
+  "A2 B05 Arabic, names approved": {
+   "length": 91778,
+   "sha256": "f50ee0e8a790ea43b8aff1bf0c53bb5d8abb6432ed3db5970120cf21b59ca2e9"
+  },
+  "A1 B06 Arabic, no names": {
+   "err": false,
+   "length": 20579,
+   "sha256": "a95a078c0ada7619c6f773e46ff6a087a01dd6f6dda216f020f0fb91682c89bb"
+  },
+  "A2 B06 Arabic, no names": {
+   "length": 94035,
+   "sha256": "203cf380a7c4dcb8489a12faf19ba20f5b89fc8158e3be6f195c8394e49e6b25"
+  },
+  "A1 B07 Arabic, an odd measure": {
+   "err": false,
+   "length": 18961,
+   "sha256": "4db9cb31e2072615043957702b21a02b4a00ef99a41326f894b45a78cc874ffc"
+  },
+  "A1 B08 Arabic, kept English on purpose": {
+   "err": false,
+   "length": 19542,
+   "sha256": "6281047d21fbe615b9ce9ffc6454b4e7f28280edfb7bfcce1733062f5d0aac20"
+  },
+  "A2 B08 Arabic, kept English on purpose": {
+   "length": 92295,
+   "sha256": "924369247996180f6251919f046a3da07b0cbbc0c3c246c84b84f779e522e340"
+  },
+  "A1 B09 Arabic, no measures (counted titles)": {
+   "err": false,
+   "length": 17877,
+   "sha256": "ba9a34eda67c5a0ffb76fb008671d865a3363cb6aa2e8407f7f14cfb77d61718"
+  },
+  "A1 B10 Arabic, no measures, a name given": {
+   "err": false,
+   "length": 17531,
+   "sha256": "072b3eb9e3a614c64f4dec2240797906cf0e12590d544581cf1372d3012ec572"
+  },
+  "A1 B11 Arabic, many counted titles": {
+   "err": false,
+   "length": 18981,
+   "sha256": "2045a05245761ab9ecb758c93ebc9be879ea304cfd5562257054aa80729d5eb2"
+  },
+  "A1 B12 English, no measures": {
+   "err": false,
+   "length": 9954,
+   "sha256": "058ac98737dceeb24ab87243d54d71f5f9b203da157deba2c93a3965f1b96c3c"
+  },
+  "A2 B12 English, no measures": {
+   "length": 87903,
+   "sha256": "35b1b5082ce8a0dafc66ed01f8675acf9aa8ea1878b1c7df89733532b51a92d0"
+  },
+  "A1 B13 English, fields given": {
+   "err": false,
+   "length": 13952,
+   "sha256": "64ae23949b9d4935a6246dadd4d59048b1802951e8f040df4911637cc3d0a83a"
+  },
+  "A2 B13 English, fields given": {
+   "length": 90604,
+   "sha256": "94988e0482ff408f08ea4be2ee909a4535675ff711a8ea2825499fd88ad9273e"
+  },
+  "A1 B14 English, kpis 2 and no fields": {
+   "err": false,
+   "length": 11789,
+   "sha256": "95cb425a76809c0fb6f7ff616afe18d8129b899926722edb9044fc388b68d7a2"
+  },
+  "A2 B14 English, kpis 2 and no fields": {
+   "length": 86994,
+   "sha256": "1b5b507aafc924c75c735e41ee17ab4615fb5f4ed242b0bf3a6c63b305f6ab83"
+  },
+  "A1 C01 no time axis asked": {
+   "err": false,
+   "length": 10730,
+   "sha256": "fe9e1312374b9d7f6539224304c6e6ac3905c596aef0ea05a6b641f819531034"
+  },
+  "A2 C01 no time axis asked": {
+   "length": 84674,
+   "sha256": "76f76c20f8ce8ab581a32c7d72dd74b70ca2f4dc4d606651aaf669debe1a2d0a"
+  },
+  "A1 C02 a model with no date": {
+   "err": false,
+   "length": 11150,
+   "sha256": "0ae77070c5865c75f729a810d6bd2822d3de49aea48982d2ba89105d7d8934c8"
+  },
+  "A2 C02 a model with no date": {
+   "length": 84378,
+   "sha256": "5ab20bc4c503e180f3d79fc827903b4bdaa26e6a891b32be8c17d933779ae4ed"
+  },
+  "A1 C03 table fields set the row": {
+   "err": false,
+   "length": 12152,
+   "sha256": "b68971e1f9742ef78493e5c8145cce223ea6e7cb8471092d6b280012cafe58c3"
+  },
+  "A2 C03 table fields set the row": {
+   "length": 86318,
+   "sha256": "c57fe389159ccda4a43ad258db78d59bbc260d2e830ce53806b64817275b2878"
+  },
+  "A1 C04 hand-placed pages": {
+   "err": false,
+   "length": 11075,
+   "sha256": "d2d7942e06efdfbf0a5a7125cdc1deb558fbd097e9844056f5655ec51b36ebcf"
+  },
+  "A2 C04 hand-placed pages": {
+   "length": 8284,
+   "sha256": "a0462632a38ac2c6b89801b0ff8f8ba7c2926a78dc4a73454d9f83d9efd46daf"
+  },
+  "A1 C05 a design given, plain": {
+   "err": false,
+   "length": 13171,
+   "sha256": "6093d68753e59e2798dd19bca398e858743355b2925711d338d0e7010586189a"
+  },
+  "A2 C05 a design given, plain": {
+   "length": 91044,
+   "sha256": "0b6a7758e747d72014f402a8d4ae5ee9fbba9bb70613a1dd5d32fecd4bb743a8"
+  },
+  "A1 C06 a second page off, a slide panel": {
+   "err": false,
+   "length": 11359,
+   "sha256": "f3c8774acc11fc674be4d8773e42923b2f56f247b8c224b14241ecd136564ff2"
+  },
+  "A2 C06 a second page off, a slide panel": {
+   "length": 45948,
+   "sha256": "7741d421b43c77a714ef7d1c4e27118c67ca9c122756802c90eeade3c457a259"
+  },
+  "A1 D01 over every limit": {
+   "err": false,
+   "length": 7603,
+   "sha256": "875ba64dd06f0cccabd31228e489ca40a1d4f7956635fb43339fcf841fc082cb"
+  },
+  "A1 D02 a large model, no area": {
+   "err": false,
+   "length": 6528,
+   "sha256": "ab9f99475608f74e6bcc2f3d5eb881b2d9e2ae4b6a0b8ce1495836442c19f36c"
+  },
+  "A1 D03 a large model, an area": {
+   "err": false,
+   "length": 12505,
+   "sha256": "57641c1da75985c9a07ac7e43cde9144c734016dfa1f2fe07f88cfc9a05e7e86"
+  },
+  "A2 D03 a large model, an area": {
+   "length": 88997,
+   "sha256": "4b6470a47e138cbfef2a28e311f485cf7a38dc45d413bf367ffff3b363a7be97"
+  },
+  "A1 D04 en+ar in Arabic, its inputs alone": {
+   "err": false,
+   "length": 12936,
+   "sha256": "47f6f1bdd6237dc08b7a8946a283299924f62427060728bf8428712bd4d2496c"
+  },
+  "A1 D05 bilingual inputs without en+ar": {
+   "err": false,
+   "length": 6942,
+   "sha256": "3e9eb42450b73669d559fded94885e7f2f4da456b3035ad59023458d947d846f"
+  },
+  "A1 D06 redesign options on a new report": {
+   "err": false,
+   "length": 6991,
+   "sha256": "248bed57def165b7ccf8bc7a54993e4e0871e62cd34f564bd27125f7b0c1983b"
+  },
+  "A1 D07 en+ar with custom visuals": {
+   "err": false,
+   "length": 7130,
+   "sha256": "67bef6690a2423b67208d7e81a162bb18e51c113aaa4e59a13889c8b0324f733"
+  },
+  "A1 D08 slicers with no filter area": {
+   "err": false,
+   "length": 7203,
+   "sha256": "5b64e0354efc48f38ba495efbb3fac8a3b6d5c06b3f63e6af2ff5d34eb4f5520"
+  },
+  "A1 D09 fields the model lacks": {
+   "err": false,
+   "length": 7033,
+   "sha256": "a0c4752d1203fcaf5bb2314d18bcaca1872e05634d1e8b8e24694ad4d12d00a3"
+  },
+  "A1 D10 fields without a model": {
+   "err": false,
+   "length": 6139,
+   "sha256": "8a9e3515814e5b8205752a0aa85174b8244a29f494ea4c0a11a4b841597f32ad"
+  },
+  "A1 E01 Gulf dates asked": {
+   "err": false,
+   "length": 11213,
+   "sha256": "3cab340b8e6c67d80036a886fd0783d9221bc91ea5dd330f98285bd30b9ffccf"
+  },
+  "A1 E02 Gulf dates answered": {
+   "err": false,
+   "length": 13831,
+   "sha256": "3bb335fa3883ec095cc1604fd4cf109b21f915364b296bdd57d03726cb4d90a5"
+  },
+  "A2 E02 Gulf dates answered": {
+   "length": 90285,
+   "sha256": "aed441163c4321b2fd974b021ca4b43b42a090303407c9d860d12e73d0ae0517"
+  },
+  "A1 E03 Gulf dates, the picker's axis": {
+   "err": false,
+   "length": 10752,
+   "sha256": "5962961618a8a9260f84157ae3eaa055d3940a0e1366832a494ca2129fb4489d"
+  },
+  "A1 E04 month order: a sort-by column": {
+   "err": false,
+   "length": 12255,
+   "sha256": "75caca4350ada85e7173fad82b716b70cc9ff0695244f2577eb2086904546515"
+  },
+  "A2 E04 month order: a sort-by column": {
+   "length": 87238,
+   "sha256": "04e4828bbd1fc7bace5b0d91c3bc022cbd8183eb91b30be59deaaec1915ce3cb"
+  },
+  "A1 E05 month order: a label": {
+   "err": false,
+   "length": 11841,
+   "sha256": "a0002cd8941d9b3f1090205036966a718c748de4a06352dfccc811684002eeb1"
+  },
+  "A2 E05 month order: a label": {
+   "length": 86676,
+   "sha256": "23011a69fb2fd477fc832cc6bb5cd665cfc6665c97c58d3bf3f8c00b23908cfa"
+  },
+  "A1 E06 month order: Time Lab": {
+   "err": false,
+   "length": 13048,
+   "sha256": "9a5a7614b5568385d270a811205bde7123daa41bc976eb844060d591f5fff275"
+  },
+  "A2 E06 month order: Time Lab": {
+   "length": 83564,
+   "sha256": "b587e8f162ad74a4fc562d60fdd3fbe89f9ca1347fe3eed115c27374ce227465"
+  },
+  "A1 E07 month order: Time Lab in Arabic": {
+   "err": false,
+   "length": 13052,
+   "sha256": "177eccf216c3315aa3d3a8f47f12e0058a273f19ac8d33ab25a8858494f60c25"
+  },
+  "A2 E07 month order: Time Lab in Arabic": {
+   "length": 79637,
+   "sha256": "440937aef46cd769d1f1fd0c9b4a755b1cf5b79c25d4a132e3b038d7f14e5672"
+  },
+  "A1 E08 month order: the picker's date": {
+   "err": false,
+   "length": 13274,
+   "sha256": "8e7066dd939a26cb11b8afd6558811ce4c8820437bdfe9be21f8414f504f9371"
+  },
+  "A2 E08 month order: the picker's date": {
+   "length": 91831,
+   "sha256": "507551f94a779db6ace88cee334ad04372fed3885c20f2574879aef067f3b509"
+  },
+  "A1 E09 month order: a date column": {
+   "err": false,
+   "length": 12876,
+   "sha256": "b36ba0cd4f8bc4908f1549c0d15adc658973113a174f17610409f22b7bcac5db"
+  },
+  "A2 E09 month order: a date column": {
+   "length": 86537,
+   "sha256": "818ce7d751b6522a7301523f5bc697b8694a74fdfb1d3e3021023ea07a142fa2"
+  },
+  "A1 F01 custom visuals without a model": {
+   "err": false,
+   "length": 5938,
+   "sha256": "0488a450146f823591c2cce928f1bb5a507773b8c02755b3205a9966a4bd988c"
+  },
+  "A1 F02 custom visuals": {
+   "err": false,
+   "length": 31772,
+   "sha256": "66208fed6228d2520a5aa4e1dc523190941ff795c5caa657b426cd1e0ffb9afd"
+  },
+  "A2 F02 custom visuals": {
+   "length": 38920,
+   "sha256": "a61cf8acc2b84c84b735ef4ae50aaf57f978ff4cc0dadad33e864518775064e1"
+  },
+  "A1 F03 custom visuals, axes answered, a second": {
+   "err": false,
+   "length": 28144,
+   "sha256": "8ced36e8d132a0d7ca12b6d254ac8bd4f4af0189142d0ef6f2d30af667fd5078"
+  },
+  "A1 F04 custom visuals, none to replace": {
+   "err": false,
+   "length": 6947,
+   "sha256": "82727d5d729901f45eeeb75dea969fb5bfe075bf4f427db15d1ad7e1e68591e4"
+  },
+  "A1 F05 options on a native copy": {
+   "err": false,
+   "length": 28997,
+   "sha256": "f7d9d1d441c825241813c1ffbdb3b46c603fe9c18b85c1de6020996ede9d1e36"
+  },
+  "A1 F06 options without a model": {
+   "err": false,
+   "length": 6993,
+   "sha256": "0332e3aa79446b1cc176faad24e125c661a238b18fc4109f1e7eea5f3083e95c"
+  },
+  "A1 F07 switcher, flip cards, icons": {
+   "err": false,
+   "length": 19835,
+   "sha256": "e3df6c7f6cb56335e43e42fa721de737d682adb508d336838f3274a994c5010f"
+  },
+  "A2 F07 switcher, flip cards, icons": {
+   "length": 105142,
+   "sha256": "942a7c137d64b019346304560c093415529fc8bbedf134dc14136470250ca8f7"
+  },
+  "A1 F08 switcher and icons refused": {
+   "err": false,
+   "length": 7895,
+   "sha256": "47b958577f3c6975cc1ecadf201df34fb3d12bdbaf2c1b64039d474f626a40d8"
+  },
+  "A1 F09 DAX library, flip cards both": {
+   "err": false,
+   "length": 7193,
+   "sha256": "48c0deba697f82a3cfca6236a1dccb014a32ffb84893872f49df12672e25346e"
+  },
+  "A1 F10 DAX library": {
+   "err": false,
+   "length": 18572,
+   "sha256": "c89b05c53a9e1bfa440cf235cbf405123d47bc050ffd673f851d7dc9999903be"
+  },
+  "A2 F10 DAX library": {
+   "length": 93922,
+   "sha256": "7286bb4e3419f5a5828a5498c9655e882a30aca2c16e6e8bfff75aba5cc44dc9"
+  },
+  "A1 F11 DAX library in Arabic": {
+   "err": false,
+   "length": 26219,
+   "sha256": "48786dad6b4a3e3652bcfecf60ceef96cb9cd7960f906e6d72c9579bd865b934"
+  },
+  "A2 F11 DAX library in Arabic": {
+   "length": 97494,
+   "sha256": "5180ccdec24f4f4e852b5ac1142d797c260d6fd44feee3a55269c7b66c257f85"
+  },
+  "A1 F12 Arabic switcher, no names": {
+   "err": false,
+   "length": 22519,
+   "sha256": "9cea638a9a7291ae93488861b86d78128d5997360fa4b7b4485787e366e15893"
+  },
+  "A2 F12 Arabic switcher, no names": {
+   "length": 94315,
+   "sha256": "3ce929d37067a5e12d76be9bdb2bd0b60b96fe996e7d8c2a1fb4faf13e85d2d5"
+  },
+  "A1 F13 Arabic flip cards and icons": {
+   "err": false,
+   "length": 26821,
+   "sha256": "78f91132b5dc6841192dd94343b9cd7dd01084c22552043f3a928d6a80c66522"
+  },
+  "A2 F13 Arabic flip cards and icons": {
+   "length": 107029,
+   "sha256": "9facc72d156aefadc0ba9b3156d34919653139cf87c52ff59d2f69eafe9e7d41"
+  },
+  "A1 F15 Arabic switcher, a measure with no name": {
+   "err": false,
+   "length": 20322,
+   "sha256": "c421a10e1b5f3ae857f1876b09c8aba08712953ead0fbd92627ca00cf8f08197"
+  },
+  "A1 F14 shared axes asked": {
+   "err": false,
+   "length": 13913,
+   "sha256": "d718657d1f6ef17f67f59bdb81462d334f199d01f6c53594da73a721bc232236"
+  },
+  "A2 F14 shared axes asked": {
+   "length": 90522,
+   "sha256": "1812c2c2917ef8b9fe0773368bdd484c4381ce6d594b6c01433112d9f3b2abbf"
+  },
+  "A1 G01 gallery kinds": {
+   "err": false,
+   "length": 11009,
+   "sha256": "07d9399d8b4dd7e1ee7c9991f026156385139bad8eb7ef3ba1da4ee907cec286"
+  },
+  "A2 G01 gallery kinds": {
+   "length": 88554,
+   "sha256": "0f3b0ecd4957f60587c361d4d244a07faf456a30554e195124d310f924adb974"
+  },
+  "A1 G02 gallery in Arabic, waterfall native": {
+   "err": false,
+   "length": 18568,
+   "sha256": "b5ecb14db72c35b6f228c6cd6a1d5bfe3ccb9a1e7f7b9f7ea1e331654245df51"
+  },
+  "A2 G02 gallery in Arabic, waterfall native": {
+   "length": 91120,
+   "sha256": "62d8cc5810111c76529d77966f41856cf954d3212e7bafb7dc5ee97e269e554b"
+  },
+  "A1 G03 gallery in Arabic, waterfall mirror": {
+   "err": false,
+   "length": 20025,
+   "sha256": "3de9128ce78f3ce2279dc8ecc1ba5ddf0d403d0056432881f96f806a961c3a9c"
+  },
+  "A2 G03 gallery in Arabic, waterfall mirror": {
+   "length": 91960,
+   "sha256": "6d8ed12f2e9fbf54f676a029877fba51dbb451c0733bf84512a4145b3f66ebbd"
+  },
+  "A1 G04 Gulf in Arabic (the calendar)": {
+   "err": false,
+   "length": 21475,
+   "sha256": "a641a1deb32745e9d19b5151d0dd86ae605bb31deb9acd7c358db885be557940"
+  },
+  "A2 G04 Gulf in Arabic (the calendar)": {
+   "length": 93862,
+   "sha256": "d3822f55b5d2d7d5f7c8cc0e5e9a57ab8c6ac145e54d71d03b2f33c916aae1d7"
+  },
+  "A1 G05 bilingual": {
+   "err": false,
+   "length": 26257,
+   "sha256": "478a1b654cd9e8fde02f4bb3d34dcbbe8ef13953d71b1fd686c103bc245d6b8f"
+  },
+  "A1 G06 bilingual, tabs in Arabic, texts": {
+   "err": false,
+   "length": 26565,
+   "sha256": "8df2501a044f43a0db86e71602d96ea4fcc0fc5157980fcb1acec5015560e1e5"
+  },
+  "A2 G06 bilingual, tabs in Arabic, texts": {
+   "length": 183493,
+   "sha256": "44a8751539d0cb11e4fd0d4c42f57ebd61f058b7f48de272cd5360f60b065f5c"
+  },
+  "A1 G07 bilingual on the sample model": {
+   "err": false,
+   "length": 26317,
+   "sha256": "49ef19c7e6dda352c6563eb624aab4b5500c0f0b05ac05a93c715d8b707eabc1"
+  },
+  "A1 G08 slicers asked, one added": {
+   "err": false,
+   "length": 10851,
+   "sha256": "6cc7f34c31801516ec44a9f95057c8d140427bbf0b886374dff7e44250beb1aa"
+  },
+  "A2 G08 slicers asked, one added": {
+   "length": 88790,
+   "sha256": "53c7c4fd1f11bddce2a6f27f993e6a56fa378c54629ce816da56991680c05373"
+  },
+  "A1 G09 slicers in Arabic, chosen": {
+   "err": false,
+   "length": 19591,
+   "sha256": "a7737042f354e21444dfe8dc312c4129fffd919a05ef7a8a30b9730fdf000e71"
+  },
+  "A1 G10 many categories, thinner bars": {
+   "err": false,
+   "length": 10902,
+   "sha256": "fa4b7564fe48ef1d839af6f23c411d1b0b2ca7212e10b06f5129b0f30c580c09"
+  },
+  "A2 G10 many categories, thinner bars": {
+   "length": 85468,
+   "sha256": "8612ea51855c731b4048a66a6c3a4d4dca09981e1c642fece600e009602675c1"
+  },
+  "A1 G11 formats the model lacks": {
+   "err": false,
+   "length": 14181,
+   "sha256": "a614751720e6a53a52f889fa8fd5d9f9ea46e1ff4dd98bec641b89057947b050"
+  },
+  "A2 G11 formats the model lacks": {
+   "length": 89149,
+   "sha256": "3575beca2248c20e37292005561d7b8100e1d0f45a14c7110ee1b562392d69ac"
+  },
+  "A1 G12 the path limit": {
+   "err": false,
+   "length": 9248,
+   "sha256": "224c1fb87cd89d6105f91b6472b5c69b9f29babf507bb8f9e122fb214bc5eaa1"
+  },
+  "A1 G13 ops, six cards in Arabic": {
+   "err": false,
+   "length": 21679,
+   "sha256": "f72df6f433ccd5e28c1ec9b26d674e246b076f74a8f58c86194762f71c446735"
+  },
+  "A2 G13 ops, six cards in Arabic": {
+   "length": 95029,
+   "sha256": "7027f164619a7e4bc35e648035779ce5a242a52b4f36eefebacfc66f4e8982b0"
+  },
+  "A1 G14 hand-placed pages in Arabic": {
+   "err": false,
+   "length": 17018,
+   "sha256": "32695615accdcd4ec0f9a660448f91c5421f32d3ea3958907ff735c5f345c30f"
+  },
+  "A2 G14 hand-placed pages in Arabic": {
+   "length": 10995,
+   "sha256": "37367bbbaab826eee77966ba48cb07293beb3242842515ba435693816df598c3"
+  },
+  "A1 H01 colours from the report themeFrom names": {
+   "err": false,
+   "length": 12940,
+   "sha256": "e6760d7bac007b2c98c289fc676a98e2773b86222237cff0287b73bdd65c46d3"
+  },
+  "A2 H01 colours from the report themeFrom names": {
+   "length": 93017,
+   "sha256": "963b0931caaf88be5a633bdb4286494c03a388f0e2bcac0e07da91a501203f6f"
+  },
+  "A1 H02 colours with two reports, none named": {
+   "err": false,
+   "length": 12938,
+   "sha256": "c201da6204330a11286339c6097b0e63a86bacb72c47ec30f9ba5fa9ed7d5f6d"
+  },
+  "A2 H02 colours with two reports, none named": {
+   "length": 89918,
+   "sha256": "cf0285029537353a37a1524b30f94439ab42be383f4ab8d9474d97371ef982c7"
+  },
+  "A1 H03 Arabic, terms confirmed earlier": {
+   "err": false,
+   "length": 20114,
+   "sha256": "533252c635bc8d8dd8487f91d47ae802de0090665b3eaee80500901b5caec68e"
+  },
+  "A2 H03 Arabic, terms confirmed earlier": {
+   "length": 93086,
+   "sha256": "e850824cdef1747360b4fe3594081a482ff7a21d7b5250213feb626cfd3e6aa2"
+  },
+  "A1 H04 Arabic, terms confirmed earlier, the lint's fields": {
+   "err": false,
+   "length": 21272,
+   "sha256": "1c1a3b80dc83a51b4ae4109fa6864d52e44512d1d3fd75b5ff3f9ce600f93781"
+  },
+  "A1 H05 month order: a month-year label": {
+   "err": false,
+   "length": 12080,
+   "sha256": "21a21c4456659310d6ba072a87bb6859abc52934eb490d8a9bbf8bf9b5cefb8c"
+  },
+  "A2 H05 month order: a month-year label": {
+   "length": 87544,
+   "sha256": "20406548a434e2bafb4379cd447043c831416f6966d8914f5bcb940de1fe2e91"
+  },
+  "A1 H06 custom visuals, the native name taken": {
+   "err": false,
+   "length": 28791,
+   "sha256": "92bcb3ab91c7929e71c97fb2c321b7c7dd08f44ac859ec210e00f89d670afedd"
+  },
+  "A1 H07 Gulf dates: a Hijri year": {
+   "err": false,
+   "length": 16275,
+   "sha256": "1d4267072d72963440d48cc0507841fabafc15a816e4b575ac3a67bc5af5d4f1"
+  },
+  "A2 H07 Gulf dates: a Hijri year": {
+   "length": 89530,
+   "sha256": "1dc693a79e816d8f49e03afc8989937ca1d2977ed633160b91d179aaa2797305"
+  },
+  "A1 H08 Gulf dates: the trend on the ship date": {
+   "err": false,
+   "length": 15369,
+   "sha256": "1ba83b56526531488d4ae728f454eb2b8ce6db69e109ab0d8e3aa2f98976feb7"
+  },
+  "A2 H08 Gulf dates: the trend on the ship date": {
+   "length": 85263,
+   "sha256": "02243747aa990ead294a849aa28af59571baa02240e6985ac5293cf0d5875b02"
+  },
+  "A1 H09 table fields in a narrow row (exec)": {
+   "err": false,
+   "length": 12242,
+   "sha256": "c64aaba9c1d24f8e1bc5d3b2225ea990819361576a9fbe788b9978751db64966"
+  },
+  "A2 H09 table fields in a narrow row (exec)": {
+   "length": 87387,
+   "sha256": "517a201f0d444ff89d6a38086d2fab49ed90e4ec63039f09b297e1fa752c215e"
+  },
+  "A1 H10 table fields in a narrow row (ops)": {
+   "err": false,
+   "length": 14835,
+   "sha256": "3274d112be1f9d1965c61ce71bf7a426684c5b1ced0b31a089fe8308b5e7aeb2"
+  },
+  "A2 H10 table fields in a narrow row (ops)": {
+   "length": 90667,
+   "sha256": "2f931d139eb2eeaaba6b3035c18a01e9b2cd83d233422bcb34bee6532ffe170f"
+  },
+  "A1 H11 table fields in a narrow row (focus)": {
+   "err": false,
+   "length": 9882,
+   "sha256": "53aac5d6525206c78752309fefb218e1e77cc4a1af25fcc9de0f9b8c269040f5"
+  },
+  "A2 H11 table fields in a narrow row (focus)": {
+   "length": 84758,
+   "sha256": "4ec6fe0cfeba7d51a1c9d931ca27a2351f962f53d7b94d56a9544d16ef8a4ecc"
+  },
+  "A1 H12 Arabic ops, every name given (the lint's fields)": {
+   "err": false,
+   "length": 21286,
+   "sha256": "7d9d15838353aad5a47d1f670a7be8b20c48868eb18ae9b734844c5e0a59895d"
+  },
+  "A1 H13 a category with two values (a donut)": {
+   "err": false,
+   "length": 11154,
+   "sha256": "6ffff8a6f7defd188b856826f483511731cd950eeecc2fd9c9a4d46f5099f966"
+  },
+  "A2 H13 a category with two values (a donut)": {
+   "length": 86230,
+   "sha256": "e8594afe1ecc8887f7a846d23de17d8b5e113bab603b7f54ed8ac6cc2aef090b"
+  },
+  "A1 H14 Arabic status icons by thresholds": {
+   "err": false,
+   "length": 19702,
+   "sha256": "62baedc7cdd49a09838622244ffb6538840f669332fbdebe722dd3d3a1bcd212"
+  },
+  "A2 H14 Arabic status icons by thresholds": {
+   "length": 90119,
+   "sha256": "102a491c8c402a9a709bc54aee532e2cefcdb58c3db13ac938a92efc5af5bcb3"
+  },
+  "A1 H15 a design with the phone layout off": {
+   "err": false,
+   "length": 12415,
+   "sha256": "6c05bb707f229e503c4671b37240dde614c87c614a161a998d771f557f874bb1"
+  },
+  "A2 H15 a design with the phone layout off": {
+   "length": 84779,
+   "sha256": "41e070bb60558c502bb9b3d8feda3586da7a24f4df99ff3ba3672108fc5b0eea"
+  },
+  "A1 H16 a small page": {
+   "err": false,
+   "length": 9672,
+   "sha256": "54473200ed0d6312ea8da192fd48329aaf3219d22bcb732225f4baad6a865ed1"
+  },
+  "A2 H16 a small page": {
+   "length": 42540,
+   "sha256": "3eaf4324a41f00acfe39bc5308f525a280dc3d95922e3761a035e3518082f039"
+  },
+  "A1 H17 Arabic, many English titles": {
+   "err": false,
+   "length": 21871,
+   "sha256": "b89e075b54ed7f60bd33259df36f5eac3b3286153861c0fc115b51b4830624f5"
+  },
+  "A2 H17 Arabic, many English titles": {
+   "length": 51871,
+   "sha256": "ea9a4c61aed95bf1b2990c68fa7bb7abeb488b1bbe3c413794675cd79a01e9b5"
+  },
+  "A1 H18 both languages, many English titles": {
+   "err": false,
+   "length": 29241,
+   "sha256": "f6d1e73bb304b650b45f12436e59f5744c713c73337658b6f5878464cc570830"
+  }
+ }
+}

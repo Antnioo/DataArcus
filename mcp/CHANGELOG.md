@@ -110,6 +110,10 @@ package's manifest; this file says what is in it.
   create_report tells after a write, every answer and fix script of the model health check, and each visual the
   report writer writes are each made by short named steps instead of one long function; all of them are byte for
   byte what they were before, and the tool's name, description and inputs are unchanged.
+- **Inside plan_layout, in smaller steps:** the plan's model read, its names, layout, checks against the limits, date
+  questions, options, exact report, titles, preview and answer are each made by short named steps instead of one long
+  function; every answer, problem and plan held for the approval page is byte for byte what it was before, and the
+  tool's name, description and inputs are unchanged.
 - **Inside the Theme Generator's downloads, the site's navigation and the SVG KPI Designer's panels, in smaller
   steps:** each is made by short named steps instead of one long function; every download, menu, counter, panel and
   click is what it was before.
