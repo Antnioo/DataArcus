@@ -54,6 +54,10 @@ task routes. [Every module](#every-module) (0.3.2 MD1): one row per file, kept t
     flag checks them (run by `scripts/check-min.mjs`, so by CI); reads and writes the pages and engines.
   - `scripts/test-stamps.mjs`: stamps.mjs red on made-up trees (an old stamp, a typed one, a missing or changed
     target, a loop), green on the real tree, a second build a no-op; made-up files in the temp folder.
+- **Bot pull requests** (0.3.3 BA1, D-1109-10): `scripts/bot-pr-files.mjs`: paths of a pull request in (stdin, one per
+  line) -> `auto` only when every path is one of the 3 data files (prices, PL-300 and DP-600 outlines), else `owner <path>`;
+  the one allowed list, called by `update-powerbi-prices.yml` and `check-exam-outlines.yml`;
+  `scripts/test-bot-pr-files.mjs` proves it and both workflows (merge only after `auto`, `--auto` only).
 - **Packaging**: the one-click extension (`.mcpb`) and its release notes are made by a separate build step from
   `mcp/` as it is here; `mcp/skills-packaging/` is the plugin folder next to Microsoft's.
 

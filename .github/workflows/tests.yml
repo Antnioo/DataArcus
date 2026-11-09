@@ -73,6 +73,10 @@ jobs:
       - name: The price updater reads Microsoft's page correctly (fixed text, no network)
         run: node scripts/test-powerbi-prices.mjs
 
+      # (BA1, 0.3.3, D-1109-10) which bot pull requests may merge themselves: the one allowed list and the two workflows
+      - name: Bot pull requests that change only the 3 data files merge themselves (the one list, the workflows)
+        run: node scripts/test-bot-pr-files.mjs
+
       - name: The weekly Microsoft watch compares and writes its issue correctly (fixed answers, no network)
         run: node scripts/test-microsoft-watch.mjs
       - name: The PL-300 question file is what its source builds (no edit in the built file only)
