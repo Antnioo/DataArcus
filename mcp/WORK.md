@@ -9,6 +9,7 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 - `integration/0.3.3`: builders branch from it, push only their branch; the reviewer merges; the owner merges to main.
 - 0.3.3 merged: BA1 (weekly bot PRs that change only the 3 data files merge themselves, D-1109-10).
 - 0.3.3 running: LK1 (linked visuals named), PQ1 (PL-300 bank), HK1 (suites read saved fixtures), WE1 (Arabic write errors).
+  HC2 (the month-sort rule finds an Arabic Hijri month column, B-425).
   Held: TC1, SG1.
 
 ## Next step
