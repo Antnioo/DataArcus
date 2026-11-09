@@ -91,6 +91,8 @@ const MUTANTS = [
   { id: 'D-nfd', file: MO, edits: [["  const full = path.resolve(root, String(p || '.'));\n  if (within(root, full)) return full;", "  const full = path.resolve(root, String(p || '.').normalize('NFD'));\n  if (within(root, full)) return full;"]], guards: ['test-platform-paths.mjs'], only: ['linux', 'win32'] },
   // (AF1) the report reader opens a file through a linked folder: diskSource's check of every folder on the way skipped
   { id: 'R-ancestors', file: 'mcp/lib/read-report.mjs', edits: [['  const at = (rel) => {\n    const parts', "  const at = (rel) => { return path.join(loc.reportDir, ...String(rel).split('/').filter(Boolean));\n    const parts"]], guards: ['test-0.3.1-audit-readers.mjs'] },
+  // (0.3.3 LK1, AUD-057) one link, one entry: without the dedup a link met by check_report's walk and by the source counts twice
+  { id: 'R-link-once', file: 'mcp/lib/read-report.mjs', edits: [['if (!(sk.links = sk.links || []).includes(r)) sk.links.push(r);', '(sk.links = sk.links || []).push(r);']], guards: ['test-0.3.3-lk1.mjs'] },
   // (SQ6) the reader: two models at one depth read silently as the first (SQ15a: the owner's yes); a .pbit link followed; a .pbit that changed while read used
   // (SQ15a) a KPI's target expression returned as text; an image file name returned unscreened
   { id: 'R-kpi-quoted', file: MM, edits: [["target: !k ? 'none' : k.expression ? 'an expression' :", "target: !k ? 'none' : k.expression ? String(x.kpi.targetExpression) :"]], guards: ['test-0.3.1-sq15a.mjs'] },
