@@ -96,7 +96,7 @@ links as [text]). Recurring phrases reuse the earlier posts' wording: «فحص �
 «تدقيق الجاهزية لـ Copilot», «مخطط بيانات للذكاء الاصطناعي (AI data schema)», «إجابات موثّقة», «تعليمات للذكاء
 الاصطناعي», «النموذج الدلالي», «نموذج تجريبي» (as W's «تقارير تجريبية»), «المقسمات» (your term, E2). Please look in
 particular at: «الدقيقة 0 إلى 2» for "Minutes 0 to 2"; «تُرشّح في الاتجاهين» for "filter in both directions"; «جهة الكثير»
-for "the many side"; «مختلق» beside «تجريبي» in p2; the AI instructions block kept in English (the article says why).
+for "the many side"; «تجريبي» for "made-up" twice in p2 (your D-1028-05 word; the CI test fx3 caught a first «مختلق»); the AI instructions block kept in English (the article says why).
 
 - `meta.title`: هل نموذج Power BI جاهز لـ Copilot؟ فحص في 10 دقائق
 - `meta.description`: فحص بالدقائق قبل أن يستخدم فريقك Copilot: ما يحتاجه Copilot ليعمل، وما تكشفه أداة فحص صحة النموذج المجانية، وما تصلحه، على نموذج تجريبي.
@@ -104,7 +104,7 @@ for "the many side"; «مختلق» beside «تجريبي» in p2; the AI instru
 - `header.title`: هل نموذج Power BI جاهز لـ Copilot؟ كيف تفحصه في 10 دقائق
 - `header.subtitle`: نُشر في 9 نوفمبر 2026
 - `content.p1`: يريد مديرك أن يسأل الفريق Copilot بدل انتظار صفحة تقرير جديدة. والسؤال يصل إليك: هل النموذج جاهز، وكيف تعرف ذلك قبل أن يبدأ الناس في الوثوق بالإجابات؟ نصيحة Microsoft نفسها أن تصلح النموذج أولًا، لأن التعليمات الإضافية لا تصحّح علاقات خاطئة ولا تجميعًا غير مناسب ([Microsoft Learn، قُرئت في 9 نوفمبر 2026]).
-- `content.p2`: هذه هي النسخة العملية: فحص تنجزه في نحو عشر دقائق، بالساعة. شغّلنا كل خطوة على نموذج تجريبي اسمه Sahel Electronics، متجر إلكترونيات خليجي مختلق، فيه أربعة جداول وأربعة مقاييس وصفحة تقرير واحدة؛ لا شركة حقيقية ولا بيانات حقيقية. ولماذا تهم كل نقطة، اقرأ [فحصنا ذا النقاط السبع]؛ أما هنا فنجري الفحص فقط.
+- `content.p2`: هذه هي النسخة العملية: فحص تنجزه في نحو عشر دقائق، بالساعة. شغّلنا كل خطوة على نموذج تجريبي اسمه Sahel Electronics، متجر إلكترونيات خليجي تجريبي، فيه أربعة جداول وأربعة مقاييس وصفحة تقرير واحدة؛ لا شركة حقيقية ولا بيانات حقيقية. ولماذا تهم كل نقطة، اقرأ [فحصنا ذا النقاط السبع]؛ أما هنا فنجري الفحص فقط.
 - `content.h1`: قبل أن تبدأ الساعة: هل يعمل Copilot عندكم أصلًا؟
 - `content.p3`: إن كان الجواب لا، فالباقي يمكنه الانتظار. من Microsoft Learn، قُرئت في 9 نوفمبر 2026 ([تفعيل Copilot في Power BI]):
 - `content.list1_1`: السعة: يجب أن تكون مساحة عمل التقرير على Power BI Premium ‏(P1 أو أعلى) أو على سعة Fabric مدفوعة (F2 أو أعلى)، أو أن تستخدم سعة Fabric Copilot. السعات التجريبية غير مدعومة، وCopilot في Power BI Desktop لا يدعم مساحات العمل بترخيص Premium Per User ([Copilot في Power BI Desktop]).
