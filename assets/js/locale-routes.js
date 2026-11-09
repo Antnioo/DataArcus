@@ -71,6 +71,7 @@
     ['article-ramadan-sales-power-bi', 'ramadanSalesTranslations'],
     ['article-power-bi-model-health-check', 'modelHealthArticleTranslations'],
     ['article-power-bi-report-ready-for-arabic', 'reportReadyArabicTranslations'],
+    ['article-power-bi-copilot-ready-check', 'copilotReadyCheckTranslations'],
     ['article-power-bi-custom-visual-ai-checks', 'customVisualChecksTranslations'],
     ['article-power-bi-best-practice-exceptions', 'bestPracticeExceptionsTranslations'],
     ['article-power-bi-report-redesign', 'reportRedesignArticleTranslations'],

@@ -167,6 +167,37 @@ for (const [k, t] of Object.entries(W)) {
   check(heads.length >= 4 && !heads.some((h) => /\b(?:first|only|official|free)\b|الأول|الوحيد|رسمي|مجان/i.test(h)), `W-6. the ${k} article's headlines are missing or say first, only, official or free: ${JSON.stringify(heads)}`);
 }
 
+// CP1 (content, 9 Nov; mcp/work/CP1.md): the article "Is your Power BI model ready for Copilot? How to check in 10
+// minutes" in English, its Arabic copy and its translations: the forbidden words as above, then each public sentence it
+// must keep true (a missing file fails its checks)
+const CP1_FILES = ['../articles/article-power-bi-copilot-ready-check.html', '../ar/articles/article-power-bi-copilot-ready-check.html', '../assets/js/translations/article-power-bi-copilot-ready-check.js'];
+for (const f of CP1_FILES) {
+  const t = maybe(f);
+  for (const [re, what] of BANNED) { const m = re.exec(t); check(t && !m, `CP1-0. ${f}: ${t ? what + ': "' + (m ? t.slice(Math.max(0, m.index - 40), m.index + 60) : '') + '"' : 'missing'}`); }
+}
+const CP = { en: maybe(CP1_FILES[0]), ar: maybe(CP1_FILES[1]) };
+// CP1-1 Prep data for AI said as preview, as Microsoft Learn titles it (read 9 Nov 2026)
+check(/Prep data for AI \(preview\)/.test(CP.en) && /still calls it preview/.test(CP.en), 'CP1-1. the English article does not call Prep data for AI preview');
+check(/Prep data for AI \(معاينة\)/.test(CP.ar) && /تسميها معاينة/.test(CP.ar), 'CP1-1. the Arabic article does not call Prep data for AI preview');
+// CP1-2 every Microsoft fact linked to its Learn page, with the date read
+const LEARN = ['copilot-enable-power-bi', 'copilot-evaluate-data', 'copilot-power-bi-desktop', 'copilot-prepare-data-ai', 'copilot-prepare-data-ai-data-schema', 'copilot-prepare-data-ai-verified-answers', 'copilot-prepare-data-ai-instructions', 'copilot-ask-data-question', 'tutorial-copilot-power-bi-prepare-model', 'copilot-integration'];
+for (const [k, t] of Object.entries(CP)) {
+  const miss = LEARN.filter((p) => !new RegExp(`learn\\.microsoft\\.com/power-bi/create-reports/${p}['"]`).test(t));
+  check(!miss.length && (k === 'en' ? /read 9 Nov 2026/ : /قُرئت في 9 نوفمبر 2026/).test(t), `CP1-2. the ${k} article lacks a Learn link or the date read: ${miss.join(', ')}`);
+}
+// CP1-3 the made-up model's numbers as the engine measured them (mcp/work/cp1/sahel-model.mjs: 79 -> 98; 10 kinds on 24 objects)
+check(/made-up model/.test(CP.en) && /<strong>79<\/strong>/.test(CP.en) && /10 kinds of finding on 24 objects/.test(CP.en) && /79 to 98/.test(CP.en), 'CP1-3. the English article does not give the made-up model\'s measured numbers (79, 10 kinds on 24 objects, 79 to 98)');
+check(/نموذج تجريبي/.test(CP.ar) && /<strong>79<\/strong>/.test(CP.ar) && /10 أنواع من الملاحظات على 24 عنصرًا/.test(CP.ar) && /من 79 إلى 98/.test(CP.ar), 'CP1-3. the Arabic article does not give the same numbers');
+// CP1-4 no headline with first, only, official or free (title, h1, og:title, twitter:title)
+for (const [k, t] of Object.entries(CP)) {
+  const heads = [...t.matchAll(/<title>([^<]*)<\/title>|<h1[^>]*>([^<]*)<\/h1>|property="og:title" content="([^"]*)"|name="twitter:title" content="([^"]*)"/g)].map((m) => m.slice(1).find(Boolean) || '');
+  check(heads.length >= 4 && !heads.some((h) => /\b(?:first|only|official|free)\b|الأول|الوحيد|رسمي|مجان/i.test(h)), `CP1-4. the ${k} article's headlines are missing or say first, only, official or free: ${JSON.stringify(heads)}`);
+}
+// CP1-5 "free" is never said of the audit (a paid service): no sentence that names the audit says free
+const auditSaid = (t, re) => t.replace(/<[^>]+>/g, ' ').split(/(?<=[.؟!:])\s+/).filter((s) => re.test(s));
+check(auditSaid(CP.en, /readiness audit/i).length > 0 && !auditSaid(CP.en, /readiness audit/i).some((s) => /\bfree\b/i.test(s)), 'CP1-5. an English sentence on the Copilot readiness audit says free (or the audit is not named)');
+check(auditSaid(CP.ar, /تدقيق الجاهزية/).length > 0 && !auditSaid(CP.ar, /تدقيق الجاهزية/).some((s) => /مجان/.test(s)), 'CP1-5. an Arabic sentence on the audit says free (or the audit is not named)');
+
 // D5 (0.3.1 wave 5, 25 Oct; mcp/work/D5.md): every public sentence the release-prep sweep added, one check each, and the
 // forbidden words over the texts it touched that the scan above does not read (PRODUCT_SPEC, llms.txt, the CHANGELOG's
 // [Unreleased])
