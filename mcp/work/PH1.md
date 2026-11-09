@@ -5,7 +5,8 @@
 - **Base:** `fix/0.3.2-ph1` from `origin/integration/0.3.2` at 0f5d0f79 (FN1J merged). Push only this branch.
 - **Scope:** redesign.mjs `same` and report-build.mjs `fsInTree` call path-rules.mjs `sameOnDisk`; `tooLongSaid` example: win32 `C:\PBI`, darwin and linux `~/PBI`. New suite ph1. Not plan_layout.mjs or FN1J's files.
 - **Expected checks:** new `ph1` red on 0f5d0f79 first (tooLongSaid darwin and linux, the two source checks); redesign, sp2, sp43, fn1f, wn1 and the pinning split tests unchanged counts; mutation run before and after.
-- **Resume:** 2026-11-09T07:03Z: State: fn1j normalises the example folder (Windows CI red on the first G12 pin); CI run again.
+- **CI:** CI green: https://github.com/Antnioo/DataArcus/actions/runs/42582529670 on b43b3f51 (Linux, Windows, website; macOS skipped on a branch run). Earlier runs: 42578343323 red (Windows fn1j G12, fixed in b43b3f51); 42579777733 red (website theme-generator "steps bar did not open" on a page this job does not touch, the same flake WN1 saw; green on the fresh run).
+- **Resume:** 2026-11-09T08:10Z: State: DONE (CI green on b43b3f51); the reviewer merges.
 
 ## Plan
 1. redesign.mjs: import sameOnDisk, delete local `same`, message unchanged.
