@@ -8,7 +8,8 @@
   sitemap.xml, scripts/test-powerbi-prices.mjs (the new check), CHANGELOG line. No price, no other word.
 - **Expected checks:** test-powerbi-prices.mjs: new checks red on 207784c6 (3 places say 23 September, fallback
   2026-10-03 vs JSON 2026-11-02), then PASS; check:min, sitemap-lastmod, site config PASS; run-all tools, site PASS.
-- **Resume:** plan written (2026-11-09T04:08Z); next the red check, then syncChecked, the workflow, the sync run, CI.
+- **Got:** test-powerbi-prices 29/29 (3 red before the sync: page span, translations spans, fallback; red on 207784c6's data first); run-all site 629, tools 399, lang-switcher 1442 PASS; 0.3.0-claims 721 PASS; lint 0. Code: 7cf571ec.
+- **Resume:** CI next (2026-11-09T04:23Z); earlier: plan written (2026-11-09T04:08Z); next the red check, then syncChecked, the workflow, the sync run, CI.
 
 ## Plan
 1. Red first: add the drift check to scripts/test-powerbi-prices.mjs (already run by tests.yml).
@@ -18,5 +19,30 @@
 3. Workflow adds the changed files; min and sitemap rebuilt in the workflow (decision below).
 4. Run syncChecked now with 2026-11-02.
 
+## CHANGELOG line
+In mcp/CHANGELOG.md [Unreleased]: "The cost calculator's checked date is the date of the weekly price check".
+
 ## Decisions I made
-(filled at the end)
+- Min rebuild and sitemap lastmod run in the workflow, not the script: they need terser (npm ci) and git history (lastmod reads commit dates, so it needs a second commit after the first).
+- The workflow checks out with fetch-depth 0 and installs with --ignore-scripts.
+- The script's network run is guarded to run only as the entry point, so the test imports syncChecked without the network.
+- The check lives in scripts/test-powerbi-prices.mjs (already a CI step), not a new suite.
+- The Arabic span is chosen by Arabic letters in the old text, so the order of the two spans does not matter.
+- Also rebuilt by build:min on purpose: the ?v= stamp in ar/tools/power-bi-licensing-cost-calculator.html (the bot's git add includes it).
+- Source of the date: assets/data/powerbi-prices.json "checked" 2026-11-02 (written by the weekly workflow).
+
+## For the owner
+none
+
+## Risky changes
+- .github/workflows/update-powerbi-prices.yml commits more than before: the calculator page, its Arabic page, three scripts and two .min.js (all from the date), then a second commit of sitemap.xml. It adds npm ci --ignore-scripts, build:min and sitemap-lastmod to the bot's run, and full-history checkout. Why: the page's date must follow the data. No new permission, no new network host (npm ci uses the registry as tests.yml does). Not run yet; the first Monday run proves it.
+
+## For the laptop
+none
+
+## Seen, not in scope
+- mcp/test-0.3.0-claims.mjs:401 pins "checked 26 October 2026" for the licensing guide; it does not follow the weekly date.
+
+## Lessons for the reviewer
+- The brief's "four places" are three files; the stamps change a fifth (the Arabic page), which the bot's git add must carry.
+- WORK.md has no room (3200 cap): a new job line must be short.
