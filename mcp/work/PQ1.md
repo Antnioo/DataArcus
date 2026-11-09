@@ -52,3 +52,5 @@
 - No other test's expected number changed. site, tools, lang-switcher, sp13, sp24, pl300-bank green on this tree; sp34 green after the re-record (`PASS  sp34  18 checks`).
 - scripts/tests/fixtures/sp36-lang.json (2026-11-09T20:41Z): CI run 42688593295 on 1f95884a was red in sp36 only (home and tools i18n table hashes: the card text 228 became 234, on purpose; the brief's list of pinning tests named none, I had not run sp36 locally: lesson below). Re-recorded with SP36_RECORD=1; the diff is exactly 15 lines, every one an `i18n` hash of a step, no other field. Old fixture kept in the scratchpad.
 - Lessons: a count in a translations file is hashed by sp36 (i18n) as well as sp34; run `node scripts/tests/run-all.mjs sp36 sp34` when a translation text changes.
+
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/42695415687 on 055fc5eb (2026-11-09T20:55Z; the earlier run 42688593295 on 1f95884a was red in sp36 only, fixed above)
