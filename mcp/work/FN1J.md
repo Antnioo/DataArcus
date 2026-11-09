@@ -26,8 +26,9 @@
 - **The plan's answer size:** fn1j pins each of the 90 answers' length and sha256 (normalised: the working folder,
   the plan id, the path limit's numbers): the same on 207784c6 and on the split, so at one path every answer has the
   same size (the largest: the custom visuals plan F02, 31,772 normalised characters).
-- CI: started on the note's commit at 2026-11-09T05:58Z (the line below is written when it ends).
-- **State:** waiting for CI.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42570318212 on 5afa63f7 (Linux and Windows; macOS
+  skipped by the workflow on a branch run), read 2026-11-09T06:12Z. After it only this note changed.
+- **State: DONE.**
 - **Resume:** none; the reviewer's merge (the ratchet's fn_over_150: plan_layout register leaves it).
 
 ## The steps (one per part of the old handler, called in the old order)
