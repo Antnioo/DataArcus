@@ -59,3 +59,5 @@ none. The six suites read saved files with the same bytes git show returned (the
 - B-417 cannot be done as written: the guide's date and its UAE figures come from different reads (see "For the owner").
 
 Written: 2026-11-09T19:56Z
+
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/42688224957 on 7506eeeb (run 1592, success; written 2026-11-09T20:40Z)
