@@ -1,10 +1,10 @@
 ## Summary
-STOP (B-417 only, not done): mcp/test-0.3.0-claims.mjs still pins "checked 26 October 2026"; the fix needs the owner (see "For the owner"). The six base-commit suites are done and green.
+B-417: decided by the reviewer 9 Nov: keep. The six base-commit suites are done.
 - **Approval:** reviewer brief HK1 (0.3.3, Haiku job), 9 Nov; owner D-1109-09 (run every check, record what is unsure).
 - **Base:** origin/integration/0.3.3 at f3c1b7e1 (unchanged at merge time); branch fix/0.3.3-hk1.
 - **Scope:** six suites (glass-tables, dd2c, dd2o, dd2p, sp29, sp6) read saved copies of their base commits from mcp/fixtures/hk1/<suite>/ instead of git show or git ls-tree. Not done: B-417 (claims date).
 - **Expected checks:** glass-tables 113, dd2c 48, dd2o 89, dd2p 112, sp29 21, sp6 13: unchanged. claims 721: not touched.
-- **Resume:** owner answers the B-417 question; then one commit to the claims date check (and the guide, if he agrees).
+- **Resume:** B-417 decided by the reviewer 9 Nov: keep the guide's 26 October date (only the price file was refreshed on 2 Nov; moving the guide's date unread would be untrue); claims test untouched.
 
 ## Before -> after
 Counting rule: the last PASS/FAIL line of each suite's own output file (saved in the session scratchpad).
@@ -39,7 +39,7 @@ none (test-only change; no product, page or public text changed).
 - mcp/WORK.md: no HK1 line. The file is at its 3,200-character cap (my line made it 3,231), so this job's memory is mcp/work/HK1.md only.
 
 ## For the owner
-- B-417: may the licensing guide (EN article and its AR version) change "re-checked against Microsoft on 26 October 2026" to 2 November 2026, so the claims test can read the date from assets/data/powerbi-prices.json? Reason it is not a plain edit: the UAE figures (0.22 a CU hour, 1,146 a CU year) were read on 26 October from Azure's uaenorth API and are not in that file, so a new date would also say they were checked on 2 November. The AR date line is an approved draft (D-1105-16), so I did not edit it. Choose: restamp the whole guide, or keep 26 October and split the UAE line.
+none (B-417 decided by the reviewer 9 Nov: keep the guide's 26 October date; the question is closed).
 
 ## Risky changes
 none. The six suites read saved files with the same bytes git show returned (the green runs prove the same checks and numbers); no product code, network, process or file-writing change (temp folders are still os.tmpdir()).
