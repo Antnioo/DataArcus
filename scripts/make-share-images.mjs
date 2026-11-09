@@ -83,7 +83,7 @@ const TOOLS = [
   ['licensing-calculator', 'power-bi-licensing-cost-calculator', 'Power BI Licensing Cost Calculator', ['Pro vs PPU vs Fabric', 'F64 break-even', 'USD, AED, SAR'], 'tool-licensing.jpg'],
   ['model-health-check', 'power-bi-model-health-check', 'Power BI Model Health Check', ['Unused columns', 'Slow DAX', 'Nothing uploaded'], 'tool-health.jpg'],
   ['dp-600', 'dp-600-practice-exam', 'DP-600 Practice Exam', ['220 questions', 'Timed mocks', 'Score out of 1000'], 'tool-dp600.jpg'],
-  ['pl-300', 'pl-300-practice-exam', 'PL-300 Practice Exam', ['228 questions', 'Timed mocks', 'Renewal prep'], 'tool-pl300.jpg'],
+  ['pl-300', 'pl-300-practice-exam', 'PL-300 Practice Exam', ['234 questions', 'Timed mocks', 'Renewal prep'], 'tool-pl300.jpg'],
   ['svg-kpi-designer', 'svg-kpi-designer', 'SVG KPI Designer for Power BI', ['Link to measures', 'Sparklines', 'One DAX measure'], 'tool-svgkpi.jpg']
 ];
 // small line icons for the tools hub
@@ -95,7 +95,7 @@ const HUB = [
   ['Theme & layout', 'Colors, JSON, layout', icon('<circle cx="8" cy="9" r="1.5"/><circle cx="12" cy="7" r="1.5"/><circle cx="16" cy="9" r="1.5"/><path d="M12 21a9 9 0 1 1 9-9c0 2-1.5 3-3 3h-2a2 2 0 0 0-1 3.7c.3.2.5.6.5 1 0 .7-.6 1.3-1.5 1.3z"/>')],
   ['DAX calendar', 'Hijri, Ramadan, Eid', icon('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>')],
   ['Measure builder', 'YTD, YoY, rolling DAX', icon('<path d="M17 5H7l6 7-6 7h10"/>')],
-  ['PL-300 exam', '228 practice questions', icon('<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>')],
+  ['PL-300 exam', '234 practice questions', icon('<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>')],
   ['SVG KPI designer', 'KPI cards as DAX', icon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 15l3-3 3 2 4-5"/>')]
 ];
 

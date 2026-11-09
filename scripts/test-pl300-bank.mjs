@@ -1,0 +1,53 @@
+// PL-300 bank test (PQ1, B-400 + B-401).
+//  1. Length giveaway: among single-answer questions (the bank's and the case studies') the share where the right
+//     option is the strictly longest must not pass 40% (AUD-055: it was 131/174 = 75.3%). DP-600's share is printed.
+//  2. One count: every "N questions" on the PL-300 pages, the hubs and the share images equals the bank's length.
+// Run: node scripts/test-pl300-bank.mjs   (prints `PASS  pl300-bank  <N> checks`)
+import fs from 'node:fs';
+import path from 'node:path';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
+const load = (f, key) => { const w = {}; vm.runInNewContext(read(f), { window: w }); return w[key]; };
+const MAX_SHARE = 0.40;
+let checks = 0; const bad = [];
+const ok = (c, m) => { checks++; if (!c) bad.push(m); };
+
+function share(bank) {
+  const qs = [...bank.q, ...(bank.cases || []).flatMap((c) => c.questions)].filter((q) => q.type === 'single');
+  const hit = qs.filter((q) => { const L = q.opts.map((o) => String(o).length), m = Math.max(...L); return L[q.ans] === m && L.filter((x) => x === m).length === 1; });
+  return { n: qs.length, hit: hit.length, share: hit.length / qs.length, ids: hit.map((q) => q.id) };
+}
+const pl = load('assets/data/pl300-questions.js', 'PL300');
+const dp = load('assets/data/dp600-questions.js', 'DP600');
+const p = share(pl), d = share(dp);
+console.log(`PL-300: right option strictly longest in ${p.hit}/${p.n} = ${(p.share * 100).toFixed(1)}% single-answer questions (limit ${MAX_SHARE * 100}%)`);
+console.log(`DP-600: ${d.hit}/${d.n} = ${(d.share * 100).toFixed(1)}% (printed, not failed)`);
+ok(p.n > 0, 'no single-answer questions found');
+ok(p.share <= MAX_SHARE, `PL-300 right option is the strictly longest in ${(p.share * 100).toFixed(1)}% (${p.hit}/${p.n}), limit ${MAX_SHARE * 100}%`);
+
+// the bank's total: its questions plus the case-study questions (what the page says it holds)
+const total = pl.q.length + pl.cases.reduce((a, c) => a + c.questions.length, 0);
+ok(total > 0, 'empty bank');
+const FILES = ['tools/pl-300-practice-exam.html', 'ar/tools/pl-300-practice-exam.html', 'assets/js/translations/pl300.js', 'assets/js/translations/pl300.min.js',
+  'tools/index.html', 'ar/tools/index.html', 'index.html', 'ar/index.html', 'assets/js/translations/tools-hub.js', 'assets/js/translations/tools-hub.min.js',
+  'assets/js/translations/homepage.js', 'assets/js/translations/homepage.min.js', 'scripts/make-share-images.mjs'];
+const RE = /(?<![-\d])(\d{3})\s+(?:original\s+|practice\s+|Power BI\s+)*(?:questions?|سؤالًا|سؤال)/g;
+for (const f of FILES) {
+  if (!fs.existsSync(path.join(ROOT, f))) continue;
+  const s = read(f);
+  // a count is a number of 3 digits next to the word question(s) / سؤال; it is PL-300's when the page is PL-300's own
+  // or the 70 characters before it (30 after) name PL-300 or Power BI and not DP-600 / Fabric
+  const own = /pl-300-practice-exam|translations\/pl300/.test(f);
+  for (const m of s.matchAll(RE)) {
+    const ctx = s.slice(Math.max(0, m.index - 70), m.index + m[0].length + 30);
+    if (!own && (!/PL-300|Power BI|pl300/.test(ctx) || /Fabric|DP-600|فابريك/.test(ctx))) continue;
+    ok(+m[1] === total, `${f}: says ${m[1]} questions, the bank holds ${total}`);
+  }
+}
+const stated = checks - 2;
+ok(stated >= 8, `only ${stated} stated counts found (the page, its Arabic copy, hubs and share images carry at least 8)`);
+console.log(`stated counts checked: ${stated}, bank total ${total}`);
+if (bad.length) { bad.slice(0, 20).forEach((b) => console.log('FAIL  ' + b)); console.log(`FAIL  pl300-bank  ${checks} checks`); process.exit(1); }
+console.log(`PASS  pl300-bank  ${checks} checks`);
