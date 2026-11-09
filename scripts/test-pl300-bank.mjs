@@ -33,17 +33,20 @@ ok(total > 0, 'empty bank');
 const FILES = ['tools/pl-300-practice-exam.html', 'ar/tools/pl-300-practice-exam.html', 'assets/js/translations/pl300.js', 'assets/js/translations/pl300.min.js',
   'tools/index.html', 'ar/tools/index.html', 'index.html', 'ar/index.html', 'assets/js/translations/tools-hub.js', 'assets/js/translations/tools-hub.min.js',
   'assets/js/translations/homepage.js', 'assets/js/translations/homepage.min.js', 'scripts/make-share-images.mjs'];
+const RE = /(?<![-\d])(\d{3})\s+(?:original\s+|practice\s+|Power BI\s+)*(?:questions?|سؤالًا|سؤال)/g;
 for (const f of FILES) {
   if (!fs.existsSync(path.join(ROOT, f))) continue;
   const s = read(f);
-  // a count is a number of 3 digits next to the word question(s) / سؤال, on a line that is about PL-300
-  for (const line of s.split('\n')) {
-    if (!/PL-300|pl300|PL300/i.test(line) && !/(228|234)/.test(line)) continue;
-    if (!/PL-300|pl300|PL300|practice|تجريب|Power BI questions|عن Power BI/i.test(line)) continue;
-    for (const m of line.matchAll(/(?<![-\d])(\d{3})\s+(?:original\s+|practice\s+|Power BI\s+)*(?:questions?|سؤالًا|سؤال)/g)) ok(+m[1] === total, `${f}: says ${m[1]} questions, the bank holds ${total}`);
+  // a count is a number of 3 digits next to the word question(s) / سؤال; it is PL-300's when the page is PL-300's own
+  // or the 70 characters before it (30 after) name PL-300 or Power BI and not DP-600 / Fabric
+  const own = /pl-300-practice-exam|translations\/pl300/.test(f);
+  for (const m of s.matchAll(RE)) {
+    const ctx = s.slice(Math.max(0, m.index - 70), m.index + m[0].length + 30);
+    if (!own && (!/PL-300|Power BI|pl300/.test(ctx) || /Fabric|DP-600|فابريك/.test(ctx))) continue;
+    ok(+m[1] === total, `${f}: says ${m[1]} questions, the bank holds ${total}`);
   }
 }
-const stated = FILES.filter((f) => fs.existsSync(path.join(ROOT, f))).reduce((a, f) => a + (read(f).match(/(?<![-\d])\b\d{3}\s+(?:original\s+|practice\s+|Power BI\s+)*(?:questions?|سؤالًا)/g) || []).length, 0);
+const stated = checks - 2;
 ok(stated >= 8, `only ${stated} stated counts found (the page, its Arabic copy, hubs and share images carry at least 8)`);
 console.log(`stated counts checked: ${stated}, bank total ${total}`);
 if (bad.length) { bad.slice(0, 20).forEach((b) => console.log('FAIL  ' + b)); console.log(`FAIL  pl300-bank  ${checks} checks`); process.exit(1); }
