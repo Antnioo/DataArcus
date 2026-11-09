@@ -7,7 +7,7 @@
   new `mcp/tsconfig.tc1.json` (checks that one file), one step in tests.yml (mcp job, Linux), this note.
 - **Expected checks:** comment-stripped model.mjs byte-identical to the base's; `npm pack` file list before/after identical
   (1325 files before); `npx tsc -p tsconfig.tc1.json` exits 0 after; area runs (model, core) PASS; lint 0; CI green.
-- **Resume:** code done and pushed; waits for the CI line below, then DONE. Recommendation: roll out (section below).
+- **Resume:** DONE; CI green (CI section below); waits for the reviewer. Recommendation: roll out (section below).
 
 ## Plan and numbers (measured 2026-11-09)
 Busiest module: count of distinct mcp/lib and mcp/tools files importing each mcp/lib file (112 files scanned):
@@ -74,3 +74,11 @@ none.
 ## Lessons for the reviewer
 - TypeScript 7 has no JavaScript API (`require('typescript')` is absent); a comments-stripped comparison goes through `tsc --removeComments`.
 - The brief said the shipped files list is identical: mcp has no "files" field, so adding any file under mcp/ changes `npm pack`'s list.
+
+## CI
+- First run 42704058686 on 185278d4: red only on `same-question` S4 (`the compare of 1,017 visuals under 2 s on linux: 2429 ms`, a 2000 ms budget at
+  mcp/test-0.3.2-same-question.mjs:146, a file this job does not touch; it passed on the rerun). My TC1 step was skipped there because ci-sum failed
+  first, so it got `if: always()`. Seen: that budget has no 2x headroom (L-1104-02).
+- The TC1 step in the green run: 2 s (22:11:14 to 22:11:16Z, including `npm ci`); `tsc` itself 0.4 s.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42708313346 on 9305b265 (2026-11-09T22:19Z; origin/integration/0.3.3 merged once before it).
+- Area runs before the last code commit: `npm test -- model` 31 suites PASS, `npm test -- core` 12 suites PASS, lint exit 0, check-agent-memory and modules PASS.
