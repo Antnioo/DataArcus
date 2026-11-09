@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "generated_at": "2026-11-09T06:02Z",
+  "generated_at": "2026-11-09T06:34Z",
   "today": {
     "date": "2026-11-09",
-    "cost_usd": 21.89,
-    "tokens": 53872731,
-    "sessions": 10,
+    "cost_usd": 23.42,
+    "tokens": 61119496,
+    "sessions": 11,
     "by_kind": {
       "builder": {
-        "cost_usd": 0,
-        "count": 0
+        "cost_usd": 1.53,
+        "count": 1
       },
       "worker": {
         "cost_usd": 21.89,
@@ -30,8 +30,8 @@
         "count": 9
       },
       "sonnet": {
-        "cost_usd": 0.74,
-        "count": 1
+        "cost_usd": 2.27,
+        "count": 2
       }
     }
   },
@@ -116,12 +116,21 @@
     },
     {
       "date": "2026-11-09",
-      "cost_usd": 21.89,
-      "tokens": 53872731,
-      "sessions": 10
+      "cost_usd": 23.42,
+      "tokens": 61119496,
+      "sessions": 11
     }
   ],
   "jobs": [
+    {
+      "id": "PC1",
+      "title": "PC1: the cost calculator's checked date in one place, from powerbi-prices.json (B-413)",
+      "model": "sonnet",
+      "cost_usd": 1.53,
+      "tokens": 7246765,
+      "minutes": 79,
+      "finished_at": "2026-11-09T05:26Z"
+    },
     {
       "id": "WN1",
       "title": "WN1: the Windows findings before the laptop session (Codex, B-407)",
