@@ -55,6 +55,7 @@ ok(checkAddon(20, { old: 14, ppu: 18 }).value === 14 && /less than ppu/.test(che
   eq(span(read('tools/power-bi-licensing-cost-calculator.html')), [w.en], `the page's span says ${w.en} (powerbi-prices.json: ${iso})`);
   const tr = span(read('assets/js/translations/licensing-calculator.js'));
   eq(tr, [w.en, w.ar], `the translations' spans say ${w.en} and ${w.ar}`);
+  eq(span(read('ar/tools/power-bi-licensing-cost-calculator.html')), [w.ar], `the Arabic page's span says ${w.ar}`);
   ok(new RegExp(`checked: '${iso}'`).test(read('assets/js/licensing-calculator.js')), `the fallback in licensing-calculator.js is ${iso}`);
   // syncChecked on a copy: it writes exactly those places and nothing else
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pc1-'));
@@ -63,6 +64,7 @@ ok(checkAddon(20, { old: 14, ppu: 18 }).value === 14 && /less than ppu/.test(che
   eq(changed.slice().sort(), CHECKED_PLACES.slice().sort(), 'syncChecked reports the files it changed');
   const t2 = checkedWords('2027-01-09');
   eq(span(fs.readFileSync(path.join(tmp, CHECKED_PLACES[0]), 'utf8')), [t2.en], 'a copy: the page span follows the date');
+  eq(span(fs.readFileSync(path.join(tmp, CHECKED_PLACES[3]), 'utf8')), [t2.ar], 'a copy: the Arabic page span follows the date');
   ok(/checked: '2027-01-09'/.test(fs.readFileSync(path.join(tmp, 'assets/js/licensing-calculator.js'), 'utf8')), 'a copy: the fallback follows the date');
   eq(syncChecked(tmp, '2027-01-09'), [], 'a second run changes nothing');
   let threw = false; try { syncChecked(tmp, 'tomorrow'); } catch { threw = true; }
