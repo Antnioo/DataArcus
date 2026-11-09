@@ -1,4 +1,4 @@
-State: IN PROGRESS (plan pushed; the article next)
+State: DONE (CI green: https://github.com/Antnioo/DataArcus/actions/runs/42625021186 on 3a50c4fa; the Arabic listed for the owner under "For the owner": the page ships only after his yes)
 
 # CP1 (content): the article "Is your Power BI model ready for Copilot? How to check in 10 minutes" (EN and AR)
 
@@ -12,7 +12,8 @@ State: IN PROGRESS (plan pushed; the article next)
   script, BLOG-PLAN.md). A claims block in `mcp/test-0.3.0-claims.mjs` (the test W used for its article). No engine,
   MCP or tool change.
 - **Expected checks:** claims 721 -> 752 (31 new, red first); sitemap 76 -> 78 URLs, 81 pages, 39 Arabic copies.
-  **Got:** the same (see "Results"); lint 0.
+  **Got:** the same (see "Results"); lint 0; the MCP suite locally 230 of 230; tests.yml green on 3a50c4fa (run
+  42625021186, every job on Linux and Windows; macOS skipped by the workflow) after two red runs, both said in "Results".
 - **The Arabic waits for the owner:** listed under "## For the owner"; the page ships only after his yes.
 - **Resume:** the owner's read of the Arabic ("For the owner"); the Desktop run of the one DAX measure (laptop list).
 
@@ -95,6 +96,7 @@ engine the page runs). Before and after the fixes; the article's numbers are thi
   18 and cards (one more card at index 0, so the search and filter results shift by one: "2,3,7,8,10,14" ->
   "3,4,8,9,11,15", "3,8" -> "4,9"; 40 lines); `sp36-lang.json` i18n and dict of the home page and the blog (EN and AR:
   dict 42532 -> 43065 and 19396 -> 20082; 68 lines). Nothing else moved; both suites pass again (sp35 38, sp36 18).
+  **Run 3** (https://github.com/Antnioo/DataArcus/actions/runs/42625021186, on 3a50c4fa): green, every job.
 - **On the page (Chromium, 1280 and 390, EN and AR):** no page error, no horizontal scroll at 390, `dir="rtl"` on the
   Arabic copy. The first shots showed code runs (`[Margin %]`, `0.0%`) drawn reversed and «لـ» split from Copilot at a
   line end: every `<code>` in the Arabic is now inside `<bdi>`, and «لـ» is joined to Copilot with a no-break space in the
