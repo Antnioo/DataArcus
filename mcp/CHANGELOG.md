@@ -4,6 +4,11 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
+## [Unreleased]
+- **The write tools answer in Arabic when asked to:** plan_layout, generate_theme and add_gulf_calendar given
+  `lang: "ar"` say the several-models answer in the same approved Arabic as the reading tools; `lang: "en"` says it in
+  English; without `lang` the folder's own letters decide, as before.
+
 ## [0.3.2]: 2026-11-09 (the version for testers, second round)
 The second version for testers. In short:
 - **The approval page says what the click writes:** every page and tooltip page it writes, and on each page every

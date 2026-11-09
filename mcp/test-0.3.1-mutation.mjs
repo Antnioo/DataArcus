@@ -168,7 +168,9 @@ const MUTANTS = [
   // (0.3.2 SM2, D-1104-14 "add the security mutants to DD1 too"; B-330, the last item) two branches of plan_layout's exact artifact
   // that no suite caught: a design's overlap blocks the plan (FX2's C23), and the EN-AR copy's plan offers no Arabic month script
   { id: 'PA-overlap', file: PA, edits: [['ab.design && !ab.pages ? { blockOverlap: true } : {}', '{}']], guards: PAG },
-  { id: 'PA-month', file: PA, edits: [['arabicMonth: false, waterfallRtl: ab.waterfallRtl', 'arabicMonth: true, waterfallRtl: ab.waterfallRtl']], guards: PAG }
+  { id: 'PA-month', file: PA, edits: [['arabicMonth: false, waterfallRtl: ab.waterfallRtl', 'arabicMonth: true, waterfallRtl: ab.waterfallRtl']], guards: PAG },
+  // (0.3.3 WE1) a write tool's default lang "en" taken as given: AR4's letter rule lost without lang
+  { id: 'WE1-given', file: 'mcp/lib/tool-answer.mjs', edits: [['(args && args[LANG_GIVEN] && (args.lang', '(args && (args.lang']], guards: ['test-0.3.3-we1.mjs'] }
 ];
 
 // (0.3.1 T1, Windows) a mutant's text is written with "\n"; a Windows checkout has the files with CRLF, so each text is

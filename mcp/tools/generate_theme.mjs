@@ -89,5 +89,5 @@ export function register(server, ctx) {
       if (!nothingAt(path.join(inside(a.folder || '.'), name))) throw new Error(`Nothing was written: "${name}" is already there, and it is not the file the plan named (DataArcus never writes over a file, nor under another name than the plan showed). Make the plan again (call generate_theme without planId), show it to the user and wait for their go.`);
       const made = [], f = path.join(folderFor(a.folder, made), name); writeFileNew(f, JSON.stringify(withGlassPicture(buildTheme(design, a.lang), design), null, 2), { madeDirs: made }); noteWritten(f); return f; });
     return text({ path: file, file: path.basename(file), page, colours, sayInPlan, look, ...(glass ? { glass } : {}), design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}) });
-  }));
+  }, { lang: 'given' }));
 }

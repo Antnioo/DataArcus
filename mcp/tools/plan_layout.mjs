@@ -93,7 +93,7 @@ export function register(server, ctx) {
     switcherStep(lc); iconsStep(lc); daxStep(lc); axesStep(lc); lintStep(lc); await exactStep(lc); titlesStep(lc); previewStep(lc);
     kindsStep(lc); saidStep(lc); slicersStep(lc); writesStep(lc); terminologyStep(lc); planStep(lc);
     return answerStep(lc);
-  }));
+  }, { lang: 'given' }));
 }
 
 // (0.3.2 FN1J) the plan's names so far, the terms reused from this session, and the names given checked as create_report checks them
