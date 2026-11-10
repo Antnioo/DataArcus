@@ -457,22 +457,22 @@
   },
   "A1 G05 bilingual": {
    "err": false,
-   "length": 26257,
-   "sha256": "478a1b654cd9e8fde02f4bb3d34dcbbe8ef13953d71b1fd686c103bc245d6b8f"
+   "length": 26265,
+   "sha256": "990ff8e781609fd70e518633c00e6ec1a02f72dc3fdf25d1aec44bf3b465aff7"
   },
   "A1 G06 bilingual, tabs in Arabic, texts": {
    "err": false,
-   "length": 26565,
-   "sha256": "8df2501a044f43a0db86e71602d96ea4fcc0fc5157980fcb1acec5015560e1e5"
+   "length": 26573,
+   "sha256": "5f4332461245b8eae6adad4becb6270a0ae2e59eccc8c900bf6885b673a7661f"
   },
   "A2 G06 bilingual, tabs in Arabic, texts": {
    "length": 183493,
-   "sha256": "44a8751539d0cb11e4fd0d4c42f57ebd61f058b7f48de272cd5360f60b065f5c"
+   "sha256": "1bcc71d3a0fb342ee9a8f0b726a9362de47f1412b2b9c06f0b834d61aa85671c"
   },
   "A1 G07 bilingual on the sample model": {
    "err": false,
-   "length": 26317,
-   "sha256": "49ef19c7e6dda352c6563eb624aab4b5500c0f0b05ac05a93c715d8b707eabc1"
+   "length": 26325,
+   "sha256": "c53d88066571ec07fff0282773d58ee2a81c644b6cff77e88db8cba9a95f09d5"
   },
   "A1 G08 slicers asked, one added": {
    "err": false,
@@ -672,8 +672,8 @@
   },
   "A1 H18 both languages, many English titles": {
    "err": false,
-   "length": 29241,
-   "sha256": "f6d1e73bb304b650b45f12436e59f5744c713c73337658b6f5878464cc570830"
+   "length": 29249,
+   "sha256": "7ad2e786f4ce0ac0b603311d7273f44fc858ca9edb2b6af90ce71f5cff532c71"
   }
  }
 }

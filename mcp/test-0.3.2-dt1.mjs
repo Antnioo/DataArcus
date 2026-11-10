@@ -51,7 +51,7 @@ async function planBilingual(c) {
       fields.forEach((f, k) => { t[f] = k === fields.length - 1 ? (B.terminology.sheet.find((x) => x.field === f) || {}).en : arName(); });
       declined = t[fields[fields.length - 1]]; more.arabicTerms = t;
     } else if (B && args.arabicTerms && !args.arabicTexts) {
-      const at = {}; (B.texts || []).filter((x) => x.text != null && x.arabic == null && !x.field && x.text !== declined).forEach((x) => { at[x.text] = x.draftArabic || (/\{1\}/.test(x.text) ? `أعلى {1} من {2}: ${arName()}` : arName()); });
+      const at = {}; (B.texts || []).filter((x) => x.text != null && x.arabic == null && !x.field && x.text !== declined).forEach((x) => { at[x.text] = x.draftArabic || (/\{1\}/.test(x.text) ? `أعلى {1} من أصل {2}: ${arName()}` : arName()); });
       more.arabicTexts = at;
     }
     if (!Object.keys(more).length) break;

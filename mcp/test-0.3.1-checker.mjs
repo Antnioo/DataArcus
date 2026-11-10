@@ -82,7 +82,7 @@ try {
   if (id0) await s.call('approve_plan', { planId: id0 });
   const en = id0 ? await s.call('create_report', { path: MP, planId: id0 }) : { err: true, t: 'no plan' };
   const p0 = await s.call('create_arabic_twin', { path: 'large/Orders EN.pbip' }), T0 = (p0.j && p0.j.texts) || [];
-  let k = 0; const L = {}; T0.filter((t) => t.text != null).forEach((t) => { L[t.id] = t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من {2}: نص ${++k}` : `نص ${++k}`); });
+  let k = 0; const L = {}; T0.filter((t) => t.text != null).forEach((t) => { L[t.id] = t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من أصل {2}: نص ${++k}` : `نص ${++k}`); });
   const p1 = await s.call('create_arabic_twin', { path: 'large/Orders EN.pbip', into: 'same', labels: L }), pid = p1.j && p1.j.plan && p1.j.plan.planId;
   if (pid) await s.call('approve_plan', { planId: pid });
   const w1 = pid ? await s.call('create_arabic_twin', { path: 'large/Orders EN.pbip', into: 'same', planId: pid }) : { err: true, t: 'no plan' };

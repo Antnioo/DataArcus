@@ -5,6 +5,12 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.3
+- The Arabic chart title for "Top N of M" now reads «أعلى N من أصل M: ...» (it could be read as "N higher than M"); the twin's
+  drafts and the Arabic terminology sheet use the new words.
+- The Arabic approval page's first line no longer repeats the generic folder words in brackets: the bracket shows the
+  folder's own path, and is left out when there is none.
+- With `lang: "ar"`, the three "which model" errors of the model-path tools (no model of that name, nothing at that path,
+  several models of that name) are answered in Arabic, in every reading and write tool; the English is unchanged.
 - A plan for a new report with no report name is no longer given a plan id: the plan asks for the name first, so a plan that
   `create_report` would refuse can no longer be approved.
 - A new test pins that every tool that plans or writes answers a wrong input in Arabic when you give `lang` "ar" and in English with "en" or none, using only wording already approved; the errors that have no approved Arabic yet stay English.

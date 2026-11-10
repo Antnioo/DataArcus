@@ -38,7 +38,7 @@ const V1 = { start: RLM + FSI + 'Department' + PDI + ': عدد الأوامر ف
   chk(() => Object.keys(T).every((k) => TM.isolateLatin(T[k]) === RLI + V1[k] + PDI), () => `R2. isolateLatin is V3: U+2067 + V1 + U+2069, at the start, in the middle and at the end: ${Object.keys(T).map((k) => cps(TM.isolateLatin(T[k]))).join(' | ')}`);
   chk(() => Object.keys(T).every((k) => TM.isolateLatin(TM.isolateLatin(T[k])) === TM.isolateLatin(T[k])), () => 'R3. idempotent: a text already wrapped is not wrapped twice');
   chk(() => Object.keys(T).every((k) => TM.isolateLatin(V1[k]) === RLI + V1[k] + PDI), () => `R4. a text an older build isolated (V1 only) gets the wrap, its isolates kept: ${cps(TM.isolateLatin(V1.middle))}`);
-  chk(() => ['المبيعات', 'أعلى 6 من 10', 'أعلى {1} من {2}: المبيعات', 'Total Sales', 'Sales by Region 2024', '', '  '].every((x) => TM.isolateLatin(x) === x), () => 'R5. no Latin run (digits and placeholders only), English, empty: unchanged');
+  chk(() => ['المبيعات', 'أعلى 6 من 10', 'أعلى {1} من أصل {2}: المبيعات', 'Total Sales', 'Sales by Region 2024', '', '  '].every((x) => TM.isolateLatin(x) === x), () => 'R5. no Latin run (digits and placeholders only), English, empty: unchanged');
   const named = TM.isolateNames('المبيعات حسب Region', ['Region']);
   chk(() => named === RLI + 'المبيعات حسب ' + FSI + 'Region' + PDI + RLM + PDI && TM.isolateNames(named, ['Region']) === named && TM.isolateNames('المبيعات', ['Region']) === 'المبيعات', () => `R6. isolateNames wraps what it isolates, once; a text without the name unchanged: ${cps(named)}`);
   chk(() => TM.textWidth(TM.isolateLatin(T.middle), 12) === TM.textWidth(T.middle, 12), () => 'R7. the marks are 0 wide (textWidth)');
