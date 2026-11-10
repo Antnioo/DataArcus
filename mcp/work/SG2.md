@@ -23,7 +23,7 @@
 | sp10 P10 (mirror-policy.js) | FAIL 1 of 113 | PASS 113 | FAIL 1 of 113 |
 | sp30 K2 (field-catalog.js) | FAIL K2 | PASS 21 | FAIL K2 |
 | sp42 P2 (lib/model-discovery.mjs) | FAIL P2 | PASS 22 | FAIL P2 |
-The old code (exact lists) also failed on png-bytes, so the "on the list passes" column is the new behaviour; the off-list and row-removed columns are the kept protection. Note: on the base, the "on the list" plant is red; red on e01832dc first.
+Red on e01832dc first: with the old exact lists, planting png-bytes.js (on the list) FAILS sp10 (1 of 113), sp30 (K2) and sp42 (P2); with the new code it passes.
 
 ## Changed on purpose
 - `mcp/docs/MODULES.md` rows pbir-values.js and page-toast.js: `check-modules --strict` was already red on the base (e01832dc, two rows from SG1 named callers the code does not require: report-inventory.mjs, licensing-calculator.js). Fixed in the docs only (names written without backticks with the way they really reach it), since it is an expected check. Rows that change: those two.
