@@ -78,6 +78,9 @@ async function drive(browser, url, [exam, store, bank], lang, rec, errors, asked
     Object.defineProperty(window, 'dataArcusTrack', { configurable: true, get: () => (n, p) => window.__ev.push([n, p]), set: () => {} });
     window.open = (u) => { window.__opened.push(String(u)); return null; };
   });
+  // the outline's "checked" day is the weekly bot's, and the exam's note prints it: the run reads the day the fixtures were recorded
+  // with (2 Nov), so a Monday data PR never turns the home steps red (10 Nov: the 9 Nov bot PR did)
+  await v.ctx.route(/\/assets\/data\/(dp600|pl300)-outline\.json/, async (rt) => { const r = await rt.fetch(); const j = await r.json(); j.checked = '2026-11-02'; await rt.fulfill({ response: r, json: j }); });
   v.ctx.on('request', (r) => { const m = /\/(exam-grade|exam-session|exam-progress|exam-view|dp600-sim)\.min\.js/.exec(r.url()); if (m && !asked.includes(m[1])) asked.push(m[1]); });
   const pg = v.pg, base = `${url}/tools/${exam}-practice-exam.html?lang=${lang}`;
   let scen = '', step = 0, act = 0;
