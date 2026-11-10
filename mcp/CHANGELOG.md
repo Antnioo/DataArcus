@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.3
+- A report made with a layout or design now uses the `font` you give it (for example Tahoma) over the design's own font, in the
+  English report and its Arabic twin; the plan says which font it uses and which design font it replaced, and a font the
+  tools do not offer is named in the plan instead of being dropped.
 - On Windows, when the approval page was not opened, the answer no longer says DataArcus "opened" the folder window with the
   shortcut: starting Windows Explorer does not prove a window is on screen, so it says DataArcus asked Windows to open it
   and to check whether the user sees it.
