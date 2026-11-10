@@ -56,7 +56,9 @@ const MODELS = [
 
 // the dates a run can write (UTC today, and the day either side of a run that crosses midnight)
 const DATES = [-1, 0, 1].map((d) => new Date(Date.now() + d * 864e5).toISOString().slice(0, 10));
-const undate = (t) => DATES.reduce((s, d) => s.split(d).join('<DATE>'), t);
+// (0.3.3 DB1) only the documentation's own date: a quoted date is the model's (a Hijri calendar's month start, 2026-11-10,
+// was masked on 10 Nov and its file read 4 characters short)
+const undate = (t) => DATES.reduce((s, d) => s.replace(new RegExp(`(?<!"|&quot;)${d}`, 'g'), '<DATE>'), t);
 
 async function downloadsOf(browser, url, lang, name, buffer, asked) {
   const v = await visitor(browser, { viewport: [1440, 900], downloads: true });

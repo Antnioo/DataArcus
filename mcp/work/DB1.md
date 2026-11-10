@@ -60,6 +60,14 @@
   3 runs each; mutation 250 checks (99 mutants, all killed); test-contracts 14; result-lines 233; changelog-words 9;
   agent-memory 469; site config pass; \`npm run lint\` exit 0.
 
+## CI
+- First run https://github.com/Antnioo/DataArcus/actions/runs/42725236519 on 6655d20a: red in website-suites (3),
+  sp24 only (D8, D18: "ramadan - documentation.html" 19022 characters, recorded 19026). Red the same on the base
+  8f5624e6 locally (not this job's change). Measured cause: sp24's \`undate\` (scripts/tests/sp24.mjs:58-59) masks
+  every yesterday/today/tomorrow date; the ramadan model's Hijri calendar starts month 1448/6 on 2026-11-10, so on
+  10 Nov that quoted date became \`<DATE>\` (10 characters to 6). Fix (test only, 2026-11-10T00:26Z): a quoted date is not
+  masked; "PASS  sp24  23 checks" after. Then CI again.
+
 ## CHANGELOG line
 - Inside plan_layout, three checks that could never be reached were removed (no answer or file changes), and tests
   now reach three that could: the preview of a plan with no report name, a field kept in English on purpose, and the
@@ -74,6 +82,9 @@
   model fn1j writes: no new fixture file, fn1j-cases.mjs unchanged.
 - V2 is reached by a plan with no report name: a plan id with a preview but no exact build. Kept as it is; said below.
 - The scratch mutant run mutates plan_layout.mjs in place and puts it back (a finally); nothing of it is committed.
+
+- sp24's date mask fixed here (a test line, no product change), not left for another job: every branch's CI was red
+  on it until 12 Nov, and DONE needs a green run.
 
 ## For the owner
 - Two behaviours found while proving the branches reachable; neither changed here (a behaviour change needs your go):
@@ -94,6 +105,8 @@ none
 - The two behaviours under For the owner.
 
 ## Lessons for the reviewer
+- A test that masks today's date in a file holding dates (a calendar) fails on the days a held date is today: mask
+  the one place the date is written, never every match.
 - Two of FN1J's "equivalent" mutants were not equivalent: an input that skips one step (no report name: no exact
   build) or types a key another way (a quoted table) reached them; try the inputs a refusal would skip first.
 - B6's "no icon column" was the model's shape, not a bug: the automatic icons need a rate and a measure named
