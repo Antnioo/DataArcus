@@ -8,7 +8,7 @@
   `mcp/test-0.3.3-mh1.mjs` (+ row in `tests.json`), a longer explicit timeout in any suite whose slowest call needs it.
 - **Expected checks:** mh1 suite red first on ad50f1d7 (the next call after a hang does not answer); every suite that
   imports serverClient and the 12 split guards unchanged; `node scripts/check-modules.mjs --strict`.
-- **Resume:** plan written 2026-11-10T14:29Z; next: write mh1 suite, run it red on the old client, then change serverClient.
+- **Resume:** DONE 2026-11-10T15:30Z. CI green: https://github.com/Antnioo/DataArcus/actions/runs/42842558065 on cd8d34554aa567a2cb13c140ef7e7657273ed1a9 (Linux and Windows; macOS skipped by the workflow).
 
 ## Plan
 1. Suite mh1: a made-up call that hangs the server (a hostile input) or kills it, then a normal call must answer in time.
