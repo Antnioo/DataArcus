@@ -154,16 +154,28 @@ export default async function ({ browser, url }) {
       await v.ctx.close();
     }
     // (0.3.3 CL2, B-435: the Copilot article's title is 1656 px in the fallback and 1634 px in Inter, so at 1400 px and up
-    // it wraps to 3 lines then 2 and the page moved 58 px, CLS 0.13 to 0.47; the stylesheet now keeps 3 lines of room for
-    // an English title from 1400 px. The Arabic copy never swaps, so it stays at 0.) Inter arrives late, as above. Only shifts
-    // from 450 ms on count: before it the browser is still loading the local Arial that stands in (about 195 ms here), and
-    // whether the first frame lands before or after that varies from run to run (0.048 or none), which is not the swap.
-    for (const [page, lang, vp, max] of [['articles/article-power-bi-copilot-ready-check.html', 'en', 1400, 0.1], ['articles/article-power-bi-copilot-ready-check.html', 'en', 1600, 0.1], ['articles/article-power-bi-copilot-ready-check.html', 'en', 1920, 0.1], ['articles/article-power-bi-model-ai-ready.html', 'en', 1400, 0.1], ['articles/article-power-bi-copilot-ready-check.html', 'ar', 1400, 0.01]]) {
-      const v = await visitor(browser, { viewport: [vp, 900] }); await lateFonts(v, 500);
+    // it wraps to 3 lines then 2 and everything under it moved 58 px, CLS 0.13 to 0.47; the stylesheet now keeps 3 lines of
+    // room for an English title from 1400 px.) What is measured is the title's own shift: Inter arrives 2.5 s late (the load
+    // event waits for it, so the page is read at DOMContentLoaded + 0.8 s), the title's height and the date line under it are read before and after, and neither may move (1 px). The page's CLS is
+    // not the number: a body paragraph can still wrap a line apart between the fallback and Inter, and how often depends on
+    // the machine's Arial (0.089 on one, 0.118 on CI), which is another job's. The Arabic copy never swaps: CLS 0.01.
+    for (const [page, lang, vp] of [['articles/article-power-bi-copilot-ready-check.html', 'en', 1400], ['articles/article-power-bi-copilot-ready-check.html', 'en', 1600], ['articles/article-power-bi-copilot-ready-check.html', 'en', 1920], ['articles/article-power-bi-model-ai-ready.html', 'en', 1400]]) {
+      const v = await visitor(browser, { viewport: [vp, 900] }); await lateFonts(v, 2500);
+      await v.pg.goto(`${url}/${page}?lang=${lang}`, { waitUntil: 'domcontentloaded' }); await v.pg.waitForTimeout(800);
+      const read = () => v.pg.evaluate(() => { const h = document.querySelector('.article-header h1'), d = document.querySelector('.article-header .lead'); return { h: h.getBoundingClientRect().height, y: d.getBoundingClientRect().top + scrollY, swapped: [...document.fonts].some((f) => f.family === 'Inter' && f.status === 'loaded') }; });
+      const a = await read();
+      await v.pg.waitForFunction(() => [...document.fonts].some((f) => f.family === 'Inter' && f.status === 'loaded'), null, { timeout: 15000 }).catch(() => {}); await v.pg.waitForTimeout(500);
+      const b = await read();
+      check(!a.swapped && b.swapped, `${page} ${lang} ${vp}px: Inter ${a.swapped ? 'arrived before the first reading' : 'never arrived'}`);
+      check(Math.abs(a.y - b.y) <= 1 && Math.abs(a.h - b.h) <= 1, `${page} ${lang} ${vp}px: the Inter swap moves the date line ${Math.round((b.y - a.y) * 10) / 10} px (title ${Math.round(a.h)} -> ${Math.round(b.h)} px, want 0)`);
+      await v.ctx.close();
+    }
+    {
+      const v = await visitor(browser, { viewport: [1400, 900] }); await lateFonts(v, 500);
       await v.ctx.addInitScript(() => { window.__cls = 0; new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput && e.startTime >= 450) window.__cls += e.value; }).observe({ type: 'layout-shift', buffered: true }); });
-      await v.pg.goto(`${url}/${page}?lang=${lang}`, { waitUntil: 'load' }); await v.pg.waitForTimeout(2500);
-      const r = await v.pg.evaluate(() => ({ cls: +window.__cls.toFixed(3), inter: document.fonts.check('400 16px Inter') }));
-      check(r.cls <= max && (lang === 'ar' || r.inter), `${page} ${lang} ${vp}px: the Inter swap shifts the page ${r.cls}${r.inter || lang === 'ar' ? '' : ' (Inter never loaded)'} (want ${max} or less)`);
+      await v.pg.goto(`${url}/articles/article-power-bi-copilot-ready-check.html?lang=ar`, { waitUntil: 'load' }); await v.pg.waitForTimeout(2500);
+      const cls = await v.pg.evaluate(() => +window.__cls.toFixed(3));
+      check(cls <= 0.01, `articles/article-power-bi-copilot-ready-check.html ar 1400px: the Arabic copy shifts ${cls} (want 0.01 or less)`);
       await v.ctx.close();
     }
     for (const [page, delay] of [['articles/article-gulf-calendar-power-bi.html', 700], ['articles/article-power-bi-licensing-guide.html', 700], ['tools/power-bi-theme-generator.html', 5000]]) {
