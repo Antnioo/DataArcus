@@ -22,9 +22,12 @@ import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { visitor, ready, ROOT } from './lib.mjs';
+import { releasedVersion } from '../check-release.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const GOLD = path.join(HERE, 'fixtures', 'sp35-site.json');
+// the released version (one place: check-release.mjs) is a token in the recorded and the live events, so a release does not trip E7
+const RELEASED = releasedVersion(), TOKEN = (x) => x.split(RELEASED).join('<release>');
 const MODS = ['site-navigation', 'site-forms', 'site-analytics'];
 const JS = (n) => path.join(ROOT, 'assets/js', n + '.js');
 const have = MODS.filter((n) => fs.existsSync(JS(n)));
@@ -156,6 +159,7 @@ export default async function ({ browser, url }) {
           try { if (act) await act(v.pg, { page }); } catch (e) { bad.push(`${label}: ${e.message.split('\n')[0]}`); break; }
           await settle(v.pg);
           const st = await state(v.pg);
+          st.gtag = st.gtag.map(TOKEN);
           // the counters and the ripple are read in the home session only (elsewhere a smooth scroll can pass the
           // counters and start them at any moment); the ripple's own geometry is never read
           rec.push({ step: label, ...st, counters: k === 0 ? st.counters : null, ripples: k === 0 ? st.ripples : null, particles: sha(st.particles), bar: sha(st.bar), hits: [...new Set(v.hits)].sort().join(','), posts: posts.slice(), errs: v.errs.slice() });

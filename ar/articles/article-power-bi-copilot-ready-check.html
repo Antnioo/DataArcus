@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-UqlxWpioX3BjrlIRIpE94CO2pgikl7pLfFx6jJgMZxc=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/ https://cdn.jsdelivr.net/npm/aos@2.3.4/ https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/ https://cdn.jsdelivr.net/npm/aos@2.3.4/; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),a=/^\/ar\//.test(location.pathname),s=a?null:localStorage.getItem("dataarcus-lang"),l=a?"ar":(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://dataarcus.com/ar/articles/article-power-bi-copilot-ready-check.html">
+  <link rel="alternate" hreflang="en" href="https://dataarcus.com/articles/article-power-bi-copilot-ready-check.html">
+  <link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/articles/article-power-bi-copilot-ready-check.html">
+  <link rel="alternate" hreflang="x-default" href="https://dataarcus.com/articles/article-power-bi-copilot-ready-check.html">
+
+  <title>هل نموذج Power BI جاهز لـ Copilot؟ فحص في 10 دقائق</title>
+  <meta name="description" content="فحص بالدقائق قبل أن يستخدم فريقك Copilot: ما يحتاجه Copilot ليعمل، وما تكشفه أداة فحص صحة النموذج المجانية، وما تصلحه، على نموذج تجريبي.">
+  <meta name="author" content="DataArcus">
+  <meta name="keywords" content="جاهزية Power BI لـ Copilot, تجهيز النموذج الدلالي لـ Copilot, Prep data for AI, تقييم الجاهزية لـ Copilot, فحص صحة النموذج, power bi copilot readiness, DataArcus">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="هل نموذج Power BI جاهز لـ Copilot؟ فحص في 10 دقائق">
+  <meta property="og:description" content="فحص بالدقائق قبل أن يستخدم فريقك Copilot: ما يحتاجه Copilot ليعمل، وما تكشفه أداة فحص صحة النموذج المجانية، وما تصلحه، على نموذج تجريبي.">
+  <meta property="og:url" content="https://dataarcus.com/ar/articles/article-power-bi-copilot-ready-check.html">
+  <meta property="og:site_name" content="DataArcus">
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/copilot-ready-check.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:alt" content="DataArcus logo">
+  <meta property="og:locale" content="ar_AE">
+  <meta property="article:published_time" content="2026-11-09T09:00:00Z">
+  <meta property="article:author" content="Abdelrahman M.">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="هل نموذج Power BI جاهز لـ Copilot؟ فحص في 10 دقائق">
+  <meta name="twitter:description" content="فحص بالدقائق قبل أن يستخدم فريقك Copilot: ما يحتاجه Copilot ليعمل، وما تكشفه أداة فحص صحة النموذج المجانية، وما تصلحه، على نموذج تجريبي.">
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/copilot-ready-check.jpg">
+  <meta name="twitter:image:alt" content="DataArcus logo">
+
+  <link rel="icon" href="/assets/img/favicon.svg">
+  <link rel="icon" href="/assets/img/favicon-48.png" sizes="48x48" type="image/png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#0a0f1c">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+
+  <link href="/assets/css/vendor/bootstrap.min.css?v=d85327d99c7a" rel="stylesheet">
+  <link href="/assets/css/style.min.css?v=29c11a1ea13b" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
+  </noscript>
+
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Is Your Power BI Model Ready for Copilot? How to Check in 10 Minutes",
+    "description": "A timed check before your team uses Copilot: what Copilot needs to run, what the free Model Health Check flags, and what to fix, on a made-up model.",
+    "url": "https://dataarcus.com/articles/article-power-bi-copilot-ready-check.html",
+    "mainEntityOfPage": "https://dataarcus.com/articles/article-power-bi-copilot-ready-check.html",
+    "author": { "@type": "Person", "name": "Abdelrahman M." },
+    "publisher": {
+      "@type": "Organization",
+      "name": "DataArcus",
+      "logo": { "@type": "ImageObject", "url": "https://dataarcus.com/assets/img/logo.svg" }
+    },
+    "datePublished": "2026-11-09",
+    "dateModified": "2026-11-09",
+    "image": "https://dataarcus.com/assets/img/og/copilot-ready-check.jpg"
+  }
+  </script>
+</head>
+<body class="rtl">
+
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/ar/#hero">
+        <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="فتح القائمة أو إغلاقها" data-i18n-aria-label="nav.toggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/ar/#services" data-i18n="nav.services">الخدمات</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/portfolio.html" data-i18n="nav.portfolio">نماذج الحلول</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/tools/" data-i18n="nav.tools">أدوات مجانية</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/power-bi-mcp/" data-i18n="nav.agent">الوكيل الذكي (تجريبي)</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#about" data-i18n="nav.about">عن الشركة</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#contact" data-i18n="nav.contact">تواصل معنا</a></li>
+        <li class="nav-item desktop-lang-switcher"><a class="nav-link lang-btn-desktop" href="/articles/article-power-bi-copilot-ready-check.html" hreflang="en" lang="en" aria-label="التبديل إلى الإنجليزية"><i class="bi bi-globe2 me-1"></i> <span lang="en">English</span></a></li>
+</ul>
+        <a href="/ar/#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">احجز مكالمة مجانية</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="article-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+
+            <header class="article-header">
+              <span class="page-badge" data-i18n="header.badge">Copilot والذكاء الاصطناعي</span>
+              <h1 class="display-5 fw-bold" data-i18n="header.title">هل نموذج Power BI جاهز لـ&nbsp;Copilot؟ كيف تفحصه في 10 دقائق</h1>
+              <p class="lead text-white-50" data-i18n="header.subtitle">نُشر في 9 نوفمبر 2026</p>
+            </header>
+
+            <article class="article-body">
+              <p data-i18n-html="content.p1">يريد مديرك أن يسأل الفريق <bdi>Copilot</bdi> بدل انتظار صفحة تقرير جديدة. والسؤال يصل إليك: هل النموذج جاهز، وكيف تعرف ذلك قبل أن يبدأ الناس في الوثوق بالإجابات؟ نصيحة <bdi>Microsoft</bdi> نفسها أن تصلح النموذج أولًا، لأن التعليمات الإضافية لا تصحّح علاقات خاطئة ولا تجميعًا غير مناسب (<a href="https://learn.microsoft.com/power-bi/create-reports/copilot-evaluate-data" target="_blank" rel="noopener noreferrer" class="text-accent"><bdi>Microsoft Learn</bdi>، قُرئت في 9 نوفمبر 2026</a>).</p>
+              <p data-i18n-html="content.p2">هذه هي النسخة العملية: فحص تنجزه في نحو عشر دقائق، مع حساب الوقت. شغّلنا كل خطوة على نموذج تجريبي اسمه <strong><bdi>Sahel Electronics</bdi></strong>، متجر إلكترونيات خليجي تجريبي، فيه أربعة جداول وأربعة مقاييس وصفحة تقرير واحدة؛ لا شركة حقيقية ولا بيانات حقيقية. ولماذا تهم كل نقطة، اقرأ <a href="/ar/articles/article-power-bi-model-ai-ready.html" class="text-accent">فحصنا ذا النقاط السبع</a>؛ أما هنا فنجري الفحص فقط.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h1">قبل أن تبدأ الفحص: هل يعمل Copilot عندكم أصلًا؟</h2>
+              <p data-i18n-html="content.p3">إن كان الجواب لا، فالباقي يمكنه الانتظار. من <bdi>Microsoft Learn</bdi>، قُرئت في 9 نوفمبر 2026 (<a href="https://learn.microsoft.com/power-bi/create-reports/copilot-enable-power-bi" target="_blank" rel="noopener noreferrer" class="text-accent">تفعيل <bdi>Copilot</bdi> في <bdi>Power BI</bdi></a>):</p>
+              <ul>
+  <li data-i18n-html="content.list1_1"><strong>السعة:</strong> يجب أن تكون مساحة عمل التقرير على <bdi>Power BI Premium</bdi> ‏(<bdi>P1</bdi> أو أعلى) أو على سعة <bdi>Fabric</bdi> مدفوعة (<bdi>F2</bdi> أو أعلى)، أو أن تستخدم سعة <bdi>Fabric Copilot</bdi>. السعات التجريبية غير مدعومة، و<bdi>Copilot</bdi> في <bdi>Power BI Desktop</bdi> لا يدعم مساحات العمل بترخيص <bdi>Premium Per User</bdi> (<a href="https://learn.microsoft.com/power-bi/create-reports/copilot-power-bi-desktop" target="_blank" rel="noopener noreferrer" class="text-accent"><bdi>Copilot</bdi> في <bdi>Power BI Desktop</bdi></a>).</li>
+  <li data-i18n-html="content.list1_2"><strong>إعداد المسؤول:</strong> في بوابة إدارة <bdi>Fabric</bdi>، ضمن <bdi>Tenant settings</bdi>، الإعداد <bdi><em>Users can use Copilot and other features powered by Azure OpenAI</em></bdi>. تقول <bdi>Microsoft</bdi> إنه مفعّل افتراضيًا، ويستطيع المسؤول إيقافه أو قصره على مجموعة.</li>
+  <li data-i18n-html="content.list1_3"><strong>الجزء الخليجي:</strong> تقول <bdi>Microsoft</bdi> إن <bdi>Copilot</bdi> يكون معطّلًا افتراضيًا إذا كان المستأجر أو السعة خارج نطاق بيانات الولايات المتحدة أو الاتحاد الأوروبي (<a href="https://learn.microsoft.com/power-bi/create-reports/copilot-evaluate-data" target="_blank" rel="noopener noreferrer" class="text-accent"><bdi>Microsoft Learn</bdi></a>). والمستأجر في الإمارات أو السعودية من هذه الحالة: لا يعمل <bdi>Copilot</bdi> إلا بعد أن يفعّل مسؤول <bdi>Fabric</bdi> الإعداد الذي يسمح بمعالجة البيانات المرسلة إلى <bdi>Azure OpenAI</bdi> خارج منطقتك. وهذا قرار يخص سياسة البيانات في شركتك، لا إصلاحًا في النموذج.</li>
+  <li data-i18n-html="content.list1_4"><strong>تفعيل <bdi>Q&amp;A</bdi> للنموذج:</strong> تستخدم أسئلة البيانات في <bdi>Copilot</bdi> المحرك نفسه الذي تستخدمه <bdi>Q&amp;A</bdi>، فيجب أن تكون <bdi>Q&amp;A</bdi> مفعّلة للنموذج الدلالي (<a href="https://learn.microsoft.com/power-bi/create-reports/copilot-ask-data-question" target="_blank" rel="noopener noreferrer" class="text-accent"><bdi>Microsoft Learn</bdi></a>).</li>
+              </ul>
+              <p data-i18n-html="content.p4">لا يلزم شيء من هذا لإجراء الفحص التالي. فهو يعمل على ملف النموذج، فتستطيع إجراءه اليوم وتشغيل <bdi>Copilot</bdi> لاحقًا.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h2">من الدقيقة 0 إلى 2: شغّل فحص صحة النموذج</h2>
+              <ol>
+  <li data-i18n-html="content.list2_1">في <bdi>Power BI Desktop</bdi>: <strong><bdi>File &gt; Export &gt; Power BI template</bdi></strong>. ملف ‎.pbit يحمل تعريف النموذج، لا البيانات التي حمّلها <bdi>Power BI</bdi> (وتبقى فيه الجداول الصغيرة المكتوبة يدويًا عبر <bdi>Enter data</bdi> والقيم المحفوظة في الفلاتر والمقسمات).</li>
+  <li data-i18n-html="content.list2_2">اسحب ملف ‎.pbit وأفلته في أداة <a href="/ar/tools/power-bi-model-health-check.html" class="text-accent">فحص صحة النموذج</a> المجانية. تعمل في متصفحك ولا يُرفع أي شيء.</li>
+  <li data-i18n-html="content.list2_3">دوّن النتيجة وعدد الملاحظات، فستعيد الفحص بعد الإصلاحات.</li>
+              </ol>
+              <p data-i18n-html="content.p5">حصل <bdi>Sahel Electronics</bdi> على <strong>79</strong>، مع <strong>10 أنواع من الملاحظات على 24 عنصرًا</strong>. ليست كلها عن <bdi>Copilot</bdi>. ستة أنواع منها هي كذلك، وهي ما تشغل الدقائق الأربع التالية.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h3">من الدقيقة 2 إلى 6: الملاحظات الست التي تهم Copilot</h2>
+              <ul>
+  <li data-i18n-html="content.list3_1"><strong>«أعمدة معرّفات أو سنوات أو رموز تُجمع افتراضيًا»</strong> (6 في نموذجنا، منها <bdi><code>Calendar[Year]</code></bdi> و<bdi><code>Product[ProductCode]</code></bdi>). ضع سنة تُجمع افتراضيًا في قيم جدول، فيجمع <bdi>Power BI</bdi> السنوات: 2026 عن كل يوم في التقويم. وتذكر <bdi>Microsoft</bdi> التجميع غير المناسب ضمن ما لا تصحّحه التعليمات. الإصلاح: اجعل <strong><bdi>Summarize by</bdi></strong> على <strong><bdi>None</bdi></strong> في كل واحد منها، وضع الأرقام التي يسأل عنها الناس في مقاييس مراجَعة، كما تنصح <bdi>Microsoft</bdi> للحسابات المهمة للعمل.</li>
+  <li data-i18n-html="content.list3_2"><strong>«أعمدة مفاتيح ظاهرة في طرف «متعدد» من العلاقة»</strong> (3) و<strong>«أعمدة غير مستخدمة في أي مكان»</strong> (4، اثنان منها عمودا رقم الشهر المساعدان). الحقول التي تخفيها تُستبعد من مخطط بيانات الذكاء الاصطناعي حين تُعدّه أول مرة (<a href="https://learn.microsoft.com/power-bi/create-reports/copilot-prepare-data-ai-data-schema" target="_blank" rel="noopener noreferrer" class="text-accent"><bdi>Microsoft Learn</bdi></a>). الإصلاح: أخفِ المفاتيح والأعمدة المساعدة للترتيب، واحذف الأعمدة التي لا يستخدمها أحد (عندنا <bdi><code>Sales[Old Notes]</code></bdi>).</li>
+  <li data-i18n-html="content.list3_3"><strong>«أسماء أشهر أو أيام بلا عمود ترتيب»</strong> (2: <bdi><code>Month Name</code></bdi> و<bdi><code>Hijri Month Name</code></bdi>). دون عمود ترتيب تُرتَّب الأشهر الهجرية أبجديًا، فيأتي جمادى الأولى قبل محرم. الإصلاح: <strong><bdi>Sort by column</bdi></strong> برقم الشهر.</li>
+  <li data-i18n-html="content.list3_4"><strong>«جدول التقويم غير معلَّم كجدول تاريخ»</strong> (1). تحتاج إليه دوال ذكاء الوقت التقليدية، و<bdi>Copilot</bdi> قد يكتب <bdi>DAX</bdi> لأسئلة مثل النمو عن العام السابق (<a href="https://learn.microsoft.com/power-bi/create-reports/copilot-ask-data-question" target="_blank" rel="noopener noreferrer" class="text-accent"><bdi>Microsoft Learn</bdi></a>). الإصلاح: <strong><bdi>Mark as date table</bdi></strong> على العمود <bdi><code>Date</code></bdi>.</li>
+  <li data-i18n-html="content.list3_5"><strong>«علاقات بتصفية ثنائية الاتجاه»</strong> (1، من <bdi>Sales</bdi> إلى <bdi>Branch</bdi>). تطلب <bdi>Microsoft</bdi> علاقات واضحة ومنطقية، والتعليمات لا تصلحها. الإصلاح: اتجاه واحد، إلا إن كنت تعرف لماذا يجب أن تكون ثنائية الاتجاه.</li>
+  <li data-i18n-html="content.list3_6"><strong>«مقاييس بلا وصف»</strong> (4)، ومعها <bdi><code>[Margin %]</code></bdi> بلا تنسيق وبقسمة عادية <bdi><code>/</code></bdi>. يقرأ <bdi>Copilot</bdi> الأوصاف، لكنه لا يستخدم منها إلا أول 200 حرف (<a href="https://learn.microsoft.com/power-bi/create-reports/copilot-evaluate-data" target="_blank" rel="noopener noreferrer" class="text-accent"><bdi>Microsoft Learn</bdi></a>): ابدأ بالمعنى والوحدة وما يُستثنى. وتطلب <bdi>Microsoft</bdi> أيضًا أن تُنسَّق النسب كنسب مئوية وأن يُقسَم الهامش من المقاييس المعتمدة. الإصلاح، بالتنسيق <bdi><code>0.0%</code></bdi>:</li>
+              </ul>
+              <pre><code>Margin % =
+DIVIDE (
+    [Total Sales] - [Total Cost],
+    [Total Sales]
+)</code></pre>
+              <h2 class="mt-5 mb-3" data-i18n="content.h4">من الدقيقة 6 إلى 9: ما لا يحسمه فحص الملف</h2>
+              <p data-i18n-html="content.p6">يستطيع الملف أن يُظهر ما ينقص. أما هذه الأربعة فتحتاج إليك:</p>
+              <ul>
+  <li data-i18n-html="content.list4_1"><strong>الاسم نفسه في جدولين.</strong> كان في نموذجنا <bdi><code>Name</code></bdi> في جدول المنتجات و<bdi><code>Name</code></bdi> في جدول الفروع. يقول الدليل التعليمي من <bdi>Microsoft</bdi> أن تتجنب تكرار أسماء الحقول بين الجداول (<a href="https://learn.microsoft.com/power-bi/create-reports/tutorial-copilot-power-bi-prepare-model" target="_blank" rel="noopener noreferrer" class="text-accent"><bdi>Microsoft Learn</bdi></a>)، وأداة فحص صحة النموذج لا تكشف ذلك اليوم. أعدنا تسميتهما <bdi><code>Product Name</code></bdi> و<bdi><code>Branch Name</code></bdi>.</li>
+  <li data-i18n-html="content.list4_2"><strong>أسماء الأعمدة العربية.</strong> تقول <bdi>Microsoft</bdi> عن أسئلة البيانات في <bdi>Copilot</bdi> إن اللغة المدعومة الوحيدة هي الإنجليزية (<a href="https://learn.microsoft.com/power-bi/create-reports/copilot-ask-data-question" target="_blank" rel="noopener noreferrer" class="text-accent"><bdi>Microsoft Learn</bdi></a>). في جدول الفروع عندنا العمود «اسم الفرع» لصفحات التقرير العربية. أبقِه، وأعطه وصفًا بالإنجليزية يقول ما يحمله: <bdi><em>Branch name in Arabic (the same branch as Branch Name).</em></bdi></li>
+  <li data-i18n-html="content.list4_3"><strong>التقويم الهجري.</strong> إن كان الناس سيسألون عن رمضان، فيجب أن يعرفه النموذج: في جدول التقويم عندنا <bdi><code>Hijri Year</code></bdi> و<bdi><code>Hijri Month Name</code></bdi> و<bdi><code>Is Ramadan</code></bdi>، ومقياس <bdi><code>[Ramadan Sales]</code></bdi>. ومن دونها لن يستطيع <bdi>Copilot</bdi> أن يجيب عن رمضان. وأداتنا <a href="/ar/tools/dax-calendar-table-generator.html" class="text-accent">مولّد جدول التاريخ</a> تبني هذه الأعمدة.</li>
+  <li data-i18n-html="content.list4_4"><strong>عشرة أسئلة حقيقية.</strong> تقترح <bdi>Microsoft</bdi> أن تبدأ بأسئلة عمل محددة، لكل منها المقياس المتوقع والتجميع وأساس التاريخ والفلاتر والنتيجة. اكتب عشرة أسئلة يطرحها فريقك كل شهر، مع الإجابات التي تثق بها اليوم. هذا هو اختبارك لاحقًا.</li>
+              </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h5">من الدقيقة 9 إلى 10: اكتب القائمة</h2>
+              <p data-i18n-html="content.p7">رتّبها كما ترتّبها <bdi>Microsoft</bdi>: النموذج أولًا (الملاحظات الست والفحوص الأربعة)، ثم <bdi>Prep data for AI</bdi>، ثم الاختبار بأسئلتك العشرة. كل إصلاح مما سبق دقيقة أو دقيقتان في <bdi>Desktop</bdi>؛ والأوصاف تأخذ الوقت الأطول.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h6">ما فعلته الإصلاحات بالنموذج التجريبي</h2>
+              <p data-i18n-html="content.p8">طبّقنا الإصلاحات على تعريف نموذج <bdi>Sahel Electronics</bdi> وشغّلنا محرك فحص صحة النموذج نفسه مرة أخرى. ارتفعت النتيجة <strong>من 79 إلى 98</strong>، ونزلت الملاحظات من 10 أنواع إلى نوعين: مفتاح مخفي لا يستخدمه أي مرئي (لا بأس: إنه معرّف الصف)، وتنبيه بأن النموذج بلا أدوار أمان على مستوى الصفوف، وهذا صحيح لنموذج يراه الجميع. وصيغة <bdi>DAX</bdi> للمقياس <bdi><code>[Margin %]</code></bdi> أعلاه هي التي حلّت محل القسمة العادية.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h7">ثم Prep data for AI (معاينة)</h2>
+              <p data-i18n-html="content.p9">ما زالت صفحة <bdi>Microsoft</bdi> تسميها معاينة (<a href="https://learn.microsoft.com/power-bi/create-reports/copilot-prepare-data-ai" target="_blank" rel="noopener noreferrer" class="text-accent">تجهيز بياناتك للذكاء الاصطناعي، قُرئت في 9 نوفمبر 2026</a>). في <bdi>Desktop</bdi> هي زر <strong><bdi>Prep data for AI</bdi></strong> في شريط <bdi>Home</bdi>؛ وفي الخدمة، في شريط النموذج الدلالي. ويُحفظ كل شيء في النموذج الدلالي، لا في التقرير. ولها ثلاثة أجزاء:</p>
+              <ul>
+  <li data-i18n-html="content.list5_1"><strong>مخطط بيانات للذكاء الاصطناعي (<bdi>AI data schema</bdi>):</strong> الجداول والأعمدة والمقاييس التي يستخدمها <bdi>Copilot</bdi>. وتنبّه <bdi>Microsoft</bdi> إلى أن <bdi>Copilot</bdi> حين ينشئ صفحة تقرير أو يبحث عن بيانات أو يكتب استعلام <bdi>DAX</bdi> يستخدم النموذج الدلالي كله ويتجاهل هذا المخطط. لذا يبقى الإخفاء والحذف مهمَّين.</li>
+  <li data-i18n-html="content.list5_2"><strong>إجابات موثّقة (<bdi>Verified answers</bdi>):</strong> مرئي راجعته، مربوط بالعبارات التي يكتبها الناس (تقترح <bdi>Microsoft</bdi> من خمس إلى سبع عبارات لكل إجابة). وفي قائمة <bdi>Microsoft</bdi> نفسها تنبيه: الإجابات الموثّقة لا تعمل إذا أخفيت حقولها في النموذج، فابنِها على حقول ظاهرة (<a href="https://learn.microsoft.com/power-bi/create-reports/copilot-prepare-data-ai-verified-answers" target="_blank" rel="noopener noreferrer" class="text-accent"><bdi>Microsoft Learn</bdi></a>).</li>
+  <li data-i18n-html="content.list5_3"><strong>تعليمات للذكاء الاصطناعي (<bdi>AI instructions</bdi>):</strong> مصطلحات عملك بلغة بسيطة، حتى 10,000 حرف، ولا ضمان أن يتبعها النموذج اللغوي حرفيًا (<a href="https://learn.microsoft.com/power-bi/create-reports/copilot-prepare-data-ai-instructions" target="_blank" rel="noopener noreferrer" class="text-accent"><bdi>Microsoft Learn</bdi></a>). وهذه تعليمات متجرنا التجريبي، بالإنجليزية لأنها لغة أسئلة البيانات اليوم:</li>
+              </ul>
+              <pre><code>Sales means [Total Sales]: net of discounts, excluding VAT, in AED.
+Margin means [Margin %]. Never average the margin of single order lines.
+Ramadan means the days where 'Calendar'[Is Ramadan] is TRUE. To compare one
+Ramadan with the one before, compare by 'Calendar'[Hijri Year], not by [Year].
+Branch names in Arabic are in Branch[<span dir="rtl">اسم الفرع</span>]. Answer with Branch[Branch Name]
+unless the question asks for Arabic.</code></pre>
+              <p data-i18n-html="content.p10">وحين يجهز النموذج، يستطيع مالكه أن يضع عليه علامة <strong><bdi>Approved for Copilot</bdi></strong> في إعدادات النموذج الدلالي في الخدمة.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h8">ما لا يراه Copilot</h2>
+              <ul>
+  <li data-i18n-html="content.list6_1"><strong>المقسمات في الصفحة.</strong> أسئلة البيانات في <bdi>Copilot</bdi> لا تطبّق الفلاتر أو المقسمات المطبّقة حاليًا على صفحة التقرير (<a href="https://learn.microsoft.com/power-bi/create-reports/copilot-ask-data-question" target="_blank" rel="noopener noreferrer" class="text-accent"><bdi>Microsoft Learn</bdi></a>). فسؤال «مبيعات هذا الشهر» يعني النموذج كله ما لم يقل السؤال أكثر.</li>
+  <li data-i18n-html="content.list6_2"><strong>الحقول والصفحات والمرئيات المخفية،</strong> باختيارك: تصف <bdi>Microsoft</bdi> إخفاء الحقول للتحكم فيما يستخدمه <bdi>Copilot</bdi> من النموذج، وإخفاء الصفحات والمرئيات للتحكم فيما يقرؤه ملخص التقرير (<a href="https://learn.microsoft.com/power-bi/create-reports/copilot-integration" target="_blank" rel="noopener noreferrer" class="text-accent"><bdi>Microsoft Learn</bdi></a>).</li>
+  <li data-i18n-html="content.list6_3"><strong>ما بعد أول 200 حرف من الوصف،</strong> وعناصر مجموعة الحساب، فبيانات النموذج الوصفية لا تتضمنها: اذكرها في وصف عمود مجموعة الحساب.</li>
+  <li data-i18n-html="content.list6_4"><strong>تعليماتك، لمن يسأل:</strong> لا يرى المستخدمون تعليمات الذكاء الاصطناعي ولا مخطط بياناته. أخبر فريقك بالكلمات ما الغرض من النموذج.</li>
+              </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h9">أين يأتي دور DataArcus</h2>
+              <p data-i18n-html="content.p11">أداة <a href="/ar/tools/power-bi-model-health-check.html" class="text-accent">فحص صحة النموذج</a> تنجز الجزء القابل للقياس من الدقيقة 0 إلى 6، مجانًا وفي متصفحك. تقرأ تعريف النموذج لا بياناتك، ولا تشغّل <bdi>Copilot</bdi>. وحين تريد من يجري الفحص كله على نموذج حقيقي، فإن <a href="/ar/services/copilot-readiness-audit.html" class="text-accent">تدقيق الجاهزية لـ&nbsp;<bdi>Copilot</bdi></a> مراجعة بسعر ثابت لنموذج دلالي واحد: كل ملاحظة مع إصلاحها الدقيق، وإعداد <bdi>Prep data for AI</bdi>، والتقويم الخليجي إن كان عملك يسير عليه، بالعربية أو الإنجليزية.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h10">أسئلة</h2>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q1">هل أحتاج إلى تشغيل Copilot لإجراء هذا الفحص؟</h3>
+              <p data-i18n-html="content.a1">لا. الدقائق من 0 إلى 10 تعمل على ملف النموذج. تحتاج إلى <bdi>Copilot</bdi> فقط لاختبار الإجابات بعدها بأسئلتك العشرة.</p>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q2">هل يستطيع فريقي سؤال Copilot بالعربية؟</h3>
+              <p data-i18n-html="content.a2">تقول <bdi>Microsoft Learn</bdi> عن أسئلة البيانات في <bdi>Copilot</bdi> إن اللغة المدعومة الوحيدة هي الإنجليزية (قُرئت في 9 نوفمبر 2026). يمكن أن تبقى أسماء الأعمدة العربية لتقريرك؛ أعطها أوصافًا بالإنجليزية.</p>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q3">هل ترسل أداة فحص صحة النموذج نموذجي إلى أي مكان؟</h3>
+              <p data-i18n-html="content.a3">لا. تعمل في متصفحك ولا يُرفع أي شيء.</p>
+              <p data-i18n-html="content.p12">ميزات الذكاء الاصطناعي في <bdi>Power BI</bdi> تتغير كل شهر، لذلك كل معلومة من <bdi>Microsoft</bdi> هنا مؤرَّخة. ولخلفية كل فحص، اقرأ <a href="/ar/articles/article-power-bi-model-ai-ready.html" class="text-accent">هل نموذج <bdi>Power BI</bdi> جاهز للذكاء الاصطناعي؟ فحص من 7 نقاط</a>؛ وللأعمدة الهجرية، <a href="/ar/articles/article-gulf-calendar-power-bi.html" class="text-accent">تقويم خليجي في <bdi>Power BI</bdi></a>.</p>
+            </article>
+
+            <div class="text-center block">
+              <div class="glass-card cta" data-aos="fade-up">
+                <h3 class="h4 mb-3" data-i18n="exploreMore.title">ابدأ الفحص الآن</h3>
+                <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">مجانية، تعمل في متصفحك، ولا يُرفع أي شيء.</p>
+                <div class="cta-actions">
+                  <a href="/ar/tools/power-bi-model-health-check.html" class="btn btn-accent"><i class="bi bi-heart-pulse me-2"></i><span data-i18n="exploreMore.button1">افتح فحص صحة النموذج</span></a>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <hr class="divider">
+              <div class="glass-card cta">
+                <h3 class="h4 mb-3" data-i18n="finalCta.title">تريد الفحص كله على نموذجك؟</h3>
+                <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">مراجعة بسعر ثابت لنموذج دلالي واحد قبل Copilot، مع الإصلاح الدقيق لكل ملاحظة، بالعربية أو الإنجليزية.</p>
+                <div class="cta-actions">
+                  <a href="/ar/services/copilot-readiness-audit.html" class="btn btn-accent"><i class="bi bi-clipboard-check me-2"></i><span data-i18n="finalCta.button">اطّلع على تدقيق الجاهزية لـ Copilot</span></a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="/ar/#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">حلول Power BI مخصصة للشركات في الشرق الأوسط، نحوّل بياناتك المعقدة إلى ميزة استراتيجية واضحة.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">الخدمات</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">هندسة البيانات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">التحليلات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">الاستشارات</a></li>
+              <li class="mb-2"><a href="/ar/tools/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">أدوات Power BI و Fabric مجانية</a></li>
+              <li class="mb-2"><a href="/ar/power-bi-mcp/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.mcp">DataArcus لـ Power BI</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">الشركة</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">عن الشركة</a></li>
+              <li class="mb-2"><a href="/ar/portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">نماذج الحلول</a></li>
+              <li class="mb-2"><a href="/ar/#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">تواصل معنا</a></li>
+              <li class="mb-2"><a href="/ar/blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">المدونة</a></li>
+              <li class="mb-2"><a href="/ar/privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">الخصوصية</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">للتواصل</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">© <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">جميع الحقوق محفوظة.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">صُنع في دبي</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="/assets/js/translations/common.min.js?v=434124bdf3f2" defer=""></script>
+  <script src="/assets/js/translations/article-power-bi-copilot-ready-check.min.js?v=9c77d1e610ee" defer=""></script>
+  <script src="/assets/js/locale-routes.min.js?v=59ad61997060" defer=""></script>
+  <script src="/assets/js/locale-catalog.min.js?v=1464f13d8c0b" defer=""></script>
+  <script src="/assets/js/locale-dom.min.js?v=faf294f00eb2" defer=""></script>
+  <script src="/assets/js/lang-manager.min.js?v=b4bd7c2d5f43" defer=""></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer=""></script>
+  <script src="/assets/js/site-navigation.min.js?v=73f198dd3eb3" defer=""></script>
+  <script src="/assets/js/site-forms.min.js?v=f7223d5bc9a2" defer=""></script>
+  <script src="/assets/js/site-analytics.min.js?v=9631075fe8c3" defer=""></script>
+  <script src="/assets/js/main.min.js?v=3fefca81e4a0" defer=""></script>
+
+
+</body></html>

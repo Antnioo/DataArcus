@@ -1,7 +1,7 @@
 # DataArcus blog: the plan (read before writing a post)
 
 The memory for the blog. Read it before planning or writing an article; update it after each one is published
-(the log, the map, "Next up"). Last updated 2026-10-25 by the builder (W, the Arabic-readiness article); before that 2026-10-22 by the reviewer (the custom-visual article; before that 2026-10-03, "Next up" from the SEO research).
+(the log, the map, "Next up"). Last updated 2026-11-09 by the builder (CP1, the Copilot 10-minute check); before that 2026-10-25 by the builder (W, the Arabic-readiness article); before that 2026-10-22 by the reviewer (the custom-visual article; before that 2026-10-03, "Next up" from the SEO research).
 
 ## Who we write for, and how we sound
 - **Our identity:** Power BI reports designed right, in minutes, and checked in Power BI, not just generated.
@@ -19,6 +19,7 @@ The memory for the blog. Read it before planning or writing an article; update i
   that runs) or sourced (Microsoft Learn, official pricing).
 - **Both languages.** Every post is written in English and Arabic (the Arabic is written, not machine-sounding; right
   to left checked on the page). Gulf terms where they matter: Hijri, Ramadan, Eid, the Saturday-Sunday weekend, VAT.
+- Arabic: content/ARABIC-STYLE.md (the owner's standard, 9 Nov)
 - **Accuracy like the code.** DAX in a post is run on a real model before publishing; numbers are checked twice;
   screenshots come from our own test models, never from the owner's job.
 
@@ -26,7 +27,7 @@ The memory for the blog. Read it before planning or writing an article; update i
 | Pillar | Published | Free tool it leads to |
 |---|---|---|
 | Gulf business logic (and Arabic) | Ramadan sales YoY (2026-09-23), Gulf calendar in DAX (2026-10-03), Is your report ready for Arabic? (2026-10-25, with 0.3.1) | DAX Calendar Table Generator (Hijri), Theme Generator (Arabic) |
-| Power BI craft (DAX, models) | DAX attribution pattern (2026-09-01), Model health check (2026-09-25), AI-built custom visuals: 4 checks (2026-10-23) | Model Health Check, DAX Measure Builder |
+| Power BI craft (DAX, models) | DAX attribution pattern (2026-09-01), Model health check (2026-09-25), AI-built custom visuals: 4 checks (2026-10-23), Ready for Copilot? A 10-minute check (2026-11-09) | Model Health Check, DAX Measure Builder |
 | Report design | Report redesign in 5 minutes (2026-09-28), 7 report styles (2026-09-29) | Theme Generator, SVG KPI Designer |
 | Cost and licensing | Pro vs PPU vs Fabric F64 (2026-09-23) | Licensing Cost Calculator |
 | E-commerce analytics (2025; **no new posts**, owner 2026-10-01: the existing ones stay online) | CLV, 5 KPIs, Shopify dashboard, ETL vs Power Query, EVM (project risk) | none |
@@ -38,7 +39,7 @@ The memory for the blog. Read it before planning or writing an article; update i
 - DP-600 practice exam (`tools/dp-600-practice-exam.html`)
 
 ## Next up (in order; owner adopted 2026-10-03 from the SEO research, dataarcus-engine `research/SEO-REPORT.md`)
-1. **The Copilot-readiness audit page and "Is your model ready for Copilot? How to check in 10 minutes"** (improve
+1. **(Written 2026-11-09 as "Is your Power BI model ready for Copilot? How to check in 10 minutes", `content/0.3.2-cp1`, mcp/work/CP1.md; the Arabic waits for the owner's yes.)** **The Copilot-readiness audit page and "Is your model ready for Copilot? How to check in 10 minutes"** (improve
    the AI-ready article: a step-by-step check with the Model Health Check, then the audit). Keywords: copilot
    readiness assessment, power bi copilot best practices, prepare semantic model for copilot, power bi prep data for
    AI. Tool: Model Health Check. The first paid offer. (Audit page: Beta prep, 2026-10-03.)
@@ -117,4 +118,5 @@ became a post). Add ideas here with the date and where they came from:
 | 2026-10-17 | Power BI best practices have exceptions: 5 we missed (the Health Check benchmark: 23 models, 206 wrong findings before, 1 after; Microsoft's own words, quotes checked on Microsoft Learn 16 Oct) | Craft | Model Health Check |
 | 2026-10-23 | Before an AI builds your Power BI custom visual: 4 checks (the admin settings, certification, Desktop vs the service, what an uncertified visual can't do; every fact from Microsoft Learn, read 22 Oct; Microsoft's October 2026 feature summary is behind a bot check, its wording confirmed from a verbatim copy) | Craft (AI agents) | Theme Generator, the DataArcus agent |
 | 2026-10-25 | Is your Power BI report ready for Arabic? 19 things to check (L1's Arabic lens: each kind with DataArcus's fix, a Desktop setting or no setting; Microsoft Learn read 25 Oct; L1's numbers on four made-up reports; goes live with DataArcus 0.3.1, branch `feat/0.3.1-ready-for-arabic`, mcp/work/W.md; updated 2026-10-26: a Latin run anywhere in Arabic text can swap the Arabic around it, measured in Desktop 2.159, and the "reword it" advice taken out, mcp/work/BD1.md; updated 2026-10-27: the measured fix, the isolates and the whole text wrapped in U+2067 ... U+2069, page names kept in Arabic since tabs lay out left to right, mcp/work/BD2.md) | Gulf (Arabic) | The DataArcus agent (check_report's Arabic lens) |
+| 2026-11-09 | Is your Power BI model ready for Copilot? How to check in 10 minutes (a timed walkthrough on a made-up model, Sahel Electronics: the Health Check engine scored it 79 with 10 kinds of finding on 24 objects, 98 after the fixes; what Copilot needs to run, the data-boundary setting for Gulf tenants, Prep data for AI (preview), what Copilot does not see; every Microsoft fact from Microsoft Learn, read 9 Nov 2026; branch `content/0.3.2-cp1`, mcp/work/CP1.md; the 7-point article links to it) | Craft (AI-ready models) | Model Health Check, Copilot readiness audit, Calendar Generator |
 | 2026-10-03 | Copilot readiness audit (a service page in `services/`, not a post; linked from the home page, the AI-ready article and the licensing guide) | Craft (AI-ready models) | Model Health Check |

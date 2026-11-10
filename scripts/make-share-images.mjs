@@ -189,6 +189,11 @@ const RTLREADY = `<div class="card" style="padding:16px 22px">${pill('19 things 
   .map((t, i) => `<div style="display:flex;align-items:center;gap:14px;padding:6px 0;border-top:${i ? '1px solid rgba(255,255,255,.07)' : '0'}"><b style="width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:16px;font-weight:800;color:#051018;background:#00d4ff">${i + 1}</b><span style="font-size:19px;font-weight:700">${t}</span></div>`).join('')}</div>
   <div class="card" style="padding:12px 20px;font-size:16px;font-weight:600;text-align:center;color:#cbd5e1">Each fix: DataArcus, a Desktop setting, or no setting</div>`;
 
+// the Copilot-readiness check: the four steps by the clock (the article's own headings), on a made-up model
+const COPILOTCHECK = `<div class="card" style="padding:16px 22px">${pill('A 10-minute check, by the clock')}${['0-2  Run the Model Health Check', '2-6  The six findings for Copilot', '6-9  What no file check settles', '9-10  Write the list']
+  .map((t, i) => `<div style="display:flex;align-items:center;gap:14px;padding:6px 0;border-top:${i ? '1px solid rgba(255,255,255,.07)' : '0'}"><b style="width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:16px;font-weight:800;color:#051018;background:#00d4ff">${i + 1}</b><span style="font-size:19px;font-weight:700">${t}</span></div>`).join('')}</div>
+  <div class="card" style="padding:12px 20px;font-size:16px;font-weight:600;text-align:center;color:#cbd5e1">Then Prep data for AI, as Microsoft Learn says today</div>`;
+
 const PAGES = [
   ['portfolio', 'Power BI showcases', 'Dashboards Built for Real Business Problems', { chips: ['7 dashboards', 'Retail to healthcare', 'Real models'] }, PORTFOLIO, '470px 1fr'],
   ['blog', 'Blog · Power BI for Gulf teams', 'The Power BI Playbook', { sub: 'Gulf calendars and Ramadan, Copilot-ready models, report design, DAX and licensing.' }, BLOG, '500px 1fr'],
@@ -201,6 +206,7 @@ const PAGES = [
   ['report-redesign', 'Case study · Report design', 'Same Visuals, New Design: A Power BI Report in 5 Minutes', { size: 44, sub: 'One brand colour, one grid, KPIs first.' }, REDESIGN, '470px 1fr'],
   ['custom-visual-ai-checks', 'AI agents · Power BI', 'Before an AI Builds Your Power BI Custom Visual', { size: 44, sub: 'Four checks before you rely on one at work.' }, CVCHECKS, '470px 1fr'],
   ['report-ready-for-arabic', 'Arabic reports · Power BI', 'Is Your Power BI Report Ready for Arabic?', { size: 44, sub: 'What reads wrong from the right, and what fixes each.' }, RTLREADY, '470px 1fr'],
+  ['copilot-ready-check', 'Copilot · Power BI', 'Is Your Power BI Model Ready for Copilot?', { size: 44, sub: 'How to check in 10 minutes, and what to fix first.' }, COPILOTCHECK, '470px 1fr'],
   ['best-practice-exceptions', 'Best practice · Power BI', 'Power BI Best Practices Have Exceptions: 5 We Missed', { size: 44, sub: 'Our own tool was wrong 206 times, each where a rule does not fit.' }, EXCEPTIONS, '470px 1fr'],
   ['health-check-article', 'Case study · Power BI', 'We Ran a Health Check on a Microsoft Sample. It Scored 85.', { size: 44, sub: 'What a small, published model was hiding.' }, HEALTH, '470px 1fr'],
   ['ramadan-sales', 'Ramadan · DAX · Hijri calendar', 'Compare This Ramadan With Last Ramadan', { sub: 'SAMEPERIODLASTYEAR gets it wrong. A Hijri calendar and one DAX measure fix it.' }, RAMADAN, '470px 1fr'],

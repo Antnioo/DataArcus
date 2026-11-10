@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-UqlxWpioX3BjrlIRIpE94CO2pgikl7pLfFx6jJgMZxc=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/ https://cdn.jsdelivr.net/npm/aos@2.3.4/ https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/ https://cdn.jsdelivr.net/npm/aos@2.3.4/; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),a=/^\/ar\//.test(location.pathname),s=a?null:localStorage.getItem("dataarcus-lang"),l=a?"ar":(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://dataarcus.com/articles/article-power-bi-copilot-ready-check.html" />
+  <link rel="alternate" hreflang="en" href="https://dataarcus.com/articles/article-power-bi-copilot-ready-check.html" />
+  <link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/articles/article-power-bi-copilot-ready-check.html" />
+  <link rel="alternate" hreflang="x-default" href="https://dataarcus.com/articles/article-power-bi-copilot-ready-check.html" />
+
+  <title>Is Your Power BI Model Ready for Copilot? A 10-Minute Check</title>
+  <meta name="description" content="A timed check before your team uses Copilot: what Copilot needs to run, what the free Model Health Check flags, and what to fix, on a made-up model." />
+  <meta name="author" content="DataArcus" />
+  <meta name="keywords" content="power bi copilot readiness, prepare semantic model for copilot, power bi copilot best practices, power bi prep data for AI, copilot readiness assessment, AI data schema, verified answers, AI instructions, Model Health Check, DataArcus" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Is Your Power BI Model Ready for Copilot? A 10-Minute Check" />
+  <meta property="og:description" content="A timed check before your team uses Copilot: what Copilot needs to run, what the free Model Health Check flags, and what to fix, on a made-up model." />
+  <meta property="og:url" content="https://dataarcus.com/articles/article-power-bi-copilot-ready-check.html" />
+  <meta property="og:site_name" content="DataArcus" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/copilot-ready-check.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:alt" content="DataArcus logo" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="article:published_time" content="2026-11-09T09:00:00Z" />
+  <meta property="article:author" content="Abdelrahman M." />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Is Your Power BI Model Ready for Copilot? A 10-Minute Check" />
+  <meta name="twitter:description" content="A timed check before your team uses Copilot: what Copilot needs to run, what the free Model Health Check flags, and what to fix, on a made-up model." />
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/copilot-ready-check.jpg" />
+  <meta name="twitter:image:alt" content="DataArcus logo" />
+
+  <link rel="icon" href="../assets/img/favicon.svg"/>
+  <link rel="icon" href="../assets/img/favicon-48.png" sizes="48x48" type="image/png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#0a0f1c" />
+  <link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png" />
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="../assets/css/vendor/bootstrap.min.css?v=d85327d99c7a" rel="stylesheet">
+  <link href="../assets/css/style.min.css?v=29c11a1ea13b" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
+  </noscript>
+
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Is Your Power BI Model Ready for Copilot? How to Check in 10 Minutes",
+    "description": "A timed check before your team uses Copilot: what Copilot needs to run, what the free Model Health Check flags, and what to fix, on a made-up model.",
+    "url": "https://dataarcus.com/articles/article-power-bi-copilot-ready-check.html",
+    "mainEntityOfPage": "https://dataarcus.com/articles/article-power-bi-copilot-ready-check.html",
+    "author": { "@type": "Person", "name": "Abdelrahman M." },
+    "publisher": {
+      "@type": "Organization",
+      "name": "DataArcus",
+      "logo": { "@type": "ImageObject", "url": "https://dataarcus.com/assets/img/logo.svg" }
+    },
+    "datePublished": "2026-11-09",
+    "dateModified": "2026-11-09",
+    "image": "https://dataarcus.com/assets/img/og/copilot-ready-check.jpg"
+  }
+  </script>
+</head>
+<body>
+
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/#hero">
+        <img src="../assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation" data-i18n-aria-label="nav.toggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="../portfolio.html" data-i18n="nav.portfolio">Showcases</a></li>
+          <li class="nav-item"><a class="nav-link" href="/tools/" data-i18n="nav.tools">Free Tools</a></li>
+          <li class="nav-item"><a class="nav-link" href="/power-bi-mcp/" data-i18n="nav.agent">AI Agent (beta)</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#contact" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+        <a href="/#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Book a Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="article-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+
+            <header class="article-header">
+              <span class="page-badge" data-i18n="header.badge">COPILOT &amp; AI</span>
+              <h1 class="display-5 fw-bold" data-i18n="header.title">Is Your Power BI Model Ready for Copilot? How to Check in 10 Minutes</h1>
+              <p class="lead text-white-50" data-i18n="header.subtitle">Posted on November 9, 2026</p>
+            </header>
+
+            <article class="article-body">
+              <p data-i18n-html="content.p1">Your manager wants the team to ask Copilot questions instead of waiting for a new report page. The question lands on you: is the model ready, and how do you know before people start trusting the answers? Microsoft's own advice is to fix the model first: <em>"Resolve modeling issues in the semantic model because additional instructions can't correct inaccurate relationships or inappropriate aggregations"</em> (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-evaluate-data' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn, read 9 Nov 2026</a>).</p>
+              <p data-i18n-html="content.p2">This is the hands-on version: a check you can do in about ten minutes, by the clock. We ran every step on a made-up model, <strong>Sahel Electronics</strong>, a pretend Gulf electronics retailer with four tables, four measures and one report page; no real company and no real data. For why each point matters, see <a href='article-power-bi-model-ai-ready.html' class='text-accent'>our 7-point check</a>; here we only do the check.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h1">Before the clock starts: can Copilot run here at all?</h2>
+              <p data-i18n-html="content.p3">If the answer is no, the rest can wait. From Microsoft Learn, read 9 Nov 2026 (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-enable-power-bi' target='_blank' rel='noopener noreferrer' class='text-accent'>Enable Fabric Copilot for Power BI</a>):</p>
+              <ul>
+  <li data-i18n-html="content.list1_1"><strong>Capacity:</strong> the report's workspace must be on Power BI Premium (P1 or higher) or a paid Fabric capacity (F2 or higher), or you use a Fabric Copilot capacity. Trial capacities are not supported, and Copilot in Power BI Desktop does not support Premium Per User workspaces (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-power-bi-desktop' target='_blank' rel='noopener noreferrer' class='text-accent'>Use Copilot in Power BI Desktop</a>).</li>
+  <li data-i18n-html="content.list1_2"><strong>The admin setting:</strong> in the Fabric admin portal, Tenant settings, <em>Users can use Copilot and other features powered by Azure OpenAI</em>. Microsoft says it is on by default, and an admin can turn it off or limit it to a group.</li>
+  <li data-i18n-html="content.list1_3"><strong>The Gulf part:</strong> <em>"If your tenant or capacity is outside the United States or EU data boundary, Copilot is disabled by default"</em> (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-evaluate-data' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>). A tenant in the UAE or Saudi Arabia is in that case: Copilot works only after a Fabric admin turns on the setting that lets data sent to Azure OpenAI be processed outside your region. That is a data-policy decision for your company, not a model fix.</li>
+  <li data-i18n-html="content.list1_4"><strong>Q&amp;A on the model:</strong> Copilot's data questions use the same engine as Q&amp;A, so Q&amp;A must be on for the semantic model (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-ask-data-question' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>).</li>
+              </ul>
+              <p data-i18n-html="content.p4">None of these is needed to run the check below. It works on the model file, so you can do it today and switch Copilot on later.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h2">Minutes 0 to 2: run the Model Health Check</h2>
+              <ol>
+  <li data-i18n-html="content.list2_1">In Power BI Desktop: <strong>File &gt; Export &gt; Power BI template</strong>. A .pbit holds the model's definition, not the data Power BI loaded (small tables typed in with Enter data and values saved in filters and slicers do stay in it).</li>
+  <li data-i18n-html="content.list2_2">Drop the .pbit on the free <a href='../tools/power-bi-model-health-check.html' class='text-accent'>Model Health Check</a>. It runs in your browser; nothing is uploaded.</li>
+  <li data-i18n-html="content.list2_3">Write down the score and the number of findings. You will run it again after the fixes.</li>
+              </ol>
+              <p data-i18n-html="content.p5">Sahel Electronics scored <strong>79</strong>, with <strong>10 kinds of finding on 24 objects</strong>. Not all of them are about Copilot. Six kinds are, and they take the next four minutes.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h3">Minutes 2 to 6: the six findings that matter for Copilot</h2>
+              <ul>
+  <li data-i18n-html="content.list3_1"><strong>"ID, year or code columns that sum by default"</strong> (6 on our model, among them <code>Calendar[Year]</code> and <code>Product[ProductCode]</code>). Put a year that sums by default in a table's values and Power BI adds the years up: 2,026 for every day in the calendar. Microsoft lists inappropriate aggregations among what instructions cannot correct. Fix: set <strong>Summarize by</strong> to <strong>None</strong> on each one, and put the numbers people ask for in reviewed measures, as Microsoft advises for business-critical calculations.</li>
+  <li data-i18n-html="content.list3_2"><strong>"Visible key columns on the many side"</strong> (3) and <strong>"Columns not used anywhere"</strong> (4, two of them the month-number helpers). Fields you hide are left out of the AI data schema when you first set it up (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-prepare-data-ai-data-schema' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>). Fix: hide keys and sort helpers; remove the columns nobody uses (our <code>Sales[Old Notes]</code>).</li>
+  <li data-i18n-html="content.list3_3"><strong>"Month or day names without a sort column"</strong> (2: <code>Month Name</code> and <code>Hijri Month Name</code>). Without a sort column, the Hijri months sort alphabetically: Jumada al-Awwal before Muharram. Fix: <strong>Sort by column</strong>, by the month number.</li>
+  <li data-i18n-html="content.list3_4"><strong>"Calendar table not marked as a date table"</strong> (1). The classic time-intelligence functions need it, and Copilot can write DAX for questions like year-over-year growth (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-ask-data-question' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>). Fix: <strong>Mark as date table</strong>, on the <code>Date</code> column.</li>
+  <li data-i18n-html="content.list3_5"><strong>"Relationships that filter in both directions"</strong> (1, Sales to Branch). Microsoft asks for clear, logical relationships, and instructions cannot repair them. Fix: single direction, unless you know why it must be both.</li>
+  <li data-i18n-html="content.list3_6"><strong>"Measures without a description"</strong> (4), plus <code>[Margin %]</code> with no format and a plain <code>/</code>. Copilot reads descriptions, but <em>"Copilot uses only the first 200 characters"</em> (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-evaluate-data' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>): start with the meaning, the unit and what is left out. Microsoft also asks for ratios as percentages and a margin divided from the approved measures. Fix, with the format <code>0.0%</code>:</li>
+              </ul>
+              <pre><code>Margin % =
+DIVIDE (
+    [Total Sales] - [Total Cost],
+    [Total Sales]
+)</code></pre>
+              <h2 class="mt-5 mb-3" data-i18n="content.h4">Minutes 6 to 9: what no file check settles</h2>
+              <p data-i18n-html="content.p6">A file can show what is missing. These four need you:</p>
+              <ul>
+  <li data-i18n-html="content.list4_1"><strong>The same name in two tables.</strong> Our model had <code>Name</code> in Product and <code>Name</code> in Branch. Microsoft's tutorial says to avoid duplicate field names across tables (<a href='https://learn.microsoft.com/power-bi/create-reports/tutorial-copilot-power-bi-prepare-model' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>); the Health Check does not flag it today. We renamed them <code>Product Name</code> and <code>Branch Name</code>.</li>
+  <li data-i18n-html="content.list4_2"><strong>Arabic column names.</strong> For Copilot's data questions, <em>"The only supported language is English"</em> (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-ask-data-question' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>). Our Branch table has <code dir='rtl'>اسم الفرع</code> for the report's Arabic pages. Keep it, and give it an English description that says what it holds: <em>Branch name in Arabic (the same branch as Branch Name).</em></li>
+  <li data-i18n-html="content.list4_3"><strong>The Hijri calendar.</strong> If people will ask about Ramadan, the model must know it: our Calendar has <code>Hijri Year</code>, <code>Hijri Month Name</code> and <code>Is Ramadan</code>, and a <code>[Ramadan Sales]</code> measure. Without them, Copilot has no Ramadan to answer about. Our <a href='../tools/dax-calendar-table-generator.html' class='text-accent'>Calendar Generator</a> builds those columns.</li>
+  <li data-i18n-html="content.list4_4"><strong>Ten real questions.</strong> Microsoft suggests starting with focused business questions, each with the expected measure, grouping, date basis, filters and result. Write ten your team asks every month, with the answers you already trust. That is your test for later.</li>
+              </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h5">Minutes 9 to 10: write the list</h2>
+              <p data-i18n-html="content.p7">Order it the way Microsoft does: the model first (the six findings and the four checks), then Prep data for AI, then testing with your ten questions. Each fix above is a minute or two in Desktop; the descriptions take longest.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h6">What the fixes did to the made-up model</h2>
+              <p data-i18n-html="content.p8">We made the fixes on Sahel Electronics' model definition and ran the same Health Check engine again. The score went from <strong>79 to 98</strong>, and the findings from 10 kinds to 2: a hidden key that no visual uses (fine: it is the row's ID) and a note that the model has no row-level security roles, which is right for a model everyone may see. The DAX for <code>[Margin %]</code> above is the version that replaced the plain division.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h7">Then Prep data for AI (preview)</h2>
+              <p data-i18n-html="content.p9">Microsoft's page still calls it preview (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-prepare-data-ai' target='_blank' rel='noopener noreferrer' class='text-accent'>Prepare your data for AI, read 9 Nov 2026</a>). In Desktop it is the <strong>Prep data for AI</strong> button on the Home ribbon; in the service, on the semantic model's ribbon. Everything is saved on the semantic model, not the report. Three parts:</p>
+              <ul>
+  <li data-i18n-html="content.list5_1"><strong>AI data schema:</strong> the tables, columns and measures Copilot should use. Microsoft notes that when Copilot creates a report page, searches for data or writes a DAX query, it uses the entire semantic model and ignores this schema. So hiding and removing still matter.</li>
+  <li data-i18n-html="content.list5_2"><strong>Verified answers:</strong> a visual you have checked, linked to the phrases people type (Microsoft suggests five to seven per answer). One catch from Microsoft's own list: <em>"Verified answers don't work if you hide fields in the model"</em>, so build them on visible fields (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-prepare-data-ai-verified-answers' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>).</li>
+  <li data-i18n-html="content.list5_3"><strong>AI instructions:</strong> your business terms in plain language, up to 10,000 characters, and <em>"There's no guarantee that the LLM will exactly follow instructions"</em> (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-prepare-data-ai-instructions' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>). For our made-up retailer:</li>
+              </ul>
+              <pre><code>Sales means [Total Sales]: net of discounts, excluding VAT, in AED.
+Margin means [Margin %]. Never average the margin of single order lines.
+Ramadan means the days where 'Calendar'[Is Ramadan] is TRUE. To compare one
+Ramadan with the one before, compare by 'Calendar'[Hijri Year], not by [Year].
+Branch names in Arabic are in Branch[<span dir="rtl">اسم الفرع</span>]. Answer with Branch[Branch Name]
+unless the question asks for Arabic.</code></pre>
+              <p data-i18n-html="content.p10">When the model is ready, its owner can mark it <strong>Approved for Copilot</strong> in the semantic model's settings in the service.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h8">What Copilot does not see</h2>
+              <ul>
+  <li data-i18n-html="content.list6_1"><strong>The slicers on the page.</strong> Copilot's data questions do not apply the filters or slicers currently on the report page (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-ask-data-question' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>). "Sales this month" means the whole model unless the question says more.</li>
+  <li data-i18n-html="content.list6_2"><strong>Hidden fields, pages and visuals,</strong> by your choice: Microsoft describes hiding fields to control what Copilot uses from the model, and hiding pages and visuals to control what a report summary reads (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-integration' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>).</li>
+  <li data-i18n-html="content.list6_3"><strong>A description past 200 characters,</strong> and a calculation group's items, which the model metadata does not include: list them in the calculation group column's description.</li>
+  <li data-i18n-html="content.list6_4"><strong>Your instructions, for the people asking:</strong> consumers cannot see the AI instructions or the AI data schema. Tell your team what the model is for, in words.</li>
+              </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h9">Where DataArcus fits</h2>
+              <p data-i18n-html="content.p11">The <a href='../tools/power-bi-model-health-check.html' class='text-accent'>Model Health Check</a> does the measurable part of minutes 0 to 6, free, in your browser. It reads the model's definition, not your data, and it does not run Copilot. When you want someone to do the whole check on a real model, the <a href='../services/copilot-readiness-audit.html' class='text-accent'>Copilot readiness audit</a> is a fixed-price review of one semantic model: each finding with its exact fix, the Prep data for AI set-up, and the Gulf calendar if your business runs on it, in English or Arabic.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h10">Questions</h2>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q1">Do I need Copilot switched on to do this check?</h3>
+              <p data-i18n-html="content.a1">No. Minutes 0 to 10 work on the model file. You need Copilot only to test the answers afterwards with your ten questions.</p>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q2">Can my team ask Copilot in Arabic?</h3>
+              <p data-i18n-html="content.a2">Microsoft Learn says, for Copilot's data questions, that the only supported language is English (read 9 Nov 2026). Arabic column names can stay for your report; give them English descriptions.</p>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q3">Does the Model Health Check send my model anywhere?</h3>
+              <p data-i18n-html="content.a3">No. It runs in your browser and nothing is uploaded.</p>
+              <p data-i18n-html="content.p12">AI features in Power BI change every month, so every Microsoft fact here is dated. For the background behind each check, read <a href='article-power-bi-model-ai-ready.html' class='text-accent'>Is your Power BI model ready for AI? A 7-point check</a>; for the Hijri columns, <a href='article-gulf-calendar-power-bi.html' class='text-accent'>a Gulf calendar in Power BI</a>.</p>
+            </article>
+
+            <div class="text-center block">
+              <div class="glass-card cta" data-aos="fade-up">
+                <h3 class="h4 mb-3" data-i18n="exploreMore.title">Start the clock</h3>
+                <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">Free, runs in your browser, nothing is uploaded.</p>
+                <div class="cta-actions">
+                  <a href="../tools/power-bi-model-health-check.html" class="btn btn-accent"><i class="bi bi-heart-pulse me-2"></i><span data-i18n="exploreMore.button1">Open the Model Health Check</span></a>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <hr class="divider">
+              <div class="glass-card cta">
+                <h3 class="h4 mb-3" data-i18n="finalCta.title">Want the whole check done on your model?</h3>
+                <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">A fixed-price review of one semantic model before Copilot, with the exact fix for each finding, in English or Arabic.</p>
+                <div class="cta-actions">
+                  <a href="../services/copilot-readiness-audit.html" class="btn btn-accent"><i class="bi bi-clipboard-check me-2"></i><span data-i18n="finalCta.button">See the Copilot Readiness Audit</span></a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="/#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="../assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+              <li class="mb-2"><a href="/tools/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">Free Power BI &amp; Fabric Tools</a></li>
+              <li class="mb-2"><a href="/power-bi-mcp/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.mcp">DataArcus for Power BI</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="../portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Showcases</a></li>
+              <li class="mb-2"><a href="/#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="../blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+              <li class="mb-2"><a href="../privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">Privacy</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Made in Dubai</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="../assets/js/translations/common.min.js?v=434124bdf3f2" defer></script>
+  <script src="../assets/js/translations/article-power-bi-copilot-ready-check.min.js?v=9c77d1e610ee" defer></script>
+  <script src="../assets/js/locale-routes.min.js?v=59ad61997060" defer></script>
+  <script src="../assets/js/locale-catalog.min.js?v=1464f13d8c0b" defer></script>
+  <script src="../assets/js/locale-dom.min.js?v=faf294f00eb2" defer></script>
+  <script src="../assets/js/lang-manager.min.js?v=b4bd7c2d5f43" defer></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>
+  <script src="../assets/js/site-navigation.min.js?v=73f198dd3eb3" defer></script>
+  <script src="../assets/js/site-forms.min.js?v=f7223d5bc9a2" defer></script>
+  <script src="../assets/js/site-analytics.min.js?v=9631075fe8c3" defer></script>
+  <script src="../assets/js/main.min.js?v=3fefca81e4a0" defer></script>
+</body>
+</html>

@@ -48,6 +48,13 @@ export function downloadFacts(text) {
   return out;
 }
 
+// the released version: the one every download line in README.md names (one place, D-1104-12); refuses if they disagree
+export function releasedVersion(root = ROOT) {
+  const vs = new Set(downloadFacts(fs.readFileSync(path.join(root, FILES.readme), 'utf8')).filter((f) => f.kind === 'version').map((f) => f.value));
+  if (vs.size !== 1) throw new Error(`${FILES.readme}: the download lines name ${vs.size ? [...vs].join(' and ') : 'no version'}, want exactly one`);
+  return [...vs][0];
+}
+
 const sectionId = (version) => 'new-' + version.replace(/-.*$/, '').split('.').join('');   // 0.3.1 -> new-031
 // the page's "What's new in <version>" section: { found, hidden, key } (key: its date's translation key)
 export function whatsNew(html, version) {

@@ -59,6 +59,13 @@ window.blogTranslations = {
 
     // Posts
     posts: {
+      copilotReadyCheck: {
+        badge: "COPILOT & AI",
+        title: "Is Your Power BI Model Ready for Copilot? A 10-Minute Check",
+        date: "November 9, 2026",
+        excerpt: "A timed check before your team uses Copilot, run on a made-up model: what Copilot needs to run, the six Health Check findings that matter, and what no file check settles.",
+        button: "Read Playbook"
+      },
       readyForArabic: {
         badge: "ARABIC REPORTS",
         title: "Is Your Power BI Report Ready for Arabic? 19 Things to Check",
@@ -228,6 +235,13 @@ window.blogTranslations = {
 
     // Posts (AR)
     posts: {
+      copilotReadyCheck: {
+        badge: "Copilot والذكاء الاصطناعي",
+        title: "هل نموذج Power BI جاهز لـ Copilot؟ فحص في 10 دقائق",
+        date: "9 نوفمبر 2026",
+        excerpt: "فحص بالدقائق قبل أن يستخدم فريقك Copilot، أجريناه على نموذج تجريبي: ما يحتاجه Copilot ليعمل، والملاحظات الست المهمة في فحص صحة النموذج، وما لا يحسمه فحص الملف.",
+        button: "اقرأ الدليل"
+      },
       readyForArabic: {
         badge: "التقارير العربية",
         title: "هل تقرير Power BI الخاص بك جاهز للعربية؟ 19 أمرًا تفحصها",
