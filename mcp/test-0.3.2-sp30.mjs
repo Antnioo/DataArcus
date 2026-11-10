@@ -22,6 +22,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
+import { pureSharedFiles, asSibling } from './ledger-places.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.join(HERE, '..');
@@ -188,7 +189,9 @@ try {
     () => `K1 pbip-bind.js must re-export field-catalog.js's functions (the same ones) and hold no catalog code: ${CAT_NAMES.filter((k) => Bind[k] !== Cat[k]).join(', ')}`);
   // (0.3.2 DD1H: and the pure sort-column rule, sort-column.js, its one home; mcp/work/DD1H.md; DD1F: and the pure
   // Arabic letter test, arabic-script.js, its one home; mcp/work/DD1F.md)
-  chk(() => (catSrc.match(/require\(['"][^'"]+['"]\)/g) || []).join() === "require('./field-meaning.js'),require('./sort-column.js'),require('./arabic-script.js')" && !/document\.|window\.|fetch\(|XMLHttpRequest|FileReader|arrayBuffer|localStorage|postMessage|importScripts|suggest\(|function build|EVALUATE/.test(catSrc),
+  const catReqs = (catSrc.match(/require\(['"][^'"]+['"]\)/g) || []).map((x) => x.slice(9, -2)), CAT_OWN = ['./field-meaning.js', './sort-column.js', './arabic-script.js'];
+  // (0.3.3 SG2: and any pure shared file the CONTRACTS.md ledger names as a one place, read by ledger-places.mjs)
+  chk(() => CAT_OWN.every((r) => catReqs.includes(r)) && catReqs.every((r) => CAT_OWN.includes(r) || [...pureSharedFiles()].map(asSibling).includes(r)) && !/document\.|window\.|fetch\(|XMLHttpRequest|FileReader|arrayBuffer|localStorage|postMessage|importScripts|suggest\(|function build|EVALUATE/.test(catSrc),
     () => 'K2 field-catalog.js must read no file, page or network, run no query, and require field-meaning.js, sort-column.js and arabic-script.js only');
   const tg = read('theme-generator.js'), at = (f) => tg.indexOf('/assets/js/' + f + '.min.js?v='), once = (f) => tg.split('/assets/js/' + f + '.min.js?v=').length === 2;
   chk(() => once('field-catalog') && once('pbip-bind') && at('field-meaning') < at('field-catalog') && at('field-catalog') < at('pbip-bind') && at('field-catalog') > tg.indexOf('const loadBind'),
