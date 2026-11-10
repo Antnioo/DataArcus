@@ -4373,10 +4373,7 @@ if (part('round18')) {
     const ring = { w: 64, h: 64, values: [{ id: 'p', label: 'Margin', kind: 'measure', measure: 'Sales[Margin %]' }], layers: [{ type: 'ring', cx: 32, cy: 32, r: 24, sw: 8, bind: { p: { v: 'p', d0: 0, d1: 1 } } },
       { type: 'text', x: 32, y: 36, size: 12, anchor: 'middle', bind: { text: { v: 'p' } } }] };
     const ext = (x) => x.err ? '' : fs.readFileSync(path.join(ROOT, 'r18-ring', x.j.report, 'definition', 'reportExtensions.json'), 'utf8');
-    // (0.3.3 FB1, changed on purpose: filters 'end' -> 'top') the small table of this check was the one beside a rail at the
-    // end; since FB1 the row under that rail is higher (the cards' row lies over the rail), its table 306 high and its
-    // ring 54, so the check takes the page with the filters on top, whose table is still the short one
-    const small = await ask('create_report', { path: 'r18-ring', name: 'R18 ring small', secondPage: false, design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'top', page: '1280x720' })).j.design, fields: { table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Margin %]'] }, svgColumns: [{ label: 'Ring col', design: ring }] });
+    const small = await ask('create_report', { path: 'r18-ring', name: 'R18 ring small', secondPage: false, design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', page: '1280x720' })).j.design, fields: { table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Margin %]'] }, svgColumns: [{ label: 'Ring col', design: ring }] });
     const big = await ask('create_report', { path: 'r18-ring', name: 'R18 ring big', fields: { kpis: ['Sales[Total Sales]'], table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Margin %]'] }, svgColumns: [{ label: 'Ring col', design: ring }],
       pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'table', x: 36, y: 100, w: 800, h: 560, title: 'T' }] }] });
     const hOf = (x, dir) => { if (x.err) return NaN; const t = vis(dir, x).find((v) => ty(v) === 'tableEx'); return t ? parseFloat(t.visual.objects.grid[0].properties.imageHeight.expr.Literal.Value) : NaN; };

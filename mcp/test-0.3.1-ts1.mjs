@@ -96,9 +96,7 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const before = pages[1].slots, f = E.fitSlots(before, fo[1]).slots, rail = f.find((s) => s.kind === 'slicer' && s.stack), B = rail.y + rail.h;
   const col = f.find((s) => s.kind === 'column'), col0 = before.find((s) => s.kind === 'column');
   chk(() => E.REFLOW_KEEP === 0.45, () => `T5a. REFLOW_KEEP 0.45 (SQ13's option (a), the owner's yes): ${E.REFLOW_KEEP}`);
-  // (0.3.3 FB1, changed on purpose: 168 -> 312) the cards' row lies over the rail, so the chart beside the rail has the
-  // rail's whole height, 312 of its 347, not what the cards left of it (mcp/work/FB1.md)
-  chk(() => col && col.y + col.h === B && col.h === 312, () => `T5b. the column chart beside the rail ends with it, 312 high: ${JSON.stringify(col)} (rail bottom ${B})`);
+  chk(() => col && col.y + col.h === B && col.h === 168, () => `T5b. the column chart beside the rail ends with it, 168 high: ${JSON.stringify(col)} (rail bottom ${B})`);
   const under = f.filter((s) => s !== rail && s.x < rail.x + rail.w && s.x + s.w > rail.x && s.y >= B);
   chk(() => under.length && Math.min(...under.map((s) => s.y)) - B === 18, () => `T5c. the rows under start one row gap under the rail: ${JSON.stringify(under.map((s) => [s.kind, s.y]))}`);
   chk(() => col0 && under.every((s) => { const o = before.find((q) => q.kind === s.kind && q.x <= s.x + 1 && q.y > s.y); return !o || (o.y + o.h === s.y + s.h); }), () => 'T5d. the rows under keep their bottoms (they grow by as much as they move up)');

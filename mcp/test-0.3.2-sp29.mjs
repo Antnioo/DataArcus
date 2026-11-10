@@ -34,13 +34,6 @@ const rng = (seed) => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(
 
 // ---------- the facts, for any engine (this one, or the base's in B1) ----------
 const ADDED_SINCE = ['pageFill'];
-// (0.3.3 FB1, changed on purpose) a page whose row of KPI cards lies over its shortened rail (fitSlots keeps that
-// arrangement where pageFill measures the page better filled, mcp/work/FB1.md) is placed differently from the base on
-// purpose: by the engine of today (never the base's), such a fit is this one line in G1, for the base's facts too, so
-// every other layout is still the base's byte for byte; the arrangement itself is pinned by test-0.3.3-fb1.mjs and L1
-const LIFTED = 'the cards over the rail (0.3.3 FB1)', LIFTED_FITS = 124;
-const lifted = (slots, opt) => { const f = E.fitSlots(slots, opt).slots, rail = f.find((x) => x.kind === 'slicer' && x.stack), k = f.find((x) => x.kind === 'kpi'); if (rail && k && rail.y >= k.y + k.h) { liftedCount++; return LIFTED; } return null; };
-let liftedCount = 0;   // counted over one facts() run: reset before each
 const facts = (E) => {
   const design = (preset, chart, layout) => { const d = E.fresh(); d.preset = preset; d.data = E.PRESETS[preset].data.slice(); d.ui = Object.assign({}, E.PRESETS[preset].ui); d.chart = chart; d.name = 'SP29 ' + preset; E.repairState(d); Object.assign(d.layout, layout); return d; };
   const DESIGNS = [
@@ -68,8 +61,8 @@ const facts = (E) => {
       panel: E.slidePanel(c, lang), second: E.secondLayout(c),
       kpi: [E.kpiInset(c), E.barW('kpiBarW', c), E.barW('headLineW', c), E.c0(c)],
       ranges: Object.keys(E.RANGE).map((k) => [k, E.rangeOf(k, PW, c), E.clampTo(k, 1e6, PW, c), E.clampTo(k, -5, PW, c), E.clampTo(k, '33.4', PW, c)]),
-      fitDrop: E.fitSlots(proj, { dropKinds: ['line', 'text'] }), fitHead: E.fitSlots(proj, { headerRows: 40 }), fitRail: lifted(proj, { railItems: RAIL, dropKinds: ['donut'] }) || E.fitSlots(proj, { railItems: RAIL, dropKinds: ['donut'] }),
-      fitGrid: lifted(slots, E.fitScale({ headerRows: 30, railItems: RAIL }, 1 / E.page(c).s)) || E.fitSlots(slots, E.fitScale({ headerRows: 30, railItems: RAIL }, 1 / E.page(c).s)),
+      fitDrop: E.fitSlots(proj, { dropKinds: ['line', 'text'] }), fitHead: E.fitSlots(proj, { headerRows: 40 }), fitRail: E.fitSlots(proj, { railItems: RAIL, dropKinds: ['donut'] }),
+      fitGrid: E.fitSlots(slots, E.fitScale({ headerRows: 30, railItems: RAIL }, 1 / E.page(c).s)),
       text: [8, 10, 12, 18, 28, 60].map((n) => [E.fs(n, c), E.sizeAt(n, E.page(c).h)]), scale: E.textScale(E.page(c).h)
     };
   };
@@ -142,7 +135,7 @@ const facts = (E) => {
   return out;
 };
 
-const got = facts(E), liftedNow = liftedCount;
+const got = facts(E);
 if (process.env.SP29_RECORD === '1') { fs.writeFileSync(GOLD, JSON.stringify(got, null, 1) + '\n'); console.log('recorded ' + path.relative(REPO, GOLD)); }
 const gold = fs.existsSync(GOLD) ? JSON.parse(fs.readFileSync(GOLD, 'utf8')) : {};
 const diff = (a, b) => (typeof a === 'string' || typeof b === 'string' ? (a === b ? [] : ['the value']) : Object.keys(Object.assign({}, a, b)).filter((k) => JSON.stringify((a || {})[k]) !== JSON.stringify((b || {})[k])));
@@ -151,11 +144,6 @@ const diff = (a, b) => (typeof a === 'string' || typeof b === 'string' ? (a === 
 for (const name of Object.keys(got)) chk(() => gold[name] && !diff(got[name], gold[name]).length, () => `${name}: differs from the base in ${gold[name] ? diff(got[name], gold[name]).join(', ') : '(not recorded)'}`);
 
 chk(() => ADDED_SINCE.every((k) => typeof E[k] === 'function' && E[k] === require('../assets/js/design-metrics.js')[k]), () => `K2 a name added on purpose since the base (${ADDED_SINCE.join(', ')}) is not the engine's and the metrics' own`);
-
-{ // L1: how many of G1's 400 layouts are lifted in either fit (a number that moves says the rule moved)
-  const n = liftedNow;
-  chk(() => n === LIFTED_FITS, () => `L1 the fits with the cards over the rail among the suite's fits (two a layout): ${n} (pinned ${LIFTED_FITS})`);
-}
 
 // ---------- B1: the base engine itself, live, on the same facts ----------
 {

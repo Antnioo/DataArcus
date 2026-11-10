@@ -4,49 +4,49 @@
   "T1 EN glass 1920 x 1080": {
    "plan": {
     "err": false,
-    "length": 13449,
-    "sha256": "b0a9f7a4c7fcdda9990ac4516724c167f4e5c7422e12b8cc870c9bce423a915d"
+    "length": 13141,
+    "sha256": "51427e8e6839fd86c18242a7d6e6d3b95e74ee8b757f07941a776d72b8fd7dea"
    },
    "report": {
     "err": false,
-    "length": 9596,
-    "sha256": "65cd524f3b0396aad3463f5799d951035589df4ccaabb596e67ad6aa325db4c2"
+    "length": 10197,
+    "sha256": "a007856228069bddc4e730103623fcf318d88d79b976c307ff4cdcbdb942ea9e"
    },
    "files": {
     "count": 89,
-    "sha256": "e5d3afa035f4ce86be4ff1138cd2bc274a9b10ee73c31fcb69ddb83558e3ab5a"
+    "sha256": "6d0cb0ab3365ec35bed7a7431c4af98d8f3f650e7e401a97833a44bbff7093bb"
    }
   },
   "T2 EN plain 1280 x 720": {
    "plan": {
     "err": false,
-    "length": 13249,
-    "sha256": "d07b6c7a757de65480f3c2e400b3485debe57b37ef861103b880b7af00cc59cb"
+    "length": 13980,
+    "sha256": "160c6e8eafa8e29167a19f524bb4e11e89836bc7a52d784aef8abf49a77056e8"
    },
    "report": {
     "err": false,
-    "length": 10253,
-    "sha256": "68d5eb8d46aa72cdcec8d0c2ed9f82d014edfb5a6280ea1a097d79ba74118bd6"
+    "length": 10761,
+    "sha256": "eb37a532645f1ea04aac5866a8afbc0a7a732a547292a82e8cbf0b38e6d06200"
    },
    "files": {
     "count": 92,
-    "sha256": "e39cb116ce4e71f3d2b6fd1d6d7daf5f1a8131c5a35da4b21f82da82948636fe"
+    "sha256": "fa5bed5c9df49b125f5f371821486932aadf98cee5ef6fbf0fd44c6f06cc1551"
    }
   },
   "T3 AR glass 1920 x 1080, names approved": {
    "plan": {
     "err": false,
-    "length": 18201,
-    "sha256": "9009775ffa63d2122e50b616b97febc934255292433b49a33ead07bf3cc3359f"
+    "length": 17878,
+    "sha256": "aad80df840a929723f0f0559dfcde93b053355e20f1a1cce253a858bc1c14acd"
    },
    "report": {
     "err": false,
-    "length": 9131,
-    "sha256": "3a88b979651471b33cfa04dde7d1ea0048348edb14d74b218adcbc9a3443a6be"
+    "length": 9726,
+    "sha256": "98a9257eb63c182472c931ebdb8ac32a44b9239cd0457b063def66de10910dbf"
    },
    "files": {
     "count": 88,
-    "sha256": "95d88008efb4333a8ab062f77988e63acb209c20d6131302b434fe9693a578fa"
+    "sha256": "80b471168461af8b5aaa0df9ae1d0a30b76404f2fb81ad5edd45ddec85a13c61"
    }
   },
   "T4 AR plain 1280 x 720, names approved": {
@@ -68,49 +68,49 @@
   "T5 EN glass on the twin": {
    "plan": {
     "err": false,
-    "length": 11663,
-    "sha256": "a22c38f05bd6e229082bf478da31adcb4bfb7d19cfb43dd6c28b48929a370fd4"
+    "length": 11355,
+    "sha256": "63586b4855e70e28a0cdd224a78e9a18fdc8a8383f1cb6a9fe31336b26abd2e3"
    },
    "report": {
     "err": false,
-    "length": 7399,
-    "sha256": "9f2919e8d9b3bb1aa25b2e0b1f177bef1248e1873dc2936f512d7e0a2ef5102c"
+    "length": 8000,
+    "sha256": "0af993e47028b73d7bdb57898dbbb68bd21e18aae720ca965b0cddf7b2ef47af"
    },
    "files": {
     "count": 116,
-    "sha256": "314877567a50564aedcac9f5a3500f36d14e7cc2458a9c92e24b4c84db22c0b3"
+    "sha256": "85b8d8e664f42b344541fc87924ade0f8989b00276372d401997edf7574c4278"
    }
   },
   "T6 AR plain 1280 x 720 on the twin, no names": {
    "plan": {
     "err": false,
-    "length": 21139,
-    "sha256": "d5af3202b7d687fe08b8e246c55b00b65c4c88bd364b82f6f9398bfc769ca563"
+    "length": 21873,
+    "sha256": "f81ef1a50ff47f881b9a4ab1ee5fd362fa85a7b5cb2e301e34f2dc4342d993a1"
    },
    "report": {
     "err": false,
-    "length": 11235,
-    "sha256": "bc9a23850e1b947881ec91e027dc127d6f2c6877b19af38a631549883467d0cd"
+    "length": 11745,
+    "sha256": "0f20a125dfef203c6e1e18d89c23ff05ec5b8d3bcb186429498d2c573184783b"
    },
    "files": {
     "count": 126,
-    "sha256": "379d4261dab367632f0fc0c9d4ef0382fd4207da7917fa8c5fb0d1fe614fd20a"
+    "sha256": "ac5f3afb7283648078e9c1af2cf6941a64fc74af8d7b1cf8ad3fc7ccf0cf5707"
    }
   },
   "T7 AR glass 1280 x 720 on the twin": {
    "plan": {
     "err": false,
-    "length": 17540,
-    "sha256": "fce67cd4c8f8584bd2d729212472ab9108deb2416ef1f08ae69450e152a57eba"
+    "length": 18274,
+    "sha256": "63484723e17357728de50324b40bc3f1d36f7d1592ea6544202e7559ae90315a"
    },
    "report": {
     "err": false,
-    "length": 11092,
-    "sha256": "6c34b387c785b8f9788444c7c75ced3a679b0454ddeebe7c39d3a1e56995e908"
+    "length": 11361,
+    "sha256": "c6a8f9114b4c062843c0f72d676f3698008d0ab9721ff2dd9673868903ee5d3d"
    },
    "files": {
     "count": 111,
-    "sha256": "76dc02fc73fb5f3aab1626c3becd8139bf3b09f46843074de0997802957b9b6e"
+    "sha256": "c113ba8f81763bb2bce1b03dbfe6080bc04f53cddf7283f0e79df865703a8c75"
    }
   },
   "T8 hand-placed pages, no chart": {
