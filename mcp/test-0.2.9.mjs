@@ -17,12 +17,31 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { E } from './lib/design.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-// a client of a server of its own (the expiry check runs one with a short plan life)
-export async function serverClient(ROOT, env) {
-  const c = new Client({ name: 'test-029', version: '1' });
-  await c.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(HERE, 'server.mjs')], env: { ...process.env, DATAARCUS_ROOT: ROOT, ...(env || {}) }, stderr: 'ignore' }));
-  const call = async (name, args) => { try { const r = await c.callTool({ name, arguments: args }); const t = r.content[0].text; let j = null; if (!r.isError) { try { j = JSON.parse(t); } catch (e) { j = null; } } return { err: !!r.isError, t, j }; } catch (e) { return { err: true, t: 'call failed: ' + String(e && e.message || e), j: null }; } };
-  return { c, call, close: () => c.close() };
+// a client of a server of its own (the expiry check runs one with a short plan life).
+// MH1 (L-1108-25): every call has a timeout (10 s; options.timeoutMs for a suite whose slowest legitimate call needs more),
+// and after a call threw (a timeout, a closed transport) the client is closed and a fresh server is started with the same
+// ROOT and env before the next call, so one hostile input cannot make every later call of a suite time out.
+// `c` is a getter: it always points to the live client. Only this client's own child is ever stopped.
+export async function serverClient(ROOT, env, options) {
+  const timeoutMs = (options && options.timeoutMs) || 10000;
+  const start = async () => {
+    const c = new Client({ name: 'test-029', version: '1' });
+    const transport = new StdioClientTransport({ command: process.execPath, args: [path.join(HERE, 'server.mjs')], env: { ...process.env, DATAARCUS_ROOT: ROOT, ...(env || {}) }, stderr: 'ignore' });
+    await c.connect(transport);
+    return c;
+  };
+  const stop = async (c) => {
+    const pid = c.transport && c.transport.pid;
+    try { await Promise.race([c.close(), new Promise((r) => setTimeout(r, 3000))]); } catch (e) { /* already closed */ }
+    if (pid) { try { process.kill(pid, 'SIGKILL'); } catch (e) { /* gone */ } }   // a stopped child ignores the polite close
+  };
+  let c = await start(), broken = false, closed = false;
+  const call = async (name, args) => {
+    if (broken && !closed) { broken = false; await stop(c); c = await start(); }
+    const cur = c;
+    try { const r = await cur.callTool({ name, arguments: args }, undefined, { timeout: timeoutMs }); const t = r.content[0].text; let j = null; if (!r.isError) { try { j = JSON.parse(t); } catch (e) { j = null; } } return { err: !!r.isError, t, j }; } catch (e) { broken = true; return { err: true, t: 'call failed: ' + String(e && e.message || e), j: null }; }
+  };
+  return { get c() { return c; }, call, close: () => { closed = true; return stop(c); } };
 }
 
 // call: the raw call (no plan id added); meta: { instructions, tools } as the server lists them

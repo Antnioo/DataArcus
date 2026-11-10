@@ -29,6 +29,8 @@ const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } ca
 const ROOT = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-wn1-')));
 process.env.DATAARCUS_ROOT = ROOT;
 const { serverClient } = await import('./test-0.2.9.mjs');
+// MH1: these servers wait for an approval (20 s, 3 s) before they answer; the slowest call measured on Linux was 3.0 s (the 3 s wait), so 40 s keeps 2x over any slower CI system (L-1104-02)
+const WAITING = 40000;
 const tryImport = async (f) => { try { return await import(f); } catch (e) { return {}; } };
 const PR = await tryImport('./lib/path-rules.mjs');
 const short = (x) => (x.err ? x.t.slice(0, 300) : JSON.stringify(x.j).slice(0, 300));
@@ -111,7 +113,7 @@ const W = path.win32, X = path.posix;
   // R2 the browser exits with 1 and never loads the page
   const quit = JSON.stringify([process.execPath, '-e', 'process.exit(1)']);
   // (D-1109-01: on Windows the answer names no place, R6; R2-R3 are the macOS and Linux answer on every system)
-  const s = await serverClient(ROOT, { DATAARCUS_BROWSER: quit, DATAARCUS_TEST_PLATFORM: 'linux', DATAARCUS_APPROVAL_WAIT_MS: '20000', DATAARCUS_SEEN_WAIT_MS: '1500' });
+  const s = await serverClient(ROOT, { DATAARCUS_BROWSER: quit, DATAARCUS_TEST_PLATFORM: 'linux', DATAARCUS_APPROVAL_WAIT_MS: '20000', DATAARCUS_SEEN_WAIT_MS: '1500' }, { timeoutMs: WAITING });
   try {
     const t = await s.call('generate_theme', { brand: '#0F766E', name: 'Lost Window' }), id = t.j && t.j.plan && t.j.plan.planId;
     const t0 = Date.now(), ap = await s.call('approve_plan', { planId: id }), took = Date.now() - t0;
@@ -133,7 +135,7 @@ const W = path.win32, X = path.posix;
     chk(() => !fs.existsSync(f), () => `R3. the shortcut is removed once the plan is decided: ${f}`);
   } finally { await s.close(); }
   // R4 a browser that opens the page: no shortcut, the answer as before
-  const s2 = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'none', DATAARCUS_APPROVAL_WAIT_MS: '3000', DATAARCUS_SEEN_WAIT_MS: '1500' });
+  const s2 = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'none', DATAARCUS_APPROVAL_WAIT_MS: '3000', DATAARCUS_SEEN_WAIT_MS: '1500' }, { timeoutMs: WAITING });
   try {
     const t = await s2.call('generate_theme', { brand: '#0F766E', name: 'Seen Window' }), id = t.j && t.j.plan && t.j.plan.planId;
     const ap = await s2.call('approve_plan', { planId: id });
@@ -151,7 +153,7 @@ const W = path.win32, X = path.posix;
   // opened (the tests' program logs what it is given) and the answer has no path and no file name
   const log6 = path.join(ROOT, 'opened6.txt');
   const logger = JSON.stringify([process.execPath, '-e', `require('fs').appendFileSync(${JSON.stringify(log6)}, process.argv[process.argv.length - 1] + '\\n'); process.exit(1)`]);
-  const s6 = await serverClient(ROOT, { DATAARCUS_BROWSER: logger, DATAARCUS_FOLDER_OPENER: logger, DATAARCUS_TEST_PLATFORM: 'win32', DATAARCUS_APPROVAL_WAIT_MS: '20000', DATAARCUS_SEEN_WAIT_MS: '1500' });
+  const s6 = await serverClient(ROOT, { DATAARCUS_BROWSER: logger, DATAARCUS_FOLDER_OPENER: logger, DATAARCUS_TEST_PLATFORM: 'win32', DATAARCUS_APPROVAL_WAIT_MS: '20000', DATAARCUS_SEEN_WAIT_MS: '1500' }, { timeoutMs: WAITING });
   try {
     const t = await s6.call('generate_theme', { brand: '#0F766E', name: 'Windows Window' }), id = t.j && t.j.plan && t.j.plan.planId;
     const ap = await s6.call('approve_plan', { planId: id });

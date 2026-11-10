@@ -1,1 +1,3 @@
 *.dax text eol=lf
+mcp/fixtures/hk1/sp6/assets/js/design-engine.min.js -text
+mcp/fixtures/hk1/sp29/assets/js/design-engine.min.js -text
