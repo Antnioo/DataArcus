@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-10T17:02Z",
+  "generated_at": "2026-11-10T19:05Z",
   "today": {
     "date": "2026-11-10",
-    "cost_usd": 87.62,
-    "tokens": 344601068,
-    "sessions": 33,
+    "cost_usd": 92.44,
+    "tokens": 372820291,
+    "sessions": 36,
     "by_kind": {
       "builder": {
-        "cost_usd": 60.79,
-        "count": 18
+        "cost_usd": 64.16,
+        "count": 19
       },
       "worker": {
-        "cost_usd": 26.83,
-        "count": 15
+        "cost_usd": 28.28,
+        "count": 17
       },
       "probe": {
         "cost_usd": 0,
@@ -26,8 +26,8 @@
     },
     "by_model": {
       "sonnet": {
-        "cost_usd": 34.03,
-        "count": 23
+        "cost_usd": 38.85,
+        "count": 26
       },
       "opus": {
         "cost_usd": 53.59,
@@ -116,12 +116,21 @@
     },
     {
       "date": "2026-11-10",
-      "cost_usd": 87.62,
-      "tokens": 344601068,
-      "sessions": 33
+      "cost_usd": 92.44,
+      "tokens": 372820291,
+      "sessions": 36
     }
   ],
   "jobs": [
+    {
+      "id": "AT1",
+      "title": "AT1: the approved Arabic title template and model-path errors (B-429, B-449)",
+      "model": "sonnet",
+      "cost_usd": 3.37,
+      "tokens": 21037739,
+      "minutes": 205,
+      "finished_at": "2026-11-10T18:14Z"
+    },
     {
       "id": "MH1",
       "title": "MH1: the shared MCP test client times out each call and restarts after a throw (L-1108-25, D-1110-06)",
@@ -472,20 +481,11 @@
       "tokens": 7621098,
       "minutes": 11,
       "finished_at": "2026-11-08T17:01Z"
-    },
-    {
-      "id": "RV1",
-      "title": "RV1: every validation error capped; the two promises say what the code does (B-392, B-393)",
-      "model": "sonnet",
-      "cost_usd": 4.36,
-      "tokens": 29109952,
-      "minutes": 159,
-      "finished_at": "2026-11-08T16:04Z"
     }
   ],
   "workers": {
-    "count": 15,
-    "cost_usd": 26.83,
+    "count": 17,
+    "cost_usd": 28.28,
     "costliest": [
       {
         "label": "worker 00:48",
