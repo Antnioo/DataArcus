@@ -11,5 +11,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "files": ["lib/model.mjs"]
+  "files": ["lib/model.mjs", "lib/read-report.mjs", "lib/files.mjs"]
 }
