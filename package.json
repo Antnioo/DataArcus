@@ -25,5 +25,8 @@
     "pngjs": "^7.0.0",
     "terser": "5.51.2",
     "three": "0.160.0"
+  },
+  "overrides": {
+    "minimatch": "11.0.5"
   }
 }
