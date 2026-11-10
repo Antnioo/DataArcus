@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.3
+- A new measure says how well each planned page is filled: the largest empty area, the flattest and the lowest chart. A new
+  test pins it on 80 plans of made-up models, so a layout change now shows its whole effect as numbers before it ships.
+  Nothing a tool writes or answers changes.
 - A plan for a new report with no report name is no longer given a plan id: the plan asks for the name first, so a plan that
   `create_report` would refuse can no longer be approved.
 - A new test pins that every tool that plans or writes answers a wrong input in Arabic when you give `lang` "ar" and in English with "en" or none, using only wording already approved; the errors that have no approved Arabic yet stay English.
