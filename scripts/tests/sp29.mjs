@@ -1,14 +1,14 @@
 // 0.3.2 SP29 (the split, finish, mcp/work/SP29.md): every page that loads the design engine draws and downloads exactly
 // what it did before its layout geometry and typography moved to design-metrics.js and its saved designs to
-// design-state.js. Each page is opened twice: once as it is, once with the base engine (git show
-// SP29_BASE:assets/js/design-engine.min.js, default 39c46bb, the engine before this split) served in place of
+// design-state.js. Each page is opened twice: once as it is, once with the base engine (the saved bytes of 39c46bb,
+// mcp/fixtures/hk1/sp29, the engine before this split; SP29_BASE=<commit> reads that commit with git instead) served in place of
 // design-engine.min.js and the two new files served empty. Each time a true first visit (the glass look, the default),
 // the plain design and an old saved design the page repairs on load (v1: corners 12, no accent bar, a 1600 x 900 page,
 // right to left, a broken colour): the preview's screenshot must be pixel for pixel the same, and the downloaded
 // theme JSON and background PNG byte for byte. Pages: the generator in English and Arabic, the lab page in both.
-import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
-import { ROOT, visitor, ready, settle } from './lib.mjs';
+import { visitor, ready, settle } from './lib.mjs';
+import { baseEngine as readBase } from './base-engine.mjs';
 
 const PAGES = [['generator EN', '/tools/power-bi-theme-generator.html?lang=en'], ['generator AR', '/ar/tools/power-bi-theme-generator.html'],
   ['lab EN', '/tools/power-bi-theme-generator-lab.html?lang=en'], ['lab AR', '/tools/power-bi-theme-generator-lab.html?lang=ar']];
@@ -19,9 +19,8 @@ const OLD_SAVE = JSON.stringify({ preset: 'Midnight', name: 'Old save', font: 'T
 export default async function ({ browser, url }) {
   const problems = []; let checks = 0;
   const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
-  const BASE = process.env.SP29_BASE || '39c46bb';
-  let baseEngine;
-  try { baseEngine = execFileSync('git', ['show', `${BASE}:assets/js/design-engine.min.js`], { cwd: ROOT, maxBuffer: 1 << 26 }); } catch (e) { return { checks: 1, problems: [`the base engine (${BASE}) could not be read: ${e.message}`] }; }
+  let baseEngine, BASE;
+  try { ({ bytes: baseEngine, label: BASE } = readBase({ suite: 'sp29', envName: 'SP29_BASE', commit: '39c46bb', sha256: '64b824c9fc23cf7c3201348661717cf655f4e91a5124b322d4fabf88d63e13f4' })); } catch (e) { return { checks: 1, problems: [`the base engine (39c46bb) could not be read: ${e.message}`] }; }
 
   // what one visit shows and downloads: the preview's pixels, the theme JSON, the background PNG
   const visit = async (address, look, base) => {

@@ -1,21 +1,20 @@
 // 0.3.2 SP6 (the split, mcp/work/SP6.md): the Theme Generator draws and downloads exactly what it did before the design
 // engine's colours moved to design-colours.js and its glass look to design-glass.js. The same page is opened twice in
-// each language: once as it is, once with the base engine (git show SP6_BASE:assets/js/design-engine.min.js, default
-// 04a9922, the last engine in one file) served in place of design-engine.min.js and the two new files served empty.
+// each language: once as it is, once with the base engine (the saved bytes of 04a9922, mcp/fixtures/hk1/sp6, the last engine
+// in one file; SP6_BASE=<commit> reads that commit with git instead) served in place of design-engine.min.js and the two new files served empty.
 // Each time a true first visit (the glass look, the default) and the plain design: the preview's screenshot must be
 // pixel for pixel the same, and the downloaded theme JSON and background PNG byte for byte.
-import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
-import { ROOT, visitor, ready, settle } from './lib.mjs';
+import { visitor, ready, settle } from './lib.mjs';
+import { baseEngine as readBase } from './base-engine.mjs';
 
 const PAGE = '/tools/power-bi-theme-generator.html';
 
 export default async function ({ browser, url }) {
   const problems = []; let checks = 0;
   const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
-  const BASE = process.env.SP6_BASE || '04a9922';
-  let baseEngine;
-  try { baseEngine = execFileSync('git', ['show', `${BASE}:assets/js/design-engine.min.js`], { cwd: ROOT, maxBuffer: 1 << 26 }); } catch (e) { return { checks: 1, problems: [`the base engine (${BASE}) could not be read: ${e.message}`] }; }
+  let baseEngine, BASE;
+  try { ({ bytes: baseEngine, label: BASE } = readBase({ suite: 'sp6', envName: 'SP6_BASE', commit: '04a9922', sha256: 'c65211868a4d55a122ed0dc92b493000463388ca860b6c58a4f228228dbb7a44' })); } catch (e) { return { checks: 1, problems: [`the base engine (04a9922) could not be read: ${e.message}`] }; }
 
   // what one visit shows and downloads: the preview's pixels, the theme JSON, the background PNG
   const visit = async (lang, plainDesign, base) => {
