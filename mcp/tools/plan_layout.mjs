@@ -231,6 +231,8 @@ function limitsStep(lc) { let { LIMITS, a, m0, r } = lc;
     let model = null, planned = null;
     if (a.path) { const m = m0; model = modelRef(m, a.path); if (Object.keys(pf).length) { const fr = fieldsAndProblems(m.tables, pf); fr.problems.forEach((x) => planProblems.push(x + ' (use the names exactly as read_model lists them)')); planned = pf; } }
     else if (Object.keys(pf).length) planProblems.push('planFields need path (the model), so the fields can be checked against it.');
+    // (0.3.3 DB2, A-DB1-2) create_report writes no new report without a name: no plan id for a plan that cannot be written
+    if (a.path && a.customVisualsFrom == null && !a.name) planProblems.push('Give the report a name (name): create_report writes no report without one, so there is no plan to approve yet.');
   Object.assign(lc, { planProblems, pf, model, planned }); }
 // (FN1J) the Gulf date questions
 function gulfDatesStep(lc) { let { a, m0, noAxis, planProblems, pf } = lc;
