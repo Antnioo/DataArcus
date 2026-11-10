@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.3
+- On Windows, when the approval page was not opened, the answer no longer says DataArcus "opened" the folder window with the
+  shortcut: starting Windows Explorer does not prove a window is on screen, so it says DataArcus asked Windows to open it
+  and to check whether the user sees it.
 - A link inside a report (a symbolic link or a junction) is now named in `read_report` and `check_report`, at most 10
   and then a count, and counted once (`check_report` counted one link twice); a page whose visuals folder is a link
   says "visuals not read: its folder is a link" instead of "0 visuals". Links are still never followed.

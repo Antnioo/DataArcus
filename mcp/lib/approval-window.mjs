@@ -20,17 +20,20 @@ export { summary, groupFiles, kindsLine, plainLine, promptSummary, promptText, p
 
 const windows = new Map();          // planId -> { plan, show, expires, decided: null | 'approve' | 'decline', waiters, opened, seen, lost, shortcut }
 
+// a test program: a path, or a JSON array of a program and its first arguments; the link or folder is the last argument.
+// Shared by DATAARCUS_BROWSER and DATAARCUS_FOLDER_OPENER (D-1104-12). -> [cmd, args]
+function ownProgram(name, value, last) {
+  let cmd = value, args = [];
+  if (/^\s*\[/.test(value)) { const v = JSON.parse(value); if (!Array.isArray(v) || !v.length || v.some((x) => typeof x !== 'string')) throw new Error(`${name} must be a program's path or a JSON array of strings`); [cmd, ...args] = v; }
+  return [cmd, args.concat(last)];
+}
 /** The programs that open the page, in order: the system's default browser, then (Windows, 0.3.2 WN1 F03) explorer.exe
  *  with the link, a second way to the default browser when the first starts and then fails; or DATAARCUS_BROWSER alone
- *  (a program's path, or a JSON array of a program and its first arguments; the tests use it for a browser of their own).
+ *  (a program's path, or a JSON array of a program and its first arguments; TEST-ONLY: the tests use it for a browser of
+ *  their own, never read unless set; the folder window has its own DATAARCUS_FOLDER_OPENER, below).
  *  Pure: platform and env given. -> [[cmd, args], ...] */
 export function launchers(url, platform = process.platform, env = process.env) {
-  const own = env.DATAARCUS_BROWSER;
-  if (own) {
-    let cmd = own, args = [];
-    if (/^\s*\[/.test(own)) { const v = JSON.parse(own); if (!Array.isArray(v) || !v.length || v.some((x) => typeof x !== 'string')) throw new Error('DATAARCUS_BROWSER must be a program\'s path or a JSON array of strings'); [cmd, ...args] = v; }
-    return [[cmd, args.concat(url)]];
-  }
+  if (env.DATAARCUS_BROWSER) return [ownProgram('DATAARCUS_BROWSER', env.DATAARCUS_BROWSER, url)];
   // (no shell: the link goes to the program as one argument, never through cmd's parsing of & and ^)
   if (platform === 'win32') return [['rundll32.exe', ['url.dll,FileProtocolHandler', url]], ['explorer.exe', [url]]];
   if (platform === 'darwin') return [['open', [url]]];
@@ -74,14 +77,18 @@ process.once('exit', () => { windows.forEach((w) => dropShortcut(w)); });
 // (the owner D-1109-01, A-WN1-1 (b): "on Windows, leave the location out and open the folder window for you; give it
 // only on Mac and Linux") the platform the answer and the folder window follow; DATAARCUS_TEST_PLATFORM: tests only
 export const platform = () => process.env.DATAARCUS_TEST_PLATFORM || process.platform;
-/** The program that shows the shortcut's folder in a window: Windows explorer.exe, or the tests' own DATAARCUS_BROWSER;
+/** The program that shows the shortcut's folder in a window: Windows explorer.exe, or the tests' own DATAARCUS_FOLDER_OPENER
+ *  (TEST-ONLY, same format as DATAARCUS_BROWSER, never read unless set; DATAARCUS_BROWSER does not open the folder);
  *  null elsewhere (macOS and Linux: the answer names the folder). Pure: platform and env given. -> [cmd, args] | null */
 export function folderOpener(dir, pl = platform(), env = process.env) {
   if (pl !== 'win32') return null;
-  if (env.DATAARCUS_BROWSER) { const [own] = launchers(dir, pl, env); return own; }
+  if (env.DATAARCUS_FOLDER_OPENER) return ownProgram('DATAARCUS_FOLDER_OPENER', env.DATAARCUS_FOLDER_OPENER, dir);
   return ['explorer.exe', [dir]];
 }
-// shows the shortcut's folder: true when its window's program started (Windows), false otherwise
+// (FW1, B-431 b) how sure we are: the program started proves no window is on screen, so the answer says DataArcus asked
+// (FOLDER_ASKED), never that it opened; one place for the word, read by notSeenAnswer
+export const FOLDER_ASKED = 'asked';
+// asks for the shortcut's folder window: true when its program started (Windows; the window itself is not proven), false otherwise
 async function showFolder(dir) { const o = folderOpener(dir); if (!o) return false; return !(await launch(o)); }
 // watches a window opened by launcher i: the next one, then the shortcut, while the page is not seen
 function watch(w, url, list, i, failed) {
@@ -136,13 +143,13 @@ export function wait(id, ms) {
 export function state(id) { const w = windows.get(id); return w ? Object.assign({ opened: w.opened, seen: w.seen, decided: w.decided }, w.shortcut && !w.seen ? { shortcut: Object.assign({}, w.shortcut), folderShown: !!w.folderShown } : {}) : null; }
 
 /** approve_plan's answer when the page was not seen and a shortcut was written (WN1 F03). The link is never in it. On
- *  Windows (D-1109-01) neither the shortcut's folder nor its name either: DataArcus opened the folder window (shown) and
- *  the answer says so; on macOS and Linux it names the file and its folder. Pure: platform given. */
+ *  Windows (D-1109-01) neither the shortcut's folder nor its name either: DataArcus asked Windows to open the folder window (shown: the program started, a window is not proven) and
+ *  the answer says only that; on macOS and Linux it names the file and its folder. Pure: platform given. */
 export function notSeenAnswer(planId, sc, pl, shown) {
   const tail = 'The link is in that file only, never in this answer: only the person approves. When they say they clicked, call approve_plan again with this planId. Nothing is approved by what is typed in the chat, and nothing was written.';
   const head = 'Not approved yet: DataArcus asked the browser to open its approval window, but the page was not opened.';
-  if (pl === 'win32') return { planId, status: 'waiting', approvedBy: null, window: 'not seen', folderWindow: shown ? 'opened' : 'not opened',
-    sayFirst: shown ? `${head} DataArcus opened a folder window on the user's computer that holds one file, a shortcut to the approval page. Tell the user to double-click that file (or drag it into any web browser): it opens DataArcus's approval page, which shows the plan and every file it writes; then click Approve there (or "Not now"). If they can't find the folder window, call approve_plan again with this planId and reopen: true. Where the file is stays out of this answer on purpose. ${tail}`
+  if (pl === 'win32') return { planId, status: 'waiting', approvedBy: null, window: 'not seen', folderWindow: shown ? FOLDER_ASKED : 'not opened',
+    sayFirst: shown ? `${head} DataArcus asked Windows to open a folder window on the user's computer that holds one file, a shortcut to the approval page (Windows may not have shown it: ask the user whether they see it). Tell the user to double-click that file (or drag it into any web browser): it opens DataArcus's approval page, which shows the plan and every file it writes; then click Approve there (or "Not now"). If they can't find the folder window, call approve_plan again with this planId and reopen: true. Where the file is stays out of this answer on purpose. ${tail}`
       : `${head} DataArcus could not open the folder window that holds its shortcut either. Ask the user to check that Windows Explorer works, then call approve_plan again with this planId and reopen: true. ${tail}` };
   return { planId, status: 'waiting', approvedBy: null, window: 'not seen', shortcut: { file: sc.file, folder: sc.dir },
     sayFirst: `${head} Tell the user to open the file "${SHORTCUT_NAME}" in the folder ${sc.dir} (double-click it, or drag it into any web browser): it opens DataArcus's approval page, which shows the plan and every file it writes; then click Approve there (or "Not now"). ${tail}` };
