@@ -7,7 +7,7 @@
 - **Expected checks:** comment-stripped output of both files byte-identical to the base's (and the proof sensitive); `npm pack` list
   identical apart from the new repo files (1460 files before); `npx tsc -p <tsconfig>` exit 0; `node scripts/check-modules.mjs --strict`;
   area runs core, report, model, arabic PASS with no recording moved; mutation count before = after; lint 0; CI green.
-- **Resume:** code done 2026-11-10T12:06Z; areas, lint, modules, tsc green; CI run 42812922381 on f5bea621 pending.
+- **Resume:** DONE. CI green: https://github.com/Antnioo/DataArcus/actions/runs/42812922381 on f5bea621 (2026-11-10T12:28Z); waits for the reviewer.
 
 ## Plan and numbers (measured 2026-11-10T11:33Z)
 Importers recounted on integration/0.3.3 (distinct mcp/lib and mcp/tools files, relative import): model 45, read-report 31, files 15,
@@ -44,3 +44,6 @@ none.
 ## Lessons for the reviewer
 - A `@ts-expect-error` must sit directly above the erroring line, below any JSDoc block.
 - `@param` inside a one-line class body does not attach: the constructor needs its own line.
+
+## CI
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42812922381 on f5bea621 (2026-11-10T12:28Z; integration was cd4ea0c0 at my fetch, nothing to merge). All jobs success, including the type-check step.
