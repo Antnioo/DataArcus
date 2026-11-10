@@ -53,7 +53,7 @@ try {
   // 3. a coded error with no approved Arabic stays English, whatever lang says (the drafts wait in work/LG2.md)
   for (const tool of MANY) {
     const ar = await s.call(tool, { path: 'nope', lang: 'ar' });
-    chk(() => ar.err && /^No model named "nope" in the working folder /.test(ar.t) && !/[؀-ۿ]/.test(ar.t), () => `N ${tool}. NO_MODEL_NAMED with lang "ar": English until the owner approves a line: ${cut(ar.t)}`);
+    chk(() => ar.err && /^لا يوجد نموذج باسم "nope" في مجلد العمل /.test(ar.t) && /أعطِ read_model أحد هذه المسارات، أو "\." لمجلد العمل نفسه\.$/.test(ar.t), () => `N ${tool}. NO_MODEL_NAMED with lang "ar": the approved Arabic line (AT1, D-1110-07; test-0.3.3-at1 pins it whole): ${cut(ar.t)}`);
   }
 } finally { await s.close(); fs.rmSync(ROOT, { recursive: true, force: true }); }
 
