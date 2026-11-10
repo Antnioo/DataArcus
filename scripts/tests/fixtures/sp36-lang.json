@@ -19,7 +19,7 @@
     "arFontLabel": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500;600&display=swap&text=%D8%B9%D8%B1%D8%A8%D9%8A%20%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9",
     "title": "DataArcus - Power BI, Checked and Made for the Gulf",
     "metas": "95232293d8e7e630",
-    "i18n": "08b01a9913a0bbf9",
+    "i18n": "6aeba227c5020828",
     "html": "396016ac72eb5b56",
     "attrs": "21472e689790ce47",
     "switcher": [
@@ -30,7 +30,7 @@
     "history": 2,
     "hstate": "null",
     "warns": [],
-    "dict": 42532
+    "dict": 43065
    }
   ]
  },
@@ -54,7 +54,7 @@
     "arFontLabel": null,
     "title": "DataArcus - Power BI مُتحقَّق منه ومهيّأ للخليج",
     "metas": "d8404c28e186c460",
-    "i18n": "4c45fdf5764c63d0",
+    "i18n": "c9550e8f95c047fb",
     "html": "68dd76f8ded221f1",
     "attrs": "a859cf1248d07b9a",
     "switcher": [
@@ -65,7 +65,7 @@
     "history": 2,
     "hstate": "null",
     "warns": [],
-    "dict": 42532
+    "dict": 43065
    },
    {
     "step": "open / again",
@@ -84,7 +84,7 @@
     "arFontLabel": null,
     "title": "DataArcus - Power BI مُتحقَّق منه ومهيّأ للخليج",
     "metas": "d8404c28e186c460",
-    "i18n": "4c45fdf5764c63d0",
+    "i18n": "c9550e8f95c047fb",
     "html": "68dd76f8ded221f1",
     "attrs": "a859cf1248d07b9a",
     "switcher": [
@@ -95,7 +95,7 @@
     "history": 3,
     "hstate": "null",
     "warns": [],
-    "dict": 42532
+    "dict": 43065
    }
   ]
  },
@@ -119,7 +119,7 @@
     "arFontLabel": null,
     "title": "DataArcus - Power BI مُتحقَّق منه ومهيّأ للخليج",
     "metas": "44f387e67bb58522",
-    "i18n": "4c45fdf5764c63d0",
+    "i18n": "c9550e8f95c047fb",
     "html": "ff837dc271bb7bce",
     "attrs": "a859cf1248d07b9a",
     "switcher": [
@@ -130,7 +130,7 @@
     "history": 2,
     "hstate": "null",
     "warns": [],
-    "dict": 42532
+    "dict": 43065
    },
    {
     "step": "switch (to the English page)",
@@ -149,7 +149,7 @@
     "arFontLabel": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500;600&display=swap&text=%D8%B9%D8%B1%D8%A8%D9%8A%20%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9",
     "title": "DataArcus - Power BI, Checked and Made for the Gulf",
     "metas": "95232293d8e7e630",
-    "i18n": "08b01a9913a0bbf9",
+    "i18n": "6aeba227c5020828",
     "html": "396016ac72eb5b56",
     "attrs": "21472e689790ce47",
     "switcher": [
@@ -160,7 +160,7 @@
     "history": 3,
     "hstate": "null",
     "warns": [],
-    "dict": 42532
+    "dict": 43065
    },
    {
     "step": "switch (back to the copy)",
@@ -179,7 +179,7 @@
     "arFontLabel": null,
     "title": "DataArcus - Power BI مُتحقَّق منه ومهيّأ للخليج",
     "metas": "44f387e67bb58522",
-    "i18n": "4c45fdf5764c63d0",
+    "i18n": "c9550e8f95c047fb",
     "html": "ff837dc271bb7bce",
     "attrs": "a859cf1248d07b9a",
     "switcher": [
@@ -190,7 +190,7 @@
     "history": 4,
     "hstate": "null",
     "warns": [],
-    "dict": 42532
+    "dict": 43065
    }
   ]
  },
@@ -309,7 +309,7 @@
     "arFontLabel": null,
     "title": "دليل Power BI: أدلة لفرق الخليج - DataArcus",
     "metas": "2ce7683911043d94",
-    "i18n": "9515c3726c3f49d2",
+    "i18n": "4ae24be22f9f4a4c",
     "html": "ba768b331fd86cec",
     "attrs": "6d8ea3c017b730fd",
     "switcher": [
@@ -320,7 +320,7 @@
     "history": 2,
     "hstate": "null",
     "warns": [],
-    "dict": 19396
+    "dict": 20082
    },
    {
     "step": "switch",
@@ -339,7 +339,7 @@
     "arFontLabel": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500;600&display=swap&text=%D8%B9%D8%B1%D8%A8%D9%8A%20%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9",
     "title": "The Power BI Playbook: Guides for Gulf Teams - DataArcus",
     "metas": "77f94ce4a8eeb346",
-    "i18n": "a54e3cb0ed81c547",
+    "i18n": "8d4babcb9921b4ab",
     "html": "ba768b331fd86cec",
     "attrs": "7ff753972ffabd89",
     "switcher": [
@@ -350,7 +350,7 @@
     "history": 2,
     "hstate": "{}",
     "warns": [],
-    "dict": 19396
+    "dict": 20082
    }
   ]
  },
@@ -374,7 +374,7 @@
     "arFontLabel": null,
     "title": "دليل Power BI: أدلة لفرق الخليج - DataArcus",
     "metas": "7991c21c50de8c77",
-    "i18n": "9515c3726c3f49d2",
+    "i18n": "4ae24be22f9f4a4c",
     "html": "ba768b331fd86cec",
     "attrs": "6d8ea3c017b730fd",
     "switcher": [
@@ -385,7 +385,7 @@
     "history": 2,
     "hstate": "null",
     "warns": [],
-    "dict": 19396
+    "dict": 20082
    },
    {
     "step": "switch (to ?lang=en)",
@@ -404,7 +404,7 @@
     "arFontLabel": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500;600&display=swap&text=%D8%B9%D8%B1%D8%A8%D9%8A%20%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9",
     "title": "The Power BI Playbook: Guides for Gulf Teams - DataArcus",
     "metas": "77f94ce4a8eeb346",
-    "i18n": "a54e3cb0ed81c547",
+    "i18n": "8d4babcb9921b4ab",
     "html": "ba768b331fd86cec",
     "attrs": "7ff753972ffabd89",
     "switcher": [
@@ -415,7 +415,7 @@
     "history": 3,
     "hstate": "null",
     "warns": [],
-    "dict": 19396
+    "dict": 20082
    },
    {
     "step": "switch (in place)",
@@ -434,7 +434,7 @@
     "arFontLabel": null,
     "title": "دليل Power BI: أدلة لفرق الخليج - DataArcus",
     "metas": "7991c21c50de8c77",
-    "i18n": "9515c3726c3f49d2",
+    "i18n": "4ae24be22f9f4a4c",
     "html": "ba768b331fd86cec",
     "attrs": "6d8ea3c017b730fd",
     "switcher": [
@@ -445,7 +445,7 @@
     "history": 4,
     "hstate": "null",
     "warns": [],
-    "dict": 19396
+    "dict": 20082
    }
   ]
  },
@@ -469,7 +469,7 @@
     "arFontLabel": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500;600&display=swap&text=%D8%B9%D8%B1%D8%A8%D9%8A%20%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9",
     "title": "DataArcus - Power BI, Checked and Made for the Gulf",
     "metas": "95232293d8e7e630",
-    "i18n": "08b01a9913a0bbf9",
+    "i18n": "6aeba227c5020828",
     "html": "396016ac72eb5b56",
     "attrs": "21472e689790ce47",
     "switcher": [
@@ -480,7 +480,7 @@
     "history": 2,
     "hstate": "null",
     "warns": [],
-    "dict": 42532
+    "dict": 43065
    },
    {
     "step": "switch",
@@ -499,7 +499,7 @@
     "arFontLabel": null,
     "title": "DataArcus - Power BI مُتحقَّق منه ومهيّأ للخليج",
     "metas": "44f387e67bb58522",
-    "i18n": "4c45fdf5764c63d0",
+    "i18n": "c9550e8f95c047fb",
     "html": "ff837dc271bb7bce",
     "attrs": "a859cf1248d07b9a",
     "switcher": [
@@ -510,7 +510,7 @@
     "history": 3,
     "hstate": "null",
     "warns": [],
-    "dict": 42532
+    "dict": 43065
    }
   ]
  },
@@ -759,7 +759,7 @@
     "arFontLabel": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500;600&display=swap&text=%D8%B9%D8%B1%D8%A8%D9%8A%20%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9",
     "title": "DataArcus - Power BI, Checked and Made for the Gulf",
     "metas": "95232293d8e7e630",
-    "i18n": "08b01a9913a0bbf9",
+    "i18n": "6aeba227c5020828",
     "html": "396016ac72eb5b56",
     "attrs": "21472e689790ce47",
     "switcher": [
@@ -770,7 +770,7 @@
     "history": 2,
     "hstate": "null",
     "warns": [],
-    "dict": 42532
+    "dict": 43065
    },
    {
     "step": "wider than 992",
@@ -789,7 +789,7 @@
     "arFontLabel": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500;600&display=swap&text=%D8%B9%D8%B1%D8%A8%D9%8A%20%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9",
     "title": "DataArcus - Power BI, Checked and Made for the Gulf",
     "metas": "95232293d8e7e630",
-    "i18n": "08b01a9913a0bbf9",
+    "i18n": "6aeba227c5020828",
     "html": "396016ac72eb5b56",
     "attrs": "21472e689790ce47",
     "switcher": [
@@ -800,7 +800,7 @@
     "history": 2,
     "hstate": "null",
     "warns": [],
-    "dict": 42532
+    "dict": 43065
    },
    {
     "step": "a phone again",
@@ -819,7 +819,7 @@
     "arFontLabel": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500;600&display=swap&text=%D8%B9%D8%B1%D8%A8%D9%8A%20%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9",
     "title": "DataArcus - Power BI, Checked and Made for the Gulf",
     "metas": "95232293d8e7e630",
-    "i18n": "08b01a9913a0bbf9",
+    "i18n": "6aeba227c5020828",
     "html": "396016ac72eb5b56",
     "attrs": "21472e689790ce47",
     "switcher": [
@@ -830,7 +830,7 @@
     "history": 2,
     "hstate": "null",
     "warns": [],
-    "dict": 42532
+    "dict": 43065
    },
    {
     "step": "switch",
@@ -849,7 +849,7 @@
     "arFontLabel": null,
     "title": "DataArcus - Power BI مُتحقَّق منه ومهيّأ للخليج",
     "metas": "44f387e67bb58522",
-    "i18n": "4c45fdf5764c63d0",
+    "i18n": "c9550e8f95c047fb",
     "html": "ff837dc271bb7bce",
     "attrs": "a859cf1248d07b9a",
     "switcher": [
@@ -860,7 +860,7 @@
     "history": 3,
     "hstate": "null",
     "warns": [],
-    "dict": 42532
+    "dict": 43065
    }
   ]
  },
