@@ -9,6 +9,8 @@
   twin, arabic areas and every suite that writes a theme or reads textClasses unchanged; recorded pins unchanged except
   any hand-placed run with a non-default font (said per fixture under "Changed on purpose").
 - **Resume:** none; the reviewer reads and merges.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42739657970 on adb2be675dd2b4430b28a35289d62a56673adcc3 (2026-11-10T02:19Z; Linux and
+  Windows shards success; the workflow skipped its macOS jobs on this run). DONE.
 
 ## Plan (written 2026-11-10T01:12Z)
 - Measured on the base (a8df06e9), scratchpad script, plan_layout -> approve_plan -> create_report through the real server,
