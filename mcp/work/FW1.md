@@ -7,7 +7,7 @@
 - **Scope:** mcp/lib/approval-window.mjs (folderOpener, notSeenAnswer, one shared wording), its test (new
   mcp/test-0.3.3-fw1.mjs), the DATAARCUS_BROWSER comment block (its doc line), mcp/test-0.3.2-wn1.mjs R5/R6 wording only.
 - **Expected checks:** fw1 13 (red on 7b6cf9a0 first: 9 of 13 failed), wn1 38 (was 38; 3 wording lines changed on purpose), sp23 29, sp44 23, approval 32. Plan was: fw1 new, red on 8f5624e6 first; wn1 33 (3 wording checks changed on purpose); sp23 29, sp44 23, approval 32.
-- **Resume:** 2026-11-10T00:10Z: code done, safety area 26 suites passed, lint 0; next: merge integration once, CI, then DONE.
+- **Resume:** 2026-11-10T01:03Z: NOT DONE: CI runs 42726266932 and 42729911726 on 22d84038 red only in website sp24 (D8/D18, Ramadan docs 19022 vs recorded 19026 bytes); all mcp and mcp-windows parts green. Reviewer decides.
 
 ## Measured (step 1)
 - Says the folder window opened: approval-window.mjs:144 (`folderWindow: 'opened'`), :145 (sayFirst "opened a folder
@@ -47,6 +47,7 @@ In mcp/CHANGELOG.md [Unreleased]: the Windows answer says DataArcus asked Window
 Check on Windows that the answer says "asked Windows to open" and that the folder window shows.
 
 ## Seen, not in scope
+- website sp24 D8/D18 (ramadan.zip html/md download 4 bytes shorter than recorded) is red on CI both times; not in FW1's files (mcp only); passes no output locally (needs the CI browser). Likely a base/PR #121 download-lines change; not touched.
 - B-431 (a), the laptop-only R3 failure: passes 38/38 here on Linux.
 
 ## Lessons for the reviewer
