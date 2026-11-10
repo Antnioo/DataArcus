@@ -48,3 +48,7 @@ none.
 
 ## Lessons for the reviewer
 - The brief's "npm audit" expectation: only the minimatch half clears; the glob advisory stays via c8.
+
+## CI (2026-11-10T06:20Z)
+- First run https://github.com/Antnioo/DataArcus/actions/runs/42761075577 was cancelled: website-suites (3) hung 40 min in "Install Chromium" (npx playwright-core install, before any test; every other job green). Varied input: the runner's download, not the code. Same sha re-run, not a retry-until-green.
+- State: DONE. CI green: https://github.com/Antnioo/DataArcus/actions/runs/42765484378 on fb4b5814d7f60d67c01490598eece5715b94d1dd
