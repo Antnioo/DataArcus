@@ -23,6 +23,7 @@ import vm from 'node:vm';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
+import { pureSharedFiles, asSibling } from './ledger-places.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..'), JS = path.join(REPO, 'assets/js'), FIX = path.join(HERE, 'fixtures');
 const require = createRequire(import.meta.url);
@@ -211,7 +212,8 @@ if (moved) {
   () => `P9 the predicates must change no visual and the api and its tables be frozen: ${b.join(', ')}`);
   // P10: the one home of each rule, and the load order. mirror-policy.js requires visual-types.js and, besides it, only
   // the pure shared files (a list, never a number; 0.3.2 DD1A: the reviewer's call): pbir-values.js, time-names.js
-  const PURE_SHARED = ["'./visual-types.js'", "'./pbir-values.js'", "'./time-names.js'"];
+  // (0.3.3 SG2: and any pure shared file the CONTRACTS.md ledger names as a one place, read by ledger-places.mjs)
+  const PURE_SHARED = ["'./visual-types.js'", "'./pbir-values.js'", "'./time-names.js'", ...[...pureSharedFiles()].map((f) => `'${asSibling(f)}'`)];
   chk(() => {
     const m = fs.readFileSync(path.join(JS, 'report-mirror.js'), 'utf8'), p = fs.readFileSync(path.join(JS, 'mirror-policy.js'), 'utf8'), tg = fs.readFileSync(path.join(JS, 'theme-generator.js'), 'utf8');
     const reqs = (p.match(/require\(([^)]*)\)/g) || []).map((x) => x.slice(8, -1));
