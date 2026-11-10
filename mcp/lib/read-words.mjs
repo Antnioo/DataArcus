@@ -11,7 +11,7 @@ const manyAr = (d) => `يحتوي "${d.path}" على ${d.models.length === 2 ? '
 // approved line ("one of these paths") would say nothing true, so that case keeps the English (never a silent draft).
 const listAr = (d) => (d.models || []).join('; ') + (d.more > 0 ? '; …' : '');
 const noNamedAr = (d) => (!(d.models || []).length ? null : `لا يوجد نموذج باسم "${d.name}" في مجلد العمل ${d.root}. ${listAr(d)}. أعطِ read_model أحد هذه المسارات، أو "." لمجلد العمل نفسه.`);
-const noAtAr = (d) => (!(d.models || []).length || d.root == null ? null : `لا يوجد شيء في "${d.path}" داخل مجلد العمل ${d.root}. ${listAr(d)}. أعد استدعاء الأداة بأحد هذه المسارات (نسبةً إلى مجلد العمل)، أو "." لمجلد العمل نفسه.`);
+const noAtAr = (d, root) => (!(d.models || []).length || root == null ? null : `لا يوجد شيء في "${d.path}" داخل مجلد العمل ${root}. ${listAr(d)}. أعد استدعاء الأداة بأحد هذه المسارات (نسبةً إلى مجلد العمل)، أو "." لمجلد العمل نفسه.`);
 const manyNamedAr = (d) => `يوجد أكثر من نموذج في مجلد العمل باسم "${d.name}": ${(d.hits || []).join('; ')}. أعطِ read_model مسار النموذج الذي تقصده.`;
 // (0.3.2 LG1, D-1105-16) lang: the person's language when the tool was given it ('ar' | 'en'); absent: AR4's letter rule
 export function wordOf(e, lang) {
@@ -21,7 +21,7 @@ export function wordOf(e, lang) {
     case 'MANY_MODELS': if (Array.isArray(d.models) && d.models.length > 1 && (lang === 'ar' || (lang !== 'en' && hasArabic([d.path].concat(d.models).join(' '))))) return manyAr(d); return `${e.message} Give read_model the path of the one you mean.`;
     case 'NO_MODEL_NAMED': { const a = lang === 'ar' ? noNamedAr(d) : null; if (a) return a; } return `${e.message} ${(d.models || []).length ? 'Give read_model one of these paths, or "." for the working folder itself.' : 'Give read_model the path of a project folder, or "." for the working folder itself.'}`;
     // (0.3.1 MR1, B-271) a model path that does not exist: as a bare wrong name, the tool called again with one listed
-    case 'NO_MODEL_AT': { const a = lang === 'ar' ? noAtAr(d) : null; if (a) return a; } return `${e.message} ${(d.models || []).length ? 'Call the tool again with one of these paths (relative to the working folder), or "." for the working folder itself.' : 'Call the tool again with the path of a project folder, or "." for the working folder itself.'}`;
+    case 'NO_MODEL_AT': { const a = lang === 'ar' ? noAtAr(d, e.root) : null; if (a) return a; } return `${e.message} ${(d.models || []).length ? 'Call the tool again with one of these paths (relative to the working folder), or "." for the working folder itself.' : 'Call the tool again with the path of a project folder, or "." for the working folder itself.'}`;
     default: return String((e && e.message) || e);
   }
 }
