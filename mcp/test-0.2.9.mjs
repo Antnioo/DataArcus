@@ -128,7 +128,7 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
     chk(() => !big.err && !big.j.plan && big.j.planProblems.some((p) => /KPI/.test(p) && /\b6\b/.test(p)) && big.j.planProblems.some((p) => /table/.test(p) && /\b8\b/.test(p)), () => `L3. 7 KPI cards and 9 table fields must be refused with the limits: ${short(big)}`);
     const bad = await ask('plan_layout', { path: 'g', layout: 'exec', lang: 'en', planFields: { kpis: ['Sales[Nope]'], category: 'Sales[Total Sales]' } });
     chk(() => !bad.err && !bad.j.plan && bad.j.planProblems.some((p) => /Sales\[Nope\]/.test(p)) && bad.j.planProblems.some((p) => /a column is needed/.test(p)), () => `L4. a field not in the model, or a measure where a column goes, must be refused before the plan is shown: ${short(bad)}`);
-    const ok = await ask('plan_layout', { path: 'g', layout: 'analysis', lang: 'en', planFields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]'], slicers: ['Sales[Region]', 'Sales[Channel]', 'Sales[Product]'] } });
+    const ok = await ask('plan_layout', { path: 'g', name: 'L5 Within', layout: 'analysis', lang: 'en', planFields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]'], slicers: ['Sales[Region]', 'Sales[Channel]', 'Sales[Product]'] } });
     chk(() => !ok.err && /^plan-/.test(ok.j.plan.planId) && !ok.j.planProblems, () => `L5. a plan within the limits must get a plan id: ${short(ok)}`);
     chk(() => !meta || /planFields/.test(meta.instructions), () => 'L6. the instructions must say to check the plan\'s fields with plan_layout (planFields) before showing it');
   }
@@ -177,7 +177,7 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
   // ---------- an expired plan (a server whose plans live 1.5 seconds) ----------
   {
     const s = await serverClient(ROOT, { DATAARCUS_PLAN_TTL_MS: '1500' });
-    const pl = await s.call('plan_layout', { path: 'g', layout: 'exec', lang: 'en' }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
+    const pl = await s.call('plan_layout', { path: 'g', name: 'G9 Expired', layout: 'exec', lang: 'en' }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
     await s.call('approve_plan', { planId: pid });
     await new Promise((r) => setTimeout(r, 2000));
     const before = all(), x = await s.call('create_report', { path: 'g', planId: pid }), after = all();

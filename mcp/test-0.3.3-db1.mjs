@@ -2,8 +2,8 @@ import './fixtures/sp1/seeded-random.mjs';
 import './test-env.mjs';
 // 0.3.3 DB1 (mcp/work/DB1.md, B-421): the branches of plan_layout's handler FN1J found no input for, that are reachable.
 // Each check is red on the base (integration/0.3.3) with its branch's mutant applied (DB1.md, "Red first"):
-//   V2   previewOf's displayNames: a plan with path and no report name has no exact build (create_report would refuse
-//        it), so its preview is built from the plan and shows the names given
+//   V2   previewOf's displayNames: the preview shows the names given (DB2: a plan with no report name now gets no plan id,
+//        so this plan has a name; the no-exact-build route this branch took is gone)
 //   TT2  the keptOnPurpose filters: a field kept English on purpose under a key typed with the table quoted
 //        ('Sales'[Qzx Flux]) reaches notTranslated through the lint, and is kept out of titlesInEnglish.fields (a)
 //        and switcherLabels (b): the plan keeps its id
@@ -45,11 +45,11 @@ const call = async (args) => { const p = schema.safeParse(args); if (!p.success)
 const dataOf = (j) => { const id = j && j.plan && j.plan.planId; const p = id && Plans.planOf(id); return p ? p.data : null; };
 const AR_NAMES = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Sales[Orders]': 'الطلبات', 'Sales[Margin]': 'الهامش', 'Sales[Product]': 'المنتج', 'Sales[Region]': 'المنطقة' };
 
-// ---------- V2: no exact build, the preview built from the plan with its names ----------
+// ---------- V2: the preview with the names given ----------
 {
-  const j = await call({ path: 'tiny', layout: 'exec', displayNames: { 'Sales[Total Sales]': 'Revenue Now' } });
+  const j = await call({ path: 'tiny', name: 'DB1 V2', layout: 'exec', displayNames: { 'Sales[Total Sales]': 'Revenue Now' } });
   const d = dataOf(j), pv = d && d.preview ? JSON.stringify(d.preview) : '';
-  chk(() => j.exactCheck.status === 'notBuilt' && j.plan.planId, () => `V2: a plan with no report name: exactCheck ${JSON.stringify(j.exactCheck).slice(0, 200)}, plan id ${j.plan && j.plan.planId} (expected notBuilt and an id)`);
+  chk(() => j.exactCheck.status === 'pass' && j.plan.planId, () => `V2: a plan with a report name (DB2: one without gets no plan id): exactCheck ${JSON.stringify(j.exactCheck).slice(0, 200)}, plan id ${j.plan && j.plan.planId} (expected pass and an id)`);
   chk(() => (pv.match(/Revenue Now/g) || []).length > 0, () => `V2: the preview built without exact files shows the name given ("Revenue Now") ${(pv.match(/Revenue Now/g) || []).length} times; the model's "Total Sales" ${(pv.match(/Total Sales/g) || []).length} (previewOf's displayNames not read)`);
 }
 
