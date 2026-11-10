@@ -211,7 +211,7 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
   // ---------- the owner's decision on layouts (12 Oct, after LAYOUT-SWEEP-RC6): three setups ship as preview ----------
   {
     const LINE = 'Preview: this layout is still being tuned on real dashboards; the executive and single-focus layouts are the tested ones.';
-    const prev = async (args) => { const p = await ask('plan_layout', Object.assign({ path: 's-shop' }, args)); return { p, line: p.j && p.j.preview }; };
+    const prev = async (args) => { const p = await ask('plan_layout', Object.assign({ path: 's-shop', name: 'Sweep Shop' }, args)); return { p, line: p.j && p.j.preview }; };
     for (const [args, want] of [[{ layout: 'ops' }, true], [{ layout: 'analysis' }, true], [{ layout: 'exec', page: '1280x720', filters: 'top' }, true], [{ layout: 'exec', page: '960x720', filters: 'top' }, true],
       [{ layout: 'exec' }, false], [{ layout: 'exec', page: '1920x1080', filters: 'top' }, false], [{ layout: 'exec', page: '1280x720', filters: 'end' }, false], [{ layout: 'focus' }, false], [{ layout: 'focus', page: '1280x720', filters: 'top' }, true]]) {
       const { p, line } = await prev(args);
