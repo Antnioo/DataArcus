@@ -391,30 +391,6 @@
   const REFLOW_KEEP = 0.45;   // (round 8, S7; round 9: 0.6 -> 0.5, so two dropdowns reflow too; 0.3.1 TS1, the owner's yes of 26 Oct to 0.2.9-writer-S10, SQ13's option (a): 0.5 -> 0.45, so a second page's chart keeps 168 of 347 and the 197 gap under the rail closes) a chart beside the rail keeps this share of its height at least when the page reflows
   const slotsTouch = (a, b) => (Math.abs(a.y - b.y) <= 1 && Math.abs(a.h - b.h) <= 1 && Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w) <= SLOT_GAP)
     || (Math.abs(a.x - b.x) <= 1 && Math.abs(a.w - b.w) <= 1 && Math.max(a.y, b.y) - Math.min(a.y + a.h, b.y + b.h) <= SLOT_GAP);
-  // (0.3.3 FB1) liftCards(slots, rail): the page with its row of KPI cards across the rail's column too and the rail
-  // (already kept to its contents) moved under that row, a row's gap below it: { slots, rail } (new objects), or null
-  // where the page has no such row (no cards, cards not level with the rail's top or not beside it, nothing under them,
-  // or the rail would pass the page's bottom). The cards keep their order, their gap and equal widths (edges rounded,
-  // as boxOf does); one card alone keeps its width (the owner's quarter, 6 Oct) and moves to the page's edge when it
-  // stood against the rail.
-  function liftCards(slots, rail) {
-    const kp = slots.filter((s) => s.kind === 'kpi').sort((p, q) => p.x - q.x), body = slots.filter((s) => !OWN_SLOTS.includes(s.kind) && s.kind !== 'kpi' && s !== rail);
-    if (!kp.length || !body.length || kp.some((s) => Math.abs(s.y - rail.y) > 1 || Math.abs(s.h - kp[0].h) > 1 || (s.x < rail.x + rail.w && s.x + s.w > rail.x))) return null;
-    const kb = kp[0].y + kp[0].h, under = body.filter((s) => s.y >= kb).map((s) => s.y - kb);
-    if (!under.length) return null;
-    const y = kb + Math.min(...under), bottom = Math.max(...body.map((s) => s.y + s.h).concat(rail.y + rail.h));
-    if (y + rail.h > bottom + 1) return null;
-    const x0 = Math.min(rail.x, kp[0].x), x1 = Math.max(rail.x + rail.w, ...kp.map((s) => s.x + s.w)), n = kp.length, moved = new Map();
-    if (n === 1) {
-      const s = kp[0], after = s.x - (rail.x + rail.w), before = rail.x - (s.x + s.w);
-      moved.set(s, after >= 0 && after <= SLOT_GAP ? { x: rail.x } : before >= 0 && before <= SLOT_GAP ? { x: rail.x + rail.w - s.w } : {});
-    } else {
-      const g = kp[1].x - (kp[0].x + kp[0].w), step = (x1 - x0 + g) / n;
-      kp.forEach((s, i) => { const x = x0 + Math.round(i * step); moved.set(s, { x, w: (i === n - 1 ? x1 : x0 + Math.round((i + 1) * step) - g) - x }); });
-    }
-    const r2 = Object.assign({}, rail, { y });
-    return { slots: slots.map((s) => (s === rail ? r2 : moved.has(s) ? Object.assign({}, s, moved.get(s)) : s)), rail: r2 };
-  }
   // fitSlots(slots, { dropKinds, headerRows, railItems }): { slots, dropped }; the slots given are never changed
   //  dropKinds: the kinds whose visual cannot be written (a line chart on a model with no time axis)
   //  headerRows: how much the header grows for its extra row of page tabs (Round 12, the owner's go on round 11's
@@ -460,9 +436,7 @@
     // contents (the owner's round-12 rule #18): the slots beside the rail that run past its bottom end there, and the
     // slots under them and under the rail move up by as much, keeping their bottoms (they grow). Only where every chart
     // beside keeps half its height at least (REFLOW_KEEP); otherwise the page is left as it is.
-    // (0.3.3 FB1) the page under a shortened rail, settled: the reflow and the rail's column, as before, on the slots
-    // and the rail given; the cards' row is tried over the rail too (liftCards) and the better filled page is kept
-    const settle = (out, rail) => {
+    if (rail) {
       const B = rail.y + rail.h, beside = out.filter((s) => s !== rail && !OWN_SLOTS.includes(s.kind) && s.y < B && s.y + s.h > B
         && ((s.x - (rail.x + rail.w) >= 0 && s.x - (rail.x + rail.w) <= SLOT_GAP) || (rail.x - (s.x + s.w) >= 0 && rail.x - (s.x + s.w) <= SLOT_GAP)));
       const cut = beside.length ? Math.min(...beside.map((s) => s.y + s.h)) - B : 0;
@@ -486,25 +460,14 @@
         const band = (y - s0.y) * s0.w, fills = (x1 - x0 - s0.w) * h, atTop = s0.y <= rail.y + 1;
         if (h >= REFLOW_KEEP * s0.h && (!atTop || fills >= band)) out = out.map((s) => (s === s0 ? Object.assign({}, s, { x: x0, y, w: x1 - x0, h }) : s));
       }
-      return out.map((s) => {
-        if (s === rail || s.y < rail.y + rail.h || OWN_SLOTS.includes(s.kind)) return s;
-        const gapStart = s.x - (rail.x + rail.w), gapEnd = rail.x - (s.x + s.w);
-        if (gapStart >= 0 && gapStart <= SLOT_GAP) return Object.assign({}, s, { x: rail.x, w: s.x + s.w - rail.x });
-        if (gapEnd >= 0 && gapEnd <= SLOT_GAP) return Object.assign({}, s, { w: rail.x + rail.w - s.x });
-        return s;
-      });
-    };
-    if (rail) {
-      // (0.3.3 FB1; SQ13's S10, open since 12 Oct: beside a rail kept to its dropdowns the cards' row left the charts
-      // too little of the rail's height to end at its bottom, so the room under the rail stayed empty, 312 x 308 on the
-      // executive page, or the one chart was pressed to 168 of 347) the same page with the cards' row across the whole
-      // width and the rail under it, beside the charts, is settled too, and kept where pageFill measures it better: a
-      // smaller hole, or the same hole and a higher lowest chart. Nothing else changes: the same slots, the rail still
-      // kept to its contents on the side the person chose, every chart still keeping REFLOW_KEEP of its height.
-      const a = settle(out, rail), up = liftCards(out, rail), b = up ? settle(up.slots, up.rail) : null;
-      const fa = pageFill(a), fb = b ? pageFill(b) : null;
-      out = fb && (fb.holeArea < fa.holeArea - 1 || (fb.holeArea <= fa.holeArea + 1 && fb.low > fa.low)) ? b : a;
     }
+    if (rail) out = out.map((s) => {
+      if (s === rail || s.y < rail.y + rail.h || OWN_SLOTS.includes(s.kind)) return s;
+      const gapStart = s.x - (rail.x + rail.w), gapEnd = rail.x - (s.x + s.w);
+      if (gapStart >= 0 && gapStart <= SLOT_GAP) return Object.assign({}, s, { x: rail.x, w: s.x + s.w - rail.x });
+      if (gapEnd >= 0 && gapEnd <= SLOT_GAP) return Object.assign({}, s, { w: rail.x + rail.w - s.x });
+      return s;
+    });
     return { slots: out, dropped };
   }
   // fitSlots' options in other units (k: the units wanted per unit given; the background's 720 grid from page units is

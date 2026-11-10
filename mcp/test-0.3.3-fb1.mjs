@@ -90,5 +90,5 @@ try {
   chk(() => holes === SUMS.holes && worst === SUMS.worst && flat === SUMS.flat, () => `S1. of ${CASES.length} plans, with a hole: ${holes} (pinned ${SUMS.holes}); the worst hole ${worst}% (${SUMS.worst}); the flattest chart ${flat} (${SUMS.flat})`);
   if (process.env.FB1_RECORD) { fs.writeFileSync(PIN_FILE, JSON.stringify({ about: 'test-0.3.3-fb1.mjs: page 1 of each plan, "<slicers> | hole <share of the body>% <w>x<h> | flat <widest chart, w / h> | low <lowest chart>"; FB1_RECORD=1 rewrites it, and every moved number is said in the job\'s note', sums: { plans: CASES.length, holes, worst, flat }, cases: got }, null, 1) + '\n'); console.log('recorded ' + PIN_FILE); }
 } finally { await s.close(); fs.rmSync(ROOT, { recursive: true, force: true }); }
-if (problems.length) { console.log(`FAIL script=mcp/test-0.3.3-fb1.mjs check="${problems[0].slice(0, 300).replace(/"/g, "'")}" cause=checks-failed`); problems.forEach((p) => console.log('  - ' + p.slice(0, 400))); process.exit(1); }
+if (problems.length) { console.log(`FAIL script=mcp/test-0.3.3-fb1.mjs check="${problems[0].slice(0, 300).replace(/"/g, "'")}" cause=checks-failed`); problems.forEach((p) => console.log('  - ' + p.slice(0, 400))); console.log(`FAIL  fb1  ${checks - problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  fb1  ${checks} checks`);
