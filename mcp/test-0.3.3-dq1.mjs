@@ -10,6 +10,8 @@ import { fileURLToPath } from 'node:url';
 import { resolveSvgColumns } from './lib/report-fields.mjs';
 import { titleProblems } from './lib/metric-switcher.mjs';
 import { functionLines } from './lib/model-script.mjs';
+import { fieldKeyOf, sheetOf, placesOf } from './lib/terminology.mjs';
+import { cultureScript } from './lib/model-culture.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const require = createRequire(import.meta.url);
@@ -49,6 +51,20 @@ for (const n of NAMES) chk(() => functionLines({ name: n, expression: '1' }, 1).
 // drift: the rule moves in tmdl-name.js only; functionLines must follow it (no copy of the rule in model-script.mjs)
 chk(() => !/A-Za-z_\]\[A-Za-z0-9_\]\*/.test(read('mcp/lib/model-script.mjs')), 'D6 model-script.mjs keeps no TMDL name rule of its own');
 chk(() => /tmdl-name\.js/.test(read('mcp/lib/model-script.mjs')), 'D6 model-script.mjs reads tmdl-name.js');
+
+// ---- D7-D9 (B-434): the twin keys a field by its (table, field) pair ----
+const field = (e, p) => ({ Column: { Expression: { SourceRef: { Entity: e } }, Property: p } });
+const K1 = fieldKeyOf(field('A', 'B][C')), K2 = fieldKeyOf(field('A[B]', 'C'));
+chk(() => K1 && K2 && K1 !== K2, `D7 table A column "B][C" and table "A[B]" column C get two keys (${K1} and ${K2})`);
+chk(() => fieldKeyOf(field('Sales', 'Amount')) === 'Sales[Amount]' && fieldKeyOf(field('Sales Data', 'Net [x]')) === 'Sales Data[Net [x]]]', 'D7b a normal name keeps its key text (Sales[Amount])');
+chk(() => fieldKeyOf({ Measure: { Expression: { SourceRef: { Entity: 'A' } }, Property: 'M' } }) === 'A[M]' && fieldKeyOf({ Aggregation: { Function: 0, Expression: field('A', 'B') } }) === 'A[B]', 'D7c a measure and an aggregated column key the same way');
+// two approval lines: the sheet gives each of the two fields its own row, one approved and one not
+chk(() => { const rows = sheetOf([K1, K2], new Map([[K1, { ar: 'اسم', status: 'approved' }]]), null); return rows.length === 2 && rows[0].field !== rows[1].field && rows[0].status === 'approved' && rows[1].status === 'kept'; }, 'D8 the terminology sheet has two rows and one approval line for each field');
+chk(() => { const rows = sheetOf([K2], new Map(), null); return rows[0].en === 'C'; }, 'D8b the English name of the table-with-brackets field is its column C');
+chk(() => { const rows = sheetOf([K1], new Map(), null); return rows[0].en === 'B][C'; }, 'D8c the English name of the column B][C is B][C');
+// the culture script writes the one caption to the one field
+const raw = { model: { name: 'M', culture: 'en-US', tables: [{ name: 'A', columns: [{ name: 'B][C', dataType: 'string' }] }, { name: 'A[B]', columns: [{ name: 'C', dataType: 'string' }] }] } };
+chk(() => { const r = cultureScript(raw, new Map([[K1, { ar: 'الأول', status: 'approved', given: true }]]), ['ar-AE']); return r.covered.length === 1 && /الأول/.test(r.text) && r.english.some((e) => /C/.test(e.field)) && !/'A\[B\]'\s*\n\s*column C\s*\n\s*caption/.test(r.text); }, 'D9 the culture script gives the caption to table A only');
 
 if (problems.length) { console.log(`FAIL script=test-0.3.3-dq1.mjs cause=${problems[0].slice(0, 300)}`); for (const p of problems) console.log('  - ' + p); console.log(`FAIL  dq1  ${problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  dq1  ${checks} checks`);
