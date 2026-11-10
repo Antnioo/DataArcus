@@ -6,8 +6,8 @@
 - **Base:** `fix/0.3.3-fw1` from `origin/integration/0.3.3` at 8f5624e6. Push only this branch.
 - **Scope:** mcp/lib/approval-window.mjs (folderOpener, notSeenAnswer, one shared wording), its test (new
   mcp/test-0.3.3-fw1.mjs), the DATAARCUS_BROWSER comment block (its doc line), mcp/test-0.3.2-wn1.mjs R5/R6 wording only.
-- **Expected checks:** fw1 new, red on 8f5624e6 first; wn1 33 (3 wording checks changed on purpose); sp23 29, sp44 23, approval 32.
-- **Resume:** 2026-11-10T00:06Z: plan written; next: red tests, then the fix.
+- **Expected checks:** fw1 13 (red on 7b6cf9a0 first: 9 of 13 failed), wn1 38 (was 38; 3 wording lines changed on purpose), sp23 29, sp44 23, approval 32. Plan was: fw1 new, red on 8f5624e6 first; wn1 33 (3 wording checks changed on purpose); sp23 29, sp44 23, approval 32.
+- **Resume:** 2026-11-10T00:10Z: code done, safety area 26 suites passed, lint 0; next: merge integration once, CI, then DONE.
 
 ## Measured (step 1)
 - Says the folder window opened: approval-window.mjs:144 (`folderWindow: 'opened'`), :145 (sayFirst "opened a folder
@@ -21,5 +21,33 @@
 ## For the owner
 none (no Arabic text)
 
+## Before -> after
+- Windows, page not seen: `folderWindow: "opened"` and "DataArcus opened a folder window" -> `"asked"` and "DataArcus asked
+  Windows to open a folder window ... (Windows may not have shown it: ask the user whether they see it)". Failure wording unchanged.
+- DATAARCUS_BROWSER no longer opens the folder; DATAARCUS_FOLDER_OPENER does (test-only, same format, read only when set).
+  Both formats are parsed by one function, ownProgram (D-1104-12). Documented in approval-window.mjs's comments (launchers, folderOpener).
+
+## Tests before -> after
+- fw1 0 -> 13 (red on 7b6cf9a0 first: "FAIL  fw1  9 of 13 checks"). wn1 38 -> 38 (R5/R6 now expect "asked"; R6 sets DATAARCUS_FOLDER_OPENER).
+- sp23 29, sp44 23, approval 32, approval-complete 68, safety area 26 suites passed; lint 0; result-lines, changelog-words, agent-memory PASS.
+
+## Changed on purpose
+- test-0.3.2-wn1.mjs R5 (x1), R6 (x1): `folderWindow === 'opened'` -> `'asked'`; R6's server also gets DATAARCUS_FOLDER_OPENER. Same count.
+
+## CHANGELOG line
+In mcp/CHANGELOG.md [Unreleased]: the Windows answer says DataArcus asked Windows to open the folder window.
+
+## Decisions I made
+- Never "opened" for the folder window: explorer.exe starting is the best signal there is, so the word is always "asked".
+
 ## Risky changes
-none yet
+- approve_plan's Windows not-seen answer: key `folderWindow` value 'opened' -> 'asked', and the sayFirst sentence. Why: B-431 b.
+
+## For the laptop
+Check on Windows that the answer says "asked Windows to open" and that the folder window shows.
+
+## Seen, not in scope
+- B-431 (a), the laptop-only R3 failure: passes 38/38 here on Linux.
+
+## Lessons for the reviewer
+- The brief's line numbers (about 81) were right; the cause (explorer start = opened) was confirmed by showFolder returning true on start.
