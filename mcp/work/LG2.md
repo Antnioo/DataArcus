@@ -6,7 +6,8 @@
 - **Expected checks:** the measurement below says WE1 (merged, d59fab0a) and D-1108-16 already cover every error that has an
   approved Arabic line, so the expected code change is none; lg2 is a pin (about 30 checks) that is green on the base, with a
   mutation proof that it goes red when the shared source is broken. `node scripts/check-modules.mjs --strict`.
-- **Resume:** suite and note done (2026-11-10T12:46Z); CI next (the CI line below once green).
+- **Resume:** DONE (2026-11-10T13:05Z).
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42818579278 on 0ba798a254ef36ed4f0d4845c597d2036d32ff5f
 
 ## Plan
 1. Measure (below), on 20ef003c, through the real server (stdio), each write tool with `lang: "ar"`, `"en"` and none.
