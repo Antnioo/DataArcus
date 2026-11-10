@@ -6,7 +6,9 @@
 - **Scope:** `mcp/tools/plan_layout.mjs` (limitsStep: one planProblem line), new `mcp/test-0.3.3-db2.mjs` + its row in `mcp/tests.json`, `mcp/CHANGELOG.md`, `mcp/WORK.md`, this note; plus any test that pins the old answer, each named under "Changed on purpose".
 - **Expected checks:** `node scripts/check-modules.mjs --strict`; db2 new, red on cd4ea0c0 first; the report, core, checker and arabic areas green; lint 0; CI green.
 - **Plan:** measured on cd4ea0c0 (below): a plan with path, no name gets an id, approve_plan approves it, create_report refuses ("Give create_report a name"). Fix: in limitsStep a planProblem when path is given, no name, and no customVisualsFrom (a native copy needs no name; redesignFrom returns before limitsStep). English sentence, no Arabic text added.
-- **Resume:** 2026-11-10T13:49Z: fix, db2 and the pinned suites done and pushed; the reviewer's merge after CI green (below).
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42828160069 on 93917e59, read 2026-11-10T14:03Z.
+- **State: DONE.**
+- **Resume:** none; the reviewer's merge.
 
 ## Measured on cd4ea0c0 (test server, made-up tiny model, 2026-11-10T12:18Z)
 - plan_layout { path: tiny, layout: exec } (en): plan id given, status proposed, exactCheck "notBuilt", no planProblems.
