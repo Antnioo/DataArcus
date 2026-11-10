@@ -8,6 +8,7 @@
   split guards unchanged; `node scripts/check-modules.mjs --strict` (no fs / process.env import added).
 - **Resume:** none; the reviewer reads and merges.
 - CI green: https://github.com/Antnioo/DataArcus/actions/runs/42786563199 on c35f7f983020c02f8470dd7482958b02c5ad0515 (2026-11-10T09:10Z; Linux and Windows shards success; macOS jobs skipped by the workflow). DONE.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42796167517 on ce3f6e263ac3e03143043284266e4d8cc60195a2 (2026-11-10T10:25Z, recorded by the reviewer's worker: the head after c35f7f98 changed only the WORK.md status word and this note). DONE.
 
 ## Plan and measurement (written 2026-11-10T08:26Z)
 Measured on 00f7f702 through the real server (plan_layout, approve_plan, create_report), made-up model; theme faces = the 4 primary
