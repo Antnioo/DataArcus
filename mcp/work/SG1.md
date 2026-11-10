@@ -4,8 +4,9 @@
 - **Approval:** the reviewer's brief "SG1" (9 Nov); the owner D-1109-05 ("yes queue it for 0.3.3 after LK1"), D-1104-12 (one job, one place, the shared library). B-422.
 - **Base:** `fix/0.3.3-sg1` from `origin/integration/0.3.3` at 8f5624e6 (LK1 merged). Push only this branch.
 - **Scope:** 11 groups SAME JOB moved into an existing shared file (no new module), 4 groups DIFFERENT written down below for the engine's allow list. No behaviour change: every answer, page and written file byte for byte the same.
+- **CI:** CI green: https://github.com/Antnioo/DataArcus/actions/runs/42729802765 on 10259cfe (Linux and Windows MCP parts, every website job; macOS skipped on a branch run). Runs 1 and 2 red, causes and fixes under Tests.
 - **Expected checks:** new suite `sg1` (one parity part per moved group, red on 8f5624e6 first: the shared names do not exist there); every split test that pins the touched files' requires (sp10, sp11, sp20, sp21, sp26, sp30, sp38, sp40, sp42) passes, a new shared require allowed on purpose and said per test; no recorded fixture moves; test-contracts, check-contracts, check-modules, lint PASS; areas report, core, arabic, checker, model; site suites dd2w, theme-generator, build page.
-- **Resume:** 2026-11-10T00:38Z: State: sp24's date mask fixed (a test bug that fails every branch 10 to 12 Nov); CI run 3 started; next: CI green, its line here, DONE.
+- **Resume:** 2026-11-10T00:59Z: State: DONE (CI green on 10259cfe); the reviewer merges and adds the 4 DIFFERENT groups to the engine's allow list.
 
 ## Plan (group, decision, where it goes)
 1. `text` x6 (confirm-memory, dax-reference-parser, gulf-health, model-health-tmdl, model-index, mcp shadow-model `textOf`): SAME JOB (an expression given as a string or as lines -> one text). One place: `assets/js/dax-reference-parser.js` `exprText` (its own `text` was the first; it loads first on the health page and in the worker).
