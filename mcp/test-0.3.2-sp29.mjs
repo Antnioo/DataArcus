@@ -33,6 +33,7 @@ const BASE = '39c46bb';
 const rng = (seed) => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 
 // ---------- the facts, for any engine (this one, or the base's in B1) ----------
+const ADDED_SINCE = ['pageFill'];
 const facts = (E) => {
   const design = (preset, chart, layout) => { const d = E.fresh(); d.preset = preset; d.data = E.PRESETS[preset].data.slice(); d.ui = Object.assign({}, E.PRESETS[preset].ui); d.chart = chart; d.name = 'SP29 ' + preset; E.repairState(d); Object.assign(d.layout, layout); return d; };
   const DESIGNS = [
@@ -128,7 +129,9 @@ const facts = (E) => {
     const jpg = (w, h, pre) => Uint8Array.from([0xff, 0xd8].concat(pre || [], [0xff, 0xc0, 0, 17, 8, h >> 8, h & 255, w >> 8, w & 255, 3], new Array(20).fill(0)));
     out.I1 = js([png(400, 100), png(0, 100), png(65536, 3), jpg(640, 480), jpg(300, 120, [0xff, 0xe0, 0, 4, 1, 2, 0xff, 0xff, 0xff, 0xc4, 0, 3, 9, 0xff, 0x01, 0xff, 0xd0]), jpg(0, 9), jpg(320, 200, [0xff, 0xe0, 0, 5, 1, 2, 0xff, 0xc1, 0, 17, 8, 0, 9, 0, 9]), new Uint8Array(10), null, Uint8Array.from(new Array(40).fill(7))].map((b) => E.imageSize(b)));
   }
-  out.K1 = js(Object.keys(E).sort());
+  // (0.3.3 FB1) the names the engine got on purpose after the base are not the split's: each is listed here, must be
+  // there now and is left out of the comparison with the base (pageFill: how well a page is filled, mcp/work/FB1.md)
+  out.K1 = js(Object.keys(E).filter((k) => !ADDED_SINCE.includes(k)).sort());
   return out;
 };
 
@@ -139,6 +142,8 @@ const diff = (a, b) => (typeof a === 'string' || typeof b === 'string' ? (a === 
 
 // ---------- D1-D12, G1, S1, I1, K1: byte for byte the base's ----------
 for (const name of Object.keys(got)) chk(() => gold[name] && !diff(got[name], gold[name]).length, () => `${name}: differs from the base in ${gold[name] ? diff(got[name], gold[name]).join(', ') : '(not recorded)'}`);
+
+chk(() => ADDED_SINCE.every((k) => typeof E[k] === 'function' && E[k] === require('../assets/js/design-metrics.js')[k]), () => `K2 a name added on purpose since the base (${ADDED_SINCE.join(', ')}) is not the engine's and the metrics' own`);
 
 // ---------- B1: the base engine itself, live, on the same facts ----------
 {

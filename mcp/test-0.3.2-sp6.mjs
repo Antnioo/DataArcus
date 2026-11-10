@@ -99,7 +99,8 @@ chk(() => gold.C1 && !diff(got.C1, gold.C1).length, () => `C1 the colour functio
     const d = make(), p = E.page(d.layout), th = E.buildTheme(d, lang);
     if (bytes(E.glassPng(d, p.w, p.h)) !== bytes(B.glassPng(make(), p.w, p.h))) differ.push(name + ' glassPng');
     if (js(E.withGlassPicture(th, d)) !== js(B.withGlassPicture(B.buildTheme(make(), lang), make()))) differ.push(name + ' withGlassPicture');
-    if (js(Object.keys(E).sort()) !== js(Object.keys(B).sort())) differ.push('the facade\'s names');
+    // (0.3.3 FB1) pageFill was added on purpose after the base (how well a page is filled, mcp/work/FB1.md; sp29 K2 pins it)
+    if (js(Object.keys(E).filter((k) => k !== 'pageFill').sort()) !== js(Object.keys(B).sort())) differ.push('the facade\'s names');
   }
   chk(() => B && !differ.length, () => `B1 the base engine (${BASE}), live: ${B ? 'differs: ' + [...new Set(differ)].slice(0, 6).join('; ') : 'not loaded: ' + why}`);
 }

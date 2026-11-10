@@ -17,7 +17,8 @@
  *                    sizes(c, PW), computeSlots(c, lang, opt) (on the 720 grid), M, G, HH
  *   the KPI bars     barW(k, c), c0(c), kpiInset(c)
  *   the report       projectSlots(c, lang, opt) (page units), secondLayout(c), slidePanel(c, lang), projectPages(c, lang,
- *                    opts), absorb(out, t), fitSlots(slots, opt) { slots, dropped }, fitScale(opt, k), SLOT_GAP, REFLOW_KEEP
+ *                    opts), absorb(out, t), fitSlots(slots, opt) { slots, dropped }, fitScale(opt, k), SLOT_GAP, REFLOW_KEEP,
+ *                    pageFill(slots) { hole, holeArea, holeShare, gutter, charts, flat, low } (0.3.3 FB1)
  *   text sizes       FHD_TEXT, textScale(h), sizeAt(n, h), fs(n, c), TEXT_BASES, themeScaleOf(theme) { h, f } or null,
  *                    scaleTheme(theme, r) (a copy)
  */
@@ -351,6 +352,41 @@
     if (colm) { const y0 = Math.min(colm.y, t.y), y1 = Math.max(colm.y + colm.h, t.y + t.h); return out.map((x) => (x === colm ? Object.assign({}, x, { y: y0, h: y1 - y0 }) : x)); }
     return out;
   }
+  // ---------- how well a page is filled (0.3.3 FB1) ----------
+  // pageFill(slots): what a page's slots leave empty and how flat its charts are, measured, so a layout rule is chosen and
+  // pinned by a number instead of a case by case patch (the rail's gaps came back five times: 0.2.9 rounds 8, 9 and 12,
+  // FX2's C03, SQ13's S10). Units: the slots' own; the header's slots (title, logo) are not part of the body.
+  //  hole: the largest empty rectangle inside the body (the box around every other slot) whose two sides are both wider
+  //    than two of the page's own gutters (the smallest gap between two rows), or null; holeArea its area, holeShare its
+  //    share of the body in percent (one decimal); gutter: that smallest row gap (the slots' own G)
+  //  flat: the widest chart, its width / height (one decimal); low: the lowest chart's height; charts: how many (a chart:
+  //    any slot that is not a card, a slicer, a table, a text box or the header's)
+  const NOT_CHART = ['kpi', 'slicer', 'table', 'text', 'title', 'logo'];
+  function pageFill(slots) {
+    const body = (slots || []).filter((s) => !OWN_SLOTS.includes(s.kind) || s.kind === 'text'), charts = body.filter((s) => !NOT_CHART.includes(s.kind));
+    const r1 = (v) => Math.round(v * 10) / 10;
+    const out = { hole: null, holeArea: 0, holeShare: 0, gutter: 0, charts: charts.length, flat: charts.length ? r1(Math.max(...charts.map((s) => s.w / Math.max(1, s.h)))) : 0, low: charts.length ? Math.min(...charts.map((s) => s.h)) : 0 };
+    if (!body.length) return out;
+    const x0 = Math.min(...body.map((s) => s.x)), y0 = Math.min(...body.map((s) => s.y)), x1 = Math.max(...body.map((s) => s.x + s.w)), y1 = Math.max(...body.map((s) => s.y + s.h));
+    const gaps = body.flatMap((a) => body.filter((b) => b.y >= a.y + a.h && b.x < a.x + a.w && b.x + b.w > a.x).map((b) => b.y - (a.y + a.h))).filter((g) => g > 0);
+    const side = 2 * (out.gutter = gaps.length ? Math.min(...gaps) : 0);
+    const uniq = (l) => [...new Set(l)].sort((a, b) => a - b), xs = uniq(body.flatMap((s) => [s.x, s.x + s.w])), ys = uniq(body.flatMap((s) => [s.y, s.y + s.h]));
+    // the grid of the slots' own edges: a cell is free when no slot covers it; the largest free rectangle, by its area
+    const free = ys.slice(0, -1).map((y, j) => xs.slice(0, -1).map((x, i) => !body.some((s) => s.x <= x && s.x + s.w >= xs[i + 1] && s.y <= y && s.y + s.h >= ys[j + 1])));
+    for (let j0 = 0; j0 < ys.length - 1; j0++) {
+      const open = xs.slice(0, -1).map(() => true);
+      for (let j1 = j0; j1 < ys.length - 1; j1++) {
+        free[j1].forEach((f, i) => { if (!f) open[i] = false; });
+        for (let i0 = 0; i0 < open.length; i0++) { if (!open[i0]) continue; let i1 = i0; while (i1 + 1 < open.length && open[i1 + 1]) i1++;
+          const w = xs[i1 + 1] - xs[i0], h = ys[j1 + 1] - ys[j0];
+          if (w > side && h > side && w * h > out.holeArea) { out.hole = { x: xs[i0], y: ys[j0], w, h }; out.holeArea = w * h; }
+          i0 = i1; }
+      }
+    }
+    out.holeShare = r1(100 * out.holeArea / Math.max(1, (x1 - x0) * (y1 - y0)));
+    return out;
+  }
+
   const SLOT_GAP = 40;
   const REFLOW_KEEP = 0.45;   // (round 8, S7; round 9: 0.6 -> 0.5, so two dropdowns reflow too; 0.3.1 TS1, the owner's yes of 26 Oct to 0.2.9-writer-S10, SQ13's option (a): 0.5 -> 0.45, so a second page's chart keeps 168 of 347 and the 197 gap under the rail closes) a chart beside the rail keeps this share of its height at least when the page reflows
   const slotsTouch = (a, b) => (Math.abs(a.y - b.y) <= 1 && Math.abs(a.h - b.h) <= 1 && Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w) <= SLOT_GAP)
@@ -458,7 +494,7 @@
 
   const api = {
     M, G, HH, PAGES, DEFAULT_PAGE, LIM, within, fitCustom, page, pw, toPage, boxOf, T, baseLang, label, LAYOUTS, RTL_LANGS, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, RANGE, rangeOf, clampTo, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, noTimeOf, LAYOUT_PREVIEW, isPreview, hasMain, hasSplit, sizes, computeSlots, imageSize, pngSize,
-    FHD_TEXT, textScale, sizeAt, fs, TEXT_BASES, themeScaleOf, scaleTheme, barW, c0, kpiInset, projectSlots, secondLayout, slidePanel, absorb, SLOT_GAP, REFLOW_KEEP, fitSlots, fitScale, projectPages
+    FHD_TEXT, textScale, sizeAt, fs, TEXT_BASES, themeScaleOf, scaleTheme, barW, c0, kpiInset, projectSlots, secondLayout, slidePanel, absorb, SLOT_GAP, REFLOW_KEEP, fitSlots, fitScale, projectPages, pageFill
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAMetrics = api;
