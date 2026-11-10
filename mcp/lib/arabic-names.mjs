@@ -34,7 +34,7 @@ export function draftText(text, opts) {
     if (PHRASES.has(s.toLowerCase())) return PHRASES.get(s.toLowerCase());
     let x;
     if (s.includes(' · ')) { const parts = s.split(' · ').map(one); return parts.every(Boolean) ? parts.join(' · ') : null; }
-    if ((x = /^Top (\{\d+\}|\d+) of (\{\d+\}|\d+): (.+)$/.exec(s))) { const d = one(x[3]); return d ? `أعلى ${x[1]} من ${x[2]}: ${d}` : null; }
+    if ((x = /^Top (\{\d+\}|\d+) of (\{\d+\}|\d+): (.+)$/.exec(s))) { const d = one(x[3]); return d ? `أعلى ${x[1]} من أصل ${x[2]}: ${d}` : null; }
     if ((x = /^No data: (.+)$/.exec(s))) { const d = one(x[1]); return d ? `${PHRASES.get('no data')}: ${d}` : null; }
     if (names && (x = /^(.+): (detail)$/i.exec(s))) { const a = one(x[1]); if (a) return `${a}: ${TAIL.detail}`; }
     if ((x = /^(.+?) by (.+)$/.exec(s))) { const a = one(x[1]), b = one(x[2]); if (a && b) return `${a} حسب ${b}`; }
