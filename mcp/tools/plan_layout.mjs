@@ -36,7 +36,7 @@ import { BLANK_PNG_BYTES } from '../lib/report-run.mjs';
 // (0.3.2 SP43) the exact artifact: create_report's build with the plan's inputs, the EN-AR copy, the check and the digest
 import { exactArtifact } from '../lib/plan-artifact.mjs';
 import { createRequire } from 'node:module';
-import { fieldOfKey, keyOfText, parseFieldKey } from '../lib/field-key.mjs';
+import { fieldKey, fieldOfKey, keyOfText, parseFieldKey } from '../lib/field-key.mjs';
 const require = createRequire(import.meta.url);
 const Bind = require('../../assets/js/pbip-bind.js');
 const Pbip = require('../../assets/js/pbip-export.js');
@@ -114,7 +114,7 @@ function modelStep(lc) { let { a, formats, arabicNames, displayNamesAns, m0, pla
       // (keep the dashboard's identity, the owner's go 12 Oct: the model's report's own theme, the design's default colours)
       a.reportTheme = existingTheme(m, a.themeFrom);
       const keys = a.fields ? new Set(a.fields.map((x) => { return keyOfText(String(x)) || String(x); }))
-        : sc.needsFocus ? null : (() => { const b = Bind.suggest(sc.tables, Math.max(1, a.kpis == null ? 4 : a.kpis), relsOf(m, a.lang === 'ar' ? 'ar' : 'en')); return new Set([b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean).map((f) => `${f.t}[${f.c != null ? f.c : f.m}]`)); })();
+        : sc.needsFocus ? null : (() => { const b = Bind.suggest(sc.tables, Math.max(1, a.kpis == null ? 4 : a.kpis), relsOf(m, a.lang === 'ar' ? 'ar' : 'en')); return new Set([b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean).map((f) => fieldKey(f.t, f.c != null ? f.c : f.m))); })();
       const fmt = keys && formatsAnswer(m, a.path, keys, undefined, false, 'create_report writes it next to the project with the report, after the user\'s go (the same kind of script check_model_health writes, for the report\'s fields only).');
       // round 14 (the owner's ask, 6 Oct): an Arabic plan proposes an Arabic display name for every field it will show
       // that has none (a fixed glossary of report words, never a free translation), for the user to approve first
@@ -137,10 +137,10 @@ function modelStep(lc) { let { a, formats, arabicNames, displayNamesAns, m0, pla
       // name: each is drafted and approved like the others, its title then «عدد <name>», «مجموع <name>»
       const noMeasures = keys && !sc.needsFocus && !(a.planFields && (a.planFields.kpis || []).length) && !Bind.suggest(sc.tables, 8, relsOf(m, 'ar')).kpis.filter(Boolean).length;
       const counted = a.lang === 'ar' && keys && noMeasures ? Bind.counts(sc.tables, null, { lang: 'ar' }) : [];
-      counted.forEach((c) => keys.add(`${c.t}[${c.c}]`));
+      counted.forEach((c) => keys.add(fieldKey(c.t, c.c)));
       // (0.3.1 FX3, FX2's Seen 1; the owner, D-1027-04) the metric switcher's labels are the plan's names of its measures:
       // on an Arabic report each is drafted and approved like a title's field, or kept English on purpose
-      const switched = a.lang === 'ar' && keys && a.metricSwitcher ? resolveSwitch(m.tables, a.metricSwitcher).measures.map((x) => `${x.t}[${x.m}]`) : [];
+      const switched = a.lang === 'ar' && keys && a.metricSwitcher ? resolveSwitch(m.tables, a.metricSwitcher).measures.map((x) => fieldKey(x.t, x.m)) : [];
       switched.forEach((k) => keys.add(k));
       if (a.lang === 'ar' && keys) {
         const given = new Set(Object.keys(a.displayNames || {}).map((k) => { return keyOfText(String(k)) || k; }));
@@ -171,7 +171,7 @@ function modelStep(lc) { let { a, formats, arabicNames, displayNamesAns, m0, pla
         // confirmed earlier or the fixed list's), approved with it; none yet: its field is drafted first (proposeYourself)
         if (counted.length) {
           const nameOf = Object.assign({}, prop, reusedNames(), Object.fromEntries(Object.entries(a.displayNames || {}).map(([k, v]) => { return [keyOfText(String(k)) || String(k), String(v)]; })));
-          const titles = counted.slice(0, 30).map((c) => { const k = `${c.t}[${c.c}]`, nm = nameOf[k], ar = nm && /[\u0600-\u06FF]/.test(nm) ? (c.agg === 0 ? 'مجموع ' : 'عدد ') + nm : null;
+          const titles = counted.slice(0, 30).map((c) => { const k = fieldKey(c.t, c.c), nm = nameOf[k], ar = nm && /[\u0600-\u06FF]/.test(nm) ? (c.agg === 0 ? 'مجموع ' : 'عدد ') + nm : null;
             return { field: k, en: (c.agg === 0 ? 'Sum of ' : 'Count of ') + c.c, ar }; });
           if (!arabicNames.arabicNames) arabicNames = { arabicNames: {} };
           arabicNames.arabicNames.countedTitles = { titles, sayInPlan: 'The model has no measures, so the report counts or sums these columns itself. Show each title\'s Arabic draft beside its English, marked as a draft: it is the field\'s Arabic name with «عدد» (a count) or «مجموع» (a sum), approved with that name. A title with no draft (ar null) waits for its field\'s name (proposeYourself); until the user approves one, it is written wholly in English.' };
@@ -253,7 +253,7 @@ function monthOrderStep(lc) { let { a, m0, noAxis, planProblems, pf } = lc;
       const sc0 = scopeOf(m0, { focus: a.focus, tables: a.tables });
       const tf = noAxis ? null : pf.timeAxis ? (fieldsAndProblems(m0.tables, { timeAxis: pf.timeAxis }).out || {}).timeAxis : sc0.needsFocus ? null : (Bind.suggest(sc0.tables, 1, relsOf(m0, a.lang === 'ar' ? 'ar' : 'en')) || {}).date;
       // (the cross-review's G6: the writer's own decision, Pbip.timeAxisPlan, said here; never a promise the writer may not keep)
-      if (tf) { const key = `${tf.t}[${tf.c}]`, tp = Pbip.timeAxisPlan(tf);
+      if (tf) { const key = fieldKey(tf.t, tf.c), tp = Pbip.timeAxisPlan(tf);
         const how = { own: 'The column\'s own order (a date or a number).', model: 'The model sorts this column (its sort-by column): calendar order.',
           number: tp.by ? `In month order by ${tp.by.t}[${tp.by.c}] (the report sorts it; the model is not changed).` : '',
           monthLabel: `In time order by the label itself read as a date (a report-level measure: "Apr 2018", "April 2018" and "2018-04" are read; the column has no date or sort-by column the files give a type), showing the last ${tp.last} months with data (a visual filter the user can clear); a label that can't be read keeps every month. The model is not changed; a sort-by column in the model is the lasting fix (check_model_health, MONTH_SORT).`,
@@ -387,7 +387,7 @@ function titlesStep(lc) { let { a, arabicNames, m0, notTranslated, planProblems,
       // that would be written English for a field with no Arabic name: no plan id until each field is drafted and approved,
       // or kept English on purpose
       // (FX3) a switcher label that would be English: listed, and no plan id, as a title's field
-      const sw = m0 && a.metricSwitcher ? resolveSwitch(m0.tables, a.metricSwitcher).measures.map((x) => `${x.t}[${x.m}]`) : [];
+      const sw = m0 && a.metricSwitcher ? resolveSwitch(m0.tables, a.metricSwitcher).measures.map((x) => fieldKey(x.t, x.m)) : [];
       const swFields = (notTranslated || []).filter((x) => !keptOnPurpose.has(x.field) && sw.includes(x.field)).map((x) => x.field);
       if (swFields.length) { arabicNames.arabicNames.switcherLabels = { fields: swFields, how: 'The metric switcher\'s choices and its charts\' titles read these names: on an Arabic report they are Arabic. Draft an Arabic name for each (plain business Arabic, as howToPropose says), show the drafts to the user to approve or edit, and call plan_layout again with the approved ones as displayNames; a name the user keeps in English on purpose: its model name as its displayNames entry.' };
         planProblems.push(`an Arabic report's metric switcher shows its measures by their Arabic names, and ${swFields.length === 1 ? 'this measure has' : 'these measures have'} none yet, so ${swFields.length === 1 ? 'its label' : 'their labels'} would be English: ${swFields.join(', ')} (arabicNames.switcherLabels). Draft an Arabic name for each, show the drafts to the user to approve or edit, and call plan_layout again with the approved ones as displayNames; or, for a measure the user keeps English on purpose, give its model name as its displayNames entry. No plan id until every measure listed has one or the other.`); }
