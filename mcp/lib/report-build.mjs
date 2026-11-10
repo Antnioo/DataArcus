@@ -169,7 +169,7 @@ function designStep(rb) {
   const { a, m, F, PF, nCards, cardNote, bindFor, kpisOf, logo, logoRatio, withText, withValues, withSplit, listFormats, named, subKeys, galleryOn, svgFor, svgCardsFor, modelNames, modelColumns, countOf, png1 } = rb;
   let { r, bind, extra, written, boundPages, look, tinyPage, smallPageNote, designRepaired, switchAt, kpiCards } = rb;
     // the website's project download for this design: its pages (second page, slide-in panel), labels and theme
-    const planned = planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang, colors: a.colors, theme: a.theme });
+    const planned = planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang, colors: a.colors, theme: a.theme, font: a.font });
     let design = planned.design;
     // (the audit's A2-2: the note comes from the plan's own smallPage, the design engine's rule)
     if (planned.smallPage) smallPageNote = planned.smallPage;

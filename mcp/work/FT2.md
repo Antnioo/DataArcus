@@ -27,7 +27,13 @@ equals the plan.
 ## Before -> after (written 2026-11-10T08:26Z)
 - Red on 00f7f702 first: test-0.3.3-ft2 `FAIL  ft2  5 of 12 checks` (C1, C2, D1, D2, G, TC, TD fail: the theme keeps Segoe UI or
   Verdana, no fontSaid, no repaired line).
-- After: `PASS  ft2  12 checks`. Areas and guards: see below, filled when run.
+- After: `PASS  ft2  12 checks`. Written 2026-11-10T08:56Z, each number from the run's own output: report area 76 suites PASS, core 13, arabic 18;
+  split guards and pinned suites sp10 113, sp22 24, sp26 26, sp38 50, sp39 96, sp43 21, sp44 23, sp6 13, sp29 21, sp12 21, sp13 12,
+  sp23 29 PASS, no fixture re-recorded and no test's expected number changed. Gates: check-modules --strict (217 rows, no row
+  changes: no new module, no fs / process.env import), agent-memory, result-lines, changelog-words, check-contracts,
+  test-contracts, site config PASS; eslint (npm run lint at the repo root) exit 0.
+## Changed on purpose
+- none: no existing test or fixture changed.
 
 ## CHANGELOG line
 - A report made with a layout or design now uses the `font` you give it (for example Tahoma) over the design's own font, in the

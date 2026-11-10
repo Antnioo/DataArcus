@@ -319,6 +319,17 @@ export function planLayout(a) {
   }
   else if (rt && a.design && a.design.preset === 'Corporate' && Array.isArray(a.design.data) && a.design.data.join() === E.PRESETS.Corporate.data.join())
     colours = { from: 'design', note: `The model's report "${rt.report}" has its own theme "${rt.theme.name}"; this design has the Corporate preset (generate_theme was called without the model). If the user asked for no colours, call generate_theme again with path (the model) to keep the report's theme, then plan again; otherwise say the colours are the Corporate preset.` };
+  // (0.3.3 FT2, B-432) the font the person gave (create_report's font) over a design's own: their explicit choice wins,
+  // unless E.FONTS refuses it (said, never dropped). "Segoe UI" is the default create_report fills in, so it counts as
+  // none (FT1 decided the same). Hand-placed pages (a.pages) have no design font: their font is the theme's, FT1.
+  let fontSaid = null;
+  if (a.font != null && a.font !== 'Segoe UI' && !a.pages) {
+    if (E.FONTS.includes(a.font)) {
+      const was = given && given.font != null && E.FONTS.includes(given.font) && given.font !== a.font ? given.font : null;
+      fontSaid = { font: a.font, ...(was ? { replaced: was } : {}), say: `The report's font is ${a.font}, as asked${was ? `; it replaced the design's own font ${was}` : ''}.${E.MEASURED_FONTS.includes(a.font) ? '' : ` ${a.font} is not measured yet in Power BI Desktop (only ${E.MEASURED_FONTS.join(' and ')} are), so a long title or value may be cut.`}` };
+      given = Object.assign({}, given, { font: a.font });
+    } else fix({ field: 'font', given: a.font, used: given && given.font != null ? given.font : 'Segoe UI', why: `not a Power BI font the generator offers; use one of ${E.FONTS.join(', ')}` });
+  }
   const design = withDefaults(given, fix), l = design.layout;
   // (P3, N28) the default design's page is the 6% tint (withDefaults): said in the plan
   const tinted = !namesColours(given) && !(given && given.ui && given.ui.background != null) ? { pageTint: TINT_LINE(design.ui.background) } : null;
@@ -352,7 +363,7 @@ export function planLayout(a) {
     .map((s, i) => ({ role: s.role, kind: s.kind, position: { x: s.x, y: s.y, z: (i + 1) * 1000, width: s.w, height: s.h, tabOrder: (i + 1) * 1000 } }));
   if (colours && colours.from === 'report theme') colours.contrastWarnings = contrastReport(design).warnings;
   // (the owner's decision on layouts, 12 Oct: a setup that ships as preview says so in one plain line, E.isPreview)
-  return Object.assign({ design, slots, forAuthoring, why: E.LAYOUTS[layout.preset].why.map(nm), look }, E.isPreview(layout) ? { preview: nm(E.LAYOUT_PREVIEW) } : {}, tinted || {}, smallPage ? { smallPage } : {}, repaired.length ? { repaired } : {}, colours ? { colours } : {});
+  return Object.assign({ design, slots, forAuthoring, why: E.LAYOUTS[layout.preset].why.map(nm), look }, E.isPreview(layout) ? { preview: nm(E.LAYOUT_PREVIEW) } : {}, tinted || {}, smallPage ? { smallPage } : {}, fontSaid ? { fontSaid } : {}, repaired.length ? { repaired } : {}, colours ? { colours } : {});
 }
 
 // (rc.22, B-140) a slot kind's visual, in the plan's language (the slots' "visual")
