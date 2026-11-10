@@ -252,7 +252,7 @@ function monthOrderStep(lc) { let { a, m0, noAxis, planProblems, pf } = lc;
       const sc0 = scopeOf(m0, { focus: a.focus, tables: a.tables });
       const tf = noAxis ? null : pf.timeAxis ? (fieldsAndProblems(m0.tables, { timeAxis: pf.timeAxis }).out || {}).timeAxis : sc0.needsFocus ? null : (Bind.suggest(sc0.tables, 1, relsOf(m0, a.lang === 'ar' ? 'ar' : 'en')) || {}).date;
       // (the cross-review's G6: the writer's own decision, Pbip.timeAxisPlan, said here; never a promise the writer may not keep)
-      if (tf) { const key = `${tf.t}[${tf.c}]`, tp = Pbip.timeAxisPlan(tf) || { order: 'own' };
+      if (tf) { const key = `${tf.t}[${tf.c}]`, tp = Pbip.timeAxisPlan(tf);
         const how = { own: 'The column\'s own order (a date or a number).', model: 'The model sorts this column (its sort-by column): calendar order.',
           number: tp.by ? `In month order by ${tp.by.t}[${tp.by.c}] (the report sorts it; the model is not changed).` : '',
           monthLabel: `In time order by the label itself read as a date (a report-level measure: "Apr 2018", "April 2018" and "2018-04" are read; the column has no date or sort-by column the files give a type), showing the last ${tp.last} months with data (a visual filter the user can clear); a label that can't be read keeps every month. The model is not changed; a sort-by column in the model is the lasting fix (check_model_health, MONTH_SORT).`,
@@ -320,7 +320,6 @@ function lintStep(lc) { let { a, arabicNames, m0, planNames, notTranslated, reus
       if (planProblems.length) return { skipped: 'the plan is outside the tools\' limits (planProblems): change it first' };
       try {
         const sc = scopeOf(m0, { focus: a.focus, tables: a.tables });
-        if (sc.needsFocus) return { skipped: 'a large model needs a focus or tables to plan the page\'s fields' };
         return planLint({ m: m0, tables: sc.tables, design: r.design, lang: a.lang === 'ar' ? 'ar' : 'en', gallery: a.gallery, axes: m0 ? axesOf(m0, a.sharedAxes) : undefined, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null });
       } catch (e) { return { skipped: 'the planned page could not be built for the lint: ' + String(e && e.message || e).slice(0, 200) }; }
     })() };
@@ -507,12 +506,11 @@ function slicersStep(lc) { let { a, pf, exact, biSaid } = lc;
     const biWrites = biSaid ? ` (in English and Arabic: its ${biSaid.pairs.length} English pages and their ${biSaid.pairs.length} Arabic pages, ${biSaid.buttons.filter((b) => b.placed).length} language buttons, ${biSaid.syncGroups.length} slicer pairs kept in sync, the ${a.tabsShown === 'ar' ? 'English' : 'Arabic'} pages hidden in the tabs)` : '';
   Object.assign(lc, { slicersAns, bilingual, biWrites }); }
 // (FN1J) what the plan writes, in English and Arabic, and the status icons said
-function writesStep(lc) { let { a, formats, m0, cvEntries, switchPlan, flipPlan, calFile, calPlan, iconsPlan, daxPlan, biSaid, biWrites } = lc;
+function writesStep(lc) { let { a, formats, m0, cvEntries, switchPlan, flipPlan, calFile, calPlan, iconsPlan, daxPlan, biWrites } = lc;
     const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0, axesOf(m0, a.sharedAxes), { second: a.customVisualsSecond }).writes : [`the report "<name>.Report" and its "<name>.pbip" ${m0 && m0.projectDir ? whereSaid(m0.projectDir).replace(/, next to "[^"]*"$/, '') + ', next to the model' : 'next to the model'}, with the theme inside it${biWrites}${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"${formats.formats.alreadyThere ? ' (already there with exactly this script: not written again)' : ''}` : ''}${switchPlan ? `, and the metric switcher's TMDL script "<name>${SCRIPT_SUFFIX}.tmdl" (a new table for the model, ${NEVER_APPLIED})` : ''}${flipPlan ? `, and the flip cards' TMDL script "${flipPlan.scriptAfterGo}" (${flipPlan.newMeasures} new measures, ${NEVER_APPLIED})` : ''}${iconsPlan && iconsPlan.scriptAfterGo ? `, and the status icons' TMDL script "${iconsPlan.scriptAfterGo}" (${iconsPlan.newMeasures} new measures, ${NEVER_APPLIED})` : ''}${daxPlan ? `, and the DAX functions' TMDL script "${daxPlan.scriptAfterGo}" (${daxPlan.functions.filter((f) => f.inScript).length} functions and ${daxPlan.measures.length} measures, ${NEVER_APPLIED}; ${daxPlan.compatibility.raises ? 'applying it raises the model\'s compatibility level to 1702, which cannot be undone' : 'the model is already at 1702 or higher'})` : ''} (create_report)`];
     if (calFile && a.customVisualsFrom == null && writes.length) writes[0] += `, and the Arabic calendar columns' TMDL script "${calFile}" (${calPlan ? `${calPlan.columns.length} column${calPlan.columns.length === 1 ? '' : 's'}` : 'columns'} for the date table, ${NEVER_APPLIED})`;
     // (SQ3, T1-S6) the same line in Arabic, for an Arabic report's approval page (a native copy's stays English)
     const NA = NEVER_APPLIED_AR, writesAr = a.lang === 'ar' && a.customVisualsFrom == null && writes.length === 1 ? [`التقرير «<name>.Report» وملف «<name>.pbip» ${m0 && m0.projectDir ? whereSaid(m0.projectDir, undefined, true).replace(/، بجانب «[^»]*»$/, '') + '، بجانب النموذج' : 'بجانب النموذج'}، والسمة داخله`
-      + (biSaid ? ` (بالإنجليزية والعربية: صفحاته الإنجليزية (${biSaid.pairs.length}) وصفحاتها العربية (${biSaid.pairs.length})، أزرار اللغة: ${biSaid.buttons.filter((b) => b.placed).length}، أزواج المقسمات المتزامنة: ${biSaid.syncGroups.length}، والصفحات ${a.tabsShown === 'ar' ? 'الإنجليزية' : 'العربية'} مخفية في علامات التبويب)` : '')
       + (formats.formats && formats.formats.scriptAfterGo ? `، وسكربت التنسيقات «${formats.formats.scriptAfterGo}»${formats.formats.alreadyThere ? ' (موجود من قبل بالمحتوى نفسه: لا يُكتب مرة أخرى)' : ''}` : '')
       + (switchPlan ? `، وسكربت TMDL لمبدّل المقاييس «<name>${SCRIPT_SUFFIX}.tmdl» (جدول جديد للنموذج، ${NA})` : '')
       + (flipPlan ? `، وسكربت TMDL للبطاقات القابلة للقلب «${flipPlan.scriptAfterGo}» (مقاييس جديدة: ${flipPlan.newMeasures}، ${NA})` : '')

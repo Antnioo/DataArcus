@@ -7,7 +7,7 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 ## Where it stands (0.3.3)
 - 0.3.2 is on main (#117, f3c1b7e1; each job's note in `mcp/work/<ID>.md`, the list in `CHANGELOG.md`).
 - `integration/0.3.3`: builders branch from it, push only their branch; the reviewer merges; the owner merges to main.
-- 0.3.3 merged: BA1 (weekly bot PRs that change only the 3 data files merge themselves, D-1109-10), HK1 (suites read saved fixtures), LK1 (linked visuals folder named, one link counts once), WE1 (Arabic write errors), PQ1 (PL-300 bank, 234 questions), HC2 (month-sort rule finds an Arabic Hijri month column).
+- 0.3.3 merged: BA1 (weekly bot PRs that change only the 3 data files merge themselves, D-1109-10), HK1 (suites read saved fixtures), LK1 (linked visuals folder named, one link counts once), WE1 (Arabic write errors), PQ1 (PL-300 bank, 234 questions), HC2 (month-sort rule finds an Arabic Hijri month column), DB1 (plan_layout's 3 unreachable branches removed, 3 reachable now tested).
   Held: TC1, SG1.
 
 ## Next step
