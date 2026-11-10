@@ -17,7 +17,7 @@
 //   the theme, a page's background: files.mjs's readUserFile) and refuses ("Nothing was written ...") an input it cannot use.
 import path from 'node:path';
 import { inside, modelOf, nothingAt } from './model.mjs';
-import { planLayout, absorb, imageSize, isSmall, projectPages, designRtl, buildTheme, texts, themeName, themeScaleOf, scaleTheme, textScale, isGlass, glassPng } from './design.mjs';
+import { planLayout, absorb, imageSize, isSmall, projectPages, designRtl, buildTheme, texts, themeName, themeScaleOf, scaleTheme, textScale, isGlass, glassPng, themeFont } from './design.mjs';
 import { resolveSwitch, switchReach, addSwitch, switchSaid, SWITCH_MIN, SWITCH_MAX } from './metric-switcher.mjs';
 import { takenNames } from './report-names.mjs';
 import { modelPrintOf } from './artifact.mjs';
@@ -263,6 +263,8 @@ function handStep(rb) {
       } else if (t10 > 0 && !ours) reportNotes.push(`The theme's text sizes were not scaled to the pages: it is not a theme generate_theme made, so its sizes are kept as its author set them. If they look too large or too small on these ${hs.join(' and ')}-high pages, change the theme, or make one with generate_theme (layout.page).`);
       else if (!ratio && t10 > 0 && hs.length > 1) reportNotes.push(`The theme's text sizes are made for a page about ${themeH} high and were not scaled: the pages have different heights (${hs.join(', ')}). Use one page size, or a theme made for it (generate_theme's layout.page).`);
     }
+    // (0.3.3 FT1) the report's font in the theme's text classes, so every visual without its own font shows it
+    theme = themeFont(theme, a.font);
     written = theme;
     look = { ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}), font: a.font, rtl: rtlHand };
     r = Pbip.build({
