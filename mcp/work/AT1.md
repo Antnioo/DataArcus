@@ -64,6 +64,6 @@ Open an Arabic plan's approval page: the first line has no repeated bracket; che
 - A pin file holds lengths: +8 per two inserted words is a quick proof only the words moved.
 - The note's cap (WORK.md 3200) was already exceeded on integration (3215); I trimmed it.
 
-CI: GREEN, run https://github.com/Antnioo/DataArcus/actions/runs/42866433432 on b940a377 (the website job's first run hit the B-439 flake; rerun green, all 19 jobs, read by me).
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/42866433432 on b940a377 (the website job's first run hit the B-439 flake; rerun green, all 19 jobs, read by the reviewer).
 
 DONE
