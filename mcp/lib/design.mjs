@@ -23,6 +23,24 @@ export const { withGlassPicture } = E;
 export const { absorb, fitSlots } = E;
 export const designRtl = E.rtl;
 
+// (0.3.3 FT1, B-430: a hand-placed report's font reached only its text box, slicers and filter pane; its theme had none)
+// the theme with a font: the 4 primary text classes buildTheme writes (callout, title, header, label) carry it as their
+// fontFace, their size, weight and colour kept; a secondary class the theme itself sets with a face takes it too, but
+// boldLabel and semiboldLabel (their face carries the weight); every other secondary class inherits from its primary
+// one (Microsoft Learn, "Create custom report themes in Power BI Desktop", Set formatted text defaults). Visual styles
+// are not touched. The default font (Segoe UI), none, or a font the tools do not offer (E.FONTS): the theme itself.
+// Pure: the input is not changed.
+export const PRIMARY_TEXT_CLASSES = ['callout', 'title', 'header', 'label'];
+const WEIGHT_CLASSES = ['boldLabel', 'semiboldLabel'];
+export function themeFont(theme, font) {
+  const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
+  if (font === 'Segoe UI' || !E.FONTS.includes(font) || !isObj(theme)) return theme;
+  const tc = isObj(theme.textClasses) ? theme.textClasses : {}, out = {};
+  Object.keys(tc).forEach((k) => { out[k] = isObj(tc[k]) && typeof tc[k].fontFace === 'string' && !WEIGHT_CLASSES.includes(k) ? Object.assign({}, tc[k], { fontFace: font }) : tc[k]; });
+  PRIMARY_TEXT_CLASSES.forEach((k) => { out[k] = Object.assign({}, isObj(tc[k]) ? tc[k] : {}, { fontFace: font }); });
+  return Object.assign({}, theme, { textClasses: out });
+}
+
 const HARMONIES = ['analogous', 'complementary', 'triadic', 'mono'];
 // the light page of a brand theme (0.2.9, O-11): the Corporate preset's (the cross-review's G7: one light page, the
 // design engine's; the brand is the accent)

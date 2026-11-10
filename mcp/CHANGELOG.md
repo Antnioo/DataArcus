@@ -13,6 +13,9 @@ package's manifest; this file says what is in it.
   English; without `lang` the folder's own letters decide, as before.
 - The Model Health Check's month-sort rule also finds a Hijri month column named in Arabic («الشهر الهجري»,
   «اسم الشهر الهجري»).
+- A hand-placed report's font (create_report's `font`, for example Tahoma) now reaches its tables, cards and charts
+  too: the report's theme carries it in its text classes, so every visual without a font of its own shows it, in the
+  English report and its Arabic twin. Without a font the theme is written as before.
 
 ## [0.3.2]: 2026-11-09 (the version for testers, second round)
 The second version for testers. In short:
