@@ -11,6 +11,8 @@ package's manifest; this file says what is in it.
 - **The write tools answer in Arabic when asked to:** plan_layout, generate_theme and add_gulf_calendar given
   `lang: "ar"` say the several-models answer in the same approved Arabic as the reading tools; `lang: "en"` says it in
   English; without `lang` the folder's own letters decide, as before.
+- The Model Health Check's month-sort rule also finds a Hijri month column named in Arabic («الشهر الهجري»,
+  «اسم الشهر الهجري»).
 
 ## [0.3.2]: 2026-11-09 (the version for testers, second round)
 The second version for testers. In short:
