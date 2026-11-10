@@ -635,6 +635,7 @@ export const FAMILIES = [
       P('mcp/lib/sample-project.mjs', 'name', 'source', esc1n()),
       P('mcp/lib/shadow-model.mjs', 'q', 'source', esc1n()),
       P('mcp/lib/twin-model.mjs', 'tmdlName', 'source', esc1n()),
+      P('mcp/lib/model-script.mjs', 'functionLines', 'export', async (x, get) => { const l = (await get())({ name: x.n, expression: '1' }, 0)[0]; return l.slice('function '.length, -' ='.length); }),   // (DQ1, B-438) the name in the function's first line
     ] },
   { id: 'u32', title: 'What number do four bytes hold?', question: 'bytes and an offset: the big-endian unsigned 32-bit number there (a PNG read)',
     inputs: U32, places: [

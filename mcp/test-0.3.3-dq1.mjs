@@ -9,6 +9,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { resolveSvgColumns } from './lib/report-fields.mjs';
 import { titleProblems } from './lib/metric-switcher.mjs';
+import { functionLines } from './lib/model-script.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const require = createRequire(import.meta.url);
@@ -39,6 +40,15 @@ for (const f of ['mcp/lib/report-fields.mjs', 'mcp/lib/twin-model.mjs', 'mcp/lib
   chk(() => !/tq = `\(\?:'\$\{esc/.test(s), `D5 ${f}: no hand-written table quoting in a regex`);
   chk(() => /daxNames/.test(s), `D5 ${f}: reads daxNames`);
 }
+
+// ---- D6 (B-438): functionLines writes its name with tmdl-name.js, the one TMDL name rule ----
+const { tmdlName } = require('../assets/js/tmdl-name.js');
+// the 9 probe names of family tmdl-name's kind, plus a dotted function name and a hyphenated one
+const NAMES = ['Sales', 'Sales Data', 'Sales-2024', "O'Brien", 'Local.Fn', '2024', '_x', 'ي', '', 'a b-c'];
+for (const n of NAMES) chk(() => functionLines({ name: n, expression: '1' }, 1).find((l) => l.includes('function ')).trim() === 'function ' + tmdlName(n) + ' =', `D6 functionLines name ${JSON.stringify(n)} is tmdlName's`);
+// drift: the rule moves in tmdl-name.js only; functionLines must follow it (no copy of the rule in model-script.mjs)
+chk(() => !/A-Za-z_\]\[A-Za-z0-9_\]\*/.test(read('mcp/lib/model-script.mjs')), 'D6 model-script.mjs keeps no TMDL name rule of its own');
+chk(() => /tmdl-name\.js/.test(read('mcp/lib/model-script.mjs')), 'D6 model-script.mjs reads tmdl-name.js');
 
 if (problems.length) { console.log(`FAIL script=test-0.3.3-dq1.mjs cause=${problems[0].slice(0, 300)}`); for (const p of problems) console.log('  - ' + p); console.log(`FAIL  dq1  ${problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  dq1  ${checks} checks`);

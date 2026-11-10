@@ -51,7 +51,7 @@ How it is kept true:
 | [contrast What is the contrast of two colours?](#contrast-what-is-the-contrast-of-two-colours) | 4 | 0 of 9 | generate_theme, the writer, the SVG KPIs | one place since DD2K: `assets/js/contrast.js` `contrast` |
 | [xml How is a text escaped for XML (SVG)?](#xml-how-is-a-text-escaped-for-xml-svg) | 2 | 0 of 10 | the SVG KPIs, the flip cards | equal |
 | [html How is a text escaped for HTML?](#html-how-is-a-text-escaped-for-html) | 9 | 0 of 10 | the website's pages, the approval window | one place since DD2H: `assets/js/html-escape.js` `htmlEsc` |
-| [tmdl-name How is a name written in TMDL?](#tmdl-name-how-is-a-name-written-in-tmdl) | 7 | 0 of 9 | check_model_health's fix scripts, the measure builder page, the twin's model, create_report's sample | equal (one place: `tmdl-name.js`) |
+| [tmdl-name How is a name written in TMDL?](#tmdl-name-how-is-a-name-written-in-tmdl) | 8 | 0 of 9 | check_model_health's fix scripts, the measure builder page, the twin's model, create_report's sample | equal (one place: `tmdl-name.js`) |
 | [decode What text do the bytes of a Power BI file hold?](#decode-what-text-do-the-bytes-of-a-power-bi-file-hold) | 4 | 0 of 10 | every model read (the MCP and the website) | one place since DD2D: `assets/js/model-file.js` `decodeText` |
 | [limits How large may a model file be?](#limits-how-large-may-a-model-file-be) | 4 | 0 of 8 | every model read (the MCP and the website) | one place since DD2D: `assets/js/model-file.js` `LIMITS` |
 | [text-runs What text does a text box hold?](#text-runs-what-text-does-a-text-box-hold) | 1 | 0 of 9 | check_report, read_report, the preview | one place since DD2T: `assets/js/text-runs.js` `paragraphTexts` |
@@ -854,8 +854,9 @@ places are MCP only).
 | `mcp/lib/sample-project.mjs` `name` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | create_report's sample project (reads tmdl-name.js) |
 | `mcp/lib/shadow-model.mjs` `q` | [helpers](MODULES.md#the-mcp-what-leaves-the-server-and-the-tools-helpers) | a test only (MODULES.md: used by none; reads tmdl-name.js) |
 | `mcp/lib/twin-model.mjs` `tmdlName` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's measures (reads tmdl-name.js) |
+| `mcp/lib/model-script.mjs` `functionLines` | [write path](MODULES.md#the-mcp-the-write-path) | the DAX functions' TMDL (create_report; reads tmdl-name.js since DQ1) |
 
-**Today:** all 7 answer the same on all 9 inputs.
+**Today:** all 8 answer the same on all 9 inputs (`functionLines` joined in DQ1, B-438: it kept its own copy of the rule, equal on the 9).
 
 **Before DD2N** (A: model-health-tmdl name, measure-builder tName; B: model-culture q, sample-project name,
 shadow-model q, twin-model tmdlName):
