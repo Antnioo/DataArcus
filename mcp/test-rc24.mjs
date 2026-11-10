@@ -101,7 +101,7 @@ try {
   // the labels: every text in Arabic (the page buttons, the Reset button as the laptop's tester wrote it, long headers)
   const AR = { 'Executive summary': 'الملخص التنفيذي', Details: 'التفاصيل', Tooltip: 'تلميح', 'Reset filters': 'إعادة ضبط عوامل التصفية', 'Web Orders Total Score': 'مجموع نقاط طلبات الويب الإجمالي', 'Web Orders Total Value': 'القيمة الإجمالية لطلبات الويب', 'Web Orders Count': 'عدد طلبات الويب', 'Plan Group': 'مجموعة الخطة' };
   const arOf = (t) => { const x = String(t.text || '').trim();
-    if (t.kind === 'titleMeasure') return /^Top \{1\} of \{2\}: /.test(x) ? 'أعلى {1} من {2}: ' + (/Coupon/.test(x) ? 'النقاط حسب منطقة القسيمة' : 'النقاط حسب مجموعة الخطة') : /Coupon/.test(x) ? 'النقاط حسب منطقة القسيمة' : 'النقاط حسب مجموعة الخطة';
+    if (t.kind === 'titleMeasure') return /^Top \{1\} of \{2\}: /.test(x) ? 'أعلى {1} من أصل {2}: ' + (/Coupon/.test(x) ? 'النقاط حسب منطقة القسيمة' : 'النقاط حسب مجموعة الخطة') : /Coupon/.test(x) ? 'النقاط حسب منطقة القسيمة' : 'النقاط حسب مجموعة الخطة';
     return AR[x] || t.draftArabic || AR[x.replace(/ · .*$/, '')] || 'نص'; };
   const labels = Object.fromEntries(texts.filter((t) => t.text != null).map((t) => [t.id, arOf(t)]));
   const p1 = await w.call('create_arabic_twin', { path: 'large/Golden.Report', labels });

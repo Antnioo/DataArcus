@@ -40,8 +40,11 @@ export const besideSaid = (dir) => { const r = relOf(dir); return r == null ? 'n
  *  or 'the working folder (C:\\DataArcus)'. rel: relative to the working folder, with / or the OS's separator. */
 export function folderSaid(rel, ar) {
   const r = String(rel == null ? '' : rel).replace(/[\\/]+$/, ''), abs = ROOT ? path.join(ROOT, shownPath(r)) : shownPath(r);
-  if (!r || r === '.') return ar ? `مجلد العمل (${abs})` : `the working folder (${abs})`;
-  return ar ? `المجلد «${shownPath(r)}» (${abs})` : `the folder "${shownPath(r)}" (${abs})`;
+  // (0.3.3 AT1, B-429) the Arabic bracket holds the folder's own path; with no working folder set it would only repeat the
+  // generic words or the name just said ("." or the same name), so it is left out (no new Arabic words)
+  const brAr = abs && abs !== '.' && abs !== shownPath(r) ? ` (${abs})` : '';
+  if (!r || r === '.') return ar ? `مجلد العمل${brAr}` : `the working folder (${abs})`;
+  return ar ? `المجلد «${shownPath(r)}»${brAr}` : `the folder "${shownPath(r)}" (${abs})`;
 }
 /** Where a file goes, by the folder's name: 'in the folder "Sales", next to "Sales.pbip"' (the project file of that
  *  folder, base preferred), or 'in the working folder (C:\\DataArcus)' when the folder is the working folder. dir: absolute.

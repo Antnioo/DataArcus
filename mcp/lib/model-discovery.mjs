@@ -82,5 +82,5 @@ export function noModelAt(p, root) {
   const prefer = near && near !== '.' ? shownPath(path.relative(root, path.resolve(root, near))) : null;
   try { byName('\u0000', root, prefer); } catch (e) { if (e && e.code === 'NO_MODEL_NAMED') { models = e.data.models; more = e.data.more; } else throw e; }
   const shown = shownPath(String(p));
-  return new ReadError('NO_MODEL_AT', { path: shown, models, more }, `Nothing at "${shown}" in the working folder ${root}.${modelsThere(models.concat(Array(more).fill('')))}`);
+  return new ReadError('NO_MODEL_AT', { path: shown, root, models, more }, `Nothing at "${shown}" in the working folder ${root}.${modelsThere(models.concat(Array(more).fill('')))}`);
 }
