@@ -277,6 +277,12 @@ jobs:
         if: always()
         run: node scripts/ci-sum.mjs mcp ci-logs --os linux
 
+      # (0.3.3 TC1, B-396) the type-checking pilot: mcp/lib/model.mjs only (// @ts-check, mcp/tsconfig.tc1.json). Linux only.
+      - name: Type check the pilot module (TC1)
+        if: always()
+        working-directory: mcp
+        run: npm ci --ignore-scripts --no-audit --no-fund && npx tsc -p tsconfig.tc1.json
+
   # (SPD, Codex #7) coverage and coverage-web (never gates) run nightly and by hand: .github/workflows/coverage.yml.
   # Mutation stays here, on every push (an mcp/tests.json suite, in the MCP shards).
 
