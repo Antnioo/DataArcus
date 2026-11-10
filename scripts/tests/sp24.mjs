@@ -54,14 +54,16 @@ const MODELS = [
   ['broken.zip', folderZip(TMDL, 'B.SemanticModel/definition/', [{ path: 'B.SemanticModel/definition/tables/Notes.tmdl', data: new Uint8Array(0) }])]   // the incomplete model
 ];
 
-// the dates a run can write (UTC today, and the day either side of a run that crosses midnight)
-const DATES = [-1, 0, 1].map((d) => new Date(Date.now() + d * 864e5).toISOString().slice(0, 10));
+// the date a run writes: the page's clock is fixed to one day no model holds (0.3.3 SG1: today and the days either side
+// were masked before, and on 2026-11-10 to 12 that also masked the ramadan model's Hijri month start "2026-11-11")
+const RUN_AT = '2000-01-02T12:00:00Z', DATES = [RUN_AT.slice(0, 10)];
 const undate = (t) => DATES.reduce((s, d) => s.split(d).join('<DATE>'), t);
 
 async function downloadsOf(browser, url, lang, name, buffer, asked) {
   const v = await visitor(browser, { viewport: [1440, 900], downloads: true });
   v.ctx.on('request', (r) => { const m = /\/assets\/js\/(health-downloads|model-health)\.min\.js/.exec(r.url()); if (m && asked) asked.push(m[1]); });
   await v.ctx.route(/model-health-worker\.min\.js/, async (rt) => { const r = await rt.fetch(); await rt.fulfill({ response: r, body: 'Date.now = () => 1e12;\n' + await r.text() }); });
+  await v.pg.clock.setFixedTime(new Date(RUN_AT));
   await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=${lang}`, { waitUntil: 'networkidle' });
   if (buffer) await v.pg.setInputFiles('#mhFile', { name, mimeType: 'application/octet-stream', buffer });
   else await v.pg.click('#mhSample');

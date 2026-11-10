@@ -5,7 +5,7 @@
 - **Base:** `fix/0.3.3-sg1` from `origin/integration/0.3.3` at 8f5624e6 (LK1 merged). Push only this branch.
 - **Scope:** 11 groups SAME JOB moved into an existing shared file (no new module), 4 groups DIFFERENT written down below for the engine's allow list. No behaviour change: every answer, page and written file byte for byte the same.
 - **Expected checks:** new suite `sg1` (one parity part per moved group, red on 8f5624e6 first: the shared names do not exist there); every split test that pins the touched files' requires (sp10, sp11, sp20, sp21, sp26, sp30, sp38, sp40, sp42) passes, a new shared require allowed on purpose and said per test; no recorded fixture moves; test-contracts, check-contracts, check-modules, lint PASS; areas report, core, arabic, checker, model; site suites dd2w, theme-generator, build page.
-- **Resume:** 2026-11-10T00:12Z: State: code final (e0e7b53c); CI run 2 started; next: CI green, its line here, DONE.
+- **Resume:** 2026-11-10T00:38Z: State: sp24's date mask fixed (a test bug that fails every branch 10 to 12 Nov); CI run 3 started; next: CI green, its line here, DONE.
 
 ## Plan (group, decision, where it goes)
 1. `text` x6 (confirm-memory, dax-reference-parser, gulf-health, model-health-tmdl, model-index, mcp shadow-model `textOf`): SAME JOB (an expression given as a string or as lines -> one text). One place: `assets/js/dax-reference-parser.js` `exprText` (its own `text` was the first; it loads first on the health page and in the worker).
@@ -43,7 +43,8 @@
 - Repo checks after the last code commit: lint exit 0; test-contracts 14, check-contracts 843, check-modules 1216, check-result-lines 233, changelog-words 6, check-agent-memory 490, test-site-config PASS; contracts-probe 1355 checks (with DATAARCUS_ROOT for path-out and rel-out).
 - No recorded fixture moved (no fixture re-recorded).
 - CI run 1 (551cbfcf, https://github.com/Antnioo/DataArcus/actions/runs/42724204025): red on two suites only, every other MCP part and every website job green: dd2k "FAIL  dd2k  61 of 62 checks" (M2: contrast.js holds luminance and contrast only) and dd2n crash "Cannot read properties of undefined (reading 'exprText')" (dd2n runs model-health-tmdl.min.js in a vm with tmdl-name, field-meaning and sort-column only). Fixed in e0e7b53c, neither test changed: hexToRgb stays in design-colours.js; model-health-tmdl.js reads exprText when called. After: dd2k 62, dd2n 32 PASS.
-- After the last code commit: `npm test -- model` "run-tests: 31 suites passed (model)"; site suites alone: model-health 255, theme-generator 922, pbip 111, sp31 17 PASS; lint exit 0; check-contracts 843, check-modules 1217, test-contracts 14, contracts-probe 1355. The local full run was stopped (it ran 957f7ae1, and CI run 1 had run every suite on it); CI run 2 is the full run.
+- After the last code commit: `npm test -- model` "run-tests: 31 suites passed (model)"; site suites alone: model-health 255, theme-generator 922, pbip 111, sp31 17 PASS; lint exit 0; check-contracts 843, check-modules 1217, test-contracts 14, contracts-probe 1355. The local full run was stopped (it ran 957f7ae1, and CI run 1 had run every suite on it).
+- CI run 2 (f37553fe, https://github.com/Antnioo/DataArcus/actions/runs/42726488242): every MCP job green on Linux and Windows (dd2k, dd2n fixed); website-suites (3) red on sp24 D8 only: "en ramadan.zip ... [data-doc=\"html\"] (now length 19022, recorded 19026)". Measured: the base 8f5624e6 fails the same way today; the field that varies is the ramadan fixture's Hijri month start `"2026-11-11"` (scripts/tests/fixtures/model-health/tmdl-ramadan, Calendar.tmdl), which sp24's `undate` masked as `<DATE>` because it masks UTC today and the days either side (10 -> 6 characters = 4 bytes). It fails on every branch from 2026-11-10 to 2026-11-12 UTC. Fixed in sp24.mjs (see Risky changes): the page's clock fixed to 2000-01-02T12:00Z (no fixture holds that date) and only that date masked; the recorded fixture unchanged; red on 8f5624e6 first ("FAIL  sp24  23 checks", D8), green after "PASS  sp24  23 checks" twice.
 - packaging/build.test.mjs: not run: there is no packaging/ folder in this repo (the bundle is built by the separate step); the new Node requires are dax-reference-parser.js (from confirm-memory.js, gulf-health.js, model-health-tmdl.js, shadow-model.mjs) and pbir-values.js (from check-impact.mjs), both files the MCP already loads (model-index.js, report-rules.js), so the bundle's file list does not grow. Said for the reviewer (L-1028-06).
 
 ## Changed on purpose
@@ -65,17 +66,19 @@
 - none.
 
 ## Risky changes
-- none in a security policy, the approval step, file writing, what an answer returns, network or processes: `putJson` writes into the plan's in-memory file list exactly as before (the same JSON, two spaces), before the approval as before; relOut and pathOut (paths in answers) are the same functions, imported. No test loses checks.
+- none in a security policy, the approval step, file writing, what an answer returns, network or processes: `putJson` writes into the plan's in-memory file list exactly as before (the same JSON, two spaces), before the approval as before; relOut and pathOut (paths in answers) are the same functions, imported. No test loses checks. One test changed, not its expected answers: scripts/tests/sp24.mjs (another job's suite, SP24) masked any date within a day of the run, which also masked a date inside a model on 10 to 12 Nov; it now fixes the page's clock (Playwright `clock.setFixedTime`) to 2000-01-02 and masks that date only. Same 23 checks, same recorded file.
 
 ## For the laptop
 - none (nothing Desktop shows changes).
 
 ## Seen, not in scope
+- Other suites may mask run dates the same way as sp24 did (not searched beyond sp24).
 - contracts-probe's path-out and rel-out need DATAARCUS_ROOT (model.mjs reads ROOT at import): said in the probe.
 - flip-cards.mjs `put` (add or replace) and contrast.js `luminance`'s own inline hex parse (String(hex) first) are near copies of put-json and hex-rgb with different answers: left, a family each for the next ledger.
 - HC2 changes the theme-generator and health check pages' stamps tonight too: the reviewer's merge will meet ?v= conflicts there (build:min regenerates them).
 
 ## Lessons for the reviewer
+- A text mask built from "today and the days either side" meets any data date in those days: sp24 failed every branch from 2026-11-10 to 12 (a Hijri month start in a fixture). Fixed clock plus one masked date is the safe shape; grep other suites for `864e5).toISOString().slice(0, 10)` masks.
 - dd2k M2 pins contrast.js's export list and dd2n loads model-health-tmdl.min.js in a vm without its page's earlier files: neither is in the brief's list of pinning tests; an engine that gains a require fails such a vm loader at load time unless it reads the dependency when called.
 - check-modules reads every backticked name in a row's "used by" as a caller file: a function name there fails it (use it unquoted).
 - `node scripts/tests/run-all.mjs --list` does not list: it runs every site suite (cost a parallel run).
