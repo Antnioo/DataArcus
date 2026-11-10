@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-10T15:01Z",
+  "generated_at": "2026-11-10T17:02Z",
   "today": {
     "date": "2026-11-10",
-    "cost_usd": 77.48,
-    "tokens": 311292132,
-    "sessions": 28,
+    "cost_usd": 87.62,
+    "tokens": 344601068,
+    "sessions": 33,
     "by_kind": {
       "builder": {
-        "cost_usd": 55.43,
-        "count": 15
+        "cost_usd": 60.79,
+        "count": 18
       },
       "worker": {
-        "cost_usd": 22.05,
-        "count": 13
+        "cost_usd": 26.83,
+        "count": 15
       },
       "probe": {
         "cost_usd": 0,
@@ -26,12 +26,12 @@
     },
     "by_model": {
       "sonnet": {
-        "cost_usd": 31.13,
-        "count": 20
+        "cost_usd": 34.03,
+        "count": 23
       },
       "opus": {
-        "cost_usd": 46.35,
-        "count": 8
+        "cost_usd": 53.59,
+        "count": 10
       }
     }
   },
@@ -116,12 +116,30 @@
     },
     {
       "date": "2026-11-10",
-      "cost_usd": 77.48,
-      "tokens": 311292132,
-      "sessions": 28
+      "cost_usd": 87.62,
+      "tokens": 344601068,
+      "sessions": 33
     }
   ],
   "jobs": [
+    {
+      "id": "MH1",
+      "title": "MH1: the shared MCP test client times out each call and restarts after a throw (L-1108-25, D-1110-06)",
+      "model": "sonnet",
+      "cost_usd": 0.94,
+      "tokens": 4942188,
+      "minutes": 62,
+      "finished_at": "2026-11-10T15:30Z"
+    },
+    {
+      "id": "AR6",
+      "title": "AR6: Arabic drafts for the 'Nothing was written' checks, for the owner's approval (D-1110-08)",
+      "model": "opus",
+      "cost_usd": 3.83,
+      "tokens": 8084556,
+      "minutes": 12,
+      "finished_at": "2026-11-10T15:18Z"
+    },
     {
       "id": "OR2",
       "title": "OR2: apply the owner's Lessons Review answers and build the approved lessons (D-1110-06)",
@@ -130,6 +148,15 @@
       "tokens": 24034265,
       "minutes": 20,
       "finished_at": "2026-11-10T14:13Z"
+    },
+    {
+      "id": "HK2",
+      "title": "HK2: website sp6 and sp29 read saved fixtures, not git (B-414 rest)",
+      "model": "sonnet",
+      "cost_usd": 0.59,
+      "tokens": 2684705,
+      "minutes": 24,
+      "finished_at": "2026-11-10T14:08Z"
     },
     {
       "id": "DB2",
@@ -454,38 +481,11 @@
       "tokens": 29109952,
       "minutes": 159,
       "finished_at": "2026-11-08T16:04Z"
-    },
-    {
-      "id": "BF2",
-      "title": "BF2: the usage panel on /build/ (D-1108-15, B-399)",
-      "model": "sonnet",
-      "cost_usd": 1.24,
-      "tokens": 5384969,
-      "minutes": 21,
-      "finished_at": "2026-11-08T15:28Z"
-    },
-    {
-      "id": "BF1",
-      "title": "BF1: the live build page, unlisted, read from the public repo (D-1108-14, B-397)",
-      "model": "sonnet",
-      "cost_usd": 4.89,
-      "tokens": 27086328,
-      "minutes": 73,
-      "finished_at": "2026-11-08T14:29Z"
-    },
-    {
-      "id": "US1",
-      "title": "US1: usage per session and job, recorded and published (D-1108-15, B-399)",
-      "model": "sonnet",
-      "cost_usd": 1.08,
-      "tokens": 2381092,
-      "minutes": 6,
-      "finished_at": "2026-11-08T13:47Z"
     }
   ],
   "workers": {
-    "count": 13,
-    "cost_usd": 22.05,
+    "count": 15,
+    "cost_usd": 26.83,
     "costliest": [
       {
         "label": "worker 00:48",
@@ -494,16 +494,16 @@
         "started": "2026-11-10T00:48Z"
       },
       {
-        "label": "worker 02:51",
-        "cost_usd": 2.35,
-        "minutes": 28,
-        "started": "2026-11-10T02:51Z"
-      },
-      {
         "label": "worker 12:02",
         "cost_usd": 2.36,
         "minutes": 71,
         "started": "2026-11-10T12:02Z"
+      },
+      {
+        "label": "worker 14:50",
+        "cost_usd": 3.41,
+        "minutes": 24,
+        "started": "2026-11-10T14:50Z"
       }
     ]
   },
