@@ -4,7 +4,10 @@
 // free names (checked against every table, measure and column of the model, add_gulf_calendar's list) and the lineage
 // tags (the same for the same plan, so a rebuild gives the same bytes). Model names are untrusted: compared, never followed.
 import crypto from 'node:crypto';
+import { createRequire } from 'node:module';
 import { takenNames, nameKey } from './gulf-calendar.mjs';
+// a TMDL name: the one rule, assets/js/tmdl-name.js (B-438)
+const { tmdlName } = createRequire(import.meta.url)('../../assets/js/tmdl-name.js');
 
 export { takenNames, nameKey };
 
@@ -36,7 +39,7 @@ export const compatOf = (tmsl) => { const v = tmsl && (tmsl.compatibilityLevel !
  *  functions.tmdl and Learn's TMDL form gives it: `///` description lines, the name quoted when dotted, the expression one
  *  level deeper than the properties (not fenced), then its lineage tag. Nothing outside the name's own quoting is changed. */
 export function functionLines(f, depth) {
-  const ind = (n) => '\t'.repeat(n), q = /^[A-Za-z_][A-Za-z0-9_]*$/.test(f.name) ? f.name : "'" + String(f.name).replace(/'/g, "''") + "'";
+  const ind = (n) => '\t'.repeat(n), q = tmdlName(f.name);
   const desc = f.description ? String(f.description).split(/\r?\n/).map((l) => (ind(depth) + '/// ' + l).replace(/\s+$/, '')) : [];
   return desc.concat([ind(depth) + 'function ' + q + ' ='], String(f.expression).split(/\r?\n/).map((l) => (l.trim() ? ind(depth + 2) + l : '')), [''], f.lineageTag ? [ind(depth + 1) + 'lineageTag: ' + f.lineageTag] : []);
 }

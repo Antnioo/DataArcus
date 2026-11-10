@@ -51,7 +51,7 @@ How it is kept true:
 | [contrast What is the contrast of two colours?](#contrast-what-is-the-contrast-of-two-colours) | 4 | 0 of 9 | generate_theme, the writer, the SVG KPIs | one place since DD2K: `assets/js/contrast.js` `contrast` |
 | [xml How is a text escaped for XML (SVG)?](#xml-how-is-a-text-escaped-for-xml-svg) | 2 | 0 of 10 | the SVG KPIs, the flip cards | equal |
 | [html How is a text escaped for HTML?](#html-how-is-a-text-escaped-for-html) | 9 | 0 of 10 | the website's pages, the approval window | one place since DD2H: `assets/js/html-escape.js` `htmlEsc` |
-| [tmdl-name How is a name written in TMDL?](#tmdl-name-how-is-a-name-written-in-tmdl) | 7 | 0 of 9 | check_model_health's fix scripts, the measure builder page, the twin's model, create_report's sample | equal (one place: `tmdl-name.js`) |
+| [tmdl-name How is a name written in TMDL?](#tmdl-name-how-is-a-name-written-in-tmdl) | 8 | 0 of 9 | check_model_health's fix scripts, the measure builder page, the twin's model, create_report's sample | equal (one place: `tmdl-name.js`) |
 | [decode What text do the bytes of a Power BI file hold?](#decode-what-text-do-the-bytes-of-a-power-bi-file-hold) | 4 | 0 of 10 | every model read (the MCP and the website) | one place since DD2D: `assets/js/model-file.js` `decodeText` |
 | [limits How large may a model file be?](#limits-how-large-may-a-model-file-be) | 4 | 0 of 8 | every model read (the MCP and the website) | one place since DD2D: `assets/js/model-file.js` `LIMITS` |
 | [text-runs What text does a text box hold?](#text-runs-what-text-does-a-text-box-hold) | 1 | 0 of 9 | check_report, read_report, the preview | one place since DD2T: `assets/js/text-runs.js` `paragraphTexts` |
@@ -64,6 +64,7 @@ How it is kept true:
 | [page-el What element does a page make for a class and a text?](#page-el-what-element-does-a-page-make-for-a-class-and-a-text) | 1 | 0 of 9 | the build page (its cards, the Fuel panel), the theme generator's names box | one place since SG1: `assets/js/page-toast.js` `el` |
 | [page-save What does a page keep of its state?](#page-save-what-does-a-page-keep-of-its-state) | 1 | 0 of 8 | the calendar, measure builder and licensing calculator pages (the visitor's browser only) | one place since SG1: `assets/js/page-toast.js` `saveState` |
 | [measure-key Which table and measure does 'T'[M] name?](#measure-key-which-table-and-measure-does-tm-name) | 1 | 0 of 11 | create_report (the metric switcher, the status icons) | one place since SG1: `mcp/lib/model-script.mjs` `keyOf` |
+| [dax-name How is a table and column written as a DAX name 'T'[C]?](#dax-name-how-is-a-table-and-column-written-as-a-dax-name-tc) | 1 | 0 of 10 | create_report (the SVG columns, the metric switcher), the twin's month script, every written DAX name | one place since DQ1: `assets/js/pbip-query.js` `daxNames` |
 | [put-json What does a plan's file hold after a JSON is put in it?](#put-json-what-does-a-plans-file-hold-after-a-json-is-put-in-it) | 1 | 0 of 8 | create_report (the DAX functions, the status icons) | one place since SG1: `mcp/lib/model-script.mjs` `putJson` |
 | [leaves Which leaf pointers does a value hold?](#leaves-which-leaf-pointers-does-a-value-hold) | 1 | 0 of 11 | create_report's redesign (the copy's check, each patch's reason) | one place since SG1: `mcp/lib/redesign-kinds.mjs` `leaves` |
 | [path-out How is a path inside the working folder said, dots kept?](#path-out-how-is-a-path-inside-the-working-folder-said-dots-kept) | 1 | 0 of 8 | the twin, the native copy | one place since SG1: `mcp/lib/twin-read.mjs` `pathOut` |
@@ -853,8 +854,9 @@ places are MCP only).
 | `mcp/lib/sample-project.mjs` `name` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | create_report's sample project (reads tmdl-name.js) |
 | `mcp/lib/shadow-model.mjs` `q` | [helpers](MODULES.md#the-mcp-what-leaves-the-server-and-the-tools-helpers) | a test only (MODULES.md: used by none; reads tmdl-name.js) |
 | `mcp/lib/twin-model.mjs` `tmdlName` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's measures (reads tmdl-name.js) |
+| `mcp/lib/model-script.mjs` `functionLines` | [write path](MODULES.md#the-mcp-the-write-path) | the DAX functions' TMDL (create_report; reads tmdl-name.js since DQ1) |
 
-**Today:** all 7 answer the same on all 9 inputs.
+**Today:** all 8 answer the same on all 9 inputs (`functionLines` joined in DQ1, B-438: it kept its own copy of the rule, equal on the 9).
 
 **Before DD2N** (A: model-health-tmdl name, measure-builder tName; B: model-culture q, sample-project name,
 shadow-model q, twin-model tmdlName):
@@ -1077,6 +1079,22 @@ or 0 no longer throws.
 | `mcp/lib/model-script.mjs` `keyOf` | [write path](MODULES.md#the-mcp-the-write-path) | create_report (the metric switcher, the status icons) |
 
 **Since SG1 (9 Nov):** gone, their calls read the one place: `mcp/lib/metric-switcher.mjs` `keyOf`, `mcp/lib/status-icons.mjs` `keyOf` (both import it). The parity: mcp/test-0.3.3-sg1.mjs (each old copy, as the base wrote it, and the one place on the same made-up inputs); the probe's 11 inputs (family `measure-key`).
+
+## dax-name How is a table and column written as a DAX name 'T'[C]?
+
+**One place:** assets/js/pbip-query.js daxNames (test mcp/test-0.3.3-dq1.mjs).
+
+**Question:** a table and a column: the DAX name `'Table'[Column]` (a `'` in the table doubled, a `]` in the column doubled); a control character (a tab, a line break) is refused (AUD-032).
+
+**Newest copy:** merge (0.3.3 DQ1, B-437): the writer's `daxNames` refuses a control character; the hand-written copies in `mcp/lib` (`report-fields.mjs` `daxColumn`, `twin-model.mjs` `daxCol`, `metric-switcher.mjs` the first measure's name and `titleProblems`' regex) wrote the same text but never refused.
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `assets/js/pbip-query.js` `daxNames` | [engines](MODULES.md#the-website-engines) | the one place: the writer, the SVG KPIs, create_report's SVG columns, the metric switcher, the twin's month script |
+
+**Today:** one answer on all 10 inputs (the refusal for a control character, the quoted text for the rest).
+
+**Since DQ1 (10 Nov):** gone, their calls read the one place: `mcp/lib/report-fields.mjs` (an SVG column's column value; a name it refuses is told as a problem, not thrown), `mcp/lib/twin-model.mjs` (the Arabic month script), `mcp/lib/metric-switcher.mjs` (the first measure's name, the title check; a control-character name is skipped there). The test: mcp/test-0.3.3-dq1.mjs D1-D5; the probe's 10 inputs (family `dax-name`).
 
 ## put-json What does a plan's file hold after a JSON is put in it?
 

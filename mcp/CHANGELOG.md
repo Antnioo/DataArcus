@@ -25,6 +25,9 @@ package's manifest; this file says what is in it.
 - A hand-placed report's font (create_report's `font`, for example Tahoma) now reaches its tables, cards and charts
   too: the report's theme carries it in its text classes, so every visual without a font of its own shows it, in the
   English report and its Arabic twin. Without a font the theme is written as before.
+- The Arabic twin no longer gives two fields one Arabic name when their names look alike (a table `A` with a column
+  `B][C` and a table `A[B]` with a column `C`): each has its own line in the terminology sheet and its own approval.
+  Names without a quote or a bracket are keyed as before.
 
 ## [0.3.2]: 2026-11-09 (the version for testers, second round)
 The second version for testers. In short:

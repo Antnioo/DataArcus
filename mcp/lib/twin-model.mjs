@@ -63,7 +63,8 @@ export const continuousColumnsOf = (m) => (m ? [...new Set(dateColumnsOf(m).conc
 // ---- the Arabic month column: a TMDL script offered when the model has one date table and no Arabic month ----
 // a TMDL name: the one rule, assets/js/tmdl-name.js (0.3.2 DD2N)
 const tmdlName = require('../../assets/js/tmdl-name.js').tmdlName;
-const daxCol = (t, c) => "'" + String(t).replace(/'/g, "''") + "'[" + String(c).replace(/]/g, ']]') + ']';
+// a DAX name 'Table'[Column]: the one quoter, which refuses a control character (assets/js/pbip-query.js daxNames, B-437)
+const daxCol = require('../../assets/js/pbip-query.js').daxNames.column;
 // (0.3.0 C1, the owner, 21 Oct) the full set of Arabic calendar columns (the shared builder, arabic-calendar.js): the
 // Arabic twins of what the date table has (months, days, quarters, fiscal year and quarter, Hijri months, the flags'
 // labels), each sorted by its English column's own sort column, else by the month number found here, else by a hidden

@@ -7,6 +7,7 @@ import { INSTRUCTION, safeName } from './read-report.mjs';
 import { draftText } from './arabic-names.mjs';
 import { writtenName } from './display-names.mjs';
 import * as Terms from './terminology.mjs';
+import { fieldOfKey, keyOfText } from './field-key.mjs';
 import { TEXT_CAP, isObj, pageOf } from './twin-read.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
@@ -377,7 +378,7 @@ export const rawLabels = (texts, labels) => { const by = new Map(texts.map((t) =
 // ---- the plan ----
 export const sortKeys = (o) => Object.fromEntries(Object.keys(o || {}).sort().map((k) => [k, String(o[k])]));
 // (0.3.0 J18) terms as a plan pins them: keys as Table[Field], each name as written (writtenName)
-export const normTerms = (t) => sortKeys(Object.fromEntries(Object.entries(t || {}).map(([k, v]) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? [`${mk[1]}[${mk[2]}]`, cleanLabel(v, `terms: ${String(k)}`)] : null; }).filter(Boolean)));
+export const normTerms = (t) => sortKeys(Object.fromEntries(Object.entries(t || {}).map(([k, v]) => { const n = keyOfText(k); return n ? [n, cleanLabel(v, `terms: ${String(k)}`)] : null; }).filter(Boolean)));
 export const cleanLabel = (s, id) => writtenName(s, `labels: ${visible(id).slice(0, 160)}`).slice(0, TEXT_CAP);
 
 // (0.3.0 D3) a text of the new kinds with no label of its own takes the approved Arabic of the same text, shown in the
@@ -433,9 +434,9 @@ export function termsOf(R, texts, labels, a, m) {
   R.pages.forEach((pg) => pg.visuals.forEach((v) => walk(isObj(v.json) && isObj(v.json.visual) ? v.json.visual.query : null)));
   texts.forEach((t) => { if (t.kind !== 'field') return; const k = keyOfRef.get(String(t.rawId).slice('field:'.length)); if (k) { t.fieldKey = k; t.field = shownName(k, 200); } });
   const keys = [...new Set(texts.filter((t) => t.fieldKey).map((t) => t.fieldKey))];
-  const enOf = (k) => new Set([k.replace(/^.*?\[(.*)\]$/, '$1')].concat(texts.filter((t) => t.fieldKey === k).map((t) => t.raw.trim())));
+  const enOf = (k) => new Set([fieldOfKey(k)].concat(texts.filter((t) => t.fieldKey === k).map((t) => t.raw.trim())));
   const given = {}, unknown = [], term = new Map(), notUsing = [];
-  Object.entries(a.terms || {}).forEach(([k, v]) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/), n = mk ? `${mk[1]}[${mk[2]}]` : null; const c = cleanLabel(v, `terms: ${String(k)}`);
+  Object.entries(a.terms || {}).forEach(([k, v]) => { const n = keyOfText(k); const c = cleanLabel(v, `terms: ${String(k)}`);
     if (n) given[n] = c; if (!n || !keys.includes(n)) unknown.push(visible(String(k)).slice(0, 160)); });
   const conf = a.memory === false ? new Map() : Terms.confirmedOf(m, keys.filter((k) => given[k] == null));
   keys.forEach((k) => {

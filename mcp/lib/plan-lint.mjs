@@ -13,6 +13,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Bind = require('../../assets/js/pbip-bind.js'), Pbip = require('../../assets/js/pbip-export.js'), Agg = require('../../assets/js/aggregation.js'), Gallery = require('../../assets/js/visual-gallery.js');
 import { modelOf } from './model.mjs';
+import { fieldKey } from './field-key.mjs';
 import { E, absorb } from './design.mjs';   // (A2-3: the slot rules are the design engine's)
 import { inventory, memorySource } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
@@ -104,7 +105,7 @@ export function planLint(a) {
   const fields = new Set();
   b.r.files.filter((f) => /\/visual\.json$/.test(f.path)).forEach((f) => { try { Object.values((((JSON.parse(f.data).visual || {}).query || {}).queryState) || {}).forEach((r) => (r.projections || []).forEach((p) => {
     const x = p.field || {}, e = x.Measure || x.Column || ((x.Aggregation || {}).Expression || {}).Column, t = e && e.Expression && e.Expression.SourceRef && e.Expression.SourceRef.Entity;
-    if (t && e.Property) fields.add(`${t}[${e.Property}]`); })); } catch (e) { /* not a visual */ } });
+    if (t && e.Property) fields.add(fieldKey(t, e.Property)); })); } catch (e) { /* not a visual */ } });
   // (0.2.9.1, B-174) and the category charts the writer kept to their top N, by their planned slot (from, nth, as kinds),
   // with the most categories each still shows all of (allUpTo): the plan says what is written, not the slot's N alone
   return Object.defineProperties(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), {
@@ -218,13 +219,13 @@ export function pagesWritten(files) {
     const slicers = [], buttons = [], kinds = new Map(), cards = [];
     let messageCards = 0;
     inOrder(p).forEach((x) => {
-      const cols = BY_ROLES.flatMap((r) => (x.fields && x.fields[r]) || []).filter((f) => f && f.kind === 'column').map((f) => `${f.table}[${f.name}]`);
+      const cols = BY_ROLES.flatMap((r) => (x.fields && x.fields[r]) || []).filter((f) => f && f.kind === 'column').map((f) => fieldKey(f.table, f.name));
       if (x.slicer) { slicers.push(cols[0] || '(a field)'); return; }
       if (x.type === 'actionButton') { const m = /^(\w+)(?: -> (?:bookmark|page) "(.*)")?/.exec(String(x.action || '')) || [];
         buttons.push({ to: m[1] === 'PageNavigation' ? 'page' : m[1] === 'Bookmark' ? 'bookmark' : 'other', name: m[2] || null }); return; }
       // (0.3.2 PF2, B-383: kpis 0 and the tooltip pages' own cards, unnamed in the plan) each card by the model measures
       // it shows; a card showing report measures only is a "no data" message laid over a chart (noDataMessage), counted apart
-      if (CARD_TYPES.test(x.type)) { const all = Object.values(x.fields || {}).flat().filter((f) => f && f.kind === 'measure'), shows = all.filter((f) => !f.report).map((f) => `${f.table}[${f.name}]`);
+      if (CARD_TYPES.test(x.type)) { const all = Object.values(x.fields || {}).flat().filter((f) => f && f.kind === 'measure'), shows = all.filter((f) => !f.report).map((f) => fieldKey(f.table, f.name));
         if (shows.length) cards.push({ shows: [...new Set(shows)] }); else if (all.length) messageCards++; }
       const k = kinds.get(x.type) || { type: x.type, count: 0, by: [] }; k.count++;
       if (cols[0] && !/^(cardVisual|card|multiRowCard|kpi|textbox|shape|image|group|tableEx|pivotTable)$/.test(x.type)) k.by.push(cols[0]);

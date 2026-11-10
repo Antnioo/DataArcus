@@ -36,6 +36,7 @@ import { BLANK_PNG_BYTES } from '../lib/report-run.mjs';
 // (0.3.2 SP43) the exact artifact: create_report's build with the plan's inputs, the EN-AR copy, the check and the digest
 import { exactArtifact } from '../lib/plan-artifact.mjs';
 import { createRequire } from 'node:module';
+import { fieldKey, fieldOfKey, keyOfText, parseFieldKey } from '../lib/field-key.mjs';
 const require = createRequire(import.meta.url);
 const Bind = require('../../assets/js/pbip-bind.js');
 const Pbip = require('../../assets/js/pbip-export.js');
@@ -102,7 +103,7 @@ function stateStep(lc) { let { a } = lc;
     // come first, with the script (check_model_health's kind of script, for the report's fields only)
     let formats = {}, arabicNames = {}, displayNamesAns = {}, m0 = null, planNames = null, notTranslated = null;
     // (0.3.0 J18) the terms reused from this session: { key: { alias, decision } }; as display names (a kept one: the model's own)
-    const reused = {}, reusedNames = () => Object.fromEntries(Object.entries(reused).map(([k, c]) => [k, c.decision === 'kept' ? k.replace(/^.*?\[(.*)\]$/, '$1') : c.alias]));
+    const reused = {}, reusedNames = () => Object.fromEntries(Object.entries(reused).map(([k, c]) => [k, c.decision === 'kept' ? fieldOfKey(k) : c.alias]));
     // (R-04: a name the plan pins is a name create_report can write: the same check, at the plan)
     Object.entries(a.displayNames || {}).forEach(([k, v]) => writtenName(v, `displayNames: ${visible(String(k)).slice(0, 160)}`));
   Object.assign(lc, { formats, arabicNames, displayNamesAns, m0, planNames, notTranslated, reused, reusedNames }); }
@@ -112,8 +113,8 @@ function modelStep(lc) { let { a, formats, arabicNames, displayNamesAns, m0, pla
       const m = (m0 = refuseUnreadable(loadModel(a.path))), sc = scopeOf(m, { focus: a.focus, tables: a.tables });
       // (keep the dashboard's identity, the owner's go 12 Oct: the model's report's own theme, the design's default colours)
       a.reportTheme = existingTheme(m, a.themeFrom);
-      const keys = a.fields ? new Set(a.fields.map((x) => { const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(x); }))
-        : sc.needsFocus ? null : (() => { const b = Bind.suggest(sc.tables, Math.max(1, a.kpis == null ? 4 : a.kpis), relsOf(m, a.lang === 'ar' ? 'ar' : 'en')); return new Set([b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean).map((f) => `${f.t}[${f.c != null ? f.c : f.m}]`)); })();
+      const keys = a.fields ? new Set(a.fields.map((x) => { return keyOfText(String(x)) || String(x); }))
+        : sc.needsFocus ? null : (() => { const b = Bind.suggest(sc.tables, Math.max(1, a.kpis == null ? 4 : a.kpis), relsOf(m, a.lang === 'ar' ? 'ar' : 'en')); return new Set([b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean).map((f) => fieldKey(f.t, f.c != null ? f.c : f.m))); })();
       const fmt = keys && formatsAnswer(m, a.path, keys, undefined, false, 'create_report writes it next to the project with the report, after the user\'s go (the same kind of script check_model_health writes, for the report\'s fields only).');
       // round 14 (the owner's ask, 6 Oct): an Arabic plan proposes an Arabic display name for every field it will show
       // that has none (a fixed glossary of report words, never a free translation), for the user to approve first
@@ -124,10 +125,10 @@ function modelStep(lc) { let { a, formats, arabicNames, displayNamesAns, m0, pla
       // readable names are the plan's default: named in the plan, pinned with it (create_report writes them when it gets no
       // displayNames), and changed by the user through displayNames (their own name, or the model's to keep it)
       if (a.lang !== 'ar' && keys) {
-        const given = new Set(Object.keys(a.displayNames || {}).map((k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : k; }));
-        const planKeys = [].concat(...Object.values(a.planFields || {})).filter((x) => typeof x === 'string').map((x) => { const mk = x.trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : null; }).filter(Boolean);
+        const given = new Set(Object.keys(a.displayNames || {}).map((k) => { return keyOfText(String(k)) || k; }));
+        const planKeys = [].concat(...Object.values(a.planFields || {})).filter((x) => typeof x === 'string').map((x) => { return keyOfText(x); }).filter(Boolean);
         const prop = {};
-        [...new Set([...keys, ...planKeys])].filter((k) => !given.has(k)).forEach((k) => { const r = readableName(k.replace(/^.*?\[(.*)\]$/, '$1')); if (r) prop[k] = r; });
+        [...new Set([...keys, ...planKeys])].filter((k) => !given.has(k)).forEach((k) => { const r = readableName(fieldOfKey(k)); if (r) prop[k] = r; });
         if (Object.keys(prop).length) { planNames = Object.assign({}, prop, a.displayNames || {});
           displayNamesAns = { displayNames: { inThePlan: prop, sayInPlan: 'The report shows these fields under readable names, the plan\'s default: list every one in the plan ("loan_intent" shown as "Loan Intent"), so the user sees each before saying go. The plan pins them, and create_report writes them without displayNames. To change one, or keep the model\'s own name, call plan_layout again with displayNames { "Table[Field]": "the name" } and show the new plan. The model is not renamed.' } }; }
       }
@@ -136,21 +137,21 @@ function modelStep(lc) { let { a, formats, arabicNames, displayNamesAns, m0, pla
       // name: each is drafted and approved like the others, its title then «عدد <name>», «مجموع <name>»
       const noMeasures = keys && !sc.needsFocus && !(a.planFields && (a.planFields.kpis || []).length) && !Bind.suggest(sc.tables, 8, relsOf(m, 'ar')).kpis.filter(Boolean).length;
       const counted = a.lang === 'ar' && keys && noMeasures ? Bind.counts(sc.tables, null, { lang: 'ar' }) : [];
-      counted.forEach((c) => keys.add(`${c.t}[${c.c}]`));
+      counted.forEach((c) => keys.add(fieldKey(c.t, c.c)));
       // (0.3.1 FX3, FX2's Seen 1; the owner, D-1027-04) the metric switcher's labels are the plan's names of its measures:
       // on an Arabic report each is drafted and approved like a title's field, or kept English on purpose
-      const switched = a.lang === 'ar' && keys && a.metricSwitcher ? resolveSwitch(m.tables, a.metricSwitcher).measures.map((x) => `${x.t}[${x.m}]`) : [];
+      const switched = a.lang === 'ar' && keys && a.metricSwitcher ? resolveSwitch(m.tables, a.metricSwitcher).measures.map((x) => fieldKey(x.t, x.m)) : [];
       switched.forEach((k) => keys.add(k));
       if (a.lang === 'ar' && keys) {
-        const given = new Set(Object.keys(a.displayNames || {}).map((k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : k; }));
-        const planKeys = [].concat(...Object.values(a.planFields || {})).filter((x) => typeof x === 'string').map((x) => { const mk = x.trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : null; }).filter(Boolean);
+        const given = new Set(Object.keys(a.displayNames || {}).map((k) => { return keyOfText(String(k)) || k; }));
+        const planKeys = [].concat(...Object.values(a.planFields || {})).filter((x) => typeof x === 'string').map((x) => { return keyOfText(x); }).filter(Boolean);
         // (0.3.0 J18) a term the person confirmed earlier in this session, for this field of this model, its description and
         // DAX unchanged: reused as if given (pinned, shown in the sheet as earlier); else the fixed list or the person
         const conf = Terms.confirmedOf(m, [...new Set([...keys, ...planKeys])].filter((k) => !given.has(k)));
         conf.forEach((c, k) => { reused[k] = c; });
-        const todo = [...new Set([...keys, ...planKeys])].filter((k) => !given.has(k) && !conf.has(k) && !/[\u0600-\u06FF]/.test(k.replace(/^.*?\[/, '')));
+        const todo = [...new Set([...keys, ...planKeys])].filter((k) => !given.has(k) && !conf.has(k) && !/[\u0600-\u06FF]/.test(fieldOfKey(k)));
         const prop = {}, none = [];
-        todo.forEach((k) => { const p = proposeArabic(k.replace(/^.*?\[(.*)\]$/, '$1')); if (p) prop[k] = p; else none.push(k); });
+        todo.forEach((k) => { const p = proposeArabic(fieldOfKey(k)); if (p) prop[k] = p; else none.push(k); });
         // B-88 (the owner's decision, 13 Oct, option B): every field without an Arabic name gets a proposal: the fixed list's
         // where it has one, else one the assistant proposes itself; the user approves or edits them all in the plan
         if (todo.length) arabicNames = { arabicNames: Object.assign({ sayFirst: 'Before create_report, show the user an Arabic display name for every field listed here, beside the field\'s model name and marked as a suggestion to check: suggestedDisplayNames come from a fixed list of common report words; for each field in proposeYourself, propose one yourself (howToPropose). Ask the user to approve or edit them all, then pass only the approved ones as displayNames (to plan_layout again, for the plan to pin them). Never show a name the user has not approved: the suggestedDisplayNames are pinned with this plan (inThePlan) and written only when the user approves the plan, so name each in it; the fields in notTranslated show their English model names, said in the plan with why (sayInPlan). The model is never renamed. An Arabic report\'s titles are Arabic (the owner\'s rule): draft an Arabic name for every field listed (proposeYourself, and titlesInEnglish.fields: the fields that would keep a title English), show the drafts for approval, and call plan_layout again with the approved ones as displayNames; then every title is wholly Arabic. A title stays English only for a field the person keeps in English on purpose (displayNames: its model name), and then wholly English ("Total Sales by Region", "Top 6: …"), never half Arabic, half English.' },
@@ -163,14 +164,14 @@ function modelStep(lc) { let { a, formats, arabicNames, displayNamesAns, m0, pla
         if (conf.size) planNames = Object.assign({}, reusedNames(), a.displayNames || {});
         if (todo.length) {
           if (Object.keys(prop).length) planNames = Object.assign({}, prop, reusedNames(), a.displayNames || {});
-          notTranslated = none.map((k) => ({ field: k, shownAs: k.replace(/^.*?\[(.*)\]$/, '$1'), why: NOT_TRANSLATED_WHY }));
+          notTranslated = none.map((k) => ({ field: k, shownAs: fieldOfKey(k), why: NOT_TRANSLATED_WHY }));
           Object.assign(arabicNames.arabicNames, Object.keys(prop).length ? { inThePlan: Object.assign({}, prop) } : {}, { notTranslated });
         }
         // (FX2, A-1) each count or sum title, its Arabic draft beside its English: from the field's Arabic name (given,
         // confirmed earlier or the fixed list's), approved with it; none yet: its field is drafted first (proposeYourself)
         if (counted.length) {
-          const nameOf = Object.assign({}, prop, reusedNames(), Object.fromEntries(Object.entries(a.displayNames || {}).map(([k, v]) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return [mk ? `${mk[1]}[${mk[2]}]` : String(k), String(v)]; })));
-          const titles = counted.slice(0, 30).map((c) => { const k = `${c.t}[${c.c}]`, nm = nameOf[k], ar = nm && /[\u0600-\u06FF]/.test(nm) ? (c.agg === 0 ? 'مجموع ' : 'عدد ') + nm : null;
+          const nameOf = Object.assign({}, prop, reusedNames(), Object.fromEntries(Object.entries(a.displayNames || {}).map(([k, v]) => { return [keyOfText(String(k)) || String(k), String(v)]; })));
+          const titles = counted.slice(0, 30).map((c) => { const k = fieldKey(c.t, c.c), nm = nameOf[k], ar = nm && /[\u0600-\u06FF]/.test(nm) ? (c.agg === 0 ? 'مجموع ' : 'عدد ') + nm : null;
             return { field: k, en: (c.agg === 0 ? 'Sum of ' : 'Count of ') + c.c, ar }; });
           if (!arabicNames.arabicNames) arabicNames = { arabicNames: {} };
           arabicNames.arabicNames.countedTitles = { titles, sayInPlan: 'The model has no measures, so the report counts or sums these columns itself. Show each title\'s Arabic draft beside its English, marked as a draft: it is the field\'s Arabic name with «عدد» (a count) or «مجموع» (a sum), approved with that name. A title with no draft (ar null) waits for its field\'s name (proposeYourself); until the user approves one, it is written wholly in English.' };
@@ -252,7 +253,7 @@ function monthOrderStep(lc) { let { a, m0, noAxis, planProblems, pf } = lc;
       const sc0 = scopeOf(m0, { focus: a.focus, tables: a.tables });
       const tf = noAxis ? null : pf.timeAxis ? (fieldsAndProblems(m0.tables, { timeAxis: pf.timeAxis }).out || {}).timeAxis : sc0.needsFocus ? null : (Bind.suggest(sc0.tables, 1, relsOf(m0, a.lang === 'ar' ? 'ar' : 'en')) || {}).date;
       // (the cross-review's G6: the writer's own decision, Pbip.timeAxisPlan, said here; never a promise the writer may not keep)
-      if (tf) { const key = `${tf.t}[${tf.c}]`, tp = Pbip.timeAxisPlan(tf);
+      if (tf) { const key = fieldKey(tf.t, tf.c), tp = Pbip.timeAxisPlan(tf);
         const how = { own: 'The column\'s own order (a date or a number).', model: 'The model sorts this column (its sort-by column): calendar order.',
           number: tp.by ? `In month order by ${tp.by.t}[${tp.by.c}] (the report sorts it; the model is not changed).` : '',
           monthLabel: `In time order by the label itself read as a date (a report-level measure: "Apr 2018", "April 2018" and "2018-04" are read; the column has no date or sort-by column the files give a type), showing the last ${tp.last} months with data (a visual filter the user can clear); a label that can't be read keeps every month. The model is not changed; a sort-by column in the model is the lasting fix (check_model_health, MONTH_SORT).`,
@@ -329,19 +330,19 @@ function lintStep(lc) { let { a, arabicNames, m0, planNames, notTranslated, reus
     // (0.3.0 R2) the fields the planned page shows beyond the picker's first guess (the ops layout's fifth and sixth cards,
     // a third category): each gets the fixed list's Arabic name, pinned, or is listed as kept in English, as above
     if (a.lang === 'ar' && notTranslated && designLint.designLint && Array.isArray(designLint.designLint.fields)) {
-      const inModel = (k) => { const mk = k.match(/^(.+?)\[(.+)\]$/), t = mk && (m0.tables || []).find((x) => x.name === mk[1]); return !!t && [...(t.columns || []), ...(t.measures || [])].some((x) => x.name === mk[2]); };
+      const inModel = (k) => { const mk = parseFieldKey(k), t = mk && (m0.tables || []).find((x) => x.name === mk.t); return !!t && [...(t.columns || []), ...(t.measures || [])].some((x) => x.name === mk.c); };
       const known = new Set([...Object.keys(planNames || {}), ...notTranslated.map((x) => x.field)].concat(Object.keys(a.displayNames || {})));
       if (!arabicNames.arabicNames) arabicNames = { arabicNames: {} };
       const an = arabicNames.arabicNames, why = NOT_TRANSLATED_WHY;
-      const more = designLint.designLint.fields.filter((k) => !known.has(k) && inModel(k) && !/[\u0600-\u06FF]/.test(k.replace(/^.*?\[/, ''))), conf2 = Terms.confirmedOf(m0, more);
+      const more = designLint.designLint.fields.filter((k) => !known.has(k) && inModel(k) && !/[\u0600-\u06FF]/.test(fieldOfKey(k))), conf2 = Terms.confirmedOf(m0, more);
       // (0.3.0 A3) a first name added here starts from the names the person approved (displayNames), never without them:
       // a plan whose only fixed-list name came from the lint's fields pinned that one alone and dropped every approved name
       const namesSoFar = () => planNames || Object.assign({}, a.displayNames || {});
       conf2.forEach((c, k) => { reused[k] = c; planNames = Object.assign(namesSoFar(), { [k]: reusedNames()[k] }); });
       more.filter((k) => !conf2.has(k)).forEach((k) => {
-        const p = proposeArabic(k.replace(/^.*?\[(.*)\]$/, '$1'));
+        const p = proposeArabic(fieldOfKey(k));
         if (p) { planNames = Object.assign(namesSoFar(), { [k]: p }); an.inThePlan = Object.assign(an.inThePlan || {}, { [k]: p }); }
-        else notTranslated.push({ field: k, shownAs: k.replace(/^.*?\[(.*)\]$/, '$1'), why });
+        else notTranslated.push({ field: k, shownAs: fieldOfKey(k), why });
       });
     }
     if (notTranslated && arabicNames.arabicNames) arabicNames.arabicNames.sayInPlan = sayArabicPlan(Object.keys(arabicNames.arabicNames.inThePlan || {}).length, notTranslated.length, Object.values(a.displayNames || {}).filter((v) => /[\u0600-\u06FF]/.test(String(v))).length);
@@ -377,7 +378,7 @@ function titlesStep(lc) { let { a, arabicNames, m0, notTranslated, planProblems,
     // (the owner, 27 Oct: "in arabic if title is english then translate it don't keep english titles in arabic reports")
     // fields: each field kept in English that a listed title names, the drafts the assistant owes before the go
     if (a.lang === 'ar' && exact && !exact.bilingual && arabicNames.arabicNames) { const t = englishTitles(exact.files);
-      const keptOnPurpose = new Set(Object.entries(a.displayNames || {}).filter(([k, v]) => String(v).trim() === String(k).replace(/^.*?\[(.*)\]$/, '$1').trim()).map(([k]) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(k); }));
+      const keptOnPurpose = new Set(Object.entries(a.displayNames || {}).filter(([k, v]) => String(v).trim() === fieldOfKey(k).trim()).map(([k]) => { return keyOfText(String(k)) || String(k); }));
       const fields = (notTranslated || []).filter((x) => !keptOnPurpose.has(x.field) && t.some((title) => (' ' + title + ' ').includes(' ' + x.shownAs + ' ') || title.includes(x.shownAs + ':'))).map((x) => x.field);
       if (t.length) arabicNames.arabicNames.titlesInEnglish = Object.assign({ titles: t.slice(0, 30) }, t.length > 30 ? { notListed: t.length - 30 } : {}, fields.length ? { fields } : {},
         { how: fields.length ? 'An Arabic report\'s titles are Arabic (the owner\'s rule): these would be written in English because a field in them has no Arabic name yet. Draft an Arabic name for each field in fields (plain business Arabic, as howToPropose says), show the drafts to the user to approve or edit, and call plan_layout again with the approved ones as displayNames: the titles are then wholly Arabic. Only a field the user keeps in English on purpose (displayNames: its model name) leaves its titles wholly English, never half Arabic, half English.'
@@ -386,7 +387,7 @@ function titlesStep(lc) { let { a, arabicNames, m0, notTranslated, planProblems,
       // that would be written English for a field with no Arabic name: no plan id until each field is drafted and approved,
       // or kept English on purpose
       // (FX3) a switcher label that would be English: listed, and no plan id, as a title's field
-      const sw = m0 && a.metricSwitcher ? resolveSwitch(m0.tables, a.metricSwitcher).measures.map((x) => `${x.t}[${x.m}]`) : [];
+      const sw = m0 && a.metricSwitcher ? resolveSwitch(m0.tables, a.metricSwitcher).measures.map((x) => fieldKey(x.t, x.m)) : [];
       const swFields = (notTranslated || []).filter((x) => !keptOnPurpose.has(x.field) && sw.includes(x.field)).map((x) => x.field);
       if (swFields.length) { arabicNames.arabicNames.switcherLabels = { fields: swFields, how: 'The metric switcher\'s choices and its charts\' titles read these names: on an Arabic report they are Arabic. Draft an Arabic name for each (plain business Arabic, as howToPropose says), show the drafts to the user to approve or edit, and call plan_layout again with the approved ones as displayNames; a name the user keeps in English on purpose: its model name as its displayNames entry.' };
         planProblems.push(`an Arabic report's metric switcher shows its measures by their Arabic names, and ${swFields.length === 1 ? 'this measure has' : 'these measures have'} none yet, so ${swFields.length === 1 ? 'its label' : 'their labels'} would be English: ${swFields.join(', ')} (arabicNames.switcherLabels). Draft an Arabic name for each, show the drafts to the user to approve or edit, and call plan_layout again with the approved ones as displayNames; or, for a measure the user keeps English on purpose, give its model name as its displayNames entry. No plan id until every measure listed has one or the other.`); }
@@ -490,7 +491,7 @@ function slicersStep(lc) { let { a, pf, exact, biSaid } = lc;
     // (0.3.1 LR1, the laptop's tour: 2 slicers asked, a third bound unsaid) every slicer the report writes, named in the
     // plan; the design's slots left over keep the picker's field (pbip-bind.js: the given slicers first), said as added.
     // Kept filled, not left empty: the design's look is what the person approves, and an empty slot changes what Desktop draws
-    const slicerKey = (x) => { const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(x); };
+    const slicerKey = (x) => { return keyOfText(String(x)) || String(x); };
     const slicersAns = exact && (exact.slicers || []).length ? (() => {
       const written = exact.slicers, asked = (pf.slicers || []).map(slicerKey), added = asked.length ? written.filter((f) => !asked.includes(f)) : [];
       const list = written.join(', '), listAr = written.join('، '), n = written.length;
@@ -526,7 +527,7 @@ function terminologyStep(lc) { let { a, arabicNames, m0, planNames, notTranslate
     // term to ask next. The plan's data keeps the rows for the approval page, and the terms are remembered once written
     let terminology = {}, termRows = null;
     if (a.lang === 'ar' && m0 && notTranslated) {
-      const norm = (k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(k); };
+      const norm = (k) => { return keyOfText(String(k)) || String(k); };
       const givenN = new Map(Object.entries(a.displayNames || {}).map(([k, v]) => [norm(k), String(v)]));
       const places = exact ? Terms.placesOf(Terms.reportOf(exact.files)) : null, inThePlan = (arabicNames.arabicNames && arabicNames.arabicNames.inThePlan) || {};
       const keysShown0 = places ? [...places.keys()] : [...new Set([...Object.keys(planNames || {}), ...notTranslated.map((x) => x.field), ...givenN.keys()])];
@@ -537,7 +538,7 @@ function terminologyStep(lc) { let { a, arabicNames, m0, planNames, notTranslate
       const switchKeys = switchPlan ? [...new Set((switchPlan.measures || []).map((x) => norm(x.field)))] : [];
       const keysShown = [...new Set(keysShown0.concat(flipKeys, switchKeys))];
       const terms = new Map(keysShown.map((k) => {
-        const en = k.replace(/^.*?\[(.*)\]$/, '$1');
+        const en = fieldOfKey(k);
         if (givenN.has(k)) { const v = givenN.get(k); return [k, v.trim() === en ? { ar: null, status: 'kept', declined: true } : { ar: v, status: 'approved' }]; }
         if (reused[k]) return [k, reused[k].decision === 'kept' ? { ar: null, status: 'kept', declined: true, earlier: true } : { ar: reused[k].alias, status: 'approved', earlier: true }];
         if (inThePlan[k] != null) return [k, { ar: inThePlan[k], status: 'draft' }];

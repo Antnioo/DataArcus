@@ -467,6 +467,7 @@ const SG1_HEX = ['#000000', '#ffffff', '#FFFFFF', '#118DFF', '#12ab3', '#1', '',
 const SG1_ELS = [['div'], ['div', 'a b'], ['span', '', 'x'], ['span', null, ''], ['p', 'c', 0], ['p', 'c', null], ['p', 'c', undefined], ['a', 0, false], ['time', 'w', 12]].map((v) => ({ label: lab(v), v }));
 const SG1_STATES = [['k', { a: 1 }], ['dataarcus-x', { currency: 'AED', users: [1, 2] }], ['k', null], ['k', 'text'], ['k', { a: 1 }, true], ['k', {}], ['k', [1]], ['', 0]].map(([key, state, refuses]) => ({ label: lab([key, state]) + (refuses ? ' (refused)' : ''), key, state, refuses }));
 const SG1_KEYS = ["'Sales'[Total]", 'Sales[Total]', "  'My Table'[A [b]]  ", '[Total]', 'Sales', '', null, undefined, 12, "'Sales'[]", "'a''b'[c]"].map((v) => ({ label: lab(v), v }));
+const DQ1_DAX = [['Sales', 'Amount'], ["O'Brien", 'A]B'], ['My Table', 'Col [x]'], ['A[B]', 'C'], ['A', 'B][C'], ['', 'X'], [12, 'Y'], ['T', 'A\tB'], ['A\nB', 'C'], ['  pad  ', ' c ']].map((v) => ({ label: lab(v), v }));
 const SG1_PUTS = [[['a.json', 'b.json'], 'b.json', { x: 1 }], [['a.json'], 'a.json', [1, 'two']], [['a.json'], 'a.json', null], [['a.json'], 'missing.json', { x: 1 }], [['a.json', 'a.json'], 'a.json', { y: 'ي' }], [['a.json'], 'a.json', 'text'], [['a.json'], 'a.json', 0], [['a.json'], 'a.json', { n: { m: [] } }]].map(([paths, p, j]) => ({ label: lab([paths, p, j]), paths, p, j }));
 const SG1_LEAVES = [[{ a: 1 }], [{ a: { b: 1, c: [1, 2] } }], [{}], [[]], [null], [1], ['x'], [{ a: null }], [{ a: 1 }, '/x'], [{ a: { b: {} } }, '/visual'], [5, '/p']].map((v) => ({ label: lab(v), v }));
 const SG1_PATHS = [['p', 'Sales.Report'], ['a', 'b', 'c.json'], ['Sales‮.Report'], ['x'.repeat(80)], ['ar', 'تقرير'], ['..', 'out'], ['.', 'p'], ['p q', 'r']].map((v) => ({ label: lab(v.map((s) => (s.length > 20 ? s.slice(0, 20) + '...' : s))), v }));
@@ -634,6 +635,7 @@ export const FAMILIES = [
       P('mcp/lib/sample-project.mjs', 'name', 'source', esc1n()),
       P('mcp/lib/shadow-model.mjs', 'q', 'source', esc1n()),
       P('mcp/lib/twin-model.mjs', 'tmdlName', 'source', esc1n()),
+      P('mcp/lib/model-script.mjs', 'functionLines', 'export', async (x, get) => { const l = (await get())({ name: x.n, expression: '1' }, 0)[0]; return l.slice('function '.length, -' ='.length); }),   // (DQ1, B-438) the name in the function's first line
     ] },
   { id: 'u32', title: 'What number do four bytes hold?', question: 'bytes and an offset: the big-endian unsigned 32-bit number there (a PNG read)',
     inputs: U32, places: [
@@ -695,6 +697,10 @@ export const FAMILIES = [
   { id: 'measure-key', title: "Which table and measure does 'T'[M] name?", question: "a measure written 'Table'[Measure] or Table[Measure]: { t, m }, else null",
     inputs: SG1_KEYS, places: [
       P('mcp/lib/model-script.mjs', 'keyOf', 'export', async (x, get) => (await get())(x.v)),
+    ] },
+  { id: 'dax-name', title: "How is a table and column written as a DAX name 'T'[C]?", question: "a table and a column: the DAX name 'Table'[Column] (' doubled, ] doubled), or a refusal for a control character",
+    inputs: DQ1_DAX, places: [
+      P('assets/js/pbip-query.js', 'daxNames', 'export', async (x, get) => (await get()).column(...x.v)),
     ] },
   { id: 'put-json', title: "What does a plan's file hold after a JSON is put in it?", question: "the plan's files, a path and a JSON: the files after (two spaces; a path the plan lacks throws)",
     inputs: SG1_PUTS, places: [
