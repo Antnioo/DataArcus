@@ -7,6 +7,7 @@
 - **Expected checks:** new suite test-0.3.3-ft2, 12 checks, red on the base (7 of 12 fail); report, core, arabic areas and the
   split guards unchanged; `node scripts/check-modules.mjs --strict` (no fs / process.env import added).
 - **Resume:** none; the reviewer reads and merges.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42786563199 on c35f7f983020c02f8470dd7482958b02c5ad0515 (2026-11-10T09:10Z; Linux and Windows shards success; macOS jobs skipped by the workflow). DONE.
 
 ## Plan and measurement (written 2026-11-10T08:26Z)
 Measured on 00f7f702 through the real server (plan_layout, approve_plan, create_report), made-up model; theme faces = the 4 primary
