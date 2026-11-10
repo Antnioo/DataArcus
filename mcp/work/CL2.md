@@ -9,7 +9,7 @@
   lastmod lines, this note, one WORK.md line. No page words, no Arabic text, no font file.
 - **Expected checks:** `node scripts/check-modules.mjs --strict`; site suite (new case red on the base first);
   `npm run lint` 0; check-min; `node scripts/test-site-config.mjs`.
-- **Resume:** fix and test done, pushed; waiting for CI (see the end of this note).
+- **Resume:** DONE. CI green: https://github.com/Antnioo/DataArcus/actions/runs/42806686458 on 49189af6 (2026-11-10T11:35Z; the macOS jobs were skipped by the workflow).
 
 ## Plan
 1. Measure on the base (Playwright 1.63 Chromium 153, Inter from @fontsource served 500 ms late, as site.mjs does).
