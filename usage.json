@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-10T05:43Z",
+  "generated_at": "2026-11-10T08:14Z",
   "today": {
     "date": "2026-11-10",
-    "cost_usd": 40.59,
-    "tokens": 144254335,
-    "sessions": 12,
+    "cost_usd": 43.83,
+    "tokens": 162660888,
+    "sessions": 15,
     "by_kind": {
       "builder": {
-        "cost_usd": 27.99,
-        "count": 5
+        "cost_usd": 29.47,
+        "count": 7
       },
       "worker": {
-        "cost_usd": 12.6,
-        "count": 7
+        "cost_usd": 14.36,
+        "count": 8
       },
       "probe": {
         "cost_usd": 0,
@@ -26,8 +26,8 @@
     },
     "by_model": {
       "sonnet": {
-        "cost_usd": 8.18,
-        "count": 6
+        "cost_usd": 11.42,
+        "count": 9
       },
       "opus": {
         "cost_usd": 32.41,
@@ -116,12 +116,30 @@
     },
     {
       "date": "2026-11-10",
-      "cost_usd": 40.59,
-      "tokens": 144254335,
-      "sessions": 12
+      "cost_usd": 43.83,
+      "tokens": 162660888,
+      "sessions": 15
     }
   ],
   "jobs": [
+    {
+      "id": "MM1",
+      "title": "MM1: npm overrides minimatch ^11 for the dev tools (B-310, L-1109-26)",
+      "model": "sonnet",
+      "cost_usd": 0.64,
+      "tokens": 3045058,
+      "minutes": 76,
+      "finished_at": "2026-11-10T06:21Z"
+    },
+    {
+      "id": "SG2",
+      "title": "SG2: the split guards allow any pure shared file on CONTRACTS.md's One place list (L-1104-19)",
+      "model": "sonnet",
+      "cost_usd": 0.84,
+      "tokens": 4349966,
+      "minutes": 26,
+      "finished_at": "2026-11-10T06:08Z"
+    },
     {
       "id": "LC2",
       "title": "LC2: build the 18 lessons approved 5 to 8 Nov (D-1110-03)",
@@ -439,15 +457,9 @@
     }
   ],
   "workers": {
-    "count": 7,
-    "cost_usd": 12.6,
+    "count": 8,
+    "cost_usd": 14.36,
     "costliest": [
-      {
-        "label": "worker 00:02",
-        "cost_usd": 1.7,
-        "minutes": 126,
-        "started": "2026-11-10T00:03Z"
-      },
       {
         "label": "worker 00:48",
         "cost_usd": 3.88,
@@ -459,6 +471,12 @@
         "cost_usd": 2.35,
         "minutes": 28,
         "started": "2026-11-10T02:51Z"
+      },
+      {
+        "label": "worker 06:05",
+        "cost_usd": 1.76,
+        "minutes": 123,
+        "started": "2026-11-10T06:05Z"
       }
     ]
   },
