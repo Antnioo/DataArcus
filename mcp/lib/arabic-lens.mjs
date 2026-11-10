@@ -13,17 +13,18 @@
 //   - what Power BI's matrix cannot do: arabic-twin.mjs MATRIX_SAID; the Arabic calendar columns: arabic-calendar.js
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { loadModel, ROOT, shownName } from './model.mjs';
+import { loadModel, shownName } from './model.mjs';
 import { AIM } from './scope.mjs';
 import { safeName, readJson, locate, inventory, diskSource } from './read-report.mjs';
 import { rulesInput, filledLanguages, builtByOf, fixRoutesOf } from './check-report.mjs';
 import { isolateLatin } from './terminology.mjs';
 import { MATRIX_SAID } from './arabic-twin.mjs';
 import { NO_DIRECT_EDITS } from './agent-text.mjs';
+import { relOut } from './check-redact.mjs';   // (0.3.3 SG1) a path inside the working folder, each part cleaned: its one place
 
 const require = createRequire(import.meta.url);
 // a literal's text, number and true or false, a column's set width: assets/js/pbir-values.js, their one home (DD1B)
-const { litText, litBool } = require('../../assets/js/pbir-values.js');
+const { litText, litBool, litValue } = require('../../assets/js/pbir-values.js');
 const Rules = require('../../assets/js/report-rules.js');
 const Mirror = require('../../assets/js/report-mirror.js');
 const ArabicCal = require('../../assets/js/arabic-calendar.js');
@@ -31,7 +32,7 @@ const ArabicCal = require('../../assets/js/arabic-calendar.js');
 // ---- reading a visual (literals only; a report's text is counted and told by its script, never returned) ----
 const arr = (v) => (Array.isArray(v) ? v : []);
 const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
-const litOf = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
+const litOf = litValue;   // (0.3.3 SG1) a raw literal: its one place, pbir-values.js
 const strOf = litText;
 const plainOf = (list) => arr(list).filter((e) => isObj(e) && !e.selector && isObj(e.properties)).reduce((a, e) => Object.assign(a, e.properties), {});
 const lookOf = (list) => { const d = arr(list).filter((e) => isObj(e) && isObj(e.selector) && e.selector.id === 'default' && isObj(e.properties)).reduce((a, e) => Object.assign(a, e.properties), {}); return Object.keys(d).length ? d : plainOf(list); };
@@ -90,7 +91,6 @@ export function arabicLens(p) {
   const inv = inventory(diskSource(loc, sk), path.basename(loc.reportDir));
   const { R } = rulesInput(inv);
   Rules.normalize(R);
-  const relOut = (f) => path.relative(ROOT, f).split(path.sep).map(safeName).join('/');
   const reportPath = relOut(loc.pbipPath || loc.reportDir);
   // each page's language (S1): told by its buttons, the pages that reach it or its own texts; a page none of these tell
   // takes the language most pages have, else English

@@ -181,9 +181,8 @@
   // with or without the "<Name>.Report/" folder. opts.clean: how a title or text box is kept (the MCP screens it).
   // (the check reads a value as shown: 12D -> "12", as read_report says it)
   const litStr = PV.litShown, litNum = PV.litNumber, litBool = PV.litBool;
-  const entries = (list) => (Array.isArray(list) ? list.filter((e) => e && typeof e === 'object') : []);
-  const plain = (list) => entries(list).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e.properties || {}), {});
-  const anyOf = (list) => entries(list).reduce((a, e) => Object.assign(a, (e && e.properties) || {}), {});
+  // (0.3.3 SG1) an objects list's entries, the plain ones' properties, all their properties: pbir-values.js, their one place
+  const entries = PV.entries, plain = PV.plain, anyOf = PV.anyOf;
   const AGG = { 0: 'Sum', 1: 'Avg', 2: 'DistinctCount', 3: 'Min', 4: 'Max', 5: 'Count', 6: 'Median', 7: 'StDev', 8: 'Var' };
   function fieldOf(f) {
     if (!f || typeof f !== 'object') return null;

@@ -315,7 +315,7 @@
       });
     };
     const askNames = ({ N, items }) => {
-      const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+      const el = (tag, cls, text) => window.DAPageToast.el(document, tag, cls, text);   // (0.3.3 SG1) page-toast.js, its one place
       const iso = (s) => '⁨' + s + '⁩';
       namesBox.textContent = '';
       const h = el('h3', 'h6 fw-bold mb-1', L('Arabic names for your fields', 'أسماء عربية لحقول نموذجك')); h.id = 'pbipNamesH';

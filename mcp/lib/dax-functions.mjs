@@ -17,7 +17,7 @@
 // An Arabic report says the compatibility step in Arabic first (the page, the script's header), then in English.
 import { createRequire } from 'node:module';
 import { modelOf, shownName } from './model.mjs';
-import { freeNamer, tagOf, scriptFileOf, functionLines, compatOf, COMPAT_UDF } from './model-script.mjs';
+import { freeNamer, tagOf, scriptFileOf, functionLines, compatOf, COMPAT_UDF, putJson } from './model-script.mjs';
 import { calendarFor, frontValue, UNITS_AR } from './flip-cards.mjs';
 import { targetOf, kpiSaid } from './status-icons.mjs';
 import { besideSaid } from './plain-words.mjs';   // (0.3.1 R4A, T-9: the folder by its name and where it is)
@@ -193,7 +193,7 @@ export function applyDax(files, o) {
   const lang = o.lang === 'ar' ? 'ar' : 'en', model = modelOf(o.tmsl), raw = model.tables || [], c = coloursOf(o.ui);
   const free = freeNamer(raw), res = resolveDax(o.tmsl);
   const at = new Map(files.map((f, i) => [f.path, i]));
-  const put = (p, j) => { files[at.get(p)].data = JSON.stringify(j, null, 2); };
+  const put = (p, j) => putJson(files, at, p, j);   // (0.3.3 SG1) model-script.mjs, its one place
   const measureOf = (t, m) => { const mt = raw.find((x) => x.name === t); return mt && (mt.measures || []).find((x) => x.name === m); };
   const okName = (...n) => n.every((x) => !Pbip.hasControl(String(x)));
   const measures = [], made = new Map(), used = { sparkline: [], bulletBar: [], kpiCards: [], storyTitles: [] }, notUsed = [];

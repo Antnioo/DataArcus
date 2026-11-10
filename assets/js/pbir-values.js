@@ -11,6 +11,8 @@
  * A caller that wants "" or 0 for nothing says `?? ''` or `?? 0` where it calls. p is the property; a value that is not
  * an object (a theme's own true, 12 or 'x') is read as the literal's value itself. The ledger: mcp/docs/CONTRACTS.md
  * (1b-text, 1b-number, 1b-bool, 1d); the test: mcp/test-0.3.2-dd1b.mjs.
+ *   litValue(p)   the raw Literal.Value as written, else undefined (0.3.3 SG1)
+ *   entries(list), plain(list), anyOf(list)  an objects list's object entries; the no-selector entries' properties merged; all merged (0.3.3 SG1)
  * Browser, worker and Node (module.exports / window.DAPbirValues / self.DAPbirValues). */
 (function (root) {
   'use strict';
@@ -20,6 +22,13 @@
     if (!isObj(p)) return p;
     return isObj(p.expr) && isObj(p.expr.Literal) ? p.expr.Literal.Value : undefined;
   };
+  // (0.3.3 SG1) a property's raw Literal.Value as written (12D stays "12D"), else undefined: the one place
+  const litValue = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
+  // (0.3.3 SG1) an objects list (a visual's objects.<name>): its object entries; the properties of those with no selector, merged;
+  // the properties of all, merged. A list that is not an array has none.
+  const entries = (list) => (Array.isArray(list) ? list.filter((e) => e && typeof e === 'object') : []);
+  const plain = (list) => entries(list).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e.properties || {}), {});
+  const anyOf = (list) => entries(list).reduce((a, e) => Object.assign(a, (e && e.properties) || {}), {});
   const QUOTED = /^'.*'$/s;
   const NUMBER = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?[DLM]?$/;
   const litText = (p) => { const v = valueOf(p); return typeof v === 'string' && QUOTED.test(v) ? v.slice(1, -1).replace(/''/g, "'") : null; };
@@ -46,6 +55,6 @@
     }
     return null;
   };
-  const api = Object.freeze({ litText, litNumber, litBool, litShown, columnWidth });
+  const api = Object.freeze({ litText, litNumber, litBool, litShown, columnWidth, litValue, entries, plain, anyOf });
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbirValues = api;
 })(typeof self !== 'undefined' ? self : this);
