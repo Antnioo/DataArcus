@@ -9,8 +9,9 @@
 - **Expected checks:** new suite `fb1` 94 checks (red on 31f35e4a first: no pageFill); sp29 21 -> 22 (K2); every other
   suite unchanged on the tip. With the prepared layout change (38b8ffdb): 242 suites pass, 14 fixtures re-recorded and
   7 checks changed on purpose ("Changed on purpose"). check-modules --strict, test-contracts, lint 0; CI green.
-- **Resume:** the tip is the measure alone and is ready to merge. The layout change (38b8ffdb, reverted by 3d787177)
+- **Resume:** DONE (2026-11-10T19:13Z): the tip is the measure alone and is ready to merge. The layout change (38b8ffdb, reverted by 3d787177)
   waits for the owner's yes: "For the owner" 1, then "Next stages" 1.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42880588188 on 9b0f9e66f291e95a087ffe1ced901ea198fa9341 (2026-11-10T19:13Z; Linux and Windows shards and the website success, macOS skipped by the workflow; integration 028c6a9d merged in once). DONE.
 - **Result:** 28 of 80 planned pages leave a hole today (worst 13.8% of the body), pinned; with the prepared change 10
   (worst 10.6%), SQ13's four open gaps closed, the Details chart 168 -> 312 high.
 
@@ -215,7 +216,7 @@ empty and the Details page's main chart is 312 high on a 1920 x 1080 page, not 1
 2. No new Arabic sentence, no new plan words (D-1109-07, TS-2: nothing to measure).
 
 ## Risky changes
-- On the tip: none (no written file, answer or page changes; CI green on the same tree, run 42867938918 on e9da907d).
+- On the tip: none (no written file, answer or page changes; CI green, run 42880588188 on 9b0f9e66; the report area 78 suites passed locally after the merge).
 - In 38b8ffdb: every report with a side rail and at least one KPI card is placed differently (page 2 of every default
   report). Exact checks pass (Microsoft's validator, the measured rules, the layout check: 0 problems on the sample's
   reports), but the look is unseen in Desktop. A two-slicer rail (228 high) presses the executive page's first row to
@@ -286,3 +287,11 @@ empty and the Details page's main chart is 312 high on a 1920 x 1080 page, not 1
    report-rules.js headerNeed, page-preview.js; the laptop script that prints the fixture (structure and made-up names
    only). Red-first: the fixture's rows the rules get wrong today (B-173's 0.71 to 0.73, text-measure.js:14-17's 219.9).
    Measure: header-cut false positives and missed cuts against the fixture, label slants predicted vs seen.
+
+## After the merge of integration (written 2026-11-10T19:13Z)
+- origin/integration/0.3.3 (028c6a9d, AT1 merged) merged in once, 9b0f9e66: one conflict, mcp/CHANGELOG.md, both lines
+  kept. Then: `npm test -- report --keep-going` "78 suites passed (report)"; check-modules --strict, test-contracts,
+  check-contracts, check-min, check-result-lines, test-site-config PASS; lint 0.
+- AT1 re-recorded sp1, sp3, sp23, sp43 and fn1j for its Arabic title words: 38b8ffdb's copies of those fixtures are
+  older than integration's now, so "Next stages" 1 re-records them after reverting 3d787177, as written there.
+- mcp/WORK.md has no FB1 line: it stands at its cap; the reviewer writes it at the merge.
