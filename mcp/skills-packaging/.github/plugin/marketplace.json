@@ -8,7 +8,7 @@
     {
       "name": "dataarcus",
       "source": "./plugins/dataarcus",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "description": "Arabic right-to-left reports and Arabic twins, one report in English and Arabic, Gulf calendars with Hijri and Ramadan, the model health check, and an approval click before any file is written. Works next to Microsoft's Power BI Report skill (the powerbi-authoring plugin). Install Microsoft's plugin next to it.",
       "homepage": "https://dataarcus.com/power-bi-mcp/",
       "keywords": ["powerbi", "pbir", "pbip", "arabic", "rtl", "gulf", "hijri", "ramadan", "report-design"]

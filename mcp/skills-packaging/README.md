@@ -32,12 +32,12 @@ copilot plugin install powerbi-authoring@fabric-collection
 copilot plugin install dataarcus@dataarcus
 ```
 Copilot CLI has no plugin dependencies and can't start an `.mcpb`, so the DataArcus server is added by hand: download
-`dataarcus-0.3.1.mcpb` from the release page, check its SHA-256 against the release notes
-(`certutil -hashfile dataarcus-0.3.1.mcpb SHA256`), unpack it (it is a zip) into a folder of its own, then:
+`dataarcus-0.3.2.mcpb` from the release page, check its SHA-256 against the release notes
+(`certutil -hashfile dataarcus-0.3.2.mcpb SHA256`), unpack it (it is a zip) into a folder of its own, then:
 ```
-mkdir "%USERPROFILE%\dataarcus-0.3.1"
-tar -xf dataarcus-0.3.1.mcpb -C "%USERPROFILE%\dataarcus-0.3.1"
-copilot mcp add dataarcus --env DATAARCUS_ROOT="<working folder>" -- node "%USERPROFILE%\dataarcus-0.3.1\mcp\server.mjs"
+mkdir "%USERPROFILE%\dataarcus-0.3.2"
+tar -xf dataarcus-0.3.2.mcpb -C "%USERPROFILE%\dataarcus-0.3.2"
+copilot mcp add dataarcus --env DATAARCUS_ROOT="<working folder>" -- node "%USERPROFILE%\dataarcus-0.3.2\mcp\server.mjs"
 ```
 `<working folder>` is the folder that holds your `.pbip` projects.
 
