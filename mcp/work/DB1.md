@@ -19,7 +19,10 @@
 - **Got:** db1 "PASS  db1  12 checks", red on 8f5624e6 first under each of its 4 mutants (V2, TT2a, TT2b, B6); the 11
   pins the same PASS line before and after; report "run-tests: 74 suites passed (report)", arabic "18 suites passed";
   mutation "250 checks (99 mutants, all killed)"; FN1J's 7 mutants survived 7 -> 0; contracts 14, lint 0.
-- **Resume:** the plan was pushed (2026-11-09T23:36Z); the 3 deletions and db1 pushed; the runs and CI below (2026-11-10T00:02Z).
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42728366650 on 457acc0d (Linux and Windows; macOS
+  skipped by the workflow on a branch run), read 2026-11-10T00:51Z. After it only this note changed.
+- **State: DONE.**
+- **Resume:** none; the reviewer's merge.
 
 ## The proofs (each read from the code on 8f5624e6; inputs run through the registered tool)
 - **T2, unreachable.** monthOrderStep's `tf` is either `fieldsAndProblems(...).out.timeAxis` (report-fields.mjs: a
@@ -66,7 +69,7 @@
   8f5624e6 locally (not this job's change). Measured cause: sp24's \`undate\` (scripts/tests/sp24.mjs:58-59) masks
   every yesterday/today/tomorrow date; the ramadan model's Hijri calendar starts month 1448/6 on 2026-11-10, so on
   10 Nov that quoted date became \`<DATE>\` (10 characters to 6). Fix (test only, 2026-11-10T00:26Z): a quoted date is not
-  masked; "PASS  sp24  23 checks" after. Then CI again.
+  masked; "PASS  sp24  23 checks" after. Second run 42728366650 on 457acc0d: green, sp24 included.
 
 ## CHANGELOG line
 - Inside plan_layout, three checks that could never be reached were removed (no answer or file changes), and tests
