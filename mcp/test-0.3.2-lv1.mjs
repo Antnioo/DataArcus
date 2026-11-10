@@ -62,7 +62,7 @@ chk(() => evalDax(first, VALS) === RLM + FSI + 'Thursday' + PDI + ' هو الي�
 const topExpr = 'VAR _n = [Count] VAR _s = MIN ( 10, _n ) RETURN IF ( _s = _n, "Score by Region", "Top " & _s & " of " & _n & ": Score by Region" )';
 const tm = titleMeasuresOf({ ext: { entities: [{ name: 'Coupon', measures: [{ name: 'Title: Score', dataType: 'Text', expression: topExpr }] }] }, pages: [{ id: 'p1', page: {}, visuals: [{ json: { name: 'v1', visual: { visualType: 'barChart', visualContainerObjects: { title: [{ properties: { text: { expr: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: 'Coupon' } }, Property: 'Title: Score' } } } } }] } } } }] }] })[0];
 const top = tm && tm.pd.branches ? arabicDax(tm.pd, ['النقاط حسب المنطقة', 'أعلى {1} من أصل {2}: النقاط حسب المنطقة']) : '';
-chk(() => top.includes('IF ( _s = _n, "النقاط حسب المنطقة", "أعلى " & UNICHAR ( 8296 ) & _s & UNICHAR ( 8297 ) & " من " & UNICHAR ( 8296 ) & _n & UNICHAR ( 8297 ) & ": النقاط حسب المنطقة" )'), () => `V3. the Top N title: the plain branch as approved, the other's values isolated, the condition kept: ${top}`);
+chk(() => top.includes('IF ( _s = _n, "النقاط حسب المنطقة", "أعلى " & UNICHAR ( 8296 ) & _s & UNICHAR ( 8297 ) & " من أصل " & UNICHAR ( 8296 ) & _n & UNICHAR ( 8297 ) & ": النقاط حسب المنطقة" )'), () => `V3. the Top N title: the plain branch as approved, the other's values isolated, the condition kept: ${top}`);
 // V4: what must not change
 const sameAsBase = [[pd, ['Busiest: Day: {1} Hour: {2}']], [pd, [null]], [tm.pd, ['Score by Region', null]], [tm.pd, [null, null]]];
 const noVal = textMeasuresOf(card('IF ( ISEMPTY ( Visits ), "No data for this selection", "" )'))[0];

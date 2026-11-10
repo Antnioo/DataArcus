@@ -109,7 +109,7 @@ try {
   const page = await pageOf(w, p1.j.plan.planId);
   // (0.3.0 T2, changed on purpose: on the Arabic twin's page a quoted name is isolated, <bdi>"..."</bdi>)
   // (FX1: the twin's page wholly Arabic; changed on purpose from "Chart title (from a title measure)")
-  chk(() => /عنوان مخطط \(من مقياس عنوان\) (?:<bdi>)?«Top \{1\} of \{2\}: Web Orders Total Score by Coupon Region»/.test(page) && /أعلى \{1\} من \{2\}: النقاط حسب منطقة القسيمة/.test(page), () => `T-1. the approval page names the title measure's text: ${(/النصوص العربية[\s\S]{0,800}/.exec(page) || [''])[0]}`);
+  chk(() => /عنوان مخطط \(من مقياس عنوان\) (?:<bdi>)?«Top \{1\} of \{2\}: Web Orders Total Score by Coupon Region»/.test(page) && /أعلى \{1\} من أصل \{2\}: النقاط حسب منطقة القسيمة/.test(page), () => `T-1. the approval page names the title measure's text: ${(/النصوص العربية[\s\S]{0,800}/.exec(page) || [''])[0]}`);
   // a label that drops a number the report counts is refused, never written half
   {
     const bad = Object.assign({}, labels); const k = (tm.find((t) => /\{2\}/.test(t.text)) || { id: 'titleText:none' }).id; bad[k] = 'أعلى {1}: النقاط';
@@ -129,7 +129,7 @@ try {
   const ext = rd(path.join(TWIN, 'definition/reportExtensions.json')), extMeasures = ext.entities.flatMap((e) => e.measures.map((m) => Object.assign({ entity: e.name }, m)));
   const arTitles = extMeasures.filter((m) => /^Title AR: /.test(m.name));
   // (0.3.2 LV1, changed on purpose: each value of an Arabic text in a first-strong isolate, UNICHAR ( 8296 ) ... ( 8297 ))
-  chk(() => arTitles.length === 4 && arTitles.every((m) => /أعلى " & UNICHAR \( 8296 \) & _s & UNICHAR \( 8297 \) & " من " & UNICHAR \( 8296 \) & _n & UNICHAR \( 8297 \) & ": النقاط حسب/.test(m.expression) && /RETURN IF \( _s = _n, "النقاط حسب/.test(m.expression) && m.dataType === 'Text'), () => `T-1. the twin has its own Arabic title measures, the same DAX with the Arabic texts: ${JSON.stringify(arTitles.map((m) => [m.name, m.expression.slice(-200)]))}`);
+  chk(() => arTitles.length === 4 && arTitles.every((m) => /أعلى " & UNICHAR \( 8296 \) & _s & UNICHAR \( 8297 \) & " من أصل " & UNICHAR \( 8296 \) & _n & UNICHAR \( 8297 \) & ": النقاط حسب/.test(m.expression) && /RETURN IF \( _s = _n, "النقاط حسب/.test(m.expression) && m.dataType === 'Text'), () => `T-1. the twin has its own Arabic title measures, the same DAX with the Arabic texts: ${JSON.stringify(arTitles.map((m) => [m.name, m.expression.slice(-200)]))}`);
   const titleRefs = (pages) => pages.flatMap((pg) => pg.visuals.map((v) => { const t = ((((v.visual || {}).visualContainerObjects || {}).title || [])[0] || {}).properties || {}; return t.text && t.text.expr && t.text.expr.Measure ? t.text.expr.Measure.Property : null; }).filter(Boolean));
   const twinPages = pagesOf('large/Golden AR.Report'), origPages = pagesOf('large/Golden.Report');
   chk(() => titleRefs(twinPages).length === titleRefs(origPages).length && titleRefs(twinPages).every((n) => /^Title AR: /.test(n)) && titleRefs(origPages).every((n) => /^Title: /.test(n)), () => `T-1. every twin title measure reference is the Arabic one; the original keeps its own: twin ${titleRefs(twinPages)} | original ${titleRefs(origPages)}`);
