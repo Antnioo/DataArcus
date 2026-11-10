@@ -8,6 +8,8 @@ const Bind = require('../../assets/js/pbip-bind.js');
 const Axes = require('../../assets/js/axis-units.js');
 const Fix = require('../../assets/js/model-health-tmdl.js');
 const Svg = require('../../assets/js/svg-kpi-compiler.js');
+// a DAX name 'Table'[Column]: the one quoter, which refuses a control character (assets/js/pbip-query.js daxNames, B-437)
+const { daxNames } = require('../../assets/js/pbip-query.js');
 
 // (round 22) the model's relationships for the field picker, which puts a category the measure's table is related to first;
 // (round 22b, the reviewer's second review, item 3) with the whole model's tables, which a measure's DAX may read outside the scope
@@ -124,7 +126,6 @@ export function resolveSvgColumns(tables, list, opt) {
     for (const t of tables) { const o = pick(t.measures, text); if (o) return { t, o }; }
     return null;
   };
-  const daxColumn = (t, c) => "'" + t.replace(/'/g, "''") + "'[" + c.replace(/\]/g, ']]') + ']';
   const out = list.map((sc, i) => {
     const where = `${WHAT}[${i}]`, label = String(sc.label).trim(), before = problems.length;
     if (!label || /[\[\]]|\p{Cc}|\p{Cf}/u.test(label)) problems.push(`${where}: the label ${JSON.stringify(sc.label)} can't be used (a label has no brackets and no hidden characters)`);
@@ -145,7 +146,8 @@ export function resolveSvgColumns(tables, list, opt) {
         return Object.assign({}, v, { measure: f.o.name, percent: !!(Bind.measureCard(f.o).pct || (right && /%/.test(right.format))) }, f.o.formatString ? { format: String(f.o.formatString) } : {}); }
       if (v.kind === 'column') { const f = find(v.column, 'c'); if (!f) { problems.push(`${where} ("${label}"): ${v.column} is not in the model (a column is needed, written as Table[Column])`); return v; }
         if (/^(string|boolean|date)/i.test(String(f.o.dataType || ''))) textColumns.set(v.id, `${f.t.name}[${f.o.name}]`);
-        return Object.assign({}, v, { column: daxColumn(f.t.name, f.o.name) }); }
+        let column; try { column = daxNames.column(f.t.name, f.o.name); } catch (e) { problems.push(`${where} ("${label}"): ${e.message}`); return v; }
+        return Object.assign({}, v, { column }); }
       if (textColumns.has(v.a) || textColumns.has(v.b)) textColumns.set(v.id, textColumns.get(v.a) || textColumns.get(v.b));
       return v;
     });

@@ -135,7 +135,7 @@ export function addSwitch(r, o) {
   // (F1, the owner's decision of 20 Oct) the switch opens on its FIRST metric: general.filter in the shape Desktop 2.159
   // saved for it (the laptop proof, out/L3-saved-general.json): the field column In the first measure's NAMEOF text, with
   // the display column and the item's label in the annotations
-  const nameText = "'" + String(first.t).replace(/'/g, "''") + "'[" + String(first.m).replace(/\]/g, ']]') + ']', nameLit = { Literal: { Value: "'" + nameText.replace(/'/g, "''") + "'" } };
+  const nameText = daxNames.column(first.t, first.m), nameLit = { Literal: { Value: "'" + nameText.replace(/'/g, "''") + "'" } };
   const colOf = (src, c) => ({ Column: { Expression: { SourceRef: src }, Property: c } });
   const firstChosen = { filter: { Version: 2, From: [{ Name: 'm', Entity: names.table, Type: 0 }], Where: [{ Condition: { In: { Expressions: [colOf({ Source: 'm' }, names.fields)], Values: [[nameLit]] } },
     Annotations: { filterExpressionMetadata: { expressions: [colOf({ Entity: names.table }, names.display)], decomposedIdentities: { values: [[{ 0: [nameLit] }]], columns: [{ value: colOf({ Entity: names.table }, names.fields) }] }, valueMap: [{ 0: first.label }] } } }] } };
@@ -222,8 +222,9 @@ export function titleProblems(tmslModel) {
     if (display) params.push({ table: t.name, display: display.name, others: (t.columns || []).filter((c) => c !== display).map((c) => c.name) }); });
   const esc = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const out = [];
-  params.forEach((p) => tables.forEach((t) => (t.measures || []).forEach((ms) => {
-    const e = String(ms.expression || ''), tq = `(?:'${esc(p.table).replace(/'/g, "''")}'|${esc(p.table)})`, ref = (c) => new RegExp(`(${tq})?\\s*\\[${esc(c).replace(/\]/g, ']]')}\\]`, 'i');
+  // (B-437) a name with a control character can't be written in DAX (the quoter refuses it): no measure of ours names it
+  params.filter((p) => ![p.table, p.display, ...p.others].some((n) => hasControl(String(n)))).forEach((p) => tables.forEach((t) => (t.measures || []).forEach((ms) => {
+    const e = String(ms.expression || ''), tq = `(?:${esc(daxNames.table(p.table))}|${esc(p.table)})`, ref = (c) => new RegExp(`(${tq})?\\s*${esc(daxNames.measure(c))}`, 'i');
     if (ref(p.display).test(e) && !p.others.some((c) => ref(c).test(e))) out.push({ table: t.name, measure: ms.name, parameter: p.table, display: p.display });
   })));
   return { params, problems: out };

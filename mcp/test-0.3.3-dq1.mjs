@@ -1,0 +1,44 @@
+// DQ1 (0.3.3; the owner D-1104-12 "we fix it at the source", D-1110-04; night audit AUD-061/AUD-060/AUD-064).
+//   D1-D5  B-437: a DAX name 'Table'[Column] is quoted in ONE place (assets/js/pbip-query.js daxNames, which refuses a
+//          control character, AUD-032); the mcp/lib places that wrote it by hand call it: same text for a name with a
+//          quote or a bracket, the refusal for a control character, and no hand-written quoting left
+// Made-up names only.   node test-0.3.3-dq1.mjs
+import fs from 'node:fs';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
+import { resolveSvgColumns } from './lib/report-fields.mjs';
+import { titleProblems } from './lib/metric-switcher.mjs';
+
+const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
+const require = createRequire(import.meta.url);
+const read = (rel) => fs.readFileSync(path.join(REPO, rel), 'utf8');
+const problems = []; let checks = 0;
+const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } catch (e) { err = ' (threw: ' + String(e && e.message || e).slice(0, 200) + ')'; } checks++; if (!ok) problems.push(msg + err); };
+
+const { daxNames } = require('../assets/js/pbip-query.js');
+const TAB = 'A\tB';
+// ---- D1-D2: report-fields, an SVG column's column value ----
+const model = (tn, cn) => [{ name: tn, columns: [{ name: cn, dataType: 'string' }, { name: 'Amount', dataType: 'double' }], measures: [{ name: 'Total', expression: 'SUM(1)' }] }];
+const design = (tn, cn) => ({ layers: [{ type: 'text', text: 'x', x: 0, y: 0, bind: { text: 'c' } }], values: [{ id: 'c', kind: 'column', column: `${tn}[${cn}]` }] });
+const svg = (tn, cn) => resolveSvgColumns(model(tn, cn), [{ label: 'L', design: design(tn, cn) }], { what: 'svgColumns' });
+chk(() => svg("O'Brien", 'A]B')[0].expression.includes("'O''Brien'[A]]B]"), "D1 report-fields: a table with a quote and a column with a bracket are quoted as 'O''Brien'[A]]B]");
+chk(() => { try { svg(TAB, 'X'); } catch (e) { return /control character/.test(e.message) && !/threw/.test(e.message); } return false; }, 'D2 report-fields: a table name with a control character is refused by the shared quoter');
+// ---- D3: the metric switcher's title check reads the same quoted name; a control-character name is skipped, not thrown ----
+const param = (tn, dn) => ({ name: tn, columns: [{ name: 'Fields', extendedProperties: [{ name: 'ParameterMetadata', value: { kind: 2 } }] }, { name: dn, relatedColumnDetails: { groupByColumns: [{ groupingColumn: 'Fields' }] } }], measures: [{ name: 'Title', expression: `SELECTEDVALUE ( '${tn.replace(/'/g, "''")}'[${dn.replace(/]/g, ']]')}] )` }] });
+chk(() => titleProblems({ tables: [param("O'Br", 'Name]x')] }).problems.length === 1, "D3 metric-switcher: a measure naming 'O''Br'[Name]]x] is found");
+chk(() => titleProblems({ tables: [Object.assign(param('P', 'Name'), { measures: [{ name: 'M', expression: "SELECTEDVALUE ( 'P'[Name] )" }] })] }).problems.length === 1, 'D3b metric-switcher: a plain name is found as before');
+chk(() => titleProblems({ tables: [param(TAB, 'Name')] }).problems.length === 0, 'D3c metric-switcher: a table name with a control character is skipped (nothing throws)');
+// ---- D4: the quoter itself ----
+chk(() => daxNames.column("O'Brien", 'A]B') === "'O''Brien'[A]]B]", "D4 daxNames.column quotes a quote and a bracket");
+chk(() => { try { daxNames.column('T', TAB); } catch (e) { return /control character/.test(e.message); } return false; }, 'D4b daxNames refuses a control character');
+// ---- D5: one job, one place: no hand-written 'Table'[Column] quoting left in the mcp/lib files that had it ----
+for (const f of ['mcp/lib/report-fields.mjs', 'mcp/lib/twin-model.mjs', 'mcp/lib/metric-switcher.mjs']) {
+  const s = read(f);
+  chk(() => !/"'\[" \+|replace\(\/\\?\]\/g, '\]\]'\)/.test(s), `D5 ${f}: no hand-written bracket quoting`);
+  chk(() => !/tq = `\(\?:'\$\{esc/.test(s), `D5 ${f}: no hand-written table quoting in a regex`);
+  chk(() => /daxNames/.test(s), `D5 ${f}: reads daxNames`);
+}
+
+if (problems.length) { console.log(`FAIL script=test-0.3.3-dq1.mjs cause=${problems[0].slice(0, 300)}`); for (const p of problems) console.log('  - ' + p); console.log(`FAIL  dq1  ${problems.length} of ${checks} checks`); process.exit(1); }
+console.log(`PASS  dq1  ${checks} checks`);
