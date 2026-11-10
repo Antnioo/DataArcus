@@ -16,4 +16,34 @@ The quoter already exists with the refusal: `daxNames` in assets/js/pbip-query.j
 3. Item 3: one shared `fieldKey(table, field)` in a new pure mcp/lib/field-key.mjs (bare table and column text as today for a normal name; a table with a quote or bracket in quotes, a column's `]` doubled), and its reader; terminology.mjs, model-culture.mjs, twin-texts.mjs, twin-measures.mjs call it. Red proof: tables `A` column `B][C` and `A[B]` column `C` get two keys and two approval lines.
 
 ## Before -> after
-(filled as the work lands)
+- B-437: 4 hand-written `'T'[C]` quoters in mcp/lib (report-fields, twin-model, metric-switcher x2 pieces) -> all call `daxNames` (refuses a control character). Same text for every normal, quote and bracket name. report-fields tells a refused name as a problem; metric-switcher's title check skips such a name. Red: test dq1 D1-D5 on eb1a3019 failed 7 of 16 (D2 passes on the base: the SVG compiler already refused; twin-model and addSwitch sit behind earlier control checks, so their proof is the static D5).
+- B-438: functionLines had its own copy of the TMDL name rule -> `tmdlName`. Equal on the 9 probe names and a dotted and a hyphenated one: no case the old copy got wrong today (same regex), so the proof is that the rule is no longer copied (red: 2 of 28 on the item 1 commit). The family `tmdl-name` gains the place (8, 0 of 9 disagree).
+- B-434: new `mcp/lib/field-key.mjs` (`fieldKey`, `keyOfText`, `parseFieldKey`, `fieldOfKey`). Key = `Table[Field]` as before; a table with a quote or bracket is quoted, a `]` in the field doubled. Table `A` column `B][C` is `A[B]][C]` and table `A[B]` column `C` is `'A[B]'[C]`. Callers: terminology.mjs (fieldKeyOf, placesOf, sheetOf), model-culture.mjs, twin-texts.mjs (termsOf, normTerms), plan_layout.mjs call sites, plan-lint.mjs. Red: D7-D9 failed 5 of 35 on the item 2 commit (two keys; two sheet rows; the culture script gives the caption to one table). Round23's escaped-names check caught plan_layout and plan-lint building keys by hand: fixed (found by the full run).
+- Counts: dq1 35 checks; areas arabic, report, model 124 suites (before item 3); split guards sp10 113, sp11 21, sp23 29, sp39 96, sp40 28, sp44 23 unchanged; check-modules --strict 1223, check-contracts 858, test-contracts 14.
+
+## CHANGELOG line
+The Arabic twin no longer gives two fields one Arabic name when their names look alike (a table `A` with a column `B][C` and a table `A[B]` with a column `C`): each has its own line in the terminology sheet and its own approval. Names without a quote or a bracket are keyed as before.
+
+## Decisions I made
+- Item 1's one place is the existing `daxNames` (assets/js/pbip-query.js), not a new module: it already refuses (AUD-032). The ledger family `dax-name` records it.
+- The key form for item 3 is the bare text for a normal name and a quoted table only when its name holds a quote or bracket, so no recorded suite moves; the quoted-everywhere DAX form would have changed every key text.
+- plan_layout.mjs is FT2's file: only the key-parse and key-build call sites changed, nothing else.
+
+## For the owner
+none
+
+## Risky changes
+Typed `terms` and `displayNames` keys now go through `keyOfText`: a normal `Table[Field]` or `'Table'[Field]` gives the same key as before. A typed key with brackets inside a table name is read as before (the first `[` splits it).
+
+## For the laptop
+none
+
+## Seen, not in scope
+- Other hand-written DAX quoters in assets/js (not mcp/lib): model-health-tmdl `cref`, gulf-measures `colRef`, measure-builder `colRef`, svg-kpi-compiler:123, health-view:331, field-catalog `fieldKey`.
+- `Bind.fieldKey` (assets/js/pbip-bind.js) is a second field key (the report writer's, `]` doubled, table unquoted): `A[B]]` + `C` and `A` + `B][C` collide there too (report-said.mjs:95 notes it). Not the twin's key.
+- gulf-calendar.mjs:58 and :63 write `sourceColumn: [c]` by hand (TMDL, not a DAX name).
+
+## Lessons for the reviewer
+- The brief's 9 and 8 were the audit's across the repo; mcp/lib has 4 hand quoters. Counting was needed before the plan.
+- Typed-key parsers and key builders are spread over plan_layout and plan-lint: a key change needs the full `npm test` (round23 found them), not only the twin area.
+
