@@ -80,9 +80,9 @@ parity('P5', 'leaves: redesign-kinds leaves', old(OLD.leaves), lazy(() => RK.lea
 }
 
 // ---------- P7 #rrggbb -> [r, g, b] ----------
-const CT = () => require('../assets/js/contrast.js');
+const DC = () => require('../assets/js/design-colours.js');
 const HEX = [['#000000'], ['#ffffff'], ['#FFFFFF'], ['#118DFF'], ['#12ab3'], ['#1'], [''], ['#gg0000'], ['118DFF'], ['#118dff80']];
-parity('P7', 'hexToRgb / mixHex p: contrast hexToRgb', old(OLD.hexToRgb), lazy(() => CT().hexToRgb), HEX);
+parity('P7', 'hexToRgb / mixHex p: design-colours hexToRgb', old(OLD.hexToRgb), lazy(() => DC().hexToRgb), HEX);
 
 // ---------- P8 a list's object entries, the plain ones' properties, all their properties ----------
 const OLDE = old(OLD.entries);
@@ -119,8 +119,8 @@ none('S5', 'mcp/lib/redesign-patches.mjs', /const leaves = /, 'leaves'); has('S5
 none('S6', 'mcp/lib/native-copy.mjs', /const (pathOut|relRoot) = /, 'pathOut or relRoot'); has('S6', 'mcp/lib/native-copy.mjs', /import \{[^}]*\bpathOut\b[^}]*\} from '\.\/twin-read\.mjs'/, 'pathOut from twin-read.mjs');
 for (const f of ['assets/js/calendar-generator.js', 'assets/js/licensing-calculator.js', 'assets/js/measure-builder.js']) { none('S7', f, /localStorage\.setItem\(STORE, JSON\.stringify\(state\)\)/, 'save'); has('S7', f, /saveState\(STORE, state\)/, 'saveState'); }
 has('S7', 'tools/power-bi-licensing-cost-calculator.html', /page-toast\.min\.js\?v=[0-9a-f]+"[^>]*><\/script>\s*(?:<[^>]*>\s*)*?<script[^>]*licensing-calculator\.min\.js/, 'page-toast.min.js before licensing-calculator');
-none('S8', 'assets/js/design-colours.js', /const hexToRgb = \(h\) =>/, 'hexToRgb'); none('S8', 'assets/js/pbip-query.js', /parseInt\(h\.slice\(i, i \+ 2\), 16\)/, 'hex parse');
-has('S8', 'assets/js/design-colours.js', /Contrast\.hexToRgb/, 'Contrast.hexToRgb'); has('S8', 'assets/js/pbip-query.js', /Contrast\.hexToRgb/, 'Contrast.hexToRgb');
+none('S8', 'assets/js/pbip-query.js', /parseInt\(h\.slice\(i, i \+ 2\), 16\)/, 'hex parse');
+has('S8', 'assets/js/pbip-query.js', /require\('\.\/design-colours\.js'\) : root\.DAColours\)\.hexToRgb/, 'design-colours hexToRgb');
 for (const f of ['assets/js/layout-check.js', 'mcp/lib/report-inventory.mjs']) { none('S9', f, /const entries = \(list\) =>/, 'entries'); has('S9', f, /const entries = PV\.entries, plain = PV\.plain, anyOf = PV\.anyOf;/, 'pbir-values entries, plain, anyOf'); }
 none('S10', 'mcp/lib/arabic-lens.mjs', /const relOut = /, 'relOut'); has('S10', 'mcp/lib/arabic-lens.mjs', /import \{[^}]*\brelOut\b[^}]*\} from '\.\/check-redact\.mjs'/, 'relOut from check-redact.mjs');
 for (const f of ['mcp/lib/dax-functions.mjs', 'mcp/lib/status-icons.mjs']) { none('S11', f, /files\[at\.get\(p\)\]\.data = JSON\.stringify\(j, null, 2\)/, 'put'); has('S11', f, /putJson\(files, at, /, 'putJson'); }

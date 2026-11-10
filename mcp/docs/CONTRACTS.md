@@ -60,7 +60,7 @@ How it is kept true:
 | [expr-text What text does an expression given as lines hold?](#expr-text-what-text-does-an-expression-given-as-lines-hold) | 1 | 0 of 12 | the Model Health Check (its index, fix scripts, remembered answers), check_model_health, add_gulf_calendar, the twin's model | one place since SG1: `assets/js/dax-reference-parser.js` `exprText` |
 | [lit-value What value is a literal written as?](#lit-value-what-value-is-a-literal-written-as) | 1 | 0 of 14 | check_report, the twin, the writer's visual replacement, the Arabic lens | one place since SG1: `assets/js/pbir-values.js` `litValue` |
 | [obj-entries Which entries does an objects list hold?](#obj-entries-which-entries-does-an-objects-list-hold) | 1 | 0 of 9 | read_report, check_report, the layout check | one place since SG1: `assets/js/pbir-values.js` `entries` |
-| [hex-rgb What red, green and blue does a hex colour hold?](#hex-rgb-what-red-green-and-blue-does-a-hex-colour-hold) | 1 | 0 of 10 | generate_theme and the theme generator (colour mixes), the PBIP writer's colour mix | one place since SG1: `assets/js/contrast.js` `hexToRgb` |
+| [hex-rgb What red, green and blue does a hex colour hold?](#hex-rgb-what-red-green-and-blue-does-a-hex-colour-hold) | 1 | 0 of 10 | generate_theme and the theme generator (colour mixes), the PBIP writer's colour mix | one place since SG1: `assets/js/design-colours.js` `hexToRgb` |
 | [page-el What element does a page make for a class and a text?](#page-el-what-element-does-a-page-make-for-a-class-and-a-text) | 1 | 0 of 9 | the build page (its cards, the Fuel panel), the theme generator's names box | one place since SG1: `assets/js/page-toast.js` `el` |
 | [page-save What does a page keep of its state?](#page-save-what-does-a-page-keep-of-its-state) | 1 | 0 of 8 | the calendar, measure builder and licensing calculator pages (the visitor's browser only) | one place since SG1: `assets/js/page-toast.js` `saveState` |
 | [measure-key Which table and measure does 'T'[M] name?](#measure-key-which-table-and-measure-does-tm-name) | 1 | 0 of 11 | create_report (the metric switcher, the status icons) | one place since SG1: `mcp/lib/model-script.mjs` `keyOf` |
@@ -1024,7 +1024,7 @@ or 0 no longer throws.
 
 ## hex-rgb What red, green and blue does a hex colour hold?
 
-**One place:** assets/js/contrast.js hexToRgb (test mcp/test-0.3.3-sg1.mjs).
+**One place:** assets/js/design-colours.js hexToRgb (test mcp/test-0.3.3-sg1.mjs).
 
 **Question:** a colour `#rrggbb`: `[r, g, b]`, each 0 to 255 read from its two hex digits; a pair that is not hex is NaN (the callers pass `#rrggbb` they made).
 
@@ -1032,9 +1032,9 @@ or 0 no longer throws.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
-| `assets/js/contrast.js` `hexToRgb` | [engines](MODULES.md#the-website-engines) | generate_theme and the theme generator (colour mixes), the PBIP writer's colour mix |
+| `assets/js/design-colours.js` `hexToRgb` | [engines](MODULES.md#the-website-engines) | generate_theme and the theme generator (colour mixes), the PBIP writer's colour mix |
 
-**Since SG1 (9 Nov):** gone, their calls read the one place: `assets/js/design-colours.js` `hexToRgb` (now contrast.js's), `assets/js/pbip-query.js` `p` (in `mixHex`, now a call). The parity: mcp/test-0.3.3-sg1.mjs (each old copy, as the base wrote it, and the one place on the same made-up inputs); the probe's 10 inputs (family `hex-rgb`).
+**Since SG1 (9 Nov):** gone, their calls read the one place: `assets/js/pbip-query.js` `p` (in `mixHex`, now design-colours.js's, read when called: the theme pages load design-colours.js before it). design-colours.js's own was the first and stays (contrast.js holds luminance and contrast only, as mcp/test-0.3.2-dd2k.mjs M2 pins). The parity: mcp/test-0.3.3-sg1.mjs (each old copy, as the base wrote it, and the one place on the same made-up inputs); the probe's 10 inputs (family `hex-rgb`).
 
 ## page-el What element does a page make for a class and a text?
 

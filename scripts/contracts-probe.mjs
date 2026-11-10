@@ -680,7 +680,7 @@ export const FAMILIES = [
     ] },
   { id: 'hex-rgb', title: 'What red, green and blue does a hex colour hold?', question: '#rrggbb: its [r, g, b] (0 to 255; NaN where a pair is not hex)',
     inputs: SG1_HEX, places: [
-      P('assets/js/contrast.js', 'hexToRgb', 'export', async (x, get) => (await get())(x.v)),
+      P('assets/js/design-colours.js', 'hexToRgb', 'export', async (x, get) => (await get())(x.v)),
     ] },
   { id: 'page-el', title: 'What element does a page make for a class and a text?', question: 'a tag, a class and a text: a new element with that class (when given) and that text (when not null)',
     inputs: SG1_ELS, places: [
