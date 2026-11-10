@@ -13,6 +13,9 @@ package's manifest; this file says what is in it.
   English; without `lang` the folder's own letters decide, as before.
 - The Model Health Check's month-sort rule also finds a Hijri month column named in Arabic («الشهر الهجري»,
   «اسم الشهر الهجري»).
+- Inside plan_layout, three checks that could never be reached were removed (no answer or file changes), and tests
+  now reach three that could: the preview of a plan with no report name, a field kept in English on purpose, and the
+  status icons' script in an Arabic plan.
 - A hand-placed report's font (create_report's `font`, for example Tahoma) now reaches its tables, cards and charts
   too: the report's theme carries it in its text classes, so every visual without a font of its own shows it, in the
   English report and its Arabic twin. Without a font the theme is written as before.
