@@ -55,8 +55,9 @@
   const lum = Contrast.luminance;
   const contrast = Contrast.contrast;
   const mixHex = (a, b, t) => {
-    const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-    const A = p(a), B = p(b);
+    // (0.3.3 SG1) #rrggbb -> [r, g, b]: its one place, design-colours.js (the theme pages load it first; read when called)
+    const hexToRgb = (typeof module !== 'undefined' && module.exports ? require('./design-colours.js') : root.DAColours).hexToRgb;
+    const A = hexToRgb(a), B = hexToRgb(b);
     return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join('');
   };
 

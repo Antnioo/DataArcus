@@ -54,9 +54,9 @@ const MODELS = [
   ['broken.zip', folderZip(TMDL, 'B.SemanticModel/definition/', [{ path: 'B.SemanticModel/definition/tables/Notes.tmdl', data: new Uint8Array(0) }])]   // the incomplete model
 ];
 
-// the dates a run can write (UTC today, and the day either side of a run that crosses midnight)
-const DATES = [-1, 0, 1].map((d) => new Date(Date.now() + d * 864e5).toISOString().slice(0, 10));
-const undate = (t) => DATES.reduce((s, d) => s.split(d).join('<DATE>'), t);
+// the run's date, written once in the document's header ("health check · 2026-11-10" in the page, "health check, 2026-11-10" in
+// the Markdown). Only that place: the models' own data may hold the same day (the Hijri month starting 2026-11-10 did, 10 Nov).
+const undate = (t) => t.replace(/(health check(?: ·|,) )\d{4}-\d{2}-\d{2}/g, '$1<DATE>');
 
 async function downloadsOf(browser, url, lang, name, buffer, asked) {
   const v = await visitor(browser, { viewport: [1440, 900], downloads: true });

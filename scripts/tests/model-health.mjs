@@ -183,6 +183,15 @@ export default async function ({ browser, url }) {
     const am = { model: { tables: [sales(), { name: 'التقويم', columns: [dcol('Date', 'dateTime'), dcol('اسم الشهر', 'string'), dcol('اسم اليوم', 'string'), dcol('رقم الشهر', 'int64')], partitions: mpart('التقويم') }] } };
     const found = ((E.analyze(am, null).findings.find((x) => x.id === 'MONTH_SORT') || {}).items || []).map((i) => i.obj).sort();
     check(JSON.stringify(found) === JSON.stringify(['التقويم[اسم الشهر]', 'التقويم[اسم اليوم]'].sort()), `Arabic month and day names without a sort column: found ${JSON.stringify(found)}`);
+    // HC2 (0.3.3, B-425): a Hijri month column named in Arabic is found like the English "Hijri Month Name"; near-misses are not
+    const hj = (names, extra) => ({ model: { tables: [sales(), { name: 'التقويم', columns: [dcol('Date', 'dateTime')].concat(names.map((n) => dcol(n, 'string')), extra || []), partitions: mpart('التقويم') }] } });
+    const sortFound = (m) => ((E.analyze(m, null).findings.find((x) => x.id === 'MONTH_SORT') || {}).items || []).map((i) => i.obj).sort();
+    const hijriAr = ['الشهر الهجري', 'اسم الشهر الهجري', 'اسم  الشهر  الهجري', 'شهر هجري', 'اسم شهر هجري', 'الشهر_الهجري', 'الشهـر الهجـري'];
+    check(JSON.stringify(sortFound(hj(hijriAr))) === JSON.stringify(hijriAr.map((n) => `التقويم[${n}]`).sort()), `Arabic Hijri month names without a sort column: found ${JSON.stringify(sortFound(hj(hijriAr)))}`);
+    check(JSON.stringify(sortFound(hj(['Hijri Month Name']))) === JSON.stringify(['التقويم[Hijri Month Name]']), `English Hijri month name still found: ${JSON.stringify(sortFound(hj(['Hijri Month Name'])))}`);
+    const near = ['الهجري', 'سنة هجرية', 'رقم الشهر الهجري', 'الشهر الهجري الحالي'];
+    check(sortFound(hj(near)).length === 0, `near-misses of the Hijri month name are not month columns: ${JSON.stringify(sortFound(hj(near)))}`);
+    check(sortFound(hj(['الشهر الهجري'], [dcol('رقم الشهر الهجري', 'int64')])).length === 1 && sortFound({ model: { tables: [sales(), { name: 'التقويم', columns: [dcol('Date', 'dateTime'), Object.assign(dcol('الشهر الهجري', 'string'), { sortByColumn: 'رقم الشهر الهجري' }), dcol('رقم الشهر الهجري', 'int64')], partitions: mpart('التقويم') }] } }).length === 0, 'an Arabic Hijri month column with a sort column is not raised');
     // round 3: a broken field used inside a bookmark is told as that bookmark; a report's own filter stays "report filter"
     const gone = (p) => ({ Column: { Expression: { SourceRef: { Entity: 'Sales' } }, Property: p } }), bm = (name) => ({ name: 'b1', displayName: name, explorationState: { filters: { byExpr: [{ name: 'f', expression: gone('Gone In Bookmark') }] } } });
     const detail = (rep) => Object.fromEntries(((E.analyze({ model: { tables: [sales()] } }, rep).findings.find((x) => x.id === 'BROKEN_REF') || {}).items || []).map((i) => [i.obj, i.detail]));

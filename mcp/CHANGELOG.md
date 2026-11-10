@@ -14,6 +14,11 @@ package's manifest; this file says what is in it.
 - **The write tools answer in Arabic when asked to:** plan_layout, generate_theme and add_gulf_calendar given
   `lang: "ar"` say the several-models answer in the same approved Arabic as the reading tools; `lang: "en"` says it in
   English; without `lang` the folder's own letters decide, as before.
+- The Model Health Check's month-sort rule also finds a Hijri month column named in Arabic («الشهر الهجري»,
+  «اسم الشهر الهجري»).
+- Inside plan_layout, three checks that could never be reached were removed (no answer or file changes), and tests
+  now reach three that could: the preview of a plan with no report name, a field kept in English on purpose, and the
+  status icons' script in an Arabic plan.
 
 ## [0.3.2]: 2026-11-09 (the version for testers, second round)
 The second version for testers. In short:

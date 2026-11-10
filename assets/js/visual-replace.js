@@ -25,9 +25,9 @@
   const plainName = (s) => (typeof s === 'string' && /^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(s) ? s : null);
   const DRILL_ROLES = ['Category', 'Rows'];
   const lit = (v) => ({ expr: { Literal: { Value: v } } });
-  const litOf = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
   // a literal's text, number and true or false, a column's set width: pbir-values.js, their one home (0.3.2 DD1B)
   const PV = typeof module !== 'undefined' && module.exports ? require('./pbir-values.js') : root.DAPbirValues;
+  const litOf = PV.litValue;   // (0.3.3 SG1) a raw literal: its one place, pbir-values.js
   // Power BI's QueryAggregateFunction: Avg 1, Min 3
   const AGG = { Avg: 1, Min: 3 }, AGG_WORD = { Avg: 'Average of', Min: 'First' };
   // (0.3.1 NC2) the heat shading's ends: a pale blue to a mid blue, both light enough for dark text

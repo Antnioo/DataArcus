@@ -8,7 +8,7 @@
 // untrusted input: they are quoted (Fix.name for TMDL, the writer's daxNames for DAX), compared, never followed.
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
-import { takenNames, nameKey, tagOf, scriptFileOf } from './model-script.mjs';   // (the one helper for model additions as scripts, shared with L4's flip cards)
+import { takenNames, nameKey, tagOf, scriptFileOf, keyOf } from './model-script.mjs';   // (the one helper for model additions as scripts, shared with L4's flip cards)
 
 const require = createRequire(import.meta.url);
 const Q = require('../../assets/js/pbip-query.js'), Fix = require('../../assets/js/model-health-tmdl.js'), Tmdl = require('../../assets/js/tmdl-model.js'), Bind = require('../../assets/js/pbip-bind.js');
@@ -24,7 +24,6 @@ export const BEFORE_APPLIED = 'Until the script is applied, only the Metric page
 export const MODEL_CHANGE = (t) => `A new table ${JSON.stringify(t)} (a field parameter: three columns and a title measure), as a TMDL script next to the project. DataArcus never changes the model: the user applies the script in TMDL view.`;
 export const SCRIPT_SUFFIX = ' - metric switcher';
 
-const keyOf = (s) => { const mk = String(s).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? { t: mk[1], m: mk[2] } : null; };
 
 /** The measures asked for, checked against the model's own (tables: the reader's). { measures: [{ t, m }], problems } */
 export function resolveSwitch(tables, list) {

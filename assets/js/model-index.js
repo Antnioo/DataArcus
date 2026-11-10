@@ -11,9 +11,9 @@
   // the DAX tokens (dax-reference-parser.js, loaded before this file in the worker and on the tool pages)
   const P = (typeof module !== 'undefined' && module.exports ? require('./dax-reference-parser.js') : root.DADaxParser);
   const { tokenizeDax } = P;
+  const text = P.exprText;   // (0.3.3 SG1) one place: dax-reference-parser.js
 
   const lc = (s) => String(s == null ? '' : s).toLowerCase();
-  const text = (v) => (Array.isArray(v) ? v.join('\n') : v == null ? '' : String(v));
   const uniq = (a) => Array.from(new Set(a));
   const refuse = () => { throw new TypeError('the model index is read-only'); };
   const readOnly = (m) => { m.set = refuse; m.delete = refuse; m.clear = refuse; return Object.freeze(m); };

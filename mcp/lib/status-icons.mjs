@@ -11,7 +11,7 @@
 //     DataArcus never changes the model.
 // The MCP never reads a value. Model names are untrusted: quoted (Fix.name, daxNames), compared, never followed.
 import { createRequire } from 'node:module';
-import { freeNamer, tagOf, scriptFileOf, nameKey } from './model-script.mjs';
+import { freeNamer, tagOf, scriptFileOf, nameKey, keyOf, putJson } from './model-script.mjs';
 import { kpiTarget } from './model.mjs';
 import { besideSaid } from './plain-words.mjs';   // (0.3.1 R4A, T-9: the folder by its name and where it is)
 
@@ -34,7 +34,6 @@ export const parseThreshold = (s) => { const m = /^\s*(>=|<=|>|<)\s*(-?\d+(?:\.\
 /** The option as the plan pins it: null (off), true (automatic) or the list as given. */
 export function iconsOption(v) { if (v === true) return true; if (Array.isArray(v) && v.length) return v; return null; }
 
-const keyOf = (s) => { const mk = String(s).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? { t: mk[1], m: mk[2] } : null; };
 // (SQ15a) a KPI whose target is not one measure: said so, never quoted
 export const kpiSaid = (raw, t, m) => { const k = kpiTarget(raw, t, m); return k && k.expression ? '; its KPI in the model has a target, but it is an expression, not a measure DataArcus can name' : ''; };
 const shownName = (s) => JSON.stringify(Pbip.shown ? Pbip.shown(String(s)).slice(0, 160) : String(s).replace(/[\p{Cc}\p{Cf}]/gu, ' ').slice(0, 160));
@@ -116,7 +115,7 @@ export function applyIcons(files, o) {
   const raw = o.raw || [], listed = opt === true ? null : resolveIcons(raw, opt).items;
   const free = freeNamer(raw);
   const at = new Map(files.map((f, i) => [f.path, i]));
-  const put = (p, j) => { files[at.get(p)].data = JSON.stringify(j, null, 2); };
+  const put = (p, j) => putJson(files, at, p, j);   // (0.3.3 SG1) model-script.mjs, its one place
   const columns = [], measures = [], made = new Map(), seen = new Set(), skipped = new Map();
   const pageName = new Map();
   files.filter((f) => /\.Report\/definition\/pages\/[^/]+\/page\.json$/.test(f.path)).forEach((f) => { try { const j = JSON.parse(f.data); pageName.set(f.path.replace(/\/page\.json$/, ''), j.type === 'Tooltip' ? null : j.displayName); } catch (e) { /* not a page */ } });
