@@ -1,3 +1,5 @@
+STOP (2026-11-10T17:49Z): CI run 42866433432 on b940a377 is red only in the website job: scripts/tests/theme-generator.mjs, check "en: steps bar did not open and land on Layout {open:true, top:715, bars:551}" (the lab variant of the same test failed, the plain one passed, in the same run). This branch changes no file outside mcp/. Cause read from the code: the test clicks the steps bar, whose handler runs a smooth scrollIntoView (assets/js/theme-generator.js:410), and measures after settle(); the page was still scrolling (top 715 vs bar 551). A timing test, not an AT1 change; fixing it is outside this job's scope (scripts/tests/theme-generator.mjs, assets/js), and a rerun until green is forbidden (L-1109-03). All mcp jobs of that run were green (the reviewer reads them in the run). Needs the owner or reviewer: fix that test at its cause, or say to rerun.
+
 # AT1 (0.3.3): two approved Arabic texts (B-429, B-449)
 
 ## Summary
@@ -5,7 +7,7 @@
 - **Base:** `fix/0.3.3-at1` from `origin/integration/0.3.3` at 00ed5d63, integration merged in (31f35e4a, LG2 and MH1 included). Push only this branch; never merge, no PR.
 - **Scope:** `mcp/lib/arabic-names.mjs`, `mcp/lib/plain-words.mjs`, `mcp/lib/read-words.mjs`, `mcp/lib/model-discovery.mjs` (the working folder on NO_MODEL_AT's error object), new `mcp/test-0.3.3-at1.mjs` + `tests.json`, the tests and 4 fixtures that pin the old words, `CHANGELOG.md`, `WORK.md`, this note.
 - **Expected checks:** `node scripts/check-modules.mjs --strict` (PASS 1223 checks); area run arabic, report, core, checker (123 suites passed); lint exit 0; CI.
-- **State:** built and pushed; CI line below.
+- **State:** built, pushed, area run 124 suites passed; CI red only on an unrelated website test (STOP at the top). Not DONE.
 - **Resume:** only the CI result line; nothing else is open.
 
 ## Red first
@@ -64,4 +66,4 @@ Open an Arabic plan's approval page: the first line has no repeated bracket; che
 - A pin file holds lengths: +8 per two inserted words is a quick proof only the words moved.
 - The note's cap (WORK.md 3200) was already exceeded on integration (3215); I trimmed it.
 
-CI: pending (run 42858838168 was red on sp23 and sp42; both fixed, next run below)
+CI: NOT green. Run 42858838168 red on sp23 and sp42 (fixed). Run https://github.com/Antnioo/DataArcus/actions/runs/42866433432 on b940a377: mcp jobs green, website job red on the theme-generator scroll timing (STOP above). Not DONE.
