@@ -73,7 +73,9 @@ try {
   chk(() => titleLines(lg).map((l) => l.text).join(' ') === LONG, () => `F-01. the lines are the whole title, split at words: ${JSON.stringify(titleLines(lg).map((l) => l.text))}`);
   chk(() => ll.every((l) => textWidth(l.text, TP, true, 'Segoe UI') <= 509 - 2 * 16), () => `F-01. each line fits the box's inner width by the writer's measure (509 less 16 a side)`);
   const ci = dense.visuals.findIndex((v) => v.type === 'cardVisual' && v.title), cl = titleLines(groupOf(dsvg, ci));
-  chk(() => cl.length >= 1 && near(cl[0].size, 13.3, 0.1), () => `F-01. a KPI card's title at its own 10pt (13.3): ${JSON.stringify(cl)}`);
+  // (0.3.3 FB1, changed on purpose: 13.3 -> 17.3) the six cards lie over the rail now, 302 wide each (were 250 beside
+  // it), so the writer no longer shrinks their titles to 10pt: each keeps the card title's 13pt, and the preview draws that
+  chk(() => cl.length >= 1 && near(cl[0].size, 17.3, 0.1), () => `F-01. a KPI card's title at its own 13pt (17.3): ${JSON.stringify(cl)}`);
   const wide = exec.visuals.findIndex((v) => v.type === 'lineChart' && !v.panel);
   chk(() => wide >= 0 && titleLines(groupOf(esvg, wide)).length === 1 && near(titleLines(groupOf(esvg, wide))[0].size, TPX), () => `F-01. a title that fits stays on one line: ${JSON.stringify(titleLines(groupOf(esvg, wide)))}`);
 

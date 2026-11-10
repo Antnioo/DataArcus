@@ -101,7 +101,11 @@ for (const [name] of CASES) chk(() => gold[name] && JSON.stringify(now[name]) ==
 // bilingual report's Arabic title measures write each value in a first-strong isolate; with those isolates taken out,
 // its reportExtensions.json is the base's file byte for byte (its hash as recorded on the base, 4418828), so nothing
 // else in R5 moved: the other differences were the plan's digest of these files
-const BASE_EXT = 'e3986dfffeed6a099ae26a92148014cb4e805cd8fa597d5e10191db82d1be036';
+// (0.3.3 FB1, changed on purpose: e3986dff... -> d87bede3...) the Details page's main chart is no longer pressed to 168
+// high beside the rail (the cards' row lies over the rail, mcp/work/FB1.md), so it holds as many categories as the
+// other chart by Product and the two share one Keep and one Title measure: "Keep: Total Sales by Product (2)", its
+// "Title: ... (2)" and "Title AR: ... (2)" are gone from the file, nothing else moved (the two files diffed)
+const BASE_EXT = 'd87bede39e4858d2f6e457999fde9a6d58e57a6afdf7fb5081462bfa45e0dc30';
 const unLv1 = (t) => t.replace(/(?:UNICHAR \( 8207 \) & )?UNICHAR \( 8296 \) & (_[A-Za-z0-9_]+) & UNICHAR \( 8297 \)(?: & UNICHAR \( 8207 \))?/g, '$1');
 chk(() => lv1Ext && /UNICHAR \( 8296 \) & _s & UNICHAR \( 8297 \)/.test(lv1Ext) && (norm(unLv1(lv1Ext)) !== unLv1(lv1Ext) ? sha(norm(unLv1(lv1Ext))) : sha(unLv1(lv1Ext))) === BASE_EXT,
   () => `L1. R5's reportExtensions.json is the base's but for LV1's isolates: ${lv1Ext ? sha(norm(unLv1(lv1Ext))) : 'not written'}`);

@@ -118,7 +118,11 @@ const png = (i) => new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, i]);
 function outputs(m) {
   const design = (preset) => designOf(m.E, preset);
   const glass = m.E.glassPng(design('DataArcus'), 1280, 720);
-  const input = (lang, preset) => { const d = design(preset), pages = m.E.projectPages(d.layout, lang, { second: true });
+  // (0.3.3 FB1, changed on purpose: one page, was two) the made-up report's second page has a filter rail, whose cards'
+  // row lies over the rail since FB1 (mcp/work/FB1.md): the base's engines place that page differently on purpose, so
+  // the report zipped here is the first page alone, which both place the same; the two hashes below are the base's
+  // bytes for this input (B13, B14 prove it: the base's engines, live, write the same bytes as now)
+  const input = (lang, preset) => { const d = design(preset), pages = m.E.projectPages(d.layout, lang, { second: false });
     return { name: 'DD2P ' + lang, title: lang === 'ar' ? 'لوحة المبيعات 2026' : 'Sales 2026', pageName: pages[0].name, lang, rtl: lang === 'ar', font: d.font, sample: true, logo: null, theme: m.E.buildTheme(d, lang), ui: d.ui,
       texts: m.E.REPORT_TEXTS[lang], pages: pages.map((p, i) => ({ name: p.name, page: p.page, slots: p.slots, png: i ? png(i) : glass, panel: p.panel, kpiInset: p.kpiInset })) }; };
   return [
@@ -153,8 +157,8 @@ const BASE_SHAS = {
   'page picture interlaced (testPng)': '8f2fe12287a189a5cb414437f161d5aafaedbf39cf75bb1c68f0ef29f0ff9f09',
   'page picture flipped (pagePicture, Normal)': '72311c4312473a493767b1a0ded12b117dd34244a283e136f9afb93a25423157',
   'theme generator text chunks (textChunk x2)': 'b657f58e0bc1408e6facd01aeb43114fff1c6c4d1a8a5655bd53b302b080c4d5',
-  'ZIP of a made-up report (pbip-export build, en)': '522a03df9d598fb2afa863b6d5ef3a642e844802eaa4d6c97bb2dfc336c84bd8',
-  'ZIP of a made-up report (pbip-export build, ar)': 'a27b9650da281fcfcd45e2d4103e269f7d6d9721aca83248743a24ec9d2ab4f2',
+  'ZIP of a made-up report (pbip-export build, en)': '1649f3f3189f30620f040a4f8bf36a69249c2f9ef6933169f9f126563a6e425f',
+  'ZIP of a made-up report (pbip-export build, ar)': 'd7b9345b5d151aab99a8de94b999964e8e82d69b1408ccccae40994716b6f3ea',
   'ZIP of three made-up entries (pbip-zip zip)': 'd38b248badeb359367d4d1e9b9199eb23b044835ef490436becc1cf67139f992',
 };
 const shasOf = (m) => Object.fromEntries(outputs(m).map(([label, , make]) => { let got; try { got = sha(make()); } catch (e) { got = 'throws ' + e.message; } return [label, got]; }));
