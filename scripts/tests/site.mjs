@@ -153,6 +153,19 @@ export default async function ({ browser, url }) {
       check(r.inter && r.cls <= 0.1, `${page} ${vp[0]}px: the Inter swap shifts the page ${r.cls}${r.inter ? '' : ' (Inter never loaded)'} (want 0.1 or less)`);
       await v.ctx.close();
     }
+    // (0.3.3 CL2, B-435: the Copilot article's title is 1656 px in the fallback and 1634 px in Inter, so at 1400 px and up
+    // it wraps to 3 lines then 2 and the page moved 58 px, CLS 0.13 to 0.47; the stylesheet now keeps 3 lines of room for
+    // an English title from 1400 px. The Arabic copy never swaps, so it stays at 0.) Inter arrives late, as above. Only shifts
+    // from 450 ms on count: before it the browser is still loading the local Arial that stands in (about 195 ms here), and
+    // whether the first frame lands before or after that varies from run to run (0.048 or none), which is not the swap.
+    for (const [page, lang, vp, max] of [['articles/article-power-bi-copilot-ready-check.html', 'en', 1400, 0.1], ['articles/article-power-bi-copilot-ready-check.html', 'en', 1600, 0.1], ['articles/article-power-bi-copilot-ready-check.html', 'en', 1920, 0.1], ['articles/article-power-bi-model-ai-ready.html', 'en', 1400, 0.1], ['articles/article-power-bi-copilot-ready-check.html', 'ar', 1400, 0.01]]) {
+      const v = await visitor(browser, { viewport: [vp, 900] }); await lateFonts(v, 500);
+      await v.ctx.addInitScript(() => { window.__cls = 0; new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput && e.startTime >= 450) window.__cls += e.value; }).observe({ type: 'layout-shift', buffered: true }); });
+      await v.pg.goto(`${url}/${page}?lang=${lang}`, { waitUntil: 'load' }); await v.pg.waitForTimeout(2500);
+      const r = await v.pg.evaluate(() => ({ cls: +window.__cls.toFixed(3), inter: document.fonts.check('400 16px Inter') }));
+      check(r.cls <= max && (lang === 'ar' || r.inter), `${page} ${lang} ${vp}px: the Inter swap shifts the page ${r.cls}${r.inter || lang === 'ar' ? '' : ' (Inter never loaded)'} (want ${max} or less)`);
+      await v.ctx.close();
+    }
     for (const [page, delay] of [['articles/article-gulf-calendar-power-bi.html', 700], ['articles/article-power-bi-licensing-guide.html', 700], ['tools/power-bi-theme-generator.html', 5000]]) {
       const v = await visitor(browser, { viewport: [390, 844] }); await lateFonts(v, delay);
       await v.ctx.addInitScript(() => { window.__shown = 0; const t0 = performance.now(); new MutationObserver(() => { if (!window.__shown && !document.documentElement.classList.contains('i18n-pending')) { window.__shown = performance.now() - t0; window.__fontAtShow = document.fonts.check('400 16px "IBM Plex Sans Arabic"', 'ع'); } }).observe(document, { attributes: true, subtree: true, attributeFilter: ['class'] }); });
