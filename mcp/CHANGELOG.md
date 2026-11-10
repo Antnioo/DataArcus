@@ -5,6 +5,7 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.3
+- A new test pins that every tool that plans or writes answers a wrong input in Arabic when you give `lang` "ar" and in English with "en" or none, using only wording already approved; the errors that have no approved Arabic yet stay English.
 - A report made with a layout or design now uses the `font` you give it (for example Tahoma) over the design's own font, in the
   English report and its Arabic twin; the plan says which font it uses and which design font it replaced, and a font the
   tools do not offer is named in the plan instead of being dropped.
