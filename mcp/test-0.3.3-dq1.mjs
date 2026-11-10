@@ -11,6 +11,7 @@ import { resolveSvgColumns } from './lib/report-fields.mjs';
 import { titleProblems } from './lib/metric-switcher.mjs';
 import { functionLines } from './lib/model-script.mjs';
 import { fieldKeyOf, sheetOf, placesOf } from './lib/terminology.mjs';
+import { parseFieldKey, keyOfText } from './lib/field-key.mjs';
 import { cultureScript } from './lib/model-culture.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
@@ -58,6 +59,7 @@ const K1 = fieldKeyOf(field('A', 'B][C')), K2 = fieldKeyOf(field('A[B]', 'C'));
 chk(() => K1 && K2 && K1 !== K2, `D7 table A column "B][C" and table "A[B]" column C get two keys (${K1} and ${K2})`);
 chk(() => fieldKeyOf(field('Sales', 'Amount')) === 'Sales[Amount]' && fieldKeyOf(field('Sales Data', 'Net [x]')) === 'Sales Data[Net [x]]]', 'D7b a normal name keeps its key text (Sales[Amount])');
 chk(() => fieldKeyOf({ Measure: { Expression: { SourceRef: { Entity: 'A' } }, Property: 'M' } }) === 'A[M]' && fieldKeyOf({ Aggregation: { Function: 0, Expression: field('A', 'B') } }) === 'A[B]', 'D7c a measure and an aggregated column key the same way');
+chk(() => parseFieldKey('A\nB[C]') === null && keyOfText('A\nB[C]') === null && parseFieldKey(K2).t === 'A[B]' && parseFieldKey(K1).c === 'B][C' && keyOfText("'A[B]'[C]") === K2, 'D7d a key reads back as its pair; a name with a line break reads as no key, as before');
 // two approval lines: the sheet gives each of the two fields its own row, one approved and one not
 chk(() => { const rows = sheetOf([K1, K2], new Map([[K1, { ar: 'اسم', status: 'approved' }]]), null); return rows.length === 2 && rows[0].field !== rows[1].field && rows[0].status === 'approved' && rows[1].status === 'kept'; }, 'D8 the terminology sheet has two rows and one approval line for each field');
 chk(() => { const rows = sheetOf([K2], new Map(), null); return rows[0].en === 'C'; }, 'D8b the English name of the table-with-brackets field is its column C');

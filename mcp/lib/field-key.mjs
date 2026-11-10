@@ -13,7 +13,8 @@ export const fieldKey = (t, c) => {
 
 /** A key (or a typed 'Table'[Field] / Table[Field]) read back as { t, c }, or null when it is not one. */
 export function parseFieldKey(text) {
-  const s = String(text == null ? '' : text).trim(), m = QUOTED.exec(s) || BARE.exec(s);
+  // a name with a control character (a tab, a line break) is no key a person can type: it never reads as one (as before)
+  const s = String(text == null ? '' : text).trim(), m = /\p{Cc}/u.test(s) ? null : QUOTED.exec(s) || BARE.exec(s);
   return m ? { t: m[1].replace(/''/g, "'"), c: m[2].replace(/]]/g, ']') } : null;
 }
 
