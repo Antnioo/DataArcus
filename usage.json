@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-10T19:05Z",
+  "generated_at": "2026-11-10T20:06Z",
   "today": {
     "date": "2026-11-10",
-    "cost_usd": 92.44,
-    "tokens": 372820291,
-    "sessions": 36,
+    "cost_usd": 141.9,
+    "tokens": 473807142,
+    "sessions": 39,
     "by_kind": {
       "builder": {
-        "cost_usd": 64.16,
-        "count": 19
+        "cost_usd": 112.94,
+        "count": 21
       },
       "worker": {
-        "cost_usd": 28.28,
-        "count": 17
+        "cost_usd": 28.96,
+        "count": 18
       },
       "probe": {
         "cost_usd": 0,
@@ -26,12 +26,16 @@
     },
     "by_model": {
       "sonnet": {
-        "cost_usd": 38.85,
-        "count": 26
+        "cost_usd": 39.53,
+        "count": 27
       },
       "opus": {
         "cost_usd": 53.59,
         "count": 10
+      },
+      "fable": {
+        "cost_usd": 48.78,
+        "count": 2
       }
     }
   },
@@ -116,12 +120,30 @@
     },
     {
       "date": "2026-11-10",
-      "cost_usd": 92.44,
-      "tokens": 372820291,
-      "sessions": 36
+      "cost_usd": 141.9,
+      "tokens": 473807142,
+      "sessions": 39
     }
   ],
   "jobs": [
+    {
+      "id": "TA6",
+      "title": "TA6: Today v2.6, a calmer, simpler, mind-blowing app (D-1110-11)",
+      "model": "fable",
+      "cost_usd": 26.1,
+      "tokens": 47785500,
+      "minutes": 61,
+      "finished_at": "2026-11-10T20:01Z"
+    },
+    {
+      "id": "FB1",
+      "title": "FB1: DataArcus's toughest open challenge: find it, plan it, build the first stage",
+      "model": "fable",
+      "cost_usd": 22.68,
+      "tokens": 50286475,
+      "minutes": 157,
+      "finished_at": "2026-11-10T19:14Z"
+    },
     {
       "id": "AT1",
       "title": "AT1: the approved Arabic title template and model-path errors (B-429, B-449)",
@@ -463,29 +485,11 @@
       "tokens": 1490574,
       "minutes": 16,
       "finished_at": "2026-11-08T18:43Z"
-    },
-    {
-      "id": "DD2W",
-      "title": "DD2W: one toast and one copy helper for the website pages (Phase 2)",
-      "model": "opus",
-      "cost_usd": 4.41,
-      "tokens": 11905307,
-      "minutes": 41,
-      "finished_at": "2026-11-08T17:09Z"
-    },
-    {
-      "id": "TD1",
-      "title": "TD1: the Today app's two files generated (D-1108-18, B-406)",
-      "model": "sonnet",
-      "cost_usd": 2.18,
-      "tokens": 7621098,
-      "minutes": 11,
-      "finished_at": "2026-11-08T17:01Z"
     }
   ],
   "workers": {
-    "count": 17,
-    "cost_usd": 28.28,
+    "count": 18,
+    "cost_usd": 28.96,
     "costliest": [
       {
         "label": "worker 00:48",
@@ -509,6 +513,16 @@
   },
   "top": [
     {
+      "label": "TA6",
+      "kind": "builder",
+      "cost_usd": 26.1
+    },
+    {
+      "label": "FB1",
+      "kind": "builder",
+      "cost_usd": 22.68
+    },
+    {
       "label": "LA1",
       "kind": "builder",
       "cost_usd": 10.52
@@ -522,16 +536,6 @@
       "label": "LC2",
       "kind": "builder",
       "cost_usd": 8.09
-    },
-    {
-      "label": "FT1",
-      "kind": "builder",
-      "cost_usd": 6.01
-    },
-    {
-      "label": "OR1",
-      "kind": "builder",
-      "cost_usd": 5.11
     }
   ]
 }
