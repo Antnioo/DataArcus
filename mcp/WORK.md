@@ -9,6 +9,9 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 - `integration/0.3.3`: builders branch from it, push only their branch; the reviewer merges; the owner merges to main.
 - 0.3.3 merged: BA1 (weekly bot PRs that change only the 3 data files merge themselves, D-1109-10), HK1 (suites read saved fixtures), LK1 (linked visuals folder named, one link counts once), WE1 (Arabic write errors), PQ1 (PL-300 bank, 234 questions), HC2 (month-sort rule finds an Arabic Hijri month column), DB1 (plan_layout's 3 unreachable branches removed, 3 reachable now tested), SG1 (11 same-job groups moved into the library, 4 written down), TC1 (type-checking pilot on lib/model.mjs, one CI step), SG2 (sp10, sp30 and sp42 read their allowed pure shared files from the CONTRACTS.md ledger through `mcp/ledger-places.mjs`). FW1 (Windows: folder window "asked for", never "opened"), FT1 (a hand-placed report's font reaches every visual through its theme), MM1 (the dev tools use minimatch 11.0.5 through an npm override, B-310; `mcp/work/MM1.md`), FT2 (B-432: a font given with a layout or design is applied over the design's own font, and the plan says so; `mcp/work/FT2.md`). DQ1 (a DAX name 'T'[C] is quoted in one place, `daxNames`; functionLines reads tmdl-name.js; the twin's field key is the pair, `lib/field-key.mjs`; B-437, B-438, B-434; `mcp/work/DQ1.md`).
 
+- CL2 (B-435, branch `fix/0.3.3-cl2`): English article titles keep 3 lines of room from 1400 px; the Copilot article's
+  swap shift 0.258 -> 0.089 (a body paragraph still wraps one line apart; words are the owner's call, note CL2).
+
 ## Next step
 1. PR #121 (RL032L, download lines) is on main. 2. The reviewer merges the DONE jobs above, one check each.
 
