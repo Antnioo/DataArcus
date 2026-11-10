@@ -160,7 +160,7 @@ export function resolveSvgColumns(tables, list, opt) {
     // has no number inside it (a text bound to a value whose place is inside a ring is left out); a table picture keeps it
     // (audit 6, A6-11: the compiler makes that variant: toMeasure(d, { context: 'card' }) below)
     if (opt && opt.mirror && d.mirror !== false) d.mirror = true;
-    if (d.layers.some((l) => l && l.type === 'spark')) { const f = find(d.dateCol, 'c'); if (!f) problems.push(`${where} ("${label}"): a sparkline needs dateCol, a date column of the model written as Table[Column]`); else d.dateCol = daxColumn(f.t.name, f.o.name); }
+    if (d.layers.some((l) => l && l.type === 'spark')) { const f = find(d.dateCol, 'c'); if (!f) problems.push(`${where} ("${label}"): a sparkline needs dateCol, a date column of the model written as Table[Column]`); else { try { d.dateCol = daxNames.column(f.t.name, f.o.name); } catch (e) { problems.push(`${where} ("${label}"): ${e.message}`); } } }
     else delete d.dateCol;
     d.name = label;
     if (problems.length > before) return null;

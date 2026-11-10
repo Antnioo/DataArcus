@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { resolveSvgColumns } from './lib/report-fields.mjs';
 import { titleProblems } from './lib/metric-switcher.mjs';
 import { functionLines } from './lib/model-script.mjs';
-import { fieldKeyOf, sheetOf, placesOf } from './lib/terminology.mjs';
+import { fieldKeyOf, sheetOf } from './lib/terminology.mjs';
 import { parseFieldKey, keyOfText } from './lib/field-key.mjs';
 import { cultureScript } from './lib/model-culture.mjs';
 
@@ -28,6 +28,10 @@ const design = (tn, cn) => ({ layers: [{ type: 'text', text: 'x', x: 0, y: 0, bi
 const svg = (tn, cn) => resolveSvgColumns(model(tn, cn), [{ label: 'L', design: design(tn, cn) }], { what: 'svgColumns' });
 chk(() => svg("O'Brien", 'A]B')[0].expression.includes("'O''Brien'[A]]B]"), "D1 report-fields: a table with a quote and a column with a bracket are quoted as 'O''Brien'[A]]B]");
 chk(() => { try { svg(TAB, 'X'); } catch (e) { return /control character/.test(e.message) && !/threw/.test(e.message); } return false; }, 'D2 report-fields: a table name with a control character is refused by the shared quoter');
+// the sparkline's date column (the second place in report-fields): the same quoting, the same refusal, no thrown ReferenceError
+const spark = (tn, cn) => { const m = model(tn, cn); m[0].columns.push({ name: 'Day', dataType: 'dateTime' }); return resolveSvgColumns(m, [{ label: 'S', design: { layers: [{ type: 'spark', x: 0, y: 0, w: 100, h: 30, bind: { series: { v: 'v' } } }], values: [{ id: 'v', kind: 'measure', measure: `${tn}[Total]` }], dateCol: `${tn}[Day]` } }], { what: 'svgColumns' }); };
+chk(() => { try { const r = spark("O'Brien", 'A]B'); return /'O''Brien'\[Day\]/.test(r[0].expression); } catch (e) { return false; } }, 'D1b report-fields: a sparkline reads its date column as \'O\'\'Brien\'[Day]');
+chk(() => { try { spark(TAB, 'X'); } catch (e) { return /control character/.test(e.message); } return false; }, 'D2b report-fields: the sparkline path refuses a control character too');
 // ---- D3: the metric switcher's title check reads the same quoted name; a control-character name is skipped, not thrown ----
 const param = (tn, dn) => ({ name: tn, columns: [{ name: 'Fields', extendedProperties: [{ name: 'ParameterMetadata', value: { kind: 2 } }] }, { name: dn, relatedColumnDetails: { groupByColumns: [{ groupingColumn: 'Fields' }] } }], measures: [{ name: 'Title', expression: `SELECTEDVALUE ( '${tn.replace(/'/g, "''")}'[${dn.replace(/]/g, ']]')}] )` }] });
 chk(() => titleProblems({ tables: [param("O'Br", 'Name]x')] }).problems.length === 1, "D3 metric-switcher: a measure naming 'O''Br'[Name]]x] is found");
