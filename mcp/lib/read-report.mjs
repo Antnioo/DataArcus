@@ -238,12 +238,14 @@ export function locate(p, tool) {
   return { reportDir: dir, defDir: def, pbipPath: isFile(full) ? full : null };
 }
 
+// (0.3.3 HX2 merge: one home for the optional JSON read, used by same-question.mjs and impact.mjs, never a copy)
+/** @param {{ json: (rel: string) => any }} src @param {string} rel @returns {any} */
+export function jsonOpt(src, rel) { try { const j = src.json(rel); return j && typeof j === 'object' && !Array.isArray(j) ? j : null; } catch (e) { return null; } }
+
 // ---- where the files come from: the disk (a located report) or memory (the writer's files, for a planned page) ----
 // A source answers by paths relative to the report folder ('definition/pages/<id>/page.json'):
 // dirs(rel) the folder names inside, files(rel) the file names inside, json(rel) the parsed file (TooBig past the limit)
 /** @param {{ reportDir: string, defDir?: string }} loc @param {SkipRecord} sk @returns {ReportSource} */
-// (0.3.3 HX2 merge: one home for the optional JSON read, used by same-question.mjs and impact.mjs, never a copy)
-export function jsonOpt(src, rel) { try { const j = src.json(rel); return j && typeof j === 'object' && !Array.isArray(j) ? j : null; } catch (e) { return null; } }
 export function diskSource(loc, sk) {
   // (AF1, the release audit's F05: readJson refuses a link at the file only, so a theme was read through a linked
   // StaticResources or RegisteredResources folder from outside the working folder) every file and folder this source
