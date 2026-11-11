@@ -1,5 +1,6 @@
 /*
- * DataArcus - two periods compared in the Gulf (0.3.3 IX1; a library: no page and no tool loads it yet).
+ * DataArcus - two periods compared in the Gulf (0.3.3 IX1; check_report's likeForLike since IX2; the page
+ * tools/gulf-like-for-like.html since IX4).
  * A comparison by Gregorian dates (this March against last March, this month against the month before) sets two
  * periods side by side that are often not like for like here: Ramadan moves about 11 days earlier each year, the Eids
  * move with it, a country's weekend or its VAT rate changed on a known day. For each month of a year and the month
@@ -14,6 +15,9 @@
  * data; a caller says which year. Outside the table's years nothing is counted, and why is said.
  *   monthsCompared({ year, back, country })   back: 12 (a year back, the default), 3, 1 ...; negative: ahead
  *   rangeCompared({ from, to, back, country }) the same by year: how many months differ
+ *   monthOn({ year, month, country })   (0.3.3 IX4, the website's page) one month on its own: its counts, and for a
+ *                                      country the weekend days it holds, the weekend's days and the VAT rate
+ *   eventsOf(country)                  the table's Hijri years with a country's own dates over the UAE's
  */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory(require('./gulf-dates.js'));
@@ -30,14 +34,18 @@
   const own = (o, k) => !!o && Object.prototype.hasOwnProperty.call(o, k);
   const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
+  // a country code as the weekend list knows it (lower case), or null
+  const countryOf = (c) => (typeof c === 'string' && own(GD.weekends, c.toLowerCase()) ? c.toLowerCase() : null);
+  // the table's Hijri years with a country's own dates over the UAE's; each keeps the UAE row's `estimate` list
+  const eventsOf = (country) => { const mine = (GD.own || {})[own(GD.own, country) ? country : 'uae'] || []; return GD.events.map((e0) => Object.assign({}, e0, mine.find((o) => o.hijriYear === e0.hijriYear) || {})); };
   // each day that is Ramadan or an Eid day, for one country's dates: { 'R2026-02-18': estimated?, ... }; built once a country
   const cache = {};
   function daysOf(country) {
     const code = own(GD.own, country) ? country : 'uae';
     if (cache[code]) return cache[code];
-    const days = {}, mine = (GD.own || {})[code] || [];
-    GD.events.forEach((e0) => {
-      const e = Object.assign({}, e0, mine.find((o) => o.hijriYear === e0.hijriYear) || {}), est = (k) => (e0.estimate || []).indexOf(k) >= 0;
+    const days = {};
+    eventsOf(code).forEach((e) => {
+      const est = (k) => (e.estimate || []).indexOf(k) >= 0;
       // Ramadan ends the day before Eid al-Fitr; with no Eid in the table yet, its first 29 days (it has 29 or 30)
       const end = e.fitr ? T(e.fitr) : T(e.ramadan) + 29 * DAY;
       for (let t = T(e.ramadan); t < end; t += DAY) days['R' + iso(t)] = est('ramadan') || (e.fitr ? est('fitr') : true);
@@ -61,7 +69,7 @@
   function monthsCompared(o) {
     o = o || {};
     const year = Number(o.year), back = o.back === undefined || o.back === null ? 12 : Math.trunc(Number(o.back));
-    const country = typeof o.country === 'string' && own(GD.weekends, o.country.toLowerCase()) ? o.country.toLowerCase() : null;
+    const country = countryOf(o.country);
     const out = { known: false, year: Number.isInteger(year) ? year : null, back: Number.isFinite(back) ? back : null, country, dates: null, months: [], differ: null, estimated: null, checked: GD.checked,
       notChecked: country ? [] : ['The weekend and the VAT rate: no Gulf country was given.'] };
     const other = (m) => { const n = year * 12 + (m - 1) - back; return { y: Math.floor(n / 12), m: (n % 12 + 12) % 12 + 1 }; };
@@ -91,5 +99,26 @@
     return { back, years, months: years.length * 12, differ: years.reduce((n, y) => n + y.differ, 0), estimated: years.reduce((n, y) => n + y.estimated, 0), checked: GD.checked };
   }
 
-  return { monthsCompared, rangeCompared, RANGE, CHECKED: GD.checked, WEEKDAYS, FITR_DAYS, ADHA_DAYS };
+  // one month on its own (0.3.3 IX4): its Ramadan, Eid al-Fitr and Eid al-Adha days and whether a day counted is an
+  // estimate; for a country, the weekend days it holds (each day under the weekend rule in force that day), the weekend's
+  // days and the standard VAT rate(s) in force in it (two when one changed inside the month). Outside the table: not known.
+  function monthOn(o) {
+    o = o || {};
+    const year = Number(o.year), month = Number(o.month), country = countryOf(o.country);
+    const out = { known: false, month: null, country, ramadan: null, fitr: null, adha: null, estimated: null, weekendDays: null, weekend: null, vat: null };
+    if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12 || year < RANGE.first || year > RANGE.last) return Object.assign(out, { why: WHY });
+    const D = daysOf(country), A = monthOf(D, year, month);
+    Object.assign(out, { known: true, month: A.key, ramadan: A.R, fitr: A.F, adha: A.A, estimated: A.estimated });
+    if (country) {
+      const rules = GD.weekends[country];
+      let n = 0;
+      for (let t = A.first; t <= A.last; t += DAY) if (ruleOn(rules, t).days.indexOf(new Date(t).getUTCDay() + 1) >= 0) n++;
+      out.weekendDays = n;
+      out.weekend = inMonth(rules, A, (r) => r.days.map((d) => WEEKDAYS[d - 1]));
+      if (GD.vat && own(GD.vat.rates, country)) out.vat = inMonth(GD.vat.rates[country], A, (r) => r.rate);
+    }
+    return out;
+  }
+
+  return { monthsCompared, rangeCompared, monthOn, eventsOf, RANGE, CHECKED: GD.checked, WEEKDAYS, FITR_DAYS, ADHA_DAYS };
 });

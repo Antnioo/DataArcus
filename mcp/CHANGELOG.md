@@ -60,6 +60,9 @@ package's manifest; this file says what is in it.
 - **Like for like in the Gulf:** `check_report` with `likeForLike` (a year, a Gulf country) names the visuals whose number
   compares with the same Gregorian dates of another period, the months of that year whose Ramadan or Eid days differ from
   the months they are compared with, and the "Last Ramadan" measures the model lacks. Names and dates only, never values.
+- **On dataarcus.com, a free page from the same dates:** "Is this month like last year's?" (tools/gulf-like-for-like.html)
+  sets a month beside the same month a year earlier for a Gulf country: Ramadan, Eid al-Fitr, Eid al-Adha and weekend days,
+  the weekend and the VAT rate, and whether the two are like for like. In English; it runs in the browser and saves nothing.
 - **Charts that would show one value on every row:** `check_report` now names each chart whose column cannot change the
   number it shows on your model (no relationship lets a filter on that column reach what the number reads), with why. Give
   it `brief`, the questions the report must answer as a measure by columns, and it says which a visual answers (a visual

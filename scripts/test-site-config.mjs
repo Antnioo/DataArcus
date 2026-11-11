@@ -193,7 +193,7 @@ for (const f of ['tools/power-bi-model-health-check.html', 'ar/tools/power-bi-mo
 // their alternates, robots.txt lets crawlers in, llms.txt names them. (That each copy is what a fresh render gives is
 // scripts/ar-pages.mjs's own check, in CI after Chromium is installed.)
 {
-  const { PAIRS, arFile, urlOf, fileOf, alternates } = await import('./ar-pages.mjs');
+  const { PAIRS, AR_HELD, arFile, urlOf, fileOf, alternates } = await import('./ar-pages.mjs');
   const attrs = (tag) => Object.fromEntries([...tag.matchAll(/([a-z:-]+)="([^"]*)"/gi)].map((m) => [m[1].toLowerCase(), m[2].replace(/&amp;/g, '&')]));
   const tags = (h, name) => [...h.replace(/<script\b[\s\S]*?<\/script>/gi, '').matchAll(new RegExp(`<${name}\\b[^>]*>`, 'gi'))].map((m) => attrs(m[0]));
   const head = (h) => {
@@ -207,7 +207,9 @@ for (const f of ['tools/power-bi-model-health-check.html', 'ar/tools/power-bi-mo
   const onDisk = exists('ar') ? fs.readdirSync(path.join(ROOT, 'ar'), { recursive: true }).map((f) => 'ar/' + f.split(path.sep).join('/')).filter((f) => f.endsWith('.html')) : [];
   // every public page has its copy: the pages outside the sitemap are exactly the ones lang-manager's hasArCopy() leaves
   // English (404.html, a -lab page), so the links it rewrites at run time go to copies that exist
-  const want = pages.map((p) => p.split(path.sep).join('/')).filter((p) => !p.startsWith('ar/') && !/^404\.html$|-lab\.html$|^build\/index\.html$/.test(p)).sort();
+  // (0.3.3 IX4) and a page whose Arabic is held (locale-routes.js AR_HELD): in the sitemap, English only, no copy
+  const want = pages.map((p) => p.split(path.sep).join('/')).filter((p) => !p.startsWith('ar/') && !/^404\.html$|-lab\.html$|^build\/index\.html$/.test(p) && !AR_HELD.includes(p)).sort();
+  for (const p of AR_HELD) ok(locs.includes(SITE + p) && !locs.includes(SITE + 'ar/' + p) && !exists('ar/' + p), `${p}: held (AR_HELD) must be in the sitemap in English only, with no Arabic copy`);
   ok(JSON.stringify(want) === JSON.stringify([...PAIRS].sort()), `the pages with an Arabic copy (the sitemap) must be every page but 404.html, -lab pages and build/: missing ${want.filter((p) => !PAIRS.includes(p)).join(', ') || '-'}, extra ${PAIRS.filter((p) => !want.includes(p)).join(', ') || '-'}`);
   for (const f of onDisk) ok(PAIRS.map(arFile).includes(f), `${f}: an Arabic copy with no English page in scripts/ar-pages.mjs PAIRS`);
   for (const en of PAIRS) {

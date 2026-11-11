@@ -16,6 +16,7 @@
 //   node scripts/ar-pages.mjs --write   write them
 import fs from 'node:fs';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -24,8 +25,12 @@ export const SITE = 'https://dataarcus.com/';
 // Every page in the sitemap (step 2): its English pages, in the sitemap's order. Pages outside the sitemap (404.html, the
 // Theme Generator lab, the go/ short links) stay English only; lang-manager's hasArCopy() says the same at run time
 // (test-site-config.mjs checks the two agree).
+// (0.3.3 IX4) A page whose Arabic is held (locale-routes.js AR_HELD, the one list) is in the sitemap in English only:
+// not a pair, so no copy is rendered and no alternates are written. On a page that is a pair, an element marked
+// data-ar-held (the hub's card for a held page) is English-only too: the copy is rendered without it.
+export const AR_HELD = createRequire(import.meta.url)('../assets/js/locale-routes.js').AR_HELD.map((p) => p.replace(/^\/+/, ''));
 export const PAIRS = [...fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8').matchAll(/<loc>https:\/\/dataarcus\.com\/([^<]*)<\/loc>/g)]
-  .map((m) => m[1]).filter((p) => !p.startsWith('ar/')).map((p) => (!p || p.endsWith('/') ? p + 'index.html' : p));
+  .map((m) => m[1]).filter((p) => !p.startsWith('ar/')).map((p) => (!p || p.endsWith('/') ? p + 'index.html' : p)).filter((p) => !AR_HELD.includes(p));
 
 export const arFile = (file) => 'ar/' + file;
 // a page file's address ("tools/index.html" -> https://dataarcus.com/tools/), and back
@@ -83,6 +88,7 @@ export async function render(browser, url, enFile) {
       const doc = new DOMParser().parseFromString(src, 'text/html'), lm = window.langManager;
       if (!lm || lm.currentLang !== 'ar') throw new Error('the page did not open in Arabic');
       lm.applyLanguage(doc, true);
+      for (const e of doc.querySelectorAll('[data-ar-held]')) e.remove();
       const root = doc.documentElement, own = alt[1][1];
       root.setAttribute('lang', 'ar'); root.setAttribute('dir', 'rtl'); doc.body.classList.add('rtl');
       const set = (sel, attr, val) => { const e = doc.querySelector(sel); if (e) e.setAttribute(attr, val); };
