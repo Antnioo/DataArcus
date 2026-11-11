@@ -406,8 +406,9 @@ try {
     assert.match(fs.readFileSync(path.join(REPO, 'mcp/docs/TESTS.md'), 'utf8'), /--affected[\s\S]{0,700}never use it/i);
   });
   // (SPD, Codex #9) the builder's local loop where builders read it: an area or --affected while working, one full run at the end
-  t('the local loop is written in mcp/CLAUDE.md and mcp/docs/TESTS.md: <area> / --affected while working, one full run at the end', () => {
-    for (const f of ['mcp/CLAUDE.md', 'mcp/docs/TESTS.md']) assert.match(fs.readFileSync(path.join(REPO, f), 'utf8'), /local loop[^]{0,120}npm test -- <area>` or\s+`npm test -- --affected`[^]{0,200}one full run\s+`npm test --\s+--keep-going`/, f);
+  t('the local loop is written in mcp/docs/TESTS.md (<area> / --affected while working, one full run at the end) and mcp/CLAUDE.md says: <area> while working, CI on the branch at the end, no full local run (LR3)', () => {
+    assert.match(fs.readFileSync(path.join(REPO, 'mcp/docs/TESTS.md'), 'utf8'), /local loop[^]{0,120}npm test -- <area>` or\s+`npm test -- --affected`[^]{0,200}one full run\s+`npm test --\s+--keep-going`/, 'mcp/docs/TESTS.md');
+    assert.match(fs.readFileSync(path.join(REPO, 'mcp/CLAUDE.md'), 'utf8'), /While working: `npm test -- <area>`\. At the end: CI on your branch \(`gh workflow run tests\.yml --ref <branch>`\); no full local run\./, 'mcp/CLAUDE.md');
   });
   t('--affected=HEAD lists the reasons and the picks, runs nothing with --list', () => {
     const r = node([path.join(REPO, 'mcp/run-tests.mjs'), '--affected=HEAD', '--list']);
