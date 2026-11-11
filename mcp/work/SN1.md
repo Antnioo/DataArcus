@@ -79,3 +79,5 @@ Seven items, each its own commit, red first where code: 1 tests.json duplicates 
 ## Lessons for the reviewer
 - A frozen pin of answers (fn1j) makes a one-sentence text fix a re-record: the brief's "make the text true" met a byte-for-byte guard (CI run 43073433013, red on exactly that sentence). Say in a brief which texts are pinned.
 - Hooks run in the session's folder: any hook command in `.claude/settings.json` must name its script by `CLAUDE_PROJECT_DIR`; and `cd` in a builder's Bash persists.
+
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/43078488062 on e7ed0ad860069fe18453d2ee14268e8c0d483315** (third run: the first two were red on the fn1j/test.mjs sentence and on one unused import, both fixed above). State at 2026-11-11T18:44Z: DONE.
