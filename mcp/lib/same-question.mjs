@@ -12,7 +12,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { locate, diskSource, inventory, safeName, typeName } from './read-report.mjs';
+import { locate, diskSource, jsonOpt, inventory, safeName, typeName } from './read-report.mjs';
 
 const H = (x) => crypto.createHash('sha256').update(JSON.stringify(x === undefined ? null : x)).digest('hex');
 const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
@@ -107,7 +107,7 @@ function read(p) {
   const loc = locate(p, 'check_report'), sk = { big: [], deep: 0 }, src = diskSource(loc, sk);
   const model = modelOf(src, loc, p);
   const inv = inventory(src, path.basename(loc.reportDir));
-  const opt = (rel) => { try { const j = src.json(rel); return isObj(j) ? j : null; } catch (e) { return null; } };
+  const opt = (rel) => jsonOpt(src, rel);
   const report = opt('definition/report.json') || {}, ext = opt('definition/reportExtensions.json');
   const measures = {};
   arr(isObj(ext) ? ext.entities : null).filter(isObj).forEach((en) => arr(en.measures).filter(isObj).forEach((m) => { measures['rm ' + JSON.stringify([String(en.name || ''), String(m.name || '')])] = H([m.expression, m.formatString, m.dataType]); }));

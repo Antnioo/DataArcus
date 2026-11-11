@@ -10,7 +10,7 @@
 // folder, every file measured before it is read), reports through locate, diskSource and inventory.
 import path from 'node:path';
 import { loadModel } from './model.mjs';
-import { locate, diskSource, inventory, safeName } from './read-report.mjs';
+import { locate, diskSource, jsonOpt, inventory, safeName } from './read-report.mjs';
 import { lineageOf, compareLineage, reachOf, LISTED_MAX, PROVES, NOT_PROVED, TIERS } from './lineage.mjs';
 
 const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
@@ -24,7 +24,7 @@ export const REACH_NOT_PROVED = 'From the files only: the reports saved beside t
 function reportOf(p) {
   const loc = locate(p, 'check_report'), sk = { big: [], deep: 0 }, src = diskSource(loc, sk);
   const inv = inventory(src, path.basename(loc.reportDir));
-  const opt = (rel) => { try { const j = src.json(rel); return isObj(j) ? j : null; } catch (e) { return null; } };
+  const opt = (rel) => jsonOpt(src, rel);
   const files = [];
   ['definition/report.json', 'definition/reportExtensions.json'].forEach((rel) => { const j = opt(rel); if (j) files.push({ path: rel, json: j }); });
   inv.pages.forEach((pg) => { files.push({ path: pg.file, json: isObj(pg.raw) ? pg.raw : {} }); arr(pg.visuals).forEach((x) => { if (x && x.file && isObj(x.json)) files.push({ path: x.file, json: x.json }); }); });
