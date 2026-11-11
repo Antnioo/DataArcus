@@ -11,7 +11,11 @@
 - **Expected checks:** new suite `gulf-like-for-like` (about 30 checks), red on 274b3499 first (no page);
   `node scripts/check-modules.mjs --strict` PASS; check-min, test-site-config, ar-pages, csp, sitemap-lastmod PASS;
   ix1 64 and ix2 33 unchanged; the website suites the page or locale-routes touch, each alone; lint exit 0; CI.
-- **Resume:** last code commit pushed; CI on it (2026-11-11T23:16Z). Then DONE or the failing check.
+- **Resume:** DONE. The reviewer: review and merge (`node scripts/check-modules.mjs --strict` PASS 1257). The owner:
+  "For the owner" 1 to 3 (the Arabic words before the Arabic page ships).
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/43118611233 on 744d8345d14108b65a923e51ebf9f546a3c2af25
+  (2026-11-11T23:30Z; Linux 5 of 5 parts, Windows 5 of 5, the website 3 of 3 and its checks, macOS skipped by the
+  workflow; integration/0.3.3 merged in once at c1dd7f3e before it; it has moved 5 commits since, not merged again, R-33).
 
 ## The plan (written before the code, 2026-11-11T22:23Z)
 1. **The dates first (OA1).** gulf-dates.js's estimates came from ICU. Measured here, before any page: .NET 8.0.134's
