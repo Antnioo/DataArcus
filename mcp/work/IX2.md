@@ -16,7 +16,11 @@
   check-contracts, test-contracts, check-result-lines, check-agent-memory, check-min, test-site-config PASS; the
   website suites that load health-confirm.min.js (sp27, model-health, theme-generator, theme-logo) alone after
   build:min; lint exit 0; CI on the branch.
-- **Resume:** code committed and pushed; next CI on the branch (merge integration in once first if it moved).
+- **Resume:** DONE. The reviewer: review and merge (`node scripts/check-modules.mjs --strict` PASS 1249). The owner:
+  "For the owner" 1 to 3.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/43076827239 on 6504436f4886a176ef3140b9fc54e78d8ff1e616
+  (2026-11-11T18:37Z; Linux 5 of 5 shards, Windows 5 of 5, the website 3 of 3 and its checks, macOS skipped by the workflow;
+  origin/integration/0.3.3 had not moved from 274a3d40, so nothing to merge in).
 - **Got:** `ix2` 33 checks (red on 274a3d40 first: 28 of 33); everything in "Expected checks" PASS as listed in
   "Results"; tools/list 58,837 -> 59,624. IX1 "Seen" 7 closed; "Seen" 5 not done (Decisions 8).
 
