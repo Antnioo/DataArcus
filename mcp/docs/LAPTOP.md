@@ -2,6 +2,9 @@
 
 Moved here unchanged by A1 (0.3.1, 25 Oct) from `mcp/CLAUDE.md` ("The live loop on this laptop").
 
+Run by the owner on his laptop, in Power BI Desktop: builders are cloud sessions and never use this loop (CI is their gate;
+the owner's laptop checks come after the reviewer's merge).
+
 - **Use only Microsoft's Power BI Authoring MCP for DataArcus work.** The "MCP Engine for Power BI" connector is the owner's tool for his job's dashboards: never use it here, so employer models stay out of DataArcus.
 - **Microsoft's Power BI Authoring MCP** (from the `powerbi-authoring` plugin): connect to the model open in Desktop, create tables, measures, relationships, run DAX, refresh. EULA accepted by the owner.
 - **Desktop bridge CLI** (`powerbi-desktop`): `status`, `open`, `reload`, `screenshot <page-id>`. Power BI is the Microsoft Store version: set `PBI_DESKTOP_PATH` for `open`. `screenshot-all` fails on generated projects (REPORT_DIR_REQUIRED); take pages one at a time and close any capture window left behind.

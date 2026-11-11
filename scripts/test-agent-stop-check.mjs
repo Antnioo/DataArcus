@@ -107,6 +107,24 @@ r = repo('feat/nocode', 'x\n');
 res = run(r.dir);
 allows(res, 'a branch name with no job code'); ok(res.stdout.trim().length > 10, 'no job code: a reason is printed');
 
+// (SN1 item 6) the cause of the hook that did not hold two builders on 11 Nov: Claude Code runs a hook with the session's
+// working directory, and a builder's shell had done `cd mcp`. `node scripts/agent-stop-check.mjs` was then not found (node
+// exits 1, which never blocks), and a found script looked for mcp/work/<CODE>.md under mcp/. So: the command in
+// .claude/settings.json names the script by CLAUDE_PROJECT_DIR, and the script's own root is the repo it lives in.
+{
+  const cmd = JSON.parse(fs.readFileSync(path.join(here, '..', '.claude', 'settings.json'), 'utf8')).hooks.Stop[0].hooks[0].command;
+  const rr = repo('feat/0.3.3-zz9', '## Summary\n- **Resume:** x\n');
+  fs.mkdirSync(path.join(rr.dir, 'scripts'), { recursive: true });
+  fs.copyFileSync(script, path.join(rr.dir, 'scripts', 'agent-stop-check.mjs'));
+  const fresh = () => fs.mkdtempSync(path.join(tmp, 'st-'));   // each call its own refusal count
+  const from = (cwd) => spawnSync(cmd, { cwd, shell: true, encoding: 'utf8', input: '{}', env: { ...process.env, CLAUDE_PROJECT_DIR: rr.dir, AGENT_STOP_STATE_DIR: fresh() } });
+  refuses(from(rr.dir), 'the settings.json command, run in the repo root');
+  refuses(from(path.join(rr.dir, 'mcp')), 'the settings.json command, run after a `cd mcp`');
+  refuses(from(path.join(rr.dir, 'mcp', 'work')), 'the settings.json command, run in mcp/work');
+  const bare = spawnSync(process.execPath, [path.join(rr.dir, 'scripts', 'agent-stop-check.mjs')], { cwd: path.join(rr.dir, 'mcp'), encoding: 'utf8', input: '{}', env: { ...process.env, AGENT_STOP_STATE_DIR: fresh() } });
+  refuses(bare, 'the script without --root, run from mcp/');
+}
+
 fs.rmSync(tmp, { recursive: true, force: true });
 if (problems.length) {
   console.log(`FAIL script=scripts/test-agent-stop-check.mjs check="${problems[0].slice(0, 200).replace(/"/g, "'")}" cause=checks-failed`);

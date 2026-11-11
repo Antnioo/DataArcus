@@ -151,11 +151,24 @@ jobs:
           path: ~/.cache/ms-playwright
           key: chromium-${{ runner.os }}-${{ runner.arch }}-${{ steps.chromium.outputs.rev }}
 
-      - name: Install Chromium
-        run: npx playwright-core install --with-deps chromium
+      # (SN1, 11 Nov) The browser alone first (a cache hit downloads nothing), and the launch proves it. Ubuntu's mirror
+      # (apt, for `--with-deps`) is asked ONLY when the launch fails for a missing system package: before this, every shard
+      # asked it every run and 3 of 3 failed on "Temporary failure resolving 'azure.archive.ubuntu.com'". Measured on
+      # recent green runs, this step took 13 to 83 s per shard (median 20 s) and 663 s and 890 s on two shards that waited
+      # on the mirror (runs 43051896471, 43052560843, 43066836292).
+      - name: Install Chromium (the browser only)
+        run: npx playwright-core install chromium
 
       - name: Chromium launches (after a cache hit too)
+        id: launch
+        continue-on-error: true
         run: node -e "require('playwright-core').chromium.launch().then((b) => { console.log('Chromium ' + b.version() + ' launches'); return b.close(); }, (e) => { console.error(e.message); process.exit(1); })"
+
+      - name: System packages for Chromium (only when it did not launch)
+        if: steps.launch.outcome == 'failure'
+        run: |
+          npx playwright-core install-deps chromium
+          node -e "require('playwright-core').chromium.launch().then((b) => { console.log('Chromium ' + b.version() + ' launches'); return b.close(); }, (e) => { console.error(e.message); process.exit(1); })"
 
       # (in one shard only: it renders every Arabic copy again, so once per run is enough; a failure fails the shard,
       # so the website check). (TR1) In shard 2, the shortest: over 19 green runs on 10 Nov shard 1 took 749 s (median)

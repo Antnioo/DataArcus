@@ -69,7 +69,7 @@ export function register(server, ctx) {
       // (0.3.2 TK1, B-272: create_report's own words, B-88, moved here with the input: the plan holds it)
       displayNames: z.record(z.string(), z.string()).optional().describe('Names to show instead of the model\'s field names, as { "Table[Field]": "name" } (Arabic names for an Arabic report: { "Table[Field]": "الاسم" }). Never show a name the user has not approved: only names the user gave or approved are written; without approval the model\'s names stay. The model is never renamed'),
       planFields: z.object({ kpis: z.array(z.string()).max(40), measure: z.string(), timeAxis: z.string(), category: z.string(), category2: z.string(), table: z.array(z.string()).max(40), slicers: z.array(z.string()).max(40) })
-        .partial().strict().optional().describe('With path: the plan\'s fields in create_report\'s fields shape (Table[Field]); each is checked against the model and the tools\' limits before the plan is shown. timeAxis "none" when the person asks for no time or date field: no trend, no month tooltip'),
+        .partial().strict().optional().describe('With path: the plan\'s fields (Table[Field]); each is checked against the model and the tools\' limits before the plan is shown. timeAxis "none" when the person asks for no time or date field: no trend, no month tooltip'),
       focus: focusInput, tables: tablesInput,
       themeFrom: z.string().max(200).optional().describe('With path: the report (its name, as colours.otherReports lists it) whose colours a design without its own colours keeps, when the model has several'),
       // (audit 6, A6-1: what create_report will write, pinned with the plan; the same definitions as create_report's)

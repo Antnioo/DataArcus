@@ -8,8 +8,8 @@ import { reportPrint } from './read-report.mjs';
 import { LIST_MAX as ICONS_MAX } from './status-icons.mjs';
 import { USES as DAX_USES } from './dax-functions.mjs';
 import { readUserFile } from './files.mjs';
-import { GALLERY_KINDS, LIMITS } from './tool-limits.mjs';
-import { WATERFALL_RTL_INPUT, planIdInput, focusInput, tablesInput, modelPath, pageInput, slot, columnStatsShape, strictObject, keysSaid, unknownKeysSaid } from './tool-inputs.mjs';
+import { GALLERY_KINDS } from './tool-limits.mjs';
+import { WATERFALL_RTL_INPUT, planIdInput, modelPath, slot, columnStatsShape, strictObject, keysSaid, unknownKeysSaid } from './tool-inputs.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Gallery = require('../../assets/js/visual-gallery.js');
@@ -18,6 +18,9 @@ const Gallery = require('../../assets/js/visual-gallery.js');
 // inside a design) is named in the answer's "ignored", never dropped without a word.
 // (the audit's A2-7: the key lists are the design engine's, with its written schema; an older design's keys the engine
 // still reads, such as kpiCards, are reported by the engine's repair instead)
+// (0.3.3 SN1) The sentence below still names create_report's old "fields" input (it is plan_layout's planFields now). It is
+// left as it is: plan_layout's answers are pinned byte for byte by test-0.3.2-fn1j (fixtures/fn1j-pins.json, recorded
+// before the split), so a new word needs that file recorded again: the reviewer's call (mcp/work/SN1.md, "For the owner").
 export function unknownKeys(design) {
   const keys = Object.keys(design || {}).filter((k) => !DESIGN_KEYS.includes(k))
     .concat(Object.keys((design && typeof design.layout === 'object' && design.layout) || {}).filter((k) => !LAYOUT_KEYS.includes(k) && !OLD_LAYOUT_KEYS.includes(k)).map((k) => 'layout.' + k));
@@ -26,31 +29,20 @@ export function unknownKeys(design) {
 // the files a user names, read through lib/files.mjs (audit 6, A6-7): measured first, never quoted; the largest real
 // theme files are about 22 KB and a page background a few hundred KB, so the caps are far above them
 export const THEME_MAX = 4 * 1024 * 1024, BACKGROUND_MAX = 10 * 1024 * 1024, LOGO_MAX = 2 * 1024 * 1024;
-// create_report's inputs, one definition: plan_layout takes the ones a plan pins (audit 6, A6-1)
+// The inputs plan_layout takes from here, one definition each (audit 6, A6-1): the ones a plan pins and create_report
+// writes from the approved plan. (0.3.3 SN1) create_report itself lists only path and planId (CREATE_REPORT_WRITE below);
+// plan_layout's own inputs (design, layout, kpis, focus, tables, filters, header, page, dir, lang, fields, displayNames,
+// planFields, path) are defined in tools/plan_layout.mjs and named in PLAN_ONLY_KEYS: they were defined here too, and no
+// tool listed them from here.
 export const CREATE_REPORT_INPUTS = {
-    path: modelPath.describe('The project folder or .SemanticModel folder the report will use'),
-    planId: planIdInput.describe('The approved plan id from plan_layout (made with this model\'s path), after approve_plan with the user\'s go. Required: without it nothing is written'),
     name: z.string().min(1).max(60).optional().describe('Report name (needed for a new report; customVisualsFrom names its copy after the original)'),
     title: z.string().min(1).max(80).optional().describe('The title in the report\'s header; without it the header shows the report\'s name'),
     pages: z.array(z.object({ name: z.string(), width: z.number().int().default(DEFAULT_PAGE_W), height: z.number().int().default(DEFAULT_PAGE_H), slots: z.array(slot).min(1),
       background: z.string().optional().describe('PNG file for the page background, inside the DataArcus folder') })).min(1).optional()
       .describe('Hand-placed pages; or give a design instead'),
-    design: z.record(z.any()).optional().describe('The design from generate_theme or plan_layout; the layout inputs below change it, as in plan_layout'),
-    layout: z.enum(['exec', 'analysis', 'ops', 'focus']).optional(), kpis: z.number().int().min(0).max(6).optional(),
-    focus: focusInput, tables: tablesInput,
-    filters: z.enum(['none', 'start', 'end', 'top']).optional(), header: z.boolean().optional(), page: pageInput.optional(), dir: z.enum(['ltr', 'rtl']).optional(),
     secondPage: z.boolean().optional().describe('(Default true.) With a design: a second page in a complementary layout (details after an overview, an overview after analysis), with page buttons'),
     slidePanel: z.boolean().optional().describe('(Default false.) With a design: filters as a slide-in panel opened from a Filters button in the header, instead of a filter rail'),
     theme: z.string().optional().describe('Theme JSON file (e.g. from the DataArcus theme generator), inside the DataArcus folder'),
-    fields: z.object({
-      kpis: z.array(z.string()).max(LIMITS.kpiCards).describe('The KPI cards\' measures, in card order; the row gets one card per measure'),
-      measure: z.string().describe('The measure the charts show'),
-      timeAxis: z.string().describe('The column of the line chart\'s axis (a month or date column), or "none" when the person asks for no time axis'),
-      category: z.string().describe('The column of the bar chart (also donut, funnel, treemap)'),
-      category2: z.string().describe('The column of the column chart (also map)'),
-      table: z.array(z.string()).min(1).max(LIMITS.tableFields).describe('The table\'s columns and measures, in order'),
-      slicers: z.array(z.string()).max(LIMITS.slicers).describe('The slicers\' columns; a slot left over is picked automatically')
-    }).partial().strict().optional().describe('The fields of the approved plan, each written as Table[Field] exactly as read_model lists it. What is given is bound as given and nothing is re-picked for it; what is left out is picked as suggest_fields does. A name that is not in the model, or a column where a measure is needed, refuses the call and nothing is written. The answer\'s boundFields lists the fields of every visual'),
     pageFilters: z.array(z.object({
       field: z.string().describe('The column, as Table[Column] exactly as read_model lists it (never a measure)'),
       values: z.array(z.union([z.string(), z.number(), z.boolean()])).min(1).max(50).describe('The values the pages keep, in the column\'s type: true or false, texts, or numbers')
@@ -76,7 +68,6 @@ export const CREATE_REPORT_INPUTS = {
     waterfallRtl: WATERFALL_RTL_INPUT(),
     text: z.string().min(1).max(400).optional().describe('The sentence for the design\'s text box, from the approved plan: what the main chart shows and what to do about it, in the report\'s language. Without it the box is left out: a placeholder is never written'),
     kpiValues: z.enum(['auto', 'full']).optional().describe('How every KPI card shows its number. "auto" (the default): automatic units with 2 decimals (3.43M, 14.81K). "full": the full number with thousand separators (101,914), smaller on narrow cards so it is never cut'),
-    displayNames: z.record(z.string(), z.string()).optional().describe('Names to show instead of the model\'s field names, as { "Table[Field]": "name" } (for example Arabic names for an Arabic report). Never show a name the user has not approved: only names the user gave or approved are written (in an Arabic report, plan_layout\'s arabicNames suggests names for the user to approve or edit); without approval the model\'s names stay. The report shows the name wherever it shows the field: KPI titles, chart titles, axis and legend, table headers, slicer headers, the tooltip pages. The model is never renamed. Left out, the approved plan\'s displayNames are written'),
     logo: z.string().optional().describe('Logo image for the header: a PNG or JPG file inside the DataArcus folder, 2 MB at most; copied into the new report and shown at its own shape'),
     subtitles: z.record(z.string(), z.string().max(120)).optional().describe('Subtitles under chart titles, from the approved plan only, never made up: { "<the slot\'s role as plan_layout names it, or a hand-placed slot\'s title>": "<text>" }'),
     // (0.3.0 L2: the polish lab's look options, 12-13 Oct, Desktop 2.158)
@@ -97,7 +88,7 @@ export const CREATE_REPORT_INPUTS = {
     // (L3, the lab of 10 Oct: a field parameter switches charts between measures, each in its own format)
     metricSwitcher: z.array(z.string().max(300)).min(SWITCH_MIN).max(SWITCH_MAX).optional().describe('(Default off.) Only when the user asks for it: 2 to 5 of the model\'s measures, as Table[Measure] exactly as read_model lists them, that one slicer switches between, on a page of its own ("Metric", Arabic «المؤشر»). The model is never changed: the field parameter is a TMDL script the user applies in TMDL view; until then only that page shows Power BI\'s error'),
     noDataMessage: z.boolean().optional().describe('(Default true.) Charts and tables show "No data for this selection" (Arabic: لا توجد بيانات لهذا الاختيار) when their measure is blank for the current filters; a KPI card wide enough for it says "No data" (لا توجد بيانات). The model is not touched. false leaves all of it out'),
-    lang: z.enum(['en', 'ar']).default('en'), rtl: z.boolean().optional().describe('Hand-placed pages only: right to left (Arabic: the default with lang "ar"; false keeps them left to right)'), font: z.string().optional().describe('Hand-placed pages: the font (default Segoe UI)'),
+    rtl: z.boolean().optional().describe('Hand-placed pages only: right to left (Arabic: the default with lang "ar"; false keeps them left to right)'), font: z.string().optional().describe('Hand-placed pages: the font (default Segoe UI)'),
     colors: strictObject('colors', { text: z.string(), card: z.string(), background: z.string(), accent: z.string() }).partial().optional(),
     // (0.2.9, custom visuals, step C: lib/native-copy.mjs)
     customVisualsFrom: z.string().max(400).optional().describe('An existing PBIR report (its .pbip or .Report folder) whose custom visuals are replaced by native Power BI visuals in a NEW report "<name> native" next to it (the original is only read); the plan lists each replacement and what it loses'),
@@ -119,6 +110,8 @@ export const CREATE_REPORT_INPUTS = {
 // with the proposal) and create_report writes from them. The gate compares their pin with the plan's as before, and the
 // files they name are read and hashed again, so what is written is still exactly what was approved
 export const WRITE_KEYS = ['path', 'planId'];
+// plan_layout's own inputs (defined in tools/plan_layout.mjs) that create_report once took: named "held by the plan" too
+export const PLAN_ONLY_KEYS = ['design', 'layout', 'kpis', 'focus', 'tables', 'filters', 'header', 'page', 'dir', 'lang', 'fields', 'displayNames'];
 export const CREATE_REPORT_WRITE = {
   path: modelPath.describe('The model the plan was made with (the sample: its sample.folder)'),
   planId: planIdInput.describe('The approved plan id (plan_layout, then approve_plan after the user\'s go). It holds every other input; without it nothing is written')
@@ -127,7 +120,7 @@ export const CREATE_REPORT_WRITE = {
 export const heldInputs = (a, fields) => Object.assign(Object.fromEntries(Object.entries(a).filter(([k, v]) => v !== undefined && !['path', 'planId', 'planFields'].includes(k))), fields !== undefined ? { fields } : {});
 // create_report's words for an input it no longer takes: one the plan holds is said as such (never a bare "Unrecognized key")
 export const heldSaid = (keys) => {
-  const held = keys.filter((k) => Object.prototype.hasOwnProperty.call(CREATE_REPORT_INPUTS, k) && !WRITE_KEYS.includes(k)), other = keys.filter((k) => !held.includes(k)), one = held.length === 1;
+  const held = keys.filter((k) => (Object.prototype.hasOwnProperty.call(CREATE_REPORT_INPUTS, k) || PLAN_ONLY_KEYS.includes(k)) && !WRITE_KEYS.includes(k)), other = keys.filter((k) => !held.includes(k)), one = held.length === 1;
   return 'Nothing was written: ' + [held.length ? `${keysSaid(held)}: the approved plan holds ${one ? 'this input' : 'these inputs'} (plan_layout's), so create_report takes only path and planId: call it with those two. To change ${one ? 'it' : 'them'}, call plan_layout again with the new value${one ? '' : 's'}, show the user the new plan and wait for their go.` : '',
     other.length ? unknownKeysSaid('the inputs of create_report', other, WRITE_KEYS) : ''].filter(Boolean).join(' ');
 };
