@@ -90,6 +90,10 @@ jobs:
       - name: The builder Stop hook refuses an unfinished turn and lets the rest through (made-up repos)
         run: node scripts/test-agent-stop-check.mjs
 
+      # (TR1, B-439) the suites' wait before reading a position: a smooth scroll that starts late is waited for
+      - name: The website suites wait for a late scroll before reading a position (a made-up page, no browser)
+        run: node scripts/test-settle.mjs
+
       - name: Sitemap dates skip boilerplate-only commits (git history, no network)
         run: node scripts/test-sitemap-lastmod.mjs
 
@@ -154,9 +158,10 @@ jobs:
         run: node -e "require('playwright-core').chromium.launch().then((b) => { console.log('Chromium ' + b.version() + ' launches'); return b.close(); }, (e) => { console.error(e.message); process.exit(1); })"
 
       # (in one shard only: it renders every Arabic copy again, so once per run is enough; a failure fails the shard,
-      # so the website check)
+      # so the website check). (TR1) In shard 2, the shortest: over 19 green runs on 10 Nov shard 1 took 749 s (median)
+      # with this step's 79 s in it, shard 2 took 448 s; the longest website job is now about 670 s.
       - name: The Arabic copies at /ar/ are what a fresh render of their English pages gives (never edited by hand)
-        if: matrix.shard == 1
+        if: matrix.shard == 2
         run: node scripts/ar-pages.mjs
 
       - name: Website suites, shard ${{ matrix.shard }} of 3
@@ -194,6 +199,24 @@ jobs:
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         if: always()
+        with:
+          pattern: website-suites-*
+          path: ci-logs
+          merge-multiple: true
+
+      # (TR1, L-1110-27) on 10 Nov (run 42830746700) this job started 3 s after the last upload and got 0 logs for two
+      # shards that had passed and uploaded: an artifact can be listed a few seconds late. When a log is missing, wait
+      # and download once more; ci-sum below still fails on a shard that is really missing.
+      - name: Every shard's log arrived (else wait 30 s for one more download)
+        id: logs
+        if: always()
+        run: |
+          n=$(ls ci-logs/suites-[0-9]*.log 2>/dev/null | wc -l | tr -d ' ')
+          echo "$n of 3 shard logs"
+          if [ "$n" -lt 3 ]; then echo "again=1" >> "$GITHUB_OUTPUT"; sleep 30; fi
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: always() && steps.logs.outputs.again == '1'
         with:
           pattern: website-suites-*
           path: ci-logs
@@ -272,6 +295,24 @@ jobs:
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         if: always()
+        with:
+          pattern: mcp-parts-*
+          path: ci-logs
+          merge-multiple: true
+
+      # (TR1, L-1110-27) on 10 Nov (run 42830746700) this job started 3 s after the last upload and got 0 logs for two
+      # shards that had passed and uploaded: an artifact can be listed a few seconds late. When a log is missing, wait
+      # and download once more; ci-sum below still fails on a shard that is really missing.
+      - name: Every shard's log arrived (else wait 30 s for one more download)
+        id: logs
+        if: always()
+        run: |
+          n=$(ls ci-logs/mcp-shard-[0-9]*.log 2>/dev/null | wc -l | tr -d ' ')
+          echo "$n of 5 shard logs"
+          if [ "$n" -lt 5 ]; then echo "again=1" >> "$GITHUB_OUTPUT"; sleep 30; fi
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: always() && steps.logs.outputs.again == '1'
         with:
           pattern: mcp-parts-*
           path: ci-logs
@@ -359,6 +400,24 @@ jobs:
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         if: always()
+        with:
+          pattern: mcp-windows-parts-*
+          path: ci-logs
+          merge-multiple: true
+
+      # (TR1, L-1110-27) on 10 Nov (run 42830746700) this job started 3 s after the last upload and got 0 logs for two
+      # shards that had passed and uploaded: an artifact can be listed a few seconds late. When a log is missing, wait
+      # and download once more; ci-sum below still fails on a shard that is really missing.
+      - name: Every shard's log arrived (else wait 30 s for one more download)
+        id: logs
+        if: always()
+        run: |
+          n=$(ls ci-logs/mcp-shard-[0-9]*.log 2>/dev/null | wc -l | tr -d ' ')
+          echo "$n of 5 shard logs"
+          if [ "$n" -lt 5 ]; then echo "again=1" >> "$GITHUB_OUTPUT"; sleep 30; fi
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: always() && steps.logs.outputs.again == '1'
         with:
           pattern: mcp-windows-parts-*
           path: ci-logs
@@ -470,6 +529,24 @@ jobs:
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         if: always()
+        with:
+          pattern: mcp-macos-parts-*
+          path: ci-logs
+          merge-multiple: true
+
+      # (TR1, L-1110-27) on 10 Nov (run 42830746700) this job started 3 s after the last upload and got 0 logs for two
+      # shards that had passed and uploaded: an artifact can be listed a few seconds late. When a log is missing, wait
+      # and download once more; ci-sum below still fails on a shard that is really missing.
+      - name: Every shard's log arrived (else wait 30 s for one more download)
+        id: logs
+        if: always()
+        run: |
+          n=$(ls ci-logs/mcp-shard-[0-9]*.log 2>/dev/null | wc -l | tr -d ' ')
+          echo "$n of 5 shard logs"
+          if [ "$n" -lt 5 ]; then echo "again=1" >> "$GITHUB_OUTPUT"; sleep 30; fi
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: always() && steps.logs.outputs.again == '1'
         with:
           pattern: mcp-macos-parts-*
           path: ci-logs

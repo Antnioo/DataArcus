@@ -149,13 +149,18 @@ export async function ready(pg) {
 // On a busy machine a smooth scroll can also stall mid-way for longer than that, so while the browser says a scroll is
 // under way (a scroll event without its scrollend yet) the readings don't count; a scrollend that never comes stops
 // the wait after about 3 s without movement.
-export async function settle(pg) {
-  let last = -1, same = 0, still = 0;
-  const end = Date.now() + WAIT;
+// (TR1, B-439) `from`: the position before a click that MUST scroll the page. A busy machine can start the smooth scroll
+// later than the 4 readings (on 10 Nov three CI runs read "top 715, bars 551": the page still at 0, the scroll not begun),
+// so readings at `from` do not count until the page has left it; a page that never moves ends the wait at WAIT and the
+// caller's own check fails, as it should. `wait`: the limit in ms (the settle test passes a short one).
+export async function settle(pg, { from, wait = WAIT } = {}) {
+  let last = -1, same = 0, still = 0, left = from === undefined;
+  const end = Date.now() + wait;
   while (Date.now() < end) {
     const [y, busy] = await pg.evaluate(() => [scrollY, !!window.__scrolling]);
+    if (y !== from) left = true;
     still = y === last ? still + 1 : 0;
-    same = y === last && (!busy || still >= 36) ? same + 1 : 0;
+    same = left && y === last && (!busy || still >= 36) ? same + 1 : 0;
     if (same >= 3) return y;
     last = y; await pg.waitForTimeout(80);
   }
