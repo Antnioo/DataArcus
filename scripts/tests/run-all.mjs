@@ -73,8 +73,11 @@ async function one(name) {
 }
 
 // a small pool: `jobs` tests at a time, results printed in the usual order when all are done
+// (SN1) each test says so as it ends ("done" lines, in the order they end: not result lines, nothing counts them); the
+// full results below are as before
 const results = {}, queue = run.slice();
-await Promise.all(Array.from({ length: Math.min(jobs, queue.length) }, async () => { while (queue.length) { const n = queue.shift(); results[n] = await one(n); } }));
+let ended = 0;
+await Promise.all(Array.from({ length: Math.min(jobs, queue.length) }, async () => { while (queue.length) { const n = queue.shift(); results[n] = await one(n); const r = results[n]; console.log(`done  ${n} ${r.problems.length || !(r.checks > 0) ? 'FAIL' : 'PASS'} ${r.secs}s (${++ended} of ${run.length})`); } }));
 let failed = 0;
 const spend = budget();
 if (logDir) fs.mkdirSync(logDir, { recursive: true });

@@ -385,6 +385,19 @@ try {
     assert.match(job, /name: System packages for Chromium[^\n]*\n {8}if: steps\.launch\.outcome == 'failure'\n {8}run: \|\n {10}npx playwright-core install-deps chromium\n/, 'install-deps only after that failure');
   });
 
+  // SN1 (FB3 "Seen" 5): the website runner says each suite as it ends, in a line no result-line reader counts
+  t('run-all: one "done <name> PASS|FAIL <n>s (k of N)" line per suite as it ends, before the final lines, which are unchanged', () => {
+    const r = node([path.join(REPO, 'scripts/tests/run-all.mjs'), 'svg-kpi', 'pl300-bank', '--jobs', '1']);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const lines = r.stdout.split('\n'), done = lines.filter((l) => /^done /.test(l));
+    assert.equal(done.length, 2, r.stdout);
+    for (const l of done) assert.match(l, /^done {2}(svg-kpi|pl300-bank) +PASS +\d+s \(\d of 2\)$/);
+    assert.ok(lines.lastIndexOf(done[1]) < lines.findIndex((l) => /^PASS {2}/.test(l)), 'the live lines come first');
+    assert.equal(lines.filter((l) => adapter.RESULT.test(l)).length, 2, 'the live lines are not result lines');
+    assert.match(r.stdout, /^PASS {2}svg-kpi {12}\s*\d+ checks {2}\d+s$/m);
+    assert.match(r.stdout, /All 2 passed \(\d+s, 1 at a time\)/);
+  });
+
   // (SPD; Codex: a guard's baseline that timed out was counted as a pass) mutation rejects a baseline that timed out
   t('mutation: a guard whose baseline timed out fails the run, never counted as a pass', () => {
     const r = node([path.join(REPO, 'mcp/test-0.3.1-mutation.mjs')], { DA_MUTATION_ONLY: 'G-used', DA_MUTATION_GUARD_TIMEOUT: '0.01' }, path.join(REPO, 'mcp'));
