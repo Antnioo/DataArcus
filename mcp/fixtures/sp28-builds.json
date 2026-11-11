@@ -74,11 +74,11 @@
   "B8 EN hand-placed: a column chart by many names and by quarter, a two-valued bar, many fields in a narrow table": {
    "files": {
     "count": 31,
-    "sha256": "98624c38e9ea285ef053726039afe1b163360518bb53d4ab49ccb76f8e71abce"
+    "sha256": "71b3522df27bd71007282c37bc9d8b6f6551034180fa3071a3329d6ffc1e7639"
    },
    "result": {
-    "length": 2231,
-    "sha256": "54ffad44a6bc58aa61e4069c36533f71c29ec1127651c265ef5796f82fb3cf15"
+    "length": 2234,
+    "sha256": "c9530bbd6f6196fca14a19ef1867e5e6d8e1a21fa0a07ed8a5f8324e273eea90"
    }
   },
   "B9 AR hand-placed: a right-to-left table with its row label, twin titles renamed, a matrix of months": {
