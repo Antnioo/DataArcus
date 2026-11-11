@@ -4,9 +4,17 @@
 - **Base:** `feat/0.3.3-ox1` from `origin/integration/0.3.3` at 2960587c. Push only this branch; never merge, no PR.
 - **Scope:** new module(s) in `mcp/lib/` or `mcp/lab/ox1-*` with tests and their `mcp/tests.json` lines, MODULES.md
   rows, `mcp/WORK.md`, this note. Nothing a tool writes or answers today changes. CHANGELOG: none.
-- **Expected checks:** `node scripts/check-modules.mjs --strict`; the new suite (count written in the plan before the
-  code); every existing suite untouched; lint 0; CI on the branch.
-- **Resume:** phase 1 written (the winner: the brief check). Next: the suite red, then `mcp/lib/brief.mjs`, the demo.
+- **Expected checks:** (written before the code: "about 45 checks") **got:** new suite `ox1`
+  (`mcp/test-0.3.3-ox1.mjs`, area checker) 57 checks, red on c2c868dc first (54 of 57 failed: no `lib/brief.mjs`);
+  the plan's table met as written (Souq 6 pairs all move; the planted page 12 pairs: 9 move, 3 one value, 1 name not
+  in the model; 7 questions: 3 answered, 1 partly, 1 not answered, 2 cannot). checker 15 suites passed (hx1 59, hx2
+  43, same-question 41 unchanged); `node scripts/check-modules.mjs --strict` PASS 1240 (222 files, 222 rows),
+  check-contracts PASS 858, check-agent-memory PASS 518, check-result-lines PASS 247, test-site-config PASS, lint 0.
+- **Resume:** stage 1 built (2026-11-11T15:40Z); CI on the branch is the last step. The reviewer: review and merge (nothing
+  user-visible; no existing file's code changed). The owner: "For the owner" 1 to 5. Next builder: "Stages 2 to 4".
+- **Result:** on a made-up report, three visuals that validate and draw are named as showing one value on every row,
+  each with why; seven questions (two in Arabic) are sorted into answered, partly, not answered and "this model
+  cannot answer": `node lab/ox1-brief-demo.mjs`.
 
 ## Phase 1 (discover; written 2026-11-11T15:35Z, before any code)
 How it was read: two research passes over the public web on 11 Nov 2026 plus my own searches. "Opened" = the page
@@ -143,3 +151,76 @@ has (the questions and their answers), so it is the winner's stage 4, not a riva
 | Q | 7 questions (2 in Arabic) on the AI-built report | 3 answered (Revenue by month; Net Revenue by region; total Revenue on a card), 1 partly (Units by city), 1 not answered (Margin by brand), 2 cannot answer (Target by region: one value, shown anyway by 1 visual; Net Sales: not in the model) |
 | S | safety | no hash, no question text, no literal in an answer; names through safeName; inputs not changed; null inputs do not throw |
 - Demo: `mcp/lab/ox1-brief-demo.mjs` prints the sheet for the 7 questions. MODULES.md row, tests.json line, WORK.md.
+
+## Result (stage 1, 2026-11-11T15:40Z)
+**Before -> after.** Before: no part of DataArcus (and no tool in the table above) says whether a visual someone else
+built can answer its own question; the rule guarded only DataArcus's own plans (assets/js/field-catalog.js:497).
+After: `lib/brief.mjs` (pure, 3 exports and their constants; no tool loads it) answers it for any PBIR report and for
+a list of questions. Nothing a tool writes or answers changed: no existing module's code was edited (0 export lines
+added); the diff is brief.mjs, its suite, its demo, one tests.json line, one MODULES.md row, WORK.md, this note.
+The demo's output (made-up Souq; run on this branch):
+```
+1. The visuals: 7 of 10 pairs of a number and a column it is grouped by: the column can move the number; 3 would show one value on every row (listed).
+   - ai / bar-target-by-region: No relationship lets a filter on Store reach what [Target] reads (Targets), and its DAX does not name Store: every Store[Region] would show the same [Target].
+2. The questions: 3 of 7 questions answered by a visual; 1 partly; 1 not answered; 2 this model cannot answer as asked. 6 visuals with a number are tied to no question.
+   q3  الهدف حسب المنطقة  ([Target] by Store[Region]): CANNOT ANSWER. ... Shown anyway by ai / bar-target-by-region.
+   q4  Margin by brand  ([Margin] by Product[Brand]): NOT ANSWERED. The model can answer it; no visual shows [Margin].
+   q5  Units by city  ([Units] by Store[City]): PARTLY. [Units] is shown, but no visual groups it by exactly Store[City].
+```
+
+## Stages 2 to 4 (each a builder job of a day at most; none starts before the owner's yes)
+2. **The check, through a tool (held).** `check_report { path, brief }`: a section `briefCheck` beside `impactCheck`,
+   capped like it (60 listed, 16,000 characters); the "one value" findings for every report even without questions;
+   question names parsed by impact.mjs's `parseReach`; report measures read (lineage's own nodes) instead of "cannot
+   tell"; TOOLS.md, PRIVACY.md, CHANGELOG. Before it: one laptop run of the rule on a made-up model (For the owner 2).
+3. **The brief kept with the report.** `plan_layout` and `create_report` take the questions; the approval window shows
+   "what this report will answer" and what it cannot, before the click; the list is written with the report's files
+   only at approval, so a later check reads it without being told again. The Arabic words, approved first.
+4. **Questions in the Impact check, and the handover sheet.** `againstModel` says which QUESTIONS a model change can
+   move (HX2's chains, in the person's words); one sheet, English and Arabic, for the report's owner: each question,
+   its answer's place, what was checked and what was not.
+
+## Decisions I made
+- The winner is the brief check, not the change receipt (idea 2): the receipt's core is HX1 and HX2 and is IX1's
+  ground; the evidence (E1 to E8) is about meaning, which no tool in the table checks.
+- Stage 1 takes a question as names (`{ measure, by: [{ table, column }] }`), not as words: tying words to fields is
+  the assistant's proposal and the person's confirmation (stage 3's window); a library that guessed it would be an
+  estimate. The question's text never enters the module (test S2), so no typed text is echoed by it.
+- In doubt, no finding: USERELATIONSHIP or CROSSFILTER anywhere under a number makes every relationship count; a
+  report measure, a field parameter and a calculation group are "cannot tell"; a constant is counted, never listed.
+- "Answered" is strict: the measure grouped by exactly the question's columns. Revenue by month and region does not
+  answer "Revenue by month" (it is "partly"); the owner may want it looser (For the owner 4).
+- The suite reads fixtures/hx1-souq.mjs (HX1's made-up model) and adds its planted page in the test itself: no new
+  fixture file, no edit of HX1's. `used by` in MODULES.md is "none (a test)", as HX1's row was before a tool read it.
+- WORK.md's line is "OX1." only: the file was 12 characters under its 3,200 cap (measured: 3,207 with 7 more).
+- The rule is lineage.mjs's (one side to many side, both when the relationship says so), walked here per pair because
+  lineage's `relsFor` answers per visual; the graph itself is `modelGraph`, not a copy.
+
+## For the owner
+1. Is the brief check the direction you want built next (stages 2 to 4 above)? yes / no.
+2. May the next laptop batch include one run that measures the "one value on every row" rule in Desktop on a
+   made-up model (three charts: a missing relationship, the many side, an inactive relationship)? yes / no.
+3. May a builder draft the Arabic words for the verdicts and statuses («قيمة واحدة في كل صف», «مُجاب», «غير مُجاب»:
+   examples only, not approved) for your approval? yes / no.
+4. Should "Revenue by month and region" count as answering "Revenue by month"? (today: partly) yes / no.
+5. A proposed public sentence, held: "DataArcus checks, from the files only, whether each chart's columns can
+   actually change the number it shows on your model, and which of your questions a report answers." Approve after
+   stage 2 and the laptop run? yes / no.
+
+## Risky changes
+none (a new library no tool loads, its suite and a demo; no existing code edited).
+
+## Seen, not in scope
+- `mcp/tests.json`'s `affected` block has the keys `everything` and `areas.checker`, `areas.model`, `areas.report`
+  twice each (lines 20 to 28 on c2c868dc): JSON keeps the last, so the first lists are dead text. Not touched.
+- The picker's reach rule (assets/js/field-catalog.js:470, by regular expressions) and lineage's graph (by the DAX
+  tokens) are two readings of "what a measure reads"; brief.mjs uses the graph. One home for both is a later job.
+- microsoft/json-schemas issue 573 (a schema URL that answered 404) was closed on 2026-09-14: nothing to do.
+- Microsoft's Desktop Bridge setting is on by default (Learn, 2026-09-21): worth a line in MICROSOFT-WATCH.
+
+## Lessons for the reviewer
+- community.fabric.microsoft.com answers 403 to every scripted read: forum evidence can only be a search snippet,
+  undated. A research brief should say so up front, or the builder spends calls finding it out.
+- The root `npm run lint` needs `npm ci` at the repo root in a new clone (`globals` missing otherwise); `mcp/` has no
+  lint script.
+- A WORK.md near its cap leaves a builder room for a job code only; the reviewer may want to archive a line first.
