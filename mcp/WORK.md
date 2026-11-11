@@ -12,7 +12,7 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 - AT1 (B-429, B-449): Arabic title «من أصل», header bracket, 3 Arabic model-path errors (`work/AT1.md`).
 - SN1 (`work/SN1.md`).
 - TR1 (B-439; `work/TR1.md`) and TR2 (saved schemas, check floors; `work/TR2.md`) merged.
-- LR3 (P-01, P-08: a Stop hook; `work/LR3.md`). HX1 (`work/HX1.md`). HX2 (Impact check: check_report `againstModel`, read_model `reach`; `work/HX2.md`). TL1 (`work/TL1.md`).
+- LR3 (P-01, P-08: a Stop hook; `work/LR3.md`). HX1 (`work/HX1.md`). HX2 (Impact check: check_report `againstModel`, read_model `reach`; `work/HX2.md`). TL1 (`work/TL1.md`). OX1.
 
 ## Next step
 1. PR #121 (RL032L, download lines) is on main. 2. The reviewer merges the DONE jobs above, one check each.
