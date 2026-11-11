@@ -6,7 +6,7 @@
 - **Expected checks:** fb1 red on the revert's parent first by the 30 plans of FB1's table; then 10 of 80 plans with a hole,
   worst 10.6%, flattest 6.8, sq13 S10 all 18, Details chart 312 high at 1920 x 1080; sp29 22 -> 23 checks; all suites pass;
   `node scripts/check-modules.mjs --strict`; lint 0; CI green.
-- **Resume:** (2026-11-11T03:41Z) all code and recordings committed and pushed; local runs green; CI started next (see the last line).
+- **Resume:** DONE (2026-11-11T04:14Z): tip ready to merge; nothing left to do on this branch.
 
 ## Plan (written 2026-11-11T02:47Z)
 1. Revert 3d787177 on this branch. If it conflicts, stop and name the files.
@@ -80,3 +80,5 @@ FB1.md "For the laptop" 1 to 4 (made-up sample project only).
 - Revert of a revert conflicts wherever another job re-recorded the same fixtures in between (AT1): expect it, and re-record.
 - I did not see fb1 red on the old code before re-recording: its pins came back identical to FB1's, which saw it red (95ebdb3c).
 - A fresh clone needs `npm ci` in both mcp/ and the root before any recorder runs; my first recorder pass crashed on it.
+
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42956536689 on 3c3a4b0b797fdbb57d0779583fe17bbe2cae4870 (2026-11-11T04:14Z; Linux and Windows shards and the website success, macOS skipped by the workflow; integration did not move, no merge). The first run, 42954459508, was red on website sp7 only (fixed, above). DONE.
