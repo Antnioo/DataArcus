@@ -1,0 +1,20 @@
+{
+  "source": "Microsoft .NET 8.0.134 (Ubuntu package dotnet-sdk-8.0), System.Globalization.UmAlQuraCalendar: ToDateTime(year, 9, 1), (year, 10, 1), (year, 12, 10); run in the IX4 session, 2026-11-11. The other family of published Umm al-Qura tables (ICU, which JavaScript Intl uses) agreed with every row 1439 to 1452 on the same day; the first difference is 1 Ramadan 1453 (ICU 78.3: 2031-12-16).",
+  "rows": [
+    {"hijriYear":1439,"ramadan":"2018-05-16","fitr":"2018-06-15","adha":"2018-08-21"},
+    {"hijriYear":1440,"ramadan":"2019-05-06","fitr":"2019-06-04","adha":"2019-08-11"},
+    {"hijriYear":1441,"ramadan":"2020-04-24","fitr":"2020-05-24","adha":"2020-07-31"},
+    {"hijriYear":1442,"ramadan":"2021-04-13","fitr":"2021-05-13","adha":"2021-07-20"},
+    {"hijriYear":1443,"ramadan":"2022-04-02","fitr":"2022-05-02","adha":"2022-07-09"},
+    {"hijriYear":1444,"ramadan":"2023-03-23","fitr":"2023-04-21","adha":"2023-06-28"},
+    {"hijriYear":1445,"ramadan":"2024-03-11","fitr":"2024-04-10","adha":"2024-06-16"},
+    {"hijriYear":1446,"ramadan":"2025-03-01","fitr":"2025-03-30","adha":"2025-06-06"},
+    {"hijriYear":1447,"ramadan":"2026-02-18","fitr":"2026-03-20","adha":"2026-05-27"},
+    {"hijriYear":1448,"ramadan":"2027-02-08","fitr":"2027-03-09","adha":"2027-05-16"},
+    {"hijriYear":1449,"ramadan":"2028-01-28","fitr":"2028-02-26","adha":"2028-05-05"},
+    {"hijriYear":1450,"ramadan":"2029-01-16","fitr":"2029-02-14","adha":"2029-04-24"},
+    {"hijriYear":1451,"ramadan":"2030-01-05","fitr":"2030-02-04","adha":"2030-04-13"},
+    {"hijriYear":1452,"ramadan":"2030-12-26","fitr":"2031-01-24","adha":"2031-04-02"},
+    {"hijriYear":1453,"ramadan":"2031-12-15","fitr":"2032-01-14","adha":"2032-03-22"}
+  ]
+}
