@@ -58,3 +58,4 @@ none (nothing a user sees).
 - A brief that says "registered in mcp/tests.json or the website runner" should name where scripts/ tests live: they are
   tests.yml steps, a file another builder owns; the brief's scope list and its file ban collide there.
 - State at 2026-11-11T03:21Z: code done, checks next.
+- State at 2026-11-11T03:36Z: CI 1 red (results-adapter pinned old wording), fixed, CI 2 next.
