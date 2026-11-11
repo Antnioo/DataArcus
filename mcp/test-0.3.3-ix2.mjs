@@ -25,6 +25,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { gulfModel, gulfReport } from './fixtures/ix1-souq-gulf.mjs';
 import { visual, colRef, msrRef, measureOf, tableOf } from './fixtures/hx1-souq.mjs';
+import { project as writeProject } from './fixtures/souq-project.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -40,20 +41,7 @@ const SRC = (f) => fs.readFileSync(path.join(HERE, '..', f), 'utf8');
 const CANARY = 'IX2_CANARY_4417';
 
 // ---- Souq Gulf as a .pbip project on disk: <dir>/Souq.SemanticModel/model.bim, <dir>/Souq.Report/definition/... ----
-const TWIN = path.join(HERE, 'fixtures/twin-project');
-function project(name, model, report, opts) {
-  const o = opts || {}, d = path.join(ROOT, name), sm = path.join(d, 'Souq.SemanticModel'), rp = path.join(d, 'Souq.Report');
-  fs.mkdirSync(sm, { recursive: true }); fs.mkdirSync(path.join(rp, 'definition/pages'), { recursive: true });
-  fs.copyFileSync(path.join(TWIN, 'Twin Sales.SemanticModel/definition.pbism'), path.join(sm, 'definition.pbism'));
-  fs.writeFileSync(path.join(sm, 'model.bim'), JSON.stringify(model, null, 2));
-  fs.writeFileSync(path.join(d, 'Souq.pbip'), JSON.stringify({ version: '1.0', artifacts: [{ report: { path: 'Souq.Report' } }], settings: {} }, null, 2));
-  fs.writeFileSync(path.join(rp, 'definition.pbir'), JSON.stringify(o.noModel ? { version: '4.0', datasetReference: { byConnection: { connectionString: 'Data Source=x' } } } : { version: '4.0', datasetReference: { byPath: { path: '../Souq.SemanticModel' } } }, null, 2));
-  fs.copyFileSync(path.join(TWIN, 'Twin Sales.Report/definition/version.json'), path.join(rp, 'definition/version.json'));
-  const pages = [];
-  report.files.forEach((f) => { const p = path.join(rp, f.path); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, JSON.stringify(f.json, null, 2)); const g = /^definition\/pages\/([^/]+)\/page\.json$/.exec(f.path); if (g) pages.push(g[1]); });
-  fs.writeFileSync(path.join(rp, 'definition/pages/pages.json'), JSON.stringify({ pageOrder: pages, activePageName: pages[0] }, null, 2));
-  return { dir: d, report: path.relative(ROOT, path.join(d, 'Souq.pbip')).split(path.sep).join('/'), model: path.relative(ROOT, sm).split(path.sep).join('/'), bim: path.join(sm, 'model.bim') };
-}
+const project = (name, model, report, opts) => writeProject(ROOT, name, model, report, opts);   // (0.3.3 OX2: the shared helper)
 // a calculation group "Time Intel" on Souq Gulf: Current, PY (one year back) and PM (a month back)
 const withGroup = (m) => { m.model.tables.push({ name: 'Time Intel', calculationGroup: { precedence: 1, calculationItems: [{ name: 'Current', expression: 'SELECTEDMEASURE ()' },
   { name: 'PY', expression: "CALCULATE ( SELECTEDMEASURE (), SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )" }, { name: 'PM', expression: "CALCULATE ( SELECTEDMEASURE (), DATEADD ( 'Calendar'[Date], -1, MONTH ) )" }] },

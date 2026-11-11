@@ -97,7 +97,7 @@
 7. **The hub card is English and dropped from the Arabic hub** (`data-ar-held`), and the hub's ItemList JSON-LD lists the
    page (inline scripts are copied byte for byte to the Arabic hub, English names, as every other item there).
 8. **og:image:** the existing `assets/img/og/gulf-calendar.jpg` (no new picture; R-59 not triggered).
-9. **WORK.md** was at 3,180 of 3,200 characters: my entry is " IX4 `work/IX4.md`." (19), nothing else cut.
+9. **WORK.md** was at its cap after the merge with OX2: my entry is " IX4." (as OX2's), nothing else cut.
 10. **Not linked to the MCP's `check_report` from the page:** 0.3.3 is not released, so the page would claim a feature
     users cannot download yet.
 

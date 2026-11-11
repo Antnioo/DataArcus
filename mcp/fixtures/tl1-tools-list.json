@@ -546,6 +546,39 @@
       },
       "additionalProperties": false
      },
+     "brief": {
+      "minItems": 1,
+      "maxItems": 60,
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "id": {
+         "type": "string",
+         "maxLength": 120
+        },
+        "measure": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 300
+        },
+        "by": {
+         "maxItems": 8,
+         "type": "array",
+         "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+         }
+        }
+       },
+       "required": [
+        "measure",
+        "by"
+       ],
+       "additionalProperties": false
+      }
+     },
      "lens": {
       "type": "string",
       "enum": [
