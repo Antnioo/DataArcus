@@ -366,13 +366,23 @@ try {
       for (const job of y.split(/\n(?= {2}[\w-]+:\n)/).filter((j) => /playwright-core install/.test(j))) {
         installs++;
         const at = (re) => { const m = re.exec(job); return m ? m.index : -1; }, name = /^ {2}([\w-]+):/m.exec(job)[1];
-        const cache = at(/uses: actions\/cache@[0-9a-f]{40} #/), install = at(/playwright-core install --with-deps chromium/), launch = at(/chromium\.launch\(\)[^\n]*b\.close\(\)[^\n]*process\.exit\(1\)/);
+        const cache = at(/uses: actions\/cache@[0-9a-f]{40} #/), install = at(/playwright-core install (--with-deps )?chromium/), launch = at(/chromium\.launch\(\)[^\n]*b\.close\(\)[^\n]*process\.exit\(1\)/);
         assert.ok(cache > 0 && cache < install && install < launch, `${f} ${name}: cache ${cache}, install ${install}, launch ${launch}`);
         assert.match(job, /path: ~\/\.cache\/ms-playwright\n {10}key: chromium-\$\{\{ runner\.os \}\}-\$\{\{ runner\.arch \}\}-\$\{\{ steps\.chromium\.outputs\.rev \}\}/, `${f} ${name}: the key`);
         assert.match(job, /browsers\.json[^\n]*\['chromium', 'chromium-headless-shell', 'ffmpeg'\][^\n]*revision/, `${f} ${name}: the revisions`);
       }
     }
     assert.equal(installs, 2, 'website-suites and coverage-web install Chromium');
+  });
+
+  // SN1 (11 Nov, "Temporary failure resolving azure.archive.ubuntu.com" in every website shard): the shards ask Ubuntu's
+  // mirror only when Chromium did not launch without its system packages
+  t('workflows: the website shards install the browser without apt, and fetch system packages only after a failed launch', () => {
+    const y = fs.readFileSync(path.join(REPO, '.github/workflows/tests.yml'), 'utf8');
+    const job = y.split(/\n(?= {2}[\w-]+:\n)/).find((j) => /^ {2}website-suites:/m.test(j));
+    assert.doesNotMatch(job.replace(/^ *#.*$/gm, ''), /--with-deps/, 'website-suites: no apt on every run');
+    assert.match(job, /name: Chromium launches[^\n]*\n {8}id: launch\n {8}continue-on-error: true\n/, 'the first launch may fail');
+    assert.match(job, /name: System packages for Chromium[^\n]*\n {8}if: steps\.launch\.outcome == 'failure'\n {8}run: \|\n {10}npx playwright-core install-deps chromium\n/, 'install-deps only after that failure');
   });
 
   // (SPD; Codex: a guard's baseline that timed out was counted as a pass) mutation rejects a baseline that timed out
