@@ -2,20 +2,20 @@
  "about": "SP23: sha256 and length of each approval page (the real server, GET on its link) and of the app's own prompt for 12 made-up plans, and of promptSummary at its cap and a hostile plan's page, recorded on integration/0.3.2 1ed6089 (before approval-disclosure.mjs). The secret, port, plan id, temp folder and the random page and visual folder names replaced by markers, the terminology sheet's rows sorted, \"\\\\\" by \"/\" (test-0.3.2-sp23.mjs).",
  "pages": {
   "report-en": {
-   "sha256": "19f71938ca192461f24ee3a17be21faf09fab0fd531a67b5b2ee61a4c769fdc6",
-   "length": 101444
+   "sha256": "b602b35a9478c95764c837c1196135594052b41b9ecc8cb698906abfe08c6736",
+   "length": 100201
   },
   "report-ar": {
-   "sha256": "4fb781875239769e8034eb602e6a6d848e37b40d38b451edf6c233708ffdd1f3",
-   "length": 103933
+   "sha256": "bbd3766e92eb11bef3235e81a26479ef4a44a4a0e816e416afc599a4f1df5fab",
+   "length": 102719
   },
   "report-cap": {
    "sha256": "3824a49be3c63aa8bb9522825f5d93f9774a16d2c929001ddda9b8cc0a1ef15a",
    "length": 54207
   },
   "report-hostile": {
-   "sha256": "ddf8351e6b801590830b6a9b34cc4e801a9f4099563259061b3a07dfc80d434b",
-   "length": 101654
+   "sha256": "ee6329f3ee7e5fa049d678d7b4104da9e89a6a0ec20ccbf78c6348c30a49e828",
+   "length": 100710
   },
   "twin": {
    "sha256": "2fdcf814fba7489b932a92fb23ec788af18db474d6d2bc91ffc569ad2b7c8f5a",
