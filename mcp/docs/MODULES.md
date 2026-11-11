@@ -58,6 +58,10 @@ task routes. [Every module](#every-module) (0.3.2 MD1): one row per file, kept t
   line) -> `auto` only when every path is one of the 3 data files (prices, PL-300 and DP-600 outlines), else `owner <path>`;
   the one allowed list, called by `update-powerbi-prices.yml` and `check-exam-outlines.yml`;
   `scripts/test-bot-pr-files.mjs` proves it and both workflows (merge only after `auto`, `--auto` only).
+- **Builder stop hook** (0.3.3 LR3): `scripts/agent-stop-check.mjs`, run by the Stop hook in `.claude/settings.json`: on a
+  `fix/*` or `feat/*` branch it refuses the end of a turn (exit 2) until the job's note has `CI green: <url> on <sha>` for the
+  head, a `STOP:` line or a question under "## For the owner"; allows after 3 refusals in a row, on any other branch, and
+  when git or the note cannot be read; `scripts/test-agent-stop-check.mjs` proves it on made-up repos.
 - **Packaging**: the one-click extension (`.mcpb`) and its release notes are made by a separate build step from
   `mcp/` as it is here; `mcp/skills-packaging/` is the plugin folder next to Microsoft's.
 

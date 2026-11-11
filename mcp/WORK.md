@@ -11,6 +11,8 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 - DB2 (a plan without a report name gets no plan id). LG2 (B-419: write tools already say the approved Arabic; pin test only, `work/LG2.md`). MH1 (test client: call timeout, restart; `work/MH1.md`).
 - AT1 (B-429, B-449): Arabic title «من أصل», header bracket, 3 Arabic model-path errors (`work/AT1.md`).
 
+- LR3 (LR1's P-01, P-08: a Stop hook ends no builder turn before CI is green; `work/LR3.md`).
+
 ## Next step
 1. PR #121 (RL032L, download lines) is on main. 2. The reviewer merges the DONE jobs above, one check each.
 

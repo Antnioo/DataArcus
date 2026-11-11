@@ -1,8 +1,7 @@
 # DataArcus: read this first
 
 This repo is dataarcus.com (the website and its free Power BI tools) and the DataArcus MCP (`mcp/`).
-The owner is Abdelrahman. He relays messages between two Claude sessions: a builder on his laptop (hands-on work,
-Power BI Desktop) and a reviewer in the cloud (reviews, the full test run on Linux, merges). He decides every step.
+The owner is Abdelrahman. Builders are cloud sessions on their own branches; a reviewer session reviews and merges into the integration branch; CI on three systems is the test gate; the owner merges to main and does the laptop checks in Power BI Desktop.
 
 ## Read first, in this order (capped in CI: `scripts/check-agent-memory.mjs`)
 1. `mcp/WORK.md`: the integration head, active jobs, the next step, open decisions.
