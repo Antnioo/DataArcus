@@ -21,7 +21,7 @@ import { COPY_TAG } from './arabic-twin.mjs';
 import { KNOWN_TYPES, countsOf, mixedOf, boldItalicOf } from './text-format.mjs';   // (0.3.1 CS1: FORMAT_MIXED)
 import { langOfTexts, pageLanguages } from './check-language.mjs';   // (0.3.2 SP20: each page's language)
 import { sameQuestion } from './same-question.mjs';   // (0.3.2 NC1: the number check, layer 1, option against)
-import { impactCheck } from './impact.mjs';   // (0.3.3 HX2: the Impact check, option againstModel)
+import { impactCheck, likeForLike, readOnModel } from './impact.mjs';   // (0.3.3 HX2: the Impact check, option againstModel; IX2: likeForLike)
 import { scrub, rel, relOut, cleanPath, tidy } from './check-redact.mjs';   // (0.3.2 SP41: the one redaction boundary)
 import { outsideRel } from './path-rules.mjs';   // (0.3.2 WN1, F01: the one containment rule)
 import { schemaCheck, VALIDATOR_VERSION } from './check-schema.mjs';   // (0.3.2 SP41: the bundled schemas)
@@ -107,7 +107,8 @@ export function fixRoutesOf(B, loc) {
 const fixWithOf = (B, PL, f) => (B.kind === 'copy' ? (f.page && PL.pages[f.page.id] && PL.pages[f.page.id] !== 'ar' && PL.pages[f.page.id] !== 'he' ? 'original' : 'arabicCopy') : B.kind === 'twin' ? 'arabicCopy' : B.kind === 'report' ? 'newPlan' : null);
 
 // ---- the tool ----
-// p: a path inside the working folder. opts: { checks, lang ('auto'|'en'|'ar'), maxFindings (1-200, default 60) }
+// p: a path inside the working folder. opts: { checks, lang ('auto'|'en'|'ar'), maxFindings (1-200, default 60), against,
+// againstModel, likeForLike ({ year, country }) }
 export async function checkReport(p, opts) {
   // (0.3.2 FN1E) the steps, in this order, on one context: the reading, the validator, the schemas and rules, the
   // measures not in the model yet, mixed fonts, instructions, field parameters, what was not judged, the findings, the
@@ -132,7 +133,10 @@ function readStep(p, opts) {
   // refusal (another model, outside the folder, a link, PBIR-Legacy) comes before any other work
   const same = o.against != null ? sameQuestion(p, o.against) : null;
   // (0.3.3 HX2) againstModel: the report read on an earlier model too; its refusals come before the checks as well
-  const impactSection = o.againstModel != null ? impactCheck(p, o.against, o.againstModel) : null;
+  // (0.3.3 IX2) likeForLike: the same report on its own model, read once for both sections
+  const onModel = o.againstModel != null || o.likeForLike != null ? readOnModel(p, o.againstModel != null ? 'againstModel' : 'likeForLike') : null;
+  const impactSection = o.againstModel != null ? impactCheck(p, o.against, o.againstModel, onModel) : null;
+  const lflSection = o.likeForLike != null ? likeForLike(p, o.likeForLike, onModel) : null;
   const sk = { big: [], deep: 0 };
   // the report's files, walked once (round 22b, item 6: three walks counted a folder past the depth three times)
   const reportFiles = walk(loc.reportDir, [], 20000, 0, sk);
@@ -160,7 +164,7 @@ function readStep(p, opts) {
   const isRtl = (l) => l === 'ar' || l === 'he';
   const mixed = PLg && new Set(Object.values(PLg.pages).map(isRtl)).size > 1;
   const B = builtByOf(loc, PL), routes = fixRoutesOf(B, loc);
-  return { checks, cap, loc, same, impactSection, sk, reportFiles, scan, inv, R, versions, texts, customVisuals, unreadable, bookmarks, all, notChecked, add, lang, dir, PL, PLg, isRtl, mixed, B, routes };
+  return { checks, cap, loc, same, impactSection, lflSection, sk, reportFiles, scan, inv, R, versions, texts, customVisuals, unreadable, bookmarks, all, notChecked, add, lang, dir, PL, PLg, isRtl, mixed, B, routes };
 }
 // (FN1E) Microsoft's validator
 async function validatorStep(cr) {
@@ -384,7 +388,7 @@ function lintStep(cr) {
 }
 // (FN1E) the answer, cut to fit
 function answerStep(cr) {
-  const { checks, same, impactSection, sk, R, versions, unreadable, bookmarks, all, notChecked, lang, mixed, PLg, B, routes, validator, schemas, ruled, suspicious, fieldParameters, byImpact, byRule, findings, lintSection } = cr;
+  const { checks, same, impactSection, lflSection, sk, R, versions, unreadable, bookmarks, all, notChecked, lang, mixed, PLg, B, routes, validator, schemas, ruled, suspicious, fieldParameters, byImpact, byRule, findings, lintSection } = cr;
   const answer = {
     report: { pages: R.pages.filter((p) => !p.tooltip).length, tooltipPages: R.pages.filter((p) => p.tooltip).length, visuals: R.visuals.length, bookmarks, pageNames: R.pages.map((p) => p.name), schemaVersions: versions, builtBy: B.said },
     lang, ...(mixed ? { pageLanguages: pageLanguagesOut(PLg) } : {}), validator, schemas, rulesRun: ruled.ran,
@@ -392,6 +396,7 @@ function answerStep(cr) {
       tellUser: 'Tell the user the summary and, for each kind with findings, its sentence: what only strict validation or Fabric would refuse does not break a report in Desktop, nor does a mayLook warning (Desktop was measured to draw it), nor an openedInDesktop finding (Desktop was measured to open reports with it); check_report never opens Desktop, so say what ran, not that the report opens. Each finding\'s "impact" is its kind; its code is Microsoft\'s or DataArcus\'s, unchanged.' },
     ...(same ? { sameQuestion: same } : {}),
     ...(impactSection ? { impactCheck: impactSection } : {}),
+    ...(lflSection ? { likeForLike: lflSection } : {}),
     findings, notChecked,
     ...(fieldParameters ? { fieldParameters } : {}),
     ...(lintSection ? { lint: lintSection } : {}),
@@ -414,6 +419,8 @@ function answerStep(cr) {
   while (size() > ANSWER_CAP && answer.fieldParameters && answer.fieldParameters.parameters.length > 1) { const fp = answer.fieldParameters, keep = Math.floor(fp.parameters.length / 2); fp.more = (fp.more || 0) + fp.parameters.length - keep; fp.parameters = fp.parameters.slice(0, keep); }
   // (0.3.3 HX2) the Impact check's list, cut last but one: its counts kept, the cut said
   while (size() > ANSWER_CAP && answer.impactCheck && answer.impactCheck.differ.length > 1) { const ic = answer.impactCheck, all = ic.differ.length + (ic.notListed || 0); ic.differ = ic.differ.slice(0, Math.floor(ic.differ.length * 0.7)); ic.notListed = all - ic.differ.length; }
+  // (0.3.3 IX2) like for like's list, cut as the Impact check's is
+  while (size() > ANSWER_CAP && answer.likeForLike && answer.likeForLike.list.length > 1) { const lf = answer.likeForLike; lf.list = lf.list.slice(0, Math.floor(lf.list.length * 0.7)); lf.notListed = lf.compared - lf.list.length; }
   if (size() > ANSWER_CAP && answer.suspiciousNames) { answer.suspiciousNames.names = answer.suspiciousNames.names.slice(0, 5); }
   if (size() > ANSWER_CAP) answer.notChecked = answer.notChecked.slice(0, 10);
   return answer;

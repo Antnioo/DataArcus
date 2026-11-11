@@ -523,6 +523,29 @@
       "type": "string",
       "minLength": 1
      },
+     "likeForLike": {
+      "type": "object",
+      "properties": {
+       "year": {
+        "type": "integer",
+        "minimum": 1900,
+        "maximum": 2100
+       },
+       "country": {
+        "type": "string",
+        "enum": [
+         "uae",
+         "ksa",
+         "kwt",
+         "qat",
+         "bhr",
+         "omn",
+         "shj"
+        ]
+       }
+      },
+      "additionalProperties": false
+     },
      "lens": {
       "type": "string",
       "enum": [

@@ -1,9 +1,10 @@
-// 0.3.3 IX1 (the owner, 11 Nov, D-1111-15; mcp/work/IX1.md): like for like in the Gulf. A library: no tool loads it yet.
+// 0.3.3 IX1 (the owner, 11 Nov, D-1111-15; mcp/work/IX1.md): like for like in the Gulf. Since IX2 (mcp/work/IX2.md)
+// check_report's lens likeForLike, read through impact.mjs's reading.
 // It joins three parts that never met: the number's lineage (lineage.mjs: for each visual, every measure its numbers
-// pass through, with the path that reached it), the DAX tokens (dax-reference-parser.js's tokenizeDax) and DataArcus's
+// pass through, with the path that reached it), the DAX calls (health-confirm.js's CF, the one reader) and DataArcus's
 // own sourced Gulf dates (gulf-compare.js on gulf-dates.js). It answers, from the files only:
 //   - which visuals compare with the same Gregorian dates of another period (SAMEPERIODLASTYEAR, DATEADD,
-//     PARALLELPERIOD, PREVIOUS* and NEXT*), through which measure and which chain of names;
+//     PARALLELPERIOD, PREVIOUS* and NEXT*), through which measure or calculation item and which chain of names;
 //   - for a year the person gives, the months in which those two periods are not like for like in the Gulf: Ramadan
 //     days, Eid days, a weekend or a VAT rate that changed (the calendar's facts, never the person's numbers);
 //   - whether the model already has the measure that compares the same Ramadan days (the DAX Measure Builder's
@@ -13,17 +14,23 @@
 //                                         (lineage.mjs's inputs); opts: { year, country } (gulf-compare.js's)
 // It says "not like for like", never "wrong": whether a business's numbers move with Ramadan is the person's to know.
 // Never a value: a DAX text is read for function names, a measure reference and a column reference only; a literal in
-// it is never returned. Names leave through safeName. The year is the caller's: nothing here reads a date from a row,
+// it is never returned. Names leave through safeName (a missing like-for-like measure's name whole, to 200 characters,
+// a longer one marked with its cut). Every list is capped, the rest counted. The year is the caller's: nothing here reads a date from a row,
 // and no "current year" is assumed. Pure: nothing is read or written here.
 import { createRequire } from 'node:module';
-import { lineageOf, LISTED_MAX, TIERS } from './lineage.mjs';
+import { lineageOf, LISTED_MAX, WHY_MAX, TIERS } from './lineage.mjs';
 import { safeName } from './read-report.mjs';
+import { shownName, NAME_OUT } from './model-names.mjs';
 
 const require = createRequire(import.meta.url);
 const Parser = require('../../assets/js/dax-reference-parser.js'), Health = require('../../assets/js/model-health-engine.js');
+// (0.3.3 IX2) the one DAX call reader (IX1's callsOf removed: D-1104-12)
+const { CF } = require('../../assets/js/health-confirm.js');
 const GC = require('../../assets/js/gulf-compare.js'), GM = require('../../assets/js/gulf-measures.js');
 const { K } = require('../../assets/js/model-index.js');
-export { LISTED_MAX };
+export { LISTED_MAX, WHY_MAX };
+// at most this many distances compared in the calendar (the most used first), the rest counted
+export const CALENDAR_MAX = 4;
 
 const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
 const arr = (x) => (Array.isArray(x) ? x : []);
@@ -33,7 +40,7 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 export const NAMED_MAX = 4;
 
 export const PROVES = 'From the files only: which visuals show a number that passes through a comparison with the same Gregorian dates of another period (a time-intelligence function in a measure the visual reaches), and, from the Ramadan, Eid, weekend and VAT dates DataArcus keeps with their sources, in which months those two periods differ.';
-export const NOT_PROVED = `It runs no query and reads no data: which years the data holds and whether this business's numbers move with Ramadan, an Eid or a weekend are the person's to know. A comparison written without a time-intelligence function (a filter on a year column, an offset column), a calculation group's items and what a DAX text builds at run time are not seen. The dates are the UAE's announcements (Oman's own where they differ), checked on ${GC.CHECKED}; a later date is the Umm al-Qura calendar's estimate and a sighting can move it by a day. A weekend is the government's; a private company's can differ. Say "not like for like", never "wrong".`;
+export const NOT_PROVED = `It runs no query and reads no data: which years the data holds and whether this business's numbers move with Ramadan, an Eid or a weekend are the person's to know. A comparison written without a time-intelligence function (a filter on a year column, an offset column) and what a DAX text builds at run time are not seen; the items of a calculation group are read on the visuals that use the group's column (a field or a filter), not where the group is applied another way. The dates are the UAE's announcements (Oman's own where they differ), checked on ${GC.CHECKED}; a later date is the Umm al-Qura calendar's estimate and a sighting can move it by a day. A weekend is the government's; a private company's can differ. Say "not like for like", never "wrong".`;
 
 // ---- a DAX text's comparisons ----
 // months in a unit (a day has none: no month is compared)
@@ -44,41 +51,22 @@ const BY_ARGS = ['DATEADD', 'PARALLELPERIOD'];   // ( dates, a number, a unit )
 const RUN_TIME = 'by an amount set when it runs';
 const shiftOf = (unit, n) => (n === null || !unit ? RUN_TIME : `${Math.abs(n) === 1 ? 'one ' + unit : Math.abs(n) + ' ' + unit + 's'} ${n < 0 ? 'back' : 'ahead'}`);
 const backSaid = (back) => (back % 12 === 0 ? shiftOf('year', -back / 12) : shiftOf('month', -back));
-// every call in a token list: its name, where it starts and ends, its arguments (token lists). health-confirm.js has
-// the same reader on its own lexer and does not export it: see the note's "Seen, not in scope" (one reader, stage 2).
-function callsOf(ts) {
-  const out = [];
-  ts.forEach((t, i) => {
-    const open = ts[i + 1];
-    if (t.t !== 'id' || !open || open.t !== 'op' || open.v !== '(') return;
-    const args = []; let depth = 0, start = i + 2, end = -1;
-    for (let j = i + 1; j < ts.length; j++) {
-      const v = ts[j].t === 'op' ? ts[j].v : '';
-      if (v === '(' || v === '{') depth++;
-      else if (v === ')' || v === '}') { if (!--depth) { end = j; break; } } else if (v === ',' && depth === 1) { args.push(ts.slice(start, j)); start = j + 1; }
-    }
-    if (end < 0) return;
-    if (start < end) args.push(ts.slice(start, end));
-    out.push({ name: t.v.toUpperCase(), start: i, end, args });
-  });
-  return out;
-}
 // the comparisons, with the base measure's own name (raw: for a look-up only, never returned)
 function scan(dax) {
-  const ts = Parser.tokenizeDax(Parser.exprText(dax)), calls = callsOf(ts), out = [];
+  const ts = CF.lex(Parser.exprText(dax)), calls = CF.calls(ts), out = [];
   calls.forEach((c) => {
     let unit = null, n = null;
     if (FIXED[c.name]) [unit, n] = FIXED[c.name];
     else if (BY_ARGS.includes(c.name)) {
-      const amount = arr(c.args[1]).map((t) => t.v).join(''), u = arr(c.args[2]).length === 1 ? lc(c.args[2][0].v) : '';
+      const amount = arr(c.args[1]).map((t) => t.value).join(''), u = arr(c.args[2]).length === 1 ? lc(c.args[2][0].value) : '';
       unit = Object.prototype.hasOwnProperty.call(UNITS, u) ? u : null;
-      n = unit && /^[+-]?\d+$/.test(amount) && arr(c.args[1]).every((t) => t.t === 'op' || t.t === 'num') ? Number(amount) : null;
+      n = unit && /^[+-]?\d+$/.test(amount) && arr(c.args[1]).every((t) => t.kind === 'op' || t.kind === 'number') ? Number(amount) : null;
       if (n === 0) return;
     } else return;
-    const d = arr(c.args[0]), dates = d.length === 2 && (d[0].t === 'tbl' || d[0].t === 'id') && d[1].t === 'br' ? `${safeName(d[0].v)}[${safeName(d[1].v)}]` : null;
+    const ref = CF.reference(arr(c.args[0])), dates = ref ? `${safeName(ref.table)}[${safeName(ref.column)}]` : null;
     // the base: the one measure a CALCULATE around this call filters (the innermost such CALCULATE)
     const around = calls.filter((x) => /^CALCULATE(TABLE)?$/.test(x.name) && x.args.length > 1 && c.start > x.start + 1 + x.args[0].length && c.end < x.end).pop();
-    const first = around ? around.args[0] : [], baseRaw = first.length === 1 && first[0].t === 'br' ? first[0].v : null;
+    const first = around ? CF.strip(around.args[0]) : [], baseRaw = first.length === 1 && first[0].kind === 'ref' ? first[0].value : null;
     out.push({ fn: c.name, unit, n, back: n === null || UNITS[unit] === null ? null : -n * UNITS[unit], shift: shiftOf(unit, n), dates, baseRaw });
   });
   return out;
@@ -98,14 +86,21 @@ const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 export function likeForLike(model, report, opts) {
   const o = isObj(opts) ? opts : {}, lin = lineageOf(model, report);
   // every measure's comparisons, by the lineage's own keys: the model's (m:) and the report's own (x:)
+  // (0.3.3 IX2) each key holds its rows: one for a measure, one for each item of a calculation group (the group's table
+  // key: a visual reaches it through the group's column, as a field or a filter)
   const found = new Map(), names = new Set();
-  const add = (key, name, kind, expr) => { const comps = scan(expr); if (comps.length && !found.has(key)) found.set(key, { name, kind, comps, visuals: 0 }); };
-  Health.graphStep(isObj(model) ? model : {}).M.tables.forEach((t) => t.measures.forEach((m) => { names.add(lc(m.name)); add(K.m(m.name), m.name, 'measure', m.expr); }));
+  const add = (key, name, kind, expr, label) => { const comps = scan(expr); if (!comps.length) return; if (!found.has(key)) found.set(key, { rows: [], visuals: 0 }); const f = found.get(key); if (kind !== 'calculation item' && f.rows.length) return; comps.forEach((c) => f.rows.push({ name, kind, c, label })); };
+  Health.graphStep(isObj(model) ? model : {}).M.tables.forEach((t) => {
+    t.measures.forEach((m) => { names.add(lc(m.name)); add(K.m(m.name), m.name, 'measure', m.expr); });
+    if (t.calcGroup) arr(t.calcGroup.items).forEach((ci) => add(K.t(t.name), ci.name, 'calculation item', ci.expr, `${safeName(t.name)}[${safeName(ci.name)}]`));
+  });
   arr(isObj(report) ? report.files : null).filter((f) => f && typeof f.path === 'string' && isObj(f.json) && /(^|\/)reportExtensions\.json$/i.test(f.path))
     .forEach((f) => arr(f.json.entities).filter(isObj).forEach((en) => arr(en.measures).filter(isObj).forEach((ms) => add('x:' + lc(ms.name), ms.name, 'report measure', ms.expression))));
   // a comparison a whole number of years away can have its Ramadan partner: has, none; any other: null
   const partner = (c) => (c.baseRaw === null || c.back === null || c.back % 12 !== 0 ? null : names.has(lc(partnerOf(c.baseRaw))) ? 'has' : 'none');
-  const row = (m, c) => Object.assign({ measure: label(m.name), kind: m.kind, fn: c.fn, shift: c.shift, dates: c.dates, base: c.baseRaw === null ? null : label(c.baseRaw), likeForLike: partner(c) });
+  const row = (r) => { const c = r.c; return { measure: r.label || label(r.name), kind: r.kind, fn: c.fn, shift: c.shift, dates: c.dates, base: c.baseRaw === null ? null : label(c.baseRaw), likeForLike: partner(c) }; };
+  // a missing like-for-like measure's name, whole to NAME_OUT characters (safeName's 60 would cut " Last Ramadan" off a long base); a longer one ends with its cut mark
+  const wanted = (base) => `[${shownName(partnerOf(base), NAME_OUT)}]`;
 
   const list = [], backs = new Map(), through = new Set();
   const withQuery = lin.visuals.filter((v) => v.prints).length;
@@ -113,17 +108,19 @@ export function likeForLike(model, report, opts) {
     if (!v.nodes) return;
     const comparisons = [];
     Object.keys(v.nodes).filter((k) => found.has(k)).forEach((k) => {
-      const m = found.get(k); m.visuals++; through.add(label(m.name));
-      m.comps.forEach((c) => { comparisons.push(Object.assign(row(m, c), { tier: v.nodes[k].tier, chain: chainOf(v, k) })); if (c.back !== null) backs.set(c.back, (backs.get(c.back) || 0) + 1); });
+      const m = found.get(k); m.visuals++;
+      m.rows.forEach((r) => { through.add(row(r).measure); comparisons.push(Object.assign(row(r), { tier: v.nodes[k].tier, chain: chainOf(v, k) })); if (r.c.back !== null) backs.set(r.c.back, (backs.get(r.c.back) || 0) + 1); });
     });
-    if (comparisons.length) list.push({ page: v.page, visual: v.visual, type: v.type, comparisons: comparisons.sort((a, b) => TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier)) });
+    // a visual's comparisons: the question's first, at most WHY_MAX, the rest counted
+    if (comparisons.length) list.push(Object.assign({ page: v.page, visual: v.visual, type: v.type, comparisons: comparisons.sort((a, b) => TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier)).slice(0, WHY_MAX) }, comparisons.length > WHY_MAX ? { more: comparisons.length - WHY_MAX } : {}));
   });
-  const measures = [...found.values()].flatMap((m) => m.comps.map((c) => Object.assign(row(m, c), { visuals: m.visuals })));
-  const lacking = [...new Set([...found.values()].flatMap((m) => m.comps.filter((c) => partner(c) === 'none').map((c) => label(partnerOf(c.baseRaw)))))].sort();
+  const measures = [...found.values()].flatMap((m) => m.rows.map((r) => Object.assign(row(r), { visuals: m.visuals })));
+  const lacking = [...new Set([...found.values()].flatMap((m) => m.rows.filter((r) => partner(r.c) === 'none').map((r) => wanted(r.c.baseRaw))))].sort();
 
   // the calendar: one entry for each distance the shown comparisons use, the most used first
   const year = Number.isInteger(o.year) ? o.year : null, country = typeof o.country === 'string' ? o.country : undefined;
-  const calendar = [...backs.entries()].sort((a, b) => b[1] - a[1] || b[0] - a[0]).map(([back, uses]) => {
+  const distances = [...backs.entries()].sort((a, b) => b[1] - a[1] || b[0] - a[0]);
+  const calendar = distances.slice(0, CALENDAR_MAX).map(([back, uses]) => {
     const head = { back, shift: backSaid(back), comparisons: uses };
     if (year === null) { const r = GC.rangeCompared({ back, country }); return Object.assign(head, { years: r.years, differ: r.differ, monthsCompared: r.months, estimated: r.estimated }); }
     const c = GC.monthsCompared({ year, back, country });
@@ -146,6 +143,9 @@ export function likeForLike(model, report, opts) {
       if (c.estimated) said += ` ${c.estimated} of those months rest on a date not announced yet (the Umm al-Qura calendar's estimate).`;
     }
   }
-  return Object.assign({ said, visuals: lin.visuals.length, withQuery, compared: list.length, list: list.slice(0, LISTED_MAX) }, list.length > LISTED_MAX ? { notListed: list.length - LISTED_MAX } : {},
-    { measures, lacking, calendar, proves: PROVES, notProved: NOT_PROVED });
+  // every list capped (the counts kept): the visuals and the measures at LISTED_MAX, the lacking names too, the distances at CALENDAR_MAX
+  const more = (n, cap, key) => (n > cap ? { [key]: n - cap } : {});
+  return Object.assign({ said, visuals: lin.visuals.length, withQuery, compared: list.length, list: list.slice(0, LISTED_MAX) }, more(list.length, LISTED_MAX, 'notListed'),
+    { measures: measures.slice(0, LISTED_MAX) }, more(measures.length, LISTED_MAX, 'measuresNotListed'), { lacking: lacking.slice(0, LISTED_MAX) }, more(lacking.length, LISTED_MAX, 'lackingNotListed'),
+    { calendar }, more(distances.length, CALENDAR_MAX, 'calendarNotListed'), { proves: PROVES, notProved: NOT_PROVED });
 }

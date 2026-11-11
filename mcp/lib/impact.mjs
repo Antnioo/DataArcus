@@ -3,6 +3,11 @@
 //   impactCheck(path, against, againstModel)   check_report's option againstModel: the report read on an earlier model
 //                                              (a backup's or a git checkout's) and on its own; which visuals can show
 //                                              another number, each with its chain of names (section impactCheck)
+//   likeForLike(path, opts, read)              check_report's option likeForLike (0.3.3 IX2, IX1's stage 2): the report
+//                                              read on its own model; which visuals compare with the same Gregorian dates
+//                                              and in which months of a year that is not like for like in the Gulf
+//                                              (like-for-like.mjs; section likeForLike)
+//   readOnModel(path, option)                  the one reading both sections share: the report and its own model
 //   reach(modelPath, what)                     read_model's option reach: the pages and visuals of every report beside
 //                                              the model that a measure, a column or a table reaches, by tier
 // Never a value: the lineage compares definitions and filters by hash and returns names (safeName) and words only; this
@@ -12,6 +17,7 @@ import path from 'node:path';
 import { loadModel } from './model.mjs';
 import { locate, diskSource, jsonOpt, inventory, safeName } from './read-report.mjs';
 import { lineageOf, compareLineage, reachOf, LISTED_MAX, PROVES, NOT_PROVED, TIERS } from './lineage.mjs';
+import { likeForLike as lflOf } from './like-for-like.mjs';
 
 const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
 const arr = (x) => (Array.isArray(x) ? x : []);
@@ -32,13 +38,20 @@ function reportOf(p) {
   return { loc, files, model: typeof by === 'string' && by ? path.resolve(loc.reportDir, by) : null, unread: inv.unreadableFiles.length + sk.big.length + sk.deep + (sk.links || []).length + (sk.capped ? 1 : 0) };
 }
 
+// (0.3.3 IX2) the report (path) and its own model, read once: againstModel and likeForLike share it (one reading)
+export function readOnModel(p, option) {
+  const after = reportOf(p);
+  if (!after.model) throw new Error(`check_report's ${option} reads "${safeName(p)}" on its own model, and its definition.pbir names no model folder (byPath): give a report saved with its model (a .pbip project). Nothing was compared.`);
+  return { after, now: loadModel(after.model) };
+}
+const unreadOf = (...models) => models.reduce((n, m) => n + arr(m.skipped).length + (m.partsSkipped || 0), 0);
+
 // after: the report check_report checks (path) on its own model; before: against (or path) on againstModel
-export function impactCheck(p, against, againstModel) {
-  const after = reportOf(p), before = against != null ? reportOf(against) : after;
-  if (!after.model) throw new Error(`check_report's againstModel reads "${safeName(p)}" on two models, and its definition.pbir names no model folder (byPath): give a report saved with its model (a .pbip project). Nothing was compared.`);
-  const now = loadModel(after.model), then = loadModel(againstModel);
+export function impactCheck(p, against, againstModel, read) {
+  const { after, now } = read || readOnModel(p, 'againstModel'), before = against != null ? reportOf(against) : after;
+  const then = loadModel(againstModel);
   const c = compareLineage(lineageOf(then.tmsl, { files: before.files }), lineageOf(now.tmsl, { files: after.files }));
-  const unreadModel = arr(now.skipped).length + arr(then.skipped).length + (now.partsSkipped || 0) + (then.partsSkipped || 0);
+  const unreadModel = unreadOf(now, then);
   const section = Object.assign({ said: c.said, models: { before: then.source, after: now.source } }, c);
   delete section.tiers; delete section.proves; delete section.notProved;
   // in doubt, more: a model file not read fully means what it defines was not compared, so no visual is said unchanged
@@ -52,6 +65,19 @@ export function impactCheck(p, against, againstModel) {
   // its share of check_report's answer
   const all = section.differ.length + (section.notListed || 0);
   while (JSON.stringify(section).length > SECTION_MAX && section.differ.length > 1) { section.differ = section.differ.slice(0, Math.floor(section.differ.length * 0.8)); section.notListed = all - section.differ.length; }
+  return section;
+}
+
+// (0.3.3 IX2) likeForLike: { year, country } (gulf-compare.js's); read: readOnModel's, when againstModel read it already
+export function likeForLike(p, opts, read) {
+  const { after, now } = read || readOnModel(p, 'likeForLike');
+  const section = lflOf(now.tmsl, { files: after.files }, opts);
+  // what was not read is said: a measure or a visual in it is not counted (the count can only be higher)
+  const unread = { model: unreadOf(now), report: after.unread };
+  if (unread.model || unread.report) section.unread = Object.assign(unread, { note: 'model or report files that could not be read fully: a comparison or a visual in them is not counted, so more visuals can compare than said' });
+  // its share of check_report's answer: the visuals listed cut, the counts kept
+  const all = section.compared;
+  while (JSON.stringify(section).length > SECTION_MAX && section.list.length > 1) { section.list = section.list.slice(0, Math.floor(section.list.length * 0.8)); section.notListed = all - section.list.length; }
   return section;
 }
 
