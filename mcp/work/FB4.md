@@ -7,7 +7,8 @@
   mcp/WORK.md, this note. Nothing else.
 - **Expected checks:** new fb4 suite red on the base first; fb1 pins unchanged in geometry (topN is not in them);
   `node scripts/check-modules.mjs --strict`; contracts; lint 0; CI green.
-- **Resume:** code, recorders and note done; CI run and the DONE line are the last step.
+- **Resume:** DONE (2026-11-11T22:05Z): the tip is ready to merge; nothing left on this branch.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/43102845002 on 44f66ba0bb16e28bfad3d1dc711045af802714e8 (2026-11-11T22:05Z; conclusion success; integration had not moved, no merge). DONE
 
 ## Measured first, on the base 58bf3de5 (2026-11-11T20:52Z)
 - **Item 1 (topN).** computeSlots sets `topN` from categoryFit on the 720 grid (design-metrics.js:242); fitSlots never
