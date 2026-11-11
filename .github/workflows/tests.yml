@@ -400,7 +400,8 @@ jobs:
         # new plan (run 42960363450, macOS): shards 0-4 took 513, 560, 805, 737, 734 s; that run's jobs, grouped
         # 0 1 / 2 3 / 4, took 1099, 1577 and 759 s (before: 0 / 2 3 / 1 4 took 860, 1578 and 1204 s). The plan stays
         # as it is (it is a function of test-times.json), so the shards' sizes are fixed: grouped by those seconds,
-        # 0 2 / 1 3 / 4 are 1318, 1297 and 734 s. 3 jobs, not 5 (each job a chance to wait for a runner; 40 minutes is the limit).
+        # 0 2 / 1 3 / 4 are 1318, 1297 and 734 s; measured again grouped so (run 42963522249): 1744 s, the same shard 4 took 970 s
+        # (734 s before): macOS runner noise of about 40% is more than a regrouping moves. 3 jobs, not 5 (each job a chance to wait for a runner; 40 minutes is the limit).
         # --keep-going, and a failed shard does not stop the next one; the job fails at its end.
         include:
           - job: 0
