@@ -11,6 +11,9 @@ package's manifest; this file says what is in it.
 - A page with its filters in a side rail is filled better: the KPI cards run across the whole page above the rail and the
   charts beside the rail take the rail's height, so the room under the rail is no longer left empty and the Details page's
   main chart is 312 high on a 1920 x 1080 page, not 168. Pages without a side rail are unchanged.
+- A single-focus page with two or three filters in a side rail no longer leaves an empty area under the rail: the text
+  box moves under the rail and the chart takes the whole width beside them (1560 x 789 on a 1920 x 1080 page, was 1064
+  wide). The page-fill measure now also gives each page's row balance (the first row of charts over the row under it).
 - The Arabic chart title for "Top N of M" now reads «أعلى N من أصل M: ...» (it could be read as "N higher than M"); the twin's
   drafts and the Arabic terminology sheet use the new words.
 - The Arabic approval page's first line no longer repeats the generic folder words in brackets: the bracket shows the
