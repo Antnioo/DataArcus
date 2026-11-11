@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-11T13:03Z",
+  "generated_at": "2026-11-11T18:56Z",
   "today": {
     "date": "2026-11-11",
-    "cost_usd": 148.03,
-    "tokens": 335905534,
-    "sessions": 26,
+    "cost_usd": 196.43,
+    "tokens": 454446552,
+    "sessions": 35,
     "by_kind": {
       "builder": {
-        "cost_usd": 131.27,
-        "count": 13
+        "cost_usd": 172.11,
+        "count": 18
       },
       "worker": {
-        "cost_usd": 16.76,
-        "count": 13
+        "cost_usd": 24.32,
+        "count": 17
       },
       "probe": {
         "cost_usd": 0,
@@ -26,16 +26,16 @@
     },
     "by_model": {
       "sonnet": {
-        "cost_usd": 18.49,
-        "count": 13
+        "cost_usd": 25.11,
+        "count": 16
       },
       "opus": {
-        "cost_usd": 34.86,
-        "count": 6
+        "cost_usd": 51.88,
+        "count": 10
       },
       "fable": {
-        "cost_usd": 94.68,
-        "count": 7
+        "cost_usd": 119.44,
+        "count": 9
       }
     }
   },
@@ -120,12 +120,57 @@
     },
     {
       "date": "2026-11-11",
-      "cost_usd": 148.03,
-      "tokens": 335905534,
-      "sessions": 26
+      "cost_usd": 196.43,
+      "tokens": 454446552,
+      "sessions": 35
     }
   ],
   "jobs": [
+    {
+      "id": "SN1",
+      "title": "SN1: today's seen-not-in-scope items that are safe (D-1111-17)",
+      "model": "sonnet",
+      "cost_usd": 2.49,
+      "tokens": 14047845,
+      "minutes": 57,
+      "finished_at": "2026-11-11T18:44Z"
+    },
+    {
+      "id": "IX2",
+      "title": "IX2: like for like in check_report (IX1 stage 2, D-1111-17)",
+      "model": "opus",
+      "cost_usd": 8.15,
+      "tokens": 25151768,
+      "minutes": 50,
+      "finished_at": "2026-11-11T18:37Z"
+    },
+    {
+      "id": "MR2",
+      "title": "MR2: lessons, backlog, asks as records + one lookup (C-09, D-1111-17)",
+      "model": "opus",
+      "cost_usd": 5.44,
+      "tokens": 13477264,
+      "minutes": 18,
+      "finished_at": "2026-11-11T18:05Z"
+    },
+    {
+      "id": "IX1",
+      "title": "IX1: ideas that make DataArcus one of a kind (inside-out, D-1111-15)",
+      "model": "fable",
+      "cost_usd": 12.23,
+      "tokens": 20147178,
+      "minutes": 108,
+      "finished_at": "2026-11-11T17:17Z"
+    },
+    {
+      "id": "OX1",
+      "title": "OX1: ideas that make DataArcus one of a kind (outside-in, D-1111-15)",
+      "model": "fable",
+      "cost_usd": 12.53,
+      "tokens": 15154183,
+      "minutes": 107,
+      "finished_at": "2026-11-11T17:16Z"
+    },
     {
       "id": "TL1",
       "title": "TL1: the smallest clear tools/list DataArcus sends, nothing lost (D-1111-14)",
@@ -440,56 +485,11 @@
       "tokens": 11616231,
       "minutes": 82,
       "finished_at": "2026-11-10T00:51Z"
-    },
-    {
-      "id": "TC1",
-      "title": "TC1: the type-checking pilot on the shared library (D-1108-13, B-396)",
-      "model": "sonnet",
-      "cost_usd": 2.01,
-      "tokens": 11461455,
-      "minutes": 51,
-      "finished_at": "2026-11-09T22:19Z"
-    },
-    {
-      "id": "HC2",
-      "title": "HC2: the month-sort rule also finds a Hijri month column named in Arabic (B-425)",
-      "model": "sonnet",
-      "cost_usd": 0.94,
-      "tokens": 4614999,
-      "minutes": 27,
-      "finished_at": "2026-11-09T21:56Z"
-    },
-    {
-      "id": "PQ1",
-      "title": "PQ1: the PL-300 bank without the length giveaway; the count from the bank (D-1108-17, B-400, B-401)",
-      "model": "sonnet",
-      "cost_usd": 3.97,
-      "tokens": 18185959,
-      "minutes": 86,
-      "finished_at": "2026-11-09T20:56Z"
-    },
-    {
-      "id": "WE1",
-      "title": "WE1: the write tools say their coded errors in Arabic when called with lang ar explicitly (B-419, A-LG1-2)",
-      "model": "opus",
-      "cost_usd": 3.04,
-      "tokens": 7385842,
-      "minutes": 55,
-      "finished_at": "2026-11-09T20:48Z"
-    },
-    {
-      "id": "LK1",
-      "title": "LK1: a linked visuals folder is named, its page is not \"0 visuals\", one link counts once (B-415, AUD-057)",
-      "model": "opus",
-      "cost_usd": 5.68,
-      "tokens": 16512233,
-      "minutes": 75,
-      "finished_at": "2026-11-09T20:44Z"
     }
   ],
   "workers": {
-    "count": 13,
-    "cost_usd": 16.76,
+    "count": 17,
+    "cost_usd": 24.32,
     "costliest": [
       {
         "label": "worker 00:47",
@@ -498,16 +498,16 @@
         "started": "2026-11-11T00:48Z"
       },
       {
-        "label": "worker 02:48",
-        "cost_usd": 1.98,
-        "minutes": 7,
-        "started": "2026-11-11T02:48Z"
-      },
-      {
         "label": "worker 03:52",
         "cost_usd": 2.67,
         "minutes": 7,
         "started": "2026-11-11T03:53Z"
+      },
+      {
+        "label": "worker 17:02",
+        "cost_usd": 2.76,
+        "minutes": 78,
+        "started": "2026-11-11T17:02Z"
       }
     ]
   },
@@ -533,9 +533,9 @@
       "cost_usd": 13.23
     },
     {
-      "label": "FB3",
+      "label": "OX1",
       "kind": "builder",
-      "cost_usd": 10.46
+      "cost_usd": 12.53
     }
   ]
 }
