@@ -132,7 +132,10 @@ try {
   // (0.3.3 FB1, changed on purpose: 4 -> 3 title measures) the Details page's main chart beside the rail is 312 high,
   // not 168 (the cards' row lies over the rail), so it holds as many categories as the other chart by Plan Group and the
   // two share one title measure: "Title: ... by Plan Group (2)" and its Arabic one are no longer written
-  chk(() => arTitles.length === 3 && arTitles.every((m) => /أعلى " & UNICHAR \( 8296 \) & _s & UNICHAR \( 8297 \) & " من أصل " & UNICHAR \( 8296 \) & _n & UNICHAR \( 8297 \) & ": النقاط حسب/.test(m.expression) && /RETURN IF \( _s = _n, "النقاط حسب/.test(m.expression) && m.dataType === 'Text'), () => `T-1. the twin has its own Arabic title measures, the same DAX with the Arabic texts: ${JSON.stringify(arTitles.map((m) => [m.name, m.expression.slice(-200)]))}`);
+  // (0.3.3 FB4, changed on purpose: 3 -> 4 title measures) a chart's Top N follows the size its page ends with, so the three
+  // charts by Coupon Region (different heights) hold different counts and each has its own title measure: "Title AR: ...
+  // by Coupon Region" and its "(2)" and "(3)"; Plan Group's stays one
+  chk(() => arTitles.length === 4 && arTitles.every((m) => /أعلى " & UNICHAR \( 8296 \) & _s & UNICHAR \( 8297 \) & " من أصل " & UNICHAR \( 8296 \) & _n & UNICHAR \( 8297 \) & ": النقاط حسب/.test(m.expression) && /RETURN IF \( _s = _n, "النقاط حسب/.test(m.expression) && m.dataType === 'Text'), () => `T-1. the twin has its own Arabic title measures, the same DAX with the Arabic texts: ${JSON.stringify(arTitles.map((m) => [m.name, m.expression.slice(-200)]))}`);
   const titleRefs = (pages) => pages.flatMap((pg) => pg.visuals.map((v) => { const t = ((((v.visual || {}).visualContainerObjects || {}).title || [])[0] || {}).properties || {}; return t.text && t.text.expr && t.text.expr.Measure ? t.text.expr.Measure.Property : null; }).filter(Boolean));
   const twinPages = pagesOf('large/Golden AR.Report'), origPages = pagesOf('large/Golden.Report');
   chk(() => titleRefs(twinPages).length === titleRefs(origPages).length && titleRefs(twinPages).every((n) => /^Title AR: /.test(n)) && titleRefs(origPages).every((n) => /^Title: /.test(n)), () => `T-1. every twin title measure reference is the Arabic one; the original keeps its own: twin ${titleRefs(twinPages)} | original ${titleRefs(origPages)}`);

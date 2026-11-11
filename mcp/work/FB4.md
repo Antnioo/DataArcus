@@ -38,6 +38,11 @@
   sp3 (16), sp4 (3), sp5 (2), sp13 (2), sp28 (3), sp43 (7). fb1, sp7, sp23, sp29, sp44 re-recorded: no change.
 - sp3 L1 (by hand, BASE_EXT d87bede3 -> db46d4c6): the file diffed: only "Keep: Total Sales by Region (2)", "Title: ... (3)" and
   "Title AR: ... (3)" appear (the Details chart by Region now holds 5 categories, the other 9, so they no longer share a measure set).
+- CI run 43099779603 on 207ff15e was red (five suites my area run had not reached; 2026-11-11T21:30Z), each fixed on purpose:
+  golden-baseline task 6 longTitleUses 124 -> 126 (test-models/golden-expected.json, its "why" says it); rc24 T-1 title measures
+  3 -> 4 (three charts by Coupon Region hold different counts, each its own Title AR measure); fn1h pins re-recorded (FN1H_RECORD,
+  sha256 and length keys only, 104 keys); website sp31 C12 (the zip's one visual.json: its Top N; SP31_RECORD, 2 hashes); mutation
+  was red only because its baseline is golden. Lesson: run the full report area before the first CI, not after.
 - website design-engine cases.json: re-captured, 54 of 54 cases identical (only meta moved): not committed.
 ## Tests
 fb4 (new, `area report`): 14 checks, red on 58bf3de5 first (the base: T1 "[[440,312,9,9]]", T4 386 stale slots, T7, F2) and green now.
