@@ -187,6 +187,15 @@ try {
     const r = ci({ 'mcp-shard-0.log': log, ...parts });
     assert.equal(r.status, 1, r.stdout); assert.deepEqual(causesOf(r), ['zero-checks mcp/test-b.mjs']);
   });
+  // (TR2 ask 7) a floor per suite (mcp/test-checks.json): fewer checks than the floor fails by its own cause, equal or more passes
+  const floors = (o) => { const f = path.join(fs.mkdtempSync(path.join(D, 'floors-')), 'test-checks.json'); fs.writeFileSync(f, JSON.stringify({ suites: o })); return ['--floors', f]; };
+  t('ci-sum: a suite under its floor in test-checks.json fails (fewer-checks); at or over it passes; no floor passes', () => {
+    const r = ci({ 'mcp-shard-0.log': ok0, ...parts }, floors({ a: 6, b: 6 }));
+    assert.equal(r.status, 1, r.stdout); assert.deepEqual(causesOf(r), ['fewer-checks mcp/test-a.mjs']); assert.match(r.stdout, /a: 5 checks, its floor in mcp\/test-checks\.json is 6/);
+    assert.equal(ci({ 'mcp-shard-0.log': ok0, ...parts }, floors({ a: 5, b: 3 })).status, 0, 'at and over the floor passes');
+    assert.equal(ci({ 'mcp-shard-0.log': ok0, ...parts }, floors({})).status, 0, 'no floor, no check');
+    assert.equal(ci({ 'mcp-shard-0.log': ok0, ...parts }, floors({ mcp: 99999 })).status, 0, 'the sharded suite has no floor of its own');
+  });
   t('ci-sum: a suite in two shards fails as duplicate-suite', () => {
     const r = ci({ 'mcp-shard-0.log': ok0, 'mcp-shard-1.log': parts['mcp-shard-1.log'] + 'PASS  a  5 checks\n', 'mcp-shard-2.log': parts['mcp-shard-2.log'] });
     assert.equal(r.status, 1, r.stdout); assert.ok(causesOf(r).includes('duplicate-suite mcp/test-a.mjs'), causesOf(r).join('; '));

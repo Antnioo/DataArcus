@@ -453,16 +453,22 @@ jobs:
         # (CI2) 3 jobs, not 5 (each job a chance to wait for a runner): each runs its plan shards in turn, the same plan
         # shards k 0-4 as Linux and Windows (test.mjs's part k, a SKIP in shard 0, and the mcp/tests.json suites
         # planShards deals to k on macOS by mcp/test-times.json), each with its own log and manifest, so ci-sum checks
-        # every shard against the same plan and counts each suite once. Grouped by the seconds measured on this Intel
-        # runner (run 41891982211: shards 0-4 928, 585, 860, 545, 566 s; 2 jobs of 0-2 and 3-4 hit the 40 minutes):
-        # 928, 1405 and 1151 s. --keep-going, and a failed shard does not stop the next one; the job fails at its end.
+        # every shard against the same plan and counts each suite once. (TR2 ask 2, 11 Nov) mcp/test-times.json was
+        # refreshed from run 42891716144 (all 246 suites, was 113), so the plan deals the 5 shards evenly by those
+        # times (708 s each; the old file said 445 and the real shards were 818, 820, 730, 583, 590 s). Measured on the
+        # new plan (run 42960363450, macOS): shards 0-4 took 513, 560, 805, 737, 734 s; that run's jobs, grouped
+        # 0 1 / 2 3 / 4, took 1099, 1577 and 759 s (before: 0 / 2 3 / 1 4 took 860, 1578 and 1204 s). The plan stays
+        # as it is (it is a function of test-times.json), so the shards' sizes are fixed: grouped by those seconds,
+        # 0 2 / 1 3 / 4 are 1318, 1297 and 734 s; measured again grouped so (run 42963522249): 1744 s, the same shard 4 took 970 s
+        # (734 s before): macOS runner noise of about 40% is more than a regrouping moves. 3 jobs, not 5 (each job a chance to wait for a runner; 40 minutes is the limit).
+        # --keep-going, and a failed shard does not stop the next one; the job fails at its end.
         include:
           - job: 0
-            shards: 0
+            shards: 0 2
           - job: 1
-            shards: 2 3
+            shards: 1 3
           - job: 2
-            shards: 1 4
+            shards: 4
     defaults:
       run:
         shell: bash

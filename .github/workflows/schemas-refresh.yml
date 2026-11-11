@@ -1,0 +1,50 @@
+name: Refresh the saved report schemas
+
+# TR2 ask 3 (D-1111-06): the validator test (custom-visuals-lab CL-2) reads Microsoft's JSON schemas from a saved copy,
+# mcp/lab/schemas/, never the network. Every Monday this job asks Microsoft's published schemas again and, when one
+# differs, uploads the refreshed copy as an artifact and a warning. It never commits, opens no pull request and gates
+# nothing: the reviewer takes the files in a job of their own (node lab/refresh-schemas.mjs --write, then CL-2b's pins).
+
+on:
+  schedule:
+    - cron: '41 5 * * 1'  # every Monday 05:41 UTC, after microsoft-watch
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: schemas-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - name: Install the pinned validator
+        working-directory: mcp
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Ask Microsoft's schemas again and save what differs
+        working-directory: mcp
+        run: |
+          node lab/refresh-schemas.mjs --write | tee "$RUNNER_TEMP/refresh.txt"
+          if git diff --quiet -- lab/schemas; then echo "Saved schemas are current." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::A saved report schema differs from Microsoft's: take the artifact (schemas-refreshed) in a reviewed job"
+            { echo "### Saved schemas differ"; echo '```'; cat "$RUNNER_TEMP/refresh.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+            echo "CHANGED=1" >> "$GITHUB_ENV"
+          fi
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: env.CHANGED == '1'
+        with:
+          name: schemas-refreshed
+          path: mcp/lab/schemas
