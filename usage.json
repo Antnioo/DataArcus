@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-10T23:02Z",
+  "generated_at": "2026-11-11T00:03Z",
   "today": {
-    "date": "2026-11-10",
-    "cost_usd": 150.68,
-    "tokens": 497336385,
-    "sessions": 45,
+    "date": "2026-11-11",
+    "cost_usd": 0,
+    "tokens": 0,
+    "sessions": 0,
     "by_kind": {
       "builder": {
-        "cost_usd": 112.94,
-        "count": 21
+        "cost_usd": 0,
+        "count": 0
       },
       "worker": {
-        "cost_usd": 37.74,
-        "count": 24
+        "cost_usd": 0,
+        "count": 0
       },
       "probe": {
         "cost_usd": 0,
@@ -24,28 +24,9 @@
         "count": 0
       }
     },
-    "by_model": {
-      "sonnet": {
-        "cost_usd": 41.01,
-        "count": 30
-      },
-      "opus": {
-        "cost_usd": 60.89,
-        "count": 13
-      },
-      "fable": {
-        "cost_usd": 48.78,
-        "count": 2
-      }
-    }
+    "by_model": {}
   },
   "days": [
-    {
-      "date": "2026-10-28",
-      "cost_usd": 0,
-      "tokens": 0,
-      "sessions": 0
-    },
     {
       "date": "2026-10-29",
       "cost_usd": 0,
@@ -120,9 +101,15 @@
     },
     {
       "date": "2026-11-10",
-      "cost_usd": 150.68,
-      "tokens": 497336385,
-      "sessions": 45
+      "cost_usd": 153.12,
+      "tokens": 503169609,
+      "sessions": 47
+    },
+    {
+      "date": "2026-11-11",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
     }
   ],
   "jobs": [
@@ -488,54 +475,9 @@
     }
   ],
   "workers": {
-    "count": 24,
-    "cost_usd": 37.74,
-    "costliest": [
-      {
-        "label": "worker 00:48",
-        "cost_usd": 3.88,
-        "minutes": 37,
-        "started": "2026-11-10T00:48Z"
-      },
-      {
-        "label": "worker 14:50",
-        "cost_usd": 3.41,
-        "minutes": 24,
-        "started": "2026-11-10T14:50Z"
-      },
-      {
-        "label": "worker 18:47",
-        "cost_usd": 3.23,
-        "minutes": 6,
-        "started": "2026-11-10T18:48Z"
-      }
-    ]
+    "count": 0,
+    "cost_usd": 0,
+    "costliest": []
   },
-  "top": [
-    {
-      "label": "TA6",
-      "kind": "builder",
-      "cost_usd": 26.1
-    },
-    {
-      "label": "FB1",
-      "kind": "builder",
-      "cost_usd": 22.68
-    },
-    {
-      "label": "LA1",
-      "kind": "builder",
-      "cost_usd": 10.52
-    },
-    {
-      "label": "OR2",
-      "kind": "builder",
-      "cost_usd": 8.83
-    },
-    {
-      "label": "LC2",
-      "kind": "builder",
-      "cost_usd": 8.09
-    }
-  ]
+  "top": []
 }
