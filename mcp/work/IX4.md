@@ -11,7 +11,7 @@
 - **Expected checks:** new suite `gulf-like-for-like` (about 30 checks), red on 274b3499 first (no page);
   `node scripts/check-modules.mjs --strict` PASS; check-min, test-site-config, ar-pages, csp, sitemap-lastmod PASS;
   ix1 64 and ix2 33 unchanged; the website suites the page or locale-routes touch, each alone; lint exit 0; CI.
-- **Resume:** planning (2026-11-11T22:23Z).
+- **Resume:** last code commit pushed; CI on it (2026-11-11T23:16Z). Then DONE or the failing check.
 
 ## The plan (written before the code, 2026-11-11T22:23Z)
 1. **The dates first (OA1).** gulf-dates.js's estimates came from ICU. Measured here, before any page: .NET 8.0.134's
@@ -71,8 +71,24 @@
   translations, remove the path from `AR_HELD` and the `data-ar-held` mark, then `node scripts/ar-pages.mjs --write`.
   A visitor who saved Arabic sees the site's menu in Arabic and the tool in English, left to right (`#lfTool`).
 
-## Results
-(filled from the runs below)
+## Results (from the runs' own output)
+- `gulf-like-for-like` PASS 75 checks; red on 274b3499 first (25 problems of 54 checks; no page, so the browser block
+  did not run).
+- ix1 PASS 64, ix2 PASS 33 (unchanged, after the engine export and again after the merge with OX2); ox2 PASS 29.
+- `node scripts/check-modules.mjs --strict` PASS 1257 (225 files, 225 rows; after the merge); check-contracts PASS 858;
+  test-contracts PASS 14; check-result-lines PASS 250; check-agent-memory PASS 523; check-min exit 0 (144 .min.js),
+  stamps PASS 1282; csp: all 143 pages carry their policy; `node scripts/test-site-config.mjs` PASS (79 URLs, 82
+  pages); `node scripts/ar-pages.mjs --write` wrote `ar/tools/index.html` only; sitemap-lastmod: all dates match;
+  changelog-words PASS 62; eslint on the changed files exit 0.
+- CI run 43115221844 on b858b7dc: every MCP part (Linux 5, Windows 5), website-checks and website shards 2 and 3 green;
+  shard 1 red in `site`: "tools/gulf-like-for-like.html ar 390px: meta not in the page language" (the suite tests every
+  page in Arabic too; a held page has none). Fix: `scripts/tests/lib.mjs` `langsOf` gives a held page English only (as
+  build/), from the same `AR_HELD`. Red on b858b7dc first (that CI run), then `site` PASS 655 alone here (657 in the
+  red run: the held page's Arabic visits are no longer made, on purpose), `lang-switcher` PASS 1491 alone (it reads
+  `langsOf` too), `gulf-like-for-like` PASS 75.
+- A local one-at-a-time run of every website suite (R-64) passed components, dd2z, dd2w, design-engine, anchors, then
+  showed the same `site` failure; I stopped it there (the CI run had already covered the other suites) and ran the two
+  suites `langsOf` touches alone after the fix.
 
 ## CHANGELOG line
 - **On dataarcus.com, a free page from the same dates:** "Is this month like last year's?" (tools/gulf-like-for-like.html)
@@ -98,7 +114,9 @@
    page (inline scripts are copied byte for byte to the Arabic hub, English names, as every other item there).
 8. **og:image:** the existing `assets/img/og/gulf-calendar.jpg` (no new picture; R-59 not triggered).
 9. **WORK.md** was at its cap after the merge with OX2: my entry is " IX4." (as OX2's), nothing else cut.
-10. **Not linked to the MCP's `check_report` from the page:** 0.3.3 is not released, so the page would claim a feature
+10. **A held page is English only in the website suites** (`langsOf`, `scripts/tests/lib.mjs`), from `AR_HELD`; my
+    own suite still opens it at 390 px with Arabic saved (the tool stays left to right, no sideways scroll).
+11. **Not linked to the MCP's `check_report` from the page:** 0.3.3 is not released, so the page would claim a feature
     users cannot download yet.
 
 ## For the owner
