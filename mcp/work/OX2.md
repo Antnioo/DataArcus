@@ -1,3 +1,10 @@
+STOP: CI cannot start (2026-11-11T20:47Z). Every run of tests.yml since 20:31Z ends in `startup_failure` with no job:
+this branch on 8277fced (43096526086, 43097384331) and the unchanged `integration/0.3.3` at 1e5c539a (43097861380, one
+diagnostic dispatch). GitHub says "likely failed because of a workflow file issue", yet tests.yml is the base's (no
+`.github` change on this branch) and the base's runs started at 19:26Z; the proxy refuses the Actions settings path, so
+the cause (Actions minutes, a spending limit, an allowed-actions policy) cannot be read from here. The owner checks the
+repository's Actions settings; then the reviewer runs CI on this branch. Every local check is green ("Results").
+
 ## Summary
 - **Approval:** the owner, 11 Nov, D-1111-16 ("go for your recommendations": OX1's asks, the brief check next, the
   Arabic verdicts drafted for approval, "Revenue by month and region" answers "Revenue by month", worded "answers it,
@@ -18,7 +25,8 @@
   lineage.mjs alone); ox1 57 (X9, not X10 as the plan said, changed on purpose); fn1e 591, sp20 8, sp41 25 (each +1,
   their base recordings unchanged); sn1 20 (T6 bound moved on purpose); every other suite naming check_report unchanged
   (72 run, "Results"); tools/list 59,592 -> 60,532; `node scripts/check-modules.mjs --strict` PASS 1251.
-- **Resume:** code pushed; CI next (the line below once read).
+- **Resume:** code done and pushed (8277fced); STOP above: CI cannot start for any branch. Next: once Actions starts
+  again, `gh workflow run tests.yml --ref feat/0.3.3-ox2` and read it; nothing else is left.
 
 ## The plan (written 2026-11-11T20:10Z, before any code)
 1. **One reading.** check-report.mjs reads the report once (`walk`, `diskSource`, `inventory`) and hands that reading
