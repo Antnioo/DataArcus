@@ -6,7 +6,7 @@
  */
 /* global MHEngine, TmdlModel */
 // a model file's bytes to text and the size limits (0.3.2 DD2D: model-file.js, the MCP's too) first; the DAX tokens and report references (0.3.2 SP9), the model index (SP15), the rule texts, the rules and the questions (SP27), all before the engine; the engine, and the TMDL reader the MCP uses for projects saved as TMDL (Power BI Desktop's default)
-importScripts('model-file.min.js?v=47bc00d4a4cb', 'dax-reference-parser.min.js?v=dce038c72310', 'model-index.min.js?v=0302b5d27b99', 'health-texts.min.js?v=dc21adf6917d', 'health-rules.min.js?v=e604a64d4feb', 'health-confirm.min.js?v=c9b40542eee2', 'model-health-engine.min.js?v=eae0f55d972c', 'tmdl-model.min.js?v=f4832d0d3ac0');
+importScripts('model-file.min.js?v=47bc00d4a4cb', 'dax-reference-parser.min.js?v=dce038c72310', 'model-index.min.js?v=0302b5d27b99', 'health-texts.min.js?v=dc21adf6917d', 'health-rules.min.js?v=e604a64d4feb', 'health-confirm.min.js?v=eb4cc43fe6ee', 'model-health-engine.min.js?v=eae0f55d972c', 'tmdl-model.min.js?v=f4832d0d3ac0');
 
 const post = (type, data) => self.postMessage(Object.assign({ type }, data || {}));
 
