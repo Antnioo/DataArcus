@@ -13,7 +13,10 @@
 1. This note (commit, push). 2. The test, red on the base (the script does not exist). 3. The script, green.
 4. `.claude/settings.json`, the two wordings, MODULES.md row, WORK.md line. 5. Checks, merge origin/integration/0.3.3 once, CI, wait.
 - The hook: Stop, on `fix/*` or `feat/*` only. Refuses (exit 2, message on stderr) when the note `mcp/work/<CODE>.md` has no
-  `CI green: <url> on <sha>` naming the head, no `STOP:` line and no question under "## For the owner". Allows after 3
+  `CI green: <url> on <sha>` naming the head, no `STOP:` line and no question under "
+- CI run 42952240376 was red: `scripts/test-results-adapter.mjs` pinned the old local-loop text of mcp/CLAUDE.md (job website-checks, "AssertionError: mcp/CLAUDE.md"). I changed that one test to the new sentence (outside the listed scope; the wording change requires it); TESTS.md keeps its old check.
+
+## For the owner". Allows after 3
   refusals in a row (count in a file under os.tmpdir(), keyed by branch). Any read failure: allow and print why.
 - Test cases: no CI line; CI line on an older sha; CI line on the head; STOP: line; a question for the owner; the 4th call
   after 3 refusals; integration branch; unreadable git; plus a note-only commit after the green run.
@@ -59,3 +62,4 @@ none (nothing a user sees).
   tests.yml steps, a file another builder owns; the brief's scope list and its file ban collide there.
 - State at 2026-11-11T03:21Z: code done, checks next.
 - State at 2026-11-11T03:36Z: CI 1 red (results-adapter pinned old wording), fixed, CI 2 next.
+- **CI green: https://github.com/Antnioo/DataArcus/actions/runs/42953863979 on aea7ab5f131d4a618eb3f195fcbf9dff8a97a3a7** (second run; first red, see Decisions). State at 2026-11-11T03:50Z: DONE.
