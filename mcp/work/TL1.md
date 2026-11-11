@@ -18,7 +18,10 @@
   585, 636, 340); `node scripts/check-modules.mjs --strict` PASS 1237, check-contracts PASS 858, test-contracts PASS
   14, check-agent-memory PASS 517, check-result-lines PASS 246, changelog-words PASS 51,
   `node scripts/test-site-config.mjs` PASS, `npm run lint` 0.
-- **Resume:** built and pushed; CI on the branch is the last step (its line is at the end of this note).
+- **Resume:** DONE. `npm test -- core` 16 suites passed after the last code commit; `origin/integration/0.3.3` had
+  nothing new to merge (still 36abdcd2). The reviewer: review and merge. The owner: "For the owner" 1.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/43021744199 on 7238b7595ae63b4c2944ff9ea46e5936ac094a7f
+  (2026-11-11T12:55Z; Linux 5 of 5 shards, Windows 5 of 5, the website success, macOS skipped by the workflow). DONE.
 - **Result:** every chat starts with 16,088 fewer characters (about 3,700 fewer tokens by the stand-in tokenizer); the
   same 11 tools, 144 options, types, enums, required lists and limits; both rules on every tool they belong to.
 
