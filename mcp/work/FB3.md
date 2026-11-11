@@ -7,7 +7,8 @@
 - **Expected checks:** fb1 94 -> 108 checks, red on 69b27179 first (20 of 109 then: no `rows` / `balance`, the focus
   boxes, the 80 pins); plans with a hole 10 -> 2 of 80, worst hole 10.6% -> 4.5%, flattest chart 6.8 -> 6.8; sq13 S10
   stays 18 x 5; ts1 T5b stays 312; sp29 23 -> 24; `node scripts/check-modules.mjs --strict`; test-contracts; lint 0; CI green.
-- **Resume:** built and recorded (2026-11-11T09:40Z); left: the last CI run and its line below.
+- **Resume:** DONE (2026-11-11T10:05Z): the tip is ready to merge; nothing left to do on this branch.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42998250892 on ec2fd573fd51870e2264f7d6fefa36d4cc8cecf8 (2026-11-11T10:05Z; conclusion success; integration 193d74be merged in once). DONE.
 - **Result:** the focus page's hole is closed by one rule (the text box under the rail): 8 of the 10 holes gone. The
   junior first row is measured and pinned (`balance`), its cause proven geometric; no rule inside the approved
   arrangement can change it, so those pages stay as they are and three ways out wait for the owner ("For the owner").
@@ -176,3 +177,12 @@ in Desktop. Pages of the other three layouts, pages with the filters on top or n
 - This rule moved 3 recordings, not FB2's 22: almost nothing pins a focus page with a rail. The fb1 grid (720 pages
   straight on the engine, 0.3 s) is the cheap place to see a layout rule's whole effect before the slow suites.
 - sp29's parity guard needs one marker and one pinned count per arrangement added on purpose; say so in a layout brief.
+
+## After the merge of integration (written 2026-11-11T10:05Z)
+- origin/integration/0.3.3 (193d74be, HX1 merged) merged in once, ec2fd573: one conflict, mcp/WORK.md (integration's
+  text taken, the FB3 line added). Then, on that tree: `npm test -- report --keep-going` "run-tests: 78 suites passed
+  (report)"; website alone "PASS  design-engine      600 checks", "PASS  sp6                  4 checks",
+  "PASS  sp29                 8 checks"; `node scripts/check-modules.mjs --strict` PASS (1226 checks); check-min,
+  check-agent-memory PASS; `npm run lint` exit 0; `node scripts/sitemap-lastmod.mjs --write`: "All lastmod dates match".
+- Before the merge, on c85f80bf's tree: test-contracts, check-contracts, check-result-lines, test-site-config,
+  changelog-words PASS; sq13 "PASS  sq13  39 checks", ts1 "PASS  ts1  25 checks".
