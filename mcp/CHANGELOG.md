@@ -56,6 +56,9 @@ package's manifest; this file says what is in it.
 - **Like for like in the Gulf:** `check_report` with `likeForLike` (a year, a Gulf country) names the visuals whose number
   compares with the same Gregorian dates of another period, the months of that year whose Ramadan or Eid days differ from
   the months they are compared with, and the "Last Ramadan" measures the model lacks. Names and dates only, never values.
+- **On dataarcus.com, a free page from the same dates:** "Is this month like last year's?" (tools/gulf-like-for-like.html)
+  sets a month beside the same month a year earlier for a Gulf country: Ramadan, Eid al-Fitr, Eid al-Adha and weekend days,
+  the weekend and the VAT rate, and whether the two are like for like. In English; it runs in the browser and saves nothing.
 - Every chat starts smaller: the tool list an AI app reads at the start of each chat is 58,837 characters, down from
   74,925 (about a fifth fewer tokens in every chat). The same 11 tools take the same options and answer the same; their
   texts say it in fewer words, and the details that left the list are in TOOLS.md.
