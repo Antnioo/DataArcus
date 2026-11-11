@@ -10,8 +10,11 @@
   in the model; 7 questions: 3 answered, 1 partly, 1 not answered, 2 cannot). checker 15 suites passed (hx1 59, hx2
   43, same-question 41 unchanged); `node scripts/check-modules.mjs --strict` PASS 1240 (222 files, 222 rows),
   check-contracts PASS 858, check-agent-memory PASS 518, check-result-lines PASS 247, test-site-config PASS, lint 0.
-- **Resume:** stage 1 built (2026-11-11T15:40Z); CI on the branch is the last step. The reviewer: review and merge (nothing
-  user-visible; no existing file's code changed). The owner: "For the owner" 1 to 5. Next builder: "Stages 2 to 4".
+- **Resume:** DONE. The reviewer: review and merge (nothing user-visible; no existing file's code changed). The
+  owner: "For the owner" 1 to 5. Next builder: "Stages 2 to 4".
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/43052560843 on 1f87f87b51580fbf612395b00341299117cd2c1c
+  (2026-11-11T17:16Z; Linux 5 of 5 shards, Windows 5 of 5, the website 3 of 3 suites and its checks, macOS skipped by the
+  workflow; origin/integration/0.3.3 had not moved from 2960587c, so nothing to merge in). DONE.
 - **Result:** on a made-up report, three visuals that validate and draw are named as showing one value on every row,
   each with why; seven questions (two in Arabic) are sorted into answered, partly, not answered and "this model
   cannot answer": `node lab/ox1-brief-demo.mjs`.
@@ -227,3 +230,7 @@ none (a new library no tool loads, its suite and a demo; no existing code edited
 - `node scripts/test-site-config.mjs` reads tracked files only: run it after `git add`, not before. My first CI run
   (43050778385) was red on website-checks for one em dash in the new suite (an escape the editor wrote as the
   character; the local run before staging said PASS). Fixed at the cause: the check builds it from its code point.
+- Run 43052560843 needed three re-runs of its failed jobs only: the website suites died before any test, installing
+  the browser's system packages ("Temporary failure resolving 'azure.archive.ubuntu.com'", GitHub's runner; IX1's
+  run 43051896471 failed at the same minutes). No code changed between the attempts. A cached apt step or a retry
+  around `npx playwright-core install --with-deps` (.github/workflows/tests.yml:155) would have saved an hour.
