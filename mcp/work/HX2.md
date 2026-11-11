@@ -12,10 +12,11 @@
   check-contracts PASS 858, test-contracts PASS 14, check-agent-memory PASS 515, check-result-lines PASS 245,
   changelog-words PASS 45, `node scripts/test-site-config.mjs` PASS, `scripts/tests/model-health.mjs` exit 0, lint 0;
   model area 31 suites passed; mutation PASS 250 (99 mutants, all killed).
-- **Resume:** first CI (run 43003688911) red on one check, tk1 K4: tools/list 75,950 of 75,000 (my option texts);
-  fixed by shortening the two option descriptions (full text stays in TOOLS.md): 74,925. Second CI (43006186137, after
-  merging integration's FB3 once) red on the sitemap's lastmod of the two theme generator pages (FB3 and this job both
-  re-stamped them): `node scripts/sitemap-lastmod.mjs --write`. CI again.
+- **Resume:** DONE. Two red CI runs, each fixed at the cause (tk1 K4: tools/list 75,950 of 75,000, the option texts
+  shortened to 74,925; the sitemap's lastmod of two pages after merging FB3 once). The reviewer: review and merge.
+  The owner: "For the owner" 1 (the Arabic drafts) and 2.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/43008243329 on 7d6a7c631548a5ff723c8cbf5108e7df06096b4c
+  (2026-11-11T11:14Z; Linux 5 of 5 shards, Windows 5 of 5, the website success, macOS skipped by the workflow). DONE.
 - **Result:** after a model edit, `check_report { path, againstModel }` names exactly the visuals it can move, with the
   chain ("[Total Sales] uses [Base]: measure: its DAX changed"); `read_model { reach: "[Total Sales]" }` answers 7
   visuals on 3 pages of twin-project.
