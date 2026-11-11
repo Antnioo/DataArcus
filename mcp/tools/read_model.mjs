@@ -8,13 +8,22 @@ import { text, compact, safe } from '../lib/tool-answer.mjs';
 import { READS, modelPath, readLangInput, strictInputs } from '../lib/tool-inputs.mjs';
 import { LIMITS } from '../lib/tool-limits.mjs';
 import { hiddenOf } from '../lib/hidden-names.mjs';
+import { reach as reachOf } from '../lib/impact.mjs';
 
 export function register(server, ctx) {
   server.registerTool('read_model', {
     title: 'Read a Power BI model',
     description: 'Lists the tables, visible columns (with types), measures (with formats) and date tables of a model, without changing it.' + UNTRUSTED + ' A large model (a full list over 40,000 characters) gets a summary first: counts, the date tables, the areas (measure display folders), the tables with measures and the other tables\' names; ask for the tables you need with tables. Pass lang "ar" when the user writes in Arabic.',
-    inputSchema: strictInputs('read_model', { path: modelPath, tables: z.array(z.string()).min(1).max(LIMITS.tables).optional().describe('Only these tables, in full (names as read_model lists them). For a large model, after its summary'), lang: readLangInput }), annotations: READS
-  }, safe(async ({ path: p, tables }) => {
+    inputSchema: strictInputs('read_model', { path: modelPath, tables: z.array(z.string()).min(1).max(LIMITS.tables).optional().describe('Only these tables, in full (names as read_model lists them). For a large model, after its summary'),
+      reach: z.string().min(1).max(300).optional().describe('Impact check before an edit: "[Measure]", "Table[Column]" or "Table". Instead of the model list: the visuals it reaches in the reports beside the model, by tier. Not with tables'),
+      lang: readLangInput }), annotations: READS
+  }, safe(async ({ path: p, tables, reach }) => {
+    // (0.3.3 HX2) reach: the Impact check before an edit, in place of the model list
+    if (reach != null) {
+      if (tables) throw new Error('read_model takes reach or tables, not both: reach answers the visuals a measure, a column or a table reaches; tables lists tables in full. Call once for each.');
+      const m = loadModel(p);
+      return compact(Object.assign({}, unreadableOf(m), { reach: reachOf(p, reach) }));
+    }
     // (AU47) a definition file that could not be read fully is named first, before the part that was read
     const m = loadModel(p), first = unreadableOf(m);
     // (SQ15a) each KPI and its target: a measure, or "an expression" (its text never)

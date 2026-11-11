@@ -46,6 +46,13 @@ package's manifest; this file says what is in it.
 - The Arabic twin no longer gives two fields one Arabic name when their names look alike (a table `A` with a column
   `B][C` and a table `A[B]` with a column `C`): each has its own line in the terminology sheet and its own approval.
   Names without a quote or a bracket are keyed as before.
+- **Impact check: what a model change can move.** `check_report` with `againstModel` (an earlier copy of the model,
+  for example a backup or a git checkout) says which visuals of the report can show another number after the model was
+  edited, and why, by the chain of names: "[Margin %] uses [Net Revenue] uses [Returns Value]: measure: its DAX
+  changed". The others can only show other numbers if the data changed. It reads the files only, runs no query, and
+  counts a visual as changed whenever it is not sure.
+- **Impact check before an edit:** `read_model` with `reach` (a measure, a column or a table) answers which pages and
+  visuals of the reports beside the model it reaches. Names only, never values.
 
 ## [0.3.2]: 2026-11-09 (the version for testers, second round)
 The second version for testers. In short:
