@@ -86,6 +86,10 @@ jobs:
       - name: Test results read one way (one-line failures, named causes, suite identities; made-up suites and logs)
         run: node scripts/test-results-adapter.mjs
 
+      # (LR3, 0.3.3) the builders' Stop hook: no turn ends before the note has a green CI line (made-up repos, no network)
+      - name: The builder Stop hook refuses an unfinished turn and lets the rest through (made-up repos)
+        run: node scripts/test-agent-stop-check.mjs
+
       - name: Sitemap dates skip boilerplate-only commits (git history, no network)
         run: node scripts/test-sitemap-lastmod.mjs
 
