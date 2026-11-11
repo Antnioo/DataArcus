@@ -4,17 +4,17 @@
   "T1 EN glass 1920 x 1080, rail at the start, two pages": {
    "plan": {
     "err": false,
-    "length": 13142,
-    "sha256": "c7f05b54b94cef598c259c1a34fe676bd29a750a16b93c43b14845c60976f662"
+    "length": 13450,
+    "sha256": "cf5aea480c191bf5de731cd43b8fc5192a2ae0638580b1f17030ca5f85b37357"
    },
    "report": {
     "err": false,
-    "length": 10199,
-    "sha256": "79e747c8262f2906ba21af4dd8a1a87dbcb7fe891e78858360a6ab04689fbe3f"
+    "length": 9598,
+    "sha256": "fc0c809de47f4e94ba4bcfdfa9c7a7ef09a0301e9dbf4754bd3fddde21bef3f3"
    },
    "files": {
     "count": 89,
-    "sha256": "7791f74a5c5a7abd6ddecf8d7cbbf63e85c0ce11faacb4917957c8e963bcb14d"
+    "sha256": "2d794eacdf7fe2ca7f4d0cdbd3f2c70113f748ea08b5421bbf5fbe9cc03e2b31"
    }
   },
   "T2 EN plain 1280 x 720, strip on top": {
@@ -36,8 +36,8 @@
   "T3 AR glass 1920 x 1080, slide-in panel, names approved": {
    "plan": {
     "err": false,
-    "length": 17872,
-    "sha256": "ba0166cf677398f03dc223f170349dc1f6175a2fb3ee54f6dff23aac93d05fc6"
+    "length": 18922,
+    "sha256": "ea80ed5760c196386e0e55ea7aad0cedf4869196ba2068443be5fa5f7eb57051"
    },
    "report": {
     "err": false,
@@ -68,8 +68,8 @@
   "T5 EN glass 1280 x 720 on the twin, slide-in panel": {
    "plan": {
     "err": false,
-    "length": 13615,
-    "sha256": "2288c33fbb590e67f5999f4c3cafd8bbd62bcea543af1c0aac0dbb33bc7fb1e2"
+    "length": 13614,
+    "sha256": "d38e743eb92676f9a833331220b24c36c67349399a8c1bb8483930d00aef93a5"
    },
    "report": {
     "err": false,
