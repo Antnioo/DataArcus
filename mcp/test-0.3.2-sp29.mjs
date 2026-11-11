@@ -38,9 +38,13 @@ const ADDED_SINCE = ['pageFill'];
 // arrangement where pageFill measures the page better filled, mcp/work/FB1.md) is placed differently from the base on
 // purpose: by the engine of today (never the base's), such a fit is this one line in G1, for the base's facts too, so
 // every other layout is still the base's byte for byte; the arrangement itself is pinned by test-0.3.3-fb1.mjs and L1
-const LIFTED = 'the cards over the rail (0.3.3 FB1)', LIFTED_FITS = 124;
-const lifted = (slots, opt) => { const f = E.fitSlots(slots, opt).slots, rail = f.find((x) => x.kind === 'slicer' && x.stack), k = f.find((x) => x.kind === 'kpi'); if (rail && k && rail.y >= k.y + k.h) { liftedCount++; return LIFTED; } return null; };
-let liftedCount = 0;   // counted over one facts() run: reset before each
+// (0.3.3 FB3, changed on purpose, the same way) a page whose text box lies under its shortened rail (fitSlots' tuckText,
+// kept where pageFill measures a smaller hole, mcp/work/FB3.md) and whose cards are not over the rail is one line too,
+// counted by L2; a page with both is counted as lifted, as before
+const LIFTED = 'the cards over the rail (0.3.3 FB1)', LIFTED_FITS = 122, TUCKED = 'the text box under the rail (0.3.3 FB3)', TUCKED_FITS = 21;
+const lifted = (slots, opt) => { const f = E.fitSlots(slots, opt).slots, rail = f.find((x) => x.kind === 'slicer' && x.stack), k = f.find((x) => x.kind === 'kpi'), t = f.find((x) => x.kind === 'text'); if (rail && k && rail.y >= k.y + k.h) { liftedCount++; return LIFTED; }
+  if (rail && t && Math.abs(t.x - rail.x) <= 1 && t.y >= rail.y + rail.h) { tuckedCount++; return TUCKED; } return null; };
+let liftedCount = 0, tuckedCount = 0;   // counted over one facts() run: reset before each
 const facts = (E) => {
   const design = (preset, chart, layout) => { const d = E.fresh(); d.preset = preset; d.data = E.PRESETS[preset].data.slice(); d.ui = Object.assign({}, E.PRESETS[preset].ui); d.chart = chart; d.name = 'SP29 ' + preset; E.repairState(d); Object.assign(d.layout, layout); return d; };
   const DESIGNS = [
@@ -142,7 +146,7 @@ const facts = (E) => {
   return out;
 };
 
-const got = facts(E), liftedNow = liftedCount;
+const got = facts(E), liftedNow = liftedCount, tuckedNow = tuckedCount;
 if (process.env.SP29_RECORD === '1') { fs.writeFileSync(GOLD, JSON.stringify(got, null, 1) + '\n'); console.log('recorded ' + path.relative(REPO, GOLD)); }
 const gold = fs.existsSync(GOLD) ? JSON.parse(fs.readFileSync(GOLD, 'utf8')) : {};
 const diff = (a, b) => (typeof a === 'string' || typeof b === 'string' ? (a === b ? [] : ['the value']) : Object.keys(Object.assign({}, a, b)).filter((k) => JSON.stringify((a || {})[k]) !== JSON.stringify((b || {})[k])));
@@ -155,6 +159,7 @@ chk(() => ADDED_SINCE.every((k) => typeof E[k] === 'function' && E[k] === requir
 { // L1: how many of G1's 400 layouts are lifted in either fit (a number that moves says the rule moved)
   const n = liftedNow;
   chk(() => n === LIFTED_FITS, () => `L1 the fits with the cards over the rail among the suite's fits (two a layout): ${n} (pinned ${LIFTED_FITS})`);
+  chk(() => tuckedNow === TUCKED_FITS, () => `L2 the fits with the text box under the rail and the cards not over it: ${tuckedNow} (pinned ${TUCKED_FITS})`);
 }
 
 // ---------- B1: the base engine itself, live, on the same facts ----------
