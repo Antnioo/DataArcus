@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-11T03:37Z",
+  "generated_at": "2026-11-11T04:03Z",
   "today": {
     "date": "2026-11-11",
-    "cost_usd": 40.04,
-    "tokens": 62585243,
-    "sessions": 6,
+    "cost_usd": 50.75,
+    "tokens": 73971651,
+    "sessions": 8,
     "by_kind": {
       "builder": {
-        "cost_usd": 36.17,
-        "count": 2
+        "cost_usd": 46.39,
+        "count": 3
       },
       "worker": {
-        "cost_usd": 3.87,
-        "count": 4
+        "cost_usd": 4.36,
+        "count": 5
       },
       "probe": {
         "cost_usd": 0,
@@ -26,16 +26,16 @@
     },
     "by_model": {
       "sonnet": {
-        "cost_usd": 0.95,
-        "count": 3
+        "cost_usd": 1.44,
+        "count": 4
       },
       "opus": {
         "cost_usd": 2.92,
         "count": 1
       },
       "fable": {
-        "cost_usd": 36.17,
-        "count": 2
+        "cost_usd": 46.39,
+        "count": 3
       }
     }
   },
@@ -120,12 +120,21 @@
     },
     {
       "date": "2026-11-11",
-      "cost_usd": 40.04,
-      "tokens": 62585243,
-      "sessions": 6
+      "cost_usd": 50.75,
+      "tokens": 73971651,
+      "sessions": 8
     }
   ],
   "jobs": [
+    {
+      "id": "CO1",
+      "title": "CO1: what is outdated, what newer techniques we miss, how to grow into a company (D-1111-06)",
+      "model": "fable",
+      "cost_usd": 10.22,
+      "tokens": 9682008,
+      "minutes": 9,
+      "finished_at": "2026-11-11T03:53Z"
+    },
     {
       "id": "TR1",
       "title": "TR1: review the checks run every time: outdated, missing, slow; build the safe fixes (D-1111-02)",
@@ -476,20 +485,11 @@
       "tokens": 7246765,
       "minutes": 79,
       "finished_at": "2026-11-09T05:26Z"
-    },
-    {
-      "id": "WN1",
-      "title": "WN1: the Windows findings before the laptop session (Codex, B-407)",
-      "model": "opus",
-      "cost_usd": 15.35,
-      "tokens": 45130040,
-      "minutes": 377,
-      "finished_at": "2026-11-09T02:38Z"
     }
   ],
   "workers": {
-    "count": 4,
-    "cost_usd": 3.87,
+    "count": 5,
+    "cost_usd": 4.36,
     "costliest": [
       {
         "label": "worker 00:02",
@@ -504,10 +504,10 @@
         "started": "2026-11-11T00:48Z"
       },
       {
-        "label": "worker 02:02",
-        "cost_usd": 0.33,
-        "minutes": 2,
-        "started": "2026-11-11T02:03Z"
+        "label": "worker 03:02",
+        "cost_usd": 0.49,
+        "minutes": 4,
+        "started": "2026-11-11T03:02Z"
       }
     ]
   },
@@ -516,6 +516,11 @@
       "label": "TR1",
       "kind": "builder",
       "cost_usd": 29.65
+    },
+    {
+      "label": "CO1",
+      "kind": "builder",
+      "cost_usd": 10.22
     },
     {
       "label": "LR1",
@@ -528,14 +533,9 @@
       "cost_usd": 2.92
     },
     {
-      "label": "worker 00:02",
+      "label": "worker 03:02",
       "kind": "worker",
-      "cost_usd": 0.33
-    },
-    {
-      "label": "worker 02:02",
-      "kind": "worker",
-      "cost_usd": 0.33
+      "cost_usd": 0.49
     }
   ]
 }
