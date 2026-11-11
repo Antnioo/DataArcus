@@ -12,3 +12,6 @@
 - Draft PR #123 (test/0.3.3-tr2 to integration/0.3.3) opened right after the first push with the GitHub MCP tool: `gh pr create` is refused (HTTP 403, GraphQL is not available from a Claude Code session), so a worker's route is `mcp__github__create_pull_request` with draft true. Subscribed with `mcp__github__subscribe_pr_activity` ("Subscribed to activity on Antnioo/DataArcus#123").
 - **No CI result woke me.** Over about 1 hour 15 minutes, 5 tests.yml runs on this branch finished (push, pull_request and workflow_dispatch events; 2 more on the check branch), and no `<wake reason="external-event">` envelope arrived; every wake-up in this session came from my own background commands and monitors. So a builder cannot rely on the subscription to be told that CI finished: it waits with its own loop (`until [ "$(gh run view <id> --json status --jq .status)" = completed ]; do sleep 20; done`, under the 10-minute tool limit, in the background or in pieces).
 - The PR stays a draft; the hub closes it after the merge. Scratch branch `check/0.3.3-tr2-macos` (the two macOS measurement runs) is mine: the hub deletes it with the others.
+
+The last commit after the CI run adds only this line to this note.
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/42967589968 on 72ddbff4
