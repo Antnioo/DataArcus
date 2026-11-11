@@ -8,7 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { missingLines } from './check-result-lines.mjs';
-import { registryProblems } from '../mcp/run-tests.mjs';
+import { registryProblems, duplicateKeys } from '../mcp/run-tests.mjs';
 
 let n = 0;
 const D = fs.mkdtempSync(path.join(os.tmpdir(), 'result-lines-'));
@@ -46,6 +46,21 @@ try {
     reg([{ file: 'test-x.mjs', area: 'b', purpose: 'p' }, { file: 'test-x.mjs', area: 'a', purpose: 'p' }], { pending: [{ file: 'test-y.mjs', area: 'a', purpose: 'p' }] });
     const p = registryProblems(D).join('\n');
     assert.match(p, /test-y\.mjs: its file has landed/); assert.match(p, /unknown area "b"/); assert.match(p, /test-x\.mjs: listed twice/);
+  });
+  // SN1 item 1: a key twice in one object of tests.json (JSON keeps the last: the first list is dead text) is named
+  t('duplicateKeys names a key twice in one object, at any depth; the same key in two objects is fine', () => {
+    assert.deepEqual(duplicateKeys('{"a":1,"b":{"c":1,"c":2},"a":3}'), ['b.c', 'a']);
+    assert.deepEqual(duplicateKeys('{"a":{"x":[1]},"b":{"x":[{"y":1},{"y":2}]}}'), []);
+    assert.deepEqual(duplicateKeys('{"s":"a \\"k\\": 1, \\"k\\": 2"}'), []);
+  });
+  t('registryProblems names a duplicate key of a registry file, and the repo\'s own tests.json has none', () => {
+    fs.writeFileSync(path.join(D, 'tests.json'), '{"areas":{"a":"A"},"affected":{"everything":["x"],"everything":["y"]},"suites":[{"file":"test-x.mjs","area":"a","purpose":"p"}],"ignored":[{"file":"test-y.mjs","why":"w"}],"pending":[]}');
+    assert.deepEqual(registryProblems(D), ['tests.json: the key "affected.everything" is written twice (JSON keeps the last)']);
+    assert.deepEqual(duplicateKeys(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../mcp/tests.json'), 'utf8')), []);
+  });
+  t('the base of the affected block is the current integration branch', () => {
+    const base = JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../mcp/tests.json'), 'utf8')).affected.base;
+    assert.equal(base, 'origin/integration/0.3.3');
   });
 } finally { fs.rmSync(D, { recursive: true, force: true }); }
 console.log(`PASS  result-lines-test  ${n} checks`);
