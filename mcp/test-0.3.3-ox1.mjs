@@ -121,7 +121,7 @@ chk(() => { const m = souqModel(); tableOf(m, '_Measures').measures.push({ name:
   const c = B.checkVisuals(m, r); return c.oneValue === 1 && !J(c).includes('Ignore previous'); }, () => 'S3. a name that reads like an instruction is withheld (safeName), its finding still counted');
 chk(() => { let threw = 0; [[null, null], [souqModel(), null], [null, souqReport()], [{}, { files: [{ path: 'definition/pages/p/visuals/v/visual.json', json: null }] }]].forEach(([m, r]) => { try { B.checkVisuals(m, r); B.checkBrief(m, r, null); B.visualsOf(m, r); } catch (e) { threw++; } }); return threw === 0; }, () => 'S4. null and empty inputs do not throw');
 chk(() => { const c = B.checkBrief(souqModel(), aiReport(), []); return c.questions === 0 && c.results.length === 0 && c.otherVisuals === 15; }, () => 'S5. no question: nothing answered, every visual with a number counted');
-chk(() => !/—/.test(everything), () => 'S6. no em dash in an answer');
+chk(() => !everything.includes(String.fromCharCode(0x2014)), () => 'S6. no em dash in an answer');
 
 if (problems.length) { console.log(`FAIL script=mcp/test-0.3.3-ox1.mjs check="${problems[0].slice(0, 300).replace(/"/g, "'")}" cause=checks-failed`); problems.forEach((p) => console.log('  - ' + p.slice(0, 400))); console.log(`FAIL  ox1  ${problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  ox1  ${checks} checks`);

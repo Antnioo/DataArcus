@@ -224,3 +224,6 @@ none (a new library no tool loads, its suite and a demo; no existing code edited
 - The root `npm run lint` needs `npm ci` at the repo root in a new clone (`globals` missing otherwise); `mcp/` has no
   lint script.
 - A WORK.md near its cap leaves a builder room for a job code only; the reviewer may want to archive a line first.
+- `node scripts/test-site-config.mjs` reads tracked files only: run it after `git add`, not before. My first CI run
+  (43050778385) was red on website-checks for one em dash in the new suite (an escape the editor wrote as the
+  character; the local run before staging said PASS). Fixed at the cause: the check builds it from its code point.
