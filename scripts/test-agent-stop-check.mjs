@@ -85,7 +85,7 @@ r = repo('feat/0.3.3-zz9', '## For the owner\nnone\n\n## Risky changes\nWhy? non
 refuses(run(r.dir), 'For the owner says none (a question elsewhere does not count)');
 
 // 6. the 4th call after 3 refusals: allow; then the count starts again
-r = repo('feat/0.3.3-loop', 'x\n', { code: 'LOOP' });
+r = repo('feat/0.3.3-lp1', 'x\n', { code: 'LP1' });
 refuses(run(r.dir), 'refusal 1'); refuses(run(r.dir), 'refusal 2'); refuses(run(r.dir), 'refusal 3');
 allows(run(r.dir), 'the 4th call after 3 refusals');
 refuses(run(r.dir), 'after the allowed stop the count starts again');

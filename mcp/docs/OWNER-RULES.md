@@ -7,8 +7,7 @@ here). Nothing was reworded; where a moved line says "this file" or names a sect
 # From the root CLAUDE.md
 
 This repo is dataarcus.com (the website and its free Power BI tools) and the DataArcus MCP (`mcp/`).
-The owner is Abdelrahman. He relays messages between two Claude sessions: a builder on his laptop (hands-on work,
-Power BI Desktop) and a reviewer in the cloud (reviews, the full test run on Linux, merges). He decides every step.
+The owner is Abdelrahman. Builders are cloud sessions on their own branches; a reviewer session reviews and merges into the integration branch; CI on three systems is the test gate; the owner merges to main and does the laptop checks in Power BI Desktop.
 
 **Before doing anything:**
 1. Read `mcp/WORK.md`: the current step, its approved plan and expected numbers, and what is open. It is the

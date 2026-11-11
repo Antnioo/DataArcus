@@ -21,3 +21,40 @@
 ## CHANGELOG line
 none (nothing a user sees).
 - State at 2026-11-11T03:19Z: plan written, pushed.
+
+## Before -> after
+- No hook: a builder could end its turn with CI not run or still red. Now the Stop hook refuses (max 3 times in a row) on
+  fix/* and feat/* until the note shows the CI line for the head, a STOP: line or an owner question.
+- `CLAUDE.md` lines 4-5 and `mcp/CLAUDE.md` lines 29-30 are the two sentences of P-08, word for word.
+- Test: `scripts/test-agent-stop-check.mjs` 25 checks, **red on 7d144326 first** (no script: 25 of 25 failed), green after.
+
+## Decisions I made
+- Scripts tests run as steps of `.github/workflows/tests.yml` (TR1's file, not mine); `mcp/tests.json` holds only mcp/ suites.
+  So the new test is not yet a CI step: the reviewer adds `node scripts/test-agent-stop-check.mjs` after TR1 merges (see For the owner).
+- A green line naming an older sha also counts when every file changed since is the job's note or `mcp/WORK.md` (the note
+  is written after the green run, so the head always moves past the CI sha). Any code change after the sha: refused.
+- The "?" test for the owner question looks at the lines under "## For the owner" only; "none" is no question.
+- `OWNER-RULES.md` lines 10-11 repeated the old CLAUDE.md sentence; I made them the new one (they contradicted it).
+- `.claude/settings.json` did not exist: created with only the Stop hook. Hook path is relative (`node scripts/...`): a session
+  started in a subfolder of the repo finds no script, node fails with exit 1, which does not block (only exit 2 does).
+
+## For the owner
+- Lines that no longer match the two sentences, left unchanged: `OWNER-RULES.md` line 28 (builder scripts in `C:\DataArcus\...`),
+  line 31 ("the full run once, at the end") and line 53 ("the full run"); `mcp/docs/TESTS.md` lines 40-41 (one full local run
+  `npm test -- --keep-going`, 30-40 min, then CI); `mcp/CLAUDE.md` line 34 and `mcp/docs/LAPTOP.md` (the laptop loop as a builder's);
+  `mcp/WORK.md` and the skills' "builder on his laptop" wording elsewhere. A later job (LR2 or a docs job) can make them true.
+- The reviewer adds the step for `scripts/test-agent-stop-check.mjs` to tests.yml once TR1 is merged.
+
+## Risky changes
+- **The Stop hook changes how every builder session in this repo ends.** What: Stop runs `scripts/agent-stop-check.mjs`; on
+  fix/* and feat/* a note without the CI line gets one refusal message and the turn continues. Why: LR1 found builders ending
+  turns before CI finished. Limits: 3 refusals in a row, then the stop is allowed; every read failure allows it; other
+  branches are never held. Tried only on made-up repos, not in a live Stop event: the exit-2-with-stderr protocol is Claude Code's.
+
+## Seen, not in scope
+- Docs outside the brief that still describe the laptop-builder flow (listed above).
+
+## Lessons for the reviewer
+- A brief that says "registered in mcp/tests.json or the website runner" should name where scripts/ tests live: they are
+  tests.yml steps, a file another builder owns; the brief's scope list and its file ban collide there.
+- State at 2026-11-11T03:21Z: code done, checks next.
