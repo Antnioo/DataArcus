@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "generated_at": "2026-11-11T08:03Z",
+  "generated_at": "2026-11-11T09:03Z",
   "today": {
     "date": "2026-11-11",
-    "cost_usd": 98.5,
-    "tokens": 234409511,
-    "sessions": 18,
+    "cost_usd": 111.01,
+    "tokens": 252004443,
+    "sessions": 20,
     "by_kind": {
       "builder": {
-        "cost_usd": 85.3,
-        "count": 8
+        "cost_usd": 97.81,
+        "count": 10
       },
       "worker": {
         "cost_usd": 13.2,
@@ -30,12 +30,12 @@
         "count": 10
       },
       "opus": {
-        "cost_usd": 23.95,
-        "count": 4
+        "cost_usd": 27.4,
+        "count": 5
       },
       "fable": {
-        "cost_usd": 59.62,
-        "count": 4
+        "cost_usd": 68.68,
+        "count": 5
       }
     }
   },
@@ -120,12 +120,30 @@
     },
     {
       "date": "2026-11-11",
-      "cost_usd": 98.5,
-      "tokens": 234409511,
-      "sessions": 18
+      "cost_usd": 111.01,
+      "tokens": 252004443,
+      "sessions": 20
     }
   ],
   "jobs": [
+    {
+      "id": "HX1",
+      "title": "HX1: find and prove the hidden lever that unlocks DataArcus's future (D-1111-12)",
+      "model": "fable",
+      "cost_usd": 9.06,
+      "tokens": 10205167,
+      "minutes": 32,
+      "finished_at": "2026-11-11T08:41Z"
+    },
+    {
+      "id": "RW1",
+      "title": "RW1: release by the owner's approval on GitHub, dry run on 0.3.2 (C-01, D-1111-12)",
+      "model": "opus",
+      "cost_usd": 3.45,
+      "tokens": 7389765,
+      "minutes": 22,
+      "finished_at": "2026-11-11T08:31Z"
+    },
     {
       "id": "TR2",
       "title": "TR2: build TR1's 8 approved asks (D-1111-06)",
@@ -467,24 +485,6 @@
       "tokens": 7092815,
       "minutes": 82,
       "finished_at": "2026-11-09T19:52Z"
-    },
-    {
-      "id": "OI033",
-      "title": "OI033: open 0.3.3 in the engine: one place names the integration branch; S3 for released versions (L-1109-27)",
-      "model": "opus",
-      "cost_usd": 4.05,
-      "tokens": 10743726,
-      "minutes": 19,
-      "finished_at": "2026-11-09T19:23Z"
-    },
-    {
-      "id": "CP1",
-      "title": "CP1: the article: Is your Power BI model ready for Copilot? How to check in 10 minutes (EN + AR, D-1109-06)",
-      "model": "opus",
-      "cost_usd": 11.1,
-      "tokens": 33650772,
-      "minutes": 144,
-      "finished_at": "2026-11-09T14:47Z"
     }
   ],
   "workers": {
@@ -533,9 +533,9 @@
       "cost_usd": 10.22
     },
     {
-      "label": "TR2",
+      "label": "HX1",
       "kind": "builder",
-      "cost_usd": 7.09
+      "cost_usd": 9.06
     }
   ]
 }
