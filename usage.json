@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-11T18:56Z",
+  "generated_at": "2026-11-11T20:50Z",
   "today": {
     "date": "2026-11-11",
-    "cost_usd": 196.43,
-    "tokens": 454446552,
-    "sessions": 35,
+    "cost_usd": 215.84,
+    "tokens": 484872831,
+    "sessions": 38,
     "by_kind": {
       "builder": {
-        "cost_usd": 172.11,
-        "count": 18
+        "cost_usd": 187.08,
+        "count": 19
       },
       "worker": {
-        "cost_usd": 24.32,
-        "count": 17
+        "cost_usd": 28.76,
+        "count": 19
       },
       "probe": {
         "cost_usd": 0,
@@ -26,16 +26,16 @@
     },
     "by_model": {
       "sonnet": {
-        "cost_usd": 25.11,
-        "count": 16
+        "cost_usd": 26.69,
+        "count": 17
       },
       "opus": {
-        "cost_usd": 51.88,
-        "count": 10
+        "cost_usd": 54.74,
+        "count": 11
       },
       "fable": {
-        "cost_usd": 119.44,
-        "count": 9
+        "cost_usd": 134.41,
+        "count": 10
       }
     }
   },
@@ -120,12 +120,21 @@
     },
     {
       "date": "2026-11-11",
-      "cost_usd": 196.43,
-      "tokens": 454446552,
-      "sessions": 35
+      "cost_usd": 215.84,
+      "tokens": 484872831,
+      "sessions": 38
     }
   ],
   "jobs": [
+    {
+      "id": "OA1",
+      "title": "OA1: everything waiting for the owner, answered with research; Arabic checks (D-1111-18)",
+      "model": "fable",
+      "cost_usd": 14.97,
+      "tokens": 13628544,
+      "minutes": 14,
+      "finished_at": "2026-11-11T19:18Z"
+    },
     {
       "id": "SN1",
       "title": "SN1: today's seen-not-in-scope items that are safe (D-1111-17)",
@@ -476,20 +485,11 @@
       "tokens": 1804487,
       "minutes": 92,
       "finished_at": "2026-11-10T00:59Z"
-    },
-    {
-      "id": "DB1",
-      "title": "DB1: plan_layout's dead and unreachable branches, behaviour only (B-421)",
-      "model": "opus",
-      "cost_usd": 4.28,
-      "tokens": 11616231,
-      "minutes": 82,
-      "finished_at": "2026-11-10T00:51Z"
     }
   ],
   "workers": {
-    "count": 17,
-    "cost_usd": 24.32,
+    "count": 19,
+    "cost_usd": 28.76,
     "costliest": [
       {
         "label": "worker 00:47",
@@ -498,16 +498,16 @@
         "started": "2026-11-11T00:48Z"
       },
       {
-        "label": "worker 03:52",
-        "cost_usd": 2.67,
-        "minutes": 7,
-        "started": "2026-11-11T03:53Z"
-      },
-      {
         "label": "worker 17:02",
         "cost_usd": 2.76,
         "minutes": 78,
         "started": "2026-11-11T17:02Z"
+      },
+      {
+        "label": "worker 18:55",
+        "cost_usd": 2.86,
+        "minutes": 22,
+        "started": "2026-11-11T18:56Z"
       }
     ]
   },
@@ -528,14 +528,14 @@
       "cost_usd": 15.54
     },
     {
+      "label": "OA1",
+      "kind": "builder",
+      "cost_usd": 14.97
+    },
+    {
       "label": "CO1",
       "kind": "builder",
       "cost_usd": 13.23
-    },
-    {
-      "label": "OX1",
-      "kind": "builder",
-      "cost_usd": 12.53
     }
   ]
 }
