@@ -33,8 +33,10 @@ try {
   chk(() => JSON.stringify(props) === '["path","planId"]', () => `K3. create_report's inputs are path and planId only: ${props.join(', ')}`);
   const listSize = JSON.stringify({ tools }).length;
   // (B-272's cause: create_report's own entry was 30,749 of 98,360 on b40cb78) its entry under 3,000, the list under 75,000
+  // (0.3.3 TL1, D-1111-14: the list was 74,925 of that 75,000; shortened to 58,837, the cap follows it down to 61,000 so
+  // the gain is kept: room for about four one-line options, an option costing 400 to 560 characters with its schema)
   const crSize = JSON.stringify(cr || {}).length;
-  chk(() => crSize < 3000 && listSize < 75000, () => `K4. create_report's entry under 3,000 characters and tools/list under 75,000: ${crSize}, ${listSize}`);
+  chk(() => crSize < 3000 && listSize < 61000, () => `K4. create_report's entry under 3,000 characters and tools/list under 61,000: ${crSize}, ${listSize}`);
 
   const base = { path: MODEL, layout: 'exec', name: 'TK One', lang: 'en', noDataMessage: false };
   const one = await planOf(base);

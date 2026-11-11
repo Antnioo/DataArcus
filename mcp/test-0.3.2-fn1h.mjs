@@ -8,6 +8,8 @@ import './test-env.mjs';
 // (assets/js/pbip-visuals.js visual: 300 seeded hand-placed reports and 2 edges, every file written). Recorded in
 // fixtures/fn1h-pins.json as sha256 and length; FN1H_RECORD=1 records them again (only on the base, never to make a run
 // pass); FN1H_DUMP=<file> writes the texts compared. The writer's random ids come from SP1's one fixed seed.
+// (0.3.3 TL1, D-1111-14: every tool's texts in tools/list were shortened on purpose) B1's pin alone was moved, by hand, to
+// check_model_health's new entry (5,597 -> 4,626 characters); its schema is pinned against the base by test-0.3.3-tl1.mjs.
 //   A1  create_report's answers;  B1  check_model_health in the tool list;  B2  its answers and refusals;
 //   C1  the writer's files and results;  C2  the builds reach the visual's parts (title, logo, text, Top N, detail,
 //   subtitles, fitted titles, "No data", the panel)

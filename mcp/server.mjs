@@ -9,6 +9,7 @@ import { ROOT, prepareRoot, rootProblem } from './lib/model.mjs';
 import { instructions } from './lib/agent-text.mjs';
 import { LIMITS } from './lib/tool-limits.mjs';
 import { guardInputErrors } from './lib/tool-answer.mjs';
+import { leanToolsList } from './lib/tools-list.mjs';
 // (0.3.1 S9) one module a tool, registered below in the same order as before (tools/list keeps its order)
 import { register as registerReadModel } from './tools/read_model.mjs';
 import { register as registerSuggestFields } from './tools/suggest_fields.mjs';
@@ -45,6 +46,8 @@ registerCreateArabicTwin(server, ctx);
 registerApprovePlan(server, ctx);
 // (0.3.2 RV1, B-392) a call whose input fails the schema is answered short and capped, for every tool
 guardInputErrors(server);
+// (0.3.3 TL1) tools/list without the schema keys that say nothing (it starts every chat); what a call accepts is unchanged
+leanToolsList(server);
 
 prepareRoot();
 await server.connect(new StdioServerTransport());
