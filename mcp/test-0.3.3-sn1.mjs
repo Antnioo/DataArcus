@@ -3,7 +3,7 @@ import './test-env.mjs';
 // is true. create_report takes path and planId only (TK1); the inputs of a plan are plan_layout's.
 //   T  report-inputs.mjs defines no input a tool does not list; the "ignored keys" answer sends fields to planFields;
 //      planFields does not say "create_report's fields shape"; create_report still says "the approved plan holds it"
-//      for each key plan_layout takes; tools/list did not grow (58,837 at 2960587c)
+//      for each key plan_layout takes; tools/list did not grow (58,837 at 2960587c; 59,592 after IX2's likeForLike, 00f0be33)
 //   node test-0.3.3-sn1.mjs
 import fs from 'node:fs';
 import os from 'node:os';
@@ -35,7 +35,8 @@ try {
   const gone = ['design', 'layout', 'kpis', 'focus', 'tables', 'filters', 'header', 'page', 'dir', 'lang', 'fields', 'displayNames', 'pages', 'text', 'name'];
   for (const k of gone) chk(() => /the approved plan holds/.test(heldSaid([k])) && heldSaid([k]).includes(k), () => `T5. ${k}: ${heldSaid([k])}`);
   // T6: the list did not grow
-  chk(() => size <= 58837, () => `T6. tools/list is ${size} characters, 58,837 at 2960587c`);
+  // (reviewer, 11 Nov: IX2 added check_report's likeForLike, 58,837 -> 59,592 at 00f0be33; SN1 itself adds nothing, 58,805 alone)
+  chk(() => size <= 59592, () => `T6. tools/list is ${size} characters, 59,592 at 00f0be33 (IX2's likeForLike; SN1 adds none)`);
   chk(() => size < 61000, () => `T7. tools/list under tk1's cap of 61,000: ${size}`);
   console.log(`tools/list ${size} characters`);
 } finally { await s.c.close().catch(() => {}); fs.rmSync(ROOT, { recursive: true, force: true }); }
