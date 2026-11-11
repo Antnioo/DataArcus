@@ -9,7 +9,7 @@
   (one call), new `scripts/test-settle.mjs`, `.github/workflows/tests.yml` (3 changes).
 - **Expected checks:** `node scripts/test-settle.mjs` 6 checks, red first on 7960ac78 (2 of 6 fail there); the website
   suites theme-generator and theme-generator-lab keep their check counts; every other suite untouched.
-- **Resume:** running; this review's CI line is the LAST line of this file (the tools read the last one; the 0.3.2
+- **Resume:** DONE 2026-11-11T03:26Z; this review's CI line is the LAST line of this file (the tools read the last one; the 0.3.2
   job of the same code keeps its own note and CI line below, unchanged).
 ## Before -> after
 1. B-439, the flaky "steps bar did not open and land on Layout {open:true,top:715,bars:551}" (theme-generator-lab,
@@ -166,4 +166,5 @@ selection box (Format > General > Properties) or a screenshot at 100% zoom; edge
 ---
 
 ## TR1 (0.3.3, the tests review): CI
-CI: pending on the last commit.
+DONE 2026-11-11T03:26Z. Linux and Windows, macOS skipped by the workflow on a builder branch; 955 s.
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/42950664465 on f5e8ae672798bd91a13d2efc7684afc503efc183

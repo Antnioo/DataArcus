@@ -10,7 +10,7 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 - 0.3.3 merged: BA1 (data-only bot PRs merge themselves, D-1109-10), HK1 (suites read saved fixtures), LK1 (linked visuals folder named, one link counts once), WE1 (Arabic write errors), PQ1, HC2 (Arabic Hijri month column), DB1 (3 unreachable branches removed), SG1 (11 same-job groups moved into the library), TC1 (type-checking pilot on lib/model.mjs, one CI step), SG2 (sp10, sp30, sp42 read pure shared files via `mcp/ledger-places.mjs`). FW1 (Windows folder window wording), FT1 (a hand-placed report's font reaches every visual), MM1 (minimatch 11.0.5 by npm override, B-310; `work/MM1.md`), FT2 (B-432, `work/FT2.md`). DQ1 (DAX names quoted in one place; the twin's field key is the pair; B-437, B-438, B-434; `work/DQ1.md`). TC2 (`work/TC2.md`). CL2 (B-435, `work/CL2.md`). HK2 (B-414: sp6, sp29 saved files; `work/HK2.md`). FB1 (`work/FB1.md`: `pageFill`, how well a page is filled, as numbers; nothing a tool writes changes).
 - DB2 (a plan without a report name gets no plan id). LG2 (B-419: write tools already say the approved Arabic; pin test only, `work/LG2.md`). MH1 (test client: call timeout, restart; `work/MH1.md`).
 - AT1 (B-429, B-449): Arabic title «من أصل», header bracket, 3 Arabic model-path errors (`work/AT1.md`).
-- Running: TR1 (B-439 flake fixed at its cause, CI artifact retry; tests and CI only, `work/TR1.md`).
+- DONE, CI green: TR1 (B-439 flake fixed at its cause, CI artifact retry; tests and CI only, `work/TR1.md`).
 
 ## Next step
 1. PR #121 (RL032L, download lines) is on main. 2. The reviewer merges the DONE jobs above, one check each.
