@@ -12,8 +12,9 @@
   ten planted changes each on exactly its visuals. checker 13 suites passed, release 5 suites passed, no other suite's
   number moved; `node scripts/check-modules.mjs --strict` PASS 1226 checks (219 files, 219 rows), check-contracts PASS
   858, check-result-lines PASS 244, check-agent-memory PASS 514, lint exit 0.
-- **Resume:** stage 1 built and pushed (e96eda91, 2026-11-11T08:25Z); the reviewer: review and merge (nothing user-visible). The
+- **Resume:** DONE. Stage 1 built and pushed (e96eda91, 2026-11-11T08:25Z); the reviewer: review and merge (nothing user-visible). The
   owner: "For the owner" 1 to 4. Next builder: "Next stages" 2.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/42986956518 on f87a3be33714ac9a7437e02b44b8b830190af237 (2026-11-11T08:41Z; Linux 5 of 5 shards, Windows 5 of 5, the website success, macOS skipped by the workflow; origin/integration/0.3.3 had not moved from 69b27179, so nothing to merge in). DONE.
 - **Result:** a model edit that the number check cannot see today (measured: "10 of 10 visuals ask the same question"
   after a measure's DAX changed) is named on exactly its 2 visuals with the chain of names; `node lab/lineage-demo.mjs`.
 
