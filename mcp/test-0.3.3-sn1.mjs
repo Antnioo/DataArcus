@@ -10,7 +10,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
-import { CREATE_REPORT_INPUTS, REPORT_LOOK, unknownKeys, heldSaid } from './lib/report-inputs.mjs';
+import { CREATE_REPORT_INPUTS, REPORT_LOOK, heldSaid } from './lib/report-inputs.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const problems = []; let checks = 0;
