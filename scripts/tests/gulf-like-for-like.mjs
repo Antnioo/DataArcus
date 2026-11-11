@@ -105,8 +105,9 @@ export default async function ({ browser, url }) {
   const sitemap = read('sitemap.xml');
   check(!PAIRS.includes(FILE) && sitemap.includes(`<loc>https://dataarcus.com/${FILE}</loc>`) && !sitemap.includes(`/ar/${FILE}`), 'H1 in the sitemap in English, not in PAIRS, no /ar/ address');
   const hub = read('tools/index.html'), arHub = read('ar/tools/index.html');
-  check(/<a\b[^>]*data-ar-held[^>]*href="gulf-like-for-like\.html"|<a\b[^>]*href="gulf-like-for-like\.html"[^>]*data-ar-held/.test(hub), 'H1 the hub has the card, marked data-ar-held');
-  check(!arHub.includes('gulf-like-for-like'), 'H1 the Arabic hub has no card or link for the held page');
+  check(/<div\b[^>]*data-ar-held[^>]*>\s*(<!--[\s\S]*?-->\s*)?<a\b[^>]*href="gulf-like-for-like\.html"/.test(hub), 'H1 the hub has the card, its column marked data-ar-held');
+  // (its ItemList JSON-LD is the English hub's, byte for byte as every inline script of a copy: English names only)
+  check(!arHub.replace(/<script\b[\s\S]*?<\/script>/gi, '').includes('gulf-like-for-like'), 'H1 the Arabic hub has no card, link or text for the held page');
 
   // C1
   const csp = spawnSync(process.execPath, [path.join(ROOT, 'scripts/csp.mjs')], { encoding: 'utf8' });
