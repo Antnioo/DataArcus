@@ -31,6 +31,7 @@
 // The laptop's run (mcp/lab/CUSTOM-VISUALS-LAB.md) is this chain, then Desktop.
 //   node test-0.3.1-custom-visuals-lab.mjs
 import './test-env.mjs';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -88,6 +89,13 @@ try {
   // ---- CL-2 the validator on the original ----
   const v0 = Lab.validate(RD);
   chk(() => errorsOf(v0) === 0 && warningsOf(v0) === 0, () => `CL-2. the validator on the original: 0 errors, 0 warnings: ${v0.text.slice(0, 600)}`);
+  // CL-2b (TR2 ask 3): the validator read every schema from the saved copy (all 200, none missing), and each saved file is the
+  // pinned one (schemas/pins.json: sha256). A schema change is a reviewed refresh (node lab/refresh-schemas.mjs --write), not a surprise.
+  { const sch = path.join(HERE, 'lab', 'schemas'), pins = J(path.join(sch, 'pins.json')), urls = Object.keys(pins), root = 'https://developer.microsoft.com/json-schemas/';
+    const bad = urls.filter((u) => { const f = path.join(sch, u.slice(root.length)); return !fs.existsSync(f) || crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex') !== pins[u]; });
+    const miss = v0.served.filter((l) => !l.startsWith('200 ')), need = new Set(v0.served.map((l) => l.slice(4)));
+    chk(() => urls.length >= 12 && bad.length === 0 && miss.length === 0 && urls.every((u) => need.has(u)) && [...need].every((u) => u in pins),
+      () => `CL-2b. the validator's ${v0.served.length} schema reads came from the saved copy (${urls.length} pinned): changed or missing ${bad.join()}; not served ${miss.join()}`); }
   const before = hashOf(RD);
 
   // ---- CL-3 and CL-4 through the real server ----
