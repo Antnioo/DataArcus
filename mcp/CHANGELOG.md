@@ -7,7 +7,7 @@ package's manifest; this file says what is in it.
 ## [Unreleased]: 0.3.3
 - A new measure says how well each planned page is filled: the largest empty area, the flattest and the lowest chart. A new
   test pins it on 80 plans of made-up models, so a layout change now shows its whole effect as numbers before it ships.
-  Nothing a tool writes or answers changes.
+  The measure itself is in no answer; the two layout changes it measured are the next two lines.
 - A page with its filters in a side rail is filled better: the KPI cards run across the whole page above the rail and the
   charts beside the rail take the rail's height, so the room under the rail is no longer left empty and the Details page's
   main chart is 312 high on a 1920 x 1080 page, not 168. Pages without a side rail are unchanged.
@@ -56,9 +56,14 @@ package's manifest; this file says what is in it.
 - **Like for like in the Gulf:** `check_report` with `likeForLike` (a year, a Gulf country) names the visuals whose number
   compares with the same Gregorian dates of another period, the months of that year whose Ramadan or Eid days differ from
   the months they are compared with, and the "Last Ramadan" measures the model lacks. Names and dates only, never values.
-- Every chat starts smaller: the tool list an AI app reads at the start of each chat is 58,837 characters, down from
-  74,925 (about a fifth fewer tokens in every chat). The same 11 tools take the same options and answer the same; their
-  texts say it in fewer words, and the details that left the list are in TOOLS.md.
+- **Charts that would show one value on every row:** `check_report` now names each chart whose column cannot change the
+  number it shows on your model (no relationship lets a filter on that column reach what the number reads), with why. Give
+  it `brief`, the questions the report must answer as a measure by columns, and it says which a visual answers (a visual
+  split further still answers it), which only partly, which no visual answers and which the model cannot answer. From
+  the files only, names never values; a rule not yet measured in Power BI Desktop, and in doubt it says it cannot tell.
+- Every chat starts smaller: the tool list an AI app reads at the start of each chat is 60,532 characters with this
+  version's new options, down from 74,925 (about a fifth fewer tokens in every chat). The shortening itself changed no
+  option and no answer: the texts say it in fewer words, and the details that left the list are in TOOLS.md.
 
 ## [0.3.2]: 2026-11-09 (the version for testers, second round)
 The second version for testers. In short:

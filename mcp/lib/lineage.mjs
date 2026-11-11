@@ -9,6 +9,7 @@
 //   compareLineage(before, after)   visual by visual: can it show other numbers, and through which names
 //   reachOf(lineage, what)          the visuals a measure, a column or a table reaches
 //   modelGraph(model)               the model's nodes, their references and its relationships
+//   reportMeasures(G, files)        (0.3.3 OX2) a report's own measures added to the graph, the one reading
 // Three tiers, same-question's: question (the numbers can differ), display (the same numbers shown otherwise: a format
 // string, a colour set by a measure), order (the same numbers in another order: a sort-by column, the visual's sort).
 // IN DOUBT, MORE: whatever cannot be resolved counts as a change of the question; "can only show other numbers if the
@@ -123,14 +124,25 @@ function closure(G, roots) {
 }
 const tablesOf = (nodes, tier) => new Set(Object.keys(nodes).filter((k) => (!tier || nodes[k].tier === tier) && (k.startsWith('t:') || k.startsWith('c:'))).map((k) => (k.startsWith('t:') ? k.slice(2) : k.slice(2).split('|')[0])));
 
+// (0.3.3 OX2) the report's own measures (reportExtensions.json) as nodes 'x:<name>' of the graph G, their DAX followed
+// into the model and into each other (a report measure calling another: in doubt, more); the one reading, called by
+// lineageOf and by brief.mjs. Returns the set of their names, lower case. G is modelGraph's; files: [{ path, json }]
+export function reportMeasures(G, files) {
+  const ext = new Set(), defs = [];
+  arr(files).filter((f) => f && isObj(f.json) && /(^|\/)reportExtensions\.json$/i.test(String(f.path))).forEach((f) => arr(f.json.entities).filter(isObj).forEach((en) => arr(en.measures).filter(isObj).forEach((ms) => {
+    const expr = Parser.exprText(ms.expression); ext.add(lc(ms.name)); defs.push({ ms, expr });
+  })));
+  defs.forEach(({ ms, expr }) => {
+    const own = [...String(expr).matchAll(/\[([^\]]+)\]/g)].map((x) => lc(x[1])).filter((n) => ext.has(n) && n !== lc(ms.name) && !G.IX.measures.has(n)).map((n) => 'x:' + n);
+    G.nodes.set('x:' + lc(ms.name), { label: mLabel(ms.name), kind: 'report measure', q: H({ expr, type: ms.dataType }), d: H({ format: ms.formatString }), deps: [...new Set(daxRefs(expr, null, G.IX).refs.concat(own))], show: [], sort: null, turns: TURNS.test(expr) });
+  });
+  return ext;
+}
+
 export function lineageOf(model, report) {
   const G = modelGraph(model), files = arr(isObj(report) ? report.files : null).filter((f) => f && typeof f.path === 'string' && isObj(f.json));
   // the report's own measures: nodes of their own, their DAX followed into the model
-  const ext = new Set();
-  files.filter((f) => /(^|\/)reportExtensions\.json$/i.test(f.path)).forEach((f) => arr(f.json.entities).filter(isObj).forEach((en) => arr(en.measures).filter(isObj).forEach((ms) => {
-    const expr = Parser.exprText(ms.expression), key = 'x:' + lc(ms.name); ext.add(lc(ms.name));
-    G.nodes.set(key, { label: mLabel(ms.name), kind: 'report measure', q: H({ expr, type: ms.dataType }), d: H({ format: ms.formatString }), deps: daxRefs(expr, null, G.IX).refs, show: [], sort: null, turns: TURNS.test(expr) });
-  })));
+  const ext = reportMeasures(G, files);
   const reportJson = (files.find((f) => /(^|\/)definition\/report\.json$/.test(f.path) || f.path === 'report.json') || {}).json || {};
   const pages = new Map();
   const pageOf = (id) => { if (!pages.has(id)) pages.set(id, { id, json: {}, visuals: [] }); return pages.get(id); };

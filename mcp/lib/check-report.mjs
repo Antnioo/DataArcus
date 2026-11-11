@@ -21,7 +21,7 @@ import { COPY_TAG } from './arabic-twin.mjs';
 import { KNOWN_TYPES, countsOf, mixedOf, boldItalicOf } from './text-format.mjs';   // (0.3.1 CS1: FORMAT_MIXED)
 import { langOfTexts, pageLanguages } from './check-language.mjs';   // (0.3.2 SP20: each page's language)
 import { sameQuestion } from './same-question.mjs';   // (0.3.2 NC1: the number check, layer 1, option against)
-import { impactCheck, likeForLike, readOnModel } from './impact.mjs';   // (0.3.3 HX2: the Impact check, option againstModel; IX2: likeForLike)
+import { impactCheck, likeForLike, readOnModel, briefCheck } from './impact.mjs';   // (0.3.3 HX2: the Impact check, option againstModel; IX2: likeForLike; OX2: briefCheck)
 import { scrub, rel, relOut, cleanPath, tidy } from './check-redact.mjs';   // (0.3.2 SP41: the one redaction boundary)
 import { outsideRel } from './path-rules.mjs';   // (0.3.2 WN1, F01: the one containment rule)
 import { schemaCheck, VALIDATOR_VERSION } from './check-schema.mjs';   // (0.3.2 SP41: the bundled schemas)
@@ -108,7 +108,7 @@ const fixWithOf = (B, PL, f) => (B.kind === 'copy' ? (f.page && PL.pages[f.page.
 
 // ---- the tool ----
 // p: a path inside the working folder. opts: { checks, lang ('auto'|'en'|'ar'), maxFindings (1-200, default 60), against,
-// againstModel, likeForLike ({ year, country }) }
+// againstModel, likeForLike ({ year, country }), brief ([{ id, measure, by }]) }
 export async function checkReport(p, opts) {
   // (0.3.2 FN1E) the steps, in this order, on one context: the reading, the validator, the schemas and rules, the
   // measures not in the model yet, mixed fonts, instructions, field parameters, what was not judged, the findings, the
@@ -132,17 +132,25 @@ function readStep(p, opts) {
   // (0.3.2 NC1, RD2's brief g) against: the original; the copy (p) compared with it visual by visual, first, so a
   // refusal (another model, outside the folder, a link, PBIR-Legacy) comes before any other work
   const same = o.against != null ? sameQuestion(p, o.against) : null;
-  // (0.3.3 HX2) againstModel: the report read on an earlier model too; its refusals come before the checks as well
-  // (0.3.3 IX2) likeForLike: the same report on its own model, read once for both sections
-  const onModel = o.againstModel != null || o.likeForLike != null ? readOnModel(p, o.againstModel != null ? 'againstModel' : 'likeForLike') : null;
-  const impactSection = o.againstModel != null ? impactCheck(p, o.against, o.againstModel, onModel) : null;
-  const lflSection = o.likeForLike != null ? likeForLike(p, o.likeForLike, onModel) : null;
   const sk = { big: [], deep: 0 };
   // the report's files, walked once (round 22b, item 6: three walks counted a folder past the depth three times)
   const reportFiles = walk(loc.reportDir, [], 20000, 0, sk);
   // a file over the limit anywhere in the report: Microsoft's validator reads every file whole, so it is not run
   const scan = reportFiles.filter((f) => { try { return fs.lstatSync(f).size > REPORT_LIMITS.file; } catch (e) { return false; } });
-  const inv = inventory(diskSource(loc, sk), path.basename(loc.reportDir));
+  const src = diskSource(loc, sk), inv = inventory(src, path.basename(loc.reportDir));
+  // (0.3.3 OX2) the model the report names, loaded once a call (a memo by path) for every section and step that reads it
+  const models = new Map();
+  const modelAt = (mp) => { if (!models.has(mp)) { try { models.set(mp, { m: loadModel(mp) }); } catch (e) { models.set(mp, { e }); } } const r = models.get(mp); if (r.e) throw r.e; return r.m; };
+  // (0.3.3 HX2) againstModel: the report read on an earlier model too; its refusals come before the checks as well
+  // (0.3.3 IX2) likeForLike: the same report on its own model, read once for both sections
+  // (0.3.3 OX2) brief: the same reading again (check_report's own, above); asked for, it is refused as they are
+  const wantBrief = o.brief != null || !(o.checks && o.checks.length), shared = { loc, src, inv, sk, modelAt };
+  const asked = o.againstModel != null ? 'againstModel' : o.likeForLike != null ? 'likeForLike' : o.brief != null ? 'brief' : null;
+  let onModel = asked ? readOnModel(p, asked, shared) : null, briefNote = null;
+  if (!onModel && wantBrief) { try { onModel = readOnModel(p, 'brief', shared); } catch (e) { briefNote = e; } }
+  const impactSection = o.againstModel != null ? impactCheck(p, o.against, o.againstModel, onModel) : null;
+  const lflSection = o.likeForLike != null ? likeForLike(p, o.likeForLike, onModel) : null;
+  const briefSection = wantBrief && onModel ? briefCheck(onModel, o.brief != null ? o.brief : null) : null;
   const { R, versions, texts, customVisuals, unreadable, bookmarks } = rulesInput(inv);
   const all = [], notChecked = [];
   const add = (f) => all.push(f);
@@ -164,7 +172,7 @@ function readStep(p, opts) {
   const isRtl = (l) => l === 'ar' || l === 'he';
   const mixed = PLg && new Set(Object.values(PLg.pages).map(isRtl)).size > 1;
   const B = builtByOf(loc, PL), routes = fixRoutesOf(B, loc);
-  return { checks, cap, loc, same, impactSection, lflSection, sk, reportFiles, scan, inv, R, versions, texts, customVisuals, unreadable, bookmarks, all, notChecked, add, lang, dir, PL, PLg, isRtl, mixed, B, routes };
+  return { checks, cap, loc, same, impactSection, lflSection, briefSection, briefNote, modelAt, sk, reportFiles, scan, inv, R, versions, texts, customVisuals, unreadable, bookmarks, all, notChecked, add, lang, dir, PL, PLg, isRtl, mixed, B, routes };
 }
 // (FN1E) Microsoft's validator
 async function validatorStep(cr) {
@@ -227,7 +235,7 @@ function pendingStep(cr) {
   if (checks.includes('navigation')) {
     let tables = null;
     const daxDeclared = daxScriptMeasures(loc), isDax = (ms) => DAX_MEASURE.test(String(ms.Property)) && daxDeclared.has(ms.Expression.SourceRef.Entity + '\u0000' + ms.Property);
-    try { const pbir = readJson(path.join(loc.reportDir, 'definition.pbir')), by = pbir && pbir.datasetReference && pbir.datasetReference.byPath && pbir.datasetReference.byPath.path; if (by) tables = loadModel(path.resolve(loc.reportDir, String(by))).tables; } catch (e) { tables = null; }
+    try { const pbir = readJson(path.join(loc.reportDir, 'definition.pbir')), by = pbir && pbir.datasetReference && pbir.datasetReference.byPath && pbir.datasetReference.byPath.path; if (by) tables = cr.modelAt(path.resolve(loc.reportDir, String(by))).tables; } catch (e) { tables = null; }
     if (tables) R.visuals.filter((x) => x.type === 'image').forEach((x) => {
       const im = arr((((x.json || {}).visual || {}).objects || {}).image).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e.properties || {}), {});
       const ms = [im.sourceUrl, im.sourceField].map((p) => p && p.expr && p.expr.Measure).find((m) => m && m.Expression && m.Expression.SourceRef && !m.Expression.SourceRef.Schema);
@@ -313,7 +321,7 @@ function fieldParametersStep(cr) {
     if (used.length) {
       let tm = null;
       try { const pbir = readJson(path.join(loc.reportDir, 'definition.pbir')), by = pbir && pbir.datasetReference && pbir.datasetReference.byPath && pbir.datasetReference.byPath.path;
-        if (by) { const t = loadModel(path.resolve(loc.reportDir, String(by))).tmsl; tm = (t && t.model) || t; } } catch (e) { tm = null; }
+        if (by) { const t = cr.modelAt(path.resolve(loc.reportDir, String(by))).tmsl; tm = (t && t.model) || t; } } catch (e) { tm = null; }
       const tables = [...new Set(used.map((u) => u.table))], have = tm ? new Set((tm.tables || []).map((t) => t.name)) : null, missing = have ? tables.filter((t) => !have.has(t)) : [];
       const tp = tm ? titleProblems(tm) : { problems: [] };
       tp.problems.forEach((x) => add({ origin: 'rule', rule: 'FIELD_PARAMETER_TITLE', severity: 'warning', file: null, page: null, visual: null,
@@ -332,7 +340,9 @@ function fieldParametersStep(cr) {
 }
 // (FN1E) what the tool could not judge
 function notCheckedStep(cr) {
-  const { checks, sk, R, customVisuals, unreadable, notChecked, lang, dir, mixed, links } = cr;
+  const { checks, sk, R, customVisuals, unreadable, notChecked, lang, dir, mixed, links, briefNote } = cr;
+  // (0.3.3 OX2) the brief check could not read the report's model: said, never silently left out
+  if (briefNote) notChecked.push({ rule: 'briefCheck', why: /names no model folder/.test(String(briefNote.message)) ? 'whether each chart\'s columns can move its number is judged on the report\'s own model, and its definition.pbir names no model folder (byPath): not judged' : 'whether each chart\'s columns can move its number is judged on the report\'s own model, which could not be read: not judged' });
   // what the tool could not judge
   if (dir === 'rtl' || mixed) notChecked.push({ rule: 'RTL_MIRROR (tables)', why: 'which column a right-to-left table puts first is the report\'s choice: Power BI writes the total row\'s "Total" only in a first column of text, so the category at the left can be right (measured 2026-10-04); a hidden first column (width 0) with a row-label measure at the right that gives the row\'s name and «الإجمالي» on the total row is intentional (DataArcus\'s own Arabic tables since 8 Oct 2026, measured in Desktop 2.158.1304), not a finding; not judged' });
   else notChecked.push({ rule: 'RTL_MIRROR', why: `the report reads left to right (lang ${lang}); pass lang "ar" to apply the right-to-left rules` });
@@ -374,7 +384,7 @@ function lintStep(cr) {
     let model = null, modelNote = null;
     try {
       const pbir = readJson(path.join(loc.reportDir, 'definition.pbir')), by = pbir && pbir.datasetReference && pbir.datasetReference.byPath && pbir.datasetReference.byPath.path;
-      if (by) model = loadModel(path.resolve(loc.reportDir, String(by))).tables; else modelNote = 'the report names no model folder (definition.pbir byPath): column types and sort-by columns are unknown';
+      if (by) model = cr.modelAt(path.resolve(loc.reportDir, String(by))).tables; else modelNote = 'the report names no model folder (definition.pbir byPath): column types and sort-by columns are unknown';
     } catch (e) { modelNote = 'the model the report names could not be read: column types and sort-by columns are unknown'; }
     // (A4-2: a file the reading layer cannot read never takes check_report's answer down with the lint)
     let L = null;
@@ -388,7 +398,7 @@ function lintStep(cr) {
 }
 // (FN1E) the answer, cut to fit
 function answerStep(cr) {
-  const { checks, same, impactSection, lflSection, sk, R, versions, unreadable, bookmarks, all, notChecked, lang, mixed, PLg, B, routes, validator, schemas, ruled, suspicious, fieldParameters, byImpact, byRule, findings, lintSection } = cr;
+  const { checks, same, impactSection, lflSection, briefSection, sk, R, versions, unreadable, bookmarks, all, notChecked, lang, mixed, PLg, B, routes, validator, schemas, ruled, suspicious, fieldParameters, byImpact, byRule, findings, lintSection } = cr;
   const answer = {
     report: { pages: R.pages.filter((p) => !p.tooltip).length, tooltipPages: R.pages.filter((p) => p.tooltip).length, visuals: R.visuals.length, bookmarks, pageNames: R.pages.map((p) => p.name), schemaVersions: versions, builtBy: B.said },
     lang, ...(mixed ? { pageLanguages: pageLanguagesOut(PLg) } : {}), validator, schemas, rulesRun: ruled.ran,
@@ -397,6 +407,7 @@ function answerStep(cr) {
     ...(same ? { sameQuestion: same } : {}),
     ...(impactSection ? { impactCheck: impactSection } : {}),
     ...(lflSection ? { likeForLike: lflSection } : {}),
+    ...(briefSection ? { briefCheck: briefSection } : {}),
     findings, notChecked,
     ...(fieldParameters ? { fieldParameters } : {}),
     ...(lintSection ? { lint: lintSection } : {}),
@@ -421,6 +432,9 @@ function answerStep(cr) {
   while (size() > ANSWER_CAP && answer.impactCheck && answer.impactCheck.differ.length > 1) { const ic = answer.impactCheck, all = ic.differ.length + (ic.notListed || 0); ic.differ = ic.differ.slice(0, Math.floor(ic.differ.length * 0.7)); ic.notListed = all - ic.differ.length; }
   // (0.3.3 IX2) like for like's list, cut as the Impact check's is
   while (size() > ANSWER_CAP && answer.likeForLike && answer.likeForLike.list.length > 1) { const lf = answer.likeForLike; lf.list = lf.list.slice(0, Math.floor(lf.list.length * 0.7)); lf.notListed = lf.compared - lf.list.length; }
+  // (0.3.3 OX2) the brief check's lists, cut as the Impact check's are: the counts kept
+  while (size() > ANSWER_CAP && answer.briefCheck && answer.briefCheck.visuals.findings.length > 1) { const bv = answer.briefCheck.visuals; bv.findings = bv.findings.slice(0, Math.floor(bv.findings.length * 0.7)); bv.notListed = bv.oneValue - bv.findings.length; }
+  while (size() > ANSWER_CAP && answer.briefCheck && answer.briefCheck.questions && answer.briefCheck.questions.results.length > 1) { const bq = answer.briefCheck.questions; bq.results = bq.results.slice(0, Math.floor(bq.results.length * 0.7)); bq.notListed = bq.questions - bq.results.length; }
   if (size() > ANSWER_CAP && answer.suspiciousNames) { answer.suspiciousNames.names = answer.suspiciousNames.names.slice(0, 5); }
   if (size() > ANSWER_CAP) answer.notChecked = answer.notChecked.slice(0, 10);
   return answer;

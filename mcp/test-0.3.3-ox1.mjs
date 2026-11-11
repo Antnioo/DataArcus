@@ -10,24 +10,14 @@
 //   S  safety: no hash, no question text, names through safeName, null inputs
 // Made-up models only (fixtures/hx1-souq.mjs, in memory: no file is read or written).   node test-0.3.3-ox1.mjs
 import { souqModel, souqReport, measureOf, tableOf, colRef, msrRef } from './fixtures/hx1-souq.mjs';
+import { visual, aiReport } from './fixtures/ox1-ai-page.mjs';
 
 let B = {}; try { B = await import('./lib/brief.mjs'); } catch (e) { B = {}; }
 const problems = []; let checks = 0;
 const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } catch (e) { err = ' (threw: ' + String(e && e.message || e).slice(0, 200) + ')'; } checks++; if (!ok) { let m = ''; try { m = msg(); } catch (e) { m = 'unexpected'; } problems.push(m + err); } };
 const J = (x) => JSON.stringify(x);
 
-// ---- the made-up "AI-built" page: six visuals that validate and draw, three of them asking what Souq cannot answer
-const S = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/';
-const visual = (name, visualType, roles) => ({ path: `definition/pages/ai/visuals/${name}/visual.json`,
-  json: { $schema: S + 'visualContainer/2.1.0/schema.json', name, position: { x: 0, y: 0, z: 0, width: 300, height: 200 }, visual: { visualType, query: { queryState: Object.fromEntries(Object.entries(roles).map(([r, l]) => [r, { projections: l }])) } } } });
-const aiReport = (more) => { const r = souqReport(); r.files.push({ path: 'definition/pages/ai/page.json', json: { $schema: S + 'page/2.0.0/schema.json', name: 'ai', displayName: 'AI page', width: 1280, height: 720 } },
-  visual('bar-target-by-region', 'clusteredBarChart', { Category: [colRef('Store', 'Region')], Y: [msrRef('Target')] }),
-  visual('table-staff-revenue', 'tableEx', { Values: [colRef('Staff', 'Name'), msrRef('Revenue'), msrRef('Headcount')] }),
-  visual('column-headcount-by-category', 'clusteredColumnChart', { Category: [colRef('Product', 'Category')], Y: [msrRef('Headcount')] }),
-  visual('bar-headcount-by-city', 'clusteredBarChart', { Category: [colRef('Store', 'City')], Y: [msrRef('Headcount')] }),
-  visual('card-ghost', 'card', { Values: [msrRef('Net Sales')] }),
-  visual('line-returns-by-month', 'lineChart', { Category: [colRef('Calendar', 'Month')], Y: [msrRef('Returns Value')] }),
-  ...(more || [])); return r; };
+// ---- the made-up "AI-built" page: fixtures/ox1-ai-page.mjs (six visuals, three asking what Souq cannot answer)
 const check = (m, r) => B.checkVisuals(m || souqModel(), r || aiReport());
 const found = (c) => c.findings.map((f) => `${f.visual}: ${f.number} by ${f.by}: ${f.verdict}`).sort();
 const pair = (c, visualName, number) => (c.pairs.find((p) => p.visual === visualName && p.number === number) || {}).verdict;
@@ -76,7 +66,7 @@ chk(() => { const m = souqModel(); tableOf(m, '_Measures').measures.push({ name:
 chk(() => one({ Values: [colRef('Pick', 'Pick'), msrRef('Revenue')] }, (m) => { m.model.tables.push({ name: 'Pick', partitions: [{ name: 'Pick', mode: 'import', source: { type: 'calculated', expression: '{ ( "Region", NAMEOF ( Store[Region] ), 0 ) }' } }], columns: [{ name: 'Pick', dataType: 'string', sourceColumn: '[Value1]' }] }); }, '[Revenue]') === 'cannot tell', () => 'X7. a field parameter\'s column: cannot tell');
 chk(() => one({ Values: [colRef('Time calc', 'Name'), msrRef('Revenue')] }, (m) => { m.model.tables.push({ name: 'Time calc', calculationGroup: { calculationItems: [{ name: 'YTD', expression: 'CALCULATE ( SELECTEDMEASURE (), DATESYTD ( \'Calendar\'[Date] ) )' }] }, columns: [{ name: 'Name', dataType: 'string', sourceColumn: 'Name' }], partitions: [{ name: 'p', source: { type: 'calculationGroup' } }] }); }, '[Revenue]') === 'cannot tell', () => 'X8. a calculation group\'s column: cannot tell');
 chk(() => { const r = souqReport(); r.files.push(visual('x', 'tableEx', { Values: [colRef('Store', 'Region'), { field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: '_Measures' } }, Property: 'Mine' } }, queryRef: '_Measures.Mine' }] }));
-  r.files.push({ path: 'definition/reportExtensions.json', json: { entities: [{ name: '_Measures', measures: [{ name: 'Mine', expression: 'SUM ( Targets[Target] )' }] }] } }); const c = B.checkVisuals(souqModel(), r); return pair(c, 'x', '[Mine](report measure)') === 'cannot tell' && c.cannotTell === 1 && c.findings.length === 0; }, () => 'X9. a report measure: cannot tell (stage 2 reads it), counted, no finding');
+  r.files.push({ path: 'definition/reportExtensions.json', json: { entities: [{ name: '_Measures', measures: [{ name: 'Mine', expression: 'SUM ( Targets[Target] )' }] }] } }); const c = B.checkVisuals(souqModel(), r), unread = B.checkVisuals(souqModel(), { files: r.files.filter((f) => !/reportExtensions/.test(f.path)) }); return pair(c, 'x', '[Mine](report measure)') === 'one value' && c.oneValue === 1 && c.findings.length === 1 && pair(unread, 'x', '[Mine](report measure)') === 'cannot tell' && unread.cannotTell === 1 && unread.findings.length === 0; }, () => 'X9. a report measure (0.3.3 OX2, changed on purpose: was cannot tell): judged by what its DAX reads, SUM ( Targets[Target] ) by Store[Region] is one value; its definition not read: cannot tell, no finding');
 chk(() => { const lvl = { field: { HierarchyLevel: { Expression: { Hierarchy: { Expression: { SourceRef: { Entity: 'Store' } }, Hierarchy: 'Geo' } }, Level: 'Region' } }, queryRef: 'Store.Geo.Region' }; const add = (m) => { tableOf(m, 'Store').hierarchies = [{ name: 'Geo', levels: [{ name: 'Region', column: 'Region', ordinal: 0 }] }]; };
   const m = souqModel(); add(m); const r = souqReport(); r.files.push(visual('x', 'tableEx', { Values: [lvl, msrRef('Target'), msrRef('Revenue')] })); const c = B.checkVisuals(m, r); return pair(c, 'x', '[Target]') === 'one value' && pair(c, 'x', '[Revenue]') === 'moves'; }, () => 'X10. a hierarchy level groups by its table');
 chk(() => { const r = souqReport(); r.files.push(visual('x', 'tableEx', { Values: [colRef('Store', 'Postcode'), msrRef('Revenue')] })); const c = B.checkVisuals(souqModel(), r); return c.notInModel.some((n) => n.visual === 'x' && n.name === 'Store[Postcode]') && c.findings.length === 0 && c.pairs.every((p) => p.visual !== 'x'); }, () => 'X11. a column the model lacks: not in the model, no pair');
