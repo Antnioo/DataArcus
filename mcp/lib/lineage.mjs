@@ -25,7 +25,9 @@ import { safeName } from './read-report.mjs';
 
 const require = createRequire(import.meta.url);
 const Index = require('../../assets/js/model-index.js'), Parser = require('../../assets/js/dax-reference-parser.js');
-const { normalizeModel, buildIndex, K, daxRefs, aggBase } = Index;
+// (0.3.3 HX2) the model's graph is the health check's own (graphStep, with each edge's kind): one graph, never a copy
+const Health = require('../../assets/js/model-health-engine.js');
+const { K, daxRefs } = Index;
 
 const H = (x) => crypto.createHash('sha256').update(canon(x)).digest('hex');
 const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
@@ -46,23 +48,25 @@ const relKey = (r) => `r:${lc(r.fromTable)}|${lc(r.fromColumn)}>${lc(r.toTable)}
 // a DAX text that can turn a relationship on or change its direction: every path counts then, whatever its direction
 const TURNS = /\b(USERELATIONSHIP|CROSSFILTER)\s*\(/i;
 
+// Which of the health check's edges move a number (its graph also keeps what a clean-up must keep: a measure's home
+// table, the detail rows and KPI expressions, the "Enter data" column of a measures table): dax, table, agg and group
+// are the question's; format (a measure's format string expression) is how it is shown; sort is the order.
 export function modelGraph(model) {
-  const M = normalizeModel(isObj(model) ? model : {}), IX = buildIndex(M), nodes = new Map();
+  const { M, IX, edges } = Health.graphStep(isObj(model) ? model : {}, { edges: true }), nodes = new Map();
   const put = (key, n) => nodes.set(key, Object.assign({ deps: [], show: [], sort: null, turns: false }, n));
-  M.functions.forEach((f) => put(K.f(f.name), { label: `${safeName(f.name)} (function)`, q: H({ expr: f.expr }), d: '', deps: daxRefs(f.expr, null, IX).refs, turns: TURNS.test(f.expr) }));
+  const E = (key, ...kinds) => [...new Set(kinds.flatMap((k) => arr((edges.get(key) || {})[k])))];
+  M.functions.forEach((f) => put(K.f(f.name), { label: `${safeName(f.name)} (function)`, q: H({ expr: f.expr }), d: '', deps: E(K.f(f.name), 'dax'), turns: TURNS.test(f.expr) }));
   M.tables.forEach((t) => {
-    const cg = t.calcGroup, tDeps = (t.isCalcTable ? daxRefs(t.calcExpr, null, IX).refs : []).concat(cg ? cg.items.flatMap((ci) => daxRefs(ci.expr + '\n' + ci.fsExpr, null, IX).refs) : []);
+    const cg = t.calcGroup;
     put(K.t(t.name), { label: tLabel(t.name), kind: 'table', q: H({ parts: t.partitions.map((p) => [p.mode, p.sourceType, p.expression, p.entityName, p.schemaName]), calc: t.calcExpr, group: cg ? [cg.precedence, cg.items.map((ci) => [ci.name, ci.expr, ci.fsExpr])] : null }), d: '',
-      deps: [...new Set(tDeps)].filter((k) => k !== K.t(t.name)), turns: TURNS.test(t.calcExpr + (cg ? cg.items.map((ci) => ci.expr).join('\n') : '')) });
+      deps: E(K.t(t.name), 'dax').filter((k) => k !== K.t(t.name)), turns: TURNS.test(t.calcExpr + (cg ? cg.items.map((ci) => ci.expr).join('\n') : '')) });
     t.columns.forEach((c) => {
-      const deps = [K.t(t.name)].concat(c.kind === 'calculated' ? daxRefs(c.expr, t.name, IX).refs : []);
-      const base = aggBase(c.alternateOf); if (base) deps.push(base);
-      arr(c.relatedColumnDetails && c.relatedColumnDetails.groupByColumns).forEach((g) => { if (g && g.groupingColumn) deps.push(K.c(t.name, g.groupingColumn)); });
-      put(K.c(t.name, c.name), { label: cLabel(t.name, c.name), kind: 'column', q: H({ kind: c.kind, type: c.dataType, expr: c.expr, source: c.sourceColumn, alt: c.alternateOf || null }), d: H({ format: c.formatString, category: c.dataCategory }),
-        deps: [...new Set(deps)], sort: c.sortBy ? K.c(t.name, c.sortBy) : null, turns: TURNS.test(c.expr) });
+      const key = K.c(t.name, c.name);
+      put(key, { label: cLabel(t.name, c.name), kind: 'column', q: H({ kind: c.kind, type: c.dataType, expr: c.expr, source: c.sourceColumn, alt: c.alternateOf || null }), d: H({ format: c.formatString, category: c.dataCategory }),
+        deps: E(key, 'table', 'dax', 'agg', 'group'), sort: E(key, 'sort')[0] || null, turns: TURNS.test(c.expr) });
     });
     t.measures.forEach((ms) => put(K.m(ms.name), { label: mLabel(ms.name), kind: 'measure', q: H({ expr: ms.expr }), d: H({ format: ms.formatString, by: ms.fsExpr }),
-      deps: daxRefs(ms.expr, null, IX).refs, show: ms.fsExpr ? daxRefs(ms.fsExpr, null, IX).refs : [], turns: TURNS.test(ms.expr) }));
+      deps: E(K.m(ms.name), 'dax'), show: E(K.m(ms.name), 'format'), turns: TURNS.test(ms.expr) }));
   });
   const relationships = M.relationships.map((r) => ({ key: relKey(r), label: `${cLabel(r.fromTable, r.fromColumn)} to ${cLabel(r.toTable, r.toColumn)}`, from: lc(r.fromTable), to: lc(r.toTable), active: r.active,
     both: r.cross === 'bothDirections', many: r.toCard === 'many', q: H([r.fromTable, r.fromColumn, r.toTable, r.toColumn, r.active, r.cross, r.fromCard, r.toCard]) }));
@@ -180,7 +184,8 @@ const kindOf = (G, k) => (k.startsWith('r:') ? 'relationship' : (G.nodes.get(k) 
 const CHANGED = { measure: 'measure: its DAX changed', 'report measure': 'report measure changed', column: 'column: its definition changed', table: 'table: its source query or its definition changed', relationship: 'relationship changed', function: 'function: its DAX changed' };
 function whyOf(a, b) {
   const why = [], through = (v, k) => { const path = []; let at = v.nodes[k] && v.nodes[k].via, n = 0; while (at && n++ < 50) { path.unshift(v.nodes[at].label); at = v.nodes[at].via; } return path; };
-  const say = (what, v, k) => why.push(Object.assign({ what, name: v.nodes[k].label }, through(v, k).length ? { through: through(v, k) } : {}));
+  // (0.3.3 HX2) chain: the same in one sentence, from the visual's own field down to what changed
+  const say = (what, v, k) => { const th = through(v, k), name = v.nodes[k].label; why.push(Object.assign({ what, name }, th.length ? { through: th } : {}, { chain: (th.length ? th.join(' uses ') + ' uses ' : '') + name + ': ' + what })); };
   if (a.parts.own !== b.parts.own) why.push({ what: 'its own question changed (its fields, aggregations, filters or type)' });
   if (a.parts.context !== b.parts.context) why.push({ what: 'its page\'s filters changed (the page\'s, the report\'s, or a slicer\'s saved selection on the page)' });
   TIERS.forEach((tier) => {

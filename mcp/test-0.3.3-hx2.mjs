@@ -77,8 +77,10 @@ try {
     chk(() => x && x.found === true && x.name === '[Total Sales]' && x.reports.length === 1 && x.visuals === 7 && J(vis) === J(['barProduct', 'cardSales', 'colRegion', 'customGauge', 'lineMonth', 'tblProducts', 'tipCard']) && x.reports[0].pages.length === 3,
       () => `R1 [Total Sales] reaches 7 visuals on 3 pages of 1 report: ${r.t.slice(0, 900)}`);
     chk(() => x.reports[0].pages.every((p) => p.visuals.every((v) => v.tier === 'question')) && typeof x.notProved === 'string' && /data/.test(x.notProved), () => `R1b each by its tier, with what it does not prove: ${r.t.slice(0, 600)}`); }
-  { const a = (await reach('Sales[Region]')).x, b = (await reach("'Calendar'")).x, c = (await reach('Calendar[Month Number]')).x;
-    chk(() => a.visuals === 5 && a.reports[0].pages.length === 1, () => `R3 Sales[Region]: 5 visuals on 1 page: ${J(a)}`);
+  // (Sales[Region] is in [Total Sales]'s DAX here, the canary's filter: every visual of [Total Sales] reaches it too)
+  { const a = (await reach('Sales[Region]')).x, b = (await reach("'Calendar'")).x, c = (await reach('Calendar[Month Number]')).x, p = (await reach("'Sales'[Product]")).x;
+    chk(() => a.visuals === 9 && a.reports[0].pages.length === 3, () => `R3 Sales[Region]: 9 visuals on 3 pages (5 by their own fields, 4 more through [Total Sales]): ${J(a)}`);
+    chk(() => p.visuals === 3 && J(p.reports[0].pages.flatMap((x) => x.visuals.map((v) => v.visual)).sort()) === J(['barProduct', 'colRegion', 'tblProducts']), () => `R3d 'Sales'[Product]: colRegion, barProduct, tblProducts: ${J(p)}`);
     chk(() => b.visuals === 1 && b.reports[0].pages[0].visuals[0].visual === 'lineMonth' && /table/.test(b.name), () => `R3b the Calendar table: lineMonth: ${J(b)}`);
     chk(() => c.visuals === 1 && c.reports[0].pages[0].visuals[0].tier === 'order', () => `R3c Calendar[Month Number] (Month Name's sort-by column): lineMonth, in its order only: ${J(c)}`); }
   { const { x } = await reach('[No Such Measure]'); chk(() => x && x.found === false && x.visuals === 0 && /not in the model/.test(x.said), () => `R4 a name the model lacks: found false, said: ${J(x)}`); }
