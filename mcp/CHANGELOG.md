@@ -8,6 +8,9 @@ package's manifest; this file says what is in it.
 - A new measure says how well each planned page is filled: the largest empty area, the flattest and the lowest chart. A new
   test pins it on 80 plans of made-up models, so a layout change now shows its whole effect as numbers before it ships.
   Nothing a tool writes or answers changes.
+- A page with its filters in a side rail is filled better: the KPI cards run across the whole page above the rail and the
+  charts beside the rail take the rail's height, so the room under the rail is no longer left empty and the Details page's
+  main chart is 312 high on a 1920 x 1080 page, not 168. Pages without a side rail are unchanged.
 - The Arabic chart title for "Top N of M" now reads «أعلى N من أصل M: ...» (it could be read as "N higher than M"); the twin's
   drafts and the Arabic terminology sheet use the new words.
 - The Arabic approval page's first line no longer repeats the generic folder words in brackets: the bracket shows the
