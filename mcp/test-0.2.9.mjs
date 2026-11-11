@@ -196,8 +196,15 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
   // ---------- an expired plan (a server whose plans live 1.5 seconds) ----------
   {
     const s = await serverClient(ROOT, { DATAARCUS_PLAN_TTL_MS: '1500' });
-    const pl = await s.call('plan_layout', { path: 'g', name: 'G9 Expired', layout: 'exec', lang: 'en' }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
-    await s.call('approve_plan', { planId: pid });
+    // (on a loaded runner, the mutation run's 4 copies on macOS, approve_plan can arrive after the 1.5 seconds: the plan is
+    // then deleted as expired at approval, and create_report's refusal says "unknown", not "expired": plan again, and
+    // go on once the approval was accepted, so the wait below is the only thing that expires it)
+    let pid;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const pl = await s.call('plan_layout', { path: 'g', name: 'G9 Expired', layout: 'exec', lang: 'en' }); pid = pl.j && pl.j.plan && pl.j.plan.planId;
+      const ap = await s.call('approve_plan', { planId: pid });
+      if (!ap.err) break;
+    }
     await new Promise((r) => setTimeout(r, 2000));
     const before = all(), x = await s.call('create_report', { path: 'g', planId: pid }), after = all();
     chk(() => x.err && /expired/.test(x.t) && !added(before, after).length, () => `G9. an expired plan must be refused and nothing written: ${short(x)}`);
