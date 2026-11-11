@@ -498,7 +498,8 @@ function slicersStep(lc) { let { a, pf, exact, biSaid } = lc;
       const written = exact.slicers, asked = (pf.slicers || []).map(slicerKey), added = asked.length ? written.filter((f) => !asked.includes(f)) : [];
       const list = written.join(', '), listAr = written.join('، '), n = written.length;
       const en = `The report's slicers: ${list}.` + (added.length ? ` ${added.join(', ')} ${added.length === 1 ? 'was' : 'were'} added by DataArcus to fill the design's ${n} slicer slots (the plan names ${asked.length}): say it in the plan; to have another field there, name ${n} slicers in planFields.slicers.`
-        : asked.length ? '' : ' Chosen by DataArcus from the model (planFields.slicers names them).');
+        : asked.length ? '' : ' Chosen by DataArcus from the model (planFields.slicers names them).')
+        + (a.filters === 'none' ? ' filters "none" leaves the first page without a filter area; the second page (Details) keeps its filter rail, and these slicers are on it: say so in the plan; for a report with no slicers at all, call plan_layout again with secondPage false.' : '');
       const ar = `مقسمات التقرير: ${listAr}.` + (added.length ? ` أضاف DataArcus ${added.join('، ')} لملء خانات المقسمات في التصميم (عددها ${n}، والخطة تسمّي ${asked.length}).` : asked.length ? '' : ' اختارها DataArcus من النموذج.');
       return { slicers: Object.assign({ written }, asked.length ? { asked } : {}, added.length ? { added } : {}, { sayInPlan: en }, a.lang === 'ar' ? { sayInPlanAr: ar } : {}) };
     })() : {};

@@ -543,12 +543,17 @@
       const tucked = ta && tb ? (better(pageFill(tb), pageFill(ta)) ? ta : tb) : tb || ta;
       out = tucked && pageFill(tucked).holeArea < pageFill(settled).holeArea - 1 ? tucked : settled;
     }
+    // (0.3.3 FB4, FB3's "Seen" 3: a bar chart 312 high after the reflow still carried the count of 440) a category chart's
+    // Top N follows the size it ends with: the one place that works it out is categoryFit, on the 720 grid it was measured
+    // on (topScale: the units of the slots per grid unit; without it the slots are not in a known unit and keep theirs)
+    const ts = +o.topScale;
+    if (ts > 0) out = out.map((s) => { if (s.topN == null) return s; const n = categoryFit(s.kind, Math.round(s.w / ts), Math.round(s.h / ts)); return n && n !== s.topN ? Object.assign({}, s, { topN: n }) : s; });
     return { slots: out, dropped };
   }
   // fitSlots' options in other units (k: the units wanted per unit given; the background's 720 grid from page units is
   // 1 / page(c).s): the lengths scaled, the kinds and the count kept
   const fitScale = (opt, k) => { const o = opt || {}, R = o.railItems;
-    return Object.assign({}, o, { headerRows: (+o.headerRows || 0) * k }, R ? { railItems: Object.assign({}, R, { minH: R.minH * k, maxH: R.maxH * k, resetH: R.resetH * k, pad: R.pad * k, gap: R.gap * k }) } : {}); };
+    return Object.assign({}, o, { headerRows: (+o.headerRows || 0) * k }, o.topScale ? { topScale: o.topScale * k } : {}, R ? { railItems: Object.assign({}, R, { minH: R.minH * k, maxH: R.maxH * k, resetH: R.resetH * k, pad: R.pad * k, gap: R.gap * k }) } : {}); };
 
   // The report's pages for a layout: this page, the second page when asked, each with the slide-in panel when asked.
   // opts: { second, panel, logoRatio (an attached logo's width / height, see computeSlots), tableFields (see

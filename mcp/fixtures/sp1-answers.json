@@ -24,12 +24,12 @@
   "P5 Arabic, no names": {
    "err": false,
    "length": 19855,
-   "sha256": "ec09019f1de6aea4892352541ea168adfe151c3a9b2dd5989bbd3823cedc46b6"
+   "sha256": "48fac9c5bd5acfba1734590699d84e365bd8343193017e46d2e5f708a953e2df"
   },
   "P6 bilingual": {
    "err": false,
    "length": 25529,
-   "sha256": "91f44490a537f0b418e7a186e67d7f66ee1fea1ae1f64c2aeb365c1511d08742"
+   "sha256": "9908b92200842b961e4f1f0f0a5bbebe30feba1b112fd19c31b64b597b4ba729"
   },
   "P7 redesign": {
    "err": false,
@@ -44,12 +44,12 @@
   "P10 Arabic, a field no list names": {
    "err": false,
    "length": 17652,
-   "sha256": "1741aaf796dd7634222ad8735364ff06af06f7fddc909074aadcad340f0ea8c3"
+   "sha256": "59774a151b5157620db6ad93a06872e776f17a17b8f852c7df32184df8dde36c"
   },
   "P9 options and scripts": {
    "err": false,
    "length": 16695,
-   "sha256": "6b8d4798f63615b75ea2dc3105160b94160843602e2ccb31c3cd7443f64e48bd"
+   "sha256": "8691cdc56c53039647d55e24af66a8f817c85c4e8952bc5b987bca41b1635a66"
   }
  }
 }

@@ -14,6 +14,10 @@ package's manifest; this file says what is in it.
 - A single-focus page with two or three filters in a side rail no longer leaves an empty area under the rail: the text
   box moves under the rail and the chart takes the whole width beside them (1560 x 789 on a 1920 x 1080 page, was 1064
   wide). The page-fill measure now also gives each page's row balance (the first row of charts over the row under it).
+- A bar or column chart's Top N now follows the size its page ends with: after the filter rail's reflow made a bar chart 312 high
+  instead of 440, it still kept the count worked out for 440 (9 categories where 5 fit). The count is now worked out once, from
+  the final size. With filters "none" the answer now says the second page (Details) keeps its filter rail and its 3 slicers,
+  and that `secondPage` false writes none.
 - The Arabic chart title for "Top N of M" now reads «أعلى N من أصل M: ...» (it could be read as "N higher than M"); the twin's
   drafts and the Arabic terminology sheet use the new words.
 - The Arabic approval page's first line no longer repeats the generic folder words in brackets: the bracket shows the
