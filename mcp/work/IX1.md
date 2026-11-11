@@ -15,8 +15,14 @@
   check-contracts PASS 858, check-result-lines PASS 247, check-agent-memory PASS 518, check-min: all 142 match (no new
   .min.js: no page loads the engine), `node scripts/test-site-config.mjs` PASS, lint exit 0; the 16 suites that list
   `assets/js` run one by one, each PASS with its number unchanged.
-- **Resume:** stage 1 built; CI on the branch next. The reviewer: review and merge (nothing user-visible). The owner:
-  "For the owner" 1 to 5. Next builder: "Next stages" 2.
+- **Resume:** DONE. Stage 1 built and pushed (7c4daaa0). The reviewer: review and merge (nothing user-visible). The
+  owner: "For the owner" 1 to 5. Next builder: "Next stages" 2.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/43051896471 on 7c4daaa0e20ad540c29ffffc18e25ddfa7d9eb51
+  (2026-11-11T17:17Z; Linux 5 of 5 shards, Windows 5 of 5, the website 3 of 3, macOS skipped by the workflow;
+  origin/integration/0.3.3 had not moved from 2960587c, so nothing to merge in). Green on the fifth attempt: four
+  times the website shards stopped in "Install Chromium" ("Temporary failure resolving 'azure.archive.ubuntu.com'",
+  the runners' DNS; no suite had started), each rerun with "rerun failed jobs", no commit between; meanwhile the 50
+  website suites passed here on the same commit. DONE, CI green on 7c4daaa0 (run 43051896471).
 - **Result:** on a made-up report, 4 of 16 visuals are named as comparing with the same Gregorian dates of another
   period, each with its chain ("[Growth %] uses [Revenue LY]"), and for 2026 against 2025 the 5 months that are not
   like for like in the Gulf are listed with their Ramadan and Eid days; `node lab/ix1-like-for-like-demo.mjs`.
@@ -215,6 +221,8 @@ estimates marked, and stay next to `NOT_PROVED`.
 - The fixture first, then the table, then the suite red, then the code (HX1's lesson) held again: every row of the
   table came out as written, and the run found only my English ("1 Ramadan days").
 - WORK.md is at its cap to the character (3,200 of 3,200): the next builder's line needs an entry cut first.
+- CI's website shards install Chromium from Ubuntu's mirror on every run: a DNS failure there cost four reruns
+  (about 75 minutes). A cached browser, or a retry inside the step, would have hidden it.
 - A discovery brief that lists the parts gets a parts list back; the fact that decided the ranking was not in the list
   (DataArcus's own measurement in `gulf-measures.js:5-7`, and that DataArcus writes the Gregorian comparison itself).
   Ask for "one fact the list did not hold".
