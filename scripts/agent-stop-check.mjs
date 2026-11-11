@@ -10,7 +10,7 @@
 // After 3 refusals in a row it allows the stop (a broken builder must not loop); the count is a file in
 // os.tmpdir() (or AGENT_STOP_STATE_DIR), keyed by branch. Any other branch: allowed at once. If git or the note cannot
 // be read: allowed, and it prints why (never a trap).
-//   node scripts/agent-stop-check.mjs [--root <dir>]     exit 0 allow, exit 2 refuse
+//   node scripts/agent-stop-check.mjs [--root <dir>]     exit 0 allow, exit 2 refuse (default root: the repo this script is in)
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -89,7 +89,8 @@ export function check(root, stateDir = process.env.AGENT_STOP_STATE_DIR || os.tm
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const i = process.argv.indexOf('--root');
-  const root = i > 0 ? path.resolve(process.argv[i + 1]) : process.cwd();
+  // (SN1) the repo this script lives in, never the session's folder: a builder's shell may be in mcp/ (Claude Code runs a hook there)
+  const root = i > 0 ? path.resolve(process.argv[i + 1]) : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
   let r;
   try { r = check(root); } catch (e) { r = { exit: 0, out: 'agent-stop-check: allowed, it failed itself (' + String(e.message).slice(0, 120) + ')' }; }
   if (r.out) console.log(r.out);

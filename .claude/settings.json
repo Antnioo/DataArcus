@@ -3,7 +3,7 @@
     "Stop": [
       {
         "hooks": [
-          { "type": "command", "command": "node scripts/agent-stop-check.mjs" }
+          { "type": "command", "command": "node \"${CLAUDE_PROJECT_DIR:-.}/scripts/agent-stop-check.mjs\"" }
         ]
       }
     ]
