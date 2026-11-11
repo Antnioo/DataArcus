@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-11T04:03Z",
+  "generated_at": "2026-11-11T04:27Z",
   "today": {
     "date": "2026-11-11",
-    "cost_usd": 50.75,
-    "tokens": 73971651,
-    "sessions": 8,
+    "cost_usd": 85.78,
+    "tokens": 153929200,
+    "sessions": 13,
     "by_kind": {
       "builder": {
-        "cost_usd": 46.39,
-        "count": 3
+        "cost_usd": 76.77,
+        "count": 6
       },
       "worker": {
-        "cost_usd": 4.36,
-        "count": 5
+        "cost_usd": 9.01,
+        "count": 7
       },
       "probe": {
         "cost_usd": 0,
@@ -26,16 +26,16 @@
     },
     "by_model": {
       "sonnet": {
-        "cost_usd": 1.44,
-        "count": 4
+        "cost_usd": 2.21,
+        "count": 5
       },
       "opus": {
-        "cost_usd": 2.92,
-        "count": 1
+        "cost_usd": 23.95,
+        "count": 4
       },
       "fable": {
-        "cost_usd": 46.39,
-        "count": 3
+        "cost_usd": 59.62,
+        "count": 4
       }
     }
   },
@@ -120,20 +120,38 @@
     },
     {
       "date": "2026-11-11",
-      "cost_usd": 50.75,
-      "tokens": 73971651,
-      "sessions": 8
+      "cost_usd": 85.78,
+      "tokens": 153929200,
+      "sessions": 13
     }
   ],
   "jobs": [
     {
+      "id": "LR2",
+      "title": "LR2: build LR1's approved rules and checks in the engine (D-1111-03)",
+      "model": "opus",
+      "cost_usd": 16.38,
+      "tokens": 52160063,
+      "minutes": 44,
+      "finished_at": "2026-11-11T04:20Z"
+    },
+    {
       "id": "CO1",
       "title": "CO1: what is outdated, what newer techniques we miss, how to grow into a company (D-1111-06)",
       "model": "fable",
-      "cost_usd": 10.22,
-      "tokens": 9682008,
-      "minutes": 9,
-      "finished_at": "2026-11-11T03:53Z"
+      "cost_usd": 23.45,
+      "tokens": 23987529,
+      "minutes": 41,
+      "finished_at": "2026-11-11T04:16Z"
+    },
+    {
+      "id": "BT1",
+      "title": "BT1: 10 tester candidates and the invite for 0.3.2 (D-1111-07 ask 2)",
+      "model": "sonnet",
+      "cost_usd": 0.77,
+      "tokens": 2079596,
+      "minutes": 4,
+      "finished_at": "2026-11-11T04:09Z"
     },
     {
       "id": "TR1",
@@ -467,36 +485,12 @@
       "tokens": 11175163,
       "minutes": 82,
       "finished_at": "2026-11-09T08:11Z"
-    },
-    {
-      "id": "FN1J",
-      "title": "FN1J: plan_layout register into named steps (the last function over 150)",
-      "model": "opus",
-      "cost_usd": 14.38,
-      "tokens": 46089766,
-      "minutes": 165,
-      "finished_at": "2026-11-09T06:12Z"
-    },
-    {
-      "id": "PC1",
-      "title": "PC1: the cost calculator's checked date in one place, from powerbi-prices.json (B-413)",
-      "model": "sonnet",
-      "cost_usd": 1.53,
-      "tokens": 7246765,
-      "minutes": 79,
-      "finished_at": "2026-11-09T05:26Z"
     }
   ],
   "workers": {
-    "count": 5,
-    "cost_usd": 4.36,
+    "count": 7,
+    "cost_usd": 9.01,
     "costliest": [
-      {
-        "label": "worker 00:02",
-        "cost_usd": 0.33,
-        "minutes": 2,
-        "started": "2026-11-11T00:02Z"
-      },
       {
         "label": "worker 00:47",
         "cost_usd": 2.92,
@@ -504,10 +498,16 @@
         "started": "2026-11-11T00:48Z"
       },
       {
-        "label": "worker 03:02",
-        "cost_usd": 0.49,
-        "minutes": 4,
-        "started": "2026-11-11T03:02Z"
+        "label": "worker 02:48",
+        "cost_usd": 1.98,
+        "minutes": 7,
+        "started": "2026-11-11T02:48Z"
+      },
+      {
+        "label": "worker 03:52",
+        "cost_usd": 2.67,
+        "minutes": 7,
+        "started": "2026-11-11T03:53Z"
       }
     ]
   },
@@ -518,6 +518,16 @@
       "cost_usd": 29.65
     },
     {
+      "label": "LR2",
+      "kind": "builder",
+      "cost_usd": 16.38
+    },
+    {
+      "label": "CO1",
+      "kind": "builder",
+      "cost_usd": 13.23
+    },
+    {
       "label": "CO1",
       "kind": "builder",
       "cost_usd": 10.22
@@ -526,16 +536,6 @@
       "label": "LR1",
       "kind": "builder",
       "cost_usd": 6.52
-    },
-    {
-      "label": "worker 00:47",
-      "kind": "worker",
-      "cost_usd": 2.92
-    },
-    {
-      "label": "worker 03:02",
-      "kind": "worker",
-      "cost_usd": 0.49
     }
   ]
 }
