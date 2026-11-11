@@ -1,0 +1,1672 @@
+{
+ "about": "tools/list of integration/0.3.3 36abdcd2 (before TL1) with every description left out: names, order, titles, annotations, execution and each input schema as it was sent. Read by test-0.3.3-tl1.mjs.",
+ "tools": [
+  {
+   "name": "read_model",
+   "title": "Read a Power BI model",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "tables": {
+      "minItems": 1,
+      "maxItems": 100,
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "reach": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+     },
+     "lang": {
+      "type": "string",
+      "enum": [
+       "en",
+       "ar"
+      ]
+     }
+    },
+    "required": [
+     "path"
+    ],
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "openWorldHint": false
+   },
+   "execution": {
+    "taskSupport": "forbidden"
+   }
+  },
+  {
+   "name": "suggest_fields",
+   "title": "Suggest fields for a report design",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "kpis": {
+      "default": 4,
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 6
+     },
+     "focus": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+     },
+     "tables": {
+      "minItems": 1,
+      "maxItems": 100,
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "lang": {
+      "type": "string",
+      "enum": [
+       "en",
+       "ar"
+      ]
+     },
+     "columnStats": {
+      "type": "object",
+      "properties": {
+       "rows": {
+        "type": "object",
+        "propertyNames": {
+         "type": "string"
+        },
+        "additionalProperties": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 9007199254740991
+        }
+       },
+       "distinct": {
+        "type": "object",
+        "propertyNames": {
+         "type": "string"
+        },
+        "additionalProperties": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 9007199254740991
+        }
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "required": [
+     "path"
+    ],
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "openWorldHint": false
+   },
+   "execution": {
+    "taskSupport": "forbidden"
+   }
+  },
+  {
+   "name": "check_model_health",
+   "title": "Check model health",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "lang": {
+      "type": "string",
+      "enum": [
+       "en",
+       "ar"
+      ]
+     },
+     "maxItems": {
+      "default": 15,
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200
+     },
+     "weekStart": {
+      "default": "sunday",
+      "type": "string",
+      "enum": [
+       "sunday",
+       "monday",
+       "saturday"
+      ]
+     },
+     "country": {
+      "type": "string",
+      "enum": [
+       "uae",
+       "ksa",
+       "qat",
+       "kwt",
+       "bhr",
+       "omn"
+      ]
+     },
+     "weekend": {
+      "type": "string",
+      "enum": [
+       "country",
+       "shj"
+      ]
+     },
+     "asOf": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+     },
+     "planId": {
+      "type": "string",
+      "maxLength": 40
+     },
+     "only": {
+      "minItems": 1,
+      "maxItems": 20,
+      "type": "array",
+      "items": {
+       "type": "string",
+       "maxLength": 40
+      }
+     },
+     "answers": {
+      "maxItems": 200,
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "answerKey": {
+         "type": "string",
+         "maxLength": 64
+        },
+        "answer": {
+         "type": "string",
+         "enum": [
+          "intended",
+          "mistake"
+         ]
+        }
+       },
+       "required": [
+        "answerKey",
+        "answer"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "forgetAnswers": {
+      "type": "boolean"
+     },
+     "columnTypes": {
+      "type": "object",
+      "propertyNames": {
+       "type": "string"
+      },
+      "additionalProperties": {
+       "type": [
+        "string",
+        "number"
+       ]
+      }
+     }
+    },
+    "required": [
+     "path"
+    ],
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+   },
+   "execution": {
+    "taskSupport": "forbidden"
+   }
+  },
+  {
+   "name": "create_report",
+   "title": "Create a report project for an existing model",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "planId": {
+      "type": "string",
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "path"
+    ],
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+   },
+   "execution": {
+    "taskSupport": "forbidden"
+   }
+  },
+  {
+   "name": "generate_theme",
+   "title": "Generate a Power BI theme",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "name": {
+      "type": "string",
+      "maxLength": 60
+     },
+     "palette": {
+      "type": "object",
+      "properties": {
+       "data": {
+        "minItems": 8,
+        "maxItems": 8,
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "ui": {
+        "type": "object",
+        "properties": {
+         "background": {
+          "type": "string"
+         },
+         "card": {
+          "type": "string"
+         },
+         "text": {
+          "type": "string"
+         },
+         "accent": {
+          "type": "string"
+         },
+         "good": {
+          "type": "string"
+         },
+         "neutral": {
+          "type": "string"
+         },
+         "bad": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "background",
+         "card",
+         "text",
+         "accent"
+        ],
+        "additionalProperties": false
+       }
+      },
+      "required": [
+       "data",
+       "ui"
+      ],
+      "additionalProperties": false
+     },
+     "brand": {
+      "type": "string"
+     },
+     "harmony": {
+      "type": "string"
+     },
+     "preset": {
+      "type": "string"
+     },
+     "font": {
+      "type": "string"
+     },
+     "chart": {
+      "type": "object",
+      "properties": {
+       "labels": {
+        "type": "string"
+       },
+       "grid": {
+        "type": "string"
+       },
+       "legend": {
+        "type": "string"
+       },
+       "axis": {
+        "type": "string"
+       },
+       "table": {
+        "type": "string"
+       },
+       "look": {
+        "type": "string"
+       }
+      },
+      "additionalProperties": false
+     },
+     "layout": {
+      "type": "object",
+      "properties": {
+       "page": {
+        "anyOf": [
+         {
+          "type": "string",
+          "enum": [
+           "1920x1080",
+           "1280x720",
+           "960x720"
+          ]
+         },
+         {
+          "type": "object",
+          "properties": {
+           "w": {
+            "type": "number"
+           },
+           "h": {
+            "type": "number"
+           }
+          },
+          "required": [
+           "w",
+           "h"
+          ]
+         }
+        ]
+       },
+       "radius": {
+        "type": "number"
+       },
+       "shadow": {
+        "type": "boolean"
+       },
+       "transparent": {
+        "type": "boolean"
+       },
+       "dir": {
+        "type": "string",
+        "enum": [
+         "ltr",
+         "rtl"
+        ]
+       }
+      },
+      "additionalProperties": false
+     },
+     "mode": {
+      "type": "string",
+      "enum": [
+       "light",
+       "dark"
+      ]
+     },
+     "pageTint": {
+      "type": "boolean"
+     },
+     "lang": {
+      "default": "en",
+      "type": "string",
+      "enum": [
+       "en",
+       "ar"
+      ]
+     },
+     "themeFrom": {
+      "type": "string",
+      "maxLength": 200
+     },
+     "path": {
+      "type": "string"
+     },
+     "folder": {
+      "type": "string",
+      "maxLength": 500
+     },
+     "planId": {
+      "type": "string",
+      "maxLength": 40
+     }
+    },
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+   },
+   "execution": {
+    "taskSupport": "forbidden"
+   }
+  },
+  {
+   "name": "check_report",
+   "title": "Check a Power BI report",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "checks": {
+      "minItems": 1,
+      "maxItems": 50,
+      "type": "array",
+      "items": {
+       "type": "string",
+       "enum": [
+        "validator",
+        "schemas",
+        "sizes",
+        "selectors",
+        "phone",
+        "tooltips",
+        "theme",
+        "navigation",
+        "sort",
+        "rtl",
+        "a11y",
+        "lint"
+       ]
+      }
+     },
+     "lang": {
+      "default": "auto",
+      "type": "string",
+      "enum": [
+       "auto",
+       "en",
+       "ar",
+       "he"
+      ]
+     },
+     "maxFindings": {
+      "default": 60,
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200
+     },
+     "against": {
+      "type": "string"
+     },
+     "againstModel": {
+      "type": "string",
+      "minLength": 1
+     },
+     "lens": {
+      "type": "string",
+      "enum": [
+       "arabic"
+      ]
+     }
+    },
+    "required": [
+     "path"
+    ],
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "openWorldHint": false
+   },
+   "execution": {
+    "taskSupport": "forbidden"
+   }
+  },
+  {
+   "name": "read_report",
+   "title": "Read a Power BI report",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "pages": {
+      "minItems": 1,
+      "maxItems": 50,
+      "type": "array",
+      "items": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 500
+      }
+     },
+     "format": {
+      "default": "text",
+      "type": "string",
+      "enum": [
+       "text",
+       "json"
+      ]
+     },
+     "from": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100000
+     }
+    },
+    "required": [
+     "path"
+    ],
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "openWorldHint": false
+   },
+   "execution": {
+    "taskSupport": "forbidden"
+   }
+  },
+  {
+   "name": "plan_layout",
+   "title": "Plan a report page layout",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "design": {
+      "type": "object",
+      "propertyNames": {
+       "type": "string"
+      },
+      "additionalProperties": {}
+     },
+     "layout": {
+      "type": "string",
+      "enum": [
+       "exec",
+       "analysis",
+       "ops",
+       "focus"
+      ]
+     },
+     "kpis": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 6
+     },
+     "filters": {
+      "type": "string",
+      "enum": [
+       "none",
+       "start",
+       "end",
+       "top"
+      ]
+     },
+     "header": {
+      "type": "boolean"
+     },
+     "page": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "1920x1080",
+         "1280x720",
+         "960x720"
+        ]
+       },
+       {
+        "type": "object",
+        "properties": {
+         "w": {
+          "type": "number"
+         },
+         "h": {
+          "type": "number"
+         }
+        },
+        "required": [
+         "w",
+         "h"
+        ]
+       }
+      ]
+     },
+     "dir": {
+      "type": "string",
+      "enum": [
+       "ltr",
+       "rtl"
+      ]
+     },
+     "lang": {
+      "default": "en",
+      "type": "string",
+      "enum": [
+       "en",
+       "ar"
+      ]
+     },
+     "path": {
+      "type": "string"
+     },
+     "fields": {
+      "maxItems": 40,
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "displayNames": {
+      "type": "object",
+      "propertyNames": {
+       "type": "string"
+      },
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "planFields": {
+      "type": "object",
+      "properties": {
+       "kpis": {
+        "maxItems": 40,
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "measure": {
+        "type": "string"
+       },
+       "timeAxis": {
+        "type": "string"
+       },
+       "category": {
+        "type": "string"
+       },
+       "category2": {
+        "type": "string"
+       },
+       "table": {
+        "maxItems": 40,
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "slicers": {
+        "maxItems": 40,
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      },
+      "additionalProperties": false
+     },
+     "focus": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+     },
+     "tables": {
+      "minItems": 1,
+      "maxItems": 100,
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "themeFrom": {
+      "type": "string",
+      "maxLength": 200
+     },
+     "gulfDates": {
+      "type": "object",
+      "properties": {
+       "dateRole": {
+        "type": "string",
+        "maxLength": 300
+       },
+       "grain": {
+        "type": "string",
+        "enum": [
+         "gregorian",
+         "hijri",
+         "seasonDay"
+        ]
+       },
+       "scope": {
+        "type": "string",
+        "enum": [
+         "all",
+         "year"
+        ]
+       },
+       "year": {
+        "type": "integer",
+        "minimum": 1300,
+        "maximum": 1600
+       },
+       "hijriYearColumn": {
+        "type": "string",
+        "maxLength": 300
+       },
+       "country": {
+        "type": "string",
+        "enum": [
+         "uae",
+         "ksa",
+         "qat",
+         "kwt",
+         "bhr",
+         "omn"
+        ]
+       },
+       "firstYear": {
+        "type": "integer",
+        "minimum": 1901,
+        "maximum": 9999
+       },
+       "lastYear": {
+        "type": "integer",
+        "minimum": 1901,
+        "maximum": 9999
+       }
+      },
+      "additionalProperties": false
+     },
+     "pages": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "name": {
+         "type": "string"
+        },
+        "width": {
+         "default": 1920,
+         "type": "integer",
+         "minimum": -9007199254740991,
+         "maximum": 9007199254740991
+        },
+        "height": {
+         "default": 1080,
+         "type": "integer",
+         "minimum": -9007199254740991,
+         "maximum": 9007199254740991
+        },
+        "slots": {
+         "minItems": 1,
+         "type": "array",
+         "items": {
+          "type": "object",
+          "properties": {
+           "kind": {
+            "type": "string",
+            "enum": [
+             "title",
+             "logo",
+             "kpi",
+             "card",
+             "line",
+             "bar",
+             "column",
+             "donut",
+             "table",
+             "matrix",
+             "gauge",
+             "funnel",
+             "treemap",
+             "map",
+             "slicer",
+             "text",
+             "combo",
+             "waterfall",
+             "smallMultiples"
+            ]
+           },
+           "title": {
+            "type": "string"
+           },
+           "x": {
+            "type": "number"
+           },
+           "y": {
+            "type": "number"
+           },
+           "w": {
+            "type": "number",
+            "exclusiveMinimum": 0
+           },
+           "h": {
+            "type": "number",
+            "exclusiveMinimum": 0
+           },
+           "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400
+           }
+          },
+          "required": [
+           "kind",
+           "x",
+           "y",
+           "w",
+           "h"
+          ]
+         }
+        },
+        "background": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "name",
+        "slots"
+       ]
+      }
+     },
+     "pageFilters": {
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "field": {
+         "type": "string"
+        },
+        "values": {
+         "minItems": 1,
+         "maxItems": 50,
+         "type": "array",
+         "items": {
+          "type": [
+           "string",
+           "number",
+           "boolean"
+          ]
+         }
+        }
+       },
+       "required": [
+        "field",
+        "values"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 400
+     },
+     "subtitles": {
+      "type": "object",
+      "propertyNames": {
+       "type": "string"
+      },
+      "additionalProperties": {
+       "type": "string",
+       "maxLength": 120
+      }
+     },
+     "svgColumns": {
+      "maxItems": 4,
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "label": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 40
+        },
+        "design": {
+         "type": "object",
+         "propertyNames": {
+          "type": "string"
+         },
+         "additionalProperties": {}
+        },
+        "page": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        }
+       },
+       "required": [
+        "label",
+        "design"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "svgCards": {
+      "maxItems": 6,
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "card": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 6
+        },
+        "label": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 40
+        },
+        "design": {
+         "type": "object",
+         "propertyNames": {
+          "type": "string"
+         },
+         "additionalProperties": {}
+        }
+       },
+       "required": [
+        "card",
+        "label",
+        "design"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "customVisualsFrom": {
+      "type": "string",
+      "maxLength": 400
+     },
+     "redesignFrom": {
+      "type": "string",
+      "maxLength": 400
+     },
+     "titles": {
+      "type": "object",
+      "propertyNames": {
+       "type": "string",
+       "maxLength": 200
+      },
+      "additionalProperties": {
+       "type": "string",
+       "maxLength": 200
+      }
+     },
+     "restyle": {
+      "type": "object",
+      "properties": {
+       "preset": {
+        "type": "string",
+        "maxLength": 40
+       },
+       "brand": {
+        "type": "string",
+        "maxLength": 20
+       },
+       "harmony": {
+        "type": "string",
+        "maxLength": 20
+       },
+       "mode": {
+        "type": "string",
+        "enum": [
+         "light",
+         "dark"
+        ]
+       }
+      },
+      "additionalProperties": false
+     },
+     "consistentText": {
+      "type": "string",
+      "enum": [
+       "report",
+       "theme"
+      ]
+     },
+     "keepPositions": {
+      "type": "boolean"
+     },
+     "sample": {
+      "type": "boolean"
+     },
+     "redesignPages": {
+      "minItems": 1,
+      "maxItems": 50,
+      "type": "array",
+      "items": {
+       "type": "string",
+       "maxLength": 200
+      }
+     },
+     "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+     },
+     "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+     },
+     "theme": {
+      "type": "string"
+     },
+     "logo": {
+      "type": "string"
+     },
+     "colors": {
+      "type": "object",
+      "properties": {
+       "text": {
+        "type": "string"
+       },
+       "card": {
+        "type": "string"
+       },
+       "background": {
+        "type": "string"
+       },
+       "accent": {
+        "type": "string"
+       }
+      },
+      "additionalProperties": false
+     },
+     "chartColors": {
+      "type": "string",
+      "enum": [
+       "gradient",
+       "solid"
+      ]
+     },
+     "chartAxes": {
+      "type": "string",
+      "enum": [
+       "mirrored",
+       "standard"
+      ]
+     },
+     "kpiValues": {
+      "type": "string",
+      "enum": [
+       "auto",
+       "full"
+      ]
+     },
+     "noDataMessage": {
+      "type": "boolean"
+     },
+     "secondPage": {
+      "type": "boolean"
+     },
+     "slidePanel": {
+      "type": "boolean"
+     },
+     "smoothLines": {
+      "type": "boolean"
+     },
+     "font": {
+      "type": "string"
+     },
+     "rtl": {
+      "type": "boolean"
+     },
+     "gallery": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "minItems": 1,
+        "maxItems": 3,
+        "type": "array",
+        "items": {
+         "type": "string",
+         "enum": [
+          "combo",
+          "waterfall",
+          "smallMultiples"
+         ]
+        }
+       }
+      ]
+     },
+     "slicerStyle": {
+      "type": "string",
+      "enum": [
+       "dropdown",
+       "pills"
+      ]
+     },
+     "grid": {
+      "type": "string",
+      "enum": [
+       "solid",
+       "dotted",
+       "none"
+      ]
+     },
+     "metricSwitcher": {
+      "minItems": 2,
+      "maxItems": 5,
+      "type": "array",
+      "items": {
+       "type": "string",
+       "maxLength": 300
+      }
+     },
+     "flipCards": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "minItems": 1,
+        "maxItems": 6,
+        "type": "array",
+        "items": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 6
+        }
+       }
+      ]
+     },
+     "waterfallRtl": {
+      "type": "string",
+      "enum": [
+       "mirror",
+       "native"
+      ]
+     },
+     "statusIcons": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "minItems": 1,
+        "maxItems": 8,
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "measure": {
+           "type": "string",
+           "maxLength": 300
+          },
+          "good": {
+           "type": "string",
+           "maxLength": 40
+          },
+          "bad": {
+           "type": "string",
+           "maxLength": 40
+          }
+         },
+         "required": [
+          "measure"
+         ],
+         "additionalProperties": false
+        }
+       }
+      ]
+     },
+     "sharedAxes": {
+      "maxItems": 20,
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "measures": {
+         "minItems": 2,
+         "maxItems": 2,
+         "type": "array",
+         "items": {
+          "type": "string",
+          "maxLength": 300
+         }
+        },
+        "answer": {
+         "type": "string",
+         "enum": [
+          "comparable",
+          "separate"
+         ]
+        }
+       },
+       "required": [
+        "measures",
+        "answer"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "customVisualsSecond": {
+      "maxItems": 50,
+      "type": "array",
+      "items": {
+       "type": "string",
+       "maxLength": 40
+      }
+     },
+     "languages": {
+      "type": "string",
+      "enum": [
+       "en+ar"
+      ]
+     },
+     "tabsShown": {
+      "type": "string",
+      "enum": [
+       "en",
+       "ar"
+      ]
+     },
+     "arabicTexts": {
+      "type": "object",
+      "propertyNames": {
+       "type": "string",
+       "maxLength": 200
+      },
+      "additionalProperties": {
+       "type": "string",
+       "maxLength": 200
+      }
+     },
+     "arabicTerms": {
+      "type": "object",
+      "propertyNames": {
+       "type": "string",
+       "maxLength": 300
+      },
+      "additionalProperties": {
+       "type": "string",
+       "maxLength": 200
+      }
+     },
+     "daxFunctions": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "minItems": 1,
+        "maxItems": 4,
+        "type": "array",
+        "items": {
+         "type": "string",
+         "enum": [
+          "sparkline",
+          "bulletBar",
+          "kpiCards",
+          "storyTitles"
+         ]
+        }
+       }
+      ]
+     },
+     "columnStats": {
+      "type": "object",
+      "properties": {
+       "rows": {
+        "type": "object",
+        "propertyNames": {
+         "type": "string"
+        },
+        "additionalProperties": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 9007199254740991
+        }
+       },
+       "distinct": {
+        "type": "object",
+        "propertyNames": {
+         "type": "string"
+        },
+        "additionalProperties": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 9007199254740991
+        }
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "openWorldHint": false
+   },
+   "execution": {
+    "taskSupport": "forbidden"
+   }
+  },
+  {
+   "name": "add_gulf_calendar",
+   "title": "Add a Gulf calendar table",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "firstYear": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+     },
+     "lastYear": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+     },
+     "arabicColumnsOnly": {
+      "type": "boolean"
+     },
+     "country": {
+      "default": "uae",
+      "type": "string",
+      "enum": [
+       "uae",
+       "ksa",
+       "qat",
+       "kwt",
+       "bhr",
+       "omn"
+      ]
+     },
+     "weekend": {
+      "default": "country",
+      "type": "string",
+      "enum": [
+       "country",
+       "shj",
+       "sat-sun",
+       "fri-sat",
+       "fri",
+       "sun"
+      ]
+     },
+     "announced": {
+      "default": true,
+      "type": "boolean"
+     },
+     "lang": {
+      "default": "en",
+      "type": "string",
+      "enum": [
+       "en",
+       "ar"
+      ]
+     },
+     "arabicNames": {
+      "default": true,
+      "type": "boolean"
+     },
+     "name": {
+      "default": "Gulf Calendar",
+      "type": "string",
+      "maxLength": 80
+     },
+     "weekStart": {
+      "default": "sunday",
+      "type": "string",
+      "enum": [
+       "sunday",
+       "monday",
+       "saturday"
+      ]
+     },
+     "fiscalStart": {
+      "default": 1,
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 12
+     },
+     "measures": {
+      "maxItems": 5,
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "vat": {
+      "type": "boolean"
+     },
+     "pegs": {
+      "type": "boolean"
+     },
+     "relateTo": {
+      "maxItems": 5,
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "asOf": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+     },
+     "planId": {
+      "type": "string",
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "path"
+    ],
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+   },
+   "execution": {
+    "taskSupport": "forbidden"
+   }
+  },
+  {
+   "name": "create_arabic_twin",
+   "title": "Create the Arabic twin of a report",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "labels": {
+      "type": "object",
+      "propertyNames": {
+       "type": "string",
+       "maxLength": 200
+      },
+      "additionalProperties": {
+       "type": "string",
+       "maxLength": 200
+      }
+     },
+     "terms": {
+      "type": "object",
+      "propertyNames": {
+       "type": "string",
+       "maxLength": 300
+      },
+      "additionalProperties": {
+       "type": "string",
+       "maxLength": 200
+      }
+     },
+     "timeRightToLeft": {
+      "default": true,
+      "type": "boolean"
+     },
+     "waterfallRtl": {
+      "type": "string",
+      "enum": [
+       "mirror",
+       "native"
+      ]
+     },
+     "modelNames": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "minItems": 1,
+        "maxItems": 6,
+        "type": "array",
+        "items": {
+         "type": "string",
+         "enum": [
+          "ar-AE",
+          "ar-SA",
+          "ar-KW",
+          "ar-QA",
+          "ar-BH",
+          "ar-OM"
+         ]
+        }
+       }
+      ]
+     },
+     "arabicMonth": {
+      "default": true,
+      "type": "boolean"
+     },
+     "mirrorPicturePages": {
+      "default": false,
+      "type": "boolean"
+     },
+     "flipPictures": {
+      "maxItems": 200,
+      "type": "array",
+      "items": {
+       "type": "string",
+       "maxLength": 200
+      }
+     },
+     "matrixAsTable": {
+      "maxItems": 200,
+      "type": "array",
+      "items": {
+       "type": "string",
+       "maxLength": 200
+      }
+     },
+     "into": {
+      "type": "string",
+      "enum": [
+       "separate",
+       "same"
+      ]
+     },
+     "tabsShown": {
+      "type": "string",
+      "enum": [
+       "en",
+       "ar"
+      ]
+     },
+     "textsFrom": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100000
+     },
+     "termsFrom": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100000
+     },
+     "planId": {
+      "type": "string",
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "path"
+    ],
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+   },
+   "execution": {
+    "taskSupport": "forbidden"
+   }
+  },
+  {
+   "name": "approve_plan",
+   "title": "Ask the user to approve a plan",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "planId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     },
+     "reopen": {
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "planId"
+    ],
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+   },
+   "execution": {
+    "taskSupport": "forbidden"
+   }
+  }
+ ]
+}

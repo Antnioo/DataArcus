@@ -7,26 +7,26 @@ const require = createRequire(import.meta.url);
 const Gallery = require('../../assets/js/visual-gallery.js');
 
 // (D7, the owner of 20 Oct) a right-to-left report's waterfall: Power BI's own ("native", the default) or the mirrored look-alike
-export const WATERFALL_RTL_INPUT = () => z.enum(Gallery.WATERFALL_RTL).optional().describe(`(Default "${Gallery.WATERFALL_RTL_DEFAULT}".) Only for a right-to-left (Arabic) report\'s waterfall. "native": Power BI\'s own waterfall, exactly as in English: ${Gallery.WF_WHAT.native}; the rest of the report stays mirrored. "mirror": a stacked column chart drawn as a waterfall that reads from the right (the first period at the right), but not Power BI\'s waterfall design: no Total column and no total label (Power BI 2.159 does not draw it), no legend, the empty space under a step shows its base in the tooltip. Power BI cannot draw its own waterfall right to left. The user\'s choice; say it in the plan`);
+export const WATERFALL_RTL_INPUT = () => z.enum(Gallery.WATERFALL_RTL).optional().describe(`(Default "${Gallery.WATERFALL_RTL_DEFAULT}".) Only for a right-to-left (Arabic) report\'s waterfall. "native": Power BI\'s own: ${Gallery.WF_WHAT.native}. "mirror": a stacked column chart drawn as a waterfall that reads from the right: no Total column, no total label, no legend. The user\'s choice; say it in the plan`);
 // What a tool does to the user's files, for the AI app: four tools only read; the two that write only add new files
 // (never change or delete one) and stay inside the working folder. check_model_health adds files too: its fix scripts
 // The plan id every writing tool takes (0.2.9, the gate inside the tools: see lib/plans.mjs)
-export const planIdInput = z.string().max(40).optional().describe('The approved plan id (from plan_layout, or from this tool\'s own answer without one, then approve_plan after the user\'s go). Without an approved planId this tool writes nothing and answers with what it would write and a proposed planId');
+export const planIdInput = z.string().max(40).optional().describe('The approved plan id (this tool\'s own proposal, approved in approve_plan after the user\'s go). Without it nothing is written and the answer proposes one');
 export const READS = { readOnlyHint: true, openWorldHint: false }, ADDS = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false };
 // (SQ9, 0.2.9-design-S8) a tool whose repeat writes nothing new: a second plan on the same model names the same files, already
 // there with the same content, and writes none of them again (check_model_health's scripts, add_gulf_calendar's); the same
 // planId again is refused. The other writing tools stay ADDS: a repeat writes another file ("brand-2.json", "- New design")
 export const ADDS_SAME = Object.assign({}, ADDS, { idempotentHint: true });
 // the part of a large model a request is about (see lib/scope.mjs)
-export const focusInput = z.string().min(1).max(80).optional().describe('On a large model: the part of the model the user asked about, in their words ("logistics", "sales"). The picks then come from the tables whose name or whose measures\' display folder contains it, the tables related to them and the date table. A large model needs a focus or tables');
-export const tablesInput = z.array(z.string()).min(1).max(LIMITS.tables).optional().describe('Instead of a focus: the tables to pick from, by name (the tables related to them and the date table are added)');
+export const focusInput = z.string().min(1).max(80).optional().describe('On a large model (it needs a focus or tables): the part the user asked about, in their words ("logistics", "sales"); the picks come from the tables it names, their related tables and the date table');
+export const tablesInput = z.array(z.string()).min(1).max(LIMITS.tables).optional().describe('Instead of a focus: the tables to pick from, by name (their related tables and the date table are added)');
 export const modelPath = z.string().describe('A Power BI project folder, its .SemanticModel folder, a model.bim or a .pbit, relative to the DataArcus folder');
 
 export const pageInput = z.union([z.enum(['1920x1080', '1280x720', '960x720']), z.object({ w: z.number(), h: z.number() })])
-  .describe('Power BI page size: 1920x1080 (default), 1280x720, 960x720, or { w, h } (640-3840 x 360-2160, shaped 4:3 to 2.4:1; other sizes are fitted as the website does)');
+  .describe('Page size: 1920x1080 (default), 1280x720, 960x720 or { w, h } (640-3840 x 360-2160, shaped 4:3 to 2.4:1; other sizes are fitted)');
 // (0.3.2 LG1, D-1105-16) the person's language for a reading tool's answer words (the "several models" error): optional,
 // no default, so without it read-words.mjs keeps AR4's rule (Arabic letters in the path or a tied folder)
-export const readLangInput = z.enum(['en', 'ar']).optional().describe('The language the user writes in: pass "ar" when the user writes in Arabic (even when the folder names are English), "en" when in English; then an answer about which model is meant is said in it');
+export const readLangInput = z.enum(['en', 'ar']).optional().describe('The user\'s language: "ar" when the user writes in Arabic (even when the folder names are English), else "en"; an answer about which model is meant is said in it');
 export const langInput = z.enum(['en', 'ar']).default('en').describe('Language of the report: names in it, and right to left when dir is not given');
 export const slot = z.object({
   kind: z.enum(VISUAL_KINDS),

@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { loadModel, unreadableOf } from '../lib/model.mjs';
 import { scopeOf } from '../lib/scope.mjs';
-import { UNTRUSTED } from '../lib/agent-text.mjs';
+import { UNTRUSTED, LANG_AR, NO_VALUES } from '../lib/agent-text.mjs';
 import { text, safe } from '../lib/tool-answer.mjs';
 import { READS, focusInput, tablesInput, modelPath, strictInputs } from '../lib/tool-inputs.mjs';
 import { hiddenOf } from '../lib/hidden-names.mjs';
@@ -16,12 +16,12 @@ export function register(server, ctx) {
   const { LIMITS } = ctx;
   server.registerTool('suggest_fields', {
     title: 'Suggest fields for a report design',
-    description: 'Picks which of the model\'s measures and columns go in each KPI card, chart, table and slicer, the way the DataArcus theme generator does (base measures first, net before gross, month from the date table, a year-month axis across years, no keys, hidden fields, one-value, mostly unique, coordinate or invoice columns as categories); why says each rule that acted. Pass lang "ar" when the user writes in Arabic.' + UNTRUSTED,
-    inputSchema: strictInputs('suggest_fields', { path: modelPath, kpis: z.number().int().min(1).max(LIMITS.kpiCards).default(4).describe(`Number of KPI cards (1-${LIMITS.kpiCards}, as plan_layout and create_report take)`), focus: focusInput, tables: tablesInput,
-      lang: z.enum(['en', 'ar']).optional().describe('The report\'s language: pass it. On a model with columns in both languages (City and المدينة) only the columns in that language are picked (language: what was skipped); an English report uses an Arabic column only when it has no other. Also the language of an answer about which model is meant: pass "ar" when the user writes in Arabic'),
+    description: 'Picks which of the model\'s measures and columns go in each KPI card, chart, table and slicer, the way the DataArcus theme generator does (base measures first, month from the date table; no keys, hidden or mostly unique columns as categories); why says each rule that acted. Read-only.' + LANG_AR + NO_VALUES + UNTRUSTED,
+    inputSchema: strictInputs('suggest_fields', { path: modelPath, kpis: z.number().int().min(1).max(LIMITS.kpiCards).default(4).describe(`Number of KPI cards (1-${LIMITS.kpiCards})`), focus: focusInput, tables: tablesInput,
+      lang: z.enum(['en', 'ar']).optional().describe('The report\'s language: on a model with columns in both languages (City and المدينة) only that language\'s columns are picked (language says what was skipped). Also the language of an answer about which model is meant: "ar" when the user writes in Arabic'),
       // (0.3.1 FX4, D-1028-04) the model's own counts: whole numbers only, so no data value can be passed
       columnStats: z.object({ rows: z.record(z.string(), z.number().int().min(0)).optional(), distinct: z.record(z.string(), z.number().int().min(0)).optional() }).strict().optional()
-        .describe('Counts only, never values, when Desktop has the model open: distinct: { "Table[Column]": its distinct count (Cardinality from COLUMNSTATISTICS(); never pass its Min or Max) }, rows: { "Table": its row count }. With them no category is a column of one value or of mostly unique values, and a month name gives way to a year-month axis when the years are more than one. Without them only the name rules apply (countsNote says so)') }), annotations: READS
+        .describe('Counts only, never values, when Desktop has the model open: distinct: { "Table[Column]": its distinct count (Cardinality from COLUMNSTATISTICS(); never pass its Min or Max) }, rows: { "Table": its row count }. They rule out categories of one value or of mostly unique values; without them only the name rules apply (countsNote)') }), annotations: READS
   }, safe(async ({ path: p, kpis, focus, tables, lang, columnStats }) => {
     const m = loadModel(p), sc = scopeOf(m, { focus, tables });
     // a large model without a focus, or a focus that matches nothing: no picks, and what to ask the user

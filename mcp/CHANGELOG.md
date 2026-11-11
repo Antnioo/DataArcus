@@ -53,6 +53,9 @@ package's manifest; this file says what is in it.
   counts a visual as changed whenever it is not sure.
 - **Impact check before an edit:** `read_model` with `reach` (a measure, a column or a table) answers which pages and
   visuals of the reports beside the model it reaches. Names only, never values.
+- Every chat starts smaller: the tool list an AI app reads at the start of each chat is 58,837 characters, down from
+  74,925 (about a fifth fewer tokens in every chat). The same 11 tools take the same options and answer the same; their
+  texts say it in fewer words, and the details that left the list are in TOOLS.md.
 
 ## [0.3.2]: 2026-11-09 (the version for testers, second round)
 The second version for testers. In short:
