@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-11T04:27Z",
+  "generated_at": "2026-11-11T07:02Z",
   "today": {
     "date": "2026-11-11",
-    "cost_usd": 85.78,
-    "tokens": 153929200,
-    "sessions": 13,
+    "cost_usd": 97.48,
+    "tokens": 228991111,
+    "sessions": 17,
     "by_kind": {
       "builder": {
-        "cost_usd": 76.77,
-        "count": 6
+        "cost_usd": 85.3,
+        "count": 8
       },
       "worker": {
-        "cost_usd": 9.01,
-        "count": 7
+        "cost_usd": 12.18,
+        "count": 9
       },
       "probe": {
         "cost_usd": 0,
@@ -26,8 +26,8 @@
     },
     "by_model": {
       "sonnet": {
-        "cost_usd": 2.21,
-        "count": 5
+        "cost_usd": 13.91,
+        "count": 9
       },
       "opus": {
         "cost_usd": 23.95,
@@ -120,12 +120,21 @@
     },
     {
       "date": "2026-11-11",
-      "cost_usd": 85.78,
-      "tokens": 153929200,
-      "sessions": 13
+      "cost_usd": 97.48,
+      "tokens": 228991111,
+      "sessions": 17
     }
   ],
   "jobs": [
+    {
+      "id": "TR2",
+      "title": "TR2: build TR1's 8 approved asks (D-1111-06)",
+      "model": "sonnet",
+      "cost_usd": 7.09,
+      "tokens": 47517898,
+      "minutes": 143,
+      "finished_at": "2026-11-11T06:52Z"
+    },
     {
       "id": "LR2",
       "title": "LR2: build LR1's approved rules and checks in the engine (D-1111-03)",
@@ -143,6 +152,15 @@
       "tokens": 23987529,
       "minutes": 41,
       "finished_at": "2026-11-11T04:16Z"
+    },
+    {
+      "id": "FB2",
+      "title": "FB2: restore FB1's cards' row over the rail (D-1111-01)",
+      "model": "sonnet",
+      "cost_usd": 1.44,
+      "tokens": 8056682,
+      "minutes": 89,
+      "finished_at": "2026-11-11T04:15Z"
     },
     {
       "id": "BT1",
@@ -467,29 +485,11 @@
       "tokens": 33650772,
       "minutes": 144,
       "finished_at": "2026-11-09T14:47Z"
-    },
-    {
-      "id": "RL032",
-      "title": "RL032: 0.3.2 ready for the owner: CHANGELOG, the PR to main, the cloud build twice, the laptop brief (smoke + release)",
-      "model": "opus",
-      "cost_usd": 6.27,
-      "tokens": 19534281,
-      "minutes": 70,
-      "finished_at": "2026-11-09T09:41Z"
-    },
-    {
-      "id": "PH1",
-      "title": "PH1: the last two path compares call path-rules.mjs; tooLongSaid's example follows the platform (B-412, B-416)",
-      "model": "sonnet",
-      "cost_usd": 1.75,
-      "tokens": 11175163,
-      "minutes": 82,
-      "finished_at": "2026-11-09T08:11Z"
     }
   ],
   "workers": {
-    "count": 7,
-    "cost_usd": 9.01,
+    "count": 9,
+    "cost_usd": 12.18,
     "costliest": [
       {
         "label": "worker 00:47",
@@ -533,9 +533,9 @@
       "cost_usd": 10.22
     },
     {
-      "label": "LR1",
+      "label": "TR2",
       "kind": "builder",
-      "cost_usd": 6.52
+      "cost_usd": 7.09
     }
   ]
 }
