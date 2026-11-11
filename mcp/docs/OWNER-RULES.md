@@ -23,12 +23,12 @@ LinkedIn post, read `content/LINKEDIN-PLAN.md`. Update them after each post (the
 ## Working efficiently (every session: the builder and the reviewer)
 The owner wants this done fast without losing accuracy. So:
 - **Batch, don't drip.** Gather everything that needs the owner (clicks, decisions, screenshots) into one request,
-  not one at a time. Automate Desktop steps where Windows allows it (UI Automation for buttons such as Mobile
-  layout), keep reusable scripts in `C:\DataArcus\tests\phase2-try\builder-scripts\` and reuse them.
+  not one at a time. Desktop steps are the owner's one batched laptop run; automate them where Windows allows it
+  (UI Automation for buttons such as Mobile layout), and keep reusable scripts in the repo (`scripts/`, `mcp/lab/`).
 - **Measure, don't estimate.** Any size or rule Power BI decides is measured in Desktop once (English and Arabic,
   smallest and largest page) before it is coded; estimates have cost whole rounds.
-- **Test in the right order.** The failing tests first; then the suites the change touches; the full run once, at
-  the end. Never rerun everything to check a one-line change.
+- **Test in the right order.** The failing tests first; then the suites the change touches (`npm test -- <area>`); at
+  the end CI on your branch, no full local run. Never rerun everything to check a one-line change.
 - **Stop when a failure could change what Desktop shows** (owner 2026-10-01): report it with its cause and a
   proposed fix, and don't pile up results that the fix will invalidate. Any other failure (a fixture that needs the
   owner's go, a validator message, a test expectation to discuss): note it with its cause and proposed fix, and
@@ -49,7 +49,7 @@ collecting every point decided so far, so nothing is lost between sessions. Chec
 1. The request itself, first line ("Go on X", "Plan only").
 2. Every decision the owner made that applies (with what was rejected), and what is out of scope.
 3. The files and branch, by name.
-4. The steps in order, including tests first, the full run, Desktop checks and the memory update.
+4. The steps in order, including tests first, CI on the branch, the owner's Desktop checks and the memory update.
 5. The rules: scope folder, no employer or client data, don't change tests or expected numbers to pass, stop and
    report on failure, don't merge.
 6. The expected results, written down before any run.

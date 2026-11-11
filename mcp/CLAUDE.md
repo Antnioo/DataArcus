@@ -31,7 +31,7 @@ starts with `## Summary` (40 lines at most). After each step: update, commit, pu
 
 ## Constraints
 - **Never use the "MCP Engine for Power BI" connector here**; only Microsoft's Power BI Authoring MCP
-  ([the laptop loop](docs/LAPTOP.md)).
+  ([the owner's laptop loop](docs/LAPTOP.md)).
 - The MCP stays self-contained: only `mcp/package.json`'s packages.
 - Power BI rules are measured: [docs/RULES-POWERBI.md](docs/RULES-POWERBI.md), measurements in
   [DESKTOP-TESTS.md](../scripts/tests/DESKTOP-TESTS.md).
