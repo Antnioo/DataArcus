@@ -168,3 +168,4 @@ selection box (Format > General > Properties) or a screenshot at 100% zoom; edge
 ## TR1 (0.3.3, the tests review): CI
 DONE 2026-11-11T03:26Z. Linux and Windows, macOS skipped by the workflow on a builder branch; 955 s.
 CI green: https://github.com/Antnioo/DataArcus/actions/runs/42950664465 on f5e8ae672798bd91a13d2efc7684afc503efc183
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/42967984512 on 9635ac13a138d6834e73301a52cab929f7ebf9ed
