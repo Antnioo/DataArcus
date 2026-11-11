@@ -13,7 +13,9 @@
   changelog-words PASS 45, `node scripts/test-site-config.mjs` PASS, `scripts/tests/model-health.mjs` exit 0, lint 0;
   model area 31 suites passed; mutation PASS 250 (99 mutants, all killed).
 - **Resume:** first CI (run 43003688911) red on one check, tk1 K4: tools/list 75,950 of 75,000 (my option texts);
-  fixed by shortening the two option descriptions (full text stays in TOOLS.md): 74,925. CI again.
+  fixed by shortening the two option descriptions (full text stays in TOOLS.md): 74,925. Second CI (43006186137, after
+  merging integration's FB3 once) red on the sitemap's lastmod of the two theme generator pages (FB3 and this job both
+  re-stamped them): `node scripts/sitemap-lastmod.mjs --write`. CI again.
 - **Result:** after a model edit, `check_report { path, againstModel }` names exactly the visuals it can move, with the
   chain ("[Total Sales] uses [Base]: measure: its DAX changed"); `read_model { reach: "[Total Sales]" }` answers 7
   visuals on 3 pages of twin-project.
@@ -163,6 +165,8 @@
   half): not built.
 
 ## Lessons for the reviewer
+- After the one merge of integration, run `node scripts/sitemap-lastmod.mjs` again: a page both branches re-stamped
+  gets today's date only on the merged history (my pre-merge run said "match").
 - A new option's description counts against tk1's 75,000-character tools/list cap: run `test-0.3.2-tk1.mjs` (core
   area) with any description change; my checker and model runs did not include it and CI caught it.
 - An answer key the brief names (`impact`) was already taken in the same answer: a brief that names a new key could ask
