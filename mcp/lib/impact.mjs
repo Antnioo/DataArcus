@@ -7,7 +7,9 @@
 //                                              read on its own model; which visuals compare with the same Gregorian dates
 //                                              and in which months of a year that is not like for like in the Gulf
 //                                              (like-for-like.mjs; section likeForLike)
-//   readOnModel(path, option)                  the one reading both sections share: the report and its own model
+//   readOnModel(path, option, shared)          the one reading the sections share: the report and its own model
+//                                              (0.3.3 OX2: check_report's own reading and model, when it gives them)
+//   briefCheck(read, brief)                    (0.3.3 OX2, OX1's stage 2) the section briefCheck: brief.mjs on that reading
 //   reach(modelPath, what)                     read_model's option reach: the pages and visuals of every report beside
 //                                              the model that a measure, a column or a table reaches, by tier
 // Never a value: the lineage compares definitions and filters by hash and returns names (safeName) and words only; this
@@ -18,6 +20,7 @@ import { loadModel } from './model.mjs';
 import { locate, diskSource, jsonOpt, inventory, safeName } from './read-report.mjs';
 import { lineageOf, compareLineage, reachOf, LISTED_MAX, PROVES, NOT_PROVED, TIERS } from './lineage.mjs';
 import { likeForLike as lflOf } from './like-for-like.mjs';
+import { checkVisuals, checkBrief, PROVES as BRIEF_PROVES, NOT_PROVED as BRIEF_NOT_PROVED } from './brief.mjs';
 
 const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
 const arr = (x) => (Array.isArray(x) ? x : []);
@@ -27,22 +30,28 @@ export const SECTION_MAX = 16000;
 export const REACH_NOT_PROVED = 'From the files only: the reports saved beside the model (their definition.pbir names this model folder). A report elsewhere that uses the model (another folder, the Power BI service) is not seen; the data, row-level security, a custom visual\'s own logic and what a DAX text builds at run time are outside it. Which relationships count for a visual is a rule from Microsoft\'s documented filter propagation, not measured in Power BI Desktop.';
 
 // ---- one report, read once through the reading block, in the shape lineageOf takes ({ files: [{ path, json }] }) ----
-function reportOf(p) {
-  const loc = locate(p, 'check_report'), sk = { big: [], deep: 0 }, src = diskSource(loc, sk);
-  const inv = inventory(src, path.basename(loc.reportDir));
+// (0.3.3 OX2) shared: check_report's own reading ({ loc, src, inv, sk }), so the report is read once for every section
+function reportOf(p, shared) {
+  const loc = shared ? shared.loc : locate(p, 'check_report'), sk = shared ? shared.sk : { big: [], deep: 0 }, src = shared ? shared.src : diskSource(loc, sk);
+  const inv = shared ? shared.inv : inventory(src, path.basename(loc.reportDir));
   const opt = (rel) => jsonOpt(src, rel);
+  const pbir = opt('definition.pbir'), by = isObj(pbir) && isObj(pbir.datasetReference) && isObj(pbir.datasetReference.byPath) ? pbir.datasetReference.byPath.path : null;
+  return { loc, files: filesOf(inv, opt), model: typeof by === 'string' && by ? path.resolve(loc.reportDir, by) : null, unread: inv.unreadableFiles.length + sk.big.length + sk.deep + (sk.links || []).length + (sk.capped ? 1 : 0) };
+}
+// (0.3.3 OX2) a report's files in the shape lineageOf takes, from the reading block's inventory (the one builder)
+export function filesOf(inv, opt) {
   const files = [];
   ['definition/report.json', 'definition/reportExtensions.json'].forEach((rel) => { const j = opt(rel); if (j) files.push({ path: rel, json: j }); });
-  inv.pages.forEach((pg) => { files.push({ path: pg.file, json: isObj(pg.raw) ? pg.raw : {} }); arr(pg.visuals).forEach((x) => { if (x && x.file && isObj(x.json)) files.push({ path: x.file, json: x.json }); }); });
-  const pbir = opt('definition.pbir'), by = isObj(pbir) && isObj(pbir.datasetReference) && isObj(pbir.datasetReference.byPath) ? pbir.datasetReference.byPath.path : null;
-  return { loc, files, model: typeof by === 'string' && by ? path.resolve(loc.reportDir, by) : null, unread: inv.unreadableFiles.length + sk.big.length + sk.deep + (sk.links || []).length + (sk.capped ? 1 : 0) };
+  arr(inv.pages).forEach((pg) => { files.push({ path: pg.file, json: isObj(pg.raw) ? pg.raw : {} }); arr(pg.visuals).forEach((x) => { if (x && x.file && isObj(x.json)) files.push({ path: x.file, json: x.json }); }); });
+  return files;
 }
 
 // (0.3.3 IX2) the report (path) and its own model, read once: againstModel and likeForLike share it (one reading)
-export function readOnModel(p, option) {
-  const after = reportOf(p);
-  if (!after.model) throw new Error(`check_report's ${option} reads "${safeName(p)}" on its own model, and its definition.pbir names no model folder (byPath): give a report saved with its model (a .pbip project). Nothing was compared.`);
-  return { after, now: loadModel(after.model) };
+// (0.3.3 OX2) shared: check_report's reading ({ loc, src, inv, sk }) and its model loader (modelAt, one load a call)
+export function readOnModel(p, option, shared) {
+  const after = reportOf(p, shared && shared.inv ? shared : null);
+  if (!after.model) throw new Error(`check_report's ${option} reads "${safeName(p)}" on its own model, and its definition.pbir names no model folder (byPath): give a report saved with its model (a .pbip project). Nothing was ${option === 'brief' ? 'checked' : 'compared'}.`);
+  return { after, now: shared && shared.modelAt ? shared.modelAt(after.model) : loadModel(after.model) };
 }
 const unreadOf = (...models) => models.reduce((n, m) => n + arr(m.skipped).length + (m.partsSkipped || 0), 0);
 
@@ -78,6 +87,41 @@ export function likeForLike(p, opts, read) {
   // its share of check_report's answer: the visuals listed cut, the counts kept
   const all = section.compared;
   while (JSON.stringify(section).length > SECTION_MAX && section.list.length > 1) { section.list = section.list.slice(0, Math.floor(section.list.length * 0.8)); section.notListed = all - section.list.length; }
+  return section;
+}
+
+// (0.3.3 OX2, OX1's stage 2) briefCheck: read is readOnModel's; brief: [{ id, measure, by: [names] }] or null (the
+// visuals alone). Each name read by parseReach (one reader): "[Revenue]" or "Revenue" a measure, "Sales[Revenue]" a
+// measure written with its table (as reach reads it); "Calendar[Month]" or "'Store'[Region]" a column to group by.
+export function briefCheck(read, brief) {
+  const { after, now } = read, report = { files: after.files };
+  const v = checkVisuals(now.tmsl, report);
+  const visuals = { visuals: v.visuals, withNumbers: v.withNumbers, pairs: v.pairs.length, moves: v.moves, oneValue: v.oneValue, constant: v.constant, cannotTell: v.cannotTell, findings: v.findings };
+  if (v.notListed) visuals.notListed = v.notListed;
+  if (v.notInModel.length) visuals.notInModel = v.notInModel;
+  if (v.notInModelNotListed) visuals.notInModelNotListed = v.notInModelNotListed;
+  const section = { said: v.said, visuals };
+  if (Array.isArray(brief)) {
+    const questions = brief.map((q, i) => {
+      const w = parseReach(q && q.measure), measure = w.measure != null ? w.measure : w.column != null ? w.column : w.table;
+      // a "by" name that is not Table[Column] stays as it is, so the library answers it "not read"
+      const by = arr(q && q.by).map((b) => { const x = parseReach(b); return x.column != null ? { table: x.table, column: x.column } : { name: String(b) }; });
+      return Object.assign({ id: q && q.id != null ? q.id : 'q' + (i + 1), measure }, { by });
+    });
+    const b = checkBrief(now.tmsl, report, questions);
+    delete b.proves; delete b.notProved;
+    section.said += ' ' + b.said;
+    section.questions = b;
+  }
+  const unread = { model: unreadOf(now), report: after.unread };
+  if (unread.model || unread.report) section.unread = Object.assign(unread, { note: 'model or report files that could not be read fully: a visual or a measure in them is not judged, so a finding can be missing' });
+  Object.assign(section, { proves: BRIEF_PROVES, notProved: BRIEF_NOT_PROVED });
+  // its share of check_report's answer: the lists cut, the counts kept
+  const allF = v.oneValue, allQ = section.questions ? section.questions.questions : 0;
+  while (JSON.stringify(section).length > SECTION_MAX && (visuals.findings.length > 1 || (section.questions && section.questions.results.length > 1))) {
+    if (visuals.findings.length > 1) { visuals.findings = visuals.findings.slice(0, Math.floor(visuals.findings.length * 0.8)); visuals.notListed = allF - visuals.findings.length; }
+    else { const q = section.questions; q.results = q.results.slice(0, Math.floor(q.results.length * 0.8)); q.notListed = allQ - q.results.length; }
+  }
   return section;
 }
 

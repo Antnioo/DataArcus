@@ -36,7 +36,8 @@ try {
   for (const k of gone) chk(() => /the approved plan holds/.test(heldSaid([k])) && heldSaid([k]).includes(k), () => `T5. ${k}: ${heldSaid([k])}`);
   // T6: the list did not grow
   // (reviewer, 11 Nov: IX2 added check_report's likeForLike, 58,837 -> 59,592 at 00f0be33; SN1 itself adds nothing, 58,805 alone)
-  chk(() => size <= 59592, () => `T6. tools/list is ${size} characters, 59,592 at 00f0be33 (IX2's likeForLike; SN1 adds none)`);
+  // (0.3.3 OX2, on purpose: check_report's brief, 59,592 -> 60,532, measured on feat/0.3.3-ox2)
+  chk(() => size <= 60532, () => `T6. tools/list is ${size} characters, 60,532 after OX2's brief (59,592 at 00f0be33 with IX2's likeForLike; SN1 adds none)`);
   chk(() => size < 61000, () => `T7. tools/list under tk1's cap of 61,000: ${size}`);
   console.log(`tools/list ${size} characters`);
 } finally { await s.c.close().catch(() => {}); fs.rmSync(ROOT, { recursive: true, force: true }); }

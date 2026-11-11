@@ -22,6 +22,8 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const problems = []; let checks = 0;
 const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } catch (e) { err = ' (threw: ' + String(e && e.message || e).slice(0, 200) + ')'; } checks++; if (!ok) { let m = ''; try { m = msg(); } catch (e) { m = 'unexpected shape'; } problems.push(m + err); } };
 const sha = (t) => crypto.createHash('sha256').update(t).digest('hex');
+import { withoutBrief } from './fixtures/ox2-pins.mjs';   // (0.3.3 OX2: its own section left out, pinned by ox2)
+const BRIEF_TALLY = { had: 0, noted: 0 };
 const GOLD = path.join(HERE, 'fixtures', 'sp20-languages.json');
 
 // the working folder first: the library modules read DATAARCUS_ROOT when they are loaded
@@ -110,7 +112,7 @@ for (const [name, pages] of Object.entries(REPORTS)) {
 }
 const answers = {};
 for (const name of ANSWERED) {
-  const a = await CR.checkReport(dirs[name], {});
+  const a = withoutBrief(await CR.checkReport(dirs[name], {}), BRIEF_TALLY);
   answers[name] = JSON.stringify(a).split(path.basename(ROOT)).join('<root>').split(JSON.stringify(ROOT).slice(1, -1)).join('<root>');
 }
 const record = { languages: got, answers: Object.fromEntries(Object.entries(answers).map(([k, v]) => [k, sha(v)])) };
@@ -149,5 +151,7 @@ if (L) {
 }
 
 try { fs.rmSync(ROOT, { recursive: true, force: true }); } catch (e) { /* a temp folder */ }
+// (0.3.3 OX2, on purpose) the answers above are compared without OX2's own section (fixtures/ox2-pins.mjs): the 4 reports made from scratch name no model folder: no briefCheck, one notChecked line each
+chk(() => BRIEF_TALLY.had === 0 && BRIEF_TALLY.noted === 4, () => `OX2: the answers that carry briefCheck and the notChecked lines, 0 and 4: ${JSON.stringify(BRIEF_TALLY)}`);
 if (problems.length) { console.log(`FAIL script=test-0.3.2-sp20.mjs cause=${problems[0].slice(0, 300)}`); problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  sp20  ${checks - problems.length}/${checks} checks`); process.exit(1); }
 console.log(`PASS  sp20  ${checks} checks`);

@@ -25,6 +25,8 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const problems = []; let checks = 0;
 const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } catch (e) { err = ' (threw: ' + String(e && e.message || e).slice(0, 200) + ')'; } checks++; if (!ok) { let m = ''; try { m = msg(); } catch (e) { m = 'unexpected shape'; } problems.push(m + err); } };
 const sha = (t) => crypto.createHash('sha256').update(t).digest('hex');
+import { withoutBrief } from './fixtures/ox2-pins.mjs';   // (0.3.3 OX2: its own section left out, pinned by ox2)
+const BRIEF_TALLY = { had: 0, noted: 0 };
 const GOLD = path.join(HERE, 'fixtures', 'sp41-checks.json');
 
 // the working folder first: the library modules read DATAARCUS_ROOT when they are loaded
@@ -127,7 +129,7 @@ const norm = (s) => s.split(JSON.stringify(ROOT).slice(1, -1)).join('<root>').sp
 const answers = {}, said = {};
 for (const [name, [p, o]] of Object.entries(CASES)) {
   let a; try { a = await CR.checkReport(p, o); } catch (e) { a = { refused: String(e && e.message || e) }; }
-  answers[name] = norm(JSON.stringify(a));
+  answers[name] = norm(JSON.stringify(withoutBrief(a, BRIEF_TALLY)));
   const j = JSON.parse(answers[name]);
   said[name] = j.refused ? { refused: j.refused } : { counts: j.counts, notChecked: j.notChecked.map((n) => n.rule), validator: { ran: j.validator.ran, mode: j.validator.mode, why: j.validator.why || null }, schemas: j.schemas, summary: j.impact.summary, truncated: j.truncated, sameQuestion: !!j.sameQuestion, fixRoutes: j.fixRoutes ? Object.keys(j.fixRoutes) : null };
 }
@@ -214,5 +216,7 @@ if (has('check-impact.mjs')) {
 }
 
 try { fs.rmSync(ROOT, { recursive: true, force: true }); } catch (e) { /* the temp folder */ }
+// (0.3.3 OX2, on purpose) the answers above are compared without OX2's own section (fixtures/ox2-pins.mjs): 10 answers carry briefCheck, 2 say in notChecked that it was not judged
+chk(() => BRIEF_TALLY.had === 10 && BRIEF_TALLY.noted === 2, () => `OX2: the answers that carry briefCheck and the notChecked lines, 10 and 2: ${JSON.stringify(BRIEF_TALLY)}`);
 if (problems.length) { console.log(`FAIL script=test-0.3.2-sp41.mjs cause=${JSON.stringify(problems[0]).slice(0, 300)}`); problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  sp41  ${problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  sp41  ${checks} checks`);

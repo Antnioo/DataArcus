@@ -18,6 +18,8 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { disclosureCases, meaningCases } from './fixtures/fn1e-cases.mjs';
+import { withoutBrief } from './fixtures/ox2-pins.mjs';   // (0.3.3 OX2: its own section left out, pinned by ox2)
+const BRIEF_TALLY = { had: 0, noted: 0 };
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const problems = []; let checks = 0;
@@ -216,7 +218,7 @@ CASES.push(['cut to the bone', worst, { maxFindings: 200 }]);
 
 for (const [name, p, o] of CASES) {
   let a; try { a = await CR.checkReport(p, o); } catch (e) { a = { refused: String(e && e.message || e) }; }
-  out['C ' + name] = norm(JSON.stringify(a));
+  out['C ' + name] = norm(JSON.stringify(withoutBrief(a, BRIEF_TALLY)));
 }
 
 // ---------- M: what each visual means ----------
@@ -257,5 +259,7 @@ const DO = all('D'), CO = all('C'), MO = all('M');
   .forEach((h) => chk(() => MO.includes(h), () => `C2. no meaning case reaches ${h}`));
 
 fs.rmSync(ROOT, { recursive: true, force: true });
+// (0.3.3 OX2, on purpose) the answers above are compared without OX2's own section (fixtures/ox2-pins.mjs): the check_report cases: 42 answers carry briefCheck (the twin project names its model), 4 say in notChecked that it was not judged
+chk(() => BRIEF_TALLY.had === 42 && BRIEF_TALLY.noted === 4, () => `OX2: the answers that carry briefCheck and the notChecked lines, 42 and 4: ${JSON.stringify(BRIEF_TALLY)}`);
 if (problems.length) { console.log(`FAIL script=test-0.3.2-fn1e.mjs cause=${problems[0].slice(0, 300)}`); problems.slice(0, 20).forEach((p) => console.log('  - ' + p.slice(0, 400))); console.log(`FAIL  fn1e  ${problems.length} of ${checks} checks failed`); process.exit(1); }
 console.log(`PASS  fn1e  ${checks} checks`);
