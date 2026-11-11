@@ -12,7 +12,8 @@
   check-contracts PASS 858, test-contracts PASS 14, check-agent-memory PASS 515, check-result-lines PASS 245,
   changelog-words PASS 45, `node scripts/test-site-config.mjs` PASS, `scripts/tests/model-health.mjs` exit 0, lint 0;
   model area 31 suites passed; mutation PASS 250 (99 mutants, all killed).
-- **Resume:** code pushed (see "Before -> after"); next: the area runs, the merge of integration, CI.
+- **Resume:** first CI (run 43003688911) red on one check, tk1 K4: tools/list 75,950 of 75,000 (my option texts);
+  fixed by shortening the two option descriptions (full text stays in TOOLS.md): 74,925. CI again.
 - **Result:** after a model edit, `check_report { path, againstModel }` names exactly the visuals it can move, with the
   chain ("[Total Sales] uses [Base]: measure: its DAX changed"); `read_model { reach: "[Total Sales]" }` answers 7
   visuals on 3 pages of twin-project.
@@ -149,6 +150,8 @@
   worker's new ?v= stamp).
 
 ## Seen, not in scope
+- `tools/list` is at 74,925 of tk1's 75,000 characters after HX2 (it was 75,950 with my first, longer option texts):
+  the next option on any tool will not fit without cutting elsewhere. The hub may want a budget per tool.
 - `sameQuestion` still reads a report through its own `read` (same-question.mjs) and impact.mjs reads it again through
   `inventory`: two reads of the same files in one check_report call with both options (correct, a little slower). One
   shared read would touch NC1's file.
@@ -160,6 +163,8 @@
   half): not built.
 
 ## Lessons for the reviewer
+- A new option's description counts against tk1's 75,000-character tools/list cap: run `test-0.3.2-tk1.mjs` (core
+  area) with any description change; my checker and model runs did not include it and CI caught it.
 - An answer key the brief names (`impact`) was already taken in the same answer: a brief that names a new key could ask
   the builder to grep the answer's keys first.
 - "Red first" for refusal tests of a new option is vacuous on the old code (the strict schema refuses any unknown key
