@@ -58,7 +58,7 @@ const src = (t) => ({ Expression: { SourceRef: { Entity: t } } });
 export const colRef = (t, c) => ({ field: { Column: Object.assign(src(t), { Property: c }) }, queryRef: `${t}.${c}`, nativeQueryRef: c });
 export const msrRef = (name) => ({ field: { Measure: Object.assign(src('_Measures'), { Property: name }) }, queryRef: `_Measures.${name}`, nativeQueryRef: name });
 export const sumRef = (t, c) => ({ field: { Aggregation: { Expression: { Column: Object.assign(src(t), { Property: c }) }, Function: 0 } }, queryRef: `Sum(${t}.${c})`, nativeQueryRef: `Sum of ${c}` });
-const visual = (page, name, visualType, roles, more) => ({ path: `definition/pages/${page}/visuals/${name}/visual.json`,
+export const visual = (page, name, visualType, roles, more) => ({ path: `definition/pages/${page}/visuals/${name}/visual.json`,
   json: Object.assign({ $schema: S + 'visualContainer/2.1.0/schema.json', name, position: { x: 0, y: 0, z: 0, width: 300, height: 200 },
     visual: Object.assign({ visualType }, roles ? { query: { queryState: Object.fromEntries(Object.entries(roles).map(([r, l]) => [r, { projections: l }])) } } : {}) }, more || {}) });
 const page = (name, displayName, more) => ({ path: `definition/pages/${name}/page.json`, json: Object.assign({ $schema: S + 'page/2.0.0/schema.json', name, displayName, width: 1280, height: 720 }, more || {}) });
