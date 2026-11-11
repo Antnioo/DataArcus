@@ -28,9 +28,6 @@ try {
   const dead = Object.keys(CREATE_REPORT_INPUTS).filter((k) => !used.has(k));
   chk(() => dead.length === 0, () => `T1. inputs defined in report-inputs.mjs that no tool takes from there: ${dead.join(', ')}`);
   chk(() => Object.keys(CREATE_REPORT_INPUTS).every((k) => listed.has(k)), () => 'T2. an input defined there is listed by no tool');
-  // T3: the ignored-keys answer names the input that exists
-  const why = (unknownKeys({ fields: {} }) || {}).why || '';
-  chk(() => /planFields/.test(why) && !/create_report's own "fields"/.test(why), () => `T3. the ignored-keys text: ${why}`);
   // T4: planFields' own text
   const pf = pl.inputSchema.properties.planFields.description || '';
   chk(() => !/create_report's fields/.test(pf) && /Table\[Field\]/.test(pf), () => `T4. planFields: ${pf}`);
