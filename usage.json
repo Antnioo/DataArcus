@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-11T09:03Z",
+  "generated_at": "2026-11-11T13:03Z",
   "today": {
     "date": "2026-11-11",
-    "cost_usd": 111.01,
-    "tokens": 252004443,
-    "sessions": 20,
+    "cost_usd": 148.03,
+    "tokens": 335905534,
+    "sessions": 26,
     "by_kind": {
       "builder": {
-        "cost_usd": 97.81,
-        "count": 10
+        "cost_usd": 131.27,
+        "count": 13
       },
       "worker": {
-        "cost_usd": 13.2,
-        "count": 10
+        "cost_usd": 16.76,
+        "count": 13
       },
       "probe": {
         "cost_usd": 0,
@@ -26,16 +26,16 @@
     },
     "by_model": {
       "sonnet": {
-        "cost_usd": 14.93,
-        "count": 10
+        "cost_usd": 18.49,
+        "count": 13
       },
       "opus": {
-        "cost_usd": 27.4,
-        "count": 5
+        "cost_usd": 34.86,
+        "count": 6
       },
       "fable": {
-        "cost_usd": 68.68,
-        "count": 5
+        "cost_usd": 94.68,
+        "count": 7
       }
     }
   },
@@ -120,12 +120,39 @@
     },
     {
       "date": "2026-11-11",
-      "cost_usd": 111.01,
-      "tokens": 252004443,
-      "sessions": 20
+      "cost_usd": 148.03,
+      "tokens": 335905534,
+      "sessions": 26
     }
   ],
   "jobs": [
+    {
+      "id": "TL1",
+      "title": "TL1: the smallest clear tools/list DataArcus sends, nothing lost (D-1111-14)",
+      "model": "fable",
+      "cost_usd": 15.54,
+      "tokens": 25624556,
+      "minutes": 60,
+      "finished_at": "2026-11-11T12:55Z"
+    },
+    {
+      "id": "HX2",
+      "title": "HX2: Impact check in check_report, reach in read_model (HX1 stages 2-3, D-1111-13)",
+      "model": "opus",
+      "cost_usd": 7.46,
+      "tokens": 21492153,
+      "minutes": 66,
+      "finished_at": "2026-11-11T11:15Z"
+    },
+    {
+      "id": "FB3",
+      "title": "FB3: FB1 stage 2, rows re-shared after a reflow and the focus page's hole (D-1111-12)",
+      "model": "fable",
+      "cost_usd": 10.46,
+      "tokens": 17588114,
+      "minutes": 117,
+      "finished_at": "2026-11-11T10:06Z"
+    },
     {
       "id": "HX1",
       "title": "HX1: find and prove the hidden lever that unlocks DataArcus's future (D-1111-12)",
@@ -458,38 +485,11 @@
       "tokens": 16512233,
       "minutes": 75,
       "finished_at": "2026-11-09T20:44Z"
-    },
-    {
-      "id": "HK1",
-      "title": "HK1: six suites read fixtures, not integration-only commits; the licensing date follows the price file (B-414, B-417)",
-      "model": "haiku",
-      "cost_usd": 1.11,
-      "tokens": 16666210,
-      "minutes": 72,
-      "finished_at": "2026-11-09T20:43Z"
-    },
-    {
-      "id": "BA1",
-      "title": "BA1: weekly bot PRs that change only the 3 data files merge themselves once CI is green (D-1109-10)",
-      "model": "sonnet",
-      "cost_usd": 0.58,
-      "tokens": 2231829,
-      "minutes": 37,
-      "finished_at": "2026-11-09T20:37Z"
-    },
-    {
-      "id": "RL032L",
-      "title": "RL032L: the download lines name 0.3.2, after the owner publishes (F04)",
-      "model": "sonnet",
-      "cost_usd": 1.52,
-      "tokens": 7092815,
-      "minutes": 82,
-      "finished_at": "2026-11-09T19:52Z"
     }
   ],
   "workers": {
-    "count": 10,
-    "cost_usd": 13.2,
+    "count": 13,
+    "cost_usd": 16.76,
     "costliest": [
       {
         "label": "worker 00:47",
@@ -523,19 +523,19 @@
       "cost_usd": 16.38
     },
     {
+      "label": "TL1",
+      "kind": "builder",
+      "cost_usd": 15.54
+    },
+    {
       "label": "CO1",
       "kind": "builder",
       "cost_usd": 13.23
     },
     {
-      "label": "CO1",
+      "label": "FB3",
       "kind": "builder",
-      "cost_usd": 10.22
-    },
-    {
-      "label": "HX1",
-      "kind": "builder",
-      "cost_usd": 9.06
+      "cost_usd": 10.46
     }
   ]
 }
