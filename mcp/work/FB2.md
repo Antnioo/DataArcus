@@ -31,7 +31,7 @@
 | SQ13 S10 gaps | 18 x 5 | 18 x 5 | 392, 308, 329, 245, 18 |
 | Details chart at 1920 x 1080 | 312 | 312 | 168 |
 | MCP suites | 242 | 243 | 242 |
-No number differs from FB1's. The extra suite is something integration added since (the count was 242 on FB1's tree); sp29 has 23 checks.
+No number differs from FB1's. The count is 243, FB1's was 242: most likely AT1's suite (test-0.3.3-at1.mjs), merged into FB1's branch after its count; I did not check which. sp29 has 23 checks.
 `npm test -- --keep-going`: "run-tests: 243 suites passed", no FAIL line. Website suites run alone: design-engine 600, sp6 4, sp29 8,
 pbip 111, sp31 (see below), `check-modules --strict` PASS, `npm run lint` exit 0, test-site-config PASS, check-agent-memory PASS.
 
@@ -42,6 +42,7 @@ cards' row over the rail (FB1.md "Changed on purpose"). Re-recorded here, byte d
 |---|---|
 | scripts/tests/fixtures/design-engine/project-pages.json, bgs of layout-analysis-1920x1080, layout-analysis-1920x1080-plain, layout-ops-1920x1080, layout-focus-3840x2160, page-out-of-range-plain, arabic-analysis-filters-plain | the 6 website page backgrounds: the page's cards' row over the rail (D-1111-01) |
 | fixtures fb1-pins, fn1c-builds, fn1f-pins, fn1j-pins, sp1, sp3, sp4, sp5, sp7, sp13, sp23, sp28, sp29, sp43, sp44 | the same 15 files and nearly the same line counts as FB1's diff (fb1 66, fn1c 4, fn1f 44, fn1j 284, sp1 24, sp3 60, sp4 28, sp5 208, sp7 60, sp13 18, sp23 12, sp28 14, sp29 18, sp43 34, sp44 12) |
+| scripts/tests/fixtures/sp7-download.json (website sp7, SP7_RECORD=1) | NOT in FB1's list; found by CI run 42954459508 (website-suites shard 1, "FAIL script=scripts/tests/sp7.mjs check=\"W1 en download: the files or their order differ (87 files, recorded 87); 25 files differ\""). Same kind of diff as sp31: the zip hash, 7 order entries, the page's visual files and ids, one bookmark, the background png, EN and AR. Every other recorded website suite (sp5, sp8, sp9, sp12, sp13, sp14, sp24, sp25, sp32 to sp36) passes unchanged |
 | scripts/tests/fixtures/sp31-page.json (website sp31, SP31_RECORD=1) | NOT in FB1's list. Green on origin/integration/0.3.3 (57 s run), red with the revert: C1 and C12, the downloaded report's page files. Diff: the preview hash, the page's visual files and ids of one page, its bookmark, one background png. Recorded by its own recorder (the file says "only on the base": here the layout change is the owner's yes, and attribution is by the base run above) |
 | test-0.3.2-sp3.mjs L1 BASE_EXT, test-rc24.mjs T-1, test-0.3.1-sq13.mjs S10, test-0.3.1-ts1.mjs T5b, test-0.3-preview-fidelity.mjs F-01, test-0.3.2-dd2p.mjs H13/H14, test.mjs round18 | FB1's checks, back as in 38b8ffdb (sp3 and rc24 merged with AT1, above) |
 
@@ -69,12 +70,12 @@ the look is unseen in Desktop. A two-slicer rail (228 high) presses the executiv
 FB1.md "For the laptop" 1 to 4 (made-up sample project only).
 
 ## Seen, not in scope
-1. website sp31's fixture was not in FB1's list: a layout job should run sp31, pbip and theme-generator before DONE.
+1. website sp31's and sp7's fixtures were not in FB1's list: a layout job should run every website suite with a `_RECORD` recorder (scripts/tests/sp*.mjs) before the first CI, not only the ones its brief names.
 2. The first CHANGELOG bullet contradiction, above.
 3. FB1 stage 2 (rows re-shared after a reflow; the 0.52 lower-row case) is untouched.
 
 ## Lessons for the reviewer
-- FB1's list of moved recordings missed sp31 (a website suite that pins a downloaded report). Its brief for FB2 said "14 fixtures
+- FB1's list of moved recordings missed sp31 and sp7 (website suites that pin a downloaded report); CI found sp7, my own run of sp31 found sp31. The brief's website list (6 backgrounds) was too short. Its brief for FB2 said "14 fixtures
   and 6 backgrounds"; the real set was 15 MCP fixtures, 6 backgrounds and sp31.
 - Revert of a revert conflicts wherever another job re-recorded the same fixtures in between (AT1): expect it, and re-record.
 - I did not see fb1 red on the old code before re-recording: its pins came back identical to FB1's, which saw it red (95ebdb3c).
