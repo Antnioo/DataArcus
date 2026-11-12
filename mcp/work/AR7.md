@@ -13,7 +13,8 @@
 - **Expected checks:** `node scripts/check-modules.mjs --strict`; ar7 red on 26cfb66f first; `npm test -- arabic`
   (and model, checker, report, core where a shipped line moves an answer); the website suites of each changed asset;
   build:min; lint 0; check-result-lines, changelog-words, check-agent-memory PASS; CI green.
-- **Resume:** sent back by the review of 12 Nov 23:1xZ (two approved rows shipped unsourced words); fixed (2026-11-12T23:09Z); next: CI, the CI line.
+- **Resume:** DONE (2026-11-12T23:33Z), round 2: the tip is ready to merge; nothing left on this branch. The held rows wait for the owner.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/43327163684 on 8c70665b39b579e08f3eae9cd108e98afba34d04 (2026-11-12T23:33Z; conclusion success, read from the run; origin/integration/0.3.3 merged in once before it, 17 commits, no conflict). Round 1's run (43312241764 on afadc436) is superseded. DONE
 
 ## Plan (written before any work)
 1. Sources first, measured: for each key term of the 37 items, fetch Microsoft's Arabic page (learn.microsoft.com/ar-sa)
@@ -83,7 +84,7 @@ Words re-checked and found without both sources (their rows are HELD): «يذك�
   `check-agent-memory` 537, `changelog-words` 111, `check-result-lines` 258, `stamps` 1286, `arabic-glossary` 44,
   `scripts/test-arabic-terms.mjs` 87, `test-site-config` PASS, lint exit 0.
 - Website `model-health` not re-run locally: its test file and every asset it reads are the base's again (CI runs it).
-- The merge (R-33): origin/integration/0.3.3 fetched before CI; see the CI line.
+- The merge (R-33): origin/integration/0.3.3 merged once before CI (17 commits, no conflict); after it `mcp/WORK.md` was 6 characters over its cap, so this job's line was shortened to "AR7 (`AR7`).".
 
 ## CHANGELOG line
 Two lines under [Unreleased] in `mcp/CHANGELOG.md`: the Arabic answer for a wrong model name or path in an empty working folder; the glossary and its check. (The counts have no line: nothing a user sees uses them yet.)
