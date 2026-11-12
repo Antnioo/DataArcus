@@ -69,8 +69,8 @@
   // visual: a visual.json's "visual". Whether its first Category field is time
   const categoryIsTime = (visual, dateTables) => isTime((first(projections(isObj(visual) ? visual.query : null, 'Category')) || {}).field, dateTables);
   // (0.3.1 MP1e) a date table's column whose name reads as a date (its type unknown to the model read): RepeatIQ's
-  // StartOfMonth, "Start of Month", "Order Date", "Month Start", "Day"
-  const DATE_LIKE = /(?:^|[\s_])(?:date|day)$|^date|start ?of ?[a-z]+$|startof[a-z]*$|(?:^|[\s_])[a-z]* ?start$/i;
+  // StartOfMonth, "Start of Month", "Order Date", "Month Start", "Day"; (0.3.3 AU2, AUD-051) and «تاريخ الطلب»,
+  // «التاريخ», «بداية الشهر»: time-names.js isDateName, its one home (D-1104-15)
   // (T-2 of the laptop's rc.2 twins: a continuous date axis ignores the sort, so time stayed left to right; on such an
   // axis categoryAxis.invertAxis is honoured: round 13, "2027 at the left, 2022 at the right". Continuous: the category
   // is a date column of the model (o.dateColumns, "Table.Column") and the axis is not set Categorical)
@@ -88,7 +88,7 @@
     const cf = c0 && isObj(c0.field) && isObj(c0.field.Column) ? c0.field.Column : null;
     const cref = cf && isObj(cf.Expression) && isObj(cf.Expression.SourceRef) ? cf.Expression.SourceRef.Entity + '.' + cf.Property : null;
     const axisType = (entries(v.objects, 'categoryAxis') || []).map((e) => strOf((e.properties || {}).axisType)).find((x) => x != null);
-    const timeCat = Array.isArray(o.textColumns) && c0 && isTime(c0.field, o.dateTables) && (!cf || (DATE_LIKE.test(String(cf.Property || '')) && !o.textColumns.includes(cref)));
+    const timeCat = Array.isArray(o.textColumns) && c0 && isTime(c0.field, o.dateTables) && (!cf || (TN.isDateName(String(cf.Property || '')) && !o.textColumns.includes(cref)));
     return !!(((cref && (o.dateColumns || []).includes(cref)) || timeCat) && axisType !== 'Categorical' && o.timeRightToLeft !== false);
   }
 
@@ -134,7 +134,7 @@
 
   const api = Object.freeze({ isObj, lit, strOf, entries, projections, first,
     COLUMN, BAR, WATERFALL, SIDELESS, isCustom, kindOf,
-    DATE_LIKE, isTime, categoryIsTime, invertsTimeAxis,
+    isTime, categoryIsTime, invertsTimeAxis,
     MOVES_ONLY, movesOnly, waterfallKind, ONE_ROW_H, oneRowButtons, verticalValues, TITLED, titled, keepsGridLtr });
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAMirrorPolicy = api;
 })(typeof self !== 'undefined' ? self : this);
