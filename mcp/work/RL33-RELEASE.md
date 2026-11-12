@@ -24,7 +24,7 @@
   25 jobs had lines; 2 user-facing changes had none and got one (the PL-300 practice questions, the article
   title); 17 change nothing a user sees (tests, CI, builder tools, type checking, research notes). One number was
   wrong and is now measured (the tool list: 60,513 characters).
-- tests.yml on Linux, Windows and macOS on the last commit: see the "CI green" line in `mcp/work/RL33.md`.
+- tests.yml green on Linux, Windows and macOS on ec8a80f3 (run 43254948213, attempt 1; the line is in `mcp/work/RL33.md`).
 - macOS now runs on a `release/*` branch (D-1104-19), so a release branch is read on three systems before main.
 
 ## What the owner clicks, in order
