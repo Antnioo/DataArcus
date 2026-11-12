@@ -75,7 +75,8 @@ with the current page, no data state; the validator 0 errors; the Arabic report;
 if a module is added, tests.json. 5. Area runs, the capped-answer suites 3 times, lint, merge integration once, CI.
 - Alt text and tab order: no code; one new check in the suite that a written view report still has alt text on every
   data visual (the a11y suite's own count stays 121).
-- State at 2026-11-12T14:36Z: built, the suites named below green locally; CI is the next line.
+- State at 2026-11-12T15:08Z: done. Run 43241081009: Linux and Windows shards and the website jobs passed; the two macOS jobs were skipped by the workflow on this branch, so macOS is not proven here. Local: report 81, checker 20, model 32 suites pass; terminology-sheet and bilingual-report 3 of 3.
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/43241081009 on fd80fb6e67bb63abbfaf60826576c7d7072b8249
 
 ## Before -> after
 - **Bookmarks for the plan's views (new).** Before: `plan_layout` refused `bookmarks` ("Unrecognized key"); a report had
