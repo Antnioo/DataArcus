@@ -726,6 +726,10 @@ changed. The probe: one answer on all 10 inputs.
 
 **Newest copy:** equal since DD1G (4 Nov): the rule is `model-nearest.js` `nearest` (MANY_MODELS since 41bd0daa, 26 Oct,
 built from `model-discovery.mjs`); the browser's own sort is gone.
+Since 0.3.3 AU1 (AUD-068) the Health Check's worker (`model-health-worker.js` `fromZip`) reads the rule too, for a zip
+with more than one model: the nearest is read; on a tie, where the two callers below refuse, it reads the first of the
+tied (the rule's sorted order) and says, before the score, which it read and which not (no picker yet). Test:
+`mcp/test-0.3.3-au1.mjs` W4 to W11.
 
 | place | MODULES.md | who sees it |
 |---|---|---|

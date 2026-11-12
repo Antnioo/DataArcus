@@ -188,7 +188,23 @@
     const files0 = modelFiles(files), parsed = new Map(files0.map((f) => [f, parse(f.text)]));
     const problemOf = (f) => problemIn(f, parsed.get(f));
     const skipped = files0.map(problemOf).filter(Boolean);
-    return { model: build(files0, opts || {}, parsed), skipped };
+    const model = build(files0, opts || {}, parsed);
+    return { model, skipped: skipped.concat(missingIn(model, files0, parsed, skipped)) };
+  }
+  // (AU1, the night audit's AUD-067: a model whose table file is missing was read as a smaller model, and scored higher)
+  // what the model refers to and no file defines, one entry per table, named by the table's name as the parse read it
+  // (readName, this reader's one unquoting place), never by file text: a `ref table` line of the model (missingTable),
+  // else a relationship end (missingEnd). Power BI's names ignore case. A table whose own file is there but was named
+  // above as unreadable (tables/<name>.tmdl) is that file's entry already, never a second one
+  function missingIn(model, files0, parsed, skipped) {
+    const key = (n) => String(n).toLowerCase(), m = model.model || {};
+    const defined = new Set((m.tables || []).map((t) => key(t.name)));
+    skipped.forEach((s) => { const f = String(s.path).replace(/\\/g, '/').match(/(^|\/)tables\/([^/]+)\.tmdl$/i); if (f) defined.add(key(f[2])); });
+    const out = [], said = new Set();
+    const add = (name, code) => { if (name == null || name === '' || defined.has(key(name)) || said.has(key(name))) return; said.add(key(name)); out.push({ table: String(name), code }); };
+    files0.forEach((f) => parsed.get(f).children.forEach((n) => { if (n.type === 'ref' && n.of === 'table') add(n.name, 'missingTable'); }));
+    (m.relationships || []).forEach((r) => { add(r.fromTable, 'missingEnd'); add(r.toTable, 'missingEnd'); });
+    return out;
   }
   // why one file can't be read fully, or null: the first of empty, not text, git merge-conflict markers, a line the
   // parse could not place (indentation, a line it stopped at), cut short (no final line break, and the last item is
@@ -239,13 +255,16 @@
     indent: ['unexpected indentation at line #', 'مسافة بادئة غير متوقعة في السطر #'],
     stopped: ['parse stopped at line #', 'توقفت القراءة عند السطر #'],
     cut: ['cut short: line #, the last, stops in the middle of an item', 'الملف مقطوع: السطر #، وهو الأخير، يتوقف في منتصف عنصر'],
-    noTable: ['no table definition in it', 'لا يحتوي على تعريف جدول']
+    noTable: ['no table definition in it', 'لا يحتوي على تعريف جدول'],
+    // (AU1) not yet approved in Arabic (D-1109-07): the Arabic side carries the English sentence; drafts in mcp/work/AU1.md
+    missingTable: ['model.tmdl names this table; no file in the project defines it', 'model.tmdl names this table; no file in the project defines it'],
+    missingEnd: ['a relationship uses this table; no file in the project defines it', 'a relationship uses this table; no file in the project defines it']
   };
   const whyOf = (s, lang) => (WHY[s.code] || WHY.stopped)[lang === 'ar' ? 1 : 0].replace('#', String(s.line || 1));
-  // the one message, first in every answer that read such a model: items { path | file, code | why } (a caller passes
+  // the one message, first in every answer that read such a model: items { path | file | table, code | why } (a caller passes
   // the file as it shows names, screened, and the reason in its words); again: 'check' on the website, else 'ask'
   function unreadableSaid(skipped, lang, again) {
-    const list = (skipped || []).map((s) => `${s.file != null ? s.file : s.path} (${s.why != null && lang !== 'ar' ? s.why : whyOf(s, lang)})`), n = list.length;
+    const list = (skipped || []).map((s) => `${s.file != null ? s.file : s.table != null ? s.table : s.path} (${s.why != null && lang !== 'ar' ? s.why : whyOf(s, lang)})`), n = list.length;
     if (lang === 'ar') return `تعذّرت قراءة ${n} من ملفات النموذج: ${list.join('؛ ')}. ${again === 'check' ? 'الفحص أدناه ينقصه' : 'الإجابة أدناه ينقصها'} ما تحتويه هذه الملفات؛ أصلح الملف في Power BI Desktop أو في محرر النصوص ثم ${again === 'check' ? 'افحصه' : 'اسأل'} مرة أخرى.`;
     return `${n} model file(s) could not be read: ${list.join('; ')}. The ${again === 'check' ? 'check' : 'answer'} below is missing what they hold; fix the file in Power BI Desktop or your editor and ${again === 'check' ? 'check it' : 'ask'} again.`;
   }
