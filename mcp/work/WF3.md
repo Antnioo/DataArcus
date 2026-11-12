@@ -19,9 +19,18 @@ route; a wrapped item is one item; "none"; a heading that only contains the word
 
 ## CHANGELOG line
 none (not a user change: the hook is a builder tool).
-- State at 2026-11-12T06:07Z: plan written.
+- State at 2026-11-12T06:25Z: done; CI green on the last code commit.
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/43166273678 on 1fd37d24366a584a5394c1843f80890496cfdf75
+
+## Before -> after
+- The Stop hook let a note through on a CI green line whatever its two sections said. Now it refuses (exit 2, one message naming the line, format shown once) when a line under "## For the owner" is not a question with class/rec/yes/no/default, or a line under "## Seen, not in scope" has no valid route/why (fix: size). 3-refusals rule and STOP: unchanged.
+- Test: `scripts/test-agent-stop-check.mjs` 25 -> 59 checks, **red on c921955d first** (20 of 59 failed with the old hook; read from the run), green after.
+- `mcp/docs/OWNER-RULES.md` has the note template (the repo had none) with one example per line format and "## For the reviewer".
 
 ## Decisions I made
+- A bare indented line continues the item before it; a bare unindented line is an item of its own. Fenced code is skipped.
+- The refusal counter is per branch, so the new tests give each call its own state folder.
+- `npm run lint` needed `npm ci --ignore-scripts` in this container (no node_modules); then exit 0.
 - The format is checked on the CI green path only, as the brief says; the old "a question under For the owner allows the stop" path stays as it is.
 
 ## For the owner
@@ -41,3 +50,4 @@ none
 none
 
 ## Lessons for the reviewer
+- The note's section format is now a gate: a builder note with an old-style Seen or For the owner line is refused up to 3 times (tell builders to use the template).
