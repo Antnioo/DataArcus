@@ -311,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let words = null;
   const loadNames = () => Promise.all([window.DAArabicNames ? window.DAArabicNames : loadScript('/assets/js/arabic-names.min.js?v=637dc63aff40').then(() => window.DAArabicNames),
     words || (words = fetch('/assets/data/arabic-report-words.json').then((r) => (r.ok ? r.json() : Promise.reject(new Error('words')))).catch((e) => { words = null; throw e; }))]);
-  const CHECK = ['../assets/js/visual-types.min.js?v=55431aa586c5', '../assets/js/report-rules.min.js?v=0feeae0ec5e2', '../assets/js/layout-check.min.js?v=a712355c7688'];
+  const CHECK = ['../assets/js/visual-types.min.js?v=55431aa586c5', '../assets/js/report-rules.min.js?v=0feeae0ec5e2', '../assets/js/layout-check.min.js?v=b50a6b9a99f0'];
   const loadCheck = () => (window.DALayoutCheck ? Promise.resolve(window.DALayoutCheck) : loadBuilder().then(() => CHECK.reduce((q, src) => q.then(() => loadScript(src)), Promise.resolve())).then(() => window.DALayoutCheck));
   // (0.3.2 DD1B: the preview reads its literals with pbir-values.js, DD1A: its time names with time-names.js, DD2T:
   // a text box's paragraphs with text-runs.js, each

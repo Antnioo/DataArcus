@@ -283,7 +283,7 @@
       return { file: b.file, id: String(raw.name || ''), page: typeof st.activeSection === 'string' ? st.activeSection : null,
         sections: Object.fromEntries(keys(sec).map((k) => [k, keys((sec[k] || {}).visualContainers).concat(keys((sec[k] || {}).visualContainerGroups))])),
         targets: entries((raw.options || {}).targetVisualNames).filter((n) => typeof n === 'string') }; });
-    R.bookmarkList = inv.bookmarkList || null;
+    R.bookmarkList = null;   // (check_report reads bookmarks.json itself and sets it: the inventory's shape stays as it is)
     R.bookmarkPlan = (() => { const a = entries((inv.report || {}).annotations).find((x) => x && x.name === 'DataArcusBookmarkOrder'); if (!a) return null;
       try { const l = JSON.parse(String(a.value)); return Array.isArray(l) && l.every((n) => typeof n === 'string') ? l : null; } catch (e) { return null; } })();
     return { R, versions: inv.versions, texts, customVisuals, unreadable: inv.unreadable, bookmarks: inv.bookmarkFiles, bookmarkNames: (inv.bookmarks || []).map((b) => ({ file: b.file, name: b.rawName })) };

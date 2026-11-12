@@ -128,9 +128,6 @@ export function inventory(src, reportName, opts) {
   const pageName = (id) => (pageJson[id] ? safeName(pageJson[id].displayName || id) : safeName(id));
   const bmRaw = src.files('definition/bookmarks').filter((n) => /\.bookmark\.json$/i.test(n)).map((n) => ({ n, b: json('definition/bookmarks/' + n) })).filter((x) => x.b);
   const bmName = Object.fromEntries(bmRaw.map(({ b }) => [String(b.name), safeName(b.displayName || b.name)]));
-  // (0.3.3 RX1) bookmarks.json: the ids it lists in order, a group's children in their place (ids only, for the rules)
-  const bmList = src.has('definition/bookmarks/bookmarks.json') ? json('definition/bookmarks/bookmarks.json') : null;
-  const bookmarkList = bmList ? { file: 'definition/bookmarks/bookmarks.json', ids: entries(bmList.items).flatMap((x) => (x && Array.isArray(x.children) ? names(x.children) : x && typeof x.name === 'string' ? [x.name] : [])) } : null;
   // the theme: report.json names its file in RegisteredResources; its name, colours (hex only) and label size
   const tc = report.themeCollection || {}, ref = tc.customTheme && tc.customTheme.name ? path.basename(String(tc.customTheme.name)) : null;
   const th = ref ? json('StaticResources/RegisteredResources/' + ref) : null;
@@ -227,5 +224,5 @@ export function inventory(src, reportName, opts) {
   const installedNotUsed = [...new Set(pub.concat(orgs))].filter((t) => !custom.includes(t)).length;
   return { name: safeName(reportName || 'report'), pages, theme, themeFile: ref ? 'StaticResources/RegisteredResources/' + ref : null, themeJson: th, themeRef: ref, baseJson, report,
     hasPlatform: src.has('.platform'), versions: Object.fromEntries(Object.entries(versions).map(([k, v]) => [k, [...v].sort()])),
-    bookmarks, bookmarkList, bookmarkFiles: src.files('definition/bookmarks').filter((n) => /\.bookmark\.json$/i.test(n)).length, types, customVisuals: custom.map((t) => Object.assign({ type: safeName(t) }, customNameOf(t) ? { name: customNameOf(t) } : {}, { source: sourceOf(t) })), installedNotUsed, reportFilters: safeFilters(report.filterConfig), unreadable: unreadableFiles.length, unreadableFiles, suspicious, longTexts, sk };
+    bookmarks, bookmarkFiles: src.files('definition/bookmarks').filter((n) => /\.bookmark\.json$/i.test(n)).length, types, customVisuals: custom.map((t) => Object.assign({ type: safeName(t) }, customNameOf(t) ? { name: customNameOf(t) } : {}, { source: sourceOf(t) })), installedNotUsed, reportFilters: safeFilters(report.filterConfig), unreadable: unreadableFiles.length, unreadableFiles, suspicious, longTexts, sk };
 }

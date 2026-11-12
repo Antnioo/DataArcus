@@ -6,7 +6,7 @@
 - **Base:** `feat/0.3.3-rx1` from `origin/integration/0.3.3` at 624357f0. Only this branch is pushed; no merge, no PR.
 - **Scope:** `assets/js/pbip-export.js` (the views' bookmark files, first in the list), `assets/js/report-rules.js`
   (two rules, `when`), `assets/js/layout-check.js` (the rules' input), `mcp/lib/report-inputs.mjs`, `report-build.mjs`,
-  `report-result.mjs`, `report-inventory.mjs`, `plan-artifact.mjs`, `artifact.mjs`, `approval-disclosure.mjs`,
+  `report-result.mjs`, `check-report.mjs`, `plan-artifact.mjs`, `artifact.mjs`, `approval-disclosure.mjs`,
   `mcp/tools/plan_layout.mjs`, `mcp/TOOLS.md`, `PRIVACY.md`, `CHANGELOG.md`, `tests.json`, `WORK.md`, the new suite
   `mcp/test-0.3.3-rx1.mjs`, `mcp/fixtures/rx1-pins.mjs`; on purpose: tl1 and its fixture, sn1, fn1e, sp41. No new module.
 - **Expected checks:** rx1 red on 624357f0 first (12 of 22 failed), then green: 49 checks; a11y 121 unchanged; tools/list
@@ -133,6 +133,9 @@ Two lines under [Unreleased] in `mcp/CHANGELOG.md`: "New, only when asked: `plan
   way OX2's `fixtures/ox2-pins.mjs` does it; nothing was recorded again. sp20 needed nothing (its reports have no bookmark).
 - The approval page's row uses the heading "Bookmarks" (its Arabic «الإشارات المرجعية» is already approved) and, as
   values, only the person's names and the plan's page names: no new English or Arabic wording on the page.
+- check_report reads `bookmarks.json` itself, quietly (`check-report.mjs`), not through the shared inventory: the first CI
+  run (43239014057 on cbf07526) failed sp42 and fn1g on Linux and Windows because the inventory had gained a key; the
+  inventory is as it was again, and both pass (sp42 22, fn1g 222). I had not run those two locally before that run.
 - The option's description is 151 characters on purpose: tools/list is at 60,930 of 61,000.
 
 ## Changes to other tests, on purpose (R-10, one line each)
