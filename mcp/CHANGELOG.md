@@ -9,6 +9,7 @@ package's manifest; this file says what is in it.
   date table's column named «تاريخ الطلب» or «بداية الشهر», whose type the model does not say, has its time axis read
   from the right like one named "Order Date", and a heatmap whose rows are «يوم الأسبوع» gets its day names beside the
   grid like one by "Weekday". Every English name reads as before.
+- The SVG KPI Designer's preview prints a very large value in digits (1,000,000,000,000,000,000,000 for 1e21), never as "1e+21" or a wrong percent. Up to 15 significant digits are the value's, then zeros.
 - A new measure says how well each planned page is filled: the largest empty area, the flattest and the lowest chart. A new
   test pins it on 80 plans of made-up models, so a layout change now shows its whole effect as numbers before it ships.
   The measure itself is in no answer; the two layout changes it measured are the next two lines.
