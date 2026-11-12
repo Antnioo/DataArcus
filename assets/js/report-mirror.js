@@ -406,7 +406,9 @@
   // the twin's left: o.mirrored), which the twin's matrix gives up, so its grid keeps English's width. Less padding
   // there than that: B1, said.
   // Returns { ok: true, textSize, width (the names table's), slack } or { ok: false, why }
-  const WEEKDAY = /^(week ?day|day ?name|day of (the )?week|dayofweek|week ?day name)$/i;
+  // (0.3.3 AU2, B-402) the rows are the days of the week by their name ("Weekday", «يوم الأسبوع»): time-names.js
+  // isWeekdayName, its one home (D-1104-15, D-1104-12)
+  const TN = typeof module !== 'undefined' && module.exports ? require('./time-names.js') : root.DATimeNames;
   const ROW_LINE = 15.1 / 8, ROW_PAD = 2, ROW_TITLE = 1.6, ROW_MARGINS = 6, TABLE_PAD_MORE = 6, TABLE_EDGES = 4;
   const padOf = (json, side) => { const e = (entries(json.visual.visualContainerObjects, 'padding') || []).find((x) => !x.selector && isObj(x.properties) && x.properties[side] !== undefined); const n = e ? parseFloat(String(lit(e.properties[side])).replace(/D$/, '')) : 0; return Number.isFinite(n) ? n : 0; };
   function heatmapBeside(json, opts) {
@@ -414,7 +416,7 @@
     const v = json.visual, rows = projections(v.query, 'Rows'), cols = projections(v.query, 'Columns');
     if (!cols || !cols.length) return { ok: false, why: 'no Columns field' };
     const f = rows && rows.length === 1 && isObj(rows[0]) && isObj(rows[0].field) ? rows[0].field : null, name = f && isObj(f.Column) ? f.Column.Property : null;
-    if (typeof name !== 'string' || !WEEKDAY.test(name.trim())) return { ok: false, why: 'its rows are not the days of the week (told from the row field\'s name)' };
+    if (typeof name !== 'string' || !TN.isWeekdayName(name)) return { ok: false, why: 'its rows are not the days of the week (told from the row field\'s name)' };
     const ob = isObj(v.objects) ? v.objects : {}, pv = (k, x) => { const e = (Array.isArray(ob[k]) ? ob[k] : []).find((y) => isObj(y) && !y.selector && isObj(y.properties) && y.properties[x] !== undefined); return e ? e.properties[x] : undefined; };
     const pt = parseFloat(String(lit(pv('grid', 'textSize')) || lit(pv('values', 'fontSize')) || lit(pv('rowHeaders', 'fontSize')) || '10').replace(/D$/, '')) || 10;
     // (0.3.2 HM1, B-299: Codex F1-1, rowPadding 6 at 10pt in a box 190 passed: its 8 rows are 269) a row counts the

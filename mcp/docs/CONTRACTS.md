@@ -125,6 +125,8 @@ dd1a's P runs the four on the 24 names and 26 more: one answer each. The probe: 
 
 **Since TN2 (5 Nov; the owner D-1105-04):** «عام» / «العام» is a time word only as the first word of a name («العام», «عام 2024»), never after another word («المدير العام», «القطاع العام»); every other word as before.
 
+**Since AU2 (12 Nov; AUD-051, B-307, B-402):** two more questions a name answers, in the same file, each one place: `isDateName` (does a date table's untyped column read as a date: English as mirror-policy's `DATE_LIKE` read it, unchanged; Arabic, the noun first: «تاريخ ...», «يوم» alone or before a word that is not a time word, «بداية» before a time word, «عام» as TN2) and `isWeekdayName` (the heatmap's rows: English as report-mirror's `WEEKDAY` read it, unchanged; «يوم الأسبوع», «اسم اليوم»). `DATE_LIKE` and `WEEKDAY` are gone from the mirror; mirror-policy.js `invertsTimeAxis` and report-mirror.js `heatmapBeside` call them. The test: dd1a U5, U6 (the English answers read from the two regexes on c21df8d5) and the au2 suite through the twin.
+
 ## 1b-text What text does a literal hold?
 
 **One place:** assets/js/pbir-values.js litText (test mcp/test-0.3.2-dd1b.mjs).

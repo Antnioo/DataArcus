@@ -5,6 +5,10 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.3
+- The Arabic twin now reads a date and a weekday from an Arabic column name as it does from an English one: a chart on a
+  date table's column named «تاريخ الطلب» or «بداية الشهر», whose type the model does not say, has its time axis read
+  from the right like one named "Order Date", and a heatmap whose rows are «يوم الأسبوع» gets its day names beside the
+  grid like one by "Weekday". Every English name reads as before.
 - A new measure says how well each planned page is filled: the largest empty area, the flattest and the lowest chart. A new
   test pins it on 80 plans of made-up models, so a layout change now shows its whole effect as numbers before it ships.
   The measure itself is in no answer; the two layout changes it measured are the next two lines.
