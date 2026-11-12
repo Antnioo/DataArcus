@@ -46,6 +46,10 @@
   };
   // (0.3.0 X1) not measured, so not in SRC (every SRC entry is a section of DESKTOP-TESTS.md): what the PBIR format says
   const LINKS_SRC = { format: true, section: 'a visualLink\'s navigationSection is the name of a page of the same report (visualConfiguration schema, bundled in mcp/schemas)' };
+  // (0.3.3 RX1) the bookmark rules' sources: the PBIR format (the bookmark schema, bundled in mcp/schemas) and
+  // Microsoft's guidance on the order of bookmarks (read 12 Nov 2026)
+  const BOOKMARK_SRC = { format: true, section: 'a bookmark\'s activeSection, sections and targetVisualNames name a page and visuals of the same report, and bookmarks.json lists bookmarks by name (bookmark and bookmarksMetadata schemas, bundled in mcp/schemas)' };
+  const BOOKMARK_ORDER_SRC = { guide: true, title: 'Create report bookmarks in Power BI to share insights and build stories', section: 'Arranging bookmarks', url: 'https://learn.microsoft.com/power-bi/create-reports/desktop-bookmarks#arranging-bookmarks' };
   // (0.3.1 R1) the rows of a table, measured for the report writer (Desktop 2.158, 13 Oct: N21-LAB); not a section of
   // DESKTOP-TESTS.md, so not in SRC. The one copy of the numbers is the writer's sizing module, loaded when the rule runs
   const TABLE_ROWS_SRC = { file: 'assets/js/pbip-sizing.js (TABLE_ROWS)', date: '2026-10-13', desktop: '2.158', section: 'a table\'s title, header, rows and total, measured for the report writer (N21-LAB)' };
@@ -311,6 +315,41 @@
           if (to && !ids.has(to)) out(x, 'the page button goes to a page this report does not have (its navigationSection names no page of the report)', 'Point it at a page of the report (navigationSection: that page\'s name, its folder under definition/pages), or remove it: clicking it does nothing.');
         });
       } },
+    // (0.3.3 RX1) a bookmark that names a page or visuals the report no longer has, or a bookmark listed without its
+    // file. Microsoft Learn (the PBIR format's page): "any invalid visuals are removed from the bookmark configuration"
+    // when Desktop saves, so the bookmark quietly does less than its name says. Counts and the file only: a bookmark's
+    // name and the ids it holds are the report's own text, never quoted. A report with no bookmark: not run (when), so
+    // it is not in the answer's rulesRun either, as a right-to-left rule is not on a left-to-right report
+    { id: 'BOOKMARK_TARGET_MISSING', group: 'navigation', severity: 'warning', source: BOOKMARK_SRC,
+      when: (R) => (Array.isArray(R.bookmarks) && R.bookmarks.length > 0) || !!(R.bookmarkList && Array.isArray(R.bookmarkList.ids) && R.bookmarkList.ids.length),
+      about: 'a bookmark names a page of this report and visuals of that page; every bookmark bookmarks.json lists has its file',
+      run(R, out) {
+        if (!Array.isArray(R.bookmarks)) return;
+        const pages = new Map((R.pages || []).map((p) => [String(p.id), new Set((p.visuals || []).map((x) => String(x.name)))]));
+        const s = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+        R.bookmarks.forEach((b) => {
+          const gone = [...new Set((b.page ? [b.page] : []).concat(Object.keys(b.sections || {})))].filter((id) => !pages.has(id));
+          if (gone.length) { out(null, `a bookmark names ${s(gone.length, 'page', 'pages')} this report does not have, so it has nowhere to go`, 'Remove the bookmark (the Bookmarks pane), or make it again on the page it was meant for and update the buttons that use it.', { file: b.file }); return; }
+          const here = new Set(); Object.entries(b.sections || {}).forEach(([id, list]) => list.forEach((n) => { if (!pages.get(id).has(n)) here.add(n); }));
+          const on = b.page && pages.get(b.page); (b.targets || []).forEach((n) => { if (on && !on.has(n)) here.add(n); });
+          if (here.size) out(null, `a bookmark names ${s(here.size, 'visual', 'visuals')} its page no longer has: Power BI drops them from the bookmark when it saves, so the bookmark does less than before`, 'Open the page, set it as the bookmark should show it, then right-click the bookmark and choose Update; or remove the bookmark.', { file: b.file });
+        });
+        const L = R.bookmarkList;
+        if (L && Array.isArray(L.ids)) { const have = new Set(R.bookmarks.map((b) => b.id)), lost = L.ids.filter((n) => !have.has(n)).length;
+          if (lost) out(null, `bookmarks.json lists ${s(lost, 'bookmark', 'bookmarks')} that ${lost === 1 ? 'has' : 'have'} no file in the bookmarks folder`, 'Remove the entry from bookmarks.json (its "items"), or put the bookmark\'s file back.', { file: L.file }); }
+      } },
+    // (0.3.3 RX1) the views create_report wrote for the plan (report.json's annotation DataArcusBookmarkOrder: their ids
+    // in the plan's order) are listed in another order in bookmarks.json. A view the owner removed is no finding; only
+    // the order of those still there is judged. A note: the new order may be meant. A report without the record: not run
+    { id: 'BOOKMARK_ORDER', group: 'navigation', severity: 'note', source: BOOKMARK_ORDER_SRC,
+      when: (R) => Array.isArray(R.bookmarkPlan),
+      about: 'the views DataArcus wrote as bookmarks are in the plan\'s order in bookmarks.json (the Bookmarks pane, its slide show and a bookmark navigator follow that order)',
+      run(R, out) {
+        const plan = R.bookmarkPlan, L = R.bookmarkList;
+        if (!Array.isArray(plan) || !L || !Array.isArray(L.ids)) return;
+        const listed = L.ids.filter((n) => plan.includes(n)), planned = plan.filter((n) => listed.includes(n));
+        if (listed.length > 1 && listed.join('\n') !== planned.join('\n')) out(null, `the ${listed.length} views DataArcus wrote as bookmarks are no longer in the plan's order: bookmarks.json lists them in another order, and the Bookmarks pane, its slide show (View) and a bookmark navigator follow that file`, 'If the new order is the one you want, nothing to do. Else drag the bookmarks back into the plan\'s order in the Bookmarks pane and save.', { file: L.file });
+      } },
     { id: 'SORT_IN_VISUAL', group: 'sort', severity: 'warning', source: SRC.round2,
       about: 'a chart sorts by a field only when that field is in the visual (a sort by any other field is ignored)',
       run(R, out) {
@@ -416,7 +455,7 @@
     const groups = (opts && opts.groups) || GROUPS, findings = [], ran = [], failed = [];
     // (A4-11: a right-to-left rule keys on the report's direction, Arabic or Hebrew; R.dir, else from R.lang)
     const dir = R.dir || (R.lang === 'ar' || R.lang === 'he' ? 'rtl' : 'ltr'), parts = byDirection(R, dir);
-    RULES.filter((r) => groups.includes(r.group) && (!r.lang || r.lang === R.lang)).forEach((rule) => {
+    RULES.filter((r) => groups.includes(r.group) && (!r.lang || r.lang === R.lang) && (!r.when || r.when(R))).forEach((rule) => {
       const runs = rule.dir || rule.byDir ? parts.filter((v) => !rule.dir || rule.dir === v.dir) : [{ dir, R }];
       if (!runs.length) return;
       ran.push(rule.id);

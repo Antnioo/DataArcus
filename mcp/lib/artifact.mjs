@@ -132,6 +132,10 @@ export async function checkArtifact(files, tables, lang, opts) {
     else {
       try {
         const { R } = rulesInput(inv); Rules.normalize(R); R.lang = lang === 'ar' ? 'ar' : 'en'; R.dir = lang === 'ar' ? 'rtl' : 'ltr';
+        // (0.3.3 RX1) the two bookmark rules judge a report that changed after it was written (a page or a visual gone,
+        // the views moved); the planned report's bookmarks are the writer's own, made with its pages (test-0.3.3-rx1.mjs
+        // W12 checks the written report), so the plan's check leaves them out and its count of rules stays as it was
+        R.bookmarks = null; R.bookmarkList = null; R.bookmarkPlan = null;
         const ruled = Rules.check(R, { groups: Rules.GROUPS });
         checks.rules = { ran: ruled.ran.length, failed: (ruled.failed || []).length };
         if ((ruled.failed || []).length) notRun.push({ check: 'rules', why: `${ruled.failed.length} rule${ruled.failed.length === 1 ? '' : 's'} could not run on this report` });

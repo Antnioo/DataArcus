@@ -5,6 +5,15 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.3
+- New, only when asked: `plan_layout` takes `bookmarks`, the plan's views to present in order (1 to 8, each a name and a
+  page). The approval window lists them with their pages before anything is written; `create_report` then writes one
+  bookmark a view, first in the Bookmarks pane in the plan's order, so "View" in that pane plays them as a slide show.
+  A view opens its page and holds no filter, slicer or visual state (no data value can be in it); it does not yet show
+  or hide visuals. For a new report in one language; not yet tried in Power BI Desktop.
+- `check_report` has two new rules for any report: a bookmark that names a page or visuals the report no longer has, or
+  a bookmark listed without its file (a warning, counted, never named), and the views DataArcus wrote listed in another
+  order than the plan's (a note). Alt text on every visual that shows data, at most 250 characters, and a tab order in
+  reading order have been written since 0.3 and are unchanged.
 - The Model Health Check, on the website and in read_model and check_model_health, now says what it did not read. A TMDL
   project whose model names a table (in model.tmdl, or at one end of a relationship) that no file defines was read as a
   smaller model and scored higher (96 where the whole model scores 92); the table is now named first and no score is given,
