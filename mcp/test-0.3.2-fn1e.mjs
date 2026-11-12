@@ -228,11 +228,12 @@ for (const [name, v, o] of M) {
   out['M ' + name] = json(m);
 }
 
+// (0.3.3 SN4, on purpose, D-1112-01) the lint section's cut says notListed with its count: the C2 needle for the lint's cut follows, and the 4 cases that cut it are recorded again (mcp/work/SN4.md)
 // ---------- compare (or record) ----------
 const pins = Object.fromEntries(Object.entries(out).map(([k, t]) => [k, { sha: sha(t), len: t.length }]));
 if (process.env.FN1E_DUMP) fs.writeFileSync(process.env.FN1E_DUMP, JSON.stringify(out, null, 1));
 if (RECORD) {
-  fs.writeFileSync(GOLD, JSON.stringify({ about: 'FN1E: the whole output of summaryOf (with promptText and promptBox), checkReport and meaningOf for made-up inputs, recorded on integration/0.3.2 f6bf9fac before the split (test-0.3.2-fn1e.mjs). Never re-recorded to make a run pass.', linked: !!linked, pins }, null, 1) + '\n');
+  fs.writeFileSync(GOLD, JSON.stringify({ about: 'FN1E: the whole output of summaryOf (with promptText and promptBox), checkReport and meaningOf for made-up inputs, recorded on integration/0.3.2 f6bf9fac before the split (test-0.3.2-fn1e.mjs). Never re-recorded to make a run pass; on purpose, 0.3.3 SN4: the 4 cases that cut the lint section (it says notListed now).', linked: !!linked, pins }, null, 1) + '\n');
   console.log(`recorded ${Object.keys(pins).length} outputs`);
 }
 const gold = JSON.parse(fs.readFileSync(GOLD, 'utf8'));
@@ -252,7 +253,7 @@ const DO = all('D'), CO = all('C'), MO = all('M');
   .forEach((h) => chk(() => DO.includes(h.startsWith('"') ? h : h), () => `C2. no approval case reaches "${h}"`));
 ['IMAGE_MEASURE_PENDING', 'ICON_MEASURE_PENDING', 'DAX_MEASURE_PENDING', 'FORMAT_MIXED', 'INSTRUCTION_TEXT', 'FIELD_PARAMETER_TITLE', 'pageLanguages', 'page sizes', 'unreadable files', 'files too large',
   'custom visuals', 'findingsNotListed', 'suspiciousNames', 'modelNote', 'A11Y (accessibility)', 'RTL_MIRROR (tables)',
-  'the design lint could not read', '2 files could not be read', '"truncated":true}', 'folders too deep'].concat(linked ? ['"rule":"links"'] : [])
+  'the design lint could not read', '2 files could not be read', 'never as errors.","notListed":', 'folders too deep'].concat(linked ? ['"rule":"links"'] : [])
   .forEach((h) => chk(() => CO.includes(h), () => `C2. no check_report case reaches "${h}"`));
 ['"kind":"network"', '"kind":"map"', '"kind":"scatter"', '"kind":"matrix"', '"kind":"gauge"', '"kind":"card"', '"kind":"slicer"', '"kind":"kpi"', '"kind":"combo"', '"kind":"waterfall"', '"kind":"pie"',
   '"aggregate"', '"idFit":"', 'format objects', 'set aside', 'drill levels', 'a schedule']

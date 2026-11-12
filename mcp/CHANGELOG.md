@@ -12,6 +12,13 @@ package's manifest; this file says what is in it.
   found". A zip holding two semantic models now says, before the score, which model the check read and which it did not,
   and reads only the report that belongs to the model read (or says that no report could be told to be its own). Whole
   models score as before.
+- `read_report` with `format: "json"` now says what it did not read, as the text form always did: files over 8 MB, files
+  that are not readable JSON, folders too deep, files past the cap, next to the links it already named. The key is there
+  only when something was left out.
+- `check_report`'s lint section says `notListed` with how many findings it left out when its list is cut, as every other
+  section does, instead of `truncated: true`.
+- The `font` option of `create_report` is described as the font (default Segoe UI), true for hand-placed pages and for a
+  design, instead of "hand-placed pages" only.
 - The Arabic twin now reads a date and a weekday from an Arabic column name as it does from an English one: a chart on a
   date table's column named «تاريخ الطلب» or «بداية الشهر», whose type the model does not say, has its time axis read
   from the right like one named "Order Date", and a heatmap whose rows are «يوم الأسبوع» gets its day names beside the

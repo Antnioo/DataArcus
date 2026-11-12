@@ -394,7 +394,7 @@ function lintStep(cr) {
     catch (e) { notChecked.push({ rule: 'lint', why: 'the design lint could not read this report (a file has a shape the reading layer did not expect); the validator and the rules ran' }); }
     // (A4-7: the lint's findings carry the same fields as the others: origin, impact, level on the common scale, source)
     if (L) lintSection = Object.assign({}, L, { findings: L.findings.slice(0, cap).map((f) => Object.assign({ origin: 'lint' }, f, { level: f.severity === 'note' ? 'note' : 'warning', impact: 'dataarcusRule', source: 'DataArcus design lint (0.2.9 item 11): a finding marked guess comes from names and types, not data', why: visible(f.why), visual: f.visual == null ? null : visible(f.visual) })) },
-      L.findings.length > cap ? { truncated: true } : {}, modelNote ? { modelNote } : {});
+      L.findings.length > cap ? { notListed: L.findings.length - cap } : {}, modelNote ? { modelNote } : {});
   }
   cr.lintSection = lintSection;
 }
@@ -427,7 +427,7 @@ function answerStep(cr) {
   const size = () => JSON.stringify(answer).length;
   while (size() > ANSWER_CAP && answer.findings.length > 1) { answer.findings = answer.findings.slice(0, Math.max(1, Math.floor(answer.findings.length * 0.7))); answer.truncated = true; }
   if (answer.findings.length < all.length) Object.assign(answer, { findingsNotListed: all.length - answer.findings.length, findingsHow: 'counts.byRule counts every finding. For the ones not listed, call check_report again with checks: ["<one check>"], one kind at a time.' });
-  while (size() > ANSWER_CAP && answer.lint && answer.lint.findings.length) { answer.lint.findings = answer.lint.findings.slice(0, Math.floor(answer.lint.findings.length * 0.7)); answer.lint.truncated = true; }
+  while (size() > ANSWER_CAP && answer.lint && answer.lint.findings.length) { const lt = answer.lint, all = lt.findings.length + (lt.notListed || 0); lt.findings = lt.findings.slice(0, Math.floor(lt.findings.length * 0.7)); lt.notListed = all - lt.findings.length; }
   // (PF3) the field parameter list, halved (its "more" kept true) when the answer is still over the cap
   while (size() > ANSWER_CAP && answer.fieldParameters && answer.fieldParameters.parameters.length > 1) { const fp = answer.fieldParameters, keep = Math.floor(fp.parameters.length / 2); fp.more = (fp.more || 0) + fp.parameters.length - keep; fp.parameters = fp.parameters.slice(0, keep); }
   // (0.3.3 HX2) the Impact check's list, cut last but one: its counts kept, the cut said
