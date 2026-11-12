@@ -5,9 +5,8 @@
 //      to both; mcp/work/AR7-ARABIC.md holds the 37 items, each APPROVED or HELD
 //   K  the check names the file, the key and the word (a planted wrong word in a translations file and in a lib table)
 //   C  the one Arabic count: CLDR's six forms (Intl.PluralRules('ar') and the rule written out agree), source and .min.js
-//   S  the approved lines, typed here (not read from the code): the missing-table reason, the two-models sentence
-//      (the website's worker in a vm, source and .min.js), the two model-path errors with nothing to list; what is
-//      held stays English
+//   S  the approved lines, typed here (not read from the code): the two model-path errors with nothing to list; what
+//      is held stays English (the missing-table reasons, the two-models sentence: the website's worker in a vm)
 // Made-up names only. No network.
 //   node test-0.3.3-ar7.mjs
 import fs from 'node:fs';
@@ -80,14 +79,10 @@ for (const min of [false, true]) {
     () => `C4 (${label}). a missing form reads as other, zero only when given, Western digits`);
 }
 
-// ---- S the approved lines (typed here) ----
+// ---- S the approved lines (typed here), and what is held ----
 const Tm = require('../assets/js/tmdl-model.js');
-const whyEn = Tm.whyOf({ code: 'missingTable' }, 'en'), whyAr = Tm.whyOf({ code: 'missingTable' }, 'ar');
-chk(() => whyEn === 'model.tmdl names this table; no file in the project defines it' && whyAr === 'يذكر model.tmdl هذا الجدول، ولا يوجد في المشروع ملف يعرّفه', () => `S1. the missing-table reason in the approved Arabic, the English unchanged: ${whyAr} | ${whyEn}`);
-chk(() => Tm.whyOf({ code: 'missingEnd' }, 'ar') === 'a relationship uses this table; no file in the project defines it' && Tm.whyOf({ code: 'missingEnd' }, 'ar') === Tm.whyOf({ code: 'missingEnd' }, 'en'),
-  () => `S2. the relationship reason is held: its Arabic side stays the English: ${Tm.whyOf({ code: 'missingEnd' }, 'ar')}`);
-{ const said = Tm.unreadableSaid([{ table: 'Dates', code: 'missingTable' }], 'ar', 'check');
-  chk(() => /^تعذّرت قراءة 1 من ملفات النموذج: Dates \(يذكر model\.tmdl هذا الجدول، ولا يوجد في المشروع ملف يعرّفه\)\. /.test(said), () => `S3. inside the approved frame: ${said}`); }
+chk(() => ['missingTable', 'missingEnd'].every((c) => Tm.whyOf({ code: c }, 'ar') === Tm.whyOf({ code: c }, 'en')) && Tm.whyOf({ code: 'missingTable' }, 'ar') === 'model.tmdl names this table; no file in the project defines it',
+  () => `S1. the two missing-table reasons are held: their Arabic side stays the English: ${Tm.whyOf({ code: 'missingTable' }, 'ar')}`);
 const worker = (min) => {
   const ctx = { console, TextDecoder, TextEncoder, Blob, Response, DecompressionStream, setTimeout, clearTimeout, Date, Intl, posted: [] };
   ctx.self = ctx; vm.createContext(ctx);
@@ -96,24 +91,12 @@ const worker = (min) => {
   vm.runInContext(fs.readFileSync(path.join(JS, min ? 'model-health-worker.min.js' : 'model-health-worker.js'), 'utf8'), ctx, { filename: 'worker' });
   return ctx;
 };
-const I = (s) => '\u2068' + s + '\u2069', plain = (s) => String(s).replace(/[\u2068\u2069]/g, '');
 for (const min of [false, true]) {
-  const label = min ? '.min.js' : 'source';
-  let said = null; try { said = worker(min).modelsSaid; } catch (e) { said = null; }
-  const two = said && said({ read: 'Sales.SemanticModel', notRead: ['Stock.SemanticModel'], report: 'read', reports: ['Sales.Report'] });
-  chk(() => two && plain(two.ar) === 'يحتوي ملف ZIP هذا على نموذجين دلاليين: قرأ الفحص أدناه Sales.SemanticModel؛ ولم يقرأ Stock.SemanticModel. التقرير المقروء هو تقرير Sales.SemanticModel (Sales.Report)، ولم تُقرأ تقارير النموذج الآخر. لفحص نموذج آخر، ضع مجلد مشروعه وحده في ملف ZIP.',
-    () => `S4 (${label}). two models, the approved sentence: ${two && plain(two.ar)}`);
-  chk(() => two && two.en === 'This zip holds 2 semantic models: the check below read Sales.SemanticModel; not read: Stock.SemanticModel. The report read is the one of Sales.SemanticModel (Sales.Report); the other models\' reports were not read. To check another model, zip its project folder alone.',
-    () => `S5 (${label}). the English unchanged: ${two && two.en}`);
-  chk(() => two && [I('ZIP'), I('Sales.SemanticModel'), I('Stock.SemanticModel'), I('Sales.Report')].every((x) => two.ar.includes(x)) && two.ar.split('\u2068').length === two.ar.split('\u2069').length && !/[A-Za-z][^\u2068\u2069]*$/.test(two.ar.split('\u2068')[0]),
-    () => `S6 (${label}). each folder name and the word ZIP are isolated (FSI ... PDI): ${two && J(two.ar)}`);
-  const three = said && said({ read: 'A', notRead: ['B', 'C'], report: 'none', reports: [] });
-  chk(() => three && plain(three.ar) === 'يحتوي ملف ZIP هذا على 3 نماذج دلالية: قرأ الفحص أدناه A؛ ولم يقرأ B، C. لم يُقرأ أي تقرير: لا يمكن أن يُعرف أي تقرير في ملف ZIP يخص A. لفحص نموذج آخر، ضع مجلد مشروعه وحده في ملف ZIP.',
-    () => `S7 (${label}). three models and no report: ${three && plain(three.ar)}`);
-  const many = said && said({ read: 'A', notRead: Array.from({ length: 11 }, (_, i) => 'M' + i), report: 'read', reports: [] });
-  chk(() => many && /^يحتوي ملف ZIP هذا على 12 نموذجًا دلاليًا: /.test(plain(many.ar)) && /التقرير المقروء هو تقرير A، ولم تُقرأ تقارير النماذج الأخرى\./.test(plain(many.ar)), () => `S8 (${label}). twelve models: the form for 11 to 99, «النماذج الأخرى»: ${many && plain(many.ar).slice(0, 120)}`);
-  chk(() => two && !T.termHits(two.ar).length && !T.termHits(whyAr).length, () => 'S9. the shipped lines use the glossary\'s words');
+  const two = worker(min).modelsSaid({ read: 'Sales.SemanticModel', notRead: ['Stock.SemanticModel'], report: 'read', reports: ['Sales.Report'] });
+  chk(() => two.ar === two.en && /^This zip holds 2 semantic models: /.test(two.en), () => `S2 (${min ? '.min.js' : 'source'}). the two-models sentence is held: its Arabic side stays the English: ${J(two)}`);
 }
+chk(() => rows.filter((l) => /^\| I-1112-(1004|1005|1006) /.test(l)).every((l) => /^HELD/.test(l.split(' | ')[5])) && rows.filter((l) => /^APPROVED/.test(l.split(' | ')[5])).length === 5,
+  () => 'S3. the item table holds -1004, -1005 and -1006; 5 rows are approved');
 const E = (code, data, root) => Object.assign(new Error(code === 'NO_MODEL_NAMED' ? `No model named "${data.name}" in the working folder ${data.root}.` : `Nothing at "${data.path}" in the working folder ${root}.`), { code, data, root });
 const named0 = E('NO_MODEL_NAMED', { name: 'Sale', root: 'C:\\work', models: [], more: 0 }), at0 = E('NO_MODEL_AT', { path: 'x/Sale.SemanticModel', models: [], more: 0 }, 'C:\\work');
 chk(() => wordOf(named0, 'ar') === 'لا يوجد نموذج باسم "Sale" في مجلد العمل C:\\work. أعطِ read_model مسار مجلد مشروع، أو "." لمجلد العمل نفسه.', () => `S10. a wrong name in a folder with no model, lang ar: ${wordOf(named0, 'ar')}`);

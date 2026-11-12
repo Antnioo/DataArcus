@@ -51,7 +51,7 @@ const says = (r) => (r.skipped || []).map((s) => `${s.table || s.path}:${s.code}
   const msg = T.unreadableSaid(noDates.skipped, 'en', 'check'), ar = T.unreadableSaid(noDates.skipped, 'ar', 'check');
   chk(() => /^1 model file\(s\) could not be read: Dates \(model\.tmdl names this table/.test(msg), () => `R3. the message names the table: ${msg}`);
   // D-1109-07: no new Arabic sentence ships; the Arabic message carries the English reason until the owner approves one
-  chk(() => /^تعذّرت قراءة 1 من ملفات النموذج: Dates \(يذكر model\.tmdl هذا الجدول، ولا يوجد في المشروع ملف يعرّفه\)/.test(ar) && T.whyOf({ code: 'missingEnd' }, 'ar') === T.whyOf({ code: 'missingEnd' }, 'en'), () => `R4. Arabic: the approved frame, the reason approved by D-1112-05 (0.3.3 AR7; the relationship reason is held and stays English): ${ar}`);
+  chk(() => /^تعذّرت قراءة 1 من ملفات النموذج: Dates \(model\.tmdl names this table/.test(ar) && T.whyOf(noDates.skipped[0], 'ar') === T.whyOf(noDates.skipped[0], 'en'), () => `R4. Arabic: the approved frame, the English reason (no unapproved Arabic): ${ar}`);
   const noRefNoDates = T.read(files(['tables/Dates.tmdl'], { 'model.tmdl': noRefs }));
   chk(() => says(noRefNoDates) === 'Dates:missingEnd' && /^a relationship uses this table/.test(T.whyOf(noRefNoDates.skipped[0], 'en')), () => `R5. no ref lines, the relationship end Dates not read: missingEnd: ${J(noRefNoDates.skipped)}`);
   const noRefWhole = T.read(files([], { 'model.tmdl': noRefs }));
@@ -152,7 +152,7 @@ for (const [label, w] of Object.entries(W)) {
     const a = await run(w, zipOf(both), 'two.zip'), b = await run(w, zipOf(both.slice().reverse()), 'two.zip');
     const m = a.result && a.result.models;
     chk(() => a.type === 'done' && m && m.read === 'Health Test.SemanticModel' && J(m.notRead) === '["Plain Orders.SemanticModel"]' && m.report === 'read' && J(m.reports) === '["Health Test Report.Report"]', () => `W4 (${label}). two models: the one read and the one not read named, its own report read: ${J(m || a)}`);
-    chk(() => m && /^This zip holds 2 semantic models: the check below read Health Test\.SemanticModel; not read: Plain Orders\.SemanticModel\./.test(m.en) && /^يحتوي ملف \u2068ZIP\u2069 هذا على نموذجين دلاليين: /.test(m.ar), () => `W5 (${label}). the sentence (EN; the Arabic approved by D-1112-05, 0.3.3 AR7, pinned word for word in ar7): ${J(m)}`);
+    chk(() => m && /^This zip holds 2 semantic models: the check below read Health Test\.SemanticModel; not read: Plain Orders\.SemanticModel\./.test(m.en) && m.ar === m.en, () => `W5 (${label}). the sentence (EN; the Arabic side carries it in English until the owner approves one): ${J(m)}`);
     chk(() => b.type === 'done' && J(b.result.models) === J(m) && b.result.score.overall === a.result.score.overall, () => `W6 (${label}). the zip in the other order: the same named answer and score: ${J(b.result ? b.result.models : b)}`);
     chk(() => alone.type === 'done' && a.result.score.overall === alone.result.score.overall && a.result.stats.pages === alone.result.stats.pages && a.result.meta.hasReport, () => `W7 (${label}). the model read is whole: its score and pages as when zipped alone (${alone.result && alone.result.score.overall}, ${alone.result && alone.result.stats.pages} pages): ${a.result && a.result.score.overall}, ${a.result && a.result.stats.pages}`);
   }

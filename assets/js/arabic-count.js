@@ -11,6 +11,7 @@
  *   NOUNS              the forms of the nouns DataArcus counts, in the case its sentences use them in
  * The case is the sentence's: a caller passes its own forms when the noun is not in the case NOUNS holds.
  * Pure: no state, reads its arguments only. The test: mcp/test-0.3.3-ar7.mjs. Its row: mcp/docs/MODULES.md.
+ * No caller yet: the first sentence written for it (the Health Check's two models) is held for the owner.
  * Browser, worker and Node (module.exports / window.DAArabicCount / self.DAArabicCount). */
 (function (root) {
   'use strict';

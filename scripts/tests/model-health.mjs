@@ -983,12 +983,12 @@ export default async function ({ browser, url }) {
       }
     }
     // (AU1, AUD-067) a table the model names and no file defines (Dates.tmdl left out; then every table file): the page
-    // names the table, in English and in the Arabic approved by D-1112-05 (0.3.3 AR7), and gives no score; never NO_MODEL when it can name what is missing
+    // names the table, in English and Arabic, and gives no score; never NO_MODEL when it can name what is missing
     {
       const dir = path.join(ROOT, 'mcp/test-models/no-measures/Plain Orders.SemanticModel'), all = walk(dir).filter((f) => /\.tmdl$/i.test(f));
       const rel = (f) => 'gone.SemanticModel/' + path.relative(dir, f).split(path.sep).join('/');
-      for (const [label, keep, want] of [['Dates.tmdl missing', (f) => !/Dates\.tmdl$/.test(f), { en: /: Dates \(model\.tmdl names this table; no file in the project defines it\)\./, ar: /: Dates \(يذكر model\.tmdl هذا الجدول، ولا يوجد في المشروع ملف يعرّفه\)\./ }],
-        ['every table file missing', (f) => !/tables[\\/]/.test(f), { en: /: Orders \(model\.tmdl names this table[^)]*\); Dates \(model\.tmdl names this table/, ar: /: Orders \(يذكر model\.tmdl هذا الجدول[^)]*\)؛ Dates \(يذكر model\.tmdl هذا الجدول/ }]]) {
+      for (const [label, keep, want] of [['Dates.tmdl missing', (f) => !/Dates\.tmdl$/.test(f), /(: |: )Dates \(model\.tmdl names this table; no file in the project defines it\)\./],
+        ['every table file missing', (f) => !/tables[\\/]/.test(f), /(: |: )Orders \(model\.tmdl names this table[^)]*\)[;؛] Dates \(model\.tmdl names this table/]]) {
         const zip = zipOf([['gone.pbip', Buffer.from('{"version":"1.0"}')], ...all.filter(keep).map((f) => [rel(f), fs.readFileSync(f)])]);
         for (const lang of ['en', 'ar']) {
           const v = await visitor(browser, { viewport: [1440, 900] });
@@ -996,7 +996,7 @@ export default async function ({ browser, url }) {
           await v.pg.setInputFiles('#mhFile', { name: 'gone.zip', mimeType: 'application/zip', buffer: zip });
           const got = await v.pg.waitForSelector('.mh-unreadable, #mhTab, .mh-error', { timeout: 30000 }).then(() => v.pg.evaluate(() => ({
             said: (document.querySelector('.mh-unreadable') || {}).textContent || '', error: (document.querySelector('.mh-error b') || {}).textContent || '', ring: !!document.querySelector('.mh-ring'), hist: localStorage.getItem('dataarcus-mh-history') }))).catch((e) => ({ said: 'timeout ' + e.message.slice(0, 60) }));
-          check(want[lang].test(got.said) && (lang === 'en' ? /^No score/.test(got.said) : /^لا توجد نتيجة/.test(got.said)) && !got.ring && !got.hist, `AU1 ${label} (${lang}): "No score" first and the table(s) named, no score ring, no history: ${JSON.stringify(got).slice(0, 400)}`);
+          check(want.test(got.said) && (lang === 'en' ? /^No score/.test(got.said) : /^لا توجد نتيجة/.test(got.said)) && !got.ring && !got.hist, `AU1 ${label} (${lang}): "No score" first and the table(s) named, no score ring, no history: ${JSON.stringify(got).slice(0, 400)}`);
           if (v.errs.length) problems.push(`AU1 ${label} (${lang}): ${v.errs.join(' | ')}`);
           await v.ctx.close();
         }
@@ -1008,15 +1008,13 @@ export default async function ({ browser, url }) {
       const hp = path.join(ROOT, 'mcp/fixtures/health-project'), pm = path.join(ROOT, 'mcp/test-models/no-measures');
       const ent = (d) => walk(d).map((f) => [path.relative(d, f).split(path.sep).join('/'), fs.readFileSync(f)]);
       const both = [...ent(hp), ...ent(pm)], alone = zipOf(ent(hp));
-      const visit = async (zip, lang = 'en', viewport = [1440, 900]) => {
-        const v = await visitor(browser, { viewport });
-        await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=${lang}`, { waitUntil: 'networkidle' });
+      const visit = async (zip) => {
+        const v = await visitor(browser, { viewport: [1440, 900] });
+        await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });
         await v.pg.setInputFiles('#mhFile', { name: 'two.zip', mimeType: 'application/zip', buffer: zip });
         const got = await v.pg.waitForSelector('#mhTab, .mh-error', { timeout: 30000 }).then(() => v.pg.evaluate(() => {
           const note = document.querySelector('.mh-models'), ring = document.querySelector('.mh-scorecard .mh-ring');
-          const box = note ? note.getBoundingClientRect() : null;
-          return { dir: note ? getComputedStyle(note).direction : '', inside: !!box && box.left >= 0 && box.right <= document.documentElement.clientWidth + 1 && document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
-            note: note ? note.textContent.trim() : '', first: !!(note && ring && (note.compareDocumentPosition(ring) & Node.DOCUMENT_POSITION_FOLLOWING)), score: +((document.querySelector('.mh-scorecard .mh-ring b') || {}).textContent || NaN) };
+          return { note: note ? note.textContent.trim() : '', first: !!(note && ring && (note.compareDocumentPosition(ring) & Node.DOCUMENT_POSITION_FOLLOWING)), score: +((document.querySelector('.mh-scorecard .mh-ring b') || {}).textContent || NaN) };
         })).catch((e) => ({ note: 'timeout ' + e.message.slice(0, 60) }));
         if (v.errs.length) problems.push(`AU1 two models: ${v.errs.join(' | ')}`);
         await v.ctx.close();
@@ -1025,12 +1023,6 @@ export default async function ({ browser, url }) {
       const one = await visit(alone), a = await visit(zipOf(both)), b = await visit(zipOf(both.slice().reverse()));
       check(!one.note && /^This zip holds 2 semantic models: the check below read Health Test\.SemanticModel; not read: Plain Orders\.SemanticModel\./.test(a.note) && a.first && a.score === one.score, `AU1 two models: the note before the score names the model read and the one not read, the score is the model's own (${one.score}): ${JSON.stringify(a)}`);
       check(b.note === a.note && b.score === a.score, `AU1 two models, the other zip order: the same note and score: ${JSON.stringify(b)}`);
-      // (0.3.3 AR7, D-1112-05) the same note in the approved Arabic, rendered at phone width: right to left, inside the
-      // page, each folder name and the word ZIP isolated (FSI ... PDI) so an English name never reorders the sentence
-      const ar = await visit(zipOf(both), 'ar', [390, 844]), bare = String(ar.note).replace(/[\u2068\u2069]/g, '');
-      check(/^يحتوي ملف ZIP هذا على نموذجين دلاليين: قرأ الفحص أدناه Health Test\.SemanticModel؛ ولم يقرأ Plain Orders\.SemanticModel\. /.test(bare) && / لفحص نموذج آخر، ضع مجلد مشروعه وحده في ملف ZIP\.$/.test(bare)
-        && ar.note.includes('\u2068Health Test.SemanticModel\u2069') && ar.note.includes('\u2068ZIP\u2069') && ar.dir === 'rtl' && ar.inside && ar.first && ar.score === one.score,
-      `AR7 two models in Arabic at 390 px: the approved sentence, right to left, inside the page, names isolated: ${JSON.stringify(ar)}`);
     }
     // the drop zone says what really works
     const v = await visitor(browser, { viewport: [1440, 900] });

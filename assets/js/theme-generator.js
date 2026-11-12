@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let binding = null;
   const loadBind = () => binding || (binding = (window.DABind ? Promise.resolve(window.DABind)
     : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('/assets/js/field-meaning.min.js?v=07343b7cf536'))
-      .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=80b424ebc1ed')))
+      .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=295f66a0c64d')))
       // (SP8: the picker's drawing is field-picker-ui.js's, which pbip-bind.js calls: loaded first)
       .then(() => (window.DAHtmlEscape ? null : loadScript('/assets/js/html-escape.min.js?v=b560fc5666ec')))   // (DD2H: the picker's escape)
       .then(() => (window.DAFieldPicker ? null : loadScript('/assets/js/field-picker-ui.min.js?v=c74879eca806')))
@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // a text box's paragraphs with text-runs.js, each
   // loaded first unless the builder or the page already did)
   const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : (window.DAPbirValues ? Promise.resolve() : loadScript('../assets/js/pbir-values.min.js?v=efce5155fdf9')).then(() => (window.DATimeNames ? null : loadScript('../assets/js/time-names.min.js?v=ae53c726782a'))).then(() => (window.DATextRuns ? null : loadScript('../assets/js/text-runs.min.js?v=047b2eda2154'))).then(() => (window.DAHtmlEscape ? null : loadScript('../assets/js/html-escape.min.js?v=b560fc5666ec'))).then(() => (window.DAVisualTypes ? null : loadScript('../assets/js/visual-types.min.js?v=55431aa586c5'))).then(() => loadScript('../assets/js/page-preview.min.js?v=878598b10089')).then(() => window.DAPagePreview));
-  const MODEL_WORKER = '/assets/js/model-health-worker.min.js?v=4881d183dc21';
+  const MODEL_WORKER = '/assets/js/model-health-worker.min.js?v=adf8575970cb';
 
   // ---------- the downloads, the visual backgrounds and the reminder (theme-download-ui.js, 0.3.2 SP31) ----------
   const Dl = window.DAThemeDownloadUI.mount({ store: S, engine: E, $, L, isAr, track, toast, layout: Lay,

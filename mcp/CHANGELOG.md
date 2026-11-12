@@ -5,13 +5,8 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.3
-- Arabic, three answers that were still in English: the Model Health Check (the website, `read_model`,
-  `check_model_health`) now says in Arabic that model.tmdl names a table no file defines; the website's Health Check says
-  in Arabic which model it read when a zip holds more than one, with each folder name kept in its own direction; and
-  with `lang` "ar", a wrong model name or path in a working folder that holds no model is answered in Arabic. English
-  answers are unchanged.
-- Arabic counts now agree with their noun as Arabic grammar asks (one, two, 3 to 10, 11 to 99, 100 and up), in one
-  place; first used by the Health Check's sentence about several models.
+- Arabic: with `lang` "ar", a wrong model name or path in a working folder that holds no model is now answered in
+  Arabic. English answers are unchanged.
 - The Arabic words DataArcus uses are in one glossary, `content/ARABIC-GLOSSARY.md`, each with Microsoft's and Google's
   own Arabic word and where it was read. A term or a line both of them use is approved by the owner's rule of 12 Nov;
   anything else waits for him and stays in English. The check that every Arabic text uses the glossary's words now names

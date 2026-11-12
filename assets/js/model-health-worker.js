@@ -6,7 +6,7 @@
  */
 /* global MHEngine, TmdlModel */
 // a model file's bytes to text and the size limits (0.3.2 DD2D: model-file.js, the MCP's too) first; the DAX tokens and report references (0.3.2 SP9), the model index (SP15), the rule texts, the rules and the questions (SP27), all before the engine; the engine, and the TMDL reader the MCP uses for projects saved as TMDL (Power BI Desktop's default)
-importScripts('model-file.min.js?v=47bc00d4a4cb', 'dax-reference-parser.min.js?v=a343dfa2bb0e', 'model-index.min.js?v=0302b5d27b99', 'health-texts.min.js?v=dc21adf6917d', 'health-rules.min.js?v=e604a64d4feb', 'health-confirm.min.js?v=eb4cc43fe6ee', 'model-health-engine.min.js?v=eae0f55d972c', 'tmdl-model.min.js?v=80b424ebc1ed', 'model-nearest.min.js?v=c6ffd3114120', 'arabic-count.min.js?v=8986377ac3eb');
+importScripts('model-file.min.js?v=47bc00d4a4cb', 'dax-reference-parser.min.js?v=a343dfa2bb0e', 'model-index.min.js?v=0302b5d27b99', 'health-texts.min.js?v=dc21adf6917d', 'health-rules.min.js?v=e604a64d4feb', 'health-confirm.min.js?v=eb4cc43fe6ee', 'model-health-engine.min.js?v=eae0f55d972c', 'tmdl-model.min.js?v=295f66a0c64d', 'model-nearest.min.js?v=c6ffd3114120');
 
 const post = (type, data) => self.postMessage(Object.assign({ type }, data || {}));
 
@@ -186,20 +186,14 @@ async function fromZip(buf, fileName) {
   return { model, report, source: /\.pbit$/i.test(fileName) ? 'pbit' : 'zip', unreadable, models };
 }
 
-// (AU1) the sentence for a zip with more than one model: folder names only. (0.3.3 AR7) its Arabic is approved by
-// D-1112-05: every key term is the one Microsoft and Google both use («ملف ZIP», مجلد, مشروع, تقرير) or the owner's own
-// («نموذجين دلاليين», «نماذج دلالية»); the count takes CLDR's six forms (arabic-count.js); each folder name and the
-// Latin word ZIP are isolated (FSI ... PDI), so an English name never reorders the Arabic around it
+// (AU1) the sentence for a zip with more than one model: folder names only. Not yet approved in Arabic (D-1109-07):
+// the Arabic side carries the English sentence; the draft for the owner is in mcp/work/AU1.md
 function modelsSaid(m) {
   const n = 1 + m.notRead.length;
-  const C = self.DAArabicCount, iso = (s) => '\u2068' + s + '\u2069', zip = 'ملف ' + iso('ZIP');
-  const ar = `يحتوي ${zip} هذا على ${C.arCount(n, C.NOUNS.semanticModelsOn)}: قرأ الفحص أدناه ${iso(m.read)}؛ ولم يقرأ ${m.notRead.map(iso).join('، ')}. ` +
-    (m.report === 'read' ? `التقرير المقروء هو تقرير ${iso(m.read)}${m.reports.length ? ' (' + m.reports.map(iso).join('، ') + ')' : ''}، ولم تُقرأ تقارير ${m.notRead.length === 1 ? 'النموذج الآخر' : 'النماذج الأخرى'}.` : `لم يُقرأ أي تقرير: لا يمكن أن يُعرف أي تقرير في ${zip} يخص ${iso(m.read)}.`) +
-    ` لفحص نموذج آخر، ضع مجلد مشروعه وحده في ${zip}.`;
   const en = `This zip holds ${n} semantic models: the check below read ${m.read}; not read: ${m.notRead.join(', ')}. ` +
     (m.report === 'read' ? `The report read is the one of ${m.read}${m.reports.length ? ' (' + m.reports.join(', ') + ')' : ''}; the other models' reports were not read.` : `No report was read: none in the zip can be told to belong to ${m.read}.`) +
     ' To check another model, zip its project folder alone.';
-  return { en, ar };
+  return { en, ar: en };
 }
 
 self.onmessage = async (ev) => {

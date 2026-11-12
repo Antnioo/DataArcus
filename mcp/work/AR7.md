@@ -8,14 +8,12 @@
   `content/ARABIC-GLOSSARY.md` (new, rendered from the sheet), `content/ARABIC-STYLE.md` (one section),
   `mcp/work/AR7-ARABIC.md` (the 37 items, one row each), a new suite `ar7` (`mcp/tests.json`, area arabic), one
   count formatter in the shared library if both sources back it, the APPROVED lines behind each tool's own
-  `lang: "ar"` path (AU1's reasons in `assets/js/tmdl-model.js` and the two-models sentence, others as the table
-  decides), MODULES.md and CONTRACTS.md rows, CHANGELOG, `mcp/WORK.md`, this note. Not: tool descriptions,
+  `lang: "ar"` path (`mcp/lib/read-words.mjs`; AU1's two sentences were shipped, then held again in round 2), MODULES.md and CONTRACTS.md rows, CHANGELOG, `mcp/WORK.md`, this note. Not: tool descriptions,
   `mcp/TOOLS.md`, R-19's files.
 - **Expected checks:** `node scripts/check-modules.mjs --strict`; ar7 red on 26cfb66f first; `npm test -- arabic`
   (and model, checker, report, core where a shipped line moves an answer); the website suites of each changed asset;
   build:min; lint 0; check-result-lines, changelog-words, check-agent-memory PASS; CI green.
-- **Resume:** DONE (2026-11-12T22:00Z): the tip is ready to merge; nothing left on this branch. The held rows wait for the owner.
-- CI green: https://github.com/Antnioo/DataArcus/actions/runs/43312241764 on afadc4368a5be1b08beffc34ac0da797972453ff (2026-11-12T22:00Z; conclusion success: Linux 5 of 5 shards, Windows 5 of 5, the website checks and 3 suite shards, lint; macOS skipped by the workflow; integration had not moved from 26cfb66f, no merge). DONE
+- **Resume:** sent back by the review of 12 Nov 23:1xZ (two approved rows shipped unsourced words); fixed (2026-11-12T23:09Z); next: CI, the CI line.
 
 ## Plan (written before any work)
 1. Sources first, measured: for each key term of the 37 items, fetch Microsoft's Arabic page (learn.microsoft.com/ar-sa)
@@ -39,103 +37,97 @@
 - The verdict counts are measured, not guessed: written under "Before -> after" when the sources are read.
 
 ## Before -> after (measured 2026-11-12T21:20Z)
-- The 37 items (`mcp/work/AR7-ARABIC.md`, one row each): 7 APPROVED (I-1112-1001, -1004, -1006, -1050, -1053, -1679,
-  -1680), 30 HELD. Before: all 37 open, every line English in the code.
-- Shipped Arabic, each behind the path its tool already has:
-  - `assets/js/tmdl-model.js` WHY.missingTable (the website's Health Check in Arabic, `read_model` and
-    `check_model_health` with lang "ar"): English sentence on the Arabic side -> the approved Arabic.
-  - `assets/js/model-health-worker.js` modelsSaid (the website, a zip with more than one model): `ar: en` -> the
-    approved Arabic, the count through the new formatter, each folder name and "ZIP" isolated (FSI ... PDI).
-  - `mcp/lib/read-words.mjs` NO_MODEL_NAMED and NO_MODEL_AT with no model to list, lang "ar": English -> Arabic.
+(round 2, 2026-11-12T23:09Z: after the review)
+- The 37 items (`mcp/work/AR7-ARABIC.md`, one row each): 5 APPROVED (I-1112-1001, -1050, -1053, -1679, -1680), 32 HELD.
+  Round 1 said 7 and 30: -1004 and -1006 were approved on their nouns only; the review asked for every word, and
+  their verbs («يذكر», «يعرّفه», «قرأ», «ضع») and «الفحص» have no source in both. They are HELD and their code is the
+  base's again, byte for byte (`git diff 26cfb66f -- assets/js tools ar scripts/tests`: only the two arabic-count files).
+- Shipped Arabic: `mcp/lib/read-words.mjs` NO_MODEL_NAMED and NO_MODEL_AT with no model to list, lang "ar":
+  English -> Arabic. Nothing else.
 - The term sheet: 30 concepts -> 44; every concept says why it stands: 17 both use (D-1112-05), 25 the owner's own,
   2 with one source (relationship, VAT; read from `content/ARABIC-GLOSSARY.md`'s last line). No existing Arabic term changed.
 - The term check: a failure named the file, the line and the word -> also the key (`fileHits` gives `key`).
-- Counts: no formatter -> `assets/js/arabic-count.js` (`arCount`, CLDR's six forms), one user (the two-models sentence).
+- Counts: no formatter -> `assets/js/arabic-count.js` (`arCount`, CLDR's six forms), tested, with no caller yet.
 - Sources: Microsoft Learn's Power BI docs under /ar-sa/ answer in English (16 pages fetched), so Microsoft's Arabic
   was read from the Arabic training units that carry Arabic and from support.microsoft.com/ar-sa; Google's from
   support.google.com ?hl=ar and developer.android.com ?hl=ar. Looker Studio and BigQuery pages answer in English.
+  Round 2 read no new page: every word was looked up in the pages fetched in round 1 (all reachable then).
 
 ## Arabic approved by D-1112-05 (both sources read 2026-11-12; the links are in AR7-ARABIC.md, rows and "Sources")
-1. «يذكر model.tmdl هذا الجدول، ولا يوجد في المشروع ملف يعرّفه». Why each word: «يذكر» not «يسمّي» (reads two ways, AU1's
-   own choice); جدول, مشروع, ملف: Microsoft (M1, M9, M3) and Google (G1, G8) both; the frame «لا يوجد» both (M1, G12).
-2. «يحتوي ملف ZIP هذا على نموذجين دلاليين: قرأ الفحص أدناه A؛ ولم يقرأ B. التقرير المقروء هو تقرير A (R)، ولم تُقرأ تقارير
-   النموذج الآخر. لفحص نموذج آخر، ضع مجلد مشروعه وحده في ملف ZIP.» (no report: «لم يُقرأ أي تقرير: لا يمكن أن يُعرف أي
-   تقرير في ملف ZIP يخص A.»). Why: «ملف ZIP» over the draft's «الملف المضغوط» because it is the word BOTH write (M3, G10);
-   Google keeps «مضغوط» for .gz files (G11). «نموذجين دلاليين», «نماذج دلالية»: the owner's terms. «ضع ... في ملف ZIP»
-   not «اضغط» (reads "press").
-3. «لا يوجد نموذج باسم "X" في مجلد العمل Y. أعطِ read_model مسار مجلد مشروع، أو "." لمجلد العمل نفسه.» and «لا يوجد شيء
-   في "X" داخل مجلد العمل Y. أعد استدعاء الأداة بمسار مجلد مشروع (نسبةً إلى مجلد العمل)، أو "." لمجلد العمل نفسه.»: the
-   owner's approved sentences of 10 Nov with the English's other ending; the one new phrase is «مجلد مشروع» (both).
-4. Counts by CLDR's six forms (Microsoft M13, Google G14, G15): «نموذج دلالي واحد، نموذجين دلاليين، 3 نماذج دلالية،
-   11 نموذجًا دلاليًا، 100 نموذج دلالي».
-5. "…" round a name in a tool answer, as both write it (M3, M4, G2, G17): no change needed.
-6. Glossary terms both use: chart, measure, column, page, report, weekend, legend, table, row, field, file, folder,
+Word by word (the review's rule): a line is here only when every word of it is sourced in both or is the owner's own.
+1. «لا يوجد نموذج باسم "X" في مجلد العمل Y. أعطِ read_model مسار مجلد مشروع، أو "." لمجلد العمل نفسه.» and «لا يوجد شيء
+   في "X" داخل مجلد العمل Y. أعد استدعاء الأداة بمسار مجلد مشروع (نسبةً إلى مجلد العمل)، أو "." لمجلد العمل نفسه.»: every
+   word but two is from the owner's own approved lines of 10 Nov (D-1110-07, `mcp/work/AT1.md` lines 24 to 26); the
+   two new words, «مجلد» and «مشروع», are both-sourced (M3, M9, G8). No word without a source.
+2. Counts by CLDR's six forms (Microsoft M13, Google G14, G15): the rule, built as a formatter; no sentence uses it yet.
+3. "…" round a name in a tool answer, as both write it (M3, M4, G2, G17): punctuation, no word; no change needed.
+4. Glossary terms both use: chart, measure, column, page, report, weekend, legend, table, row, field, file, folder,
    project, zip file, alt text, option, full screen (each row of the glossary has both links).
+Approved by the owner's own standing rule, NOT by D-1112-05 (not shipped; they wait for the Gulf page): -1050 (month
+names, Western digits: ARABIC-STYLE.md "Also") and -1053 (the page name from the sheet's «كل موسم بنظيره»).
+Words re-checked and found without both sources (their rows are HELD): «يذكر», «يعرّفه» (-1004); «الفحص», «قرأ / لم
+يقرأ / لم تُقرأ / المقروء», «ضع» (-1006).
 
 ## Tests
-- `ar7` (new, area arabic): 45 checks; red on 0f2b5d36 first (the plan commit, code equal to the base 26cfb66f: 31 of
-  45 failed), green now.
-- Changed on purpose, per test (R-10): `au1` R4 (pinned the English reason on the Arabic side; now the approved Arabic,
-  and missingEnd still English) and W5 source and min (pinned `ar === en`; now the Arabic start); 40 checks, unchanged
-  count. Website `model-health`: the two missing-table checks take the Arabic reason on the Arabic page; one new
-  rendered check (the two-models note in Arabic at 390 px: right to left, inside the page, names isolated): 265 -> 266.
-  `test-0.3.3-at1.mjs`: a comment only.
-- `test-0.3.1-arabic-terms` 99 checks (85 before: one AT-1 check per new concept); `scripts/test-arabic-terms.mjs` 87.
-- Area runs: see "Results".
+- `ar7` (new, area arabic): 34 checks now (45 in round 1: the 11 checks of the two sentences' Arabic became 4 that pin
+  them held, English on the Arabic side, source and .min.js). Red on 0f2b5d36 first (round 1: 31 of 45 failed).
+- Round 1 changed `au1` R4 and W5 and the website `model-health` suite on purpose; round 2 put all three back to the
+  base's text (no difference from 26cfb66f): `au1` 40, `model-health` 265 as before the job.
+- `test-0.3.3-at1.mjs`: a comment only. `test-0.3.1-arabic-terms` 99 checks (85 before: one AT-1 check per new
+  concept); `scripts/test-arabic-terms.mjs` 87.
 
-## Results (run 2026-11-12T21:38Z, on afadc436)
-- `ar7` 45; `au1` 40; `at1` 22; `lg2` 29; `test-0.3.1-arabic-terms` 99; `npm test -- arabic`: 21 suites passed;
-  `npm test -- model core` (the mutation suite is in core): 48 suites passed.
-- Website: `node scripts/tests/run-all.mjs model-health` 266 checks, alone (R-64); `scripts/test-arabic-terms.mjs` 87;
-  `test-site-config` PASS; `ar-pages` (39 copies), `csp` (143 pages), `stamps` 1288, `check-min`, `sitemap-lastmod` PASS.
-- `node scripts/check-modules.mjs --strict`: PASS, 1268 checks (227 module files, 227 rows). `check-contracts` 868,
-  `test-contracts` 14, `check-agent-memory` 537, `changelog-words` 116, `check-result-lines` 258, lint exit 0.
-- Not run: the report and checker areas (no file of theirs changed; CI runs every suite).
-- The merge (R-33): origin/integration/0.3.3 was still at 26cfb66f before CI (fetched 2026-11-12T21:38Z); nothing to take.
+## Results (round 2, run 2026-11-12T23:13Z)
+- `ar7` 34; `au1` 40; `npm test -- arabic model`: 53 suites passed. Round 1 (on afadc436): core with the mutation
+  suite passed (48 suites with model); round 2 changes no file of core's.
+- `node scripts/check-modules.mjs --strict`: PASS, 1267 checks (227 module files, 227 rows). `check-contracts` 868,
+  `check-agent-memory` 537, `changelog-words` 111, `check-result-lines` 258, `stamps` 1286, `arabic-glossary` 44,
+  `scripts/test-arabic-terms.mjs` 87, `test-site-config` PASS, lint exit 0.
+- Website `model-health` not re-run locally: its test file and every asset it reads are the base's again (CI runs it).
+- The merge (R-33): origin/integration/0.3.3 fetched before CI; see the CI line.
 
 ## CHANGELOG line
-Three lines under [Unreleased] in `mcp/CHANGELOG.md`: the three Arabic answers, the Arabic counts, the glossary and its check.
+Two lines under [Unreleased] in `mcp/CHANGELOG.md`: the Arabic answer for a wrong model name or path in an empty working folder; the glossary and its check. (The counts have no line: nothing a user sees uses them yet.)
 
 ## Decisions I made
 1. One term source, not two: the glossary file is the existing sheet rendered (`scripts/arabic-glossary.mjs --write`),
    and the check is the existing one (`mcp/lib/arabic-terms.mjs`) extended, not a second scanner (D-1104-12).
-2. What "passes" means, applied the same way to every row: a key term is a noun that names a thing; it passes when both
-   use it or it is already the owner's own (ARABIC-STYLE rules 2 and 5, the sheet's chosen terms). A sentence passes only
-   when both sources also have a message of its kind (an absence, a failed read, a holding, a count). A verdict of
-   DataArcus's own checks (impact, like for like, the brief check) has no such message in either: HELD.
+2. What "passes" means, applied the same way to every row (corrected in round 2): every word of a sentence that carries
+   meaning, verbs included, is sourced in both or is the owner's own (ARABIC-STYLE rules 2 and 5, the sheet's chosen
+   terms, a sentence he approved word for word); and both sources have a message of its kind. Round 1 checked only the
+   nouns: wrong, and two sentences shipped on it for one commit (never merged).
 3. Strict where one side is missing: «علاقة» (a model relationship) is Microsoft's only, so AU1's second reason is HELD
    although the Health Check already says «علاقة» elsewhere.
-4. «ملف ZIP» replaces the draft's «الملف المضغوط» (the word both use). The site's «مشروع PBIP مضغوط» (zipped, the
-   adjective) is left as it is.
-5. The formatter is used only where a line was approved with a count. The older Arabic count texts (Seen 2) and
-   `read-words.mjs` manyAr (the owner's approved words) are not rewritten.
-6. No direction marks in tool answers (`answer.mjs` shows them as codes); the website's sentence has them. The
-   missing-table reason carries none, like the six reasons beside it (it is said by both the site and the tools).
+4. «ملف ZIP» is the glossary's word for a zip file (the one both use); no shipped line uses it yet.
+5. The formatter stays, tested and with no caller: -1679 is a rule both sources back, and the first sentence that
+   counts will call it. Its worker import was removed with the held sentence. The older Arabic count texts (Seen 2)
+   and `read-words.mjs` manyAr (the owner's approved words) are not rewritten.
+6. No direction marks in tool answers (`answer.mjs` shows them as codes).
 7. The Gulf like-for-like page stays held as a whole: its approved lines (-1050, -1053) ship with it (D-1027-03).
 8. `mcp/work/AR7-ARABIC.md` has its own `## Summary` (check-agent-memory asks every note in `mcp/work/` for one).
-9. A new required file: `assets/js/arabic-count.js` (and its .min.js), imported by `model-health-worker.js`
-   (importScripts). No tool description holds a shipped Arabic line; none was edited (TB3's files untouched).
+9. A new file, `assets/js/arabic-count.js` (and its .min.js); nothing requires or imports it yet. No tool description holds a shipped Arabic line; none was edited (TB3's files untouched).
 
 ## For the owner
-- May these held Arabic lines ship as drafted, each one where only the rule's letter stops it: (a) the relationship reason «تستخدم إحدى العلاقات هذا الجدول، ولا يوجد في المشروع ملف يعرّفه» (Microsoft «علاقة»; Google has no Arabic for a model relationship); (b) the Gulf page's badge «أداة مجانية · بدون تسجيل · تعمل في متصفحك» (the hub's live badge plus «أداة»), its weekend line «عطلة نهاية الأسبوع: السبت والأحد مقابل الجمعة والسبت» and its labels («مقابل»: Google only; VAT «ضريبة القيمة المضافة»: Google only); (c) «ملء الشاشة» and «الخروج من ملء الشاشة» for the build page (both use it; the page has no Arabic copy yet)? | class: arabic | risk: two-way | rec: yes to (a), (b), (c) | yes: a builder ships (a) now and (b), (c) with their pages | no: they stay English | default: they stay English
+- May these held Arabic lines ship as drafted, each one where only the rule's letter stops it: (a) the Health Check's three sentences, held on the relationship word (Google has none) and on plain verbs with no source in both («يذكر», «يعرّفه», «قرأ», «ضع», «الفحص»): «يذكر model.tmdl هذا الجدول، ولا يوجد في المشروع ملف يعرّفه», «تستخدم إحدى العلاقات هذا الجدول، ولا يوجد في المشروع ملف يعرّفه», «يحتوي ملف ZIP هذا على نموذجين دلاليين: قرأ الفحص أدناه A؛ ولم يقرأ B. التقرير المقروء هو تقرير A (R)، ولم تُقرأ تقارير النموذج الآخر. لفحص نموذج آخر، ضع مجلد مشروعه وحده في ملف ZIP.»; and, kept from before, the relationship reason «تستخدم إحدى العلاقات هذا الجدول، ولا يوجد في المشروع ملف يعرّفه» (Microsoft «علاقة»; Google has no Arabic for a model relationship); (b) the Gulf page's badge «أداة مجانية · بدون تسجيل · تعمل في متصفحك» (the hub's live badge plus «أداة»), its weekend line «عطلة نهاية الأسبوع: السبت والأحد مقابل الجمعة والسبت» and its labels («مقابل»: Google only; VAT «ضريبة القيمة المضافة»: Google only); (c) «ملء الشاشة» and «الخروج من ملء الشاشة» for the build page (both use it; the page has no Arabic copy yet)? | class: arabic | risk: two-way | rec: yes to (a), (b), (c) | yes: a builder ships (a) now and (b), (c) with their pages | no: they stay English | default: they stay English
 - Neither Microsoft nor Google has an Arabic term for like for like: do you keep the sheet's «كل موسم بنظيره» as the name and approve IX1's «مقارنة غير متكافئة» only as the verdict "not like for like"? | class: arabic | risk: two-way | rec: yes | yes: IX1, IX2 and IX4's verdict lines are redrafted on that and come back once | no: all like-for-like Arabic stays held until you choose one word | default: held
-- The other held lines have no Microsoft or Google wording to lean on (AR7-ARABIC.md, 30 HELD rows: the Impact check's 8, the brief check's words, the lens, native copy, the two verbs, the Gulf page's statuses, sighting, not-known and privacy lines): approve them as drafted in one pass after 18 Nov? | class: arabic | risk: two-way | rec: yes, one sitting with the table open | yes: each approved row ships | no: they stay English | default: they stay English
+- The other held lines have no Microsoft or Google wording to lean on (AR7-ARABIC.md, 32 HELD rows: the Impact check's 8, the brief check's words, the lens, native copy, the two verbs, the Gulf page's statuses, sighting, not-known and privacy lines): approve them as drafted in one pass after 18 Nov? | class: arabic | risk: two-way | rec: yes, one sitting with the table open | yes: each approved row ships | no: they stay English | default: they stay English
 
 ## For the reviewer
-- The hub can close I-1112-1001, -1004, -1006, -1679, -1680 (done), and -1050, -1053 (approved, ship with the page).
-  -1003 stays open for -1005 only.
+- Round 2 answers the review of 12 Nov 23:1xZ: option (b) for -1006, and -1004 too (the same re-check found «يذكر»
+  and «يعرّفه» unsourced). -1001 stands: every word is the owner's (D-1110-07) or both-sourced. -1679 and -1680 hold
+  no word to source. -1050 and -1053 are marked as the owner's standing rule, not D-1112-05.
+- The hub can close I-1112-1001, -1679, -1680 (done), and -1050, -1053 (approved by his standing rule, ship with the
+  page). -1003, -1004, -1005, -1006 stay open.
+- The code for the three AU1 sentences in Arabic exists in commit afadc436 (with its tests): on the owner's yes it can
+  be taken from there.
 - The sheet's older Microsoft sources (the training units under dax-power-bi-modify-filter and others) answered in
   English when fetched on 12 Nov; for every term marked "both" a Microsoft page read in Arabic that day was added.
-- A translated page's key is named only when the text sits on its key's line or the line under it; running HTML has
-  no key (the file, the line and the word, as before).
-- Expected check run: `node scripts/check-modules.mjs --strict` PASS (see Results).
+- Expected check run: `node scripts/check-modules.mjs --strict` (see Results).
 
 ## Risky changes
-none (three texts change on the Arabic side only; English answers are byte for byte; no answer's shape changes).
+none (one error text changes, with lang "ar" only; English answers are byte for byte; no answer's shape changes).
 
 ## For the laptop
-Optional: open the Arabic Health Check page on a phone, drop a zip with two project folders, and read the note above
-the score: the folder names should sit inside the Arabic sentence without reordering it.
+none
 
 ## Seen, not in scope
 - Microsoft Learn's Arabic addresses in the sheet's older `source` lists now serve English | route: job | size: S | why: the glossary links should show Arabic; re-read each and replace
@@ -146,6 +138,7 @@ the score: the folder names should sit inside the Arabic sentence without reorde
 - AR6's batch («لم يُكتب شيء») is not in this repository | route: job | size: M | why: the hub holds it; a builder needs the lines in `mcp/work/`
 
 ## Lessons for the reviewer
+- A sentence is not approved by its nouns: the verbs carry the meaning and were the unsourced part. The brief's "every key term" should say "every word that carries meaning".
 - "Microsoft's Arabic" for Power BI is thin: the product docs are not translated, so a both-sources rule mostly passes
   general words (table, file, folder) and holds Power BI's own (relationship, calculation group, row-level security).
 - A brief that sends a table to `mcp/work/` should say it needs its own `## Summary` block.
