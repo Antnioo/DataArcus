@@ -78,6 +78,10 @@ package's manifest; this file says what is in it.
   decides it for all three.
 - The Impact check tells a report's own measure from a model measure of the same name by how the report writes it.
 - plan_layout's note about unknown design keys now names the input fields go in today, `planFields`.
+- check_report's like-for-like section now gives a long base measure's name whole (up to 200 characters), as it already did
+  for the measure you are asked to create; it was cut at 60.
+- read_model's `reach`, when more than 60 visuals use a name, now lists first the visuals whose numbers it decides, on any
+  page; before, the first pages filled the list and such a visual on a later page could be left out.
 
 ## [0.3.2]: 2026-11-09 (the version for testers, second round)
 The second version for testers. In short:

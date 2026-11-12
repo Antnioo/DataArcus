@@ -23,7 +23,7 @@ const Gallery = require('../../assets/js/visual-gallery.js');
 export function unknownKeys(design) {
   const keys = Object.keys(design || {}).filter((k) => !DESIGN_KEYS.includes(k))
     .concat(Object.keys((design && typeof design.layout === 'object' && design.layout) || {}).filter((k) => !LAYOUT_KEYS.includes(k) && !OLD_LAYOUT_KEYS.includes(k)).map((k) => 'layout.' + k));
-  return keys.length ? { keys, why: 'These keys of the design are not ones the tools know, so they changed nothing. Fields go in plan_layout\'s own "planFields" input, not inside the design; layout choices are its other inputs.' } : null;
+  return keys.length ? { keys, why: 'These keys of the design are not ones the tools know, so they changed nothing. The fields go in plan_layout\'s own "planFields" input, not inside the design; layout choices are its other inputs.' } : null;
 }
 // the files a user names, read through lib/files.mjs (audit 6, A6-7): measured first, never quoted; the largest real
 // theme files are about 22 KB and a page background a few hundred KB, so the caps are far above them

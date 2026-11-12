@@ -103,6 +103,30 @@ try {
     const huge = 'R' + 'x'.repeat(249); measureOf(m, long).name = huge; m.model.tables.forEach((t) => (t.measures || []).forEach((x) => { x.expression = String(x.expression).split(`[${long}]`).join(`[${huge}]`); }));
     const b = LF.likeForLike(m, gulfReport()), hit = b.measures.map((x) => x.base).find((x) => x && x.startsWith('[Rxxx'));
     chk(() => hit && hit.length <= 204 && /…\]$/.test(hit), () => `L9b past 200 characters: cut, and the cut marked: ${String(hit).slice(-30)} (${hit && hit.length})`); }
+  // ---- item 4 (HX2 "Seen"): against and againstModel in one call: each report read once (one reading shared) ----
+  { const CR = await import('./lib/check-report.mjs'), P = writeProject(ROOT, 'lx1-reads', souqModel(), souqReport());
+    fs.cpSync(path.join(ROOT, 'lx1-reads/Souq.Report'), path.join(ROOT, 'lx1-reads/Copy.Report'), { recursive: true });
+    const reads = new Map(), real = fs.openSync; let r = null;
+    fs.openSync = function (f, ...a) { const k = String(f); reads.set(k, (reads.get(k) || 0) + 1); return real.call(fs, f, ...a); };
+    try { r = await CR.checkReport('lx1-reads/Copy.Report', { against: P.report, againstModel: P.model, checks: ['schemas'] }); } finally { fs.openSync = real; }
+    const n = (re) => [...reads.entries()].filter(([k]) => re.test(k)).reduce((m, [, v]) => m + v, 0), orig = n(/Souq\.Report.*visual\.json$/), copy = n(/Copy\.Report.*visual\.json$/);
+    // measured on c21df8d5 with the same count (mcp/work/LX1.md, item 4): the original's 11 visual files 44 opens, the copy's
+    // 55; one inventory pass is 11. The two opens left beyond the inventory are the two model loads (loadModel reads the
+    // reports beside a model; here againstModel is the report's own folder): not this item's
+    chk(() => r && r.sameQuestion && r.impactCheck && r.sameQuestion.sameQuestion === 10 && r.impactCheck.same === 10 && orig <= 33 && copy <= 44,
+      () => `L4 against + againstModel: each report's inventory worked out once (base: original 44 opens of its visual files, copy 55; after 33 and 44): ${orig} ${copy} / ${r && r.sameQuestion && r.sameQuestion.said}`); }
+  // ---- item 6 (HX2 "Seen"): one cap, reachOf's: read_model's reach lists the question tier first across pages ----
+  // page "a": 62 charts by Calendar[Month] (Month Number is its sort column: order tier); page "b": one by Month Number
+  { const IM = await import('./lib/impact.mjs'), r = souqReport();
+    r.files = r.files.filter((f) => !/\/visuals\//.test(f.path) && !/pages\/(overview|details)\//.test(f.path));
+    r.files.push({ path: 'definition/pages/a/page.json', json: { name: 'a', displayName: 'A', width: 1280, height: 720 } }, { path: 'definition/pages/b/page.json', json: { name: 'b', displayName: 'B', width: 1280, height: 720 } });
+    for (let i = 0; i < 62; i++) r.files.push(visual('a', `by-month-${String(i).padStart(2, '0')}`, 'clusteredColumnChart', { Category: [colRef('Calendar', 'Month')], Y: [msrRef('Revenue')] }));
+    r.files.push(visual('b', 'by-month-number', 'clusteredColumnChart', { Category: [colRef('Calendar', 'Month Number')], Y: [msrRef('Revenue')] }));
+    const P = writeProject(ROOT, 'lx1-reach', souqModel(), r), a = IM.reach(P.model, 'Calendar[Month Number]'), listed = a.reports.flatMap((rp) => rp.pages.flatMap((pg) => pg.visuals.map((v) => v.visual + ' ' + v.tier)));
+    chk(() => a.visuals === 63 && a.listed === 60 && a.notListed === 3 && listed.includes('by-month-number question') && listed.filter((x) => / order$/.test(x)).length === 59,
+      () => `L6 63 visuals reach Month Number, 60 listed: the one where it is the question is listed (was cut: page "a" filled the 60 first): ${a.visuals} ${a.listed} ${J(listed.filter((x) => !/^by-month-\d/.test(x)))}`);
+    const src = fs.readFileSync(new URL('./lib/impact.mjs', import.meta.url), 'utf8');
+    chk(() => !/keyMatch|slice\(0, room\)/.test(src), () => 'L6b impact.mjs matches and caps through reachOf, not a second match and cap of its own'); }
 } catch (e) {
   problems.push('threw: ' + String(e && e.stack || e).slice(0, 600));
 } finally {

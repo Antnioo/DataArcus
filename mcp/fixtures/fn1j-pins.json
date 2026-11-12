@@ -173,8 +173,8 @@
   },
   "A1 C05 a design given, plain": {
    "err": false,
-   "length": 12431,
-   "sha256": "f49e9927802421e135c055ed28465b603694e165c459432e61743a607f1ca0a7"
+   "length": 12435,
+   "sha256": "799da2ead3ea70e8a2e0827631b1b416c00f2728036a499382016d56eb5cafb8"
   },
   "A2 C05 a design given, plain": {
    "length": 90378,
@@ -645,8 +645,8 @@
   },
   "A1 H15 a design with the phone layout off": {
    "err": false,
-   "length": 11675,
-   "sha256": "6b40ec4cb4afdc7769fa923b5642962bfb156d4bc1863cd2794009c23c2b648d"
+   "length": 11679,
+   "sha256": "f2c3a56baa0d99de35df32a37c089f08907f72997bdccf29d65ead117c05727d"
   },
   "A2 H15 a design with the phone layout off": {
    "length": 84114,

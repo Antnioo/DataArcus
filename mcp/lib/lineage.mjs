@@ -250,10 +250,12 @@ export function compareLineage(before, after) {
 }
 
 // ---- what a measure ({ measure }), a column ({ table, column }) or a table ({ table }) reaches ----
-export function reachOf(lineage, what) {
+// max: how many visuals to list (default LISTED_MAX), the strongest tier first; the one cap (0.3.3 LX1: impact.mjs's reach
+// passes what is left of its answer's share, it no longer matches and cuts again)
+export function reachOf(lineage, what, max) {
   const w = isObj(what) ? what : {}, key = w.measure != null ? K.m(w.measure) : w.column != null ? K.c(w.table, w.column) : K.t(w.table);
   const known = isObj(lineage) && isObj(lineage.known) ? lineage.known : {}, found = Object.prototype.hasOwnProperty.call(known, key) || Object.prototype.hasOwnProperty.call(known, 'x:' + lc(w.measure));
   const hit = arr(lineage && lineage.visuals).filter((v) => v.nodes && (v.nodes[key] || (w.measure != null && v.nodes['x:' + lc(w.measure)])));
   const visuals = hit.map((v) => ({ page: v.page, visual: v.visual, type: v.type, tier: (v.nodes[key] || v.nodes['x:' + lc(w.measure)]).tier })).sort((x, y) => rank(x.tier) - rank(y.tier));
-  return { found, name: found ? known[key] || known['x:' + lc(w.measure)] : null, visuals: visuals.slice(0, LISTED_MAX), count: visuals.length, pages: new Set(hit.map((v) => v.page)).size };
+  return { found, name: found ? known[key] || known['x:' + lc(w.measure)] : null, visuals: visuals.slice(0, Number.isInteger(max) && max >= 0 ? max : LISTED_MAX), count: visuals.length, pages: new Set(hit.map((v) => v.page)).size };
 }

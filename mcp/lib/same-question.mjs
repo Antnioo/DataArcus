@@ -103,10 +103,11 @@ function modelOf(src, loc, given) {
   if (ref && isObj(ref.byConnection)) return 'connection ' + H(ref.byConnection);
   throw new Error(`"${safeName(given)}" names no model (its definition.pbir has no datasetReference): check_report compares two reports only when both name the same model. Nothing was compared.`);
 }
-function read(p) {
-  const loc = locate(p, 'check_report'), sk = { big: [], deep: 0 }, src = diskSource(loc, sk);
+// r: check_report's reading of p ({ loc, sk, src, inv }, read-report.mjs's reading; 0.3.3 LX1), else read here
+function read(p, r) {
+  const loc = r ? r.loc : locate(p, 'check_report'), sk = r ? r.sk : { big: [], deep: 0 }, src = r ? r.src : diskSource(loc, sk);
   const model = modelOf(src, loc, p);
-  const inv = inventory(src, path.basename(loc.reportDir));
+  const inv = r ? r.inv : inventory(src, path.basename(loc.reportDir));
   const opt = (rel) => jsonOpt(src, rel);
   const report = opt('definition/report.json') || {}, ext = opt('definition/reportExtensions.json');
   const measures = {};
@@ -167,7 +168,8 @@ export const NOT_PROVED = 'It does not run the queries, so it does not prove the
 // refusal for two models; returns the section.
 export function sameQuestion(after, before, opts) {
   const o = opts || {}, cap = Math.max(1, Math.min(LISTED_MAX, o.max || LISTED_MAX));
-  const B = read(after), A = read(before);
+  // (0.3.3 LX1) o.readingOf: check_report's readings, one per report a call reads (shared with the Impact check)
+  const rd = typeof o.readingOf === 'function' ? o.readingOf : null, B = read(after, rd && rd(after)), A = read(before, rd && rd(before));
   if (A.model !== B.model) throw new Error(`check_report compares two reports only on the same model: "${safeName(after)}" and "${safeName(before)}" name different models in their definition.pbir. Nothing was compared.`);
   const res = { visuals: 0, matched: 0, withQuery: 0, sameQuestion: 0, questionDiffers: 0, displayOnly: 0, orderOnly: 0, noQuery: 0, notMatched: 0 };
   const differ = [], missing = [], pageContext = [], reportContext = [];
