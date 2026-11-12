@@ -1,5 +1,5 @@
 {
- "about": "test-0.3.2-fn1j.mjs: plan_layout's answers and the plans' data recorded on the base (integration/0.3.2 207784c6, before the split; normalised: the plan id, the working folder, the separator, the path limit's numbers and example folder)",
+ "about": "test-0.3.2-fn1j.mjs: plan_layout's answers and the plans' data recorded on the base (integration/0.3.2 207784c6, before the split; normalised: the plan id, the working folder, the separator, the path limit's numbers and example folder; recorded again on purpose by 0.3.3 LX1, 12 Nov: unknownKeys' sentence in C05 and H15, nothing else, mcp/work/LX1.md)",
  "pins": {
   "A1 A01 sample": {
    "err": false,
@@ -173,8 +173,8 @@
   },
   "A1 C05 a design given, plain": {
    "err": false,
-   "length": 12438,
-   "sha256": "7dcd4ea0fa4724bcb1fac4eeae4c6b467fab8bb784f592f9bac301e631f8fdc8"
+   "length": 12435,
+   "sha256": "799da2ead3ea70e8a2e0827631b1b416c00f2728036a499382016d56eb5cafb8"
   },
   "A2 C05 a design given, plain": {
    "length": 90378,
@@ -645,8 +645,8 @@
   },
   "A1 H15 a design with the phone layout off": {
    "err": false,
-   "length": 11682,
-   "sha256": "6ecaaba6246f86f5843bbcca48358d5f13961c72799c85f0be3037ad42e61f2d"
+   "length": 11679,
+   "sha256": "f2c3a56baa0d99de35df32a37c089f08907f72997bdccf29d65ead117c05727d"
   },
   "A2 H15 a design with the phone layout off": {
    "length": 84114,

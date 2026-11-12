@@ -18,7 +18,7 @@
 import path from 'node:path';
 import { loadModel } from './model.mjs';
 import { locate, diskSource, jsonOpt, inventory, safeName } from './read-report.mjs';
-import { lineageOf, compareLineage, reachOf, LISTED_MAX, PROVES, NOT_PROVED, TIERS } from './lineage.mjs';
+import { lineageOf, compareLineage, reachOf, LISTED_MAX, PROVES, NOT_PROVED } from './lineage.mjs';
 import { likeForLike as lflOf } from './like-for-like.mjs';
 import { checkVisuals, checkBrief, PROVES as BRIEF_PROVES, NOT_PROVED as BRIEF_NOT_PROVED } from './brief.mjs';
 
@@ -56,8 +56,9 @@ export function readOnModel(p, option, shared) {
 const unreadOf = (...models) => models.reduce((n, m) => n + arr(m.skipped).length + (m.partsSkipped || 0), 0);
 
 // after: the report check_report checks (path) on its own model; before: against (or path) on againstModel
-export function impactCheck(p, against, againstModel, read) {
-  const { after, now } = read || readOnModel(p, 'againstModel'), before = against != null ? reportOf(against) : after;
+// (0.3.3 LX1) againstRead: check_report's reading of against (read-report.mjs's reading), shared with sameQuestion
+export function impactCheck(p, against, againstModel, read, againstRead) {
+  const { after, now } = read || readOnModel(p, 'againstModel'), before = against != null ? reportOf(against, againstRead || null) : after;
   const then = loadModel(againstModel);
   const c = compareLineage(lineageOf(then.tmsl, { files: before.files }), lineageOf(now.tmsl, { files: after.files }));
   const unreadModel = unreadOf(now, then);
@@ -146,23 +147,17 @@ export function reach(modelPath, what) {
   // a model with no report beside it still says whether the name is in the model
   const lineages = groups.size ? [...groups.entries()].map(([n, files]) => [n, lineageOf(m.tmsl, { files })]) : [[null, lineageOf(m.tmsl, { files: [] })]];
   lineages.forEach(([rname, lin]) => {
-    let w = want, r = reachOf(lin, w);
+    // (0.3.3 LX1) reachOf lists what is left of the answer's LISTED_MAX, the strongest tier first, and counts every visual
+    const room = LISTED_MAX - listed;
+    let w = want, r = reachOf(lin, w, room);
     // "Sales[Total Sales]": a measure written with its table
-    if (!r.found && w.column != null) { const alt = reachOf(lin, { measure: w.column }); if (alt.found) { w = { measure: w.column }; r = alt; kind = 'measure'; } }
+    if (!r.found && w.column != null) { const alt = reachOf(lin, { measure: w.column }, room); if (alt.found) { w = { measure: w.column }; r = alt; kind = 'measure'; } }
     if (r.found) { found = true; name = r.name; }
     if (rname == null) return;
-    // reachOf lists at most LISTED_MAX; count every visual again, so the cap here is the answer's own
-    const hit = lin.visuals.filter((v) => v.nodes && Object.keys(v.nodes).some((k) => keyMatch(k, w)));
-    total += hit.length;
-    const byPage = new Map();
-    hit.forEach((v) => { if (!byPage.has(v.page)) byPage.set(v.page, []); byPage.get(v.page).push(v); });
-    pages += byPage.size;
-    const out = { report: safeName(rname), visuals: hit.length, pages: [] };
-    byPage.forEach((vs, page) => {
-      const room = Math.max(0, LISTED_MAX - listed), shown = vs.slice().sort((a, b) => TIERS.indexOf(tierOf(a, w)) - TIERS.indexOf(tierOf(b, w))).slice(0, room);
-      listed += shown.length;
-      if (shown.length) out.pages.push({ page: page, visuals: shown.map((v) => ({ visual: v.visual, type: v.type, tier: tierOf(v, w) })) });
-    });
+    total += r.count; pages += r.pages; listed += r.visuals.length;
+    // the pages in the report's order, each page's visuals as reachOf ordered them (the strongest tier first)
+    const order = [...new Set(lin.visuals.map((v) => v.page))], out = { report: safeName(rname), visuals: r.count, pages: [] };
+    order.forEach((page) => { const vs = r.visuals.filter((v) => v.page === page); if (vs.length) out.pages.push({ page, visuals: vs.map((v) => ({ visual: v.visual, type: v.type, tier: v.tier })) }); });
     reports.push(out);
   });
   const R = reports.length;
@@ -179,6 +174,3 @@ export function reach(modelPath, what) {
   }
   return answer;
 }
-const keyOf = (w) => (w.measure != null ? 'm:' + String(w.measure).toLowerCase() : w.column != null ? 'c:' + String(w.table).toLowerCase() + '|' + String(w.column).toLowerCase() : 't:' + String(w.table).toLowerCase());
-const keyMatch = (k, w) => k === keyOf(w) || (w.measure != null && k === 'x:' + String(w.measure).toLowerCase());
-const tierOf = (v, w) => { const k = Object.keys(v.nodes).find((x) => keyMatch(x, w)); return k ? v.nodes[k].tier : 'question'; };

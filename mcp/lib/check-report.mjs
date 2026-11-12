@@ -13,7 +13,7 @@ import { createRequire } from 'node:module';
 import { loadModel, ROOT, visible, readCapped } from './model.mjs';
 import { DAX_MEASURE, SCRIPT_SUFFIX } from './dax-functions.mjs';   // (0.3.1 L6: the names the DAX function library gives its measures, its script's name)
 import { AIM } from './scope.mjs';
-import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, isFile, isDir, walk, linksSaid, locate, inventory, diskSource, isCustom } from './read-report.mjs';
+import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, isFile, isDir, walk, linksSaid, locate, inventory, diskSource, reading, isCustom } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
 import { fieldParametersOf, titleProblems } from './metric-switcher.mjs';
 import { NO_DIRECT_EDITS } from './agent-text.mjs';
@@ -131,13 +131,15 @@ function readStep(p, opts) {
   const loc = locate(p, 'check_report');
   // (0.3.2 NC1, RD2's brief g) against: the original; the copy (p) compared with it visual by visual, first, so a
   // refusal (another model, outside the folder, a link, PBIR-Legacy) comes before any other work
-  const same = o.against != null ? sameQuestion(p, o.against) : null;
-  const sk = { big: [], deep: 0 };
+  // (0.3.3 LX1, HX2 "Seen") one reading per report this call reads: sameQuestion, the Impact check and the checks share it
+  const readings = new Map(), readingOf = (q) => { if (!readings.has(q)) readings.set(q, reading(q, 'check_report')); return readings.get(q); };
+  const same = o.against != null ? sameQuestion(p, o.against, { readingOf }) : null;
+  const pr = readings.get(p) || null, sk = pr ? pr.sk : { big: [], deep: 0 };
   // the report's files, walked once (round 22b, item 6: three walks counted a folder past the depth three times)
   const reportFiles = walk(loc.reportDir, [], 20000, 0, sk);
   // a file over the limit anywhere in the report: Microsoft's validator reads every file whole, so it is not run
   const scan = reportFiles.filter((f) => { try { return fs.lstatSync(f).size > REPORT_LIMITS.file; } catch (e) { return false; } });
-  const src = diskSource(loc, sk), inv = inventory(src, path.basename(loc.reportDir));
+  const src = pr ? pr.src : diskSource(loc, sk), inv = pr ? pr.inv : inventory(src, path.basename(loc.reportDir));
   // (0.3.3 OX2) the model the report names, loaded once a call (a memo by path) for every section and step that reads it
   const models = new Map();
   const modelAt = (mp) => { if (!models.has(mp)) { try { models.set(mp, { m: loadModel(mp) }); } catch (e) { models.set(mp, { e }); } } const r = models.get(mp); if (r.e) throw r.e; return r.m; };
@@ -148,7 +150,7 @@ function readStep(p, opts) {
   const asked = o.againstModel != null ? 'againstModel' : o.likeForLike != null ? 'likeForLike' : o.brief != null ? 'brief' : null;
   let onModel = asked ? readOnModel(p, asked, shared) : null, briefNote = null;
   if (!onModel && wantBrief) { try { onModel = readOnModel(p, 'brief', shared); } catch (e) { briefNote = e; } }
-  const impactSection = o.againstModel != null ? impactCheck(p, o.against, o.againstModel, onModel) : null;
+  const impactSection = o.againstModel != null ? impactCheck(p, o.against, o.againstModel, onModel, o.against != null ? readingOf(o.against) : null) : null;
   const lflSection = o.likeForLike != null ? likeForLike(p, o.likeForLike, onModel) : null;
   const briefSection = wantBrief && onModel ? briefCheck(onModel, o.brief != null ? o.brief : null) : null;
   const { R, versions, texts, customVisuals, unreadable, bookmarks } = rulesInput(inv);

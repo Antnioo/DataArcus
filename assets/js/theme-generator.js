@@ -301,8 +301,10 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(() => (window.DASortColumn ? null : loadScript('/assets/js/sort-column.min.js?v=8fba2c19aba2')))
       // (DD1F: is a text Arabic is arabic-script.js's, which field-catalog.js reads when it loads: loaded first)
       .then(() => (window.DAArabicScript ? null : loadScript('/assets/js/arabic-script.min.js?v=07b91699d1e3')))
+      // (LX1: which ways a relationship filters is relationship-filter.js's, which field-catalog.js reads when it loads: loaded first)
+      .then(() => (window.DARelationshipFilter ? null : loadScript('/assets/js/relationship-filter.min.js?v=a94fd468ba2f')))
       // (SP30: the model's metadata, normalised, is field-catalog.js's, which pbip-bind.js reads when it loads: loaded first)
-      .then(() => (window.DAFieldCatalog ? null : loadScript('/assets/js/field-catalog.min.js?v=910ad9ad493d')))
+      .then(() => (window.DAFieldCatalog ? null : loadScript('/assets/js/field-catalog.min.js?v=7627d1ef9feb')))
       // (SP30: the ranking is field-suggest.js's, which reads field-catalog.js and which pbip-bind.js reads: loaded between)
       .then(() => (window.DAFieldSuggest ? null : loadScript('/assets/js/field-suggest.min.js?v=ca404cf26ee2')))
       .then(() => loadScript('/assets/js/pbip-bind.min.js?v=600d69b2b551')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
@@ -315,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // a text box's paragraphs with text-runs.js, each
   // loaded first unless the builder or the page already did)
   const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : (window.DAPbirValues ? Promise.resolve() : loadScript('../assets/js/pbir-values.min.js?v=efce5155fdf9')).then(() => (window.DATimeNames ? null : loadScript('../assets/js/time-names.min.js?v=2cf40585fc6e'))).then(() => (window.DATextRuns ? null : loadScript('../assets/js/text-runs.min.js?v=047b2eda2154'))).then(() => (window.DAHtmlEscape ? null : loadScript('../assets/js/html-escape.min.js?v=b560fc5666ec'))).then(() => (window.DAVisualTypes ? null : loadScript('../assets/js/visual-types.min.js?v=55431aa586c5'))).then(() => loadScript('../assets/js/page-preview.min.js?v=878598b10089')).then(() => window.DAPagePreview));
-  const MODEL_WORKER = '/assets/js/model-health-worker.min.js?v=f7bb3033e770';
+  const MODEL_WORKER = '/assets/js/model-health-worker.min.js?v=4ffc3ca202aa';
 
   // ---------- the downloads, the visual backgrounds and the reminder (theme-download-ui.js, 0.3.2 SP31) ----------
   const Dl = window.DAThemeDownloadUI.mount({ store: S, engine: E, $, L, isAr, track, toast, layout: Lay,

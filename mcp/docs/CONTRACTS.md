@@ -69,6 +69,7 @@ How it is kept true:
 | [leaves Which leaf pointers does a value hold?](#leaves-which-leaf-pointers-does-a-value-hold) | 1 | 0 of 11 | create_report's redesign (the copy's check, each patch's reason) | one place since SG1: `mcp/lib/redesign-kinds.mjs` `leaves` |
 | [path-out How is a path inside the working folder said, dots kept?](#path-out-how-is-a-path-inside-the-working-folder-said-dots-kept) | 1 | 0 of 8 | the twin, the native copy | one place since SG1: `mcp/lib/twin-read.mjs` `pathOut` |
 | [rel-out How is a path inside the working folder said, every part cleaned?](#rel-out-how-is-a-path-inside-the-working-folder-said-every-part-cleaned) | 1 | 0 of 8 | check_report (its redaction, the Arabic lens) | one place since SG1: `mcp/lib/check-redact.mjs` `relOut` |
+| [rel-both Does this relationship filter both ways?](#rel-both-does-this-relationship-filter-both-ways) | 1 | 0 of 11 | check_report (briefCheck, the Impact check), suggest_fields and the website's field picker | one place since LX1: `assets/js/relationship-filter.js` `filtersBoth` |
 "places" counts a function once for each family it answers (`mirror-policy.js` `kindOf` answers two). Who sees it:
 the MCP tool whose answer or written file carries the place's answer, or the website page. Golden tests that pin a
 place are not mapped yet (see the note's "Lessons").
@@ -1151,6 +1152,20 @@ or 0 no longer throws.
 | `mcp/lib/check-redact.mjs` `relOut` | [checkers](MODULES.md#the-mcp-the-checkers) | check_report (its redaction, the Arabic lens) |
 
 **Since SG1 (9 Nov):** gone, their calls read the one place: `mcp/lib/arabic-lens.mjs` `relOut` (imported). The parity: mcp/test-0.3.3-sg1.mjs (each old copy, as the base wrote it, and the one place on the same made-up inputs); the probe's 8 inputs (family `rel-out`).
+
+## rel-both Does this relationship filter both ways?
+
+**One place:** assets/js/relationship-filter.js filtersBoth (test mcp/test-0.3.3-lx1.mjs).
+
+**Question:** a relationship, as TMSL writes it (`crossFilteringBehavior`, `fromCardinality` default many, `toCardinality` default one) or as model-index.js gives it (`cross`, `fromCard`, `toCard`): does a filter on either table reach the other? Yes when it says both directions, and always for a one-to-one: Microsoft Learn, "Model relationships in Power BI Desktop", Cross filter direction: "For one-to-one relationships, the cross filter direction is always from both tables."
+
+**Newest copy:** merge (the reviewer's night audit AUD-069, 12 Nov: both copies read `crossFilteringBehavior` alone, so a one-to-one written without it was read as one way).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `assets/js/relationship-filter.js` `filtersBoth` | [engines](MODULES.md#the-website-engines) | check_report (briefCheck, the Impact check), suggest_fields and the website's field picker |
+
+**Since LX1 (12 Nov):** gone, their calls read the one place: `mcp/lib/lineage.mjs` `modelGraph` (each relationship's `both`, which `relsFor` and brief.mjs's `reachOf` read) and `assets/js/field-catalog.js` `relsOfTmsl` (the picker's `reached`; the theme generator loads relationship-filter.min.js before field-catalog.min.js). The probe's 11 inputs.
 
 ## Equal copies, not probed (the audit's Phase 2 list)
 

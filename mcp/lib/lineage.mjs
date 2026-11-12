@@ -28,6 +28,8 @@ const require = createRequire(import.meta.url);
 const Index = require('../../assets/js/model-index.js'), Parser = require('../../assets/js/dax-reference-parser.js');
 // (0.3.3 HX2) the model's graph is the health check's own (graphStep, with each edge's kind): one graph, never a copy
 const Health = require('../../assets/js/model-health-engine.js');
+// (0.3.3 LX1, AUD-069) which ways a relationship filters: relationship-filter.js, the one rule (a one-to-one: both ways)
+const { filtersBoth } = require('../../assets/js/relationship-filter.js');
 const { K, daxRefs } = Index;
 
 const H = (x) => crypto.createHash('sha256').update(canon(x)).digest('hex');
@@ -70,7 +72,7 @@ export function modelGraph(model) {
       deps: E(K.m(ms.name), 'dax'), show: E(K.m(ms.name), 'format'), turns: TURNS.test(ms.expr) }));
   });
   const relationships = M.relationships.map((r) => ({ key: relKey(r), label: `${cLabel(r.fromTable, r.fromColumn)} to ${cLabel(r.toTable, r.toColumn)}`, from: lc(r.fromTable), to: lc(r.toTable), active: r.active,
-    both: r.cross === 'bothDirections', many: r.toCard === 'many', q: H([r.fromTable, r.fromColumn, r.toTable, r.toColumn, r.active, r.cross, r.fromCard, r.toCard]) }));
+    both: filtersBoth(r), many: r.toCard === 'many', q: H([r.fromTable, r.fromColumn, r.toTable, r.toColumn, r.active, r.cross, r.fromCard, r.toCard]) }));
   return { M, IX, nodes, relationships, wide: { roles: H(M.roles), culture: H([M.culture]) } };
 }
 
@@ -83,6 +85,8 @@ function keyOfRef(r, G, ext) {
     if (G.nodes.has(K.c(tn, r.hierarchy))) return K.c(tn, r.hierarchy);
     return missing(G, `${safeName(r.entity)}[${safeName(r.hierarchy)}].${safeName(r.level)}`);
   }
+  // (0.3.3 LX1) a reference written as the report's own (Schema "extension") is the report measure, even when the model has one of that name
+  if (r.schema === 'extension' && ext.has(lc(r.prop))) return 'x:' + lc(r.prop);
   if (ext.has(lc(r.prop)) && (r.kind === 'Measure' || !G.nodes.has(K.c(tn, r.prop))) && !G.nodes.has(K.m(r.prop))) return 'x:' + lc(r.prop);
   if (r.kind === 'Measure' && G.nodes.has(K.m(r.prop))) return K.m(r.prop);
   if (G.nodes.has(K.c(tn, r.prop))) return K.c(tn, r.prop);
@@ -93,7 +97,7 @@ function missing(G, label) { const key = 'missing:' + lc(label); if (!G.nodes.ha
 const refsOf = (json, G, ext) => { const acc = []; Parser.collectReportRefs(json, acc, {}); return [...new Set(acc.map((r) => keyOfRef(r, G, ext)))]; };
 
 // ---- which relationships count for a set of tables (the rule; NOT_PROVED says it is not measured in Desktop) ----
-// A filter travels from the one side to the many side, both ways when the relationship says so. A relationship counts
+// A filter travels from the one side to the many side, both ways when filtersBoth says so (both directions set, or one-to-one). A relationship counts
 // when (i) it lies on a path a filter can travel from one of the visual's tables to another (itself not used twice),
 // or (ii) its one side is one of the visual's tables (an unmatched key adds that table's blank row). A text with
 // USERELATIONSHIP or CROSSFILTER under the visual: every relationship is a path both ways, active or not.
@@ -246,10 +250,12 @@ export function compareLineage(before, after) {
 }
 
 // ---- what a measure ({ measure }), a column ({ table, column }) or a table ({ table }) reaches ----
-export function reachOf(lineage, what) {
+// max: how many visuals to list (default LISTED_MAX), the strongest tier first; the one cap (0.3.3 LX1: impact.mjs's reach
+// passes what is left of its answer's share, it no longer matches and cuts again)
+export function reachOf(lineage, what, max) {
   const w = isObj(what) ? what : {}, key = w.measure != null ? K.m(w.measure) : w.column != null ? K.c(w.table, w.column) : K.t(w.table);
   const known = isObj(lineage) && isObj(lineage.known) ? lineage.known : {}, found = Object.prototype.hasOwnProperty.call(known, key) || Object.prototype.hasOwnProperty.call(known, 'x:' + lc(w.measure));
   const hit = arr(lineage && lineage.visuals).filter((v) => v.nodes && (v.nodes[key] || (w.measure != null && v.nodes['x:' + lc(w.measure)])));
   const visuals = hit.map((v) => ({ page: v.page, visual: v.visual, type: v.type, tier: (v.nodes[key] || v.nodes['x:' + lc(w.measure)]).tier })).sort((x, y) => rank(x.tier) - rank(y.tier));
-  return { found, name: found ? known[key] || known['x:' + lc(w.measure)] : null, visuals: visuals.slice(0, LISTED_MAX), count: visuals.length, pages: new Set(hit.map((v) => v.page)).size };
+  return { found, name: found ? known[key] || known['x:' + lc(w.measure)] : null, visuals: visuals.slice(0, Number.isInteger(max) && max >= 0 ? max : LISTED_MAX), count: visuals.length, pages: new Set(hit.map((v) => v.page)).size };
 }

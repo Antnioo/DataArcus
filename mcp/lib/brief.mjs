@@ -7,8 +7,9 @@
 //                                        it, and which visual does
 // model: the TMSL JSON a model.bim holds (loadModel's tmsl); report: { files: [{ path, json }] } (lineage.mjs's shape).
 // THE RULE (a pair's verdict). A filter on the group's table travels a relationship from its one side to its many
-// side, both ways when the relationship says so (lineage.mjs's rule; the model's graph is lineage's modelGraph, never
-// a copy). The number reads the tables under it: its DAX's, those of the measures it calls, a summed column's table.
+// side, both ways when the relationship says so or is one-to-one (relationship-filter.js through lineage.mjs's rule;
+// the model's graph is lineage's modelGraph, never a copy). The number reads the tables under it: its DAX's, those of
+// the measures it calls, a summed column's table.
 //   moves         the group's table is one the number reads, or a filter on it reaches one
 //   one value     it reaches none: every row of the group shows the same number (the forum's "same value on every row")
 //   constant      the number reads no table of the model: one value on any group is what it means; never a finding

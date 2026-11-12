@@ -276,6 +276,16 @@ export function diskSource(loc, sk) {
   const list = (rel, want) => { let d; try { d = path.dirname(at((rel ? rel + '/' : '') + 'x')); } catch (e) { if (e instanceof Linked) { linked(e.rel || rel); return []; } throw e; } if (!isDir(d)) return []; return fs.readdirSync(d, { withFileTypes: true }).filter((e) => { if (e.isSymbolicLink()) { linked((rel ? rel + '/' : '') + e.name); return false; } return want === 'dir' ? e.isDirectory() : e.isFile(); }).map((e) => e.name); };
   return { dirs: (rel) => list(rel, 'dir'), files: (rel) => list(rel, 'file'), has: (rel) => { try { fs.lstatSync(at(rel)); return true; } catch (e) { return false; } }, json: (rel) => readJson(at(rel)), sk };
 }
+// (0.3.3 LX1, HX2 "Seen") one reading of a report for every part of one check_report call that reads it (sameQuestion,
+// the Impact check, the checks themselves): { loc, sk, src, inv }, the inventory worked out when first asked for (so a
+// caller's refusals before it, a report naming no model, still come first). tool: the caller's name, said in a refusal.
+/** @param {string} p @param {string} tool */
+export function reading(p, tool) {
+  const loc = locate(p, tool), sk = { big: [], deep: 0 }, src = diskSource(loc, sk);
+  /** @type {ReturnType<typeof inventory> | null} */
+  let inv = null;
+  return { loc, sk, src, get inv() { if (!inv) inv = inventory(src, path.basename(loc.reportDir)); return inv; } };
+}
 // files: the report writer's [{ path: '<Name>.Report/definition/...', data }]; only the .Report folder's files are read
 // files: [{ path (relative to the report folder: 'definition/...'), data }]; the caller strips its own prefix (A5-12)
 /** @param {Array<{ path: string, data: any }>|null|undefined} files @returns {ReportSource} */

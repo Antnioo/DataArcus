@@ -470,6 +470,10 @@ const SG1_KEYS = ["'Sales'[Total]", 'Sales[Total]', "  'My Table'[A [b]]  ", '[T
 const DQ1_DAX = [['Sales', 'Amount'], ["O'Brien", 'A]B'], ['My Table', 'Col [x]'], ['A[B]', 'C'], ['A', 'B][C'], ['', 'X'], [12, 'Y'], ['T', 'A\tB'], ['A\nB', 'C'], ['  pad  ', ' c ']].map((v) => ({ label: lab(v), v }));
 const SG1_PUTS = [[['a.json', 'b.json'], 'b.json', { x: 1 }], [['a.json'], 'a.json', [1, 'two']], [['a.json'], 'a.json', null], [['a.json'], 'missing.json', { x: 1 }], [['a.json', 'a.json'], 'a.json', { y: 'ي' }], [['a.json'], 'a.json', 'text'], [['a.json'], 'a.json', 0], [['a.json'], 'a.json', { n: { m: [] } }]].map(([paths, p, j]) => ({ label: lab([paths, p, j]), paths, p, j }));
 const SG1_LEAVES = [[{ a: 1 }], [{ a: { b: 1, c: [1, 2] } }], [{}], [[]], [null], [1], ['x'], [{ a: null }], [{ a: 1 }, '/x'], [{ a: { b: {} } }, '/visual'], [5, '/p']].map((v) => ({ label: lab(v), v }));
+// (0.3.3 LX1, AUD-069) relationships as TMSL writes them and as model-index.js gives them: which ways each filters
+const LX1_RELS = [{}, { crossFilteringBehavior: 'bothDirections' }, { crossFilteringBehavior: 'oneDirection' }, { fromCardinality: 'one', toCardinality: 'one' }, { fromCardinality: 'one' },
+  { fromCardinality: 'many', toCardinality: 'many' }, { fromCardinality: 'one', toCardinality: 'many' }, { cross: 'bothDirections', fromCard: 'many', toCard: 'one' },
+  { cross: 'oneDirection', fromCard: 'one', toCard: 'one' }, { crossFilteringBehavior: 'BothDirections' }, null].map((v) => ({ label: lab(v), v }));
 const SG1_PATHS = [['p', 'Sales.Report'], ['a', 'b', 'c.json'], ['Sales‮.Report'], ['x'.repeat(80)], ['ar', 'تقرير'], ['..', 'out'], ['.', 'p'], ['p q', 'r']].map((v) => ({ label: lab(v.map((s) => (s.length > 20 ? s.slice(0, 20) + '...' : s))), v }));
 
 export const FAMILIES = [
@@ -717,6 +721,11 @@ export const FAMILIES = [
   { id: 'rel-out', title: 'How is a path inside the working folder said, every part cleaned?', question: "a file: its path from the working folder, '/' between parts, every part cleaned",
     inputs: SG1_PATHS, places: [
       P('mcp/lib/check-redact.mjs', 'relOut', 'export', async (x, get) => { const { ROOT } = await import(pathToFileURL(abs('mcp/lib/model.mjs')).href); return (await get())(path.join(ROOT || path.sep, ...x.v)); }),
+    ] },
+  // (0.3.3 LX1, AUD-069) one rule: a one-to-one relationship filters both ways (Microsoft Learn); test mcp/test-0.3.3-lx1.mjs
+  { id: 'rel-both', title: 'Does this relationship filter both ways?', question: 'a relationship (TMSL or the model index): true when a filter on either table reaches the other',
+    inputs: LX1_RELS, places: [
+      P('assets/js/relationship-filter.js', 'filtersBoth', 'export', async (x, get) => (await get())(x.v)),
     ] },
 ];
 

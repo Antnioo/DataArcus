@@ -76,6 +76,9 @@ export function comparisonsIn(dax) { return scan(dax).map(shown); }
 
 // ---- a report on a model ----
 const label = (name) => `[${safeName(name)}]`;
+// (0.3.3 LX1, IX2 "Seen" 2) a base measure's name, whole to NAME_OUT characters, as lacking says its partner (safeName's 60
+// cut a long base in measures and comparisons while lacking named it whole); a longer one ends with its cut mark
+const baseLabel = (name) => `[${shownName(name, NAME_OUT)}]`;
 // the like-for-like measure's name for a base measure: the Measure Builder's own ("<base> Last Ramadan")
 const partnerOf = (base) => `${String(base).trim()} ${GM.byId('ramLY').suffix}`;
 const chainOf = (v, k) => { const path = [v.nodes[k].label]; let at = v.nodes[k].via, n = 0; while (at && v.nodes[at] && n++ < 50) { path.unshift(v.nodes[at].label); at = v.nodes[at].via; } return path.join(' uses '); };
@@ -98,7 +101,7 @@ export function likeForLike(model, report, opts) {
     .forEach((f) => arr(f.json.entities).filter(isObj).forEach((en) => arr(en.measures).filter(isObj).forEach((ms) => add('x:' + lc(ms.name), ms.name, 'report measure', ms.expression))));
   // a comparison a whole number of years away can have its Ramadan partner: has, none; any other: null
   const partner = (c) => (c.baseRaw === null || c.back === null || c.back % 12 !== 0 ? null : names.has(lc(partnerOf(c.baseRaw))) ? 'has' : 'none');
-  const row = (r) => { const c = r.c; return { measure: r.label || label(r.name), kind: r.kind, fn: c.fn, shift: c.shift, dates: c.dates, base: c.baseRaw === null ? null : label(c.baseRaw), likeForLike: partner(c) }; };
+  const row = (r) => { const c = r.c; return { measure: r.label || label(r.name), kind: r.kind, fn: c.fn, shift: c.shift, dates: c.dates, base: c.baseRaw === null ? null : baseLabel(c.baseRaw), likeForLike: partner(c) }; };
   // a missing like-for-like measure's name, whole to NAME_OUT characters (safeName's 60 would cut " Last Ramadan" off a long base); a longer one ends with its cut mark
   const wanted = (base) => `[${shownName(partnerOf(base), NAME_OUT)}]`;
 
