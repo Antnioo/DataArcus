@@ -2,7 +2,8 @@
 // bookmark rules. Written red first on integration/0.3.3 624357f0. Everything goes through the real server.
 //   P   plan_layout takes bookmarks (a list of { name, page }) and shows them in the plan's look; refusals through the
 //       registered schema (more than 8, a name over 60, an unknown key) and the plan's own (a page the plan does not
-//       have, the same name twice); create_report takes no bookmarks of its own (the approved plan holds them)
+//       have, the same name twice, a report in both languages, a redesign); create_report takes no bookmarks of its
+//       own (the approved plan holds them)
 //   A   the approval window shows each view with its page before the click; nothing is written before the click
 //   W   create_report writes one bookmark file a view, the views first in bookmarks.json in the plan's order, then the
 //       writer's own (Reset); each view goes to its page and holds no data state and no display state (never a value);
@@ -69,6 +70,10 @@ try {
   chk(() => !(far.j && far.j.plan && far.j.plan.planId) && /page 3/.test(far.t) && /2 pages/.test(far.t), () => `P8. a view of a page the plan does not have: no plan, and why: ${short(far)}`);
   const twice = await s.call('plan_layout', { layout: 'exec', path: 'health', name: 'Twice', bookmarks: [{ name: 'Same', page: 1 }, { name: 'same ', page: 2 }] });
   chk(() => !(twice.j && twice.j.plan && twice.j.plan.planId) && /same name/i.test(twice.t), () => `P9. two views under one name: no plan, and why: ${short(twice)}`);
+  const both = await s.call('plan_layout', { layout: 'exec', path: 'health', name: 'Both', languages: 'en+ar', bookmarks: VIEWS.slice(0, 1) });
+  chk(() => !(both.j && both.j.plan && both.j.plan.planId) && /bookmarks with languages/.test(both.t), () => `P11. views on a report in both languages: no plan yet, and why: ${short(both)}`);
+  const redo = await s.call('plan_layout', { path: 'twin', redesignFrom: 'twin/Twin Sales.Report', bookmarks: VIEWS.slice(0, 1) });
+  chk(() => !(redo.j && redo.j.plan && redo.j.plan.planId) && /bookmarks/.test(redo.t), () => `P12. views on a redesign (a copy keeps its own bookmarks): no plan, and why: ${short(redo)}`);
   chk(() => !fs.readdirSync(path.join(ROOT, 'health')).some((f) => /\.Report$/.test(f) && !/^Health/.test(f)), () => `P10. planning wrote no report: ${fs.readdirSync(path.join(ROOT, 'health')).join(', ')}`);
 
   // ---------- A: the approval window, before the click ----------
@@ -117,6 +122,12 @@ try {
   const said = JSON.stringify(r.j || {});
   chk(() => /3 bookmarks/.test(said) && /View/.test(said), () => `W15. create_report's answer says the views it wrote and how to play them: ${said.slice(0, 300)}`);
   }
+
+  // hand-placed pages take views too: one page, one view
+  { const ph = await s.call('plan_layout', { path: 'health', name: 'Hand', bookmarks: [{ name: 'The one page' }], pages: [{ name: 'One', slots: [{ kind: 'bar', x: 20, y: 20, w: 600, h: 400 }] }] });
+    if (ph.j && ph.j.plan) await s.call('approve_plan', { planId: ph.j.plan.planId });
+    const rh = ph.j && ph.j.plan ? await s.call('create_report', { path: 'health', planId: ph.j.plan.planId }) : ph;
+    chk(() => !rh.err && (() => { const H = bookmarksOf('health/Hand.Report'), b = H.files[H.items[0]]; return H.items.length >= 1 && b.displayName === 'The one page' && b.explorationState.activeSection === pageIds('health/Hand.Report')[0] && orderNote('health/Hand.Report') === JSON.stringify([b.name]); })(), () => `W16. hand-placed pages: a view without a page number opens the first page: ${short(rh)}`); }
 
   // ---------- N: without the option ----------
   const pn = await s.call('plan_layout', { layout: 'exec', path: 'health', name: 'Plain' });
