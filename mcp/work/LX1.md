@@ -149,3 +149,6 @@ sentence, the like-for-like base name, read_model's reach order.
 - `mcp/test.mjs` 5b checks the lowercase word "fields" in unknownKeys' sentence: a rewording that keeps only
   "Fields"/"planFields" fails it (CI caught it, the area runs had not reached test.mjs yet).
 - v029d R9 forbids a reading-block function that names a tool itself: a new read-report.mjs helper takes the caller's name.
+- CI run 43131641086 (on 68f418aa): Linux 22,489 checks PASS; two fixes after it: the type check (`npx tsc -p
+  tsconfig.tc1.json` in mcp/) wants a JSDoc type on a `let x = null` later given a value in read-report.mjs (run tsc
+  before CI when touching a file it checks), and lx1 L12 split LR3.md on "\n" (Windows checks out CRLF: split /\r?\n/).

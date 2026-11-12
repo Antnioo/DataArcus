@@ -90,10 +90,10 @@ try {
     chk(() => u && /plan_layout's own "planFields" input/.test(u.why) && !/create_report's own "fields"/.test(u.why), () => `L10 unknownKeys' sentence names plan_layout's planFields, not create_report's old "fields": ${u && u.why}`);
     chk(() => /plan_layout's own \\?"planFields\\?" input/.test(p.t) && !/create_report's own/.test(p.t), () => `L10b plan_layout's answer through the server says it too: ${String(p.t).slice(0, 400)}`); }
   // ---- item 11: the PL1 Arabic the owner approved on 5 Nov (D-1105-16) is no longer called a draft ----
-  { const t = fs.readFileSync(new URL('./lib/approval-ar.mjs', import.meta.url), 'utf8'), line = t.split('\n').find((l) => /0\.3\.2 PL1/.test(l)) || '';
+  { const t = fs.readFileSync(new URL('./lib/approval-ar.mjs', import.meta.url), 'utf8'), line = t.split(/\r?\n/).find((l) => /0\.3\.2 PL1/.test(l)) || '';
     chk(() => !/DRAFT/.test(line) && /approved/.test(line) && /D-1105-16/.test(line), () => `L11 approval-ar.mjs's PL1 comment says approved, with the decision id: ${line.trim()}`); }
   // ---- item 12: LR3.md has one "## For the owner" heading (a wrapped plan line started with it) ----
-  { const lines = fs.readFileSync(new URL('./work/LR3.md', import.meta.url), 'utf8').split('\n').filter((l) => /^#+ .*For the owner/.test(l));
+  { const lines = fs.readFileSync(new URL('./work/LR3.md', import.meta.url), 'utf8').split(/\r?\n/).filter((l) => /^#+ .*For the owner/.test(l));
     chk(() => lines.length === 1 && lines[0] === '## For the owner', () => `L12 mcp/work/LR3.md: one heading with "For the owner", the real one: ${J(lines)}`); }
   // ---- item 9 (IX2 "Seen" 2): a base measure's name in measures and comparisons: whole to 200 characters, as lacking ----
   { const LF = await import('./lib/like-for-like.mjs'), long = 'Net Revenue After Returns And Discounts For All Gulf Stores Combined X', m = gulfModel(); measureOf(m, 'Units').name = long;

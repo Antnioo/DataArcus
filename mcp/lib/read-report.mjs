@@ -282,6 +282,7 @@ export function diskSource(loc, sk) {
 /** @param {string} p @param {string} tool */
 export function reading(p, tool) {
   const loc = locate(p, tool), sk = { big: [], deep: 0 }, src = diskSource(loc, sk);
+  /** @type {ReturnType<typeof inventory> | null} */
   let inv = null;
   return { loc, sk, src, get inv() { if (!inv) inv = inventory(src, path.basename(loc.reportDir)); return inv; } };
 }
