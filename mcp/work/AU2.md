@@ -15,7 +15,7 @@
   English-named untyped date column's chart inverted, A2 the Arabic-named one the same; H1 the English weekday
   heatmap gets names beside, H2 the Arabic one too. Red on the base: A2 and H2 (2 of 4). Every other suite unchanged
   (the 6 dashboards' twin pins, fuzz, recorded twin fixtures: their names are English; a move is a STOP).
-- **Resume:** fix and tests pushed (c487c9c5); areas twin, arabic, report, checker, model green locally; CI started 2026-11-12T01:32Z.
+- **Resume:** DONE (2026-11-12T01:46Z). CI green: https://github.com/Antnioo/DataArcus/actions/runs/43135196177 on 72791c0105f9d24d1f26ba5c0e2de51a46315969 (17 jobs success; macOS skipped on a builder branch by the workflow's rule).
 
 ## Plan
 1. Pin the two regexes as they are: a table of at least 30 names each way per regex, its answers read from the regex
