@@ -12,7 +12,11 @@
 - **Expected checks:** `node scripts/check-modules.mjs --strict` PASS; `node scripts/test-contracts.mjs` PASS;
   `node scripts/check-contracts.mjs` PASS; area runs (report, checker, model) as I go; tk1 under 61,000; lint 0; CI.
 - **Resume:** items 13, 8, 10, 11, 12, 9, 4, 6 done; 5 held for the owner ("For the owner" 1); 1, 3, 2, 7 measured and
-  left under "Seen, not in scope" with why. Last: the CI line below.
+  left under "Seen, not in scope" with why. DONE; the reviewer: review and merge (check-modules --strict 1262,
+  test-contracts 14 PASS, run here).
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/43133530959 on 9cb61ba50e83e2556b6f96b6c109857de8bd2d37
+  (2026-11-12T01:31Z; Linux 5 of 5 parts, Windows 5 of 5, the website 3 of 3 and its checks, macOS skipped by the workflow;
+  integration/0.3.3 still at c21df8d5, nothing to merge in, R-33).
 
 ## The plan (written before the code, 2026-11-12T00:12Z)
 Measured on c21df8d5 (file:line, who calls it):
