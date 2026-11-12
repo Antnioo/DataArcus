@@ -97,12 +97,17 @@ package's manifest; this file says what is in it.
 - **On dataarcus.com, a free page from the same dates:** "Is this month like last year's?" (tools/gulf-like-for-like.html)
   sets a month beside the same month a year earlier for a Gulf country: Ramadan, Eid al-Fitr, Eid al-Adha and weekend days,
   the weekend and the VAT rate, and whether the two are like for like. In English; it runs in the browser and saves nothing.
+- **On dataarcus.com, the PL-300 practice questions:** the right answer is no longer the longest option in most
+  single-answer questions (it was in 131 of 174, now in 37), so an answer's length no longer gives it away;
+  the page and its share pictures say 234 questions, the real count.
+- **On dataarcus.com, a steadier article title:** the Copilot readiness article's title no longer jumps when its font
+  arrives on a wide screen.
 - **Charts that would show one value on every row:** `check_report` now names each chart whose column cannot change the
   number it shows on your model (no relationship lets a filter on that column reach what the number reads), with why. Give
   it `brief`, the questions the report must answer as a measure by columns, and it says which a visual answers (a visual
   split further still answers it), which only partly, which no visual answers and which the model cannot answer. From
   the files only, names never values; a rule not yet measured in Power BI Desktop, and in doubt it says it cannot tell.
-- Every chat starts smaller: the tool list an AI app reads at the start of each chat is 60,532 characters with this
+- Every chat starts smaller: the tool list an AI app reads at the start of each chat is 60,930 characters with this
   version's new options, down from 74,925 (about a fifth fewer tokens in every chat). The shortening itself changed no
   option and no answer: the texts say it in fewer words, and the details that left the list are in TOOLS.md.
 - A one-to-one relationship now counts as filtering both ways, as Power BI always filters it, even when the model file
