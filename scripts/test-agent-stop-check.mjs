@@ -84,6 +84,58 @@ allows(run(r.dir), 'a question for the owner');
 r = repo('feat/0.3.3-zz9', '## For the owner\nnone\n\n## Risky changes\nWhy? none\n');
 refuses(run(r.dir), 'For the owner says none (a question elsewhere does not count)');
 
+// 5b. (WF3) a note with a green CI line also has its two sections read by a machine
+//   "## For the owner": a line other than "none" is a question (ends with "?" before the first " | ") with | class | rec | yes | no | default
+//   "## Seen, not in scope": a line other than "none" has | route: fix|job|backlog|drop and | why:, and for fix | size: S|M|L
+const FMT = /Not a question for the owner\? Move it under "## For the reviewer"/;
+const greenNote = (body, branch = 'feat/0.3.3-zz9') => {
+  const rr = repo(branch, 'x\n');
+  fs.writeFileSync(path.join(rr.dir, 'mcp/work/ZZ9.md'), `## Summary\n- **Resume:** x\n\nCI green: ${URL_} on ${rr.head}\n\n${body}`);
+  return rr;
+};
+const runFresh = (dir) => spawnSync(process.execPath, [script, '--root', dir], { encoding: 'utf8', input: '{}', env: { ...process.env, AGENT_STOP_STATE_DIR: fs.mkdtempSync(path.join(tmp, 'fs-')) } });   // each call its own refusal count
+const formatRefuses = (body, msg, mention) => {
+  const res = runFresh(greenNote(body).dir);
+  ok(res.status === 2 && FMT.test(res.stderr) && /class: <|route: </.test(res.stderr), `${msg}: want exit 2 and the format message, got ${res.status} / ${res.stderr.trim()}`);
+  if (mention) ok(res.stderr.includes(mention), `${msg}: the message names the line "${mention}", got ${res.stderr.trim()}`);
+};
+const formatAllows = (body, msg) => allows(runFresh(greenNote(body).dir), msg);
+const OWNER_OK = '- Should the cap be 3 or 5? | class: rules | rec: 5 | yes: cap 5 | no: cap 3 | default: 3';
+const SEEN_OK = '- A wrong label on page 2 | route: backlog | why: not this job';
+
+formatRefuses('## For the owner\n- The cap is 3, I kept it.\n\n## Risky changes\nnone\n', 'a statement under For the owner', 'The cap is 3, I kept it.');
+formatRefuses('## For the owner\n- Should the cap be 3 or 5?\n', 'a question with no fields', 'Should the cap be 3 or 5?');
+formatRefuses('## For the owner\n- Should the cap be 3 or 5? | class: rules | yes: cap 5 | no: cap 3 | default: 3\n', 'a question without rec', 'Should the cap be 3 or 5?');
+formatRefuses('## For the owner\n- Should the cap be 3 or 5? | class: weather | rec: 5 | yes: a | no: b | default: 3\n', 'a question with a class that is not one of CLASSES');
+formatRefuses('## For the owner\n- Cap 3 or 5 | class: rules | rec: 5 | yes: a | no: b | default: 3\n', 'a line that does not end with "?" before the first " | "');
+formatRefuses('## Seen, not in scope\n- A wrong label on page 2\n', 'a Seen line without route', 'A wrong label on page 2');
+formatRefuses('## Seen, not in scope\n- A wrong label | route: backlog\n', 'a Seen line without why');
+formatRefuses('## Seen, not in scope\n- A wrong label | route: keep | why: x\n', 'a Seen line with a route builders may not propose');
+formatRefuses('## Seen, not in scope\n- A wrong label | route: fix | why: one word | \n', 'a Seen fix line without size');
+formatRefuses('## Seen, not in scope\n- A wrong label | route: fix | why: x | size: XL\n', 'a Seen fix line with a size that is not S, M or L');
+formatRefuses(`## Seen, not in scope\n${SEEN_OK}\n- A second, bare line\n\n## For the owner\n${OWNER_OK}\n`, 'one good item and one bad item: the bad one is named', 'A second, bare line');
+formatAllows(`## For the owner\n${OWNER_OK}\n\n## Seen, not in scope\n${SEEN_OK}\n- A cut text | route: fix | size: S | why: one line\n* A star item | route: job | why: needs a plan\n1. A numbered item | route: drop | why: already fixed\n`, 'good lines (bullets "- ", "* ", "1. "; fix with size)');
+// a wrapped item is ONE item: the field line may start with spaces and "| route:"
+formatAllows('## Seen, not in scope\n- A wrong label on page 2 that is long\n  | route: backlog | why: not this job\n', 'a wrapped Seen item (two lines, one item)');
+formatAllows('## For the owner\n- Should the cap be 3 or 5?\n   | class: rules | rec: 5\n   | yes: cap 5 | no: cap 3 | default: 3\n', 'a wrapped owner question (three lines, one item)');
+formatRefuses('## Seen, not in scope\n- A wrong label on page 2 that is long\n  | why: not this job\n', 'a wrapped item still needs its route');
+formatAllows('## For the owner\nnone\n\n## Seen, not in scope\nnone\n', '"none" in both sections');
+formatAllows('## For the owner\n- none\n\n## Seen, not in scope\n- none\n', '"- none" in both sections');
+formatAllows('## Summary\n- x\n\n## Risky changes\nnone\n', 'a note with neither section');
+formatAllows('## For the reviewer\n- no new Arabic\n- nothing to decide\n- The cap is 3\n', '"## For the reviewer" takes statements');
+// a heading that only contains the words is not the section (LR3.md has: ## For the owner". Allows after 3)
+formatAllows('- Two words: ## For the owner". Allows after 3\n## For the owner". Allows after 3\n- Plain statement that is not an owner line.\n## Seen, not in scope, listed above\n- Bare line.\n', 'a heading that only contains the words is not the section');
+// a STOP: line allows at once, whatever the sections say
+allows(runFresh(greenNote('STOP: the platform refused.\n\n## For the owner\n- a statement\n\n## Seen, not in scope\n- bare\n').dir), 'STOP: allows even with bad sections');
+// the refusal count stays: 3 refusals on a bad format, then the stop is allowed
+{
+  const rr = greenNote('## For the owner\n- a statement\n');
+  const st = fs.mkdtempSync(path.join(tmp, 'wf-'));
+  const go = () => spawnSync(process.execPath, [script, '--root', rr.dir], { encoding: 'utf8', input: '{}', env: { ...process.env, AGENT_STOP_STATE_DIR: st } });
+  for (let i = 1; i <= 3; i++) { const x = go(); ok(x.status === 2 && FMT.test(x.stderr), `format refusal ${i}: got ${x.status}`); }
+  allows(go(), 'the 4th call after 3 format refusals');
+}
+
 // 6. the 4th call after 3 refusals: allow; then the count starts again
 r = repo('feat/0.3.3-lp1', 'x\n', { code: 'LP1' });
 refuses(run(r.dir), 'refusal 1'); refuses(run(r.dir), 'refusal 2'); refuses(run(r.dir), 'refusal 3');
