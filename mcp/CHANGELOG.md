@@ -5,6 +5,7 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.3
+- The SVG KPI Designer's preview prints a very large value in digits (1,000,000,000,000,000,000,000 for 1e21), never as "1e+21" or a wrong percent. Up to 15 significant digits are the value's, then zeros.
 - A new measure says how well each planned page is filled: the largest empty area, the flattest and the lowest chart. A new
   test pins it on 80 plans of made-up models, so a layout change now shows its whole effect as numbers before it ships.
   The measure itself is in no answer; the two layout changes it measured are the next two lines.
