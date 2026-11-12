@@ -11,7 +11,7 @@
   CONTRACTS.md rows; the tests named per item; CHANGELOG, WORK.md, this note.
 - **Expected checks:** `node scripts/check-modules.mjs --strict` PASS; `node scripts/test-contracts.mjs` PASS;
   `node scripts/check-contracts.mjs` PASS; area runs (report, checker, model) as I go; tk1 under 61,000; lint 0; CI.
-- **Resume:** plan written; next: item 13's red tests.
+- **Resume:** group 1 (items 13, 8, 10, 11, 12, 9) pushed; CI on it; next item 4, then 6, 5; 1, 3, 2, 7 measured.
 
 ## The plan (written before the code, 2026-11-12T00:12Z)
 Measured on c21df8d5 (file:line, who calls it):
@@ -39,3 +39,33 @@ Measured on c21df8d5 (file:line, who calls it):
 - **1, 3, 4, 5, 6, 9, 2, 7:** measured when reached; written below or under "Seen, not in scope" with why.
 Expected numbers: new suite `lx1` (about 25 checks), red on c21df8d5 first; every other suite's numbers unchanged
 except those said per test under "Changed on purpose".
+
+## Before -> after (group 1, 2026-11-12T01:40Z)
+New suite `lx1` (mcp/tests.json, area checker): 19 checks, **red on c21df8d5 first** (base files checked out: R1, R2,
+R3, R3c, R4, R4b, L8, L8c, L9, L10, L10b, L11, L12 failed; the controls R1b, R1c, R2b, R3b, L8b, L9b passed).
+- **13 (AUD-069), closed.** One rule: `assets/js/relationship-filter.js` `filtersBoth` (bothDirections, or one-to-one,
+  cited from Learn above). `lineage.mjs` `modelGraph` (each relationship's `both`, read by `relsFor` and by
+  brief.mjs's `reachOf`) and `field-catalog.js` `relsOfTmsl` call it; neither reads bothDirections itself (R4b). The
+  theme generator loads relationship-filter.min.js before field-catalog.min.js (new stamp a94fd468ba2f). Through the
+  real server: "Target by Region" over a one-to-one Store to Bridge was "one value" (R1), now moves; lineage now says
+  it can show other numbers when that relationship is turned off (R2); the picker reaches it (R3, R3c). CONTRACTS.md
+  family `rel-both` (11 probe inputs), MODULES.md row.
+- **8, closed.** `collectReportRefs` keeps `schema: "extension"` (the key only when written); lineage.mjs `keyOfRef`
+  reads it first, so a visual on a report measure named like a model measure follows the report's DAX (L8, L8c).
+  sp9 (which pins collectReportRefs' output) unchanged: 16 checks pass.
+- **10, closed.** `unknownKeys`: "Fields go in plan_layout's own "planFields" input, not inside the design; layout
+  choices are its other inputs." No Arabic copy of the sentence exists (grep). fn1j re-recorded ON PURPOSE by its own
+  recorder (`FN1J_RECORD=1`): C05 and H15 only; their dumps before and after differ in that sentence only (checked).
+- **11, closed.** approval-ar.mjs:50: "approved by the owner, D-1105-16, 5 Nov". Comment only.
+- **12, closed.** LR3.md line 19 (a wrapped plan line that began `## For the owner"`) now starts "the owner's heading";
+  nothing else in LR3.md changed (`git diff`: one line).
+- **9, closed.** like-for-like.mjs `row()`: a base measure's name whole to NAME_OUT (200), as `lacking` (L9; past 200
+  the cut is marked, L9b). ix1 64 and ix2 33 unchanged.
+
+## Changed on purpose
+- `mcp/fixtures/fn1j-pins.json`: A1 C05 and A1 H15 (the sentence of item 10), and its `about` says so.
+
+## Runs (group 1)
+lx1 19, sp30 21, dd1h 35, ox1 57, ox2 29, hx1 59, hx2 43, sp9 16, fn1j 3, ix1 64, ix2 33 PASS; `npm test -- checker`
+19 suites and `-- model` 31 suites PASS; website theme-generator, pbip, sp31 PASS (each alone, after build:min);
+check-modules --strict 1262, check-contracts 868, test-contracts 14, result-lines 253, changelog-words 73 PASS; lint 0.

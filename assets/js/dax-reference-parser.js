@@ -68,7 +68,10 @@
       const f = node[kind];
       if (f && typeof f === 'object' && f.Property && f.Expression) {
         const ent = entityOf(f.Expression);
-        if (ent) acc.push({ kind, entity: ent, prop: f.Property });
+        // (0.3.3 LX1, HX1 "Seen") a report's own measure is written with SourceRef.Schema "extension": kept, so a report
+        // measure and a model measure of one name are told apart by the reference itself (the key only when written)
+        const schema = f.Expression.SourceRef && f.Expression.SourceRef.Schema;
+        if (ent) acc.push(Object.assign({ kind, entity: ent, prop: f.Property }, schema === 'extension' ? { schema } : {}));
       }
     });
     if (node.PropertyVariationSource && node.PropertyVariationSource.Property) {

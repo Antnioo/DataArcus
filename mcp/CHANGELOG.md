@@ -71,6 +71,13 @@ package's manifest; this file says what is in it.
 - Every chat starts smaller: the tool list an AI app reads at the start of each chat is 60,532 characters with this
   version's new options, down from 74,925 (about a fifth fewer tokens in every chat). The shortening itself changed no
   option and no answer: the texts say it in fewer words, and the details that left the list are in TOOLS.md.
+- A one-to-one relationship now counts as filtering both ways, as Power BI always filters it, even when the model file
+  does not say "both directions". Before, check_report could say a chart "would show one value on every row" and the
+  model "cannot answer" a question when a one-to-one relationship was on the way, the Impact check could miss a chart
+  that turning such a relationship off changes, and the field picker could leave such a table out. One rule now
+  decides it for all three.
+- The Impact check tells a report's own measure from a model measure of the same name by how the report writes it.
+- plan_layout's note about unknown design keys now names the input fields go in today, `planFields`.
 
 ## [0.3.2]: 2026-11-09 (the version for testers, second round)
 The second version for testers. In short:

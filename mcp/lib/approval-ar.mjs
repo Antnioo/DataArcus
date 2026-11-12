@@ -47,7 +47,7 @@ const EXACT = {
   'each bar fades by its value; a chart by a second category field gets a second colour, the same on every page': 'يتدرّج لون كل شريط حسب قيمته؛ والمخطط حسب حقل فئة ثانٍ يأخذ لونًا ثانيًا، هو نفسه في كل الصفحات',
   'one colour for every bar': 'لون واحد لكل الأشرطة',
   'Glass look (default): see-through cards over a soft page picture made from the theme\'s colours (Power BI has no blur behind a visual); plain cards: ask for the plain look': 'الشكل الزجاجي (الافتراضي): بطاقات شفافة فوق صورة ناعمة للصفحة مصنوعة من ألوان السمة (لا يوفّر Power BI تمويهًا خلف المرئي)؛ وللبطاقات العادية: اطلب الشكل العادي',
-  // (0.3.2 PL1) the "More" options in words (DRAFT for the owner, mcp/work/PL1.md)
+  // (0.3.2 PL1) the "More" options in words (approved by the owner, D-1105-16, 5 Nov: "Agree on suggested arabic and yes"; mcp/work/PL1.md)
   'Page filters': 'فلاتر الصفحات', 'Sentence in the text box': 'الجملة في مربع النص', 'Chart subtitles': 'العناوين الفرعية للمخططات', 'Small pictures in table rows': 'صور صغيرة في صفوف الجدول', 'Small pictures beside KPI cards': 'صور صغيرة بجانب بطاقات المؤشرات',
   'Glass look, as asked: see-through cards over a soft page picture made from the theme\'s colours': 'الشكل الزجاجي، كما طلبت: بطاقات شفافة فوق صورة ناعمة للصفحة مصنوعة من ألوان السمة',
   'Plain, as asked: Power BI\'s own cards': 'الشكل العادي، كما طلبت: بطاقات Power BI نفسها',

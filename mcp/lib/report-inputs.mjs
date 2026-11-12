@@ -18,13 +18,12 @@ const Gallery = require('../../assets/js/visual-gallery.js');
 // inside a design) is named in the answer's "ignored", never dropped without a word.
 // (the audit's A2-7: the key lists are the design engine's, with its written schema; an older design's keys the engine
 // still reads, such as kpiCards, are reported by the engine's repair instead)
-// (0.3.3 SN1) The sentence below still names create_report's old "fields" input (it is plan_layout's planFields now). It is
-// left as it is: plan_layout's answers are pinned byte for byte by test-0.3.2-fn1j (fixtures/fn1j-pins.json, recorded
-// before the split), so a new word needs that file recorded again: the reviewer's call (mcp/work/SN1.md, "For the owner").
+// (0.3.3 LX1, SN1's open item) The sentence names plan_layout's planFields, the input fields go in today (create_report
+// has no "fields" input since 0.3.2); fixtures/fn1j-pins.json was recorded again on purpose for it (mcp/work/LX1.md).
 export function unknownKeys(design) {
   const keys = Object.keys(design || {}).filter((k) => !DESIGN_KEYS.includes(k))
     .concat(Object.keys((design && typeof design.layout === 'object' && design.layout) || {}).filter((k) => !LAYOUT_KEYS.includes(k) && !OLD_LAYOUT_KEYS.includes(k)).map((k) => 'layout.' + k));
-  return keys.length ? { keys, why: 'These keys of the design are not ones the tools know, so they changed nothing. Fields go in create_report\'s own "fields" input, not inside the design; layout choices are the inputs of plan_layout.' } : null;
+  return keys.length ? { keys, why: 'These keys of the design are not ones the tools know, so they changed nothing. Fields go in plan_layout\'s own "planFields" input, not inside the design; layout choices are its other inputs.' } : null;
 }
 // the files a user names, read through lib/files.mjs (audit 6, A6-7): measured first, never quoted; the largest real
 // theme files are about 22 KB and a page background a few hundred KB, so the caps are far above them

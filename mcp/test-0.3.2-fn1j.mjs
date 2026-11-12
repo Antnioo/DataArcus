@@ -64,7 +64,7 @@ for (const [name, args, env] of CASES) {
   }
 }
 if (process.env.FN1J_DUMP) fs.writeFileSync(process.env.FN1J_DUMP, JSON.stringify(texts, null, 1));
-if (process.env.FN1J_RECORD) fs.writeFileSync(GOLD, JSON.stringify({ about: 'test-0.3.2-fn1j.mjs: plan_layout\'s answers and the plans\' data recorded on the base (integration/0.3.2 207784c6, before the split; normalised: the plan id, the working folder, the separator, the path limit\'s numbers and example folder)', pins: now }, null, 1) + '\n');
+if (process.env.FN1J_RECORD) fs.writeFileSync(GOLD, JSON.stringify({ about: 'test-0.3.2-fn1j.mjs: plan_layout\'s answers and the plans\' data recorded on the base (integration/0.3.2 207784c6, before the split; normalised: the plan id, the working folder, the separator, the path limit\'s numbers and example folder; recorded again on purpose by 0.3.3 LX1, 12 Nov: unknownKeys\' sentence in C05 and H15, nothing else, mcp/work/LX1.md)', pins: now }, null, 1) + '\n');
 const gold = JSON.parse(fs.readFileSync(GOLD, 'utf8')).pins;
 const diff = Object.keys(gold).filter((k) => !now[k] || now[k].sha256 !== gold[k].sha256 || now[k].length !== gold[k].length || now[k].err !== gold[k].err).concat(Object.keys(now).filter((k) => !gold[k]));
 const of = (pre) => Object.keys(gold).filter((k) => k.startsWith(pre)).length;
