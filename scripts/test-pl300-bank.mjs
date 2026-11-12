@@ -2,10 +2,13 @@
 //  1. Length giveaway: among single-answer questions (the bank's and the case studies') the share where the right
 //     option is the strictly longest must not pass 40% (AUD-055: it was 131/174 = 75.3%). DP-600's share is printed.
 //  2. One count: every "N questions" on the PL-300 pages, the hubs and the share images equals the bank's length.
+//  3. (SN3) The exam mixes its options: the bank has the right option first in every single-answer question, and the page draws
+//     them through exam-session's newInst. Over the whole bank the right option is first on screen in no more than 40%.
 // Run: node scripts/test-pl300-bank.mjs   (prints `PASS  pl300-bank  <N> checks`)
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
@@ -67,7 +70,20 @@ for (const f of DP_FILES) {
 }
 ok(dpStated >= 14, `only ${dpStated} stated DP-600 counts found (the page 3, its Arabic copy 3, translations 4, the home page, the hub, the share images 2 at least 14)`);
 console.log(`stated DP-600 counts checked: ${dpStated}, bank total ${dpTotal}`);
-const stated = checks - 2 - (dpStated + 2);
+// the options as the page draws them (newInst's perm: the source option shown at each place), a fixed seed, 20 draws of the whole bank
+const SES = createRequire(import.meta.url)('../assets/js/exam-session.js');
+const seeded = (n) => () => { n = (n + 0x6D2B79F5) | 0; let t = Math.imul(n ^ (n >>> 15), 1 | n); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+const rand = seeded(20261112);
+let mixN = 0;
+for (const [name, bank] of [['PL-300', pl], ['DP-600', dp]]) {
+  const singles = [...bank.q, ...(bank.cases || []).flatMap((c) => c.questions)].filter((q) => q.type === 'single');
+  let first = 0, n = 0;
+  for (let draw = 0; draw < 20; draw++) for (const q of singles) { n++; if (SES.newInst(q, rand).perm.indexOf(q.ans) === 0) first++; }
+  mixN += n;
+  console.log(`${name}: the right option is drawn first in ${first}/${n} = ${(first / n * 100).toFixed(1)}% (limit ${MAX_SHARE * 100}%; source order would be ${(singles.filter((q) => q.ans === 0).length / singles.length * 100).toFixed(1)}%)`);
+  ok(n > 0 && first / n <= MAX_SHARE, `${name}: the right option is drawn first in ${(first / n * 100).toFixed(1)}% of ${n} single-answer draws, limit ${MAX_SHARE * 100}% (are the options drawn in source order?)`);
+}
+const stated = checks - 2 - (dpStated + 2) - 2;
 ok(stated >= 8, `only ${stated} stated counts found (the page, its Arabic copy, hubs and share images carry at least 8)`);
 console.log(`stated counts checked: ${stated}, bank total ${total}`);
 if (bad.length) { bad.slice(0, 20).forEach((b) => console.log('FAIL  ' + b)); console.log(`FAIL  pl300-bank  ${checks} checks`); process.exit(1); }
