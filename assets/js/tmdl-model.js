@@ -256,8 +256,10 @@
     stopped: ['parse stopped at line #', 'توقفت القراءة عند السطر #'],
     cut: ['cut short: line #, the last, stops in the middle of an item', 'الملف مقطوع: السطر #، وهو الأخير، يتوقف في منتصف عنصر'],
     noTable: ['no table definition in it', 'لا يحتوي على تعريف جدول'],
-    // (AU1) not yet approved in Arabic (D-1109-07): the Arabic side carries the English sentence; drafts in mcp/work/AU1.md
-    missingTable: ['model.tmdl names this table; no file in the project defines it', 'model.tmdl names this table; no file in the project defines it'],
+    // (AU1; 0.3.3 AR7) missingTable's Arabic is approved by D-1112-05 (table, file, project: the words Microsoft and Google
+    // both use, content/ARABIC-GLOSSARY.md). missingEnd waits for the owner (Google has no Arabic for a model
+    // relationship): its Arabic side carries the English sentence; the draft is in mcp/work/AR7-ARABIC.md
+    missingTable: ['model.tmdl names this table; no file in the project defines it', 'يذكر model.tmdl هذا الجدول، ولا يوجد في المشروع ملف يعرّفه'],
     missingEnd: ['a relationship uses this table; no file in the project defines it', 'a relationship uses this table; no file in the project defines it']
   };
   const whyOf = (s, lang) => (WHY[s.code] || WHY.stopped)[lang === 'ar' ? 1 : 0].replace('#', String(s.line || 1));

@@ -79,7 +79,7 @@
     "New design": "تصميم جديد",
     "Tooltip page: add a card or a small chart here.": "صفحة التلميح: أضف بطاقة أو مخططًا صغيرًا هنا."
   },
-  "_concepts": "DataArcus's own Arabic vocabulary (0.3.1 E, the Arabic review of 21 Oct): one Arabic term per concept, for every engine, the MCP's answers and the site. variants are patterns of the other forms (a clitic و ف ب ك ل and ال may come before; diacritics are folded); source is Microsoft's own Arabic wording (Learn's Arabic training units, Microsoft Support), or 'none found'; 'to choose' = the owner decides. Read by mcp/lib/arabic-terms.mjs; mcp/test-0.3.1-arabic-terms.mjs and scripts/test-arabic-terms.mjs fail on a variant anywhere outside allow.",
+  "_concepts": "DataArcus's own Arabic vocabulary (0.3.1 E, the Arabic review of 21 Oct): one Arabic term per concept, for every engine, the MCP's answers and the site. variants are patterns of the other forms (a clitic و ف ب ك ل and ال may come before; diacritics are folded); source is Microsoft's own Arabic wording (Learn's Arabic training units, Microsoft Support), or 'none found'; 'to choose' = the owner decides. (0.3.3, D-1112-05) google and googleSource are Google's own Arabic wording for the same thing (its Arabic help pages), read on the date in read; approval says why the term stands: 'D-1112-05' (Microsoft and Google both use it), 'owner' (his choice or his standard) or 'one source' (only one of the two has Arabic for it: a new line with it waits for him). content/ARABIC-GLOSSARY.md is rendered from this list (node scripts/arabic-glossary.mjs --write). Read by mcp/lib/arabic-terms.mjs; mcp/test-0.3.1-arabic-terms.mjs and scripts/test-arabic-terms.mjs fail on a variant anywhere outside allow.",
   "concepts": [
     {
       "id": "filters",
@@ -95,7 +95,15 @@
         "https://learn.microsoft.com/ar-sa/training/modules/perform-analytics-power-bi/3-visuals"
       ],
       "status": "chosen",
-      "note": "The owner chose it (25 Oct). What every report writes; Power BI's menus say «عوامل التصفية»."
+      "note": "The owner chose it (25 Oct). What every report writes; Power BI's menus say «عوامل التصفية».",
+      "google": "الفلاتر",
+      "googleSource": [
+        "https://support.google.com/docs/answer/3540681?hl=ar",
+        "https://support.google.com/docs/answer/9245556?hl=ar"
+      ],
+      "approval": "owner",
+      "used": "every report DataArcus writes, the tools, the site",
+      "read": "2026-11-12"
     },
     {
       "id": "filtering",
@@ -110,7 +118,14 @@
         "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction"
       ],
       "status": "chosen",
-      "note": "The act; the things are «الفلاتر». DAX's filter context stays «سياق التصفية»."
+      "note": "The act; the things are «الفلاتر». DAX's filter context stays «سياق التصفية».",
+      "google": "الفلترة",
+      "googleSource": [
+        "https://support.google.com/docs/answer/3540681?hl=ar"
+      ],
+      "approval": "owner",
+      "used": "the tools' and the site's texts",
+      "read": "2026-11-12"
     },
     {
       "id": "reset",
@@ -128,7 +143,8 @@
       "phrases": [
         "Reset filters",
         "Clear the filters on this page"
-      ]
+      ],
+      "approval": "owner"
     },
     {
       "id": "slicer",
@@ -147,7 +163,14 @@
       "status": "chosen",
       "note": "The owner chose it (25 Oct). Plural «المقسمات». Microsoft's «مقسم طريقة العرض» is a variant. On an Arabic page of the site the first use is followed by the English once.",
       "englishOnce": "Slicer",
-      "form": "(?:ال)?مقسم(?:ات)?"
+      "form": "(?:ال)?مقسم(?:ات)?",
+      "google": "فلتر نطاق بيانات",
+      "googleSource": [
+        "https://support.google.com/docs/answer/9245556?hl=ar"
+      ],
+      "approval": "owner",
+      "used": "every report DataArcus writes, the site",
+      "read": "2026-11-12"
     },
     {
       "id": "tooltip",
@@ -165,7 +188,8 @@
       "status": "chosen",
       "note": "The owner chose it (25 Oct). Plural «التلميحات»; the tooltip page «صفحة التلميح». Microsoft's «تلميح الأدوات» is a variant. On an Arabic page of the site the first use is followed by the English once.",
       "englishOnce": "Tooltip",
-      "form": "(?:ال)?تلميح(?:ات)?"
+      "form": "(?:ال)?تلميح(?:ات)?",
+      "approval": "owner"
     },
     {
       "id": "dates",
@@ -178,7 +202,8 @@
       "microsoft": null,
       "source": "none found",
       "status": "chosen",
-      "note": "«مواعيد» are appointments or timings; a calendar has dates."
+      "note": "«مواعيد» are appointments or timings; a calendar has dates.",
+      "approval": "owner"
     },
     {
       "id": "product",
@@ -191,7 +216,8 @@
       "source": "none found",
       "status": "chosen",
       "note": "Latin everywhere (Power BI texts isolate it, terminology.mjs isolateLatin). The Arabic spelling once in the keywords of every Arabic page, for search (the owner, 25 Oct: \"add the arabic dataarcus\").",
-      "allowIn": "keywords"
+      "allowIn": "keywords",
+      "approval": "owner"
     },
     {
       "id": "likeforlike",
@@ -203,7 +229,8 @@
       "microsoft": null,
       "source": "none found",
       "status": "chosen",
-      "note": "How an Arabic analyst says it; «المتماثل بالمتماثل» is a calque."
+      "note": "How an Arabic analyst says it; «المتماثل بالمتماثل» is a calque.",
+      "approval": "owner"
     },
     {
       "id": "visual",
@@ -218,7 +245,12 @@
         "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction"
       ],
       "status": "chosen",
-      "note": "The owner chose it (25 Oct). The singular «مرئي» (a visual). «العناصر المرئية» is a variant."
+      "note": "The owner chose it (25 Oct). The singular «مرئي» (a visual). «العناصر المرئية» is a variant.",
+      "google": null,
+      "googleSource": "none found",
+      "approval": "owner",
+      "used": "the tools' answers, the approval page, the site",
+      "read": "2026-11-12"
     },
     {
       "id": "chart",
@@ -231,9 +263,17 @@
       "microsoft": "مخطط",
       "source": [
         "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction",
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/5-context-transition"
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/5-context-transition",
+        "https://support.microsoft.com/ar-sa/office/0baf399e-dd61-4e18-8a73-b3fd5d5680c2"
       ],
-      "status": "chosen"
+      "status": "chosen",
+      "google": "مخطط",
+      "googleSource": [
+        "https://support.google.com/docs/answer/63824?hl=ar"
+      ],
+      "approval": "D-1112-05",
+      "used": "the approval page, the site",
+      "read": "2026-11-12"
     },
     {
       "id": "kpicard",
@@ -245,7 +285,8 @@
       "microsoft": null,
       "source": "none found",
       "status": "chosen",
-      "note": "Plural «بطاقات المؤشرات»; «(KPI)» may follow it."
+      "note": "Plural «بطاقات المؤشرات»; «(KPI)» may follow it.",
+      "approval": "owner"
     },
     {
       "id": "datetable",
@@ -259,7 +300,8 @@
         "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-time-intelligence/2-functions"
       ],
       "status": "chosen",
-      "note": "Mark as date table: «وضع علامة كجدول تاريخ». The Gulf calendar (the generator, «تقويم الخليج») keeps its name."
+      "note": "Mark as date table: «وضع علامة كجدول تاريخ». The Gulf calendar (the generator, «تقويم الخليج») keeps its name.",
+      "approval": "owner"
     },
     {
       "id": "dashboard",
@@ -273,7 +315,14 @@
         "https://learn.microsoft.com/ar-sa/training/modules/perform-analytics-power-bi/9-quick-insights"
       ],
       "status": "chosen",
-      "note": "The owner chose it (25 Oct). Plural «لوحات المعلومات»; Microsoft's term too."
+      "note": "The owner chose it (25 Oct). Plural «لوحات المعلومات»; Microsoft's term too.",
+      "google": "لوحة بيانات",
+      "googleSource": [
+        "https://support.google.com/docs/answer/9245556?hl=ar"
+      ],
+      "approval": "owner",
+      "used": "the site",
+      "read": "2026-11-12"
     },
     {
       "id": "measure",
@@ -284,10 +333,18 @@
       ],
       "microsoft": "مقياس",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction"
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction",
+        "https://learn.microsoft.com/ar-sa/training/modules/choose-power-bi-model-framework/2-describe-power-bi-model-fundamentals"
       ],
       "status": "chosen",
-      "note": "Plural «مقاييس»."
+      "note": "Plural «مقاييس».",
+      "google": "مقياس",
+      "googleSource": [
+        "https://support.google.com/analytics/answer/9143382?hl=ar"
+      ],
+      "approval": "D-1112-05",
+      "used": "the tools' answers, the Health Check, the site",
+      "read": "2026-11-12"
     },
     {
       "id": "column",
@@ -296,10 +353,19 @@
       "variants": [],
       "microsoft": "عمود محسوب",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/5-context-transition"
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/5-context-transition",
+        "https://support.microsoft.com/ar-sa/office/fe1b6be7-1d85-4add-a629-8a3848820be3"
       ],
       "status": "chosen",
-      "note": "Plural «أعمدة»."
+      "note": "Plural «أعمدة».",
+      "google": "عمود",
+      "googleSource": [
+        "https://support.google.com/docs/answer/14239833?hl=ar",
+        "https://support.google.com/docs/answer/3540681?hl=ar"
+      ],
+      "approval": "D-1112-05",
+      "used": "the tools' answers, the Health Check, the site",
+      "read": "2026-11-12"
     },
     {
       "id": "page",
@@ -308,9 +374,17 @@
       "variants": [],
       "microsoft": "صفحة التقرير",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction"
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction",
+        "https://learn.microsoft.com/ar-sa/training/modules/choose-power-bi-model-framework/2-describe-power-bi-model-fundamentals"
       ],
-      "status": "chosen"
+      "status": "chosen",
+      "google": "صفحة",
+      "googleSource": [
+        "https://support.google.com/analytics/answer/9143382?hl=ar"
+      ],
+      "approval": "D-1112-05",
+      "used": "the tools' answers, the approval page, the site",
+      "read": "2026-11-12"
     },
     {
       "id": "report",
@@ -319,9 +393,17 @@
       "variants": [],
       "microsoft": "تقرير",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction"
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction",
+        "https://learn.microsoft.com/ar-sa/training/modules/choose-power-bi-model-framework/2-describe-power-bi-model-fundamentals"
       ],
-      "status": "chosen"
+      "status": "chosen",
+      "google": "تقرير",
+      "googleSource": [
+        "https://support.google.com/analytics/answer/9212670?hl=ar"
+      ],
+      "approval": "D-1112-05",
+      "used": "the tools' answers, the approval page, the site",
+      "read": "2026-11-12"
     },
     {
       "id": "model",
@@ -331,7 +413,8 @@
       "microsoft": null,
       "source": "none found",
       "status": "chosen",
-      "note": "«نموذج البيانات» is the generic data model in the services pages, not another word for the same thing."
+      "note": "«نموذج البيانات» is the generic data model in the services pages, not another word for the same thing.",
+      "approval": "owner"
     },
     {
       "id": "plan",
@@ -340,7 +423,8 @@
       "variants": [],
       "microsoft": null,
       "source": "none found",
-      "status": "chosen"
+      "status": "chosen",
+      "approval": "owner"
     },
     {
       "id": "approve",
@@ -352,7 +436,8 @@
       "microsoft": null,
       "source": "none found",
       "status": "chosen",
-      "note": "The verb «وافق»."
+      "note": "The verb «وافق».",
+      "approval": "owner"
     },
     {
       "id": "theme",
@@ -364,7 +449,8 @@
       ],
       "microsoft": null,
       "source": "none found",
-      "status": "chosen"
+      "status": "chosen",
+      "approval": "owner"
     },
     {
       "id": "bookmark",
@@ -379,7 +465,8 @@
         "https://learn.microsoft.com/ar-sa/training/modules/power-bi-effective-reports/2-report-objects"
       ],
       "status": "chosen",
-      "note": "Plural «الإشارات المرجعية»."
+      "note": "Plural «الإشارات المرجعية».",
+      "approval": "owner"
     },
     {
       "id": "drill",
@@ -392,7 +479,8 @@
         "https://learn.microsoft.com/ar-sa/training/modules/power-bi-effective-requirements/3-determine"
       ],
       "status": "chosen",
-      "note": "One form in DataArcus's texts; Power BI's menus say «التنقل لأسفل» (said for the owner)."
+      "note": "One form in DataArcus's texts; Power BI's menus say «التنقل لأسفل» (said for the owner).",
+      "approval": "owner"
     },
     {
       "id": "total",
@@ -402,7 +490,8 @@
       "microsoft": null,
       "source": "none found",
       "status": "chosen",
-      "note": "«المجموع» is Sum, another concept."
+      "note": "«المجموع» is Sum, another concept.",
+      "approval": "owner"
     },
     {
       "id": "average",
@@ -412,7 +501,8 @@
       "microsoft": null,
       "source": "none found",
       "status": "chosen",
-      "note": "«معدل» is a rate, another concept."
+      "note": "«معدل» is a rate, another concept.",
+      "approval": "owner"
     },
     {
       "id": "fiscalyear",
@@ -425,7 +515,8 @@
       "source": [
         "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction"
       ],
-      "status": "chosen"
+      "status": "chosen",
+      "approval": "owner"
     },
     {
       "id": "hijri",
@@ -434,7 +525,8 @@
       "variants": [],
       "microsoft": null,
       "source": "none found",
-      "status": "chosen"
+      "status": "chosen",
+      "approval": "owner"
     },
     {
       "id": "workday",
@@ -446,7 +538,8 @@
       ],
       "microsoft": null,
       "source": "none found",
-      "status": "chosen"
+      "status": "chosen",
+      "approval": "owner"
     },
     {
       "id": "weekend",
@@ -456,9 +549,18 @@
         "(?:ال)?عطلة (?:ال)?أسبوعية",
         "(?:ال)?ويك ?إند"
       ],
-      "microsoft": null,
-      "source": "none found",
-      "status": "chosen"
+      "microsoft": "عطلة نهاية الأسبوع",
+      "source": [
+        "https://support.microsoft.com/ar-sa/office/workday-intl-function-a378391c-9ba7-4678-8a39-39611a9bf81d"
+      ],
+      "status": "chosen",
+      "google": "عطلات نهاية الأسبوع",
+      "googleSource": [
+        "https://support.google.com/google-ads/answer/2375370?hl=ar"
+      ],
+      "approval": "D-1112-05",
+      "used": "the calendar generator, add_gulf_calendar, the site",
+      "read": "2026-11-12"
     },
     {
       "id": "legend",
@@ -469,9 +571,281 @@
       ],
       "microsoft": "وسيلة الإيضاح",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/5-context-transition"
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/5-context-transition",
+        "https://support.microsoft.com/ar-sa/office/0baf399e-dd61-4e18-8a73-b3fd5d5680c2"
       ],
+      "status": "chosen",
+      "google": "وسيلة الإيضاح",
+      "googleSource": [
+        "https://support.google.com/docs/answer/63824?hl=ar"
+      ],
+      "approval": "D-1112-05",
+      "used": "the tools' answers, the site",
+      "read": "2026-11-12"
+    },
+    {
+      "id": "table",
+      "en": "Table",
+      "ar": "جدول",
+      "variants": [],
+      "microsoft": "جدول",
+      "source": [
+        "https://support.microsoft.com/ar-sa/office/fe1b6be7-1d85-4add-a629-8a3848820be3",
+        "https://learn.microsoft.com/ar-sa/training/modules/choose-power-bi-model-framework/2-describe-power-bi-model-fundamentals"
+      ],
+      "google": "جدول",
+      "googleSource": [
+        "https://support.google.com/docs/answer/14239833?hl=ar"
+      ],
+      "read": "2026-11-12",
+      "approval": "D-1112-05",
+      "used": "the tools' answers, the Health Check, the site",
+      "status": "chosen",
+      "note": "Plural «جداول»."
+    },
+    {
+      "id": "row",
+      "en": "Row",
+      "ar": "صف",
+      "variants": [],
+      "microsoft": "صف",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/enforce-power-bi-model-security/2-restrict-access-to-power-bi-model-data",
+        "https://support.microsoft.com/ar-sa/office/01832226-31b5-4568-8806-38c37dcc180e"
+      ],
+      "google": "صف",
+      "googleSource": [
+        "https://support.google.com/docs/answer/3540681?hl=ar",
+        "https://support.google.com/docs/answer/14239833?hl=ar"
+      ],
+      "read": "2026-11-12",
+      "approval": "D-1112-05",
+      "used": "the tools' answers, the site",
+      "status": "chosen",
+      "note": "Plural «صفوف»."
+    },
+    {
+      "id": "field",
+      "en": "Field",
+      "ar": "حقل",
+      "variants": [],
+      "microsoft": "حقل",
+      "source": [
+        "https://support.microsoft.com/ar-sa/office/a9a84538-bfe9-40a9-a8e9-f99134456576",
+        "https://learn.microsoft.com/ar-sa/training/modules/choose-power-bi-model-framework/2-describe-power-bi-model-fundamentals"
+      ],
+      "google": "حقل",
+      "googleSource": [
+        "https://support.google.com/docs/answer/1272900?hl=ar"
+      ],
+      "read": "2026-11-12",
+      "approval": "D-1112-05",
+      "used": "the field picker, the tools' answers",
+      "status": "chosen",
+      "note": "Plural «حقول»."
+    },
+    {
+      "id": "relationship",
+      "en": "Relationship (between two tables)",
+      "ar": "علاقة",
+      "variants": [],
+      "microsoft": "علاقة",
+      "source": [
+        "https://support.microsoft.com/ar-sa/office/fe1b6be7-1d85-4add-a629-8a3848820be3",
+        "https://support.microsoft.com/ar-sa/office/87e7a54c-87dc-488e-9410-5c75dbcb0f7b"
+      ],
+      "google": null,
+      "googleSource": "none found",
+      "read": "2026-11-12",
+      "approval": "one source",
+      "used": "the Health Check, the tools' answers",
+      "status": "chosen",
+      "note": "Plural «علاقات». Google has no Arabic page that names a relationship between two tables (Sheets, Analytics read): a new line with it waits for the owner."
+    },
+    {
+      "id": "semanticmodel",
+      "en": "Semantic model",
+      "ar": "النموذج الدلالي",
+      "variants": [],
+      "microsoft": "نماذج دلالية",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/create-calculation-groups/1-introduction"
+      ],
+      "google": null,
+      "googleSource": "none found",
+      "read": "2026-11-12",
+      "approval": "owner",
+      "used": "the Health Check, the tools' answers, the site",
+      "status": "chosen",
+      "note": "The owner's standard (D-1109-07, rule 2). Two: «نموذجين دلاليين»; 3 to 10: «نماذج دلالية» (his terms)."
+    },
+    {
+      "id": "calccolumn",
+      "en": "Calculated column",
+      "ar": "عمود محسوب",
+      "variants": [],
+      "microsoft": "عمود محسوب",
+      "source": [
+        "https://support.microsoft.com/ar-sa/office/87e7a54c-87dc-488e-9410-5c75dbcb0f7b"
+      ],
+      "google": null,
+      "googleSource": "none found",
+      "read": "2026-11-12",
+      "approval": "owner",
+      "used": "the Health Check",
+      "status": "chosen",
+      "note": "The owner's standard (D-1109-07, rule 2)."
+    },
+    {
+      "id": "file",
+      "en": "File",
+      "ar": "ملف",
+      "variants": [],
+      "microsoft": "ملف",
+      "source": [
+        "https://support.microsoft.com/ar-sa/windows/zip-and-unzip-files-8d28fa72-f2f9-712f-67df-f80cf89fd4e5"
+      ],
+      "google": "ملف",
+      "googleSource": [
+        "https://support.google.com/drive/answer/2375091?hl=ar"
+      ],
+      "read": "2026-11-12",
+      "approval": "D-1112-05",
+      "used": "everywhere",
+      "status": "chosen",
+      "note": "Plural «ملفات»."
+    },
+    {
+      "id": "folder",
+      "en": "Folder",
+      "ar": "مجلد",
+      "variants": [],
+      "microsoft": "مجلد",
+      "source": [
+        "https://support.microsoft.com/ar-sa/windows/zip-and-unzip-files-8d28fa72-f2f9-712f-67df-f80cf89fd4e5"
+      ],
+      "google": "مجلد",
+      "googleSource": [
+        "https://support.google.com/drive/answer/2375091?hl=ar"
+      ],
+      "read": "2026-11-12",
+      "approval": "D-1112-05",
+      "used": "the tools' answers, the approval page",
+      "status": "chosen",
+      "note": "Plural «مجلدات». The working folder: «مجلد العمل» (the owner, D-1110-07)."
+    },
+    {
+      "id": "project",
+      "en": "Project",
+      "ar": "مشروع",
+      "variants": [],
+      "microsoft": "مشروع",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/choose-power-bi-model-framework/2-describe-power-bi-model-fundamentals"
+      ],
+      "google": "مشروع",
+      "googleSource": [
+        "https://support.google.com/drive/answer/2375091?hl=ar"
+      ],
+      "read": "2026-11-12",
+      "approval": "D-1112-05",
+      "used": "the tools' answers, the Health Check",
+      "status": "chosen",
+      "note": "Plural «مشاريع»."
+    },
+    {
+      "id": "zipfile",
+      "en": "Zip file",
+      "ar": "ملف ZIP",
+      "variants": [],
+      "microsoft": "ملف ZIP",
+      "source": [
+        "https://support.microsoft.com/ar-sa/windows/zip-and-unzip-files-8d28fa72-f2f9-712f-67df-f80cf89fd4e5"
+      ],
+      "google": "ملف ZIP",
+      "googleSource": [
+        "https://support.google.com/accounts/answer/3024190?hl=ar"
+      ],
+      "read": "2026-11-12",
+      "approval": "D-1112-05",
+      "used": "the Health Check page",
+      "status": "chosen",
+      "note": "Both write «ملفات ZIP». «مضغوط» (compressed) stays where the site says a zipped project («مشروع PBIP مضغوط»): Microsoft's word for a compressed file; Google keeps it for .gz and says ZIP for a zip."
+    },
+    {
+      "id": "alttext",
+      "en": "Alt text",
+      "ar": "نص بديل",
+      "variants": [],
+      "microsoft": "نص بديل",
+      "source": [
+        "https://support.microsoft.com/ar-sa/office/44989b2a-903c-4d9a-b742-6a75b451c669"
+      ],
+      "google": "نص بديل",
+      "googleSource": [
+        "https://support.google.com/docs/answer/6199477?hl=ar"
+      ],
+      "read": "2026-11-12",
+      "approval": "D-1112-05",
+      "used": "check_report, the report writer",
       "status": "chosen"
+    },
+    {
+      "id": "option",
+      "en": "Option (a tool's, a setting)",
+      "ar": "خيار",
+      "variants": [],
+      "microsoft": "خيار",
+      "source": [
+        "https://support.microsoft.com/ar-sa/office/01832226-31b5-4568-8806-38c37dcc180e",
+        "https://support.microsoft.com/ar-sa/office/a9a84538-bfe9-40a9-a8e9-f99134456576"
+      ],
+      "google": "خيار",
+      "googleSource": [
+        "https://support.google.com/docs/answer/3540681?hl=ar",
+        "https://support.google.com/docs/answer/14239833?hl=ar"
+      ],
+      "read": "2026-11-12",
+      "approval": "D-1112-05",
+      "used": "the tools' answers",
+      "status": "chosen",
+      "note": "Plural «خيارات»."
+    },
+    {
+      "id": "fullscreen",
+      "en": "Full screen",
+      "ar": "ملء الشاشة",
+      "variants": [],
+      "microsoft": "ملء الشاشة",
+      "source": [
+        "https://support.microsoft.com/ar-sa/microsoft-edge/keyboard-shortcuts-in-microsoft-edge-50d3edab-30d9-c7e4-21ce-37fe2713cfad"
+      ],
+      "google": "ملء الشاشة",
+      "googleSource": [
+        "https://support.google.com/chrome/answer/96810?hl=ar"
+      ],
+      "read": "2026-11-12",
+      "approval": "D-1112-05",
+      "used": "the build page, when it gets an Arabic copy",
+      "status": "chosen"
+    },
+    {
+      "id": "vat",
+      "en": "VAT",
+      "ar": "ضريبة القيمة المضافة",
+      "variants": [],
+      "microsoft": null,
+      "source": "none found",
+      "google": "ضريبة القيمة المضافة",
+      "googleSource": [
+        "https://support.google.com/google-ads/answer/2375370?hl=ar",
+        "https://support.google.com/googleplay/android-developer/answer/138000?hl=ar"
+      ],
+      "read": "2026-11-12",
+      "approval": "one source",
+      "used": "the Gulf like-for-like page, when its Arabic ships",
+      "status": "chosen",
+      "note": "No Arabic Microsoft page was found for it on 12 Nov: a new line with it waits for the owner."
     }
   ],
   "_allow": "Where a variant may stay, each with why: a path pattern (whole files) or a path plus a text the line contains.",
