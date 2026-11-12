@@ -13,7 +13,7 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 - TR1 (B-439; `work/TR1.md`) and TR2 (`work/TR2.md`) merged.
 - LR3 (P-01, P-08: a Stop hook; `LR3`). HX1 (`HX1`). HX2 (Impact check; `HX2`). TL1 (`TL1`). OX1 (`OX1`). IX1 (`IX1`). IX2 (`IX2`). SN1 (`SN1`). OX2. IX4. LX1 (`LX1`). AU2. SN3 (`SN3`). AU1 (`AU1`). SN4 (`SN4`). WF3 (`WF3`). RX1 (`RX1`).
 
-- RL33: release checklist `work/RL33-RELEASE.md`.
+- RL33: checklist `work/RL33-RELEASE.md`.
 ## Next step
 1. PR #121 (RL032L, download lines) is on main. 2. The reviewer merges the DONE jobs above, one check each.
 

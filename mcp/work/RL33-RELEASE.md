@@ -2,28 +2,30 @@
 
 ## Summary
 - **Approval:** the owner D-1112-04 (12 Nov); the job is RL33 (`mcp/work/RL33.md` holds its plan and results).
-- **Base:** `release/0.3.3-rl33` (integration/0.3.3 at 624357f0 plus RL33's commits), the release candidate.
+- **Base:** `release/0.3.3-rl33` (integration/0.3.3 at 26cfb66f plus RL33's commits), the release candidate.
 - **Scope:** what is done, what the owner clicks, what is held, the open items. DataArcus main changes only by his click.
 - **Expected checks:** tests.yml green on Linux, Windows and macOS on the branch's last code commit (RL33.md's line).
 - **Resume:** the reviewer opens the pull request to main; then "What the owner clicks".
 
 ## The cut
-- The cut is integration/0.3.3 at 624357f0 (WF3's merge, 12 Nov): what RL33's last CI run tested on three systems.
-- RX1 (`feat/0.3.3-rx1`, the report writer: alt text, bookmarks) is not in the cut. The reviewer hub, 15:20Z on 12
-  Nov: RX1 is DONE on its branch (CI green on fd80fb6e) and waits on the owner's laptop question, so the cut is
-  planned without it. If he answers and the reviewer merges it into integration/0.3.3 before the pull request to
-  main, this branch takes integration in again, the CHANGELOG gets RX1's line, and tests.yml runs once more on
-  Linux, Windows and macOS. Otherwise RX1 is 0.3.4's.
+- The cut is integration/0.3.3 at 26cfb66f (RX1's merge dfb20f95 and its follow-up, 16:08Z on 12 Nov), taken into
+  this branch at 2026-11-12T16:41Z: what RL33's last CI run tested on three systems.
+- RX1 (the report writer: `bookmarks` in plan_layout, two check_report rules) IS in the cut: the reviewer merged it
+  at 16:07Z. Its note's question to the owner is still his: ship `bookmarks` before a report with views was opened in
+  Power BI Desktop (RX1 recommends the six laptop checks first, about 10 minutes)? The CHANGELOG says "not yet tried
+  in Power BI Desktop". If he says no, RX1's option comes out of the candidate before the pull request to main.
+- Anything merged into integration/0.3.3 after 26cfb66f is not in the candidate until this branch takes it in and
+  tests.yml runs again on Linux, Windows and macOS.
 
 ## Done
 - The version says 0.3.3 in every place the build and the server read: `mcp/package.json`, `mcp/package-lock.json`
   (its two own fields), `mcp/PRIVACY.md` ("Checked against 0.3.3"); `mcp/server.mjs` reads package.json; the
   CHANGELOG's newest section is "## [Unreleased]: 0.3.3" (the form the package build accepts for a candidate).
   They were already 0.3.3 on integration: RL33 changed none of them.
-- The CHANGELOG's 0.3.3 section checked against the 44 job merges since 0.3.2 (`git log --merges --first-parent`):
-  25 jobs had lines; 2 user-facing changes had none and got one (the PL-300 practice questions, the article
+- The CHANGELOG's 0.3.3 section checked against the 45 job merges since 0.3.2 (`git log --merges --first-parent`):
+  26 jobs had lines (RX1's two came with its merge); 2 user-facing changes had none and got one (the PL-300 practice questions, the article
   title); 17 change nothing a user sees (tests, CI, builder tools, type checking, research notes). One number was
-  wrong and is now measured (the tool list: 60,513 characters).
+  wrong and is now measured (the tool list: 60,930 characters with RX1's option, 70 under its cap of 61,000).
 - tests.yml green on Linux, Windows and macOS on ec8a80f3 (run 43254948213, attempt 1; the line is in `mcp/work/RL33.md`).
 - macOS now runs on a `release/*` branch (D-1104-19), so a release branch is read on three systems before main.
 
@@ -62,15 +64,16 @@
 - The .mcpb keeps `win32` until one real Mac run (P1, in force in WORK.md).
 
 ## Known open items (ids)
-- Laptop, one batched run, none recorded yet: FW1 (the folder window sentence), FT1 and FT2 (Tahoma in tables and
+- Laptop, one batched run, none recorded yet: RX1 (six checks of a report with views; it gates the `bookmarks`
+  option), FW1 (the folder window sentence), FT1 and FT2 (Tahoma in tables and
   cards, the twin too), AT1 (the Arabic approval page's first line at phone width), FB1, FB2, FB3, FB4 (every page
   with a side rail is placed differently: not yet seen in Desktop), LX1 (a one-to-one relationship), SN3 (FORMAT of
   1E21), HX1 stage 4 (six runs), OX2 (the rule on a made-up model), IX2 (like for like on a real project).
-- Owner's decisions open: FB3 (look a, b or c for a low first row), IX2 (likeForLike together with the Arabic lens),
+- Owner's decisions open: RX1 (ship `bookmarks` before the laptop run; alt text as a sentence of its own), FB3 (look a, b or c for a low first row), IX2 (likeForLike together with the Arabic lens),
   OX2 (does a split chart answer a total question), TL1 (TOOLS.md as a resource), CL2 (the Copilot article's last
   shift needs a wording change), L6 "Seen" 1 (Arabic DA measures), C (the beta task list's line).
 - Data: Umm al-Qura dates end at Ramadan 1452, so 2031 and later say "not known" (IX2, IX4).
 - Dated: `.well-known/security.txt` expires 2027-10-06 (SN3: renew before 6 Sep 2027).
 - Seen and not fixed, a user can meet them: B-308 / AUD-052 (a date table named only with «عام» words), SN4 (a
   too-deep folder is not said in read_report), DB2 (a report name of only spaces), HC2 (no sort column for an Arabic
-  Hijri month name), HX2 and OX2 (the tool list is 487 characters under its cap of 61,000: the next option needs room).
+  Hijri month name), RX1 (the tool list is 70 characters under its cap of 61,000: the next option needs room first).

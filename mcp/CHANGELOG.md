@@ -101,7 +101,7 @@ package's manifest; this file says what is in it.
   it `brief`, the questions the report must answer as a measure by columns, and it says which a visual answers (a visual
   split further still answers it), which only partly, which no visual answers and which the model cannot answer. From
   the files only, names never values; a rule not yet measured in Power BI Desktop, and in doubt it says it cannot tell.
-- Every chat starts smaller: the tool list an AI app reads at the start of each chat is 60,513 characters with this
+- Every chat starts smaller: the tool list an AI app reads at the start of each chat is 60,930 characters with this
   version's new options, down from 74,925 (about a fifth fewer tokens in every chat). The shortening itself changed no
   option and no answer: the texts say it in fewer words, and the details that left the list are in TOOLS.md.
 - A one-to-one relationship now counts as filtering both ways, as Power BI always filters it, even when the model file
