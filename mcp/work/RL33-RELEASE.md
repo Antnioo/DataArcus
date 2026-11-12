@@ -9,9 +9,10 @@
 
 ## The cut
 - The cut is integration/0.3.3 at 624357f0 (WF3's merge, 12 Nov): what RL33's last CI run tested on three systems.
-- RX1 (`feat/0.3.3-rx1`, the report writer: alt text, bookmarks) is not in the cut: no such branch was on origin at
-  2026-11-12T14:24Z. It joins 0.3.3 only if the reviewer merges it into integration/0.3.3 before he opens the pull request to
-  main; then this branch takes integration in again, the CHANGELOG gets RX1's line, and tests.yml runs once more on
+- RX1 (`feat/0.3.3-rx1`, the report writer: alt text, bookmarks) is not in the cut. The reviewer hub, 15:20Z on 12
+  Nov: RX1 is DONE on its branch (CI green on fd80fb6e) and waits on the owner's laptop question, so the cut is
+  planned without it. If he answers and the reviewer merges it into integration/0.3.3 before the pull request to
+  main, this branch takes integration in again, the CHANGELOG gets RX1's line, and tests.yml runs once more on
   Linux, Windows and macOS. Otherwise RX1 is 0.3.4's.
 
 ## Done

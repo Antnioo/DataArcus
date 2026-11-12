@@ -93,6 +93,9 @@ export default async function ({ browser, url }) {
   const iso = (min, now) => new Date(now - min * 60e3).toISOString();
   async function open(opts = {}, setup = null) {
     const v = await visitor(browser, { viewport: opts.viewport || [1440, 900], motion: opts.motion || 'no-preference' });
+    // (RL33) every visit draws the plain tier from its first frame: full-tier WebGL on a test machine's software renderer took the
+    // processor from the suites running beside this one (sp35 red in CI run 43237079137, both attempts; reproduced with site beside it)
+    if (!opts.tier) await v.ctx.addInitScript(() => { new MutationObserver((_, o) => { const h = document.getElementById('bp-line'); if (h) { h.dataset.tier = 'plain'; o.disconnect(); } }).observe(document, { childList: true, subtree: true }); });
     const now = Date.now(), seen = { api: [], raw: [], inm: [], etags: {}, usage: [], usageInm: [] };
     await v.ctx.clock.install({ time: now }); // the fixtures' times are written from this "now": the page reads the same one (a shifted clock reaches node only)
     const state = { remaining: 59, status: {}, reset: Math.floor(now / 1000) + 1800, force304: false, calls: 0, noRelease: false, usage: 'ok' };
@@ -172,7 +175,7 @@ export default async function ({ browser, url }) {
     check(/Could not load/.test(await text(v.pg, '#bp-warn')) === false && await v.pg.locator('#bp-warn').isHidden(), `D4 a missing note file is not a failure: no banner (${await text(v.pg, '#bp-warn')})`);
     check(!v.errs.length, `P2 no page error on the first look: ${v.errs.join(' | ')}`);
     // (RL33, on purpose) H2 pinned aria-hidden on the whole box; the box now holds the slider and the full-screen button, so only the canvas is hidden
-    await v.pg.evaluate(() => window.BuildPage.helix.tier('plain'));   // a slow test machine must not step down to the SVG mid-check (H7 pins the stepping)
+    // the visit named the plain tier on the element before the helix mounted (open): no stepping down to the SVG mid-check (H7 pins the stepping)
     const mode = await v.pg.evaluate(() => { const h = document.getElementById('bp-line'), c = h.querySelector('canvas'), st = h.querySelector('.bh-stage'); return [h.dataset.mode, c && c.getAttribute('aria-hidden'), h.getAttribute('aria-hidden'), st && st.tabIndex, st && (st.getAttribute('aria-label') || '').length > 40, h.dataset.tier, window.BuildPage.helix.mode]; });
     check(mode.join() === 'webgl,true,,0,true,plain,webgl', `H2 WebGL: the helix is drawn in a canvas hidden from screen readers; the stage takes the keyboard and says how (${mode.join(',')})`);
     const cnt = await text(v.pg, '#bp-line .bh-count');
@@ -381,7 +384,7 @@ export default async function ({ browser, url }) {
     check(anim.length > 0 && anim.every((a) => a === 'none') && (await r.v.pg.evaluate(() => document.getElementById('bp-line').dataset.motion)) === 'still', `P2 reduced motion: no animation, a still helix (${anim.join(',')})`);
     // ---- H8, H9: movable and scalable. Reduced motion, so nothing turns by itself and a position can be read twice
     const pg = r.v.pg;
-    await pg.evaluate(() => window.BuildPage.helix.tier('plain'));
+    check(await pg.evaluate(() => window.BuildPage.helix.tier()) === 'plain' && await pg.evaluate(() => window.BuildPage.helix.tier('bloom')) === 'bloom' && await pg.evaluate(() => window.BuildPage.helix.tier('plain')) === 'plain', 'H7 a tier named on the element is the one drawn; tier(name) changes it and pins it');
     const pos = async () => pg.evaluate(() => { window.BuildPage.helix.focus('BB2'); const l = document.querySelector('#bp-line .bh-label'); return [Math.round(parseFloat(l.style.left)), Math.round(parseFloat(l.style.top)), l.hidden].join(); });
     await pg.locator('#bp-line').scrollIntoViewIfNeeded();
     const box = await pg.locator('#bp-line .bh-stage').boundingBox(), cx = box.x + box.width / 2, cy = box.y + box.height / 2;

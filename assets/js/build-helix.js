@@ -26,7 +26,7 @@
  *                             Drag turns it, the wheel (with the helix in focus, or Ctrl) and a pinch zoom, the arrow keys
  *                             turn and step through the jobs, + and - zoom, 0 resets, F is full screen. It turns by itself
  *                             only when motion is allowed, the tab shows and the helix is on screen; reduced motion: still.
- *                             host.dataset.mode, .motion and .tier say which.
+ *                             host.dataset.mode, .motion and .tier say which; a data-tier on the element before mount pins that tier.
  * (c) DataArcus. All rights reserved.
  */
 (function (root, factory) {
@@ -373,7 +373,8 @@
     };
 
     const startGl = (pinned) => { try { if (THREE && typeof THREE.WebGLRenderer === 'function') return glMode(pinned); } catch (e) { /* no WebGL, or a failure on the way: the SVG helix */ } return null; };
-    impl = startGl(null) || flatMode();
+    // a page (or a check on a slow machine) may name one tier on the element: data-tier="plain" draws that one and measures nothing
+    impl = startGl(TIERS[host.dataset.tier] ? host.dataset.tier : null) || flatMode();
     fullLook();
     const api = {
       mode: host.dataset.mode,
