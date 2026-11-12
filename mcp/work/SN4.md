@@ -9,7 +9,9 @@
   (the lint lines only), fixtures by their recorders, new suite sn4, TOOLS.md, CHANGELOG, WORK.md, this note.
 - **Expected checks:** sn4 red on 0dc0ea05 first, then green; fn1e only the 4 lint cases move (read every key, R-95);
   tl1 and tk1 pass, tools/list under 61,000 (60,532 now, measured); lk1 23, sn1 20, rv1 484 unchanged; lint 0; CI.
-- **Resume:** items 1, 2, 3 done; CI run 43143955271 failed only sp42 (R3, recorded JSON); re-recorded on purpose (2026-11-12T03:03Z); CI again.
+- **Resume:** DONE; the reviewer: review and merge. Items 1, 2, 3 closed; sp42 R3 and fn1e's 4 cases re-recorded on purpose.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/43145641444 on 3c435a56ad297f90c7a591f416b6e104df7846ba
+  (2026-11-12T03:21Z; Linux, Windows and website all green, macOS skipped by the workflow; integration/0.3.3 still at 0dc0ea05, R-33).
 
 ## The plan (written before the code, 2026-11-12T02:33Z)
 Measured on 0dc0ea05:
