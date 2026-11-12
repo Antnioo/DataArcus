@@ -13,7 +13,7 @@ import { createRequire } from 'node:module';
 import { loadModel, ROOT, visible, readCapped } from './model.mjs';
 import { DAX_MEASURE, SCRIPT_SUFFIX } from './dax-functions.mjs';   // (0.3.1 L6: the names the DAX function library gives its measures, its script's name)
 import { AIM } from './scope.mjs';
-import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, isFile, isDir, walk, linksSaid, locate, inventory, diskSource, reading, isCustom } from './read-report.mjs';
+import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, isFile, isDir, walk, linksSaid, locate, inventory, diskSource, reading, isCustom, jsonOpt } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
 import { fieldParametersOf, titleProblems } from './metric-switcher.mjs';
 import { NO_DIRECT_EDITS } from './agent-text.mjs';
@@ -154,6 +154,11 @@ function readStep(p, opts) {
   const lflSection = o.likeForLike != null ? likeForLike(p, o.likeForLike, onModel) : null;
   const briefSection = wantBrief && onModel ? briefCheck(onModel, o.brief != null ? o.brief : null) : null;
   const { R, versions, texts, customVisuals, unreadable, bookmarks } = rulesInput(inv);
+  // (0.3.3 RX1) bookmarks.json for the two bookmark rules: the ids it lists in order, a group's children in their
+  // place; read here, quietly (a file that is missing or not readable JSON gives no list and no new note), so the
+  // inventory read_report shares keeps its shape
+  { const bl = jsonOpt(src, 'definition/bookmarks/bookmarks.json');
+    R.bookmarkList = bl && Array.isArray(bl.items) ? { file: 'definition/bookmarks/bookmarks.json', ids: bl.items.flatMap((x) => (x && Array.isArray(x.children) ? x.children.filter((n) => typeof n === 'string') : x && typeof x.name === 'string' ? [x.name] : [])) } : null; }
   const all = [], notChecked = [];
   const add = (f) => all.push(f);
   // the reading direction: right to left when most letters of the titles, text boxes and page names are Arabic or Hebrew
