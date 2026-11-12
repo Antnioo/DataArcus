@@ -13,7 +13,9 @@
 - **Result:** tools/list 60,930 -> **55,679** (5,251 cut, 5,321 left of 61,000); 150 of 177 texts shorter, the same
   177 texts on the same keys; schemas untouched (tl1 51 green); tk1 K7 red on 26cfb66f first (60,532 said, 60,930
   measured), green now; 47 suites that pin tool text green; fn1h B1's pin moved on purpose (R-10, below).
-- **Resume:** the state is the last line of "Log"; then the reviewer: review and merge.
+- **Resume:** DONE; the reviewer: review and merge.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/43314688575 on bd28bdedbbe32a14e02b0ffb23f4cdeb0e2038eb
+  (Linux, Windows and website green, macOS skipped by the workflow; integration/0.3.3 still at 26cfb66f, R-33 merge a no-op).
 
 ## Measured first (26cfb66f, 2026-11-12T21:00Z; `JSON.stringify({ tools }).length` from the real server, as tk1 measures)
 Total **60,930** of 61,000 (70 left). Per tool, sorted (characters of the entry; description; all option texts; enum
@@ -291,3 +293,4 @@ none (no Desktop-visible change).
 - 2026-11-12T21:00Z plan written, before any cut.
 - 2026-11-12T21:14Z cuts done (55,679), pinned suites green, the note written; areas and CI next.
 - 2026-11-12T21:38Z first CI (43308651201 on 05bbd01d) red: test.mjs pins two phrases; put back (55,679); tk1 K7 caught the stale 55,629 in the area run; areas model, checker, arabic green.
+- 2026-11-12T22:09Z CI green on bd28bded (run 43314688575); DONE.
