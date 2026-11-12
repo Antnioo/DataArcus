@@ -290,9 +290,7 @@ function switcherStep(lc) { let { a, m0, planProblems } = lc;
   }
 // (FN1J) the status icons
 function iconsStep(lc) { let { a, m0, planProblems } = lc;
-    // (0.3.3 RX1) the plan's views (bookmarks): a new report's only (a copy keeps its original's bookmarks as they are)
-    if (a.bookmarks && (a.customVisualsFrom != null || a.redesignFrom != null || a.sample)) planProblems.push('bookmarks is for a new report: a native copy, a redesign and the sample keep the bookmarks they have.');
-    else if (a.bookmarks && a.languages === 'en+ar') planProblems.push('bookmarks with languages "en+ar": not yet, because each view would need its Arabic twin and an approved Arabic name. Plan the views on a report in one language, or leave bookmarks out.');
+    if (a.bookmarks) { if (a.customVisualsFrom != null || a.redesignFrom != null || a.sample) planProblems.push('bookmarks is for a new report: a native copy, a redesign and the sample keep the bookmarks they have.'); else if (a.languages === 'en+ar') planProblems.push('bookmarks with languages "en+ar": not yet, because each view would need its Arabic twin and an approved Arabic name. Plan the views on a report in one language, or leave bookmarks out.'); }   // (0.3.3 RX1) the plan's views: a new report's only, in one language
     // (L5) the status icons' measures, thresholds and targets, before the plan is shown (a threshold is never guessed)
     if (a.statusIcons && a.statusIcons !== false) {
       if (!m0) planProblems.push('statusIcons needs path (the model), so its measures and targets can be checked against it.');
