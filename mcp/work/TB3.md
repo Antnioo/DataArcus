@@ -10,7 +10,7 @@
   caps unchanged; tk1's new check red on 26cfb66f first (the CHANGELOG says 60,532, measured 60,930); suites that pin
   tool text listed below (R-90) green; `node scripts/check-modules.mjs --strict` and `node scripts/test-contracts.mjs`
   pass; lint 0; CI on Linux and Windows.
-- **Result:** tools/list 60,930 -> **55,629** (5,301 cut, 5,371 left of 61,000); 150 of 177 texts shorter, the same
+- **Result:** tools/list 60,930 -> **55,679** (5,251 cut, 5,321 left of 61,000); 150 of 177 texts shorter, the same
   177 texts on the same keys; schemas untouched (tl1 51 green); tk1 K7 red on 26cfb66f first (60,532 said, 60,930
   measured), green now; 47 suites that pin tool text green; fn1h B1's pin moved on purpose (R-10, below).
 - **Resume:** the state is the last line of "Log"; then the reviewer: review and merge.
@@ -52,29 +52,31 @@ approval-disclosure, smooth-lines, terminology-sheet, cx2, fx5b, sq7, sq9, an1, 
 au1, confirm-memory, r1-see-the-result, rc23, release-text, skill-packaging, source. Each is run after the cuts.
 
 ## Before -> after
-- tools/list (`JSON.stringify({ tools }).length`, the real server, as tk1 measures it): 60,930 -> 55,629.
+- tools/list (`JSON.stringify({ tools }).length`, the real server, as tk1 measures it): 60,930 -> 55,679.
 - Per tool (entry; description; option texts), from the same probe on this branch:
 | tool | entry | description | option texts |
 |---|---|---|---|
-| plan_layout | 24608 -> 22182 | 2077 -> 1938 | 13652 -> 11383 |
+| plan_layout | 24608 -> 22227 | 2077 -> 1938 | 13652 -> 11428 |
 | create_arabic_twin | 5895 -> 5311 | 1404 -> 1299 | 2779 -> 2308 |
 | generate_theme | 5301 -> 4942 | 1071 -> 1005 | 2117 -> 1824 |
 | check_report | 5277 -> 4913 | 1524 -> 1377 | 2237 -> 2020 |
 | add_gulf_calendar | 5332 -> 4783 | 1328 -> 1233 | 2424 -> 1970 |
-| check_model_health | 4626 -> 4256 | 1255 -> 1178 | 1967 -> 1674 |
+| check_model_health | 4626 -> 4261 | 1255 -> 1183 | 1967 -> 1674 |
 | suggest_fields | 2362 -> 2247 | 488 -> 472 | 1015 -> 918 |
 | read_report | 2315 -> 2080 | 1356 -> 1180 | 411 -> 352 |
 | approve_plan | 2043 -> 1890 | 1510 -> 1382 | 123 -> 98 |
 | create_report | 1575 -> 1517 | 975 -> 928 | 196 -> 185 |
 | read_model | 1574 -> 1486 | 521 -> 503 | 544 -> 474 |
-- tk1 prints `tools/list 55,629 of 61,000 (5,371 left)` before its result line.
+- tk1 prints `tools/list 55,679 of 61,000 (5,321 left)` before its result line.
 
 ## Every cut (150 texts; read from tools/list on 26cfb66f and on this branch, the same 177 keys)
 Where a text is a shared constant, the row is each tool that carries it. No enum value, required field, key, type or
 limit changed: tl1's Z1 and S2 compare every schema with the saved base shapes and pass. Words a suite pins were put
 back, not the suite moved: flipCards "1-6" (flip-cards S1), waterfallRtl "no Total column", "no total label"
 (waterfall-native-look S2), "a measure whose DAX is broken is not found" (sq7 W-S8a), "Hebrew" (sq9 H2), columnStats'
-shape in suggest_fields' words (fx5b S3), "never that the numbers are the same" (same-question L3).
+shape in suggest_fields' words (fx5b S3), "never that the numbers are the same" (same-question L3), and after the first
+CI run (mcp/test.mjs, not named test-*.mjs, so my grep missed it) displayNames' "Never show a name the user has not
+approved" and check_model_health's "not part of the score" (test.mjs B-88 and the Gulf calendar check).
 | text | before | after | why the meaning holds |
 |---|---|---|---|
 | read_model (description) | 521 | 503 | same facts in fewer words: words that restate the option name or repeat another option dropped; defaults, limits, "only when asked", "never guess", approvals kept |
@@ -88,7 +90,7 @@ shape in suggest_fields' words (fx5b S3), "never that the numbers are the same" 
 | suggest_fields.tables | 104 | 87 | one shared constant (lib/agent-text.mjs or lib/tool-inputs.mjs), said once, used by every tool that carries it; the words tl1 T2 to T7 pin stay |
 | suggest_fields.lang | 252 | 237 | same facts in fewer words: words that restate the option name or repeat another option dropped; defaults, limits, "only when asked", "never guess", approvals kept |
 | suggest_fields.columnStats | 327 | 295 | same facts in fewer words: words that restate the option name or repeat another option dropped; defaults, limits, "only when asked", "never guess", approvals kept |
-| check_model_health (description) | 1255 | 1178 | never changed, scripts never returned or applied, gulfCalendar not in the score, never write DAX, DAX not parsed: kept |
+| check_model_health (description) | 1255 | 1183 | never changed, scripts never returned or applied, gulfCalendar not in the score, never write DAX, DAX not parsed: kept |
 | check_model_health.path | 110 | 102 | one shared constant (lib/agent-text.mjs or lib/tool-inputs.mjs), said once, used by every tool that carries it; the words tl1 T2 to T7 pin stay |
 | check_model_health.lang | 160 | 125 | one shared constant (lib/agent-text.mjs or lib/tool-inputs.mjs), said once, used by every tool that carries it; the words tl1 T2 to T7 pin stay |
 | check_model_health.weekStart | 161 | 138 | same facts in fewer words: words that restate the option name or repeat another option dropped; defaults, limits, "only when asked", "never guess", approvals kept |
@@ -136,7 +138,7 @@ shape in suggest_fields' words (fx5b S3), "never that the numbers are the same" 
 | plan_layout.header | 57 | 46 | same facts in fewer words: words that restate the option name or repeat another option dropped; defaults, limits, "only when asked", "never guess", approvals kept |
 | plan_layout.lang | 76 | 55 | one shared constant (lib/agent-text.mjs or lib/tool-inputs.mjs), said once, used by every tool that carries it; the words tl1 T2 to T7 pin stay |
 | plan_layout.fields | 89 | 77 | same facts in fewer words: words that restate the option name or repeat another option dropped; defaults, limits, "only when asked", "never guess", approvals kept |
-| plan_layout.displayNames | 308 | 199 | same facts in fewer words: words that restate the option name or repeat another option dropped; defaults, limits, "only when asked", "never guess", approvals kept |
+| plan_layout.displayNames | 308 | 244 | same facts in fewer words: words that restate the option name or repeat another option dropped; defaults, limits, "only when asked", "never guess", approvals kept |
 | plan_layout.planFields | 217 | 194 | same facts in fewer words: words that restate the option name or repeat another option dropped; defaults, limits, "only when asked", "never guess", approvals kept |
 | plan_layout.focus | 197 | 172 | one shared constant (lib/agent-text.mjs or lib/tool-inputs.mjs), said once, used by every tool that carries it; the words tl1 T2 to T7 pin stay |
 | plan_layout.tables | 104 | 87 | one shared constant (lib/agent-text.mjs or lib/tool-inputs.mjs), said once, used by every tool that carries it; the words tl1 T2 to T7 pin stay |
@@ -232,20 +234,23 @@ shape in suggest_fields' words (fx5b S3), "never that the numbers are the same" 
 - tk1 K7 (new): the tools/list size CHANGELOG.md's [Unreleased] and TOOLS.md state equals the measured one, and the
   CHANGELOG states one. **Red on 26cfb66f first** ("CHANGELOG.md says 60,532", measured 60,930); planted red again on
   this branch: TOOLS.md "12,345" -> "TOOLS.md says 12,345"; CHANGELOG "55,628" -> "CHANGELOG.md says 55,628"; green
-  with 55,629. tk1 16 checks (15 + K7).
+  with 55,679. tk1 16 checks (15 + K7).
 - R-10, a pin moved on purpose: fn1h B1 (check_model_health's tool-list entry, sha256 and length in
-  fixtures/fn1h-pins.json): 4,626 -> 4,256, moved by hand as TL1 moved it, said in the suite's header. No other
+  fixtures/fn1h-pins.json): 4,626 -> 4,261, moved by hand as TL1 moved it, said in the suite's header. No other
   expected number or text changed. tl1's fixture holds no text and did not move.
 - The 47 suites `grep -rl "tools/list\|description\|listTools" mcp/test-*.mjs` names, plus shared-axes, rv1, lg2,
   mh1, we1, audit6: all PASS on this branch (test-source.mjs is a helper, no result line).
+- Area runs (R-70) on this branch: model 32, checker 20, arabic 20, report 81 suites passed; core 16 with test.mjs and
+  tk1 red before the two words went back and the CHANGELOG followed; then test.mjs PASS 1595 and tk1 PASS 16 alone.
+  terminology-sheet 48 and bilingual-report 34, three runs each (R-77; no answer shape changed).
 - `node scripts/check-modules.mjs --strict` PASS 1264; `node scripts/test-contracts.mjs` PASS 14; check-result-lines
   PASS 257; check-agent-memory PASS; changelog-words PASS 106; lint exit 0. The repo has no evals folder or eval suite
   (searched `mcp/`, `scripts/`, tests.json): test-contracts and the suites above are its model-facing checks.
 
 ## CHANGELOG line
 The existing [Unreleased] line about the tool list, which stated 60,532 (not the measured 60,930), now says: "the tool
-list ... is 55,629 characters with this version's new options, down from 74,925 (about a quarter fewer characters in
-every chat). Tool descriptions shortened; same tools, same options, no answer changed". 55,629 / 74,925 = 0.742.
+list ... is 55,679 characters with this version's new options, down from 74,925 (about a quarter fewer characters in
+every chat). Tool descriptions shortened; same tools, same options, no answer changed". 55,679 / 74,925 = 0.743.
 
 ## Decisions I made
 - The check lives in tk1 (it already measures the list); it reads CHANGELOG.md's [Unreleased] only (older versions
@@ -261,7 +266,7 @@ every chat). Tool descriptions shortened; same tools, same options, no answer ch
 none
 
 ## For the reviewer
-- 5,371 characters of room now: about ten one-line options at TL1's measured 400 to 560 each.
+- 5,321 characters of room now: about ten one-line options at TL1's measured 400 to 560 each.
 - The texts that left plan_layout's columnStats and create_report's descriptions were said elsewhere in the list
   (suggest_fields' columnStats, plan_layout's flow); nothing was moved to TOOLS.md.
 
@@ -278,9 +283,11 @@ none (no Desktop-visible change).
   why: the instructions' rule 1 uses the same function and they are at their cap.
 
 ## Lessons for the reviewer
+- mcp/test.mjs pins tool texts too and is not matched by `test-*.mjs`: the R-90 grep should name it.
 - A scripted list of exact replacements, applied and logged, gave the cut table for free; reading each failing pin
   before moving anything kept six suites' words in place and moved one pin only.
 
 ## Log
 - 2026-11-12T21:00Z plan written, before any cut.
-- 2026-11-12T21:14Z cuts done (55,629), pinned suites green, the note written; areas and CI next.
+- 2026-11-12T21:14Z cuts done (55,679), pinned suites green, the note written; areas and CI next.
+- 2026-11-12T21:38Z first CI (43308651201 on 05bbd01d) red: test.mjs pins two phrases; put back (55,679); tk1 K7 caught the stale 55,629 in the area run; areas model, checker, arabic green.
