@@ -11,7 +11,7 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 - DB2 (no plan id without a name). LG2 (B-419: write tools already say the approved Arabic; pin test only, `work/LG2.md`). MH1.
 - AT1 (B-429, B-449): Arabic title «من أصل», header bracket, 3 Arabic model-path errors (`work/AT1.md`).
 - TR1 (B-439; `work/TR1.md`) and TR2 (`work/TR2.md`) merged.
-- LR3 (P-01, P-08: a Stop hook; `work/LR3.md`). HX1 (`work/HX1.md`). HX2 (Impact check; `work/HX2.md`). TL1 (`work/TL1.md`). OX1 (`work/OX1.md`). IX1 (`work/IX1.md`). IX2 (`work/IX2.md`). SN1 (`work/SN1.md`). OX2. IX4.
+- LR3 (P-01, P-08: a Stop hook; `work/LR3.md`). HX1 (`work/HX1.md`). HX2 (Impact check; `work/HX2.md`). TL1 (`work/TL1.md`). OX1 (`work/OX1.md`). IX1 (`work/IX1.md`). IX2 (`work/IX2.md`). SN1 (`work/SN1.md`). OX2. IX4. AU2.
 
 ## Next step
 1. PR #121 (RL032L, download lines) is on main. 2. The reviewer merges the DONE jobs above, one check each.
