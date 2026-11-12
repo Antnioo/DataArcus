@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-11T20:50Z",
+  "generated_at": "2026-11-12T05:02Z",
   "today": {
-    "date": "2026-11-11",
-    "cost_usd": 215.84,
-    "tokens": 484872831,
-    "sessions": 38,
+    "date": "2026-11-12",
+    "cost_usd": 55.79,
+    "tokens": 150006202,
+    "sessions": 13,
     "by_kind": {
       "builder": {
-        "cost_usd": 187.08,
-        "count": 19
+        "cost_usd": 45.67,
+        "count": 7
       },
       "worker": {
-        "cost_usd": 28.76,
-        "count": 19
+        "cost_usd": 10.12,
+        "count": 6
       },
       "probe": {
         "cost_usd": 0,
@@ -25,27 +25,21 @@
       }
     },
     "by_model": {
-      "sonnet": {
-        "cost_usd": 26.69,
-        "count": 17
-      },
       "opus": {
-        "cost_usd": 54.74,
-        "count": 11
+        "cost_usd": 30.1,
+        "count": 6
       },
       "fable": {
-        "cost_usd": 134.41,
-        "count": 10
+        "cost_usd": 17.81,
+        "count": 2
+      },
+      "sonnet": {
+        "cost_usd": 7.88,
+        "count": 5
       }
     }
   },
   "days": [
-    {
-      "date": "2026-10-29",
-      "cost_usd": 0,
-      "tokens": 0,
-      "sessions": 0
-    },
     {
       "date": "2026-10-30",
       "cost_usd": 0,
@@ -120,12 +114,117 @@
     },
     {
       "date": "2026-11-11",
-      "cost_usd": 215.84,
-      "tokens": 484872831,
-      "sessions": 38
+      "cost_usd": 257.48,
+      "tokens": 602833447,
+      "sessions": 47
+    },
+    {
+      "date": "2026-11-12",
+      "cost_usd": 55.79,
+      "tokens": 150006202,
+      "sessions": 13
     }
   ],
   "jobs": [
+    {
+      "id": "AU1",
+      "title": "AU1: the Health Check says what it did not read (AUD-067, AUD-068; D-1112-01)",
+      "model": "opus",
+      "cost_usd": 5.4,
+      "tokens": 15111816,
+      "minutes": 65,
+      "finished_at": "2026-11-12T03:36Z"
+    },
+    {
+      "id": "SN4",
+      "title": "SN4: read_report JSON says what it did not read; create_report font; lint notListed (D-1112-01)",
+      "model": "sonnet",
+      "cost_usd": 1.58,
+      "tokens": 8426876,
+      "minutes": 50,
+      "finished_at": "2026-11-12T03:21Z"
+    },
+    {
+      "id": "SN3",
+      "title": "SN3: AUD-063, DP-600 count, option mix, calendar-moving tests (D-1112-01)",
+      "model": "sonnet",
+      "cost_usd": 2.55,
+      "tokens": 14705396,
+      "minutes": 79,
+      "finished_at": "2026-11-12T02:10Z"
+    },
+    {
+      "id": "WF1",
+      "title": "WF1: seen items and owner asks flow to closure, no piles (D-1112-02)",
+      "model": "fable",
+      "cost_usd": 11.63,
+      "tokens": 9327880,
+      "minutes": 11,
+      "finished_at": "2026-11-12T01:53Z"
+    },
+    {
+      "id": "AU2",
+      "title": "AU2: the twin reads Arabic date and weekday names (AUD-051; D-1112-01)",
+      "model": "opus",
+      "cost_usd": 4.47,
+      "tokens": 13164625,
+      "minutes": 55,
+      "finished_at": "2026-11-12T01:46Z"
+    },
+    {
+      "id": "LX1",
+      "title": "LX1: one lexer, one list, one reading; AUD-069 one-to-one filter direction (D-1111-17)",
+      "model": "opus",
+      "cost_usd": 13.86,
+      "tokens": 47850913,
+      "minutes": 83,
+      "finished_at": "2026-11-12T01:32Z"
+    },
+    {
+      "id": "SN2",
+      "title": "SN2: every open AUD and seen item triaged; the hub follows it (D-1112-01)",
+      "model": "fable",
+      "cost_usd": 6.18,
+      "tokens": 4676954,
+      "minutes": 10,
+      "finished_at": "2026-11-12T00:27Z"
+    },
+    {
+      "id": "IX4",
+      "title": "IX4: the Gulf like-for-like page, English; Arabic held (IX1 stage 4, D-1111-17)",
+      "model": "opus",
+      "cost_usd": 9.34,
+      "tokens": 28509988,
+      "minutes": 72,
+      "finished_at": "2026-11-11T23:31Z"
+    },
+    {
+      "id": "DV1",
+      "title": "DV1: the Dataviz dataset and plan reviewed before he builds (D-1111-19)",
+      "model": "fable",
+      "cost_usd": 9.46,
+      "tokens": 4648067,
+      "minutes": 16,
+      "finished_at": "2026-11-11T22:02Z"
+    },
+    {
+      "id": "OX2",
+      "title": "OX2: the brief check in check_report (OX1 stage 2, D-1111-16/17)",
+      "model": "opus",
+      "cost_usd": 9.86,
+      "tokens": 30331106,
+      "minutes": 108,
+      "finished_at": "2026-11-11T21:53Z"
+    },
+    {
+      "id": "FB4",
+      "title": "FB4: topN after fitSlots; filters none (FB3 seen 3, 4; D-1111-17)",
+      "model": "sonnet",
+      "cost_usd": 2.85,
+      "tokens": 17486488,
+      "minutes": 53,
+      "finished_at": "2026-11-11T21:42Z"
+    },
     {
       "id": "OA1",
       "title": "OA1: everything waiting for the owner, answered with research; Arabic checks (D-1111-18)",
@@ -386,156 +485,57 @@
       "tokens": 12600532,
       "minutes": 14,
       "finished_at": "2026-11-10T11:47Z"
-    },
-    {
-      "id": "CL2",
-      "title": "CL2: the article title no longer jumps when Inter loads (B-435, AUD-062)",
-      "model": "sonnet",
-      "cost_usd": 2.44,
-      "tokens": 13410924,
-      "minutes": 63,
-      "finished_at": "2026-11-10T11:35Z"
-    },
-    {
-      "id": "DQ1",
-      "title": "DQ1: one DAX name quoter, TMDL name rule, twin field key (B-437, B-438, B-434)",
-      "model": "sonnet",
-      "cost_usd": 3.99,
-      "tokens": 26430101,
-      "minutes": 156,
-      "finished_at": "2026-11-10T10:59Z"
-    },
-    {
-      "id": "FT2",
-      "title": "FT2: the given font with a design is applied or named (B-432)",
-      "model": "sonnet",
-      "cost_usd": 1.31,
-      "tokens": 6560788,
-      "minutes": 49,
-      "finished_at": "2026-11-10T09:11Z"
-    },
-    {
-      "id": "MM1",
-      "title": "MM1: npm overrides minimatch ^11 for the dev tools (B-310, L-1109-26)",
-      "model": "sonnet",
-      "cost_usd": 0.64,
-      "tokens": 3045058,
-      "minutes": 76,
-      "finished_at": "2026-11-10T06:21Z"
-    },
-    {
-      "id": "SG2",
-      "title": "SG2: the split guards allow any pure shared file on CONTRACTS.md's One place list (L-1104-19)",
-      "model": "sonnet",
-      "cost_usd": 0.84,
-      "tokens": 4349966,
-      "minutes": 26,
-      "finished_at": "2026-11-10T06:08Z"
-    },
-    {
-      "id": "LC2",
-      "title": "LC2: build the 18 lessons approved 5 to 8 Nov (D-1110-03)",
-      "model": "opus",
-      "cost_usd": 8.09,
-      "tokens": 25959750,
-      "minutes": 21,
-      "finished_at": "2026-11-10T05:40Z"
-    },
-    {
-      "id": "LA1",
-      "title": "LA1: build the approved check lessons (D-1110-02)",
-      "model": "opus",
-      "cost_usd": 10.52,
-      "tokens": 33640099,
-      "minutes": 26,
-      "finished_at": "2026-11-10T04:44Z"
-    },
-    {
-      "id": "LB1",
-      "title": "LB1: build the approved rule, brief and routine lessons (D-1110-02)",
-      "model": "sonnet",
-      "cost_usd": 3.03,
-      "tokens": 16506332,
-      "minutes": 23,
-      "finished_at": "2026-11-10T04:42Z"
-    },
-    {
-      "id": "FT1",
-      "title": "FT1: the requested font reaches every visual, EN and the Arabic twin (B-430)",
-      "model": "opus",
-      "cost_usd": 6.01,
-      "tokens": 17866363,
-      "minutes": 74,
-      "finished_at": "2026-11-10T02:20Z"
-    },
-    {
-      "id": "FW1",
-      "title": "FW1: the folder window: opened only when certain; a test-only folder opener (B-431 b, c)",
-      "model": "sonnet",
-      "cost_usd": 0.34,
-      "tokens": 2304614,
-      "minutes": 126,
-      "finished_at": "2026-11-10T02:11Z"
-    },
-    {
-      "id": "SG1",
-      "title": "SG1: the 15 same-shape groups: each in the library with a parity test, or written down as different (B-422, D-1109-05)",
-      "model": "opus",
-      "cost_usd": 0.46,
-      "tokens": 1804487,
-      "minutes": 92,
-      "finished_at": "2026-11-10T00:59Z"
     }
   ],
   "workers": {
-    "count": 19,
-    "cost_usd": 28.76,
+    "count": 6,
+    "cost_usd": 10.12,
     "costliest": [
       {
         "label": "worker 00:47",
-        "cost_usd": 2.92,
-        "minutes": 7,
-        "started": "2026-11-11T00:48Z"
+        "cost_usd": 2.59,
+        "minutes": 6,
+        "started": "2026-11-12T00:48Z"
       },
       {
-        "label": "worker 17:02",
-        "cost_usd": 2.76,
-        "minutes": 78,
-        "started": "2026-11-11T17:02Z"
+        "label": "worker 02:49",
+        "cost_usd": 2.67,
+        "minutes": 32,
+        "started": "2026-11-12T02:49Z"
       },
       {
-        "label": "worker 18:55",
-        "cost_usd": 2.86,
-        "minutes": 22,
-        "started": "2026-11-11T18:56Z"
+        "label": "worker 03:46",
+        "cost_usd": 1.66,
+        "minutes": 56,
+        "started": "2026-11-12T03:47Z"
       }
     ]
   },
   "top": [
     {
-      "label": "TR1",
+      "label": "LX1",
       "kind": "builder",
-      "cost_usd": 29.65
+      "cost_usd": 13.86
     },
     {
-      "label": "LR2",
+      "label": "WF1",
       "kind": "builder",
-      "cost_usd": 16.38
+      "cost_usd": 11.63
     },
     {
-      "label": "TL1",
+      "label": "SN2",
       "kind": "builder",
-      "cost_usd": 15.54
+      "cost_usd": 6.18
     },
     {
-      "label": "OA1",
+      "label": "AU1",
       "kind": "builder",
-      "cost_usd": 14.97
+      "cost_usd": 5.4
     },
     {
-      "label": "CO1",
+      "label": "AU2",
       "kind": "builder",
-      "cost_usd": 13.23
+      "cost_usd": 4.47
     }
   ]
 }
