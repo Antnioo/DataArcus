@@ -30,3 +30,4 @@
 
 ## Progress
 - 2026-11-12T23:07Z: plan written; base reproduced red under load (sp35, 16x throttled: E1 and A1 "ripples: 1 -> 0").
+- 2026-11-12T23:34Z: code pushed (9a8676de): sp35's waits, lib.mjs's shared wait, macOS 5 jobs, the upload's second try, the step's name; the load proof and CI running.
