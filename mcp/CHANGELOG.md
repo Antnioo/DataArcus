@@ -96,9 +96,10 @@ package's manifest; this file says what is in it.
   it `brief`, the questions the report must answer as a measure by columns, and it says which a visual answers (a visual
   split further still answers it), which only partly, which no visual answers and which the model cannot answer. From
   the files only, names never values; a rule not yet measured in Power BI Desktop, and in doubt it says it cannot tell.
-- Every chat starts smaller: the tool list an AI app reads at the start of each chat is 60,532 characters with this
-  version's new options, down from 74,925 (about a fifth fewer tokens in every chat). The shortening itself changed no
-  option and no answer: the texts say it in fewer words, and the details that left the list are in TOOLS.md.
+- Every chat starts smaller: the tool list an AI app reads at the start of each chat is 55,629 characters with this
+  version's new options, down from 74,925 (about a quarter fewer characters in every chat). Tool descriptions shortened;
+  same tools, same options, no answer changed: the texts say it in fewer words, and the details that left the list are
+  in TOOLS.md.
 - A one-to-one relationship now counts as filtering both ways, as Power BI always filters it, even when the model file
   does not say "both directions". Before, check_report could say a chart "would show one value on every row" and the
   model "cannot answer" a question when a one-to-one relationship was on the way, the Impact check could miss a chart
