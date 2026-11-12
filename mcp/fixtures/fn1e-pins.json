@@ -1,5 +1,5 @@
 {
- "about": "FN1E: the whole output of summaryOf (with promptText and promptBox), checkReport and meaningOf for made-up inputs, recorded on integration/0.3.2 f6bf9fac before the split (test-0.3.2-fn1e.mjs). Never re-recorded to make a run pass.",
+ "about": "FN1E: the whole output of summaryOf (with promptText and promptBox), checkReport and meaningOf for made-up inputs, recorded on integration/0.3.2 f6bf9fac before the split (test-0.3.2-fn1e.mjs). Never re-recorded to make a run pass; on purpose, 0.3.3 SN4: the 4 cases that cut the lint section (it says notListed now).",
  "linked": true,
  "pins": {
   "D report full": {
@@ -1643,28 +1643,28 @@
    "len": 14018
   },
   "C sizes and unreadable, cap 3": {
-   "sha": "6f29e597ea4b5219fd1c9ed947f250d7b03022f6050724fc099ba17b34e6af25",
-   "len": 10686
+   "sha": "2a666292112b6ded0295a259789d4f3738e950658e719fae52a80c1885b42c0d",
+   "len": 10683
   },
   "C the lint cannot read it": {
    "sha": "da641bbea7c708927ad29b91942c8992f9dd924fd98e207e6921cba0e2d968e7",
    "len": 14639
   },
   "C many overlaps": {
-   "sha": "81a85f6a9d3ba9cca09db2f1755afebed5231e1c3a7369036a68d888620cd38f",
-   "len": 27389
+   "sha": "7b9875ac36c303315789a42384111cf4015502af29a8e25b3d6adedc25ad0002",
+   "len": 27387
   },
   "C many overlaps, lint only": {
-   "sha": "f007a3ddcb5f9250bdfb0fd00777e041ddb06b83afdb55294aeffab0e4a3ce05",
-   "len": 26008
+   "sha": "879552c0cd917f6afd63f1258a98cebf468ef521c650ff00a2a0689ecd9fad62",
+   "len": 26006
   },
   "C one link": {
    "sha": "56f993ad4b205732aabc172da19d1c5c11cd025e6dc946ce8aebd13461fd38f1",
    "len": 14931
   },
   "C cut to the bone": {
-   "sha": "970662c7e468c2044015ac001844d1d48faf26d6f20fe56f4420896c75792a5d",
-   "len": 29464
+   "sha": "fffbef20a62472400e964d5be6282b7b3ef2a6811c33d822b4f38e4bd58b169e",
+   "len": 29462
   },
   "M group": {
    "sha": "daa1c5c10bc8d927794068cc44e33eae6ccd5baa49606c1b0ce986966e133f2c",

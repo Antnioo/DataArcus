@@ -5,6 +5,13 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.3
+- `read_report` with `format: "json"` now says what it did not read, as the text form always did: files over 8 MB, files
+  that are not readable JSON, folders too deep, files past the cap, next to the links it already named. The key is there
+  only when something was left out.
+- `check_report`'s lint section says `notListed` with how many findings it left out when its list is cut, as every other
+  section does, instead of `truncated: true`.
+- The `font` option of `create_report` is described as the font (default Segoe UI), true for hand-placed pages and for a
+  design, instead of "hand-placed pages" only.
 - The Arabic twin now reads a date and a weekday from an Arabic column name as it does from an English one: a chart on a
   date table's column named «تاريخ الطلب» or «بداية الشهر», whose type the model does not say, has its time axis read
   from the right like one named "Order Date", and a heatmap whose rows are «يوم الأسبوع» gets its day names beside the
