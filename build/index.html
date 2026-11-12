@@ -43,11 +43,30 @@
     .bp-note { border: 1px solid var(--bp-running); border-radius: 14px; padding: 8px 14px; color: var(--bp-running); font-size: .9rem; background: var(--bp-glass); }
     .bp-hero { position: relative; margin: 22px 0 8px; }
     .bp-hero::before { content: ""; position: absolute; inset: 8% 18%; background: radial-gradient(closest-side, rgba(91,140,255,.35), rgba(167,139,250,.16) 55%, transparent); filter: blur(28px); pointer-events: none; }
-    .bp-helix { position: relative; height: 460px; }
+    .bp-helix { position: relative; display: flex; flex-direction: column; gap: 10px; }
+    .bh-stage { position: relative; height: clamp(380px, 68vh, 720px); border-radius: 26px; overflow: hidden; background: #0a0f1c; border: 1px solid var(--bp-edge); outline: 0; cursor: grab; }
+    .bh-stage:active { cursor: grabbing; }
+    .bh-stage:focus-visible { box-shadow: 0 0 0 3px rgba(0,212,255,.55); }
     .bh-canvas, .bh-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; }
+    .bh-full { position: absolute; z-index: 4; top: 12px; inset-inline-end: 12px; width: 44px; height: 44px; padding: 0; display: grid; place-items: center; border-radius: 14px; border: 1px solid var(--bp-edge); background: rgba(14,22,48,.72); color: #fff; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); cursor: pointer; line-height: 0; }
+    .bh-full svg { display: block; }
+    .bh-full:hover, .bh-full:focus-visible { border-color: #00d4ff; color: #00d4ff; outline: 0; }
+    .bh-hint, .bh-flat { margin: 0; text-align: center; font-size: .8rem; color: var(--bp-dim); }
+    .bh-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding: 10px 16px; border-radius: 18px; background: var(--bp-glass); border: 1px solid var(--bp-edge); }
+    .bh-count { margin: 0; display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: .9rem; min-width: 0; }
+    .bh-c1 { color: #fdcb6e; font-weight: 600; } .bh-c2 { color: #2dd4bf; }
+    .bh-replay { display: flex; align-items: center; gap: 10px; flex: 1 1 240px; min-width: 0; margin: 0; font-size: .8rem; color: var(--bp-dim); }
+    .bh-range { flex: 1 1 auto; min-width: 0; height: 28px; accent-color: #00d4ff; }
+    .bh-at { font: .8rem 'JetBrains Mono', ui-monospace, monospace; color: var(--bp-text); min-width: 3.2em; text-align: end; }
+    .bh-said { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; margin: 0; }
+    .bh.bh-on { position: fixed; inset: 0; z-index: 2000; margin: 0; padding: 10px; gap: 8px; background: #0a0f1c; }
+    .bh.bh-on .bh-stage { flex: 1 1 auto; height: auto; min-height: 0; border-radius: 18px; }
+    .bh.bh-on .bh-canvas, .bh.bh-on .bh-svg { touch-action: none; }
+    .bh.bh-on .bh-hint { display: none; }
     .bh-label { position: absolute; z-index: 3; max-width: min(320px, 86%); padding: 10px 14px; border-radius: 16px; background: rgba(14,22,48,.72); border: 1px solid var(--bp-edge); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); pointer-events: none; font-size: .8rem; }
     .bh-l0 { font-weight: 800; color: #fff; letter-spacing: .08em; } .bh-l { font-family: 'JetBrains Mono', ui-monospace, monospace; color: var(--bp-dim); font-size: .75rem; overflow-wrap: anywhere; }
     .bp-legend { position: relative; display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; justify-content: center; text-align: center; font-size: .8rem; }
+    .bh-k-running { color: #fdcb6e; } .bh-k-red { color: #ff6b6b; } .bh-k-ready { color: #2dd4bf; } .bh-k-merged { color: #00d4ff; } .bh-k-held { color: #a29bfe; } .bh-k-queued { color: #74b9ff; }
     .bp-k::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: currentColor; margin-right: 6px; }
     .bp-strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
     .bp-stat, .bp-panel, .bp-row { background: var(--bp-glass); border: 1px solid var(--bp-edge); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
@@ -99,7 +118,7 @@
     .bu-axis { stroke: var(--bp-edge); stroke-width: 1; } .bu-tick { fill: var(--bp-dim); font: 11px 'JetBrains Mono', ui-monospace, monospace; }
     @keyframes bp-slide { to { background-position: -200% 0; } }
     @media (prefers-reduced-motion: reduce) { .bp-bar { animation: none; } }
-    @media (max-width: 767px) { .bp-grid { grid-template-columns: minmax(0, 1fr); } .bp-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; } .bu-grid { grid-template-columns: minmax(0, 1fr); } .bp-panel { padding: 16px; border-radius: 22px; } .bp-helix { height: 380px; } }
+    @media (max-width: 767px) { .bp-grid { grid-template-columns: minmax(0, 1fr); } .bp-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; } .bu-grid { grid-template-columns: minmax(0, 1fr); } .bp-panel { padding: 16px; border-radius: 22px; } .bh-stage { height: clamp(340px, 62vh, 560px); border-radius: 20px; } .bh-bar { padding: 10px 12px; } .bh-replay { flex-wrap: wrap; gap: 2px 10px; } .bh-replay-t { flex: 1 0 100%; } }
   </style>
 </head>
 <body>
@@ -137,8 +156,8 @@
         <p id="bp-warn" class="bp-note" role="status" hidden></p>
 
         <div class="bp-hero">
-          <div id="bp-line" class="bp-helix" aria-hidden="true"></div>
-          <p class="bp-legend"><span class="bp-k bp-running">running CI</span><span class="bp-k bp-red">red</span><span class="bp-k bp-green">done or merged</span><span class="bp-k bp-stopped">no push for 2 h</span><span class="bp-dim">One strand is the integration branch (merges today are its nodes), the other the builder branches; each rung is a job, newest at the top. Hover or tap a rung.</span></p>
+          <div id="bp-line" class="bp-helix"></div>
+          <p class="bp-legend"><span class="bp-k bh-k-running">tests running (amber ring)</span><span class="bp-k bh-k-red">red</span><span class="bp-k bh-k-ready">done</span><span class="bp-k bh-k-merged">merged</span><span class="bp-k bh-k-held">no push for 2 h</span><span class="bp-k bh-k-queued">idle</span><span class="bp-dim">The spine is the integration branch and the ring above it is main. Each sphere is a job branch with a push in the last 24 hours, oldest at the bottom; a larger sphere cost more. Everything drawn is read from the public repository; the page holds nothing else. Hover or tap a sphere.</span></p>
         </div>
 
         <div class="bp-strip" aria-label="Telemetry">
@@ -252,9 +271,9 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
   <script src="/assets/js/site-navigation.min.js?v=73f198dd3eb3" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" integrity="sha384-qOkzR5Ke/XkQxuGVJ9hpFEpDlcoLtWwVYhnJf06cLIZa2vaIptSqaubivErzmD5O" crossorigin="anonymous" defer></script>
-  <script src="/assets/js/build-helix.min.js?v=47574ab39deb" defer></script>
+  <script src="/assets/js/build-helix.min.js?v=ba263b946223" defer></script>
   <script src="/assets/js/page-toast.min.js?v=995950255945" defer></script>
   <script src="/assets/js/build-usage.min.js?v=97873045ff00" defer></script>
-  <script src="/assets/js/build-page.min.js?v=33849f556129" defer></script>
+  <script src="/assets/js/build-page.min.js?v=7f37498b70ea" defer></script>
 </body>
 </html>

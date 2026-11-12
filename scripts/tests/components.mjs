@@ -54,6 +54,9 @@ export default async function ({ browser, url }) {
       await ready(a.pg);
       for (const f of await a.pg.$$eval('[data-filter]', (bs) => bs.map((x) => x.getAttribute('data-filter')))) {
         await a.pg.click(`[data-filter="${f}"]`); await a.pg.waitForTimeout(1200);
+        // (RL33) the fade is waited for, not timed: on a busy CI runner the 1200 ms ended mid-fade (opacity 0.14864, then 0.987503; runs
+        // 43237079137 and 43261431505). An article that stays invisible is still caught: after 4 s more the check below reads it as it is.
+        await a.pg.waitForFunction(() => [...document.querySelectorAll('[data-category]')].every((c) => { if (c.style.display === 'none') return true; const r = c.getBoundingClientRect(); return !(r.top < innerHeight && r.bottom > 0) || getComputedStyle(c).opacity === '1'; }), null, { timeout: 4000 }).catch(() => null);
         const shown = await a.pg.$$eval('[data-category]', (cs) => cs.filter((c) => c.style.display !== 'none').map((c) => { const r = c.getBoundingClientRect(); return { onScreen: r.top < innerHeight && r.bottom > 0, op: getComputedStyle(c).opacity, topic: (c.querySelector('.topic-badge') || { getAttribute: () => null }).getAttribute('data-i18n'), colour: c.querySelector('.topic-badge') ? getComputedStyle(c.querySelector('.topic-badge')).backgroundColor : null, cat: c.getAttribute('data-category') }; }));
         checks++; if (!shown.length) problems.push(`${tag}: the "${f}" filter shows no article`);
         checks++; if (f !== 'all' && shown.some((c) => c.cat !== f)) problems.push(`${tag}: the "${f}" filter also shows ${[...new Set(shown.filter((c) => c.cat !== f).map((c) => c.cat))].join(', ')}`);

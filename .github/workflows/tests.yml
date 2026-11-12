@@ -447,13 +447,15 @@ jobs:
   # owner makes it one; the .mcpb keeps "win32" until one real Mac run by a person (the engine's PACKAGING.md).
   mcp-macos-parts:
     # (CI1, D-1104-02) macOS runs only where the reviewer merges: a push to main or integration/*, a pull request to
-    # main, a manual run on main, integration/* or check/*; a manual run on a builder branch (fix/*, rd/* ...) skips
+    # main, a manual run on main, integration/*, check/* or release/* (RL33, D-1104-19: a release branch is read on
+    # macOS before the pull request to main); a manual run on a builder branch (fix/*, rd/* ...) skips
     # it and runs Linux and Windows only (L-1103-13: macOS shards dropped unqueued). The same expression on mcp-macos.
     if: >-
       (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/integration/')))
       || (github.event_name == 'pull_request' && github.base_ref == 'main')
       || (github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main'
-      || startsWith(github.ref, 'refs/heads/integration/') || startsWith(github.ref, 'refs/heads/check/')))
+      || startsWith(github.ref, 'refs/heads/integration/') || startsWith(github.ref, 'refs/heads/check/')
+      || startsWith(github.ref, 'refs/heads/release/')))
     # (CI2, 4 Nov 2026) the standard Intel runner (docs.github.com "GitHub-hosted runners": "macOS | 4 | 14 GB | 14 GB |
     # Intel | macos-15-intel, macos-26-intel"), not macos-latest (macOS 26 arm64, 3 M1): on 4 Nov arm64 shards were
     # cancelled unqueued, "The job was not acquired by Runner of type hosted even after multiple attempts", with the
@@ -529,7 +531,8 @@ jobs:
       always() && ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/integration/')))
       || (github.event_name == 'pull_request' && github.base_ref == 'main')
       || (github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main'
-      || startsWith(github.ref, 'refs/heads/integration/') || startsWith(github.ref, 'refs/heads/check/'))))
+      || startsWith(github.ref, 'refs/heads/integration/') || startsWith(github.ref, 'refs/heads/check/')
+      || startsWith(github.ref, 'refs/heads/release/'))))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

@@ -12,10 +12,18 @@
 //   E3  X-RateLimit-Remaining under 10: the page says it slows to every 10 minutes
 //   E4  a call that fails keeps that section's last data and says so
 //   P1  noindex; not in the menu or the footer; not in sitemap.xml; csp.mjs passes; the policy has connect-src for GitHub
-//   H1  the helix model (pure): rungs newest first, at most 60, t from 0 to 1; merges as nodes
-//   H2  WebGL: the helix is drawn (mode webgl, a canvas, aria-hidden) and a rung's label shows its code and commit line as text
+//   H1  the helix model (pure): the 60 newest jobs, oldest first (the bottom), t from 0 to 1; a merge names its job merged
+//   H2  WebGL: the helix is drawn (mode webgl; the canvas hidden from screen readers, the stage reachable by keyboard) and a job's label shows its code and commit line as text
 //   H3  no WebGL: the SVG helix shows (mode svg, a rung per job, the label on hover) and the cards still fill
 //   H4  the three.js address is pinned to an exact version, the one package.json names, with a Subresource Integrity hash
+//   (0.3.3 RL33, D-1112-04: the Today app's helix, movable and scalable)
+//   H5  the helix's facts (pure): height 9, radius 2.3, turns clamp(n/10, 1.5, 4.5), node i at t = (i + 0.5)/n on the strand and
+//       mirrored across the spine, radius 0.11 + 0.21 sqrt(cost/max), the six state colours, the spine, the background
+//   H6  the replay (pure): absent before it started, running until merged, as it is at "now"; the counter's two texts
+//   H7  the tiers (pure): above 28 ms a frame one step down, above 50 ms at plain the SVG; a tier can be pinned
+//   H8  movable: a drag turns it, the wheel zooms only with the helix in focus (the page scrolls otherwise), the keys turn,
+//       zoom, reset and step through the jobs; the replay slider takes jobs away and says the hour
+//   H9  scalable: the full-screen button fills the window and its icon sits in the middle of its box; at 390 px the stage fits
 //   P2  no sideways scroll at 390 px; reduced motion stops the animations and the helix; no page error
 // 0.3.2 BF2 (B-399, D-1108-15): the Fuel panel (usage.json from the build-data branch, made-up fixture build-usage.json)
 //   U0  the pure helpers of assets/js/build-usage.js (version check, USD, millions, chart geometry, cost by job code)
@@ -55,8 +63,26 @@ export default async function ({ browser, url }) {
     check(JSON.stringify(B.newestVersion([{ name: 'integration/0.3.2' }, { name: 'integration/0.10.0' }, { name: 'integration/0.9.9' }, { name: 'main' }])) === '{"version":"0.10.0","branch":"integration/0.10.0"}' && B.newestVersion([{ name: 'main' }]) === null, 'B4 newestVersion compares numbers, not text');
     check(B.resultOf({ status: 'queued' }) === 'queued' && B.resultOf({ status: 'in_progress' }) === 'running' && B.resultOf({ status: 'completed', conclusion: 'success' }) === 'green' && B.resultOf({ status: 'completed', conclusion: 'failure' }) === 'red' && B.resultOf({ status: 'completed', conclusion: 'cancelled' }) === 'other', 'B5 resultOf: queued, running, green, red, other');
     const Hx = require('../../assets/js/build-helix.js');
-    const hm = Hx.helixModel(Array.from({ length: 80 }, (_, i) => ({ code: 'J' + i, status: 'idle' })), [{ message: 'a' }, { message: 'b' }]);
-    check(hm.rungs.length === 60 && hm.rungs[0].code === 'J0' && hm.rungs[0].t === 0.5 / 60 && hm.rungs[59].t === 59.5 / 60 && hm.nodes.length === 2 && hm.nodes[0].t === 0.25 && Hx.helixModel(null, null).rungs.length === 0, 'H1 the helix model: newest first, at most 60 rungs, t spread inside 0..1, merges as nodes');
+    const hm = Hx.helixModel(Array.from({ length: 80 }, (_, i) => ({ code: 'J' + i, status: 'idle', time: 1e12 - i * 1000 })), [{ message: 'Merge J3: a', time: 1e12 - 5 }, { message: 'Merge J30x: b', time: 1 }], 1e12);
+    // (RL33, on purpose) H1 pinned { rungs newest first, nodes: the merges }; the model is now the jobs oldest first, a merge marks its job
+    check(hm.nodes.length === 60 && hm.nodes[0].code === 'J59' && hm.nodes[59].code === 'J0' && hm.nodes[0].t === 0.5 / 60 && hm.nodes[59].t === 59.5 / 60 && hm.nodes[56].code === 'J3' && hm.nodes[56].state === 'merged' && hm.nodes[56].merged === 1e12 - 5 && hm.nodes[29].state === 'queued' && Hx.helixModel(null, null).nodes.length === 0, 'H1 the helix model: the 60 newest jobs, oldest first, t spread inside 0..1, a merge marks its own job only');
+    // ---- H5: the helix's facts
+    const near = (a, b) => Math.abs(a - b) < 1e-9, n10 = Hx.nodeAt(2, 10), ang = 0.25 * 1.5 * 2 * Math.PI;
+    check(Hx.HELIX.height === 9 && Hx.HELIX.radius === 2.3 && Hx.turnsOf(5) === 1.5 && Hx.turnsOf(30) === 3 && Hx.turnsOf(60) === 4.5 && Hx.MAX_NODES === 60, 'H5 height 9, radius 2.3, turns clamp(n / 10, 1.5, 4.5), at most 60 jobs');
+    check(near(n10.t, 0.25) && near(n10.angle, ang) && near(n10.a[0], 2.3 * Math.cos(ang)) && near(n10.a[1], -4.5 + 0.25 * 9) && near(n10.a[2], 2.3 * Math.sin(ang)) && near(n10.b[0], -n10.a[0]) && n10.b[1] === n10.a[1] && near(n10.b[2], -n10.a[2]) && Hx.nodeAt(0, 4).a[1] < Hx.nodeAt(3, 4).a[1], `H5 node i of n: t = (i + 0.5) / n, on the strand, its rung's other end mirrored across the spine, the oldest lowest: ${JSON.stringify(n10)}`);
+    check(near(Hx.nodeRadius(0, 8), 0.11) && near(Hx.nodeRadius(8, 8), 0.32) && near(Hx.nodeRadius(2, 8), 0.11 + 0.21 * 0.5) && near(Hx.nodeRadius(null, 0), 0.11) && near(Hx.nodeRadius(99, 8), 0.32), 'H5 a node\'s radius is 0.11 + 0.21 * sqrt(cost / maxCost); no cost: 0.11');
+    check(JSON.stringify(Hx.COLOURS) === '{"red":"#ff6b6b","ready":"#2dd4bf","running":"#fdcb6e","held":"#a29bfe","queued":"#74b9ff","merged":"#00d4ff","spine":"#00d4ff","background":"#0a0f1c"}', `H5 the colours by state, the spine and the background: ${JSON.stringify(Hx.COLOURS)}`);
+    check(['running', 'red', 'green', 'stopped', 'idle', 'x'].map((k) => Hx.stateOf(k, 0)).join() === 'running,red,ready,held,queued,queued' && Hx.stateOf('red', 5) === 'merged', 'H5 the page\'s lights as helix states; a merged job is merged');
+    // ---- H6: the replay
+    const T = 1e12, rm = Hx.helixModel([{ code: 'B2', status: 'running', time: T - 600e3, started: T - 3600e3, cost: 4 }, { code: 'A1', status: 'green', time: T - 7200e3, cost: 1 }], [{ message: 'Merge A1: x', time: T - 3600e3 }], T);
+    const at = (ms) => { const r = Hx.replayAt(rm, ms); return r.nodes.map((n) => (n.shown ? n.state : '-')).join() + '|' + Hx.counterText(r).join('|'); };
+    check(rm.from === T - 7200e3 && rm.to === T && at(T - 5000e3) === 'running,-|1 being built|0 finished in 24 hours' && at(T - 1800e3) === 'merged,running|1 being built|1 finished \u00b7 $1.00 in 24 hours' && at(null) === at(T) && at(T - 9e7) === at(T - 7200e3),
+      `H6 the replay: from the first known event when that is later than 24 h ago; absent before it started, running until merged: ${at(T - 5000e3)} / ${at(T - 1800e3)}`);
+    const old = Hx.helixModel([{ code: 'O1', status: 'idle', time: T - 3 * 864e5 }], [], T);
+    check(old.from === T - 864e5 && Hx.replayAt(old, old.from).nodes[0].shown && Hx.replayAt(rm, null).nodes[1].state === 'running' && Hx.replayAt(Hx.helixModel([{ code: 'R', status: 'red', time: T - 9 }], [], T), null).nodes[0].state === 'red', 'H6 the slider never goes back more than 24 hours; at "now" a job is as it is now');
+    // ---- H7: the tiers
+    check(Hx.nextTier('full', 28) === 'full' && Hx.nextTier('full', 29) === 'bloom' && Hx.nextTier('bloom', 40) === 'plain' && Hx.nextTier('plain', 40) === 'plain' && Hx.nextTier('plain', 51) === 'svg' && Hx.nextTier('full', 80) === 'bloom'
+      && JSON.stringify(Hx.TIERS) === '{"full":{"ratio":2,"bloom":true,"focus":true,"shadows":true,"stars":320},"bloom":{"ratio":1.5,"bloom":true,"focus":false,"shadows":false,"stars":220},"plain":{"ratio":1,"bloom":false,"focus":false,"shadows":false,"stars":120}}', 'H7 the tiers: one step down above 28 ms a frame, the SVG above 50 ms at plain; full, bloom, plain as the Today app has them');
     const nowB = Date.parse('2026-11-08T12:00:00Z'), bl = B.buildersOf({ heads: [{ branch: 'fix/0.3.2-ab1', sha: 'a', message: 'AB1: x', time: nowB - 600e3 }, { branch: 'fix/0.3.2-old', sha: 'b', message: 'x', time: nowB - 30 * 3600e3 }, { branch: 'fix/0.3.1-no', sha: 'c', message: 'x', time: nowB - 600e3 }], runs: { workflow_runs: [{ id: 1, head_branch: 'fix/0.3.2-ab1', head_sha: 'a', status: 'queued', run_started_at: '2026-11-08T11:59:00Z', updated_at: '2026-11-08T11:59:00Z', html_url: 'https://github.com/x' }] }, version: '0.3.2', now: nowB });
     check(bl.length === 1 && bl[0].code === 'AB1' && bl[0].message === 'AB1: x' && B.statusOf(bl[0], '', nowB) === 'running', 'B8 buildersOf: this release\'s branches by their latest commit within 24 h; a queued run is running');
     check(B.statusOf({ run: { result: 'running' }, time: 0 }, '', 1) === 'running' && B.statusOf({ run: { result: 'green' }, time: 0 }, 'waiting for the owner', 1) === 'red' && B.statusOf({ run: null, time: 0 }, 'DONE', 1) === 'green' && B.statusOf({ run: null, time: 0 }, '', 3 * 3600e3) === 'stopped' && B.statusOf({ run: null, time: 0 }, '', 3600e3) === 'idle', 'B7 statusOf: running, red (a note waiting on the owner), done, stopped after 2 h, idle');
@@ -67,6 +93,9 @@ export default async function ({ browser, url }) {
   const iso = (min, now) => new Date(now - min * 60e3).toISOString();
   async function open(opts = {}, setup = null) {
     const v = await visitor(browser, { viewport: opts.viewport || [1440, 900], motion: opts.motion || 'no-preference' });
+    // (RL33) every visit draws the plain tier from its first frame: full-tier WebGL on a test machine's software renderer took the
+    // processor from the suites running beside this one (sp35 red in CI run 43237079137, both attempts; reproduced with site beside it)
+    if (!opts.tier) await v.ctx.addInitScript(() => { new MutationObserver((_, o) => { const h = document.getElementById('bp-line'); if (h) { h.dataset.tier = 'plain'; o.disconnect(); } }).observe(document, { childList: true, subtree: true }); });
     const now = Date.now(), seen = { api: [], raw: [], inm: [], etags: {}, usage: [], usageInm: [] };
     await v.ctx.clock.install({ time: now }); // the fixtures' times are written from this "now": the page reads the same one (a shifted clock reaches node only)
     const state = { remaining: 59, status: {}, reset: Math.floor(now / 1000) + 1800, force304: false, calls: 0, noRelease: false, usage: 'ok' };
@@ -145,8 +174,12 @@ export default async function ({ browser, url }) {
     check(nums.join(',') === '2,0,1,1,4', `D3 telemetry: a queued and an in-progress run both count as running (running,red,done,merged,open = ${nums.join(',')})`);
     check(/Could not load/.test(await text(v.pg, '#bp-warn')) === false && await v.pg.locator('#bp-warn').isHidden(), `D4 a missing note file is not a failure: no banner (${await text(v.pg, '#bp-warn')})`);
     check(!v.errs.length, `P2 no page error on the first look: ${v.errs.join(' | ')}`);
-    const mode = await v.pg.evaluate(() => { const h = document.getElementById('bp-line'); return [h.dataset.mode, !!h.querySelector('canvas'), h.getAttribute('aria-hidden')]; });
-    check(mode[0] === 'webgl' && mode[1] && mode[2] === 'true', `H2 WebGL: the helix is drawn in a canvas and hidden from screen readers (${mode.join(',')})`);
+    // (RL33, on purpose) H2 pinned aria-hidden on the whole box; the box now holds the slider and the full-screen button, so only the canvas is hidden
+    // the visit named the plain tier on the element before the helix mounted (open): no stepping down to the SVG mid-check (H7 pins the stepping)
+    const mode = await v.pg.evaluate(() => { const h = document.getElementById('bp-line'), c = h.querySelector('canvas'), st = h.querySelector('.bh-stage'); return [h.dataset.mode, c && c.getAttribute('aria-hidden'), h.getAttribute('aria-hidden'), st && st.tabIndex, st && (st.getAttribute('aria-label') || '').length > 40, h.dataset.tier, window.BuildPage.helix.mode]; });
+    check(mode.join() === 'webgl,true,,0,true,plain,webgl', `H2 WebGL: the helix is drawn in a canvas hidden from screen readers; the stage takes the keyboard and says how (${mode.join(',')})`);
+    const cnt = await text(v.pg, '#bp-line .bh-count');
+    check(/^3 being built\s*1 finished/.test(cnt.trim()), `H2 the counter under the helix: ${cnt}`);
     await v.pg.evaluate(() => window.BuildPage.helix.focus('BB2'));
     const lab = await text(v.pg, '#bp-line .bh-label');
     check(/BB2/.test(lab) && lab.includes('<img src=x') && /CI: in progress/.test(lab), `H2 a rung's label: code, commit line as text, CI state: ${lab.slice(0, 120)}`);
@@ -318,6 +351,12 @@ export default async function ({ browser, url }) {
     check(info[0] === 'svg' && info[1] === 4 && info[2] === 4, `H3 no WebGL: the SVG helix with a rung per job, and the cards (${info.join(',')})`);
     await v.pg.locator('#bp-line g[data-code="AA1"]').first().dispatchEvent('pointerenter');
     check(/AA1/.test(await text(v.pg, '#bp-line .bh-label')) && !(await v.pg.locator('#bp-line .bh-label').isHidden()), 'H3 the SVG rung shows its label');
+    check(await v.pg.locator('#bp-line .bh-flat').isVisible() && /same helix seen from the front/.test(await text(v.pg, '#bp-line .bh-flat')), 'H3 no WebGL: the page says in words that this is the helix from the front and that the cards hold the same jobs');
+    await v.pg.locator('#bp-line .bh-range').evaluate((r) => { r.value = '0'; r.dispatchEvent(new Event('input', { bubbles: true })); });
+    const back = await v.pg.evaluate(() => [document.querySelectorAll('#bp-line svg g[data-code]').length, document.querySelector('#bp-line .bh-at').textContent]);
+    check(back[0] >= 1 && back[0] < 4 && /^\d\d:\d\d$/.test(back[1]), `H3 the replay works on the SVG helix too: fewer jobs at the start, the hour said (${back.join(',')})`);
+    await v.pg.locator('#bp-line .bh-stage').focus(); await v.pg.keyboard.press('ArrowUp');
+    check(/\b(AA1|BB2|CC3|DD4)\b/.test(await text(v.pg, '#bp-line .bh-said')), 'H3 the arrow keys step through the jobs on the SVG helix');
     check(!v.errs.length, `H3 no page error without WebGL: ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }
@@ -336,11 +375,53 @@ export default async function ({ browser, url }) {
     await loaded(v.pg).catch(() => null);
     const w = await v.pg.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
     check(w[0] <= w[1], `P2 no sideways scroll at 390 px (scrollWidth ${w[0]}, width ${w[1]})`);
+    const ph = await v.pg.evaluate(() => { const st = document.querySelector('#bp-line .bh-stage').getBoundingClientRect(), f = document.querySelector('#bp-line .bh-full').getBoundingClientRect(), r = document.querySelector('#bp-line .bh-range').getBoundingClientRect(); return [st.left >= 0 && st.right <= innerWidth, Math.round(st.height), Math.round(f.width), Math.round(f.height), f.right <= st.right && f.top >= st.top, r.width > 120 && r.right <= innerWidth]; });
+    check(ph[0] && ph[1] >= 340 && ph[2] >= 44 && ph[3] >= 44 && ph[4] && ph[5], `H9 at 390 px the stage fits the width, the full-screen button is a 44 px target inside it, the slider fits (${ph.join(',')})`);
     await v.ctx.close();
     const r = await open({ motion: 'reduce' });
     await loaded(r.v.pg).catch(() => null);
     const anim = await r.v.pg.evaluate(() => [...document.querySelectorAll('.bp-bar')].map((e) => getComputedStyle(e).animationName));
     check(anim.length > 0 && anim.every((a) => a === 'none') && (await r.v.pg.evaluate(() => document.getElementById('bp-line').dataset.motion)) === 'still', `P2 reduced motion: no animation, a still helix (${anim.join(',')})`);
+    // ---- H8, H9: movable and scalable. Reduced motion, so nothing turns by itself and a position can be read twice
+    const pg = r.v.pg;
+    check(await pg.evaluate(() => window.BuildPage.helix.tier()) === 'plain' && await pg.evaluate(() => window.BuildPage.helix.tier('bloom')) === 'bloom' && await pg.evaluate(() => window.BuildPage.helix.tier('plain')) === 'plain', 'H7 a tier named on the element is the one drawn; tier(name) changes it and pins it');
+    const pos = async () => pg.evaluate(() => { window.BuildPage.helix.focus('BB2'); const l = document.querySelector('#bp-line .bh-label'); return [Math.round(parseFloat(l.style.left)), Math.round(parseFloat(l.style.top)), l.hidden].join(); });
+    await pg.locator('#bp-line').scrollIntoViewIfNeeded();
+    const box = await pg.locator('#bp-line .bh-stage').boundingBox(), cx = box.x + box.width / 2, cy = box.y + box.height / 2;
+    const p0 = await pos();
+    await pg.mouse.move(cx, cy); const y0 = await pg.evaluate(() => scrollY); await pg.mouse.wheel(0, 240);
+    // the scroll is waited for, not timed: on a busy runner the page had not moved after 150 ms (run 43288385522: "scroll 54 -> 54")
+    await pg.waitForFunction((y) => scrollY > y, y0, { timeout: 5000 }).catch(() => null); await pg.waitForTimeout(150);
+    const y1 = await pg.evaluate(() => scrollY), pW0 = await pos();
+    check(y1 > y0 && pW0 === p0, `H8 the wheel over a helix that is not in focus scrolls the page and zooms nothing (scroll ${y0} -> ${y1}; ${p0} / ${pW0})`);
+    await pg.evaluate(() => window.scrollTo(0, 0)); await pg.locator('#bp-line').scrollIntoViewIfNeeded();
+    const b2 = await pg.locator('#bp-line .bh-stage').boundingBox(), mx = b2.x + b2.width / 2, my = b2.y + b2.height / 2, q0 = await pos();
+    await pg.mouse.move(mx, my); await pg.mouse.down(); await pg.mouse.move(mx + 90, my + 10, { steps: 4 }); await pg.mouse.move(mx + 180, my + 30, { steps: 4 }); await pg.mouse.up();
+    const q1 = await pos();
+    check(q1 !== q0 && !/true$/.test(q1), `H8 a drag turns the helix (the job's place ${q0} -> ${q1})`);
+    await pg.keyboard.press('0'); const q2 = await pos();
+    check(q2 === q0 && await pg.evaluate(() => document.activeElement === document.querySelector('#bp-line .bh-stage')), `H8 a click puts the helix in focus and 0 puts it back (${q0} / ${q2})`);
+    const ys = await pg.evaluate(() => scrollY); await pg.mouse.move(mx, my); await pg.mouse.wheel(0, -300); let q3 = q0; for (let i = 0; i < 25 && q3 === q0; i++) { await pg.waitForTimeout(120); q3 = await pos(); }   // the zoom is waited for, 3 s at most
+    check(q3 !== q0 && await pg.evaluate(() => scrollY) === ys, `H8 with the helix in focus the wheel zooms and the page stays (${q0} -> ${q3})`);
+    await pg.keyboard.press('0'); await pg.keyboard.press('ArrowRight'); const q4 = await pos(); await pg.keyboard.press('0'); await pg.keyboard.press('+'); const q5 = await pos(); await pg.keyboard.press('0');
+    check(q4 !== q0 && q5 !== q0 && q4 !== q5 && await pos() === q0, `H8 the keys: an arrow turns, plus zooms, 0 resets (${q0}; ${q4}; ${q5})`);
+    // the job in hand is BB2, the newest (pos() asked for it): down goes to the one before it, then to the one before that
+    await pg.keyboard.press('ArrowDown'); const s1 = await text(pg, '#bp-line .bh-said'); await pg.keyboard.press('ArrowDown'); const s2 = await text(pg, '#bp-line .bh-said');
+    check(/^(AA1|CC3|DD4)\. /.test(s1) && /^(AA1|CC3|DD4)\. /.test(s2) && s2 !== s1 && /CI:/.test(s2) && !(await pg.locator('#bp-line .bh-label').isHidden()), `H8 the down arrow steps through the jobs towards the oldest and says each one: ${s1.slice(0, 60)} | ${s2.slice(0, 60)}`);
+    await pg.locator('#bp-line .bh-range').evaluate((el) => { el.value = '0'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+    const rp = await pg.evaluate(() => [document.querySelector('#bp-line .bh-c1').textContent, document.querySelector('#bp-line .bh-at').textContent, document.querySelector('#bp-line .bh-range').getAttribute('aria-valuetext')]);
+    await pg.locator('#bp-line .bh-range').evaluate((el) => { el.value = '1000'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+    const rn = await pg.evaluate(() => [document.querySelector('#bp-line .bh-c1').textContent, document.querySelector('#bp-line .bh-at').textContent]);
+    check(/^[12] being built$/.test(rp[0]) && /^\d\d:\d\d$/.test(rp[1]) && rp[2] === rp[1] && rn.join() === '3 being built,now', `H8 the replay slider: fewer jobs at the start and the hour said; back at the end it is now (${rp.join(',')} -> ${rn.join(',')})`);
+    const fb = pg.locator('#bp-line .bh-full');
+    const mid = await fb.evaluate((f) => { const a = f.getBoundingClientRect(), b = f.querySelector('svg').getBoundingClientRect(); return [Math.abs((a.left + a.width / 2) - (b.left + b.width / 2)), Math.abs((a.top + a.height / 2) - (b.top + b.height / 2)), a.width, a.height, f.getAttribute('aria-label')]; });
+    check(mid[0] <= 0.5 && mid[1] <= 0.5 && mid[2] >= 44 && mid[3] >= 44 && mid[4] === 'Full screen', `H9 the full-screen button: its icon in the middle of its box, 44 px, named (${mid.join(',')})`);
+    await fb.click(); await pg.waitForFunction(() => document.getElementById('bp-line').classList.contains('bh-on'), null, { timeout: 5000 }).catch(() => null); await pg.waitForTimeout(400);
+    const on = await pg.evaluate(() => { const h = document.getElementById('bp-line'), st = h.querySelector('.bh-stage').getBoundingClientRect(), f = h.querySelector('.bh-full'), a = f.getBoundingClientRect(), b = f.querySelector('svg').getBoundingClientRect(); return [h.classList.contains('bh-on'), st.width >= innerWidth - 24, st.height >= innerHeight * 0.7, f.getAttribute('aria-label'), f.getAttribute('aria-pressed'), Math.abs((a.left + a.width / 2) - (b.left + b.width / 2)) <= 0.5 && Math.abs((a.top + a.height / 2) - (b.top + b.height / 2)) <= 0.5]; });
+    check(on.join() === 'true,true,true,Leave full screen,true,true', `H9 full screen: the helix fills the window, the button says how to leave, its icon still in the middle (${on.join(',')})`);
+    await fb.click(); await pg.waitForFunction(() => !document.getElementById('bp-line').classList.contains('bh-on') && !document.fullscreenElement, null, { timeout: 5000 }).catch(() => null);
+    check(await pg.evaluate(() => !document.getElementById('bp-line').classList.contains('bh-on') && !document.fullscreenElement), 'H9 the same button leaves full screen');
+    check(!r.v.errs.length, `H8 H9 no page error while moving and scaling: ${r.v.errs.join(' | ')}`);
     await r.v.ctx.close();
   }
   return { checks, problems };
