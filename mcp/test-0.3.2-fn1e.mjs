@@ -20,6 +20,8 @@ import { fileURLToPath } from 'node:url';
 import { disclosureCases, meaningCases } from './fixtures/fn1e-cases.mjs';
 import { withoutBrief } from './fixtures/ox2-pins.mjs';   // (0.3.3 OX2: its own section left out, pinned by ox2)
 const BRIEF_TALLY = { had: 0, noted: 0 };
+import { withoutBookmarkRules } from './fixtures/rx1-pins.mjs';   // (0.3.3 RX1: its two rules left out of rulesRun, pinned by rx1)
+const RX1_TALLY = { ran: 0 };
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const problems = []; let checks = 0;
@@ -218,7 +220,7 @@ CASES.push(['cut to the bone', worst, { maxFindings: 200 }]);
 
 for (const [name, p, o] of CASES) {
   let a; try { a = await CR.checkReport(p, o); } catch (e) { a = { refused: String(e && e.message || e) }; }
-  out['C ' + name] = norm(JSON.stringify(withoutBrief(a, BRIEF_TALLY)));
+  out['C ' + name] = norm(JSON.stringify(withoutBookmarkRules(withoutBrief(a, BRIEF_TALLY), RX1_TALLY)));
 }
 
 // ---------- M: what each visual means ----------
@@ -262,5 +264,7 @@ const DO = all('D'), CO = all('C'), MO = all('M');
 fs.rmSync(ROOT, { recursive: true, force: true });
 // (0.3.3 OX2, on purpose) the answers above are compared without OX2's own section (fixtures/ox2-pins.mjs): the check_report cases: 42 answers carry briefCheck (the twin project names its model), 4 say in notChecked that it was not judged
 chk(() => BRIEF_TALLY.had === 42 && BRIEF_TALLY.noted === 4, () => `OX2: the answers that carry briefCheck and the notChecked lines, 42 and 4: ${JSON.stringify(BRIEF_TALLY)}`);
+// (0.3.3 RX1, on purpose) the answers above are compared without RX1's two bookmark rules in rulesRun (fixtures/rx1-pins.mjs)
+chk(() => RX1_TALLY.ran === 47, () => `RX1: the answers whose rulesRun lists a bookmark rule, 47: ${JSON.stringify(RX1_TALLY)}`);
 if (problems.length) { console.log(`FAIL script=test-0.3.2-fn1e.mjs cause=${problems[0].slice(0, 300)}`); problems.slice(0, 20).forEach((p) => console.log('  - ' + p.slice(0, 400))); console.log(`FAIL  fn1e  ${problems.length} of ${checks} checks failed`); process.exit(1); }
 console.log(`PASS  fn1e  ${checks} checks`);

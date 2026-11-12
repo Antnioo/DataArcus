@@ -318,8 +318,10 @@
     // (0.3.3 RX1) a bookmark that names a page or visuals the report no longer has, or a bookmark listed without its
     // file. Microsoft Learn (the PBIR format's page): "any invalid visuals are removed from the bookmark configuration"
     // when Desktop saves, so the bookmark quietly does less than its name says. Counts and the file only: a bookmark's
-    // name and the ids it holds are the report's own text, never quoted. A report read without its bookmarks: not run
+    // name and the ids it holds are the report's own text, never quoted. A report with no bookmark: not run (when), so
+    // it is not in the answer's rulesRun either, as a right-to-left rule is not on a left-to-right report
     { id: 'BOOKMARK_TARGET_MISSING', group: 'navigation', severity: 'warning', source: BOOKMARK_SRC,
+      when: (R) => (Array.isArray(R.bookmarks) && R.bookmarks.length > 0) || !!(R.bookmarkList && Array.isArray(R.bookmarkList.ids) && R.bookmarkList.ids.length),
       about: 'a bookmark names a page of this report and visuals of that page; every bookmark bookmarks.json lists has its file',
       run(R, out) {
         if (!Array.isArray(R.bookmarks)) return;
@@ -340,6 +342,7 @@
     // in the plan's order) are listed in another order in bookmarks.json. A view the owner removed is no finding; only
     // the order of those still there is judged. A note: the new order may be meant. A report without the record: not run
     { id: 'BOOKMARK_ORDER', group: 'navigation', severity: 'note', source: BOOKMARK_ORDER_SRC,
+      when: (R) => Array.isArray(R.bookmarkPlan),
       about: 'the views DataArcus wrote as bookmarks are in the plan\'s order in bookmarks.json (the Bookmarks pane, its slide show and a bookmark navigator follow that order)',
       run(R, out) {
         const plan = R.bookmarkPlan, L = R.bookmarkList;
@@ -452,7 +455,7 @@
     const groups = (opts && opts.groups) || GROUPS, findings = [], ran = [], failed = [];
     // (A4-11: a right-to-left rule keys on the report's direction, Arabic or Hebrew; R.dir, else from R.lang)
     const dir = R.dir || (R.lang === 'ar' || R.lang === 'he' ? 'rtl' : 'ltr'), parts = byDirection(R, dir);
-    RULES.filter((r) => groups.includes(r.group) && (!r.lang || r.lang === R.lang)).forEach((rule) => {
+    RULES.filter((r) => groups.includes(r.group) && (!r.lang || r.lang === R.lang) && (!r.when || r.when(R))).forEach((rule) => {
       const runs = rule.dir || rule.byDir ? parts.filter((v) => !rule.dir || rule.dir === v.dir) : [{ dir, R }];
       if (!runs.length) return;
       ran.push(rule.id);

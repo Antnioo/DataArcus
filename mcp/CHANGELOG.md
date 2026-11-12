@@ -9,7 +9,7 @@ package's manifest; this file says what is in it.
   page). The approval window lists them with their pages before anything is written; `create_report` then writes one
   bookmark a view, first in the Bookmarks pane in the plan's order, so "View" in that pane plays them as a slide show.
   A view opens its page and holds no filter, slicer or visual state (no data value can be in it); it does not yet show
-  or hide visuals. For a new report in one language; not yet opened in Power BI Desktop by the owner.
+  or hide visuals. For a new report in one language; not yet tried in Power BI Desktop.
 - `check_report` has two new rules for any report: a bookmark that names a page or visuals the report no longer has, or
   a bookmark listed without its file (a warning, counted, never named), and the views DataArcus wrote listed in another
   order than the plan's (a note). Alt text on every visual that shows data, at most 250 characters, and a tab order in

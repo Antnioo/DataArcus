@@ -83,7 +83,9 @@ try {
     chk(() => J(shape(t.inputSchema)) === J(want), () => `S2. ${b.name}: the listed schema is the base's without the four keys, nothing else: ${firstDiff(want, shape(t.inputSchema) || {}, b.name)}`);
     chk(() => t.title === b.title && J(t.annotations) === J(b.annotations) && typeof t.description === 'string' && t.description.length > 100, () => `S3. ${b.name}: title and annotations as on the base, a description: ${t.title} ${J(t.annotations)}`);
   }
-  chk(() => J(count) === '{"schema":11,"execution":11,"propertyNames":10,"minimum":4,"maximum":9}', () => `S4. what was left out of the base's list, counted: ${J(count)}`);
+  // (0.3.3 RX1, on purpose: plan_layout's new bookmarks option has one whole number, a view's page, so one more
+  // "maximum" of the safe-integer kind is left out of the list: 9 -> 10; the fixture got that one property, 25 lines)
+  chk(() => J(count) === '{"schema":11,"execution":11,"propertyNames":10,"minimum":4,"maximum":10}', () => `S4. what was left out of the base's list, counted: ${J(count)}`);
 
   // ---------- P: the calls the dropped keys forbade ----------
   const big = await s.call('add_gulf_calendar', { path: 'twin-project', firstYear: 1e17, lastYear: 2026 });
