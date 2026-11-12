@@ -19,8 +19,9 @@ Moved here unchanged by A1 (0.3.1, 25 Oct) from `mcp/CLAUDE.md` ("Tests"); its s
   (`if (part('id')) {`) listed in exactly one of `SHARDS`; a part that reads what an earlier part wrote goes in
   `TOGETHER` with it. The run fails otherwise. To rebalance: `DA_PART_TIMES=1 node test.mjs` prints each part's
   seconds and reports (G-13 validates about 2 s a report). The website: `run-all.mjs --shard k/3`, `SHARDS` there.
-- macOS (CI2, 4 Nov): the same 5 plan shards in 3 jobs (shards 0 | 2, 3 | 1, 4 in turn, each its own log and manifest) on
-  `macos-15-intel`, the standard Intel runner: the arm64 pool (`macos-latest`) dropped shards unqueued for capacity.
+- macOS (CI2, 4 Nov; CI3, 12 Nov): the same 5 plan shards, one job each (each its own log and manifest; 3 jobs of two
+  shards ran into the 40 minutes on a slow runner), on `macos-15-intel`, the standard Intel runner: the arm64 pool
+  (`macos-latest`) dropped shards unqueued for capacity.
 - Every script in `npm test` ends with exactly one result line, `PASS  <name>  <N> checks` (or `FAIL  <name>  ...` /
   `SKIP  <name>  ...`), as `scripts/ci-sum.mjs` counts them; `scripts/check-result-lines.mjs` (CI) names a script without one.
 - Failures (A2, 0.3.1): the runner shows each suite's result line; a failing suite then prints one line,
