@@ -9,7 +9,7 @@
   (the lint lines only), fixtures by their recorders, new suite sn4, TOOLS.md, CHANGELOG, WORK.md, this note.
 - **Expected checks:** sn4 red on 0dc0ea05 first, then green; fn1e only the 4 lint cases move (read every key, R-95);
   tl1 and tk1 pass, tools/list under 61,000 (60,532 now, measured); lk1 23, sn1 20, rv1 484 unchanged; lint 0; CI.
-- **Resume:** plan written 2026-11-12T02:33Z; no code yet.
+- **Resume:** items 1, 2, 3 done; CI run 43143955271 failed only sp42 (R3, recorded JSON); re-recorded on purpose (2026-11-12T03:03Z); CI again.
 
 ## The plan (written before the code, 2026-11-12T02:33Z)
 Measured on 0dc0ea05:
@@ -38,8 +38,12 @@ the real server, under tl1/tk1's 61,000).
   `pastTheCap`), present only when something was left out (R-89). A3 proves deep and capped through the function itself.
   R-90, suites that run read_report with JSON, before the change: 0.2.9-agent, 0.2.9c, 0.2.9d, 0.2.9f, 0.2.9v, 0.3.0-claims,
   large-model-caps, powerbi-2026-10, sweep-s1, testers, audit-readers, checker, cx2, reader-seen, sf1, sq15a, sp21, sp42,
-  tk1, lk1, tl1, fuzz, rc23, round22. None moved: `npm test -- report` 80 suites and `-- checker` 20 suites pass; a report
-  read whole has no new key (A0).
+  tk1, lk1, tl1, fuzz, rc23, round22. **I wrote "none moved" before running sp42: wrong.** CI (run 43143955271, f620e1ee) failed sp42 R3 alone (Linux shard 3,
+  Windows shard 4): its report has 3 unreadable files, so the two JSON answers of R3 (`json`, `page1`) gained `notRead:
+  {unreadable: {count: 3, why: "not readable as JSON"}}` and their `size` (6538 -> 6604, 3956 -> 4022 characters), read from
+  dumps of the base's and the new answerOf (every other case of sp42's 22 unchanged). **sp42 re-recorded ON PURPOSE by its
+  recorder (SP42_RECORD=1): R3 only** (length 46132 -> 46265). The other suites of the list: no CI failure; `-- report`
+  80 and `-- checker` 20 pass. A report read whole has no new key (A0).
 - **2.** `font`: "Hand-placed pages: the font (default Segoe UI)" -> "The font (default Segoe UI)" (lib/report-inputs.mjs:91):
   true for hand pages (FT1) and a design (FT2: it replaces the design's font; the plan says which). **Arabic:** grep for
   the old text and for Arabic font wording in report-inputs.mjs and approval-ar.mjs: no Arabic copy of this description
@@ -53,8 +57,11 @@ the real server, under tl1/tk1's 61,000).
   `never as errors.","notListed":` (the lint's own text before the key; it fails if no case cuts the lint), said in the test.
   The pins file's `about` says it.
 
+## Changed on purpose
+- fixtures/fn1e-pins.json: 4 lint cases (item 3). fixtures/sp42-split.json: R3 (item 1). test-0.3.2-fn1e.mjs C2's needle.
+
 ## Runs
-sn4 11, fn1e 591, tl1 51, tk1 15, lk1 23, sn1 20, terminology-sheet 48 and bilingual-report 34 (3 times each, R-77), `npm test
+sn4 11, sp42 22, fn1e 591, tl1 51, tk1 15, lk1 23, sn1 20, terminology-sheet 48 and bilingual-report 34 (3 times each, R-77), `npm test
 -- report` 80 suites, `-- checker` 20 suites PASS; tsc (tsconfig.tc1.json) clean; lint 0; check-modules --strict 1263,
 check-contracts 868, result-lines 255, agent-memory 529 (WORK.md), changelog-words 88, site config PASS.
 
@@ -84,5 +91,6 @@ none.
    kinds of loss and 10 long link names could add about 700 characters. Not measured over the cap.
 
 ## Lessons for the reviewer
+- R-90 means running every suite on the list, not only the areas: sp42 was on my list and only CI ran it.
 - A suite with a fixed number (sn1 T6) can be a ceiling: shortening a description needs no change there.
 - fn1e's C2 needle is a text; a rename of a key in a pinned section moves it too.
