@@ -47,6 +47,14 @@ const RIPPLES = () => {
 };
 // (CI3) a step's effects are waited for, never timed (lib.mjs quiet: the page's short timers, frames, transitions and
 // scroll since the step began); fixed waits of 100 to 3000 ms raced them on a busy runner (I-1112-1700)
+// (CI3) the #contact arrival keeps its target in place for 2.5 s after load (site-navigation.js), then smooth scrolling
+// starts; "opened" read during that hold only while ready() ended in time (base, 16x throttled: "A3 opened smooth: false
+// -> true"). The hold's timer is held here until the step that ends it, so "opened" is always read inside it.
+const HOLD = (ms) => {
+  const st = window.setTimeout, held = [];
+  window.setTimeout = function (fn, t, ...a) { if (+t === ms && typeof fn === 'function') { held.push(() => fn(...a)); return 0; } return st.call(this, fn, t, ...a); };
+  window.__release = () => held.splice(0).forEach((f) => f());
+};
 const until = (pg, fn, arg) => pg.waitForFunction(fn, arg, { timeout: WAIT }).catch(() => null);
 // a made-up link, clicked and kept from navigating (the adapter listens on document, capture)
 const linkClick = (pg, href, text, cls) => pg.evaluate(([h, t, c]) => {
@@ -77,7 +85,7 @@ const SESSIONS = [
     ['the WhatsApp button', (pg) => realClick(pg, '.wa-float')],
     ['a form first focus, twice', async (pg) => { await pg.focus('#contact-name'); await pg.focus('#contact-email'); await pg.evaluate(() => document.activeElement.blur()); await pg.focus('#contact-name'); }],
     ['the language attribute flips', (pg) => pg.evaluate(() => { document.documentElement.lang = document.documentElement.lang === 'ar' ? 'en' : 'ar'; })]]],
-  ['a #contact arrival', 'index.html#contact', {}, [['settled', (pg) => until(pg, () => document.documentElement.classList.contains('smooth-scroll'))]]],   // the arrival's 2.5 s hold ended
+  ['a #contact arrival', 'index.html#contact', { hold: 2500 }, [['settled', async (pg) => { await pg.evaluate(() => window.__release()); await until(pg, () => document.documentElement.classList.contains('smooth-scroll')); }]]],   // the hold ends
   ['phone menu', 'index.html', { viewport: [390, 844] }, [
     ['open', openMenu], ['an inside link', (pg) => pg.evaluate(() => document.querySelector('a[href="#contact"]').click())],
     ['open again', async (pg) => { await scrollTo(pg, 0); await openMenu(pg); }], ['an outside click', (pg) => pg.mouse.click(200, 700)],
@@ -157,6 +165,7 @@ export default async function ({ browser, url }) {
       const id = (lang === 'en' ? 'E' : 'A') + (k + 1), bad = [];
       const v = await visitor(browser, { viewport: opts.viewport || [1440, 900], timezone: opts.timezone || 'Asia/Dubai', consent: opts.consent === undefined ? 'denied' : opts.consent, motion: opts.motion || 'no-preference' });
       await v.ctx.addInitScript(SEED); await v.ctx.addInitScript(RIPPLES); if (!opts.clock) await trackWork(v.ctx);   // (a fake clock replaces the timers trackWork wraps)
+      if (opts.hold) await v.ctx.addInitScript(HOLD, opts.hold);
       const posts = [];
       await v.ctx.route(/web3forms/, (rt) => { posts.push(rt.request().postData()); rt.fulfill({ status: opts.fail ? 500 : 200, body: '' }); });
       if (opts.noAos) await v.ctx.route(/cdn\.jsdelivr\.net\/npm\/aos/, (rt) => rt.abort());
