@@ -37,3 +37,5 @@ none
 
 ## Lessons for the reviewer
 - A note's size claim ("1 character left") differed from the tool's (7): name the tool and unit (code points) in such items.
+
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/43323823343 on 02d701c4 (contains both code commits; mcp-macos is skipped by the workflow, CI3 owns it)
