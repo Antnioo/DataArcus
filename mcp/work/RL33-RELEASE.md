@@ -26,7 +26,7 @@
   26 jobs had lines (RX1's two came with its merge); 2 user-facing changes had none and got one (the PL-300 practice questions, the article
   title); 17 change nothing a user sees (tests, CI, builder tools, type checking, research notes). One number was
   wrong and is now measured (the tool list: 60,930 characters with RX1's option, 70 under its cap of 61,000).
-- tests.yml green on Linux, Windows and macOS on ed32a6fd, the head with RX1 (run 43293059862, attempt 1; the line is
+- tests.yml green on Linux, Windows and macOS on ec9cbf27, the head with RX1 (run 43307635250, attempt 1; the line is
   in `mcp/work/RL33.md`).
 - macOS now runs on a `release/*` branch (D-1104-19), so a release branch is read on three systems before main.
 
