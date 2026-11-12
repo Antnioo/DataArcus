@@ -106,5 +106,7 @@ to open (the reason the score is withheld).
 3. A picker for a zip with more than one model (the brief's later job).
 
 ## Lessons for the reviewer
+- CI run 43144022114 on d26b19ca was red on Windows only: au1 W3's skip filter `/tables\//` missed backslash paths, so nothing was
+  left out (2026-11-12T03:09Z); fixed in the test (`[\\/]`), the code unchanged. A path filter in a test is written for both separators.
 - A choice the product makes in more than one place (here: which model folder) has a CONTRACTS.md family: grep the
   ledger for the question before writing the rule, not after.

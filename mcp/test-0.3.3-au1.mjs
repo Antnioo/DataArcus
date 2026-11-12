@@ -133,7 +133,7 @@ for (const [label, w] of Object.entries(W)) {
   const noDates = await run(w, zipOf(plain((f) => /Dates\.tmdl$/.test(f))), 'plain.zip');
   const u = noDates.result && noDates.result.unreadable;
   chk(() => noDates.type === 'done' && u && u.files.length === 1 && u.files[0].table === 'Dates' && /^1 model file\(s\) could not be read: Dates \(model\.tmdl names this table/.test(u.en) && /^تعذّرت قراءة 1 من ملفات النموذج: Dates \(/.test(u.ar), () => `W2 (${label}). without Dates.tmdl: unreadable names the table Dates, EN and AR (the page then gives no score): ${J(noDates.result ? noDates.result.unreadable : noDates)}`);
-  const none = await run(w, zipOf(plain((f) => /tables\//.test(f))), 'plain.zip');
+  const none = await run(w, zipOf(plain((f) => /tables[\\/]/.test(f))), 'plain.zip');
   chk(() => none.type === 'done' && none.result.unreadable && none.result.unreadable.files.map((x) => x.table).join() === 'Orders,Dates', () => `W3 (${label}). every table file missing: not NO_MODEL, both tables named: ${J(none.type === 'error' ? none : none.result.unreadable)}`);
 }
 
