@@ -22,7 +22,7 @@
  *                             node is absent before it started and running until it merged; at model.to it is as it is now
  *   counterText(r, fmt?)      ["<n> being built", "<m> finished · $<cost> in 24 hours"]
  *   nextTier(tier, ms)        the tier after 45 frames averaging ms: above 28 one step down; above 50 at plain: 'svg'
- *   mount(host, win)          host: the element to draw in; -> { mode: 'webgl' | 'svg', set(model), focus(code), tier(name?) }.
+ *   mount(host, win, opts?)   host: the element to draw in; opts.hhmm: the page's "HH:MM" (build-page.js); needs page-toast.js on the page; -> { mode: 'webgl' | 'svg', set(model), focus(code), tier(name?) }.
  *                             Drag turns it, the wheel (with the helix in focus, or Ctrl) and a pinch zoom, the arrow keys
  *                             turn and step through the jobs, + and - zoom, 0 resets, F is full screen. It turns by itself
  *                             only when motion is allowed, the tab shows and the helix is on screen; reduced motion: still.
@@ -96,10 +96,10 @@
     + 'void main() { vec3 c = texture2D(tMap, vUv).rgb; if (uFocus > 0.0) { float z = -perspectiveDepthToViewZ(texture2D(tDepth, vUv).x, uNear, uFar); c = mix(c, texture2D(tSoft, vUv).rgb, uFocus * smoothstep(uRange * 0.45, uRange, abs(z - uAt))); }\n'
     + 'c += (texture2D(tGlow, vUv).rgb + texture2D(tWide, vUv).rgb * 0.8) * uGlow; vec2 q = vUv - 0.5; c *= 1.0 - dot(q, q) * 0.35; gl_FragColor = vec4(c, 1.0);\n#include <colorspace_fragment>\n}';
 
-  const mount = (host, win) => {
+  const mount = (host, win, opts) => {
     const doc = win.document, THREE = win.THREE, NS = 'http://www.w3.org/2000/svg';
     const calm = () => !!(win.matchMedia && win.matchMedia('(prefers-reduced-motion: reduce)').matches);
-    const el = (tag, cls, text) => { const e = doc.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+    const el = (tag, cls, text) => win.DAPageToast.el(doc, tag, cls, text);   // page-toast.js, its one place (loaded before build-page.js, which calls mount)
     const mk = (tag, attrs) => { const e = doc.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
 
     // ---- the frame every mode shares: the stage (canvas or SVG), the label, the full-screen button, the replay row
@@ -126,7 +126,7 @@
       label.style.top = Math.max(8, y - label.offsetHeight - 14) + 'px';
     };
     const hideLabel = () => { label.hidden = true; };
-    const hhmm = (ms) => { const d = new Date(ms); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+    const hhmm = (opts && opts.hhmm) || ((ms) => new Date(ms).toISOString().slice(11, 16));   // the page's own clock text (build-page.js hhmm); without it, the hour in UTC
     const paint = () => {
       view = replayAt(model, at);
       const [a, b] = counterText(view); cA.textContent = a; cB.textContent = b;

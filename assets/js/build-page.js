@@ -160,7 +160,7 @@ const MAX_LOOKUPS = 40, KEEP_CALLS = 12;   // latest-commit lookups per refresh;
     const client = createClient({ fetch: (u, o) => win.fetch(u, o), now: () => Date.now() });
     const last = {};   // section -> its last data: a section that cannot load keeps it
     // the helix (build-helix.js, three.js): where either is missing the page still works with its cards
-    const helix = win.BuildHelix ? win.BuildHelix.mount($('bp-line'), win) : null;
+    const helix = win.BuildHelix ? win.BuildHelix.mount($('bp-line'), win, { hhmm }) : null;
     // the Fuel panel (build-usage.js, BF2): read through this same client, once per refresh; the page works without it
     const usage = win.BuildUsage ? win.BuildUsage.mount(win, client) : null;
     let timer = 0, busy = null;
