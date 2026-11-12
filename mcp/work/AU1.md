@@ -10,7 +10,8 @@
 - **Expected checks:** au1 red on 0dc0ea05 first (reader, worker, real server), green after; the 7 TMDL projects in
   the repo (the golden inputs and every TMDL fixture mcp/fixtures copies) give 0 new skipped entries and 0 score
   differences; aud047 unchanged; website model-health red first on the new block; build:min; lint 0; CI green.
-- **Resume:** 2026-11-12T02:47Z code, tests and docs committed; next: merge origin/integration/0.3.3 once, build:min, CI.
+- **Resume:** DONE (2026-11-12T03:36Z): the tip is ready to merge; nothing left on this branch.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/43146332429 on 2e2df3cf75f13ce632bd9acd36ddf514c00ccf4e (2026-11-12T03:36Z; conclusion success; integration had not moved since 0dc0ea05, no merge). DONE
 
 ## Measured first, on the base 0dc0ea05 (2026-11-12T02:34Z)
 - AUD-067 reproduced with assets/js/tmdl-model.js and model-health-engine.js on mcp/test-models/no-measures
