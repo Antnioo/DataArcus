@@ -93,12 +93,13 @@ const greenNote = (body, branch = 'feat/0.3.3-zz9') => {
   fs.writeFileSync(path.join(rr.dir, 'mcp/work/ZZ9.md'), `## Summary\n- **Resume:** x\n\nCI green: ${URL_} on ${rr.head}\n\n${body}`);
   return rr;
 };
+const runFresh = (dir) => spawnSync(process.execPath, [script, '--root', dir], { encoding: 'utf8', input: '{}', env: { ...process.env, AGENT_STOP_STATE_DIR: fs.mkdtempSync(path.join(tmp, 'fs-')) } });   // each call its own refusal count
 const formatRefuses = (body, msg, mention) => {
-  const res = run(greenNote(body).dir);
+  const res = runFresh(greenNote(body).dir);
   ok(res.status === 2 && FMT.test(res.stderr) && /class: <|route: </.test(res.stderr), `${msg}: want exit 2 and the format message, got ${res.status} / ${res.stderr.trim()}`);
   if (mention) ok(res.stderr.includes(mention), `${msg}: the message names the line "${mention}", got ${res.stderr.trim()}`);
 };
-const formatAllows = (body, msg) => allows(run(greenNote(body).dir), msg);
+const formatAllows = (body, msg) => allows(runFresh(greenNote(body).dir), msg);
 const OWNER_OK = '- Should the cap be 3 or 5? | class: rules | rec: 5 | yes: cap 5 | no: cap 3 | default: 3';
 const SEEN_OK = '- A wrong label on page 2 | route: backlog | why: not this job';
 
@@ -125,7 +126,7 @@ formatAllows('## For the reviewer\n- no new Arabic\n- nothing to decide\n- The c
 // a heading that only contains the words is not the section (LR3.md has: ## For the owner". Allows after 3)
 formatAllows('- Two words: ## For the owner". Allows after 3\n## For the owner". Allows after 3\n- Plain statement that is not an owner line.\n## Seen, not in scope, listed above\n- Bare line.\n', 'a heading that only contains the words is not the section');
 // a STOP: line allows at once, whatever the sections say
-allows(run(greenNote('STOP: the platform refused.\n\n## For the owner\n- a statement\n\n## Seen, not in scope\n- bare\n').dir), 'STOP: allows even with bad sections');
+allows(runFresh(greenNote('STOP: the platform refused.\n\n## For the owner\n- a statement\n\n## Seen, not in scope\n- bare\n').dir), 'STOP: allows even with bad sections');
 // the refusal count stays: 3 refusals on a bad format, then the stop is allowed
 {
   const rr = greenNote('## For the owner\n- a statement\n');

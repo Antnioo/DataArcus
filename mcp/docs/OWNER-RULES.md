@@ -58,6 +58,21 @@ collecting every point decided so far, so nothing is lost between sessions. Chec
 Before a session is compacted or ends: write the current state, every decision and the next step into
 `mcp/WORK.md` (or the file that owns it), commit and push.
 
+## The job note: the three sections a machine reads (WF3, owner D-1112-03)
+Every builder's `mcp/work/<ID>.md` ends its report items in these sections; the Stop hook (`scripts/agent-stop-check.mjs`)
+refuses a note with a `CI green:` line when a line below does not match. One item per list line ("- ", "* " or "1. ");
+a wrapped item continues on the next line, which may start with spaces and "| route:" (or any other field). "none" is a line.
+- **`## For the owner`**: only a question that is his to decide. The text ends with "?" before the first " | ", then the fields
+  `| class: x | rec: ... | yes: ... | no: ... | default: ...`. class is one of: arabic, public, money, main, rules, github,
+  laptop, direction. Example:
+  `- Should the cap be 3 or 5? | class: rules | rec: 5 | yes: cap 5 | no: cap 3 | default: 3`
+- **`## Seen, not in scope`**: each line has `| route: <fix|job|backlog|drop> | why: ...`; route fix also `| size: S|M|L`. Example:
+  `- A wrong label on page 2 | route: backlog | why: not this job`
+  `- The cut text on the About card | route: fix | size: S | why: one line, same file`
+- **`## For the reviewer`**: everything that is a statement and not a question: "no new Arabic", "nothing to decide", result lines.
+Not a question for the owner? Move it under "## For the reviewer". Other field names the engine reads: risk, proof, where.
+Notes already written stay as they are.
+
 ## Website changes (owner's rule 2026-10-06)
 Any change to the website runs the check of all its config files: `node scripts/test-site-config.mjs` (in CI on every
 push, before the suites). It covers `_config.yml`, `CNAME`, `robots.txt`, `sitemap.xml` (every URL has its file),
