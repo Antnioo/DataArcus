@@ -74,3 +74,5 @@ The sweep covered every suite file of the list inside the 80 minutes (nothing is
 ## Lessons for the reviewer
 - A recording suite (sp34) fails on any change, so "does a test fail when X" is a weak measure of coverage; the brief could say which kind of failure counts.
 - "mask 6 files" in a brief was a count of patterns, none of which masked; a grep for the replace call (`undate`) finds the real masks (sp24, sp32).
+
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/43137712487 on 6942b4c9 (every area run, website-suites 1-3, mcp-parts 0-4, mcp-windows-parts 0-4 and website-checks passed; the two macOS jobs are skipped by the workflow). Lint exit 0 run locally; the WORK.md line is in that commit. Done 2026-11-12T02:10Z.
