@@ -389,7 +389,9 @@ export default async function ({ browser, url }) {
     await pg.locator('#bp-line').scrollIntoViewIfNeeded();
     const box = await pg.locator('#bp-line .bh-stage').boundingBox(), cx = box.x + box.width / 2, cy = box.y + box.height / 2;
     const p0 = await pos();
-    await pg.mouse.move(cx, cy); const y0 = await pg.evaluate(() => scrollY); await pg.mouse.wheel(0, 240); await pg.waitForTimeout(150);
+    await pg.mouse.move(cx, cy); const y0 = await pg.evaluate(() => scrollY); await pg.mouse.wheel(0, 240);
+    // the scroll is waited for, not timed: on a busy runner the page had not moved after 150 ms (run 43288385522: "scroll 54 -> 54")
+    await pg.waitForFunction((y) => scrollY > y, y0, { timeout: 5000 }).catch(() => null); await pg.waitForTimeout(150);
     const y1 = await pg.evaluate(() => scrollY), pW0 = await pos();
     check(y1 > y0 && pW0 === p0, `H8 the wheel over a helix that is not in focus scrolls the page and zooms nothing (scroll ${y0} -> ${y1}; ${p0} / ${pW0})`);
     await pg.evaluate(() => window.scrollTo(0, 0)); await pg.locator('#bp-line').scrollIntoViewIfNeeded();
@@ -399,7 +401,7 @@ export default async function ({ browser, url }) {
     check(q1 !== q0 && !/true$/.test(q1), `H8 a drag turns the helix (the job's place ${q0} -> ${q1})`);
     await pg.keyboard.press('0'); const q2 = await pos();
     check(q2 === q0 && await pg.evaluate(() => document.activeElement === document.querySelector('#bp-line .bh-stage')), `H8 a click puts the helix in focus and 0 puts it back (${q0} / ${q2})`);
-    const ys = await pg.evaluate(() => scrollY); await pg.mouse.move(mx, my); await pg.mouse.wheel(0, -300); await pg.waitForTimeout(150); const q3 = await pos();
+    const ys = await pg.evaluate(() => scrollY); await pg.mouse.move(mx, my); await pg.mouse.wheel(0, -300); let q3 = q0; for (let i = 0; i < 25 && q3 === q0; i++) { await pg.waitForTimeout(120); q3 = await pos(); }   // the zoom is waited for, 3 s at most
     check(q3 !== q0 && await pg.evaluate(() => scrollY) === ys, `H8 with the helix in focus the wheel zooms and the page stays (${q0} -> ${q3})`);
     await pg.keyboard.press('0'); await pg.keyboard.press('ArrowRight'); const q4 = await pos(); await pg.keyboard.press('0'); await pg.keyboard.press('+'); const q5 = await pos(); await pg.keyboard.press('0');
     check(q4 !== q0 && q5 !== q0 && q4 !== q5 && await pos() === q0, `H8 the keys: an arrow turns, plus zooms, 0 resets (${q0}; ${q4}; ${q5})`);
@@ -414,10 +416,10 @@ export default async function ({ browser, url }) {
     const fb = pg.locator('#bp-line .bh-full');
     const mid = await fb.evaluate((f) => { const a = f.getBoundingClientRect(), b = f.querySelector('svg').getBoundingClientRect(); return [Math.abs((a.left + a.width / 2) - (b.left + b.width / 2)), Math.abs((a.top + a.height / 2) - (b.top + b.height / 2)), a.width, a.height, f.getAttribute('aria-label')]; });
     check(mid[0] <= 0.5 && mid[1] <= 0.5 && mid[2] >= 44 && mid[3] >= 44 && mid[4] === 'Full screen', `H9 the full-screen button: its icon in the middle of its box, 44 px, named (${mid.join(',')})`);
-    await fb.click(); await pg.waitForTimeout(400);
+    await fb.click(); await pg.waitForFunction(() => document.getElementById('bp-line').classList.contains('bh-on'), null, { timeout: 5000 }).catch(() => null); await pg.waitForTimeout(400);
     const on = await pg.evaluate(() => { const h = document.getElementById('bp-line'), st = h.querySelector('.bh-stage').getBoundingClientRect(), f = h.querySelector('.bh-full'), a = f.getBoundingClientRect(), b = f.querySelector('svg').getBoundingClientRect(); return [h.classList.contains('bh-on'), st.width >= innerWidth - 24, st.height >= innerHeight * 0.7, f.getAttribute('aria-label'), f.getAttribute('aria-pressed'), Math.abs((a.left + a.width / 2) - (b.left + b.width / 2)) <= 0.5 && Math.abs((a.top + a.height / 2) - (b.top + b.height / 2)) <= 0.5]; });
     check(on.join() === 'true,true,true,Leave full screen,true,true', `H9 full screen: the helix fills the window, the button says how to leave, its icon still in the middle (${on.join(',')})`);
-    await fb.click(); await pg.waitForTimeout(400);
+    await fb.click(); await pg.waitForFunction(() => !document.getElementById('bp-line').classList.contains('bh-on') && !document.fullscreenElement, null, { timeout: 5000 }).catch(() => null);
     check(await pg.evaluate(() => !document.getElementById('bp-line').classList.contains('bh-on') && !document.fullscreenElement), 'H9 the same button leaves full screen');
     check(!r.v.errs.length, `H8 H9 no page error while moving and scaling: ${r.v.errs.join(' | ')}`);
     await r.v.ctx.close();
