@@ -68,6 +68,7 @@ export default async function ({ browser, url }) {
   async function open(opts = {}, setup = null) {
     const v = await visitor(browser, { viewport: opts.viewport || [1440, 900], motion: opts.motion || 'no-preference' });
     const now = Date.now(), seen = { api: [], raw: [], inm: [], etags: {}, usage: [], usageInm: [] };
+    await v.ctx.clock.install({ time: now }); // the fixtures' times are written from this "now": the page reads the same one (a shifted clock reaches node only)
     const state = { remaining: 59, status: {}, reset: Math.floor(now / 1000) + 1800, force304: false, calls: 0, noRelease: false, usage: 'ok' };
     const json = (rt, body, extra = {}) => rt.fulfill({ status: 200, contentType: 'application/json', headers: { ...CORS, ...extra }, body: JSON.stringify(body) });
     const answer = (key, body) => async (rt) => {
