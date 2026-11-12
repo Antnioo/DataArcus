@@ -5,6 +5,13 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.3
+- The Model Health Check, on the website and in read_model and check_model_health, now says what it did not read. A TMDL
+  project whose model names a table (in model.tmdl, or at one end of a relationship) that no file defines was read as a
+  smaller model and scored higher (96 where the whole model scores 92); the table is now named first and no score is given,
+  as for a file that cannot be read, and a project with every table file missing is named that way instead of "No model
+  found". A zip holding two semantic models now says, before the score, which model the check read and which it did not,
+  and reads only the report that belongs to the model read (or says that no report could be told to be its own). Whole
+  models score as before.
 - The Arabic twin now reads a date and a weekday from an Arabic column name as it does from an English one: a chart on a
   date table's column named «تاريخ الطلب» or «بداية الشهر», whose type the model does not say, has its time axis read
   from the right like one named "Order Date", and a heatmap whose rows are «يوم الأسبوع» gets its day names beside the

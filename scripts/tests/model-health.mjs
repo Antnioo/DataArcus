@@ -982,6 +982,48 @@ export default async function ({ browser, url }) {
         await v.ctx.close();
       }
     }
+    // (AU1, AUD-067) a table the model names and no file defines (Dates.tmdl left out; then every table file): the page
+    // names the table, in English and Arabic, and gives no score; never NO_MODEL when it can name what is missing
+    {
+      const dir = path.join(ROOT, 'mcp/test-models/no-measures/Plain Orders.SemanticModel'), all = walk(dir).filter((f) => /\.tmdl$/i.test(f));
+      const rel = (f) => 'gone.SemanticModel/' + path.relative(dir, f).split(path.sep).join('/');
+      for (const [label, keep, want] of [['Dates.tmdl missing', (f) => !/Dates\.tmdl$/.test(f), /(: |: )Dates \(model\.tmdl names this table; no file in the project defines it\)\./],
+        ['every table file missing', (f) => !/tables[\\/]/.test(f), /(: |: )Orders \(model\.tmdl names this table[^)]*\)[;؛] Dates \(model\.tmdl names this table/]]) {
+        const zip = zipOf([['gone.pbip', Buffer.from('{"version":"1.0"}')], ...all.filter(keep).map((f) => [rel(f), fs.readFileSync(f)])]);
+        for (const lang of ['en', 'ar']) {
+          const v = await visitor(browser, { viewport: [1440, 900] });
+          await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=${lang}`, { waitUntil: 'networkidle' });
+          await v.pg.setInputFiles('#mhFile', { name: 'gone.zip', mimeType: 'application/zip', buffer: zip });
+          const got = await v.pg.waitForSelector('.mh-unreadable, #mhTab, .mh-error', { timeout: 30000 }).then(() => v.pg.evaluate(() => ({
+            said: (document.querySelector('.mh-unreadable') || {}).textContent || '', error: (document.querySelector('.mh-error b') || {}).textContent || '', ring: !!document.querySelector('.mh-ring'), hist: localStorage.getItem('dataarcus-mh-history') }))).catch((e) => ({ said: 'timeout ' + e.message.slice(0, 60) }));
+          check(want.test(got.said) && (lang === 'en' ? /^No score/.test(got.said) : /^لا توجد نتيجة/.test(got.said)) && !got.ring && !got.hist, `AU1 ${label} (${lang}): "No score" first and the table(s) named, no score ring, no history: ${JSON.stringify(got).slice(0, 400)}`);
+          if (v.errs.length) problems.push(`AU1 ${label} (${lang}): ${v.errs.join(' | ')}`);
+          await v.ctx.close();
+        }
+      }
+    }
+    // (AU1, AUD-068) a zip with two models (health-project's model.bim and report, no-measures in TMDL): before the score
+    // the page says which model it read and which not, the same in both zip orders; the score is the model read's own
+    {
+      const hp = path.join(ROOT, 'mcp/fixtures/health-project'), pm = path.join(ROOT, 'mcp/test-models/no-measures');
+      const ent = (d) => walk(d).map((f) => [path.relative(d, f).split(path.sep).join('/'), fs.readFileSync(f)]);
+      const both = [...ent(hp), ...ent(pm)], alone = zipOf(ent(hp));
+      const visit = async (zip) => {
+        const v = await visitor(browser, { viewport: [1440, 900] });
+        await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });
+        await v.pg.setInputFiles('#mhFile', { name: 'two.zip', mimeType: 'application/zip', buffer: zip });
+        const got = await v.pg.waitForSelector('#mhTab, .mh-error', { timeout: 30000 }).then(() => v.pg.evaluate(() => {
+          const note = document.querySelector('.mh-models'), ring = document.querySelector('.mh-scorecard .mh-ring');
+          return { note: note ? note.textContent.trim() : '', first: !!(note && ring && (note.compareDocumentPosition(ring) & Node.DOCUMENT_POSITION_FOLLOWING)), score: +((document.querySelector('.mh-scorecard .mh-ring b') || {}).textContent || NaN) };
+        })).catch((e) => ({ note: 'timeout ' + e.message.slice(0, 60) }));
+        if (v.errs.length) problems.push(`AU1 two models: ${v.errs.join(' | ')}`);
+        await v.ctx.close();
+        return got;
+      };
+      const one = await visit(alone), a = await visit(zipOf(both)), b = await visit(zipOf(both.slice().reverse()));
+      check(!one.note && /^This zip holds 2 semantic models: the check below read Health Test\.SemanticModel; not read: Plain Orders\.SemanticModel\./.test(a.note) && a.first && a.score === one.score, `AU1 two models: the note before the score names the model read and the one not read, the score is the model's own (${one.score}): ${JSON.stringify(a)}`);
+      check(b.note === a.note && b.score === a.score, `AU1 two models, the other zip order: the same note and score: ${JSON.stringify(b)}`);
+    }
     // the drop zone says what really works
     const v = await visitor(browser, { viewport: [1440, 900] });
     await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });

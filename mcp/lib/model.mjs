@@ -31,6 +31,7 @@ const ModelFile = require('../../assets/js/model-file.js');
 /** @typedef {typeof ModelFile.LIMITS} PbitLimits the .pbit size limits (assets/js/model-file.js LIMITS) */
 /** @typedef {{ size: number, at: (start: number, n: number) => Buffer }} ZipReader a zip read by offsets: its size and a reader of n bytes at start */
 /** @typedef {{ file: string, why: string }} SkippedFile a definition or report file that could not be read, named (screened) with why */
+/** @typedef {{ file: string, why: string } | { table: string, why: string }} SkippedPart a definition file that could not be read, or a table the model names and no file defines (AU1), named (screened) with why */
 // Every path the tools read or write must sit inside the working folder, DATAARCUS_ROOT. Not set, empty, blank or
 // still a placeholder ("${user_config.working_folder}": what an app's settings leave when nothing was chosen) means
 // no working folder: the server never falls back to the folder it happens to start in, every tool refuses instead.
@@ -309,12 +310,12 @@ function zipDirectoryCheck(full, size) {
  * @property {{counted:string[], notCounted:Array<any>, notRead?:Array<any>, skipped?:Array<{file:string, why:string}>, partial?:string}|null} reportsSeen
  * @property {string|null} print  the model's fingerprint, a sha256 of the definition files read (B-154; was missing from this list)
  * @property {number} partsSkipped  model parts left out because they were not lists of objects (F-M2)
- * @property {Array<{file:string, why:string}>} skipped  definition files that could not be read fully (AU47), named
+ * @property {SkippedPart[]} skipped  definition files that could not be read fully (AU47), or tables named and not defined (AU1), named
  *   relative to the project (screened), never their text; empty when every file was read
  */
 /**
  * What modelRead takes: a ModelRead's fields before the tables are derived from tmsl.
- * @typedef {{ source: string, tmsl: any, folder?: string|null, projectDir?: string|null, report?: ModelRead['report'], reportsSeen?: ModelRead['reportsSeen'], print?: string|null, skipped?: SkippedFile[] }} ModelIn
+ * @typedef {{ source: string, tmsl: any, folder?: string|null, projectDir?: string|null, report?: ModelRead['report'], reportsSeen?: ModelRead['reportsSeen'], print?: string|null, skipped?: SkippedPart[] }} ModelIn
  */
 // (F-M2, the fuzz test: a model.bim or .pbit whose tables, columns, measures, partitions or relationships were not lists of
 // objects crashed in the field picker's catalog. The shape is checked here, where the model comes in: a list that is
@@ -339,7 +340,7 @@ const modelRead = (o0) => { const c = shapeChecked(o0.tmsl), o = Object.assign({
   tables: Bind.fromTmsl(o.tmsl).filter(/** @param {any} t */ (t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name)), report: o.report || null, reportsSeen: o.reportsSeen || null, print: o.print || null, skipped: o.skipped || [] }); };
 // (AU47, the night audit's AUD-047) a model with a definition file that could not be read fully: the answer's first key
 // (read_model, check_model_health), and the planning tools' refusal (nothing is planned on part of a model)
-/** @param {ModelRead|null|undefined} m @returns {{ unreadable?: { message: string, skipped: SkippedFile[] } }} */
+/** @param {ModelRead|null|undefined} m @returns {{ unreadable?: { message: string, skipped: SkippedPart[] } }} */
 export const unreadableOf = (m) => (m && m.skipped && m.skipped.length ? { unreadable: { message: Tmdl.unreadableSaid(m.skipped, 'en'), skipped: m.skipped } } : {});
 /** @template {ModelRead|null|undefined} T @param {T} m @returns {T} */
 export function refuseUnreadable(m) {
@@ -438,8 +439,9 @@ export function loadModel(p, opts) {
     // (lineage tags kept: the fix scripts write each object back with its own tag, so Desktop doesn't give it a new one)
     const got = Tmdl.read(tfiles.map(/** @param {string} f */ (f) => ({ path: path.relative(folder, f).replace(/\\/g, '/'), text: text.get(f) })), { lineageTags: true });
     tmsl = got.model;
-    // (AU47) a definition file that could not be read fully: named relative to the project (screened), with why
-    skipped = got.skipped.map(/** @param {any} x */ (x) => ({ file: shownPath(path.basename(folder) + '/' + x.path), why: Tmdl.whyOf(x, 'en') }));
+    // (AU47) a definition file that could not be read fully: named relative to the project (screened), with why;
+    // (AU1, AUD-067) a table the model names and no file defines: named by the table's name (screened), with why
+    skipped = got.skipped.map(/** @param {any} x */ (x) => (x.table != null ? { table: shownName(x.table, 80), why: Tmdl.whyOf(x, 'en') } : { file: shownPath(path.basename(folder) + '/' + x.path), why: Tmdl.whyOf(x, 'en') }));
   }
   // the project's own reports (PBIR), for the health check and for choosing a report name that is free
   // (A3-1's calendars are marked by fromTmsl, which every model now goes through)
