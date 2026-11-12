@@ -14,7 +14,8 @@
 - **Expected checks:** `node scripts/check-modules.mjs --strict`; ar7 red on 26cfb66f first; `npm test -- arabic`
   (and model, checker, report, core where a shipped line moves an answer); the website suites of each changed asset;
   build:min; lint 0; check-result-lines, changelog-words, check-agent-memory PASS; CI green.
-- **Resume:** code and note written (2026-11-12T21:20Z); next: merge origin/integration/0.3.3 once, CI, the CI line.
+- **Resume:** DONE (2026-11-12T22:00Z): the tip is ready to merge; nothing left on this branch. The held rows wait for the owner.
+- CI green: https://github.com/Antnioo/DataArcus/actions/runs/43312241764 on afadc4368a5be1b08beffc34ac0da797972453ff (2026-11-12T22:00Z; conclusion success: Linux 5 of 5 shards, Windows 5 of 5, the website checks and 3 suite shards, lint; macOS skipped by the workflow; integration had not moved from 26cfb66f, no merge). DONE
 
 ## Plan (written before any work)
 1. Sources first, measured: for each key term of the 37 items, fetch Microsoft's Arabic page (learn.microsoft.com/ar-sa)
@@ -81,6 +82,16 @@
   `test-0.3.3-at1.mjs`: a comment only.
 - `test-0.3.1-arabic-terms` 99 checks (85 before: one AT-1 check per new concept); `scripts/test-arabic-terms.mjs` 87.
 - Area runs: see "Results".
+
+## Results (run 2026-11-12T21:38Z, on afadc436)
+- `ar7` 45; `au1` 40; `at1` 22; `lg2` 29; `test-0.3.1-arabic-terms` 99; `npm test -- arabic`: 21 suites passed;
+  `npm test -- model core` (the mutation suite is in core): 48 suites passed.
+- Website: `node scripts/tests/run-all.mjs model-health` 266 checks, alone (R-64); `scripts/test-arabic-terms.mjs` 87;
+  `test-site-config` PASS; `ar-pages` (39 copies), `csp` (143 pages), `stamps` 1288, `check-min`, `sitemap-lastmod` PASS.
+- `node scripts/check-modules.mjs --strict`: PASS, 1268 checks (227 module files, 227 rows). `check-contracts` 868,
+  `test-contracts` 14, `check-agent-memory` 537, `changelog-words` 116, `check-result-lines` 258, lint exit 0.
+- Not run: the report and checker areas (no file of theirs changed; CI runs every suite).
+- The merge (R-33): origin/integration/0.3.3 was still at 26cfb66f before CI (fetched 2026-11-12T21:38Z); nothing to take.
 
 ## CHANGELOG line
 Three lines under [Unreleased] in `mcp/CHANGELOG.md`: the three Arabic answers, the Arabic counts, the glossary and its check.
