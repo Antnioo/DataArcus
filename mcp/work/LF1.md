@@ -56,3 +56,5 @@ none
 ## Lessons for the reviewer
 - A container min-height does not stop CLS: the children inside still move. Reserve each box the script fills.
 - A check over "every tool page" at a new width found a second page (svg-kpi-designer) the audit did not list.
+
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/43370104868 on 8d7e9f52 (Linux and Windows, every website and MCP job green; mcp-macos and mcp-macos-parts are skipped by the workflow itself, as on SW1, so macOS did not run)
