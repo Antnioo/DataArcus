@@ -13,9 +13,9 @@ import { reach as reachOf } from '../lib/impact.mjs';
 export function register(server, ctx) {
   server.registerTool('read_model', {
     title: 'Read a Power BI model',
-    description: 'Lists a model\'s tables, visible columns (with types), measures (with formats) and date tables, without changing it. A large model (a full list over 40,000 characters) gets a summary first (counts, date tables, areas, the tables\' names): ask for the tables you need with tables. reach: the Impact check before an edit.' + LANG_AR + NO_VALUES + UNTRUSTED,
-    inputSchema: strictInputs('read_model', { path: modelPath, tables: z.array(z.string()).min(1).max(LIMITS.tables).optional().describe('Only these tables, in full (names as read_model lists them). For a large model, after its summary'),
-      reach: z.string().min(1).max(300).optional().describe('Impact check before an edit: "[Measure]", "Table[Column]" or "Table". Instead of the model list: the visuals it reaches in the reports beside the model, by tier. Not with tables'),
+    description: 'Lists a model\'s tables, visible columns (with types), measures (with formats) and date tables, without changing it. A large model (over 40,000 characters) gets a summary first (counts, date tables, areas, table names): ask for the tables you need with tables. reach: the Impact check before an edit.' + LANG_AR + NO_VALUES + UNTRUSTED,
+    inputSchema: strictInputs('read_model', { path: modelPath, tables: z.array(z.string()).min(1).max(LIMITS.tables).optional().describe('Only these tables, in full (as listed). For a large model, after its summary'),
+      reach: z.string().min(1).max(300).optional().describe('Impact check before an edit: "[Measure]", "Table[Column]" or "Table". Instead of the list: the visuals it reaches in the reports beside the model, by tier. Not with tables'),
       lang: readLangInput }), annotations: READS
   }, safe(async ({ path: p, tables, reach }) => {
     // (0.3.3 HX2) reach: the Impact check before an edit, in place of the model list
