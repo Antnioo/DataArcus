@@ -1083,7 +1083,7 @@
     },
     {
      "step": "open again",
-     "navbar": "navbar navbar-expand-lg navbar-dark fixed-top scrolled",
+     "navbar": "navbar navbar-expand-lg navbar-dark fixed-top",
      "navH": "67px",
      "pinH": "0px",
      "smooth": true,
@@ -1117,7 +1117,7 @@
     },
     {
      "step": "an outside click",
-     "navbar": "navbar navbar-expand-lg navbar-dark fixed-top scrolled",
+     "navbar": "navbar navbar-expand-lg navbar-dark fixed-top",
      "navH": "67px",
      "pinH": "0px",
      "smooth": true,
@@ -1151,7 +1151,7 @@
     },
     {
      "step": "open again",
-     "navbar": "navbar navbar-expand-lg navbar-dark fixed-top scrolled",
+     "navbar": "navbar navbar-expand-lg navbar-dark fixed-top",
      "navH": "67px",
      "pinH": "0px",
      "smooth": true,
@@ -1185,7 +1185,7 @@
     },
     {
      "step": "Escape",
-     "navbar": "navbar navbar-expand-lg navbar-dark fixed-top scrolled",
+     "navbar": "navbar navbar-expand-lg navbar-dark fixed-top",
      "navH": "67px",
      "pinH": "0px",
      "smooth": true,
@@ -4018,7 +4018,7 @@
     },
     {
      "step": "open again",
-     "navbar": "navbar navbar-expand-lg navbar-dark fixed-top scrolled",
+     "navbar": "navbar navbar-expand-lg navbar-dark fixed-top",
      "navH": "67px",
      "pinH": "0px",
      "smooth": true,
@@ -4052,7 +4052,7 @@
     },
     {
      "step": "an outside click",
-     "navbar": "navbar navbar-expand-lg navbar-dark fixed-top scrolled",
+     "navbar": "navbar navbar-expand-lg navbar-dark fixed-top",
      "navH": "67px",
      "pinH": "0px",
      "smooth": true,
@@ -4086,7 +4086,7 @@
     },
     {
      "step": "open again",
-     "navbar": "navbar navbar-expand-lg navbar-dark fixed-top scrolled",
+     "navbar": "navbar navbar-expand-lg navbar-dark fixed-top",
      "navH": "67px",
      "pinH": "0px",
      "smooth": true,
@@ -4120,7 +4120,7 @@
     },
     {
      "step": "Escape",
-     "navbar": "navbar navbar-expand-lg navbar-dark fixed-top scrolled",
+     "navbar": "navbar navbar-expand-lg navbar-dark fixed-top",
      "navH": "67px",
      "pinH": "0px",
      "smooth": true,

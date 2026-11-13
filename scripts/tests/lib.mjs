@@ -168,3 +168,35 @@ export async function settle(pg, { from, wait = WAIT } = {}) {
   }
   return last;
 }
+
+// (CI3) What a page still has to do after a step, so a check reads the state the step leads to, not a moment of it:
+// its own timers of up to SHORT_TIMER ms started since the step's mark (a debounce, a ripple's removal, Bootstrap's
+// collapse), the animation frames it asked for since then (a counter), its finite animations and transitions, and a
+// scroll (the page must hold still for QUIET_FRAMES frames in a row: frames, not milliseconds, so a busy runner that
+// starts a smooth scroll late is still waited for; the scroll flag above is not used, an instant scroll leaves it set).
+// A sleep raced all of these on a busy runner (sp35, run 43237079137: "ripples: 1 -> 0"). Longer timers (a result
+// hidden after 6 s, an article read after 30 s) are the page's own clocks, not work to wait for.
+// trackWork(ctx) before the page opens; markWork(pg) when a step begins; quiet(pg) waits for all of it (WAIT at most).
+export const SHORT_TIMER = 3000, QUIET_FRAMES = 5;
+export const trackWork = (ctx) => ctx.addInitScript(([limit, need]) => {
+  const w = window, st = w.setTimeout, ct = w.clearTimeout, raf = w.requestAnimationFrame, caf = w.cancelAnimationFrame;
+  const timers = new Map(), frames = new Map(), now = () => performance.now();
+  let mark = 0;
+  w.setTimeout = function (fn, ms, ...a) {
+    if (typeof fn !== 'function' || +ms > limit) return st.call(w, fn, ms, ...a);
+    const id = st.call(w, function (...x) { timers.delete(id); return fn.apply(this, x); }, ms, ...a);
+    timers.set(id, now()); return id;
+  };
+  w.clearTimeout = (id) => { timers.delete(id); return ct.call(w, id); };
+  w.requestAnimationFrame = (fn) => { const id = raf.call(w, (t) => { frames.delete(id); fn(t); }); frames.set(id, now()); return id; };
+  w.cancelAnimationFrame = (id) => { frames.delete(id); return caf.call(w, id); };
+  const since = (m) => [...m.values()].filter((t) => t >= mark).length;
+  const moving = () => document.getAnimations().filter((x) => x.playState === 'running' && x.effect && x.effect.getComputedTiming().endTime !== Infinity).length;
+  // resolves on the first frame that ends a run of `need` frames with no work left and the page in the same place
+  const still = () => new Promise((r) => { let n = 0, y = null; const f = () => { const at = scrollX + ',' + scrollY; n = !since(timers) && !since(frames) && !moving() && at === y ? n + 1 : 0; y = at; if (n >= need) r(); else raf.call(w, f); }; raf.call(w, f); });
+  Object.defineProperty(w, '__work', { value: { mark: () => { mark = now(); }, still } });
+}, [SHORT_TIMER, QUIET_FRAMES]);
+export const markWork = (pg) => pg.evaluate(() => window.__work && window.__work.mark());
+// a page without trackWork (a fake clock replaces its timers) waits for its scroll only (settle)
+export const quiet = (pg, { wait = WAIT } = {}) => pg.evaluate((ms) => (window.__work
+  ? Promise.race([window.__work.still(), new Promise((r) => setTimeout(r, ms))]) : null), wait).then((r) => (r === null ? settle(pg, { wait }) : r));
