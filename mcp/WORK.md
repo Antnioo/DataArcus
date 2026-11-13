@@ -7,11 +7,11 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 ## Where it stands (0.3.3)
 - 0.3.2 is on main (#117, f3c1b7e1; the list in `CHANGELOG.md`).
 - `integration/0.3.3`: builders branch from it, push only their branch; the reviewer merges; the owner merges to main.
-- 0.3.3 merged: BA1 (data-only bot PRs merge themselves, D-1109-10), HK1 (suites read saved fixtures), LK1 (linked visuals folder named, one link counts once), WE1 (Arabic write errors), PQ1, HC2 (Arabic Hijri month column), DB1 (3 unreachable branches removed), SG1 (11 same-job groups moved into the library), TC1 (type-checking pilot on lib/model.mjs, one CI step), SG2 (sp10, sp30, sp42 read pure shared files via `mcp/ledger-places.mjs`). FW1 (Windows folder window wording), FT1 (a hand-placed report's font reaches every visual), MM1 (minimatch 11.0.5, B-310; `work/MM1.md`), FT2 (B-432, `work/FT2.md`). DQ1 (DAX names quoted in one place; the twin's field key is the pair; B-437, B-438, B-434; `work/DQ1.md`). TC2 (`work/TC2.md`). CL2 (B-435, `work/CL2.md`). HK2 (B-414: sp6, sp29 saved files; `work/HK2.md`). FB1 (`pageFill`). FB2 (`work/FB2.md`). FB3 (`work/FB3.md`). FB4 (`work/FB4.md`).
+- Merged first: BA1 to FB4, as written in [the archive](work/archive/WORK-2026-11-12.md).
 - DB2 (no plan id without a name). LG2 (B-419, `work/LG2.md`). MH1.
 - AT1 (B-429, B-449): Arabic title «من أصل», header bracket, 3 Arabic model-path errors (`work/AT1.md`).
 - TR1 (B-439; `TR1`), TR2 (`TR2`) merged.
-- LR3 (P-01, P-08: a Stop hook; `LR3`). HX1 (`HX1`). HX2 (Impact check; `HX2`). TL1 (`TL1`). OX1 (`OX1`). IX1 (`IX1`). IX2 (`IX2`). SN1 (`SN1`). OX2. IX4. LX1 (`LX1`). AU2. SN3 (`SN3`). AU1 (`AU1`). SN4 (`SN4`). WF3 (`WF3`). RX1 (`RX1`). AR7 (`AR7`). TB3 (`TB3`). CI3 (`CI3`).
+- LR3 (P-01, P-08: a Stop hook; `LR3`). HX1 (`HX1`). HX2 (Impact check; `HX2`). TL1 (`TL1`). OX1 (`OX1`). IX1 (`IX1`). IX2 (`IX2`). SN1 (`SN1`). OX2. IX4. LX1 (`LX1`). AU2. SN3 (`SN3`). AU1 (`AU1`). SN4 (`SN4`). WF3 (`WF3`). RX1 (`RX1`). AR7 (`AR7`). TB3 (`TB3`). CI3 (`CI3`). SW1 (`SW1`: first merged line archived).
 
 - RL33: checklist `work/RL33-RELEASE.md`.
 ## Next step
