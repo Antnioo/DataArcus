@@ -17,6 +17,15 @@
 //           a click on it, no request after the page loaded, storage untouched, no page error
 //   P1  at 390 px, English and with Arabic saved as the visitor's language: no sideways scroll, the tool reads left to
 //       right, no page error
+//   L1  (0.3.3 LF1, AUD-074) the page does not jump on load (CLS at most 0.1; 0.20 at 1440 and 0.31 at 992 before) for the
+//       months that fill the most (March and February 2027: estimates, the most dates) and November 2026, the clock set
+//       to each, at 1440 and 992; and the empty result box hides when the month is not known
+//   A1  (AUD-075) a page in AR_HELD stays lang="en" dir="ltr", visible from the start, in English, with no Arabic font and
+//       no language switch, whether Arabic comes from ?lang=ar or from the saved choice (which it leaves as it was), at
+//       390 and 1440 px; the held list read from locale-routes.js only (the page has no Arabic head guard, every other
+//       page has one)
+//   A2  /tools/?lang=ar shows no card for a held page (as /ar/tools/), /tools/ in English does, at 390 and 1440 px
+//   A3  /ar/tools/'s ItemList names exactly the tools it shows (the same set and count), positions 1..n
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
@@ -168,6 +177,76 @@ export default async function ({ browser, url }) {
       check(m.dir === 'ltr', `P1 ${lang}: the tool reads left to right (got ${m.dir})`);
       check(!p.errs.length, `P1 ${lang}: no page error: ${p.errs.slice(0, 3).join(' | ')}`);
     } finally { await p.ctx.close(); }
+  }
+
+  // L1: the clock set to a month (the page opens on the visitor's month), layout shift over the first 2.5 s
+  for (const [y, m] of [[2027, 3], [2027, 2], [2026, 11]]) for (const w of [1440, 992]) {
+    const c = await visitor(browser, { viewport: [w, 900] });
+    try {
+      await c.pg.clock.setFixedTime(new Date(Date.UTC(y, m - 1, 15, 12)));
+      await c.ctx.addInitScript(() => { window.__cls = 0; new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: 'layout-shift', buffered: true }); });
+      await c.pg.goto(`${url}${PAGE}?lang=en`, { waitUntil: 'load' }); await c.pg.waitForTimeout(2500);
+      const r = await c.pg.evaluate(() => ({ cls: +window.__cls.toFixed(3), month: document.querySelector('#lfMonth').value }));
+      check(r.month === String(m) && r.cls <= 0.1, `L1 ${y}-${m} at ${w} px: layout shift ${r.cls} on load (want 0.1 or less; the page opened on month ${r.month})`);
+    } finally { await c.ctx.close(); }
+  }
+  {
+    const c = await visitor(browser, { viewport: [1440, 900] });
+    try {
+      await c.pg.goto(`${url}${PAGE}?lang=en`, { waitUntil: 'load' }); await ready(c.pg);
+      await c.pg.selectOption('#lfYear', '2031');
+      const shown = await c.pg.evaluate(() => document.querySelector('#lfDetail').getClientRects().length);
+      check(shown === 0, 'L1 a month not known: the empty result box (#lfDetail) is not shown');
+    } finally { await c.ctx.close(); }
+  }
+
+  // A1: Arabic asked for on a held page, by the address or by the saved choice
+  const guarded = (f) => /classList\.add\("i18n-pending"\)/.test(read(f));
+  check(!guarded(FILE), `A1 ${FILE} (held) carries no Arabic head guard`);
+  for (const [how, vp] of [['?lang=ar', [390, 844]], ['?lang=ar', [1440, 900]], ['saved', [390, 844]], ['saved', [1440, 900]]]) {
+    const a = await visitor(browser, { viewport: vp });
+    try {
+      if (how === 'saved') await a.ctx.addInitScript(() => { try { if (!sessionStorage.getItem('__a1')) { sessionStorage.setItem('__a1', '1'); localStorage.setItem('dataarcus-lang', 'ar'); } } catch (e) { /* ignore */ } });
+      await a.ctx.addInitScript(() => { window.__hidden = false; new MutationObserver(() => { if (document.documentElement.classList.contains('i18n-pending') || document.documentElement.dir === 'rtl') window.__hidden = true; }).observe(document, { attributes: true, subtree: true, attributeFilter: ['class', 'dir'] }); });
+      await a.pg.goto(`${url}${PAGE}${how === 'saved' ? '' : how}`, { waitUntil: 'networkidle' });
+      await ready(a.pg);
+      const r = await a.pg.evaluate(() => { const d = document.documentElement, cs = (s) => getComputedStyle(document.querySelector(s));
+        return { lang: d.lang, dir: d.dir || 'ltr', flipped: window.__hidden, rtl: document.body.classList.contains('rtl'), font: !!document.getElementById('ar-font'), lm: window.langManager && window.langManager.currentLang,
+          sw: document.querySelectorAll('.language-switcher-container, .desktop-lang-switcher').length, nav: cs('.navbar').direction, foot: cs('footer').direction,
+          tag: (document.querySelector('[data-i18n="footer.tagline"]') || {}).textContent, saved: localStorage.getItem('dataarcus-lang'), sw2: document.documentElement.scrollWidth, w: innerWidth }; });
+      const tag = `A1 ${how} at ${vp[0]} px`;
+      check(r.lang === 'en' && r.dir === 'ltr' && !r.flipped && !r.rtl && !r.font && r.lm === 'en', `${tag}: the page stays English, left to right, never hidden or flipped (got ${JSON.stringify(r)})`);
+      check(r.nav === 'ltr' && r.foot === 'ltr' && /^Custom-built Power BI/.test(r.tag || ''), `${tag}: the menu and the footer read left to right, in English (got ${r.nav} ${r.foot} "${(r.tag || '').slice(0, 30)}")`);
+      check(r.sw === 0, `${tag}: no language switch on a page with no Arabic (got ${r.sw})`);
+      check(r.saved === (how === 'saved' ? 'ar' : null), `${tag}: the saved choice is left as it was (got ${r.saved})`);
+      check(r.sw2 <= r.w && !a.errs.length, `${tag}: no sideways scroll (${r.sw2} > ${r.w}), no page error: ${a.errs.slice(0, 3).join(' | ')}`);
+    } finally { await a.ctx.close(); }
+  }
+  {
+    const { pages } = await import('./lib.mjs');
+    const LRp = require('../../assets/js/locale-routes.js');
+    const missing = pages().filter((f) => !f.startsWith('build/') && !f.startsWith('go/') && !LRp.AR_HELD.includes('/' + f) && /lang-manager\.min\.js/.test(read(f)) && !guarded(f));
+    check(!missing.length, `A1 every other page that loads lang-manager carries the Arabic head guard (missing: ${missing.slice(0, 5).join(', ')})`);
+  }
+
+  // A2: the hub in Arabic in place and in English
+  for (const [lang, vp] of [['ar', [390, 844]], ['ar', [1440, 900]], ['en', [1440, 900]]]) {
+    const h = await visitor(browser, { viewport: vp });
+    try {
+      await h.pg.goto(`${url}/tools/?lang=${lang}`, { waitUntil: 'networkidle' }); await ready(h.pg);
+      const r = await h.pg.evaluate(() => ({ held: [...document.querySelectorAll('[data-ar-held]')].filter((e) => e.getClientRects().length).length, cards: [...document.querySelectorAll('a.th-card')].filter((e) => e.getClientRects().length).length, sw: document.documentElement.scrollWidth, w: innerWidth }));
+      check(lang === 'ar' ? r.held === 0 : r.held === 1, `A2 /tools/?lang=${lang} at ${vp[0]} px: the held page's card is ${lang === 'ar' ? 'hidden' : 'shown'} (shown: ${r.held}; cards shown ${r.cards})`);
+      check(r.sw <= r.w && !h.errs.length, `A2 /tools/?lang=${lang} at ${vp[0]} px: no sideways scroll, no page error: ${h.errs.slice(0, 3).join(' | ')}`);
+    } finally { await h.ctx.close(); }
+  }
+
+  // A3: the Arabic hub's ItemList against its cards
+  {
+    const ld = [...arHub.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => { try { return JSON.parse(m[1]); } catch (e) { return null; } }).find((j) => j && j['@type'] === 'ItemList');
+    const cards = [...arHub.replace(/<script\b[\s\S]*?<\/script>/gi, '').matchAll(/<a class="th-card" href="([^"]+)"/g)].map((m) => m[1].replace(/^.*\//, ''));
+    const items = ld ? ld.itemListElement : [];
+    const named = items.map((i) => i.url.replace(/^.*\//, ''));
+    check(ld && JSON.stringify(named.slice().sort()) === JSON.stringify(cards.slice().sort()) && items.every((i, k) => i.position === k + 1), `A3 /ar/tools/: the ItemList names the ${cards.length} tools shown, positions 1..${cards.length} (got ${named.length}: ${named.join(', ')})`);
   }
   return { checks, problems };
 }

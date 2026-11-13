@@ -25,6 +25,10 @@ class LanguageManager {
       return 'ar';
     }
 
+    // (0.3.3 LF1, AUD-075) a page whose Arabic is held (locale-routes.js AR_HELD, the one list) is English whatever was
+    // asked or saved; the saved choice is left for the other pages
+    if (this.isHeld()) return 'en';
+
     // Check URL parameter first
     const urlParams = new URLSearchParams(window.location.search);
     const langParam = urlParams.get('lang');
@@ -63,6 +67,11 @@ class LanguageManager {
 
   hasArCopy(p) {
     return window.LocaleRoutes.hasArCopy(p);
+  }
+
+  // the page's Arabic is held (locale-routes.js AR_HELD): English only, no switch
+  isHeld() {
+    return window.LocaleRoutes.AR_HELD.includes(this.pagePath());
   }
 
   // Links in translated HTML on an Arabic copy: each address as locale-routes.js's arAddress gives it
@@ -136,6 +145,7 @@ class LanguageManager {
   createLanguageSwitcher() {
     // Remove any existing switchers to prevent duplicates
     this.removeSwitchers();
+    if (this.isHeld()) return;   // no other language to switch to
 
     // Only create mobile switcher if we're in mobile view
     if (this.isMobileView()) {
