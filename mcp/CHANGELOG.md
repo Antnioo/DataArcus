@@ -5,6 +5,12 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.3
+- Arabic: with `lang` "ar", a wrong model name or path in a working folder that holds no model is now answered in
+  Arabic. English answers are unchanged.
+- The Arabic words DataArcus uses are in one glossary, `content/ARABIC-GLOSSARY.md`, each with Microsoft's and Google's
+  own Arabic word and where it was read. A term or a line both of them use is approved by the owner's rule of 12 Nov;
+  anything else waits for him and stays in English. The check that every Arabic text uses the glossary's words now names
+  the file, the key and the word.
 - New, only when asked: `plan_layout` takes `bookmarks`, the plan's views to present in order (1 to 8, each a name and a
   page). The approval window lists them with their pages before anything is written; `create_report` then writes one
   bookmark a view, first in the Bookmarks pane in the plan's order, so "View" in that pane plays them as a slide show.

@@ -4,7 +4,7 @@
 //          and the approval page's Arabic folder words with no repeated bracket
 //   B-449  the three model-path input errors (NO_MODEL_NAMED, NO_MODEL_AT, MANY_MODELS_NAMED) with lang "ar", in every
 //          reading and write tool (one source: lib/read-words.mjs); English unchanged; the folder case with no model to
-//          list keeps the English (no approved line for it)
+//          list ends as the English does (0.3.3 AR7, D-1112-05: pinned in ar7)
 // Through the real server (stdio). Made-up models only, in a temp folder.
 //   node test-0.3.3-at1.mjs
 import './test-env.mjs';

@@ -7,11 +7,15 @@ const { hasArabic } = createRequire(import.meta.url)('../../assets/js/arabic-scr
 const manyAr = (d) => `يحتوي "${d.path}" على ${d.models.length === 2 ? 'نموذجين' : d.models.length + ' نماذج'} في المستوى نفسه: ${d.models.join('; ')}. أعطِ read_model مسار النموذج الذي تقصده.`;
 // (0.3.3 AT1, B-449, D-1110-07) the three "which model" input errors in Arabic, the owner's approved lines word for word:
 // "X" is the name or path the person gave, "Y" the working folder, the list the paths there (as the English lists them).
-// The list sits after the first sentence with no word of its own (none is approved); with no model there to list, the
-// approved line ("one of these paths") would say nothing true, so that case keeps the English (never a silent draft).
+// The list sits after the first sentence with no word of its own (none is approved).
+// (0.3.3 AR7, D-1112-05) with no model there to list, the same approved sentences end as the English does, "the path
+// of a project folder": «مسار مجلد مشروع» (مسار, مجلد العمل: the owner's lines above; مجلد, مشروع: the words Microsoft
+// and Google both use, content/ARABIC-GLOSSARY.md). No working folder known (NO_MODEL_AT's root): the English, as before.
 const listAr = (d) => (d.models || []).join('; ') + (d.more > 0 ? '; …' : '');
-const noNamedAr = (d) => (!(d.models || []).length ? null : `لا يوجد نموذج باسم "${d.name}" في مجلد العمل ${d.root}. ${listAr(d)}. أعطِ read_model أحد هذه المسارات، أو "." لمجلد العمل نفسه.`);
-const noAtAr = (d, root) => (!(d.models || []).length || root == null ? null : `لا يوجد شيء في "${d.path}" داخل مجلد العمل ${root}. ${listAr(d)}. أعد استدعاء الأداة بأحد هذه المسارات (نسبةً إلى مجلد العمل)، أو "." لمجلد العمل نفسه.`);
+const noNamedAr = (d) => (!(d.models || []).length ? `لا يوجد نموذج باسم "${d.name}" في مجلد العمل ${d.root}. أعطِ read_model مسار مجلد مشروع، أو "." لمجلد العمل نفسه.`
+  : `لا يوجد نموذج باسم "${d.name}" في مجلد العمل ${d.root}. ${listAr(d)}. أعطِ read_model أحد هذه المسارات، أو "." لمجلد العمل نفسه.`);
+const noAtAr = (d, root) => (root == null ? null : !(d.models || []).length ? `لا يوجد شيء في "${d.path}" داخل مجلد العمل ${root}. أعد استدعاء الأداة بمسار مجلد مشروع (نسبةً إلى مجلد العمل)، أو "." لمجلد العمل نفسه.`
+  : `لا يوجد شيء في "${d.path}" داخل مجلد العمل ${root}. ${listAr(d)}. أعد استدعاء الأداة بأحد هذه المسارات (نسبةً إلى مجلد العمل)، أو "." لمجلد العمل نفسه.`);
 const manyNamedAr = (d) => `يوجد أكثر من نموذج في مجلد العمل باسم "${d.name}": ${(d.hits || []).join('; ')}. أعطِ read_model مسار النموذج الذي تقصده.`;
 // (0.3.2 LG1, D-1105-16) lang: the person's language when the tool was given it ('ar' | 'en'); absent: AR4's letter rule
 export function wordOf(e, lang) {
