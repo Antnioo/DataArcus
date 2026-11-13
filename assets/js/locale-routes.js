@@ -12,7 +12,10 @@
  *   isArPath(pathname) -> boolean: the address is an Arabic copy (/ar/...); its address is its language
  *   pagePath(pathname) -> the page's own path: an Arabic copy is the page at the same path without /ar
  *   hasArCopy(path)    -> boolean: the page has an Arabic copy (scripts/ar-pages.mjs, PAIRS = the sitemap): every
- *                      public page; not files, the go/ short links, the 404 page or a lab page
+ *                      public page; not files, the go/ short links, the 404 page, a lab page or a page in AR_HELD
+ *   AR_HELD            the public pages whose Arabic copy is held until the owner approves its words (0.3.3 IX4,
+ *                      D-1111-17): English only, in the sitemap without an /ar/ address; ar-pages.mjs and
+ *                      test-site-config.mjs read this list, the one place it is kept
  *   pageKey(path)      -> the name of the window global that holds the page's own translations, or null (the route
  *                      table: the first entry whose text the path contains, in order)
  *   arAddress(value, pageLink, base) -> the address a link or file in translated HTML has on an Arabic copy, or null
@@ -30,7 +33,9 @@
 
   const isArPath = (pathname) => /^\/ar\//.test(pathname);
   const pagePath = (pathname) => pathname.replace(/^\/ar(?=\/)/, '');
-  const hasArCopy = (p) => /(\.html|\/)$/.test(p) && !/^\/(ar|go|assets)\//.test(p) && !/^\/404\.html$|-lab\.html$/.test(p);
+  // the Gulf like-for-like page: its Arabic is drafted in mcp/work/IX4.md, "For the owner"
+  const AR_HELD = Object.freeze(['/tools/gulf-like-for-like.html']);
+  const hasArCopy = (p) => /(\.html|\/)$/.test(p) && !/^\/(ar|go|assets)\//.test(p) && !/^\/404\.html$|-lab\.html$/.test(p) && AR_HELD.indexOf(p) < 0;
 
   const descriptor = (lang, prefix, hasCopy) => Object.freeze({ lang, dir: RTL.includes(lang) ? 'rtl' : 'ltr', prefix, hasCopy });
   const LOCALES = Object.freeze({ en: descriptor('en', '', () => true), ar: descriptor('ar', '/ar', hasArCopy) });
@@ -101,6 +106,6 @@
     return bare(to.pathname) === bare(at.pathname) ? null : at.origin + to.pathname;
   }
 
-  const api = Object.freeze({ LOCALES, LANGS, RTL, isArPath, pagePath, hasArCopy, pageKey, arAddress, pairUrl });
+  const api = Object.freeze({ LOCALES, LANGS, RTL, AR_HELD, isArPath, pagePath, hasArCopy, pageKey, arAddress, pairUrl });
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.LocaleRoutes = api;
 })(typeof self !== 'undefined' ? self : this);

@@ -20,97 +20,97 @@
   "R9 a report on the sample": {
    "plan": {
     "err": false,
-    "length": 13290,
-    "sha256": "a12cbded7c8f9e3cb3ccf880ad33602cd515cf590b2029f85bdfde6466e8a3f5"
+    "length": 13030,
+    "sha256": "f9aa8c5bd806ffd657f6a15385e86df047e208aede13727d10a195f155ed07ab"
    },
    "report": {
     "err": false,
-    "length": 8430,
-    "sha256": "f9764fab876ef22a606c6617bc0954b9b25f56ae1a54e6dc381f1b5842bebe73"
+    "length": 8181,
+    "sha256": "40cbab04921a0fd7e95f12697e1d80b4b03be078152ff02c9aec489932b74ea6"
    },
    "files": {
     "count": 108,
-    "sha256": "c734f5d143ced452c2cb563312bac5b8e926d0984480ac03e7952568184c8dd4"
+    "sha256": "00df5e0b0304fc0f2a64403079fe56553d360c16365fb8ac207d34e0d0ef2c1d"
    }
   },
   "R2 glass (the default look)": {
    "plan": {
     "err": false,
-    "length": 11353,
-    "sha256": "084be04ba4f55506196c1cfcce48656ee537d21ddd9d9dda4950d4d28fb3d13a"
+    "length": 11661,
+    "sha256": "6389f4385660b0897326844e4e337f97785105d4e0dfe62e2193905b40a33082"
    },
    "report": {
     "err": false,
-    "length": 7996,
-    "sha256": "3f9ab408a133c3f4475c8221c36b7f1c8f6f147aaf6bc36c85cee43cfd78153f"
+    "length": 7395,
+    "sha256": "82282cbe4ece71dfbb96350bc007e7ae2c88946a7d1a8b5d18caf6a97554bed0"
    },
    "files": {
     "count": 116,
-    "sha256": "f09c5d906429c20e660b700e91a8e3bffd412148746ba06172b4076e4a1121f7"
+    "sha256": "0abd5777fa319bdf33d345946355c6108f0762f82c7c0868ab2ee8a0bdcfb2d2"
    }
   },
   "R3 the plain look asked, subtitles": {
    "plan": {
     "err": false,
-    "length": 14164,
-    "sha256": "50e83b905ca60573839f0b393bee13a430282fd1d921d3cb913368f8ccbcbc21"
+    "length": 13431,
+    "sha256": "aed48de9d6222aec89f3f1552afe397eafac32d338aeab20bd178b4b79dc8e57"
    },
    "report": {
     "err": false,
-    "length": 10447,
-    "sha256": "e7e980afdba88217f49867823dcd0397809a553f1a9192aed4f6cbca4d975585"
+    "length": 9894,
+    "sha256": "535c35fda0ac4619bc325074c9e1f1929e3155cfaff8e82a1aab0fc1e5ddf370"
    },
    "files": {
     "count": 92,
-    "sha256": "3badf172b0389caa2f506dd688e9deebaf567ffa7cd6c7e339c90964997a9c44"
+    "sha256": "b84c7177176bb52d3f79f0f7a743e4d22918217f77e598c27d5603c41a49e0c0"
    }
   },
   "R4 Arabic, names approved, a page filter": {
    "plan": {
     "err": false,
-    "length": 17110,
-    "sha256": "8bfeaed82867192372ef7daff85cbccc2b02f4d335a880584c79052a8e4adb24"
+    "length": 17429,
+    "sha256": "78d97965c6d28a5dcbdde44dd2e948658ebed093ff25d86643232474b2f9a972"
    },
    "report": {
     "err": false,
-    "length": 10257,
-    "sha256": "c7e0cb64f60d45a0cbbec757e6c6db1f881721c77eca5f782c49059adc2e73ab"
+    "length": 9662,
+    "sha256": "36b9da31ab6103753160723f0c531be96c4045c15affe433acea6588b12627f9"
    },
    "files": {
     "count": 88,
-    "sha256": "80f20492ebc72551e62630396be1528fb028cc888b84cd0bcc88c606fa69a5c1"
+    "sha256": "eb09c2d45b58758ca9832b69da9204fbf9fc548bcc74d2d7362484db320814e1"
    }
   },
   "R5 bilingual": {
    "plan": {
     "err": false,
-    "length": 24830,
-    "sha256": "6b06fd462803bd8ab2ade00ffa6ab55ff2d211ce20d007457353b6ab6ed0df10"
+    "length": 24105,
+    "sha256": "793f92835b28772aa2b3ce9478bc66b714adfd3c40160f98a3b4af5c8bacaa4c"
    },
    "report": {
     "err": false,
-    "length": 9010,
-    "sha256": "ab3686950a3e4b847daf457adfde3d3226963cea04ba4bc81139fb3aa40772f7"
+    "length": 8457,
+    "sha256": "994428c1b1e9b00e20788f1bddae8c2a4e454fb5325b93164019963b8e0f3818"
    },
    "files": {
     "count": 204,
-    "sha256": "9bba676cf51d99537566e0184235c814526c2746476343df671c685ddc826100"
+    "sha256": "348a8be23543f3eb002393f654fdb18018e737e8d2054c3a9689140fc82a63a9"
    }
   },
   "R6 scripts offered": {
    "plan": {
     "err": false,
-    "length": 23888,
-    "sha256": "e8306c7da560047a0e83aa2ed871c3dff4e87784490a5cda0a64776a16134e1b"
+    "length": 23152,
+    "sha256": "387566f648da81eeb2be3d9b3cf40840188ed00032553dfae7e9d1e6d805abb9"
    },
    "report": {
     "err": false,
-    "length": 15369,
-    "sha256": "6fe7ba6e9acdf265a4d563006c1d2cdae71efa7292526d4e0856978f2b2cf8a1"
+    "length": 14814,
+    "sha256": "25f13005d7d0dd10a4cb26d1959f924634b547f84c164bfcde47aee3b05902e6"
    },
    "files": {
     "count": 133,
-    "sha256": "c87ec5950e16cc50a1f554298c902003fb544e722efee28bb4c22c85ce77e859"
+    "sha256": "5dd208117e03585861fe793ded91ccb24e5979e9e11336931df4b269c4c84e49"
    }
   },
   "R7 a refused field": {

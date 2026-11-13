@@ -54,7 +54,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   
   <link href="/assets/css/vendor/bootstrap.min.css?v=d85327d99c7a" rel="stylesheet">
-  <link href="/assets/css/style.min.css?v=29c11a1ea13b" rel="stylesheet">
+  <link href="/assets/css/style.min.css?v=db9f3474f158" rel="stylesheet">
 
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
@@ -84,6 +84,8 @@
   }
   </script>
   <style>
+    /* (0.3.3 LF1, AUD-075) a held page's card (data-ar-held) is English only: hidden when the hub is read in Arabic in place, as /ar/tools/ leaves it out */
+    html[lang="ar"] [data-ar-held] { display: none !important; }
     .th { padding: var(--page-top) 0 var(--page-bottom); }
     .th h1 { color: var(--accent); }
     .th-card { display: flex; flex-direction: column; gap: 10px; height: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; color: var(--lt); text-decoration: none; transition: transform .2s, border-color .2s; }
@@ -209,6 +211,7 @@
               <span class="th-open"><span data-i18n="hub.open">افتح الأداة</span> <i class="bi bi-arrow-right"></i></span>
             </a>
           </div>
+          
         </div>
       </section>
       <section class="th-group mt-5" aria-labelledby="grp-learn">
@@ -229,7 +232,7 @@
             <a class="th-card" href="/ar/tools/pl-300-practice-exam.html" data-tool="pl-300-practice-exam">
               <div class="th-visual"><div class="th-cost"><span>PL-300</span><b>820</b><span class="dim">/ 1000</span></div></div>
               <h3 data-i18n="hub.cards.pl300.title">محاكي اختبار PL-300</h3>
-              <p data-i18n="hub.cards.pl300.desc">228 سؤالًا أصليًا عن Power BI مع الشرح، واختبارات تجريبية بوقت ونتيجة من 1000، ودراسات حالة وخطة مذاكرة. مفيد أيضًا لتجديد الشهادة.</p>
+              <p data-i18n="hub.cards.pl300.desc">234 سؤالًا أصليًا عن Power BI مع الشرح، واختبارات تجريبية بوقت ونتيجة من 1000، ودراسات حالة وخطة مذاكرة. مفيد أيضًا لتجديد الشهادة.</p>
               <div class="th-tags"><span data-i18n="hub.cards.pl300.tag1">جديد</span><span data-i18n="hub.cards.pl300.tag2">جاهز للتجديد</span><span data-i18n="hub.cards.pl300.tag3">منهج أبريل 2026</span></div>
               <span class="th-open"><span data-i18n="hub.open">افتح الأداة</span> <i class="bi bi-arrow-right"></i></span>
             </a>
@@ -313,11 +316,11 @@
   </footer>
 
   <script src="/assets/js/translations/common.min.js?v=434124bdf3f2" defer=""></script>
-  <script src="/assets/js/translations/tools-hub.min.js?v=9b17bd31d325" defer=""></script>
-  <script src="/assets/js/locale-routes.min.js?v=59ad61997060" defer=""></script>
+  <script src="/assets/js/translations/tools-hub.min.js?v=c99ee7d58104" defer=""></script>
+  <script src="/assets/js/locale-routes.min.js?v=7ad3cd58ffda" defer=""></script>
   <script src="/assets/js/locale-catalog.min.js?v=1464f13d8c0b" defer=""></script>
   <script src="/assets/js/locale-dom.min.js?v=faf294f00eb2" defer=""></script>
-  <script src="/assets/js/lang-manager.min.js?v=b4bd7c2d5f43" defer=""></script>
+  <script src="/assets/js/lang-manager.min.js?v=aa273c8689a5" defer=""></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer=""></script>
   <script src="/assets/js/site-navigation.min.js?v=73f198dd3eb3" defer=""></script>

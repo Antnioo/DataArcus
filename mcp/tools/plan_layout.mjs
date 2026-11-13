@@ -19,7 +19,7 @@ import { daxOption, resolveDax } from '../lib/dax-functions.mjs';
 import * as Plans from '../lib/plans.mjs';
 import * as Terms from '../lib/terminology.mjs';
 import * as DateQ from '../lib/gulf-date-questions.mjs';
-import { UNTRUSTED } from '../lib/agent-text.mjs';
+import { UNTRUSTED, NO_VALUES } from '../lib/agent-text.mjs';
 import { whereSaid, relOf, NEVER_APPLIED, NEVER_APPLIED_AR } from '../lib/plain-words.mjs';
 import { tooLongSaid } from '../lib/path-rules.mjs';   // (0.3.2 WN1, F05)
 import { monthOffer as calendarOffer, twinPreview } from '../lib/arabic-twin.mjs';
@@ -36,6 +36,7 @@ import { BLANK_PNG_BYTES } from '../lib/report-run.mjs';
 // (0.3.2 SP43) the exact artifact: create_report's build with the plan's inputs, the EN-AR copy, the check and the digest
 import { exactArtifact } from '../lib/plan-artifact.mjs';
 import { createRequire } from 'node:module';
+import { fieldKey, fieldOfKey, keyOfText, parseFieldKey } from '../lib/field-key.mjs';
 const require = createRequire(import.meta.url);
 const Bind = require('../../assets/js/pbip-bind.js');
 const Pbip = require('../../assets/js/pbip-export.js');
@@ -53,33 +54,33 @@ export function register(server, ctx) {
   const { LIMITS } = ctx;
   server.registerTool('plan_layout', {
     title: 'Plan a report page layout',
-    description: 'The exact position of every visual on a Power BI page, as the DataArcus Theme Generator lays it out: one row per visual with its name, the suggested visual, and x, y, width, height in the page\'s own units (Format > General > Properties). Right-to-left designs are mirrored. It writes nothing. It is the plan step: with path (the model) and the plan\'s fields (planFields, as create_report\'s fields) it checks the plan against the tools\' limits (limits in the answer: slicers, KPI cards, table fields, page sizes...) and the model, and gives a proposed planId only for a plan within them; otherwise planProblems says what to change, before the plan is shown. Give here, too, the report\'s name, title, theme, logo, colours and options as create_report will write them: they are approved with the plan (reportLook in the answer; show them), and create_report writes only those. A KPI card shows a measure as the model defines it, filtered only by the page filters given and the user\'s slicers: its label must say what the value really is. When the request limits the report to part of the data (for example "Ramadan only"), give a page filter in pageFilters and show it in the plan: it filters every visual on the pages, the cards included. A visual outside the list of kinds is not supported: plan nothing for it and offer the closest supported ones. Show the user the plan, wait for go, call approve_plan, then create_report with planId (a separate theme file has its own plan: generate_theme proposes it). The page is 1920 x 1080 unless the user asks (pageSize.chosenBy says which). With path and a design without its own colours, the colours start from the model\'s own report (its theme\'s own colours, then the colours on its visuals; colours.source says which): say colours.sayInPlan in the plan, colours.solidVisuals and every colours.contrastWarnings; when colours.otherReports lists more of the user\'s reports, say so (themeFrom picks one). With path, the fields that lack their right number or date format come first in the answer, with the format script create_report writes next to the project after go (never applied, the model is not changed): tell the user that first. With path and lang "ar", arabicNames gives an Arabic display name for each field without one (from a fixed list of report words) and lists the rest for you to propose: show every suggestion beside the model\'s name for the user to approve or edit before create_report, and pass only the approved ones as displayNames. The plan pins the fixed list\'s names (inThePlan) and lists every field that stays in English with why (notTranslated): say both in the plan (sayInPlan). forAuthoring gives the same numbers as PBIR visual.json positions for editing an existing report: use them exactly, never snap them to multiples of 8, so every visual lands on its panel. With languages "en+ar" (only when the user asks for one report in English and Arabic) the plan builds both halves and bilingual says how to approve their Arabic (arabicTerms, arabicTexts). No model yet: sample true (with lang) plans a made-up Gulf retail project to try DataArcus on (sample in the answer). Nothing else is written.' + UNTRUSTED,
+    description: 'The plan step for a report: every page with the exact position of each visual (x, y, width, height in the page\'s units; right-to-left designs mirrored). It writes nothing. With path (the model) and planFields it checks the plan against the model and the tools\' limits (limits) and proposes a planId only for a plan within them; else planProblems says what to change, before the plan is shown. Give here the report\'s name, title, theme, logo, colours and options too: they are approved with the plan (reportLook; show them), and create_report writes only those. Then show the user the plan, wait for go, call approve_plan, then create_report with path and planId (a theme file has its own plan: generate_theme). A KPI card\'s label must say what its value really is: the model\'s measure, filtered only by the page filters and the user\'s slicers; a request for part of the data ("Ramadan only") needs pageFilters, which filter every visual, the cards included. A visual outside the list of kinds is not supported: plan nothing for it and offer the closest supported ones. The page is 1920 x 1080 unless the user asks. Say in the plan: formats first (fields lacking their right number or date format, and the script create_report writes for them; never applied), colours.sayInPlan, colours.solidVisuals, every colours.contrastWarnings, colours.otherReports (themeFrom picks one). With lang "ar", arabicNames suggests an Arabic display name per field: show each beside the model\'s name for the user to approve or edit, pass only the approved ones as displayNames, and say inThePlan and notTranslated. forAuthoring gives the same positions for editing an existing report: use them exactly, never snap them to multiples of 8. No model yet: sample true plans a made-up Gulf retail project.' + NO_VALUES + UNTRUSTED,
     inputSchema: strictInputs('plan_layout', {
-      design: z.record(z.any()).optional().describe('The design from generate_theme (its layout is the starting point); the other inputs change it'),
+      design: z.record(z.any()).optional().describe('generate_theme\'s design (its layout is the start); other inputs change it'),
       layout: z.enum(['exec', 'analysis', 'ops', 'focus']).optional().describe('Executive summary, analysis (filters and a wide table), operations monitor, or single focus'),
-      kpis: z.number().int().min(0).max(6).optional().describe('KPI cards in the top row (0-6; the layouts are made for 3-6, fewer cards share the row, 0 leaves the row out)'),
-      filters: z.enum(['none', 'start', 'end', 'top']).optional().describe('A filter panel at the start or end side (left or right by reading direction), a strip on top, or none'),
-      header: z.boolean().optional().describe('A header band with the page title and a logo (default on)'),
+      kpis: z.number().int().min(0).max(6).optional().describe('KPI cards in the top row (made for 3-6; fewer share the row; 0: no row)'),
+      filters: z.enum(['none', 'start', 'end', 'top']).optional().describe('A filter panel at the start or end side (by reading direction), a strip on top, or none'),
+      header: z.boolean().optional().describe('A header band with title and logo (default on)'),
       page: pageInput.optional(),
       dir: z.enum(['ltr', 'rtl']).optional().describe('Reading direction; by default the language decides'),
       lang: langInput,
-      path: modelPath.optional().describe('The model the report is for: its fields are checked for the right number and date formats, said first in the answer with a ready script file'),
-      fields: z.array(z.string()).max(40).optional().describe('With path: the plan\'s fields as "Table[Field]" (default: the fields suggest_fields picks)'),
+      path: modelPath.optional().describe('The model the report is for: the plan is checked against it'),
+      fields: z.array(z.string()).max(40).optional().describe('With path: the plan\'s fields, "Table[Field]" (default: suggest_fields\' picks)'),
       // (0.3.2 TK1, B-272: create_report's own words, B-88, moved here with the input: the plan holds it)
-      displayNames: z.record(z.string(), z.string()).optional().describe('Names to show instead of the model\'s field names, as { "Table[Field]": "name" } (Arabic names for an Arabic report: { "Table[Field]": "الاسم" }). Never show a name the user has not approved: only names the user gave or approved are written; with path and lang "ar" the others get a proposal (arabicNames) to approve or edit; without approval the model\'s names stay. The report shows the name wherever it shows the field (titles, axes, legends, headers, slicers, tooltips). The model is never renamed'),
+      displayNames: z.record(z.string(), z.string()).optional().describe('Names shown instead of the model\'s, { "Table[Field]": "name" } (Arabic for an Arabic report). Never show a name the user has not approved: only names the user gave or approved are written; else the model\'s names stay. The model is never renamed'),
       planFields: z.object({ kpis: z.array(z.string()).max(40), measure: z.string(), timeAxis: z.string(), category: z.string(), category2: z.string(), table: z.array(z.string()).max(40), slicers: z.array(z.string()).max(40) })
-        .partial().strict().optional().describe('With path: the plan\'s fields in create_report\'s fields shape (Table[Field]); each is checked against the model and the tools\' limits before the plan is shown. timeAxis "none" when the person asks for no time or date field: no trend, no month tooltip'),
+        .partial().strict().optional().describe('With path: the plan\'s fields (Table[Field]), checked against the model and the limits before the plan is shown. timeAxis "none" when the person asks for no date field: no trend, no month tooltip'),
       focus: focusInput, tables: tablesInput,
-      themeFrom: z.string().max(200).optional().describe('With path: the report (its name, as colours.otherReports lists it) whose colours a design without its own colours keeps, when the model has several'),
+      themeFrom: z.string().max(200).optional().describe('With path: the report (named as in colours.otherReports) whose colours a design without its own keeps, when the model has several'),
       // (audit 6, A6-1: what create_report will write, pinned with the plan; the same definitions as create_report's)
       // (0.3.0 J17) the person's answers to the Gulf date questions (gulfDates.askNext), never Claude's own guess
       gulfDates: z.object({ dateRole: z.string().max(300), grain: z.enum(['gregorian', 'hijri', 'seasonDay']), scope: z.enum(['all', 'year']), year: z.number().int().min(1300).max(1600),
         hijriYearColumn: z.string().max(300), country: z.enum(['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn']), firstYear: z.number().int().min(1901).max(9999), lastYear: z.number().int().min(1901).max(9999) })
-        .partial().strict().optional().describe('With path: the person\'s own answers to gulfDates.askNext: the date the report follows (dateRole, one of gulfDates.candidates), the grain, the seasonal scope (all, or one Hijri year the person names: never "the current" one), the calendar\'s Hijri-year column they confirmed, and for a missing calendar their country and years'),
+        .partial().strict().optional().describe('With path: the person\'s own answers to gulfDates.askNext: the date followed (dateRole, from gulfDates.candidates), the grain, the seasonal scope (all, or a Hijri year they name, never "the current"), the Hijri-year column they confirmed; for a missing calendar their country and years'),
       pages: CREATE_REPORT_INPUTS.pages, pageFilters: CREATE_REPORT_INPUTS.pageFilters, text: CREATE_REPORT_INPUTS.text, subtitles: CREATE_REPORT_INPUTS.subtitles,
       svgColumns: CREATE_REPORT_INPUTS.svgColumns, svgCards: CREATE_REPORT_INPUTS.svgCards, customVisualsFrom: CREATE_REPORT_INPUTS.customVisualsFrom,
       redesignFrom: CREATE_REPORT_INPUTS.redesignFrom, titles: CREATE_REPORT_INPUTS.titles, restyle: CREATE_REPORT_INPUTS.restyle, consistentText: CREATE_REPORT_INPUTS.consistentText, keepPositions: CREATE_REPORT_INPUTS.keepPositions, sample: CREATE_REPORT_INPUTS.sample,
-      redesignPages: z.array(z.string().max(200)).min(1).max(50).optional().describe('With redesignFrom: list only these pages (redesign.pages[].id or its name) in full, when the plan\'s answer shortened its lists (listsCut); the plan is the same'),
+      redesignPages: z.array(z.string().max(200)).min(1).max(50).optional().describe('With redesignFrom: list only these pages (redesign.pages[].id or name) in full, after listsCut; the plan is the same'),
       // (A-02: the report's look and options, pinned with the plan and shown in it; create_report's own definitions)
       ...Object.fromEntries(REPORT_LOOK.map((k) => [k, CREATE_REPORT_INPUTS[k]]))
     }), annotations: READS
@@ -93,7 +94,7 @@ export function register(server, ctx) {
     switcherStep(lc); iconsStep(lc); daxStep(lc); axesStep(lc); lintStep(lc); await exactStep(lc); titlesStep(lc); previewStep(lc);
     kindsStep(lc); saidStep(lc); slicersStep(lc); writesStep(lc); terminologyStep(lc); planStep(lc);
     return answerStep(lc);
-  }));
+  }, { lang: 'given' }));
 }
 
 // (0.3.2 FN1J) the plan's names so far, the terms reused from this session, and the names given checked as create_report checks them
@@ -102,7 +103,7 @@ function stateStep(lc) { let { a } = lc;
     // come first, with the script (check_model_health's kind of script, for the report's fields only)
     let formats = {}, arabicNames = {}, displayNamesAns = {}, m0 = null, planNames = null, notTranslated = null;
     // (0.3.0 J18) the terms reused from this session: { key: { alias, decision } }; as display names (a kept one: the model's own)
-    const reused = {}, reusedNames = () => Object.fromEntries(Object.entries(reused).map(([k, c]) => [k, c.decision === 'kept' ? k.replace(/^.*?\[(.*)\]$/, '$1') : c.alias]));
+    const reused = {}, reusedNames = () => Object.fromEntries(Object.entries(reused).map(([k, c]) => [k, c.decision === 'kept' ? fieldOfKey(k) : c.alias]));
     // (R-04: a name the plan pins is a name create_report can write: the same check, at the plan)
     Object.entries(a.displayNames || {}).forEach(([k, v]) => writtenName(v, `displayNames: ${visible(String(k)).slice(0, 160)}`));
   Object.assign(lc, { formats, arabicNames, displayNamesAns, m0, planNames, notTranslated, reused, reusedNames }); }
@@ -112,8 +113,8 @@ function modelStep(lc) { let { a, formats, arabicNames, displayNamesAns, m0, pla
       const m = (m0 = refuseUnreadable(loadModel(a.path))), sc = scopeOf(m, { focus: a.focus, tables: a.tables });
       // (keep the dashboard's identity, the owner's go 12 Oct: the model's report's own theme, the design's default colours)
       a.reportTheme = existingTheme(m, a.themeFrom);
-      const keys = a.fields ? new Set(a.fields.map((x) => { const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(x); }))
-        : sc.needsFocus ? null : (() => { const b = Bind.suggest(sc.tables, Math.max(1, a.kpis == null ? 4 : a.kpis), relsOf(m, a.lang === 'ar' ? 'ar' : 'en')); return new Set([b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean).map((f) => `${f.t}[${f.c != null ? f.c : f.m}]`)); })();
+      const keys = a.fields ? new Set(a.fields.map((x) => { return keyOfText(String(x)) || String(x); }))
+        : sc.needsFocus ? null : (() => { const b = Bind.suggest(sc.tables, Math.max(1, a.kpis == null ? 4 : a.kpis), relsOf(m, a.lang === 'ar' ? 'ar' : 'en')); return new Set([b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean).map((f) => fieldKey(f.t, f.c != null ? f.c : f.m))); })();
       const fmt = keys && formatsAnswer(m, a.path, keys, undefined, false, 'create_report writes it next to the project with the report, after the user\'s go (the same kind of script check_model_health writes, for the report\'s fields only).');
       // round 14 (the owner's ask, 6 Oct): an Arabic plan proposes an Arabic display name for every field it will show
       // that has none (a fixed glossary of report words, never a free translation), for the user to approve first
@@ -124,10 +125,10 @@ function modelStep(lc) { let { a, formats, arabicNames, displayNamesAns, m0, pla
       // readable names are the plan's default: named in the plan, pinned with it (create_report writes them when it gets no
       // displayNames), and changed by the user through displayNames (their own name, or the model's to keep it)
       if (a.lang !== 'ar' && keys) {
-        const given = new Set(Object.keys(a.displayNames || {}).map((k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : k; }));
-        const planKeys = [].concat(...Object.values(a.planFields || {})).filter((x) => typeof x === 'string').map((x) => { const mk = x.trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : null; }).filter(Boolean);
+        const given = new Set(Object.keys(a.displayNames || {}).map((k) => { return keyOfText(String(k)) || k; }));
+        const planKeys = [].concat(...Object.values(a.planFields || {})).filter((x) => typeof x === 'string').map((x) => { return keyOfText(x); }).filter(Boolean);
         const prop = {};
-        [...new Set([...keys, ...planKeys])].filter((k) => !given.has(k)).forEach((k) => { const r = readableName(k.replace(/^.*?\[(.*)\]$/, '$1')); if (r) prop[k] = r; });
+        [...new Set([...keys, ...planKeys])].filter((k) => !given.has(k)).forEach((k) => { const r = readableName(fieldOfKey(k)); if (r) prop[k] = r; });
         if (Object.keys(prop).length) { planNames = Object.assign({}, prop, a.displayNames || {});
           displayNamesAns = { displayNames: { inThePlan: prop, sayInPlan: 'The report shows these fields under readable names, the plan\'s default: list every one in the plan ("loan_intent" shown as "Loan Intent"), so the user sees each before saying go. The plan pins them, and create_report writes them without displayNames. To change one, or keep the model\'s own name, call plan_layout again with displayNames { "Table[Field]": "the name" } and show the new plan. The model is not renamed.' } }; }
       }
@@ -136,21 +137,21 @@ function modelStep(lc) { let { a, formats, arabicNames, displayNamesAns, m0, pla
       // name: each is drafted and approved like the others, its title then «عدد <name>», «مجموع <name>»
       const noMeasures = keys && !sc.needsFocus && !(a.planFields && (a.planFields.kpis || []).length) && !Bind.suggest(sc.tables, 8, relsOf(m, 'ar')).kpis.filter(Boolean).length;
       const counted = a.lang === 'ar' && keys && noMeasures ? Bind.counts(sc.tables, null, { lang: 'ar' }) : [];
-      counted.forEach((c) => keys.add(`${c.t}[${c.c}]`));
+      counted.forEach((c) => keys.add(fieldKey(c.t, c.c)));
       // (0.3.1 FX3, FX2's Seen 1; the owner, D-1027-04) the metric switcher's labels are the plan's names of its measures:
       // on an Arabic report each is drafted and approved like a title's field, or kept English on purpose
-      const switched = a.lang === 'ar' && keys && a.metricSwitcher ? resolveSwitch(m.tables, a.metricSwitcher).measures.map((x) => `${x.t}[${x.m}]`) : [];
+      const switched = a.lang === 'ar' && keys && a.metricSwitcher ? resolveSwitch(m.tables, a.metricSwitcher).measures.map((x) => fieldKey(x.t, x.m)) : [];
       switched.forEach((k) => keys.add(k));
       if (a.lang === 'ar' && keys) {
-        const given = new Set(Object.keys(a.displayNames || {}).map((k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : k; }));
-        const planKeys = [].concat(...Object.values(a.planFields || {})).filter((x) => typeof x === 'string').map((x) => { const mk = x.trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : null; }).filter(Boolean);
+        const given = new Set(Object.keys(a.displayNames || {}).map((k) => { return keyOfText(String(k)) || k; }));
+        const planKeys = [].concat(...Object.values(a.planFields || {})).filter((x) => typeof x === 'string').map((x) => { return keyOfText(x); }).filter(Boolean);
         // (0.3.0 J18) a term the person confirmed earlier in this session, for this field of this model, its description and
         // DAX unchanged: reused as if given (pinned, shown in the sheet as earlier); else the fixed list or the person
         const conf = Terms.confirmedOf(m, [...new Set([...keys, ...planKeys])].filter((k) => !given.has(k)));
         conf.forEach((c, k) => { reused[k] = c; });
-        const todo = [...new Set([...keys, ...planKeys])].filter((k) => !given.has(k) && !conf.has(k) && !/[\u0600-\u06FF]/.test(k.replace(/^.*?\[/, '')));
+        const todo = [...new Set([...keys, ...planKeys])].filter((k) => !given.has(k) && !conf.has(k) && !/[\u0600-\u06FF]/.test(fieldOfKey(k)));
         const prop = {}, none = [];
-        todo.forEach((k) => { const p = proposeArabic(k.replace(/^.*?\[(.*)\]$/, '$1')); if (p) prop[k] = p; else none.push(k); });
+        todo.forEach((k) => { const p = proposeArabic(fieldOfKey(k)); if (p) prop[k] = p; else none.push(k); });
         // B-88 (the owner's decision, 13 Oct, option B): every field without an Arabic name gets a proposal: the fixed list's
         // where it has one, else one the assistant proposes itself; the user approves or edits them all in the plan
         if (todo.length) arabicNames = { arabicNames: Object.assign({ sayFirst: 'Before create_report, show the user an Arabic display name for every field listed here, beside the field\'s model name and marked as a suggestion to check: suggestedDisplayNames come from a fixed list of common report words; for each field in proposeYourself, propose one yourself (howToPropose). Ask the user to approve or edit them all, then pass only the approved ones as displayNames (to plan_layout again, for the plan to pin them). Never show a name the user has not approved: the suggestedDisplayNames are pinned with this plan (inThePlan) and written only when the user approves the plan, so name each in it; the fields in notTranslated show their English model names, said in the plan with why (sayInPlan). The model is never renamed. An Arabic report\'s titles are Arabic (the owner\'s rule): draft an Arabic name for every field listed (proposeYourself, and titlesInEnglish.fields: the fields that would keep a title English), show the drafts for approval, and call plan_layout again with the approved ones as displayNames; then every title is wholly Arabic. A title stays English only for a field the person keeps in English on purpose (displayNames: its model name), and then wholly English ("Total Sales by Region", "Top 6: …"), never half Arabic, half English.' },
@@ -163,14 +164,14 @@ function modelStep(lc) { let { a, formats, arabicNames, displayNamesAns, m0, pla
         if (conf.size) planNames = Object.assign({}, reusedNames(), a.displayNames || {});
         if (todo.length) {
           if (Object.keys(prop).length) planNames = Object.assign({}, prop, reusedNames(), a.displayNames || {});
-          notTranslated = none.map((k) => ({ field: k, shownAs: k.replace(/^.*?\[(.*)\]$/, '$1'), why: NOT_TRANSLATED_WHY }));
+          notTranslated = none.map((k) => ({ field: k, shownAs: fieldOfKey(k), why: NOT_TRANSLATED_WHY }));
           Object.assign(arabicNames.arabicNames, Object.keys(prop).length ? { inThePlan: Object.assign({}, prop) } : {}, { notTranslated });
         }
         // (FX2, A-1) each count or sum title, its Arabic draft beside its English: from the field's Arabic name (given,
         // confirmed earlier or the fixed list's), approved with it; none yet: its field is drafted first (proposeYourself)
         if (counted.length) {
-          const nameOf = Object.assign({}, prop, reusedNames(), Object.fromEntries(Object.entries(a.displayNames || {}).map(([k, v]) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return [mk ? `${mk[1]}[${mk[2]}]` : String(k), String(v)]; })));
-          const titles = counted.slice(0, 30).map((c) => { const k = `${c.t}[${c.c}]`, nm = nameOf[k], ar = nm && /[\u0600-\u06FF]/.test(nm) ? (c.agg === 0 ? 'مجموع ' : 'عدد ') + nm : null;
+          const nameOf = Object.assign({}, prop, reusedNames(), Object.fromEntries(Object.entries(a.displayNames || {}).map(([k, v]) => { return [keyOfText(String(k)) || String(k), String(v)]; })));
+          const titles = counted.slice(0, 30).map((c) => { const k = fieldKey(c.t, c.c), nm = nameOf[k], ar = nm && /[\u0600-\u06FF]/.test(nm) ? (c.agg === 0 ? 'مجموع ' : 'عدد ') + nm : null;
             return { field: k, en: (c.agg === 0 ? 'Sum of ' : 'Count of ') + c.c, ar }; });
           if (!arabicNames.arabicNames) arabicNames = { arabicNames: {} };
           arabicNames.arabicNames.countedTitles = { titles, sayInPlan: 'The model has no measures, so the report counts or sums these columns itself. Show each title\'s Arabic draft beside its English, marked as a draft: it is the field\'s Arabic name with «عدد» (a count) or «مجموع» (a sum), approved with that name. A title with no draft (ar null) waits for its field\'s name (proposeYourself); until the user approves one, it is written wholly in English.' };
@@ -230,6 +231,8 @@ function limitsStep(lc) { let { LIMITS, a, m0, r } = lc;
     let model = null, planned = null;
     if (a.path) { const m = m0; model = modelRef(m, a.path); if (Object.keys(pf).length) { const fr = fieldsAndProblems(m.tables, pf); fr.problems.forEach((x) => planProblems.push(x + ' (use the names exactly as read_model lists them)')); planned = pf; } }
     else if (Object.keys(pf).length) planProblems.push('planFields need path (the model), so the fields can be checked against it.');
+    // (0.3.3 DB2, A-DB1-2) create_report writes no new report without a name: no plan id for a plan that cannot be written
+    if (a.path && a.customVisualsFrom == null && !a.name) planProblems.push('Give the report a name (name): create_report writes no report without one, so there is no plan to approve yet.');
   Object.assign(lc, { planProblems, pf, model, planned }); }
 // (FN1J) the Gulf date questions
 function gulfDatesStep(lc) { let { a, m0, noAxis, planProblems, pf } = lc;
@@ -252,7 +255,7 @@ function monthOrderStep(lc) { let { a, m0, noAxis, planProblems, pf } = lc;
       const sc0 = scopeOf(m0, { focus: a.focus, tables: a.tables });
       const tf = noAxis ? null : pf.timeAxis ? (fieldsAndProblems(m0.tables, { timeAxis: pf.timeAxis }).out || {}).timeAxis : sc0.needsFocus ? null : (Bind.suggest(sc0.tables, 1, relsOf(m0, a.lang === 'ar' ? 'ar' : 'en')) || {}).date;
       // (the cross-review's G6: the writer's own decision, Pbip.timeAxisPlan, said here; never a promise the writer may not keep)
-      if (tf) { const key = `${tf.t}[${tf.c}]`, tp = Pbip.timeAxisPlan(tf) || { order: 'own' };
+      if (tf) { const key = fieldKey(tf.t, tf.c), tp = Pbip.timeAxisPlan(tf);
         const how = { own: 'The column\'s own order (a date or a number).', model: 'The model sorts this column (its sort-by column): calendar order.',
           number: tp.by ? `In month order by ${tp.by.t}[${tp.by.c}] (the report sorts it; the model is not changed).` : '',
           monthLabel: `In time order by the label itself read as a date (a report-level measure: "Apr 2018", "April 2018" and "2018-04" are read; the column has no date or sort-by column the files give a type), showing the last ${tp.last} months with data (a visual filter the user can clear); a label that can't be read keeps every month. The model is not changed; a sort-by column in the model is the lasting fix (check_model_health, MONTH_SORT).`,
@@ -287,6 +290,7 @@ function switcherStep(lc) { let { a, m0, planProblems } = lc;
   }
 // (FN1J) the status icons
 function iconsStep(lc) { let { a, m0, planProblems } = lc;
+    if (a.bookmarks) { if (a.customVisualsFrom != null || a.redesignFrom != null || a.sample) planProblems.push('bookmarks is for a new report: a native copy, a redesign and the sample keep the bookmarks they have.'); else if (a.languages === 'en+ar') planProblems.push('bookmarks with languages "en+ar": not yet, because each view would need its Arabic twin and an approved Arabic name. Plan the views on a report in one language, or leave bookmarks out.'); }   // (0.3.3 RX1) the plan's views: a new report's only, in one language
     // (L5) the status icons' measures, thresholds and targets, before the plan is shown (a threshold is never guessed)
     if (a.statusIcons && a.statusIcons !== false) {
       if (!m0) planProblems.push('statusIcons needs path (the model), so its measures and targets can be checked against it.');
@@ -320,7 +324,6 @@ function lintStep(lc) { let { a, arabicNames, m0, planNames, notTranslated, reus
       if (planProblems.length) return { skipped: 'the plan is outside the tools\' limits (planProblems): change it first' };
       try {
         const sc = scopeOf(m0, { focus: a.focus, tables: a.tables });
-        if (sc.needsFocus) return { skipped: 'a large model needs a focus or tables to plan the page\'s fields' };
         return planLint({ m: m0, tables: sc.tables, design: r.design, lang: a.lang === 'ar' ? 'ar' : 'en', gallery: a.gallery, axes: m0 ? axesOf(m0, a.sharedAxes) : undefined, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null });
       } catch (e) { return { skipped: 'the planned page could not be built for the lint: ' + String(e && e.message || e).slice(0, 200) }; }
     })() };
@@ -330,19 +333,19 @@ function lintStep(lc) { let { a, arabicNames, m0, planNames, notTranslated, reus
     // (0.3.0 R2) the fields the planned page shows beyond the picker's first guess (the ops layout's fifth and sixth cards,
     // a third category): each gets the fixed list's Arabic name, pinned, or is listed as kept in English, as above
     if (a.lang === 'ar' && notTranslated && designLint.designLint && Array.isArray(designLint.designLint.fields)) {
-      const inModel = (k) => { const mk = k.match(/^(.+?)\[(.+)\]$/), t = mk && (m0.tables || []).find((x) => x.name === mk[1]); return !!t && [...(t.columns || []), ...(t.measures || [])].some((x) => x.name === mk[2]); };
+      const inModel = (k) => { const mk = parseFieldKey(k), t = mk && (m0.tables || []).find((x) => x.name === mk.t); return !!t && [...(t.columns || []), ...(t.measures || [])].some((x) => x.name === mk.c); };
       const known = new Set([...Object.keys(planNames || {}), ...notTranslated.map((x) => x.field)].concat(Object.keys(a.displayNames || {})));
       if (!arabicNames.arabicNames) arabicNames = { arabicNames: {} };
       const an = arabicNames.arabicNames, why = NOT_TRANSLATED_WHY;
-      const more = designLint.designLint.fields.filter((k) => !known.has(k) && inModel(k) && !/[\u0600-\u06FF]/.test(k.replace(/^.*?\[/, ''))), conf2 = Terms.confirmedOf(m0, more);
+      const more = designLint.designLint.fields.filter((k) => !known.has(k) && inModel(k) && !/[\u0600-\u06FF]/.test(fieldOfKey(k))), conf2 = Terms.confirmedOf(m0, more);
       // (0.3.0 A3) a first name added here starts from the names the person approved (displayNames), never without them:
       // a plan whose only fixed-list name came from the lint's fields pinned that one alone and dropped every approved name
       const namesSoFar = () => planNames || Object.assign({}, a.displayNames || {});
       conf2.forEach((c, k) => { reused[k] = c; planNames = Object.assign(namesSoFar(), { [k]: reusedNames()[k] }); });
       more.filter((k) => !conf2.has(k)).forEach((k) => {
-        const p = proposeArabic(k.replace(/^.*?\[(.*)\]$/, '$1'));
+        const p = proposeArabic(fieldOfKey(k));
         if (p) { planNames = Object.assign(namesSoFar(), { [k]: p }); an.inThePlan = Object.assign(an.inThePlan || {}, { [k]: p }); }
-        else notTranslated.push({ field: k, shownAs: k.replace(/^.*?\[(.*)\]$/, '$1'), why });
+        else notTranslated.push({ field: k, shownAs: fieldOfKey(k), why });
       });
     }
     if (notTranslated && arabicNames.arabicNames) arabicNames.arabicNames.sayInPlan = sayArabicPlan(Object.keys(arabicNames.arabicNames.inThePlan || {}).length, notTranslated.length, Object.values(a.displayNames || {}).filter((v) => /[\u0600-\u06FF]/.test(String(v))).length);
@@ -378,7 +381,7 @@ function titlesStep(lc) { let { a, arabicNames, m0, notTranslated, planProblems,
     // (the owner, 27 Oct: "in arabic if title is english then translate it don't keep english titles in arabic reports")
     // fields: each field kept in English that a listed title names, the drafts the assistant owes before the go
     if (a.lang === 'ar' && exact && !exact.bilingual && arabicNames.arabicNames) { const t = englishTitles(exact.files);
-      const keptOnPurpose = new Set(Object.entries(a.displayNames || {}).filter(([k, v]) => String(v).trim() === String(k).replace(/^.*?\[(.*)\]$/, '$1').trim()).map(([k]) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(k); }));
+      const keptOnPurpose = new Set(Object.entries(a.displayNames || {}).filter(([k, v]) => String(v).trim() === fieldOfKey(k).trim()).map(([k]) => { return keyOfText(String(k)) || String(k); }));
       const fields = (notTranslated || []).filter((x) => !keptOnPurpose.has(x.field) && t.some((title) => (' ' + title + ' ').includes(' ' + x.shownAs + ' ') || title.includes(x.shownAs + ':'))).map((x) => x.field);
       if (t.length) arabicNames.arabicNames.titlesInEnglish = Object.assign({ titles: t.slice(0, 30) }, t.length > 30 ? { notListed: t.length - 30 } : {}, fields.length ? { fields } : {},
         { how: fields.length ? 'An Arabic report\'s titles are Arabic (the owner\'s rule): these would be written in English because a field in them has no Arabic name yet. Draft an Arabic name for each field in fields (plain business Arabic, as howToPropose says), show the drafts to the user to approve or edit, and call plan_layout again with the approved ones as displayNames: the titles are then wholly Arabic. Only a field the user keeps in English on purpose (displayNames: its model name) leaves its titles wholly English, never half Arabic, half English.'
@@ -387,7 +390,7 @@ function titlesStep(lc) { let { a, arabicNames, m0, notTranslated, planProblems,
       // that would be written English for a field with no Arabic name: no plan id until each field is drafted and approved,
       // or kept English on purpose
       // (FX3) a switcher label that would be English: listed, and no plan id, as a title's field
-      const sw = m0 && a.metricSwitcher ? resolveSwitch(m0.tables, a.metricSwitcher).measures.map((x) => `${x.t}[${x.m}]`) : [];
+      const sw = m0 && a.metricSwitcher ? resolveSwitch(m0.tables, a.metricSwitcher).measures.map((x) => fieldKey(x.t, x.m)) : [];
       const swFields = (notTranslated || []).filter((x) => !keptOnPurpose.has(x.field) && sw.includes(x.field)).map((x) => x.field);
       if (swFields.length) { arabicNames.arabicNames.switcherLabels = { fields: swFields, how: 'The metric switcher\'s choices and its charts\' titles read these names: on an Arabic report they are Arabic. Draft an Arabic name for each (plain business Arabic, as howToPropose says), show the drafts to the user to approve or edit, and call plan_layout again with the approved ones as displayNames; a name the user keeps in English on purpose: its model name as its displayNames entry.' };
         planProblems.push(`an Arabic report's metric switcher shows its measures by their Arabic names, and ${swFields.length === 1 ? 'this measure has' : 'these measures have'} none yet, so ${swFields.length === 1 ? 'its label' : 'their labels'} would be English: ${swFields.join(', ')} (arabicNames.switcherLabels). Draft an Arabic name for each, show the drafts to the user to approve or edit, and call plan_layout again with the approved ones as displayNames; or, for a measure the user keeps English on purpose, give its model name as its displayNames entry. No plan id until every measure listed has one or the other.`); }
@@ -491,12 +494,13 @@ function slicersStep(lc) { let { a, pf, exact, biSaid } = lc;
     // (0.3.1 LR1, the laptop's tour: 2 slicers asked, a third bound unsaid) every slicer the report writes, named in the
     // plan; the design's slots left over keep the picker's field (pbip-bind.js: the given slicers first), said as added.
     // Kept filled, not left empty: the design's look is what the person approves, and an empty slot changes what Desktop draws
-    const slicerKey = (x) => { const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(x); };
+    const slicerKey = (x) => { return keyOfText(String(x)) || String(x); };
     const slicersAns = exact && (exact.slicers || []).length ? (() => {
       const written = exact.slicers, asked = (pf.slicers || []).map(slicerKey), added = asked.length ? written.filter((f) => !asked.includes(f)) : [];
       const list = written.join(', '), listAr = written.join('، '), n = written.length;
       const en = `The report's slicers: ${list}.` + (added.length ? ` ${added.join(', ')} ${added.length === 1 ? 'was' : 'were'} added by DataArcus to fill the design's ${n} slicer slots (the plan names ${asked.length}): say it in the plan; to have another field there, name ${n} slicers in planFields.slicers.`
-        : asked.length ? '' : ' Chosen by DataArcus from the model (planFields.slicers names them).');
+        : asked.length ? '' : ' Chosen by DataArcus from the model (planFields.slicers names them).')
+        + (a.filters === 'none' ? ' filters "none" leaves the first page without a filter area; the second page (Details) keeps its filter rail, and these slicers are on it: say so in the plan; for a report with no slicers at all, call plan_layout again with secondPage false.' : '');
       const ar = `مقسمات التقرير: ${listAr}.` + (added.length ? ` أضاف DataArcus ${added.join('، ')} لملء خانات المقسمات في التصميم (عددها ${n}، والخطة تسمّي ${asked.length}).` : asked.length ? '' : ' اختارها DataArcus من النموذج.');
       return { slicers: Object.assign({ written }, asked.length ? { asked } : {}, added.length ? { added } : {}, { sayInPlan: en }, a.lang === 'ar' ? { sayInPlanAr: ar } : {}) };
     })() : {};
@@ -507,12 +511,11 @@ function slicersStep(lc) { let { a, pf, exact, biSaid } = lc;
     const biWrites = biSaid ? ` (in English and Arabic: its ${biSaid.pairs.length} English pages and their ${biSaid.pairs.length} Arabic pages, ${biSaid.buttons.filter((b) => b.placed).length} language buttons, ${biSaid.syncGroups.length} slicer pairs kept in sync, the ${a.tabsShown === 'ar' ? 'English' : 'Arabic'} pages hidden in the tabs)` : '';
   Object.assign(lc, { slicersAns, bilingual, biWrites }); }
 // (FN1J) what the plan writes, in English and Arabic, and the status icons said
-function writesStep(lc) { let { a, formats, m0, cvEntries, switchPlan, flipPlan, calFile, calPlan, iconsPlan, daxPlan, biSaid, biWrites } = lc;
+function writesStep(lc) { let { a, formats, m0, cvEntries, switchPlan, flipPlan, calFile, calPlan, iconsPlan, daxPlan, biWrites } = lc;
     const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0, axesOf(m0, a.sharedAxes), { second: a.customVisualsSecond }).writes : [`the report "<name>.Report" and its "<name>.pbip" ${m0 && m0.projectDir ? whereSaid(m0.projectDir).replace(/, next to "[^"]*"$/, '') + ', next to the model' : 'next to the model'}, with the theme inside it${biWrites}${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"${formats.formats.alreadyThere ? ' (already there with exactly this script: not written again)' : ''}` : ''}${switchPlan ? `, and the metric switcher's TMDL script "<name>${SCRIPT_SUFFIX}.tmdl" (a new table for the model, ${NEVER_APPLIED})` : ''}${flipPlan ? `, and the flip cards' TMDL script "${flipPlan.scriptAfterGo}" (${flipPlan.newMeasures} new measures, ${NEVER_APPLIED})` : ''}${iconsPlan && iconsPlan.scriptAfterGo ? `, and the status icons' TMDL script "${iconsPlan.scriptAfterGo}" (${iconsPlan.newMeasures} new measures, ${NEVER_APPLIED})` : ''}${daxPlan ? `, and the DAX functions' TMDL script "${daxPlan.scriptAfterGo}" (${daxPlan.functions.filter((f) => f.inScript).length} functions and ${daxPlan.measures.length} measures, ${NEVER_APPLIED}; ${daxPlan.compatibility.raises ? 'applying it raises the model\'s compatibility level to 1702, which cannot be undone' : 'the model is already at 1702 or higher'})` : ''} (create_report)`];
     if (calFile && a.customVisualsFrom == null && writes.length) writes[0] += `, and the Arabic calendar columns' TMDL script "${calFile}" (${calPlan ? `${calPlan.columns.length} column${calPlan.columns.length === 1 ? '' : 's'}` : 'columns'} for the date table, ${NEVER_APPLIED})`;
     // (SQ3, T1-S6) the same line in Arabic, for an Arabic report's approval page (a native copy's stays English)
     const NA = NEVER_APPLIED_AR, writesAr = a.lang === 'ar' && a.customVisualsFrom == null && writes.length === 1 ? [`التقرير «<name>.Report» وملف «<name>.pbip» ${m0 && m0.projectDir ? whereSaid(m0.projectDir, undefined, true).replace(/، بجانب «[^»]*»$/, '') + '، بجانب النموذج' : 'بجانب النموذج'}، والسمة داخله`
-      + (biSaid ? ` (بالإنجليزية والعربية: صفحاته الإنجليزية (${biSaid.pairs.length}) وصفحاتها العربية (${biSaid.pairs.length})، أزرار اللغة: ${biSaid.buttons.filter((b) => b.placed).length}، أزواج المقسمات المتزامنة: ${biSaid.syncGroups.length}، والصفحات ${a.tabsShown === 'ar' ? 'الإنجليزية' : 'العربية'} مخفية في علامات التبويب)` : '')
       + (formats.formats && formats.formats.scriptAfterGo ? `، وسكربت التنسيقات «${formats.formats.scriptAfterGo}»${formats.formats.alreadyThere ? ' (موجود من قبل بالمحتوى نفسه: لا يُكتب مرة أخرى)' : ''}` : '')
       + (switchPlan ? `، وسكربت TMDL لمبدّل المقاييس «<name>${SCRIPT_SUFFIX}.tmdl» (جدول جديد للنموذج، ${NA})` : '')
       + (flipPlan ? `، وسكربت TMDL للبطاقات القابلة للقلب «${flipPlan.scriptAfterGo}» (مقاييس جديدة: ${flipPlan.newMeasures}، ${NA})` : '')
@@ -528,7 +531,7 @@ function terminologyStep(lc) { let { a, arabicNames, m0, planNames, notTranslate
     // term to ask next. The plan's data keeps the rows for the approval page, and the terms are remembered once written
     let terminology = {}, termRows = null;
     if (a.lang === 'ar' && m0 && notTranslated) {
-      const norm = (k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(k); };
+      const norm = (k) => { return keyOfText(String(k)) || String(k); };
       const givenN = new Map(Object.entries(a.displayNames || {}).map(([k, v]) => [norm(k), String(v)]));
       const places = exact ? Terms.placesOf(Terms.reportOf(exact.files)) : null, inThePlan = (arabicNames.arabicNames && arabicNames.arabicNames.inThePlan) || {};
       const keysShown0 = places ? [...places.keys()] : [...new Set([...Object.keys(planNames || {}), ...notTranslated.map((x) => x.field), ...givenN.keys()])];
@@ -539,7 +542,7 @@ function terminologyStep(lc) { let { a, arabicNames, m0, planNames, notTranslate
       const switchKeys = switchPlan ? [...new Set((switchPlan.measures || []).map((x) => norm(x.field)))] : [];
       const keysShown = [...new Set(keysShown0.concat(flipKeys, switchKeys))];
       const terms = new Map(keysShown.map((k) => {
-        const en = k.replace(/^.*?\[(.*)\]$/, '$1');
+        const en = fieldOfKey(k);
         if (givenN.has(k)) { const v = givenN.get(k); return [k, v.trim() === en ? { ar: null, status: 'kept', declined: true } : { ar: v, status: 'approved' }]; }
         if (reused[k]) return [k, reused[k].decision === 'kept' ? { ar: null, status: 'kept', declined: true, earlier: true } : { ar: reused[k].alias, status: 'approved', earlier: true }];
         if (inThePlan[k] != null) return [k, { ar: inThePlan[k], status: 'draft' }];
@@ -591,5 +594,6 @@ function answerStep(lc) { let { LIMITS, formats, arabicNames, displayNamesAns, r
       const lt = designLint.designLint && designLint.designLint.tops, written = new Map();
       (lt || []).forEach((t) => { const sl = ofKind(t.from)[t.nth]; if (sl) written.set(sl, t); });
       const tops = r.slots.filter((x) => x.topN && (!lt || written.has(x))).map((x) => Object.assign({ role: x.role, kind: x.kind, top: x.topN }, written.has(x) ? { top: written.get(x).top, allUpTo: written.get(x).allUpTo } : {}));
-      return tops.length ? { categoryCharts: { tops, sayInPlan: `Each bar and column chart by a category shows the categories its place can hold, its Top N by its measure (${tops.map((x) => `${x.role}: ${topSaid(x)}`).join('; ')}): the rest are left out, with no "Other" bar. Its title says "Top N of M:" (for example "Top 9 of 16:") only when it leaves categories out, counted in the report; a chart that shows all its categories keeps its plain title. Say it in the plan; a month or day axis keeps all its values in order.` } } : {}; })(), { limits: LIMITS, page, pageSize, ...(lookPlan ? { look: lookPlan } : {}), fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.preview ? { preview: r.preview } : {}, r.pageTint ? { pageTint: r.pageTint } : {}, r.colours ? { colours: r.colours } : {}, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design })), biSaid ? { last: BILINGUAL_LAST } : undefined);   // (X2: the texts to approve cut last)
+      return tops.length ? { categoryCharts: { tops, sayInPlan: `Each bar and column chart by a category shows the categories its place can hold, its Top N by its measure (${tops.map((x) => `${x.role}: ${topSaid(x)}`).join('; ')}): the rest are left out, with no "Other" bar. Its title says "Top N of M:" (for example "Top 9 of 16:") only when it leaves categories out, counted in the report; a chart that shows all its categories keeps its plain title. Say it in the plan; a month or day axis keeps all its values in order.` } } : {}; })(), { limits: LIMITS, page, pageSize, ...(lookPlan ? { look: lookPlan } : {}), fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.preview ? { preview: r.preview } : {},
+      r.fontSaid ? { fontSaid: r.fontSaid } : {}, r.pageTint ? { pageTint: r.pageTint } : {}, r.colours ? { colours: r.colours } : {}, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design })), biSaid ? { last: BILINGUAL_LAST } : undefined);   // (X2: the texts to approve cut last)
 }

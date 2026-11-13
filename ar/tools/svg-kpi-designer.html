@@ -123,7 +123,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   
   <link href="/assets/css/vendor/bootstrap.min.css?v=d85327d99c7a" rel="stylesheet">
-  <link href="/assets/css/style.min.css?v=29c11a1ea13b" rel="stylesheet">
+  <link href="/assets/css/style.min.css?v=db9f3474f158" rel="stylesheet">
 
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
@@ -146,8 +146,9 @@
        buttons and panels below don't jump (measured 2026-10-04: one row of starters from 992px, two from 576px) */
     .kd-top > div:first-child { flex: 1 1 100%; }
     .kd-starters:empty { min-height: 123px; }
-    @media (min-width: 576px) { .kd-starters:empty { min-height: 80px; } }
-    @media (min-width: 992px) { .kd-starters:empty { min-height: 36px; } }
+    /* (0.3.3 LF1) the buttons' lines, measured: 3 below 768 px, 2 from 768 to 1199 (it was 1 from 992: CLS 0.125 at 992), 1 from 1200 */
+    @media (min-width: 768px) { .kd-starters:empty { min-height: 80px; } }
+    @media (min-width: 1200px) { .kd-starters:empty { min-height: 36px; } }
     .kd-starter { background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 30px; padding: 6px 14px; font-size: .85rem; }
     .kd-starter:hover { border-color: var(--accent); }
     .kd-starter.kd-pro { border-color: rgba(253, 203, 110, .45); }
@@ -465,10 +466,10 @@
 
   <script src="/assets/js/translations/common.min.js?v=434124bdf3f2" defer=""></script>
   <script src="/assets/js/translations/svg-kpi.min.js?v=83dfbadc5c3c" defer=""></script>
-  <script src="/assets/js/locale-routes.min.js?v=59ad61997060" defer=""></script>
+  <script src="/assets/js/locale-routes.min.js?v=7ad3cd58ffda" defer=""></script>
   <script src="/assets/js/locale-catalog.min.js?v=1464f13d8c0b" defer=""></script>
   <script src="/assets/js/locale-dom.min.js?v=faf294f00eb2" defer=""></script>
-  <script src="/assets/js/lang-manager.min.js?v=b4bd7c2d5f43" defer=""></script>
+  <script src="/assets/js/lang-manager.min.js?v=aa273c8689a5" defer=""></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer=""></script>
   <script src="/assets/js/site-navigation.min.js?v=73f198dd3eb3" defer=""></script>
@@ -476,7 +477,7 @@
   <script src="/assets/js/site-analytics.min.js?v=9631075fe8c3" defer=""></script>
   <script src="/assets/js/main.min.js?v=3fefca81e4a0" defer=""></script>
   <script src="/assets/js/svg-escape.min.js?v=bae37ac7c727" defer=""></script>
-  <script src="/assets/js/svg-expressions.min.js?v=c37c64bc54d1" defer=""></script>
+  <script src="/assets/js/svg-expressions.min.js?v=91619e2e33ea" defer=""></script>
   <script src="/assets/js/svg-codegen.min.js?v=781c9e6fa230" defer=""></script>
   <script src="/assets/js/contrast.min.js?v=064538a9ae1e" defer=""></script>
   <script src="/assets/js/svg-kpi-compiler.min.js?v=09599fc30f05" defer=""></script>
@@ -485,7 +486,7 @@
   <script src="/assets/js/svg-editor-store.min.js?v=f8d6616d1b05" defer=""></script>
   <script src="/assets/js/svg-editor-pointer.min.js?v=257b0e842292" defer=""></script>
   <script src="/assets/js/svg-editor-panels.min.js?v=ff6d08d09569" defer=""></script>
-  <script src="/assets/js/page-toast.min.js?v=80494009e97b" defer=""></script>
+  <script src="/assets/js/page-toast.min.js?v=995950255945" defer=""></script>
   <script src="/assets/js/svg-kpi-designer.min.js?v=985e343b61d2" defer=""></script>
 
 

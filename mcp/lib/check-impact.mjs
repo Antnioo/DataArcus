@@ -13,6 +13,7 @@
 //   CHECKS: check_report's check groups, the summary's "what ran" when none is given
 //   arr, litOf, plainObj: the readers of a value of unknown shape (check-report.mjs and check-language.mjs read them here)
 // check-report.mjs re-exports every name it exported before the split; this module imports nothing from it.
+import { createRequire } from 'node:module';
 import { getCapabilities } from '@microsoft/powerbi-core-visual-schema';
 import { VALIDATOR_VERSION } from './check-schema.mjs';   // (the installed validator: its known gaps name its version)
 
@@ -71,7 +72,8 @@ export const IMPACT = {
 // One entry per Desktop proof, each with its evidence. A validator finding is "known" only when it is exactly the proven
 // shape: the code, the object, the visual type (and its mode), every property one of the proven ones with a value of the
 // proven kind, no selector. Anything else, even one more property of the same object, stays the validator's error.
-export const litOf = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
+// (0.3.3 SG1) a raw literal: its one place, assets/js/pbir-values.js litValue
+export const litOf = createRequire(import.meta.url)('../../assets/js/pbir-values.js').litValue;
 export const plainObj = (x) => x && typeof x === 'object' && !Array.isArray(x);
 export const VALIDATOR_GAPS = [{
   code: 'PBIR_FORMATTING_OBJECT_UNKNOWN', object: 'dropdown', visualType: 'slicer',

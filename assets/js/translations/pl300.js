@@ -2,10 +2,10 @@
 window.pl300Translations = {
   "en": {
     "meta": {
-      "title": "PL-300 Practice Exam: Power BI Data Analyst", "description": "Free PL-300 practice exam: 228 original questions with explanations, timed mocks scored out of 1000, case studies and a study plan (Apr 2026 outline)."
+      "title": "PL-300 Practice Exam: Power BI Data Analyst", "description": "Free PL-300 practice exam: 234 original questions with explanations, timed mocks scored out of 1000, case studies and a study plan (Apr 2026 outline)."
     },
     "dp": {
-      "badge": "Free · No sign-up · 228 original questions",
+      "badge": "Free · No sign-up · 234 original questions",
       "title": "PL-300 Practice Exam Simulator",
       "subtitle": "Get ready for Microsoft Power BI Data Analyst (PL-300), or your yearly renewal, with timed mock exams, case studies and an explanation for every option.",
       "pill": {
@@ -34,10 +34,10 @@ window.pl300Translations = {
   },
   "ar": {
     "meta": {
-      "title": "اختبار PL-300 تجريبي: Power BI Data Analyst", "keywords": "داتا أركوس, PL-300 practice exam, PL-300 practice test, PL-300 exam simulator, Power BI Data Analyst Associate, Power BI certification renewal, free PL-300 questions", "description": "اختبار PL-300 تجريبي: 228 سؤالًا أصليًا مع الشرح، واختبارات بوقت محدد تُصحَّح من 1000، ودراسات حالة وخطة مذاكرة لمنهج أبريل 2026."
+      "title": "اختبار PL-300 تجريبي: Power BI Data Analyst", "keywords": "داتا أركوس, PL-300 practice exam, PL-300 practice test, PL-300 exam simulator, Power BI Data Analyst Associate, Power BI certification renewal, free PL-300 questions", "description": "اختبار PL-300 تجريبي: 234 سؤالًا أصليًا مع الشرح، واختبارات بوقت محدد تُصحَّح من 1000، ودراسات حالة وخطة مذاكرة لمنهج أبريل 2026."
     },
     "dp": {
-      "badge": "مجاني · بدون تسجيل · 228 سؤالًا أصليًا",
+      "badge": "مجاني · بدون تسجيل · 234 سؤالًا أصليًا",
       "title": "محاكي اختبار PL-300",
       "subtitle": "استعد لشهادة Microsoft Power BI Data Analyst (PL-300) أو لتجديدها السنوي، باختبارات تجريبية بوقت محدد ودراسات حالة وشرح لكل خيار.",
       "pill": {

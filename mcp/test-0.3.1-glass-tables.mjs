@@ -21,7 +21,6 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
-import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
@@ -90,9 +89,10 @@ for (const [preset, table] of [['Corporate', 'banded'], ['DataArcus', 'auto']]) 
 }
 
 // ---------- N: the non-glass looks byte for byte the base engine's ----------
-const BASE_REF = process.env.GL2_BASE || 'cba24a5';
+// (HK1, 0.3.3) the base engine is a saved copy (mcp/fixtures/hk1/glass-tables, cba24a5's design-engine.js), not a git read
+const BASE_REF = 'cba24a5';
 const base = get(() => { const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-gl2-base-')), f = path.join(dir, 'design-engine.js');
-  fs.writeFileSync(f, execFileSync('git', ['show', `${BASE_REF}:assets/js/design-engine.js`], { cwd: path.join(path.dirname(fileURLToPath(import.meta.url)), '..'), maxBuffer: 1 << 26 })); return require(f); });
+  fs.writeFileSync(f, fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures', 'hk1', 'glass-tables', 'assets', 'js', 'design-engine.js'))); return require(f); });
 chk(() => typeof base.buildTheme === 'function', () => `N0. the base engine (${BASE_REF}) loads: ${cut(base)}`);
 if (typeof base.buildTheme === 'function') {
   const differ = [];

@@ -181,9 +181,8 @@
   // with or without the "<Name>.Report/" folder. opts.clean: how a title or text box is kept (the MCP screens it).
   // (the check reads a value as shown: 12D -> "12", as read_report says it)
   const litStr = PV.litShown, litNum = PV.litNumber, litBool = PV.litBool;
-  const entries = (list) => (Array.isArray(list) ? list.filter((e) => e && typeof e === 'object') : []);
-  const plain = (list) => entries(list).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e.properties || {}), {});
-  const anyOf = (list) => entries(list).reduce((a, e) => Object.assign(a, (e && e.properties) || {}), {});
+  // (0.3.3 SG1) an objects list's entries, the plain ones' properties, all their properties: pbir-values.js, their one place
+  const entries = PV.entries, plain = PV.plain, anyOf = PV.anyOf;
   const AGG = { 0: 'Sum', 1: 'Avg', 2: 'DistinctCount', 3: 'Min', 4: 'Max', 5: 'Count', 6: 'Median', 7: 'StDev', 8: 'Var' };
   function fieldOf(f) {
     if (!f || typeof f !== 'object') return null;
@@ -277,6 +276,16 @@
       R.pages.push(page); R.visuals.push(...page.visuals);
       texts.push(page.rawName);
     });
+    // (0.3.3 RX1) the bookmarks by their ids only (never a name, never a state): each one's page, the visuals and groups it
+    // names, the list's order, and the order DataArcus recorded for the plan's views (report.json's annotation)
+    const keys = (o) => (o && typeof o === 'object' && !Array.isArray(o) ? Object.keys(o) : []);
+    R.bookmarks = (inv.bookmarks || []).map((b) => { const raw = b.raw || {}, st = raw.explorationState || {}, sec = st.sections && typeof st.sections === 'object' ? st.sections : {};
+      return { file: b.file, id: String(raw.name || ''), page: typeof st.activeSection === 'string' ? st.activeSection : null,
+        sections: Object.fromEntries(keys(sec).map((k) => [k, keys((sec[k] || {}).visualContainers).concat(keys((sec[k] || {}).visualContainerGroups))])),
+        targets: entries((raw.options || {}).targetVisualNames).filter((n) => typeof n === 'string') }; });
+    R.bookmarkList = null;   // (check_report reads bookmarks.json itself and sets it: the inventory's shape stays as it is)
+    R.bookmarkPlan = (() => { const a = entries((inv.report || {}).annotations).find((x) => x && x.name === 'DataArcusBookmarkOrder'); if (!a) return null;
+      try { const l = JSON.parse(String(a.value)); return Array.isArray(l) && l.every((n) => typeof n === 'string') ? l : null; } catch (e) { return null; } })();
     return { R, versions: inv.versions, texts, customVisuals, unreadable: inv.unreadable, bookmarks: inv.bookmarkFiles, bookmarkNames: (inv.bookmarks || []).map((b) => ({ file: b.file, name: b.rawName })) };
   }
 

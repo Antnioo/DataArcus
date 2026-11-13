@@ -17,7 +17,8 @@
  *                    sizes(c, PW), computeSlots(c, lang, opt) (on the 720 grid), M, G, HH
  *   the KPI bars     barW(k, c), c0(c), kpiInset(c)
  *   the report       projectSlots(c, lang, opt) (page units), secondLayout(c), slidePanel(c, lang), projectPages(c, lang,
- *                    opts), absorb(out, t), fitSlots(slots, opt) { slots, dropped }, fitScale(opt, k), SLOT_GAP, REFLOW_KEEP
+ *                    opts), absorb(out, t), fitSlots(slots, opt) { slots, dropped }, fitScale(opt, k), SLOT_GAP, REFLOW_KEEP,
+ *                    pageFill(slots) { hole, holeArea, holeShare, gutter, charts, flat, low, rows, balance } (0.3.3 FB1, FB3)
  *   text sizes       FHD_TEXT, textScale(h), sizeAt(n, h), fs(n, c), TEXT_BASES, themeScaleOf(theme) { h, f } or null,
  *                    scaleTheme(theme, r) (a copy)
  */
@@ -351,10 +352,99 @@
     if (colm) { const y0 = Math.min(colm.y, t.y), y1 = Math.max(colm.y + colm.h, t.y + t.h); return out.map((x) => (x === colm ? Object.assign({}, x, { y: y0, h: y1 - y0 }) : x)); }
     return out;
   }
+  // ---------- how well a page is filled (0.3.3 FB1) ----------
+  // pageFill(slots): what a page's slots leave empty and how flat its charts are, measured, so a layout rule is chosen and
+  // pinned by a number instead of a case by case patch (the rail's gaps came back five times: 0.2.9 rounds 8, 9 and 12,
+  // FX2's C03, SQ13's S10). Units: the slots' own; the header's slots (title, logo) are not part of the body.
+  //  hole: the largest empty rectangle inside the body (the box around every other slot) whose two sides are both wider
+  //    than two of the page's own gutters (the smallest gap between two rows), or null; holeArea its area, holeShare its
+  //    share of the body in percent (one decimal); gutter: that smallest row gap (the slots' own G)
+  //  flat: the widest chart, its width / height (one decimal); low: the lowest chart's height; charts: how many (a chart:
+  //    any slot that is not a card, a slicer, a table, a text box or the header's)
+  //  (0.3.3 FB3) rows: the heights of the rows of charts and tables, top to bottom (slots with one top, within 1; the
+  //    row's highest slot); balance: the first row's height over the highest row's under it (two decimals), null with
+  //    fewer than two rows: under 1, the page's first charts are the junior row
+  const NOT_CHART = ['kpi', 'slicer', 'table', 'text', 'title', 'logo'];
+  function pageFill(slots) {
+    const body = (slots || []).filter((s) => !OWN_SLOTS.includes(s.kind) || s.kind === 'text'), charts = body.filter((s) => !NOT_CHART.includes(s.kind));
+    const r1 = (v) => Math.round(v * 10) / 10;
+    const out = { hole: null, holeArea: 0, holeShare: 0, gutter: 0, charts: charts.length, flat: charts.length ? r1(Math.max(...charts.map((s) => s.w / Math.max(1, s.h)))) : 0, low: charts.length ? Math.min(...charts.map((s) => s.h)) : 0 };
+    const tops = [];
+    body.filter((s) => !['kpi', 'slicer', 'text'].includes(s.kind)).sort((p, q) => p.y - q.y).forEach((s) => { const r = tops[tops.length - 1]; if (r && Math.abs(r.y - s.y) <= 1) r.h = Math.max(r.h, s.h); else tops.push({ y: s.y, h: s.h }); });
+    out.rows = tops.map((r) => r.h); out.balance = tops.length > 1 ? Math.round(100 * tops[0].h / Math.max(...out.rows.slice(1))) / 100 : null;
+    if (!body.length) return out;
+    const x0 = Math.min(...body.map((s) => s.x)), y0 = Math.min(...body.map((s) => s.y)), x1 = Math.max(...body.map((s) => s.x + s.w)), y1 = Math.max(...body.map((s) => s.y + s.h));
+    const gaps = body.flatMap((a) => body.filter((b) => b.y >= a.y + a.h && b.x < a.x + a.w && b.x + b.w > a.x).map((b) => b.y - (a.y + a.h))).filter((g) => g > 0);
+    const side = 2 * (out.gutter = gaps.length ? Math.min(...gaps) : 0);
+    const uniq = (l) => [...new Set(l)].sort((a, b) => a - b), xs = uniq(body.flatMap((s) => [s.x, s.x + s.w])), ys = uniq(body.flatMap((s) => [s.y, s.y + s.h]));
+    // the grid of the slots' own edges: a cell is free when no slot covers it; the largest free rectangle, by its area
+    const free = ys.slice(0, -1).map((y, j) => xs.slice(0, -1).map((x, i) => !body.some((s) => s.x <= x && s.x + s.w >= xs[i + 1] && s.y <= y && s.y + s.h >= ys[j + 1])));
+    for (let j0 = 0; j0 < ys.length - 1; j0++) {
+      const open = xs.slice(0, -1).map(() => true);
+      for (let j1 = j0; j1 < ys.length - 1; j1++) {
+        free[j1].forEach((f, i) => { if (!f) open[i] = false; });
+        for (let i0 = 0; i0 < open.length; i0++) { if (!open[i0]) continue; let i1 = i0; while (i1 + 1 < open.length && open[i1 + 1]) i1++;
+          const w = xs[i1 + 1] - xs[i0], h = ys[j1 + 1] - ys[j0];
+          if (w > side && h > side && w * h > out.holeArea) { out.hole = { x: xs[i0], y: ys[j0], w, h }; out.holeArea = w * h; }
+          i0 = i1; }
+      }
+    }
+    out.holeShare = r1(100 * out.holeArea / Math.max(1, (x1 - x0) * (y1 - y0)));
+    return out;
+  }
+
   const SLOT_GAP = 40;
   const REFLOW_KEEP = 0.45;   // (round 8, S7; round 9: 0.6 -> 0.5, so two dropdowns reflow too; 0.3.1 TS1, the owner's yes of 26 Oct to 0.2.9-writer-S10, SQ13's option (a): 0.5 -> 0.45, so a second page's chart keeps 168 of 347 and the 197 gap under the rail closes) a chart beside the rail keeps this share of its height at least when the page reflows
   const slotsTouch = (a, b) => (Math.abs(a.y - b.y) <= 1 && Math.abs(a.h - b.h) <= 1 && Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w) <= SLOT_GAP)
     || (Math.abs(a.x - b.x) <= 1 && Math.abs(a.w - b.w) <= 1 && Math.max(a.y, b.y) - Math.min(a.y + a.h, b.y + b.h) <= SLOT_GAP);
+  // (0.3.3 FB1) liftCards(slots, rail): the page with its row of KPI cards across the rail's column too and the rail
+  // (already kept to its contents) moved under that row, a row's gap below it: { slots, rail } (new objects), or null
+  // where the page has no such row (no cards, cards not level with the rail's top or not beside it, nothing under them,
+  // or the rail would pass the page's bottom). The cards keep their order, their gap and equal widths (edges rounded,
+  // as boxOf does); one card alone keeps its width (the owner's quarter, 6 Oct) and moves to the page's edge when it
+  // stood against the rail.
+  function liftCards(slots, rail) {
+    const kp = slots.filter((s) => s.kind === 'kpi').sort((p, q) => p.x - q.x), body = slots.filter((s) => !OWN_SLOTS.includes(s.kind) && s.kind !== 'kpi' && s !== rail);
+    if (!kp.length || !body.length || kp.some((s) => Math.abs(s.y - rail.y) > 1 || Math.abs(s.h - kp[0].h) > 1 || (s.x < rail.x + rail.w && s.x + s.w > rail.x))) return null;
+    const kb = kp[0].y + kp[0].h, under = body.filter((s) => s.y >= kb).map((s) => s.y - kb);
+    if (!under.length) return null;
+    const y = kb + Math.min(...under), bottom = Math.max(...body.map((s) => s.y + s.h).concat(rail.y + rail.h));
+    if (y + rail.h > bottom + 1) return null;
+    const x0 = Math.min(rail.x, kp[0].x), x1 = Math.max(rail.x + rail.w, ...kp.map((s) => s.x + s.w)), n = kp.length, moved = new Map();
+    if (n === 1) {
+      const s = kp[0], after = s.x - (rail.x + rail.w), before = rail.x - (s.x + s.w);
+      moved.set(s, after >= 0 && after <= SLOT_GAP ? { x: rail.x } : before >= 0 && before <= SLOT_GAP ? { x: rail.x + rail.w - s.w } : {});
+    } else {
+      const g = kp[1].x - (kp[0].x + kp[0].w), step = (x1 - x0 + g) / n;
+      kp.forEach((s, i) => { const x = x0 + Math.round(i * step); moved.set(s, { x, w: (i === n - 1 ? x1 : x0 + Math.round((i + 1) * step) - g) - x }); });
+    }
+    const r2 = Object.assign({}, rail, { y });
+    return { slots: slots.map((s) => (s === rail ? r2 : moved.has(s) ? Object.assign({}, s, moved.get(s)) : s)), rail: r2 };
+  }
+  // (0.3.3 FB3; the focus page's hole, FB1's "Seen" 2: the row beside the rail holds the chart and the text box, so it
+  // can neither end at the rail's bottom, 312 of 789, nor move under it) tuckText(slots, rail): the page with the text
+  // box of the row beside the rail moved under the rail, into the rail's own column, a row's gap below it and down to
+  // its row's bottom, and the row's other slots sharing the row's whole width in their own proportions (edges rounded,
+  // as boxOf does): new objects, or null where there is no such row (no text box that runs past the rail's bottom,
+  // no other slot in its row, the row not beside the rail, the rail's column not free under it, or the text box
+  // would keep less than TUCK_KEEP of its width or of its height). A text box is the one kind that reads in a narrow
+  // column (it is 219 wide on a 960 x 720 focus page as designed).
+  const TUCK_KEEP = 0.5;
+  function tuckText(slots, rail) {
+    const B = rail.y + rail.h, t = slots.find((s) => s.kind === 'text' && s.y < B && s.y + s.h > B);
+    if (!t) return null;
+    const row = slots.filter((s) => s !== t && s !== rail && !OWN_SLOTS.includes(s.kind) && s.kind !== 'kpi' && Math.abs(s.y - t.y) <= 1 && Math.abs(s.h - t.h) <= 1).sort((p, q) => p.x - q.x);
+    const side = row.concat(t).map((s) => Math.max(s.x - (rail.x + rail.w), rail.x - (s.x + s.w))).filter((d) => d >= 0 && d <= SLOT_GAP);
+    if (!row.length || !side.length) return null;
+    const g = Math.min(...side), y = B + g, bottom = t.y + t.h, h = bottom - y;
+    if (rail.w < TUCK_KEEP * t.w || h < TUCK_KEEP * t.h) return null;
+    if (slots.some((s) => s !== rail && s.kind !== 'title' && s.kind !== 'logo' && s.x < rail.x + rail.w && s.x + s.w > rail.x && s.y < bottom && s.y + s.h > B)) return null;
+    const all = row.concat(t), x0 = Math.min(...all.map((s) => s.x)), x1 = Math.max(...all.map((s) => s.x + s.w)), n = row.length;
+    const sum = row.reduce((a, s) => a + s.w, 0), avail = x1 - x0 - g * (n - 1), moved = new Map([[t, { x: rail.x, y, w: rail.w, h }]]);
+    let acc = 0;
+    row.forEach((s, i) => { const x = x0 + Math.round(avail * acc / sum) + g * i; acc += s.w; moved.set(s, { x, w: (i === n - 1 ? x1 : x0 + Math.round(avail * acc / sum) + g * i) - x }); });
+    return slots.map((s) => (moved.has(s) ? Object.assign({}, s, moved.get(s)) : s));
+  }
   // fitSlots(slots, { dropKinds, headerRows, railItems }): { slots, dropped }; the slots given are never changed
   //  dropKinds: the kinds whose visual cannot be written (a line chart on a model with no time axis)
   //  headerRows: how much the header grows for its extra row of page tabs (Round 12, the owner's go on round 11's
@@ -400,7 +490,16 @@
     // contents (the owner's round-12 rule #18): the slots beside the rail that run past its bottom end there, and the
     // slots under them and under the rail move up by as much, keeping their bottoms (they grow). Only where every chart
     // beside keeps half its height at least (REFLOW_KEEP); otherwise the page is left as it is.
-    if (rail) {
+    // (0.3.3 FB1) the page under a shortened rail, settled: the reflow and the rail's column, as before, on the slots
+    // and the rail given; the cards' row is tried over the rail too (liftCards) and the better filled page is kept
+    const column = (out, rail) => out.map((s) => {
+      if (s === rail || s.y < rail.y + rail.h || OWN_SLOTS.includes(s.kind)) return s;
+      const gapStart = s.x - (rail.x + rail.w), gapEnd = rail.x - (s.x + s.w);
+      if (gapStart >= 0 && gapStart <= SLOT_GAP) return Object.assign({}, s, { x: rail.x, w: s.x + s.w - rail.x });
+      if (gapEnd >= 0 && gapEnd <= SLOT_GAP) return Object.assign({}, s, { w: rail.x + rail.w - s.x });
+      return s;
+    });
+    const settle = (out, rail) => {
       const B = rail.y + rail.h, beside = out.filter((s) => s !== rail && !OWN_SLOTS.includes(s.kind) && s.y < B && s.y + s.h > B
         && ((s.x - (rail.x + rail.w) >= 0 && s.x - (rail.x + rail.w) <= SLOT_GAP) || (rail.x - (s.x + s.w) >= 0 && rail.x - (s.x + s.w) <= SLOT_GAP)));
       const cut = beside.length ? Math.min(...beside.map((s) => s.y + s.h)) - B : 0;
@@ -424,20 +523,37 @@
         const band = (y - s0.y) * s0.w, fills = (x1 - x0 - s0.w) * h, atTop = s0.y <= rail.y + 1;
         if (h >= REFLOW_KEEP * s0.h && (!atTop || fills >= band)) out = out.map((s) => (s === s0 ? Object.assign({}, s, { x: x0, y, w: x1 - x0, h }) : s));
       }
+      return column(out, rail);
+    };
+    if (rail) {
+      // (0.3.3 FB1; SQ13's S10, open since 12 Oct: beside a rail kept to its dropdowns the cards' row left the charts
+      // too little of the rail's height to end at its bottom, so the room under the rail stayed empty, 312 x 308 on the
+      // executive page, or the one chart was pressed to 168 of 347) the same page with the cards' row across the whole
+      // width and the rail under it, beside the charts, is settled too, and kept where pageFill measures it better: a
+      // smaller hole, or the same hole and a higher lowest chart. Nothing else changes: the same slots, the rail still
+      // kept to its contents on the side the person chose, every chart still keeping REFLOW_KEEP of its height.
+      const a = settle(out, rail), up = liftCards(out, rail), b = up ? settle(up.slots, up.rail) : null;
+      const fa = pageFill(a), fb = b ? pageFill(b) : null;
+      const better = (fp, fq) => fq.holeArea < fp.holeArea - 1 || (fq.holeArea <= fp.holeArea + 1 && fq.low > fp.low);
+      const settled = fb && better(fa, fb) ? b : a;
+      // (0.3.3 FB3) each of the two with its text box under the rail (tuckText), a tucked page not reflowed again (its
+      // row keeps its height): kept only where pageFill measures a smaller hole than the settled page's; of the two
+      // tucked pages the cards' row over the rail (the owner's D-1111-01) unless the other measures better
+      const ta0 = tuckText(out, rail), ta = ta0 && column(ta0, rail), tb0 = up && tuckText(up.slots, up.rail), tb = tb0 && column(tb0, up.rail);
+      const tucked = ta && tb ? (better(pageFill(tb), pageFill(ta)) ? ta : tb) : tb || ta;
+      out = tucked && pageFill(tucked).holeArea < pageFill(settled).holeArea - 1 ? tucked : settled;
     }
-    if (rail) out = out.map((s) => {
-      if (s === rail || s.y < rail.y + rail.h || OWN_SLOTS.includes(s.kind)) return s;
-      const gapStart = s.x - (rail.x + rail.w), gapEnd = rail.x - (s.x + s.w);
-      if (gapStart >= 0 && gapStart <= SLOT_GAP) return Object.assign({}, s, { x: rail.x, w: s.x + s.w - rail.x });
-      if (gapEnd >= 0 && gapEnd <= SLOT_GAP) return Object.assign({}, s, { w: rail.x + rail.w - s.x });
-      return s;
-    });
+    // (0.3.3 FB4, FB3's "Seen" 3: a bar chart 312 high after the reflow still carried the count of 440) a category chart's
+    // Top N follows the size it ends with: the one place that works it out is categoryFit, on the 720 grid it was measured
+    // on (topScale: the units of the slots per grid unit; without it the slots are not in a known unit and keep theirs)
+    const ts = +o.topScale;
+    if (ts > 0) out = out.map((s) => { if (s.topN == null) return s; const n = categoryFit(s.kind, Math.round(s.w / ts), Math.round(s.h / ts)); return n && n !== s.topN ? Object.assign({}, s, { topN: n }) : s; });
     return { slots: out, dropped };
   }
   // fitSlots' options in other units (k: the units wanted per unit given; the background's 720 grid from page units is
   // 1 / page(c).s): the lengths scaled, the kinds and the count kept
   const fitScale = (opt, k) => { const o = opt || {}, R = o.railItems;
-    return Object.assign({}, o, { headerRows: (+o.headerRows || 0) * k }, R ? { railItems: Object.assign({}, R, { minH: R.minH * k, maxH: R.maxH * k, resetH: R.resetH * k, pad: R.pad * k, gap: R.gap * k }) } : {}); };
+    return Object.assign({}, o, { headerRows: (+o.headerRows || 0) * k }, o.topScale ? { topScale: o.topScale * k } : {}, R ? { railItems: Object.assign({}, R, { minH: R.minH * k, maxH: R.maxH * k, resetH: R.resetH * k, pad: R.pad * k, gap: R.gap * k }) } : {}); };
 
   // The report's pages for a layout: this page, the second page when asked, each with the slide-in panel when asked.
   // opts: { second, panel, logoRatio (an attached logo's width / height, see computeSlots), tableFields (see
@@ -458,7 +574,7 @@
 
   const api = {
     M, G, HH, PAGES, DEFAULT_PAGE, LIM, within, fitCustom, page, pw, toPage, boxOf, T, baseLang, label, LAYOUTS, RTL_LANGS, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, RANGE, rangeOf, clampTo, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, noTimeOf, LAYOUT_PREVIEW, isPreview, hasMain, hasSplit, sizes, computeSlots, imageSize, pngSize,
-    FHD_TEXT, textScale, sizeAt, fs, TEXT_BASES, themeScaleOf, scaleTheme, barW, c0, kpiInset, projectSlots, secondLayout, slidePanel, absorb, SLOT_GAP, REFLOW_KEEP, fitSlots, fitScale, projectPages
+    FHD_TEXT, textScale, sizeAt, fs, TEXT_BASES, themeScaleOf, scaleTheme, barW, c0, kpiInset, projectSlots, secondLayout, slidePanel, absorb, SLOT_GAP, REFLOW_KEEP, fitSlots, fitScale, projectPages, pageFill
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAMetrics = api;

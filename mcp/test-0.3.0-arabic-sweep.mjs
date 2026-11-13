@@ -233,7 +233,7 @@ try {
         const fields = uniq(rows.map((x) => x.field).filter(Boolean));
         const terms = {}; fields.forEach((f, k) => { terms[f] = k === fields.length - 1 ? (rows.find((x) => x.field === f) || {}).en : arName(); });
         const declinedEn = fields.length ? terms[fields[fields.length - 1]] : null;
-        const label1 = (t) => t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من {2}: ${arName()}` : arName());
+        const label1 = (t) => t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من أصل {2}: ${arName()}` : arName());
         const L = {}; T0.filter((t) => t.text != null && t.text !== declinedEn).forEach((t) => { L[t.id] = label1(t); });
         let p1 = await ask('create_arabic_twin', Object.assign({ path: pbip, labels: L, terms }, into === 'same' ? { into } : {}));
         (p1.j && p1.j.texts || []).filter((t) => t.text != null && t.label == null && t.text !== declinedEn && L[t.id] == null).forEach((t) => { L[t.id] = label1(t); });

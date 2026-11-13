@@ -24,6 +24,14 @@ fs.cpSync(path.join(HERE, 'fixtures', 'twin-project'), path.join(ROOT, 'twin-pro
 const MODEL = 'twin-project', REPORT = 'twin-project/Twin Sales.pbip';
 const s = await serverClient(ROOT, {});
 const reports = () => fs.readdirSync(path.join(ROOT, MODEL)).filter((f) => f.endsWith('.Report')).sort();
+// the tools/list sizes a doc states: "tool list ... N characters" (CHANGELOG.md's [Unreleased] only; TOOLS.md whole)
+const SIZE_SAID = /tools?[ /]list\b[^.]{0,160}?\b(\d{1,3}(?:,\d{3})+) characters/gi;
+function statedListSizes() {
+  const log = fs.readFileSync(path.join(HERE, 'CHANGELOG.md'), 'utf8'), at = log.indexOf('## [Unreleased]'), end = log.indexOf('\n## [', at + 5);
+  const docs = { 'CHANGELOG.md': at < 0 ? '' : log.slice(at, end < 0 ? undefined : end), 'TOOLS.md': fs.readFileSync(path.join(HERE, 'TOOLS.md'), 'utf8') };
+  return Object.entries(docs).flatMap(([file, text]) => [...text.replace(/\s+/g, ' ').matchAll(SIZE_SAID)].map((m) => ({ file, n: Number(m[1].replace(/,/g, '')) })));
+}
+let headroom = '';
 const planOf = async (args) => { const pl = await s.call('plan_layout', args), id = pl.j && pl.j.plan && pl.j.plan.planId; if (id) await s.call('approve_plan', { planId: id }); return { pl, id }; };
 
 try {
@@ -33,8 +41,16 @@ try {
   chk(() => JSON.stringify(props) === '["path","planId"]', () => `K3. create_report's inputs are path and planId only: ${props.join(', ')}`);
   const listSize = JSON.stringify({ tools }).length;
   // (B-272's cause: create_report's own entry was 30,749 of 98,360 on b40cb78) its entry under 3,000, the list under 75,000
+  // (0.3.3 TL1, D-1111-14: the list was 74,925 of that 75,000; shortened to 58,837, the cap follows it down to 61,000 so
+  // the gain is kept: room for about four one-line options, an option costing 400 to 560 characters with its schema)
   const crSize = JSON.stringify(cr || {}).length;
-  chk(() => crSize < 3000 && listSize < 75000, () => `K4. create_report's entry under 3,000 characters and tools/list under 75,000: ${crSize}, ${listSize}`);
+  chk(() => crSize < 3000 && listSize < 61000, () => `K4. create_report's entry under 3,000 characters and tools/list under 61,000: ${crSize}, ${listSize}`);
+  // (0.3.3 TB3, hub I-1112-1706: the size a public text states had drifted from the measured one, 60,532 said, 60,930
+  // measured; nothing compared them) every tools/list size the CHANGELOG's [Unreleased] or TOOLS.md states is the
+  // measured one; the CHANGELOG states one
+  const said = statedListSizes();
+  chk(() => said.some((x) => x.file === 'CHANGELOG.md') && said.every((x) => x.n === listSize), () => `K7. the tools/list size the docs state is the measured ${listSize.toLocaleString('en-US')}: ${said.map((x) => `${x.file} says ${x.n.toLocaleString('en-US')}`).join('; ') || 'CHANGELOG.md [Unreleased] states none'}`);
+  headroom = `tools/list ${listSize.toLocaleString('en-US')} of 61,000 (${(61000 - listSize).toLocaleString('en-US')} left)`;
 
   const base = { path: MODEL, layout: 'exec', name: 'TK One', lang: 'en', noDataMessage: false };
   const one = await planOf(base);
@@ -99,5 +115,6 @@ try {
 } finally { await s.close(); }
 
 fs.rmSync(ROOT, { recursive: true, force: true });
+if (headroom) console.log(headroom);
 if (problems.length) { console.log(`FAIL script=test-0.3.2-tk1.mjs cause=${problems[0].slice(0, 300).replace(/\s+/g, ' ')}`); problems.forEach((p) => console.log('  - ' + p.slice(0, 900))); console.log(`FAIL  tk1  ${problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  tk1  ${checks} checks`);

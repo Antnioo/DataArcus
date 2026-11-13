@@ -9,13 +9,15 @@
 //   - every relative address made root-absolute (from /ar/tools/, "../assets" would be /ar/assets), and links to a page
 //     that has an Arabic copy go to that copy (the others stay English)
 //   - the language switch as a plain link to the English page (lang-manager replaces it with its button)
-//   - inline scripts byte for byte (their CSP hashes stay); the policy is written by csp.mjs, as on every page
+//   - inline scripts byte for byte (their CSP hashes stay), except a JSON-LD ItemList (data, never run: no hash), which
+//     leaves out a held page (withoutHeld); the policy is written by csp.mjs, as on every page
 // Generated files are never edited by hand: CI renders them again and fails when a committed file differs.
 //   node scripts/ar-pages.mjs           check: every copy, the English pages' hreflang lines and the sitemap are what
 //                                       a fresh render gives, and each copy loads with no missing file or link
 //   node scripts/ar-pages.mjs --write   write them
 import fs from 'node:fs';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -24,8 +26,12 @@ export const SITE = 'https://dataarcus.com/';
 // Every page in the sitemap (step 2): its English pages, in the sitemap's order. Pages outside the sitemap (404.html, the
 // Theme Generator lab, the go/ short links) stay English only; lang-manager's hasArCopy() says the same at run time
 // (test-site-config.mjs checks the two agree).
+// (0.3.3 IX4) A page whose Arabic is held (locale-routes.js AR_HELD, the one list) is in the sitemap in English only:
+// not a pair, so no copy is rendered and no alternates are written. On a page that is a pair, an element marked
+// data-ar-held (the hub's card for a held page) is English-only too: the copy is rendered without it.
+export const AR_HELD = createRequire(import.meta.url)('../assets/js/locale-routes.js').AR_HELD.map((p) => p.replace(/^\/+/, ''));
 export const PAIRS = [...fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8').matchAll(/<loc>https:\/\/dataarcus\.com\/([^<]*)<\/loc>/g)]
-  .map((m) => m[1]).filter((p) => !p.startsWith('ar/')).map((p) => (!p || p.endsWith('/') ? p + 'index.html' : p));
+  .map((m) => m[1]).filter((p) => !p.startsWith('ar/')).map((p) => (!p || p.endsWith('/') ? p + 'index.html' : p)).filter((p) => !AR_HELD.includes(p));
 
 export const arFile = (file) => 'ar/' + file;
 // a page file's address ("tools/index.html" -> https://dataarcus.com/tools/), and back
@@ -70,6 +76,19 @@ export function sitemapWithPairs(xml) {
   return res + out.slice(at);
 }
 
+// (0.3.3 LF1, AUD-075) A copy's JSON-LD ItemList names only what the copy shows: a ListItem whose url is a held page
+// (AR_HELD) is left out and the positions after it numbered again (the hub's card for it is data-ar-held, not rendered)
+export function withoutHeld(html) {
+  const held = AR_HELD.map((p) => urlOf(p));
+  return html.replace(/(<script type="application\/ld\+json">)([\s\S]*?)(<\/script>)/g, (all, a, body, b) => {
+    if (!held.some((u) => body.includes(`"url": "${u}"`))) return all;
+    let out = body.replace(/^[ \t]*\{ "@type": "ListItem"[^\n]*"url": "([^"]+)" \},?\r?\n/gm, (line, u) => (held.includes(u) ? '' : line)).replace(/\},(\s*\])/, '}$1');
+    let n = 0;
+    out = out.replace(/"position": \d+/g, () => `"position": ${++n}`);
+    return a + out + b;
+  });
+}
+
 // The Arabic copy of an English page, from the local server (the English page as it is on disk)
 export async function render(browser, url, enFile) {
   const { visitor, ready } = await import('./tests/lib.mjs');
@@ -83,6 +102,7 @@ export async function render(browser, url, enFile) {
       const doc = new DOMParser().parseFromString(src, 'text/html'), lm = window.langManager;
       if (!lm || lm.currentLang !== 'ar') throw new Error('the page did not open in Arabic');
       lm.applyLanguage(doc, true);
+      for (const e of doc.querySelectorAll('[data-ar-held]')) e.remove();
       const root = doc.documentElement, own = alt[1][1];
       root.setAttribute('lang', 'ar'); root.setAttribute('dir', 'rtl'); doc.body.classList.add('rtl');
       const set = (sel, attr, val) => { const e = doc.querySelector(sel); if (e) e.setAttribute(attr, val); };
@@ -113,7 +133,7 @@ export async function render(browser, url, enFile) {
       return '<!DOCTYPE html>\n' + root.outerHTML + '\n';
     }, { enFile, pairs: PAIRS, alt: alternates(enFile), site: SITE });
     if (v.errs.length) throw new Error(`${enFile}?lang=ar: ${v.errs.slice(0, 3).join(' | ')}`);
-    return apply(html);
+    return apply(withoutHeld(html));
   } finally { await v.ctx.close(); }
 }
 

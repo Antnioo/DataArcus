@@ -4,6 +4,125 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
+## [Unreleased]: 0.3.3
+- Arabic: with `lang` "ar", a wrong model name or path in a working folder that holds no model is now answered in
+  Arabic. English answers are unchanged.
+- The Arabic words DataArcus uses are in one glossary, `content/ARABIC-GLOSSARY.md`, each with Microsoft's and Google's
+  own Arabic word and where it was read. A term or a line both of them use is approved by the owner's rule of 12 Nov;
+  anything else waits for him and stays in English. The check that every Arabic text uses the glossary's words now names
+  the file, the key and the word.
+- New, only when asked: `plan_layout` takes `bookmarks`, the plan's views to present in order (1 to 8, each a name and a
+  page). The approval window lists them with their pages before anything is written; `create_report` then writes one
+  bookmark a view, first in the Bookmarks pane in the plan's order, so "View" in that pane plays them as a slide show.
+  A view opens its page and holds no filter, slicer or visual state (no data value can be in it); it does not yet show
+  or hide visuals. For a new report in one language; not yet tried in Power BI Desktop.
+- `check_report` has two new rules for any report: a bookmark that names a page or visuals the report no longer has, or
+  a bookmark listed without its file (a warning, counted, never named), and the views DataArcus wrote listed in another
+  order than the plan's (a note). Alt text on every visual that shows data, at most 250 characters, and a tab order in
+  reading order have been written since 0.3 and are unchanged.
+- The Model Health Check, on the website and in read_model and check_model_health, now says what it did not read. A TMDL
+  project whose model names a table (in model.tmdl, or at one end of a relationship) that no file defines was read as a
+  smaller model and scored higher (96 where the whole model scores 92); the table is now named first and no score is given,
+  as for a file that cannot be read, and a project with every table file missing is named that way instead of "No model
+  found". A zip holding two semantic models now says, before the score, which model the check read and which it did not,
+  and reads only the report that belongs to the model read (or says that no report could be told to be its own). Whole
+  models score as before.
+- `read_report` with `format: "json"` now says what it did not read, as the text form always did: files over 8 MB, files
+  that are not readable JSON, folders too deep, files past the cap, next to the links it already named. The key is there
+  only when something was left out.
+- `check_report`'s lint section says `notListed` with how many findings it left out when its list is cut, as every other
+  section does, instead of `truncated: true`.
+- The `font` option of `create_report` is described as the font (default Segoe UI), true for hand-placed pages and for a
+  design, instead of "hand-placed pages" only.
+- The Arabic twin now reads a date and a weekday from an Arabic column name as it does from an English one: a chart on a
+  date table's column named «تاريخ الطلب» or «بداية الشهر», whose type the model does not say, has its time axis read
+  from the right like one named "Order Date", and a heatmap whose rows are «يوم الأسبوع» gets its day names beside the
+  grid like one by "Weekday". Every English name reads as before.
+- The SVG KPI Designer's preview prints a very large value in digits (1,000,000,000,000,000,000,000 for 1e21), never as "1e+21" or a wrong percent. Up to 15 significant digits are the value's, then zeros.
+- A new measure says how well each planned page is filled: the largest empty area, the flattest and the lowest chart. A new
+  test pins it on 80 plans of made-up models, so a layout change now shows its whole effect as numbers before it ships.
+  The measure itself is in no answer; the two layout changes it measured are the next two lines.
+- A page with its filters in a side rail is filled better: the KPI cards run across the whole page above the rail and the
+  charts beside the rail take the rail's height, so the room under the rail is no longer left empty and the Details page's
+  main chart is 312 high on a 1920 x 1080 page, not 168. Pages without a side rail are unchanged.
+- A single-focus page with two or three filters in a side rail no longer leaves an empty area under the rail: the text
+  box moves under the rail and the chart takes the whole width beside them (1560 x 789 on a 1920 x 1080 page, was 1064
+  wide). The page-fill measure now also gives each page's row balance (the first row of charts over the row under it).
+- A bar or column chart's Top N now follows the size its page ends with: after the filter rail's reflow made a bar chart 312 high
+  instead of 440, it still kept the count worked out for 440 (9 categories where 5 fit). The count is now worked out once, from
+  the final size. With filters "none" the answer now says the second page (Details) keeps its filter rail and its 3 slicers,
+  and that `secondPage` false writes none.
+- The Arabic chart title for "Top N of M" now reads «أعلى N من أصل M: ...» (it could be read as "N higher than M"); the twin's
+  drafts and the Arabic terminology sheet use the new words.
+- The Arabic approval page's first line no longer repeats the generic folder words in brackets: the bracket shows the
+  folder's own path, and is left out when there is none.
+- With `lang: "ar"`, the three "which model" errors of the model-path tools (no model of that name, nothing at that path,
+  several models of that name) are answered in Arabic, in every reading and write tool; the English is unchanged.
+- A plan for a new report with no report name is no longer given a plan id: the plan asks for the name first, so a plan that
+  `create_report` would refuse can no longer be approved.
+- A new test pins that every tool that plans or writes answers a wrong input in Arabic when you give `lang` "ar" and in English with "en" or none, using only wording already approved; the errors that have no approved Arabic yet stay English.
+- A report made with a layout or design now uses the `font` you give it (for example Tahoma) over the design's own font, in the
+  English report and its Arabic twin; the plan says which font it uses and which design font it replaced, and a font the
+  tools do not offer is named in the plan instead of being dropped.
+- On Windows, when the approval page was not opened, the answer no longer says DataArcus "opened" the folder window with the
+  shortcut: starting Windows Explorer does not prove a window is on screen, so it says DataArcus asked Windows to open it
+  and to check whether the user sees it.
+- A link inside a report (a symbolic link or a junction) is now named in `read_report` and `check_report`, at most 10
+  and then a count, and counted once (`check_report` counted one link twice); a page whose visuals folder is a link
+  says "visuals not read: its folder is a link" instead of "0 visuals". Links are still never followed.
+- **The write tools answer in Arabic when asked to:** plan_layout, generate_theme and add_gulf_calendar given
+  `lang: "ar"` say the several-models answer in the same approved Arabic as the reading tools; `lang: "en"` says it in
+  English; without `lang` the folder's own letters decide, as before.
+- The Model Health Check's month-sort rule also finds a Hijri month column named in Arabic («الشهر الهجري»,
+  «اسم الشهر الهجري»).
+- Inside plan_layout, three checks that could never be reached were removed (no answer or file changes), and tests
+  now reach three that could: the preview of a plan with no report name, a field kept in English on purpose, and the
+  status icons' script in an Arabic plan.
+- A hand-placed report's font (create_report's `font`, for example Tahoma) now reaches its tables, cards and charts
+  too: the report's theme carries it in its text classes, so every visual without a font of its own shows it, in the
+  English report and its Arabic twin. Without a font the theme is written as before.
+- The Arabic twin no longer gives two fields one Arabic name when their names look alike (a table `A` with a column
+  `B][C` and a table `A[B]` with a column `C`): each has its own line in the terminology sheet and its own approval.
+  Names without a quote or a bracket are keyed as before.
+- **Impact check: what a model change can move.** `check_report` with `againstModel` (an earlier copy of the model,
+  for example a backup or a git checkout) says which visuals of the report can show another number after the model was
+  edited, and why, by the chain of names: "[Margin %] uses [Net Revenue] uses [Returns Value]: measure: its DAX
+  changed". The others can only show other numbers if the data changed. It reads the files only, runs no query, and
+  counts a visual as changed whenever it is not sure.
+- **Impact check before an edit:** `read_model` with `reach` (a measure, a column or a table) answers which pages and
+  visuals of the reports beside the model it reaches. Names only, never values.
+- **Like for like in the Gulf:** `check_report` with `likeForLike` (a year, a Gulf country) names the visuals whose number
+  compares with the same Gregorian dates of another period, the months of that year whose Ramadan or Eid days differ from
+  the months they are compared with, and the "Last Ramadan" measures the model lacks. Names and dates only, never values.
+- **On dataarcus.com, a free page from the same dates:** "Is this month like last year's?" (tools/gulf-like-for-like.html)
+  sets a month beside the same month a year earlier for a Gulf country: Ramadan, Eid al-Fitr, Eid al-Adha and weekend days,
+  the weekend and the VAT rate, and whether the two are like for like. In English; it runs in the browser and saves nothing.
+- **On dataarcus.com, the PL-300 practice questions:** the right answer is no longer the longest option in most
+  single-answer questions (it was in 131 of 174, now in 37), so an answer's length no longer gives it away;
+  the page and its share pictures say 234 questions, the real count.
+- **On dataarcus.com, a steadier article title:** the Copilot readiness article's title no longer jumps when its font
+  arrives on a wide screen.
+- **Charts that would show one value on every row:** `check_report` now names each chart whose column cannot change the
+  number it shows on your model (no relationship lets a filter on that column reach what the number reads), with why. Give
+  it `brief`, the questions the report must answer as a measure by columns, and it says which a visual answers (a visual
+  split further still answers it), which only partly, which no visual answers and which the model cannot answer. From
+  the files only, names never values; a rule not yet measured in Power BI Desktop, and in doubt it says it cannot tell.
+- Every chat starts smaller: the tool list an AI app reads at the start of each chat is 55,679 characters with this
+  version's new options, down from 74,925 (about a quarter fewer characters in every chat). Tool descriptions shortened;
+  same tools, same options, no answer changed: the texts say it in fewer words, and the details that left the list are
+  in TOOLS.md.
+- A one-to-one relationship now counts as filtering both ways, as Power BI always filters it, even when the model file
+  does not say "both directions". Before, check_report could say a chart "would show one value on every row" and the
+  model "cannot answer" a question when a one-to-one relationship was on the way, the Impact check could miss a chart
+  that turning such a relationship off changes, and the field picker could leave such a table out. One rule now
+  decides it for all three.
+- The Impact check tells a report's own measure from a model measure of the same name by how the report writes it.
+- plan_layout's note about unknown design keys now names the input fields go in today, `planFields`.
+- check_report's like-for-like section now gives a long base measure's name whole (up to 200 characters), as it already did
+  for the measure you are asked to create; it was cut at 60.
+- read_model's `reach`, when more than 60 visuals use a name, now lists first the visuals whose numbers it decides, on any
+  page; before, the first pages filled the list and such a visual on a later page could be left out.
+
 ## [0.3.2]: 2026-11-09 (the version for testers, second round)
 The second version for testers. In short:
 - **The approval page says what the click writes:** every page and tooltip page it writes, and on each page every

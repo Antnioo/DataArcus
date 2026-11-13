@@ -10,6 +10,8 @@
  *             of totalFilter, duplicateAggregate, wrongColumn, shiftedCurrentDate, ratioAsPercent, percentTwice,
  *             thousandsPlain, wrongRelationshipKey, unrelatedTable; evidence: the exact piece of the measure's DAX
  *             ('' for a relationship or a table, whose own fields name the evidence).
+ *   CF: the DAX reader the questions use (lex: tokens with their place; calls: each call's name and arguments; args,
+ *     close, strip, rootCall, piece, same, reference, words), exported once for the MCP's like-for-like check (0.3.3 IX2).
  *   Never a finding and never in the score: the engine reads structure and DAX, not the numbers, so it can only ask.
  * (c) DataArcus. All rights reserved.
  */
@@ -275,7 +277,9 @@
     });
   }
 
-  const api = { pleaseConfirm };
+  // (0.3.3 IX2) CF, the one reader of a DAX text's tokens and calls, exported for like-for-like.mjs (D-1104-12: one
+  // reader, never a copy); frozen, so no caller can change it for the others
+  const api = { pleaseConfirm, CF: Object.freeze(CF) };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAHealthConfirm = api;
 })(typeof self !== 'undefined' ? self : this);

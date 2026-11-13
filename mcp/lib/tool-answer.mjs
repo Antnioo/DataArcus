@@ -44,9 +44,14 @@ const fail = (e, lang) => ({ isError: true, content: [{ type: 'text', text: capT
 const notice = (state, whatToDo) => text({ workingFolder: ROOT ? path.basename(ROOT) : ROOT, state, done: 'Nothing was read or written.', whatToDo });
 // no working folder set: every tool refuses with the reason and touches no file
 // (audit 6, A6-17: an internal error is told as one, with what this call wrote, from the files module's log)
-// (0.3.2 LG1) opts.lang: the tool's own lang input also says its coded errors (the reading tools; a write tool's lang
-// defaults to "en" and would turn AR4's letter rule off, so it is not passed)
-export const safe = (fn, opts) => async (args) => { const mark = writtenSince(), lang = opts && opts.lang && args ? args.lang : undefined; try { const problem = rootProblem(); if (problem) return ROOT ? notice('missing', problem) : fail(problem); return await fn(args); } catch (e) { return e instanceof Notice ? notice(e.state, e.message) : fail(e && e.code && !/^E[A-Z]+$/.test(e.code) ? e : failText(e, writtenSince(mark)), lang); } };   // (a reading block's coded error is worded by wordOf, A1-9; any other by failText, A6)
+// (0.3.3 WE1, D-1109-02) a write tool's schema fills lang "en" before its handler runs, so "given" is told from "absent"
+// here, once: guardInputErrors marks the parsed arguments when the call's raw arguments held their own lang (a Symbol,
+// never enumerable, never in an answer); langGiven(args) is that lang ("en" | "ar"), else undefined (AR4's letter rule)
+const LANG_GIVEN = Symbol('lang given');
+export const langGiven = (args) => (args && args[LANG_GIVEN] && (args.lang === 'ar' || args.lang === 'en') ? args.lang : undefined);
+// (0.3.2 LG1) opts.lang: the tool's own lang input also says its coded errors. true: the reading tools (lang optional,
+// no default); 'given' (WE1): the write tools, only a lang the call gave (a default "en" would turn AR4's letter rule off)
+export const safe = (fn, opts) => async (args) => { const mark = writtenSince(), lang = !opts || !opts.lang || !args ? undefined : opts.lang === 'given' ? langGiven(args) : args.lang; try { const problem = rootProblem(); if (problem) return ROOT ? notice('missing', problem) : fail(problem); return await fn(args); } catch (e) { return e instanceof Notice ? notice(e.state, e.message) : fail(e && e.code && !/^E[A-Z]+$/.test(e.code) ? e : failText(e, writtenSince(mark)), lang); } };   // (a reading block's coded error is worded by wordOf, A1-9; any other by failText, A6)
 
 // (0.3.2 RV1, B-392: Codex's release review; check_report with 300 invalid items answered 46,772 characters, 1,000 answered
 // 155,972) The SDK checks a call's input against the tool's schema BEFORE any handler runs and answers with zod's whole
@@ -71,7 +76,8 @@ export const inputErrorSaid = (tool, issues, args, lang) => {
 export const guardInputErrors = (server) => {
   const check = server.validateToolInput.bind(server);
   server.validateToolInput = async (tool, args, name) => {
-    try { return await check(tool, args, name); }
+    let parsed;
+    try { parsed = await check(tool, args, name); }
     catch (e) {
       // a message already short is the SDK's own, unchanged (pinned by older suites); only a long one is rebuilt
       if (e instanceof McpError && e.code === ErrorCode.InvalidParams && (String(e.message).length > PASS_MAX || (args && args.lang === 'ar')) && tool && tool.inputSchema && typeof tool.inputSchema.safeParseAsync === 'function') {
@@ -80,6 +86,8 @@ export const guardInputErrors = (server) => {
       }
       throw e;
     }
+    if (parsed && typeof parsed === 'object' && args && typeof args === 'object' && Object.hasOwn(args, 'lang')) Object.defineProperty(parsed, LANG_GIVEN, { value: true });
+    return parsed;
   };
   server.createToolError = (message) => ({ isError: true, content: [{ type: 'text', text: capText(scrub(String(message))) }] });
 };

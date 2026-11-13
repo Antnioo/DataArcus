@@ -183,6 +183,15 @@ export default async function ({ browser, url }) {
     const am = { model: { tables: [sales(), { name: 'التقويم', columns: [dcol('Date', 'dateTime'), dcol('اسم الشهر', 'string'), dcol('اسم اليوم', 'string'), dcol('رقم الشهر', 'int64')], partitions: mpart('التقويم') }] } };
     const found = ((E.analyze(am, null).findings.find((x) => x.id === 'MONTH_SORT') || {}).items || []).map((i) => i.obj).sort();
     check(JSON.stringify(found) === JSON.stringify(['التقويم[اسم الشهر]', 'التقويم[اسم اليوم]'].sort()), `Arabic month and day names without a sort column: found ${JSON.stringify(found)}`);
+    // HC2 (0.3.3, B-425): a Hijri month column named in Arabic is found like the English "Hijri Month Name"; near-misses are not
+    const hj = (names, extra) => ({ model: { tables: [sales(), { name: 'التقويم', columns: [dcol('Date', 'dateTime')].concat(names.map((n) => dcol(n, 'string')), extra || []), partitions: mpart('التقويم') }] } });
+    const sortFound = (m) => ((E.analyze(m, null).findings.find((x) => x.id === 'MONTH_SORT') || {}).items || []).map((i) => i.obj).sort();
+    const hijriAr = ['الشهر الهجري', 'اسم الشهر الهجري', 'اسم  الشهر  الهجري', 'شهر هجري', 'اسم شهر هجري', 'الشهر_الهجري', 'الشهـر الهجـري'];
+    check(JSON.stringify(sortFound(hj(hijriAr))) === JSON.stringify(hijriAr.map((n) => `التقويم[${n}]`).sort()), `Arabic Hijri month names without a sort column: found ${JSON.stringify(sortFound(hj(hijriAr)))}`);
+    check(JSON.stringify(sortFound(hj(['Hijri Month Name']))) === JSON.stringify(['التقويم[Hijri Month Name]']), `English Hijri month name still found: ${JSON.stringify(sortFound(hj(['Hijri Month Name'])))}`);
+    const near = ['الهجري', 'سنة هجرية', 'رقم الشهر الهجري', 'الشهر الهجري الحالي'];
+    check(sortFound(hj(near)).length === 0, `near-misses of the Hijri month name are not month columns: ${JSON.stringify(sortFound(hj(near)))}`);
+    check(sortFound(hj(['الشهر الهجري'], [dcol('رقم الشهر الهجري', 'int64')])).length === 1 && sortFound({ model: { tables: [sales(), { name: 'التقويم', columns: [dcol('Date', 'dateTime'), Object.assign(dcol('الشهر الهجري', 'string'), { sortByColumn: 'رقم الشهر الهجري' }), dcol('رقم الشهر الهجري', 'int64')], partitions: mpart('التقويم') }] } }).length === 0, 'an Arabic Hijri month column with a sort column is not raised');
     // round 3: a broken field used inside a bookmark is told as that bookmark; a report's own filter stays "report filter"
     const gone = (p) => ({ Column: { Expression: { SourceRef: { Entity: 'Sales' } }, Property: p } }), bm = (name) => ({ name: 'b1', displayName: name, explorationState: { filters: { byExpr: [{ name: 'f', expression: gone('Gone In Bookmark') }] } } });
     const detail = (rep) => Object.fromEntries(((E.analyze({ model: { tables: [sales()] } }, rep).findings.find((x) => x.id === 'BROKEN_REF') || {}).items || []).map((i) => [i.obj, i.detail]));
@@ -972,6 +981,48 @@ export default async function ({ browser, url }) {
         if (v.errs.length) problems.push(`unreadable TMDL file (${lang}): ${v.errs.join(' | ')}`);
         await v.ctx.close();
       }
+    }
+    // (AU1, AUD-067) a table the model names and no file defines (Dates.tmdl left out; then every table file): the page
+    // names the table, in English and Arabic, and gives no score; never NO_MODEL when it can name what is missing
+    {
+      const dir = path.join(ROOT, 'mcp/test-models/no-measures/Plain Orders.SemanticModel'), all = walk(dir).filter((f) => /\.tmdl$/i.test(f));
+      const rel = (f) => 'gone.SemanticModel/' + path.relative(dir, f).split(path.sep).join('/');
+      for (const [label, keep, want] of [['Dates.tmdl missing', (f) => !/Dates\.tmdl$/.test(f), /(: |: )Dates \(model\.tmdl names this table; no file in the project defines it\)\./],
+        ['every table file missing', (f) => !/tables[\\/]/.test(f), /(: |: )Orders \(model\.tmdl names this table[^)]*\)[;؛] Dates \(model\.tmdl names this table/]]) {
+        const zip = zipOf([['gone.pbip', Buffer.from('{"version":"1.0"}')], ...all.filter(keep).map((f) => [rel(f), fs.readFileSync(f)])]);
+        for (const lang of ['en', 'ar']) {
+          const v = await visitor(browser, { viewport: [1440, 900] });
+          await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=${lang}`, { waitUntil: 'networkidle' });
+          await v.pg.setInputFiles('#mhFile', { name: 'gone.zip', mimeType: 'application/zip', buffer: zip });
+          const got = await v.pg.waitForSelector('.mh-unreadable, #mhTab, .mh-error', { timeout: 30000 }).then(() => v.pg.evaluate(() => ({
+            said: (document.querySelector('.mh-unreadable') || {}).textContent || '', error: (document.querySelector('.mh-error b') || {}).textContent || '', ring: !!document.querySelector('.mh-ring'), hist: localStorage.getItem('dataarcus-mh-history') }))).catch((e) => ({ said: 'timeout ' + e.message.slice(0, 60) }));
+          check(want.test(got.said) && (lang === 'en' ? /^No score/.test(got.said) : /^لا توجد نتيجة/.test(got.said)) && !got.ring && !got.hist, `AU1 ${label} (${lang}): "No score" first and the table(s) named, no score ring, no history: ${JSON.stringify(got).slice(0, 400)}`);
+          if (v.errs.length) problems.push(`AU1 ${label} (${lang}): ${v.errs.join(' | ')}`);
+          await v.ctx.close();
+        }
+      }
+    }
+    // (AU1, AUD-068) a zip with two models (health-project's model.bim and report, no-measures in TMDL): before the score
+    // the page says which model it read and which not, the same in both zip orders; the score is the model read's own
+    {
+      const hp = path.join(ROOT, 'mcp/fixtures/health-project'), pm = path.join(ROOT, 'mcp/test-models/no-measures');
+      const ent = (d) => walk(d).map((f) => [path.relative(d, f).split(path.sep).join('/'), fs.readFileSync(f)]);
+      const both = [...ent(hp), ...ent(pm)], alone = zipOf(ent(hp));
+      const visit = async (zip) => {
+        const v = await visitor(browser, { viewport: [1440, 900] });
+        await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });
+        await v.pg.setInputFiles('#mhFile', { name: 'two.zip', mimeType: 'application/zip', buffer: zip });
+        const got = await v.pg.waitForSelector('#mhTab, .mh-error', { timeout: 30000 }).then(() => v.pg.evaluate(() => {
+          const note = document.querySelector('.mh-models'), ring = document.querySelector('.mh-scorecard .mh-ring');
+          return { note: note ? note.textContent.trim() : '', first: !!(note && ring && (note.compareDocumentPosition(ring) & Node.DOCUMENT_POSITION_FOLLOWING)), score: +((document.querySelector('.mh-scorecard .mh-ring b') || {}).textContent || NaN) };
+        })).catch((e) => ({ note: 'timeout ' + e.message.slice(0, 60) }));
+        if (v.errs.length) problems.push(`AU1 two models: ${v.errs.join(' | ')}`);
+        await v.ctx.close();
+        return got;
+      };
+      const one = await visit(alone), a = await visit(zipOf(both)), b = await visit(zipOf(both.slice().reverse()));
+      check(!one.note && /^This zip holds 2 semantic models: the check below read Health Test\.SemanticModel; not read: Plain Orders\.SemanticModel\./.test(a.note) && a.first && a.score === one.score, `AU1 two models: the note before the score names the model read and the one not read, the score is the model's own (${one.score}): ${JSON.stringify(a)}`);
+      check(b.note === a.note && b.score === a.score, `AU1 two models, the other zip order: the same note and score: ${JSON.stringify(b)}`);
     }
     // the drop zone says what really works
     const v = await visitor(browser, { viewport: [1440, 900] });

@@ -4,7 +4,7 @@ import './test-env.mjs';
 // math moved to assets/js/design-colours.js and the glass look to assets/js/design-glass.js). Recorded on the base in
 // fixtures/sp6-design.json (sha256 and length of each result); SP6_RECORD=1 records them again (only on the base, never
 // to make a run pass). The Node zlib PNG is not recorded (zlib's bytes are per Node version): B1 compares it, and the
-// theme with its glass picture, with the base engine itself (git show SP6_BASE, default 04a9922) in the same process.
+// theme with its glass picture, with the base engine itself (its files saved in mcp/fixtures/hk1/sp6, 04a9922's bytes) in the same process.
 //   D1-D10  a design's theme JSON, glass look and fit, glass PNG (JavaScript deflate) and pixels, slots, background SVG
 //   C1      the colour functions on made-up inputs;  B1  the base engine, live;  F1  the facade (after the move)
 //   node test-0.3.2-sp6.mjs
@@ -12,7 +12,6 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
@@ -88,11 +87,11 @@ chk(() => gold.C1 && !diff(got.C1, gold.C1).length, () => `C1 the colour functio
 
 // ---------- B1: the base engine itself, live (the zlib PNG, the theme with its glass picture) ----------
 {
-  const BASE = process.env.SP6_BASE || '04a9922';
+  const BASE = '04a9922'; // (HK1, 0.3.3) the saved copies in mcp/fixtures/hk1/sp6, not git reads
   let B = null, why = '';
   try {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-sp6-base-'));
-    for (const f of ['design-engine.js', 'text-measure.js']) fs.writeFileSync(path.join(dir, f), execFileSync('git', ['show', `${BASE}:assets/js/${f}`], { cwd: REPO, maxBuffer: 1 << 26 }));
+    for (const f of ['design-engine.js', 'text-measure.js']) fs.writeFileSync(path.join(dir, f), fs.readFileSync(path.join(HERE, 'fixtures', 'hk1', 'sp6', 'assets', 'js', f)));
     B = require(path.join(dir, 'design-engine.js'));
   } catch (e) { why = String(e && e.message || e).slice(0, 200); }
   const differ = [];
@@ -100,7 +99,8 @@ chk(() => gold.C1 && !diff(got.C1, gold.C1).length, () => `C1 the colour functio
     const d = make(), p = E.page(d.layout), th = E.buildTheme(d, lang);
     if (bytes(E.glassPng(d, p.w, p.h)) !== bytes(B.glassPng(make(), p.w, p.h))) differ.push(name + ' glassPng');
     if (js(E.withGlassPicture(th, d)) !== js(B.withGlassPicture(B.buildTheme(make(), lang), make()))) differ.push(name + ' withGlassPicture');
-    if (js(Object.keys(E).sort()) !== js(Object.keys(B).sort())) differ.push('the facade\'s names');
+    // (0.3.3 FB1) pageFill was added on purpose after the base (how well a page is filled, mcp/work/FB1.md; sp29 K2 pins it)
+    if (js(Object.keys(E).filter((k) => k !== 'pageFill').sort()) !== js(Object.keys(B).sort())) differ.push('the facade\'s names');
   }
   chk(() => B && !differ.length, () => `B1 the base engine (${BASE}), live: ${B ? 'differs: ' + [...new Set(differ)].slice(0, 6).join('; ') : 'not loaded: ' + why}`);
 }

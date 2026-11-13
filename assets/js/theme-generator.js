@@ -271,9 +271,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // when they load; DD2T: a text box's paragraphs, text-runs.js, right after pbir-values.js: the a11y rules and the
   // check read it; 0.3.2 DD2K: the contrast of two colours, contrast.js, right after it: the writer reads it when it loads; 0.3.2 DD2P:
   // the picture bytes, png-bytes.js, before pbip-zip.js, which reads its CRC-32 (the page loads it already: not loaded again))
-  const BUILDER = ['/assets/js/arabic-script.min.js?v=07b91699d1e3', '/assets/js/contrast.min.js?v=064538a9ae1e', '/assets/js/pbir-values.min.js?v=57e0aebe7cdf', '/assets/js/text-runs.min.js?v=047b2eda2154', '/assets/js/time-names.min.js?v=2cf40585fc6e', '/assets/js/text-measure.min.js?v=13d0792030b9', '/assets/js/story-titles.min.js?v=596a8e4e04fa', '/assets/js/visual-types.min.js?v=55431aa586c5', '/assets/js/mirror-policy.min.js?v=baaa64376630', '/assets/js/mirror-charts.min.js?v=f29d54b64c7b', '/assets/js/mirror-text.min.js?v=f1bf57acb463', '/assets/js/mirror-units.min.js?v=91337fe5c334', '/assets/js/report-mirror.min.js?v=767cd538c95d', '/assets/js/pbip-query.min.js?v=87024fe61fd5', '/assets/js/pbip-sizing.min.js?v=14c9a147b14e', '/assets/js/pbip-notes.min.js?v=38120f9ce6fd',
-    '/assets/js/label-limits.min.js?v=28489c70397d', '/assets/js/pbip-visuals-charts.min.js?v=7d1bb8b90fa6', '/assets/js/pbip-visuals-tables.min.js?v=ad2b43d89afd', '/assets/js/pbip-visuals.min.js?v=9280599b56a8', '/assets/js/pbip-tooltip.min.js?v=f840b971a8b9', '/assets/js/pbip-navigation.min.js?v=30ed39d92fb2', '/assets/js/pbip-page.min.js?v=fc8603169202', '/assets/js/report-a11y.min.js?v=a46733654922',
-    '/assets/js/png-bytes.min.js?v=0f8f6e3b3c39', '/assets/js/pbip-zip.min.js?v=57524637fbad', '/assets/js/pbip-sample.min.js?v=c2586f4ca3c2', '/assets/js/pbip-bidi.min.js?v=7bfb226aefb3', '/assets/js/pbip-export.min.js?v=c60adc01937f'];
+  const BUILDER = ['/assets/js/arabic-script.min.js?v=07b91699d1e3', '/assets/js/contrast.min.js?v=064538a9ae1e', '/assets/js/pbir-values.min.js?v=efce5155fdf9', '/assets/js/text-runs.min.js?v=047b2eda2154', '/assets/js/time-names.min.js?v=ae53c726782a', '/assets/js/text-measure.min.js?v=13d0792030b9', '/assets/js/story-titles.min.js?v=596a8e4e04fa', '/assets/js/visual-types.min.js?v=55431aa586c5', '/assets/js/mirror-policy.min.js?v=a274c6487aaf', '/assets/js/mirror-charts.min.js?v=f29d54b64c7b', '/assets/js/mirror-text.min.js?v=f1bf57acb463', '/assets/js/mirror-units.min.js?v=91337fe5c334', '/assets/js/report-mirror.min.js?v=dc925a82fadd', '/assets/js/pbip-query.min.js?v=c618c34e093a', '/assets/js/pbip-sizing.min.js?v=14c9a147b14e', '/assets/js/pbip-notes.min.js?v=38120f9ce6fd',
+    '/assets/js/label-limits.min.js?v=28489c70397d', '/assets/js/pbip-visuals-charts.min.js?v=7d1bb8b90fa6', '/assets/js/pbip-visuals-tables.min.js?v=ad2b43d89afd', '/assets/js/pbip-visuals.min.js?v=9280599b56a8', '/assets/js/pbip-tooltip.min.js?v=f840b971a8b9', '/assets/js/pbip-navigation.min.js?v=30ed39d92fb2', '/assets/js/pbip-page.min.js?v=b00bd55a8c94', '/assets/js/report-a11y.min.js?v=642cabaa4e15',
+    '/assets/js/png-bytes.min.js?v=0f8f6e3b3c39', '/assets/js/pbip-zip.min.js?v=57524637fbad', '/assets/js/pbip-sample.min.js?v=c2586f4ca3c2', '/assets/js/pbip-bidi.min.js?v=7bfb226aefb3', '/assets/js/pbip-export.min.js?v=27a294be41fd'];
   // (0.3.1 FX5: the page loads the sizes and what they read, for the canvas's bars; a script already on the page is not
   // loaded again)
   const onPage = (src) => [...document.scripts].some((x) => x.src === new URL(src, location.href).href);
@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let binding = null;
   const loadBind = () => binding || (binding = (window.DABind ? Promise.resolve(window.DABind)
     : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('/assets/js/field-meaning.min.js?v=07343b7cf536'))
-      .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=f4832d0d3ac0')))
+      .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=295f66a0c64d')))
       // (SP8: the picker's drawing is field-picker-ui.js's, which pbip-bind.js calls: loaded first)
       .then(() => (window.DAHtmlEscape ? null : loadScript('/assets/js/html-escape.min.js?v=b560fc5666ec')))   // (DD2H: the picker's escape)
       .then(() => (window.DAFieldPicker ? null : loadScript('/assets/js/field-picker-ui.min.js?v=c74879eca806')))
@@ -301,21 +301,23 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(() => (window.DASortColumn ? null : loadScript('/assets/js/sort-column.min.js?v=8fba2c19aba2')))
       // (DD1F: is a text Arabic is arabic-script.js's, which field-catalog.js reads when it loads: loaded first)
       .then(() => (window.DAArabicScript ? null : loadScript('/assets/js/arabic-script.min.js?v=07b91699d1e3')))
+      // (LX1: which ways a relationship filters is relationship-filter.js's, which field-catalog.js reads when it loads: loaded first)
+      .then(() => (window.DARelationshipFilter ? null : loadScript('/assets/js/relationship-filter.min.js?v=a94fd468ba2f')))
       // (SP30: the model's metadata, normalised, is field-catalog.js's, which pbip-bind.js reads when it loads: loaded first)
-      .then(() => (window.DAFieldCatalog ? null : loadScript('/assets/js/field-catalog.min.js?v=910ad9ad493d')))
+      .then(() => (window.DAFieldCatalog ? null : loadScript('/assets/js/field-catalog.min.js?v=7627d1ef9feb')))
       // (SP30: the ranking is field-suggest.js's, which reads field-catalog.js and which pbip-bind.js reads: loaded between)
       .then(() => (window.DAFieldSuggest ? null : loadScript('/assets/js/field-suggest.min.js?v=ca404cf26ee2')))
       .then(() => loadScript('/assets/js/pbip-bind.min.js?v=600d69b2b551')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
   let words = null;
   const loadNames = () => Promise.all([window.DAArabicNames ? window.DAArabicNames : loadScript('/assets/js/arabic-names.min.js?v=637dc63aff40').then(() => window.DAArabicNames),
     words || (words = fetch('/assets/data/arabic-report-words.json').then((r) => (r.ok ? r.json() : Promise.reject(new Error('words')))).catch((e) => { words = null; throw e; }))]);
-  const CHECK = ['../assets/js/visual-types.min.js?v=55431aa586c5', '../assets/js/report-rules.min.js?v=1718fa3ad073', '../assets/js/layout-check.min.js?v=8fea44535695'];
+  const CHECK = ['../assets/js/visual-types.min.js?v=55431aa586c5', '../assets/js/report-rules.min.js?v=0feeae0ec5e2', '../assets/js/layout-check.min.js?v=b50a6b9a99f0'];
   const loadCheck = () => (window.DALayoutCheck ? Promise.resolve(window.DALayoutCheck) : loadBuilder().then(() => CHECK.reduce((q, src) => q.then(() => loadScript(src)), Promise.resolve())).then(() => window.DALayoutCheck));
   // (0.3.2 DD1B: the preview reads its literals with pbir-values.js, DD1A: its time names with time-names.js, DD2T:
   // a text box's paragraphs with text-runs.js, each
   // loaded first unless the builder or the page already did)
-  const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : (window.DAPbirValues ? Promise.resolve() : loadScript('../assets/js/pbir-values.min.js?v=57e0aebe7cdf')).then(() => (window.DATimeNames ? null : loadScript('../assets/js/time-names.min.js?v=2cf40585fc6e'))).then(() => (window.DATextRuns ? null : loadScript('../assets/js/text-runs.min.js?v=047b2eda2154'))).then(() => (window.DAHtmlEscape ? null : loadScript('../assets/js/html-escape.min.js?v=b560fc5666ec'))).then(() => (window.DAVisualTypes ? null : loadScript('../assets/js/visual-types.min.js?v=55431aa586c5'))).then(() => loadScript('../assets/js/page-preview.min.js?v=878598b10089')).then(() => window.DAPagePreview));
-  const MODEL_WORKER = '/assets/js/model-health-worker.min.js?v=46818f5fb869';
+  const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : (window.DAPbirValues ? Promise.resolve() : loadScript('../assets/js/pbir-values.min.js?v=efce5155fdf9')).then(() => (window.DATimeNames ? null : loadScript('../assets/js/time-names.min.js?v=ae53c726782a'))).then(() => (window.DATextRuns ? null : loadScript('../assets/js/text-runs.min.js?v=047b2eda2154'))).then(() => (window.DAHtmlEscape ? null : loadScript('../assets/js/html-escape.min.js?v=b560fc5666ec'))).then(() => (window.DAVisualTypes ? null : loadScript('../assets/js/visual-types.min.js?v=55431aa586c5'))).then(() => loadScript('../assets/js/page-preview.min.js?v=878598b10089')).then(() => window.DAPagePreview));
+  const MODEL_WORKER = '/assets/js/model-health-worker.min.js?v=adf8575970cb';
 
   // ---------- the downloads, the visual backgrounds and the reminder (theme-download-ui.js, 0.3.2 SP31) ----------
   const Dl = window.DAThemeDownloadUI.mount({ store: S, engine: E, $, L, isAr, track, toast, layout: Lay,

@@ -86,7 +86,7 @@ try {
     for (const [k, dir] of [['a', 'f05a'], ['b', 'f05b']]) {
       const { rr, cr, lens } = await three(`${dir}/${BASE}.pbip`), all = [rr, cr, lens];
       chk(() => all.every((x) => !x.t.includes(NAME) && !x.t.toLowerCase().includes(COLOUR)), () => `F05-${k}1. nothing of the theme behind the link (its name "${NAME}", its colour ${COLOUR}) in read_report, check_report or the lens: ${all.map((x) => (x.t.includes(NAME) || x.t.toLowerCase().includes(COLOUR) ? short(x) : 'clean')).join(' | ')}`);
-      chk(() => !rr.err && /links \(never followed\)/.test(rr.t), () => `F05-${k}2. read_report says a link was not followed: ${short(rr)}`);
+      chk(() => !rr.err && rr.t.includes(`NOT READ 1 link(s) never followed: "${k === 'a' ? 'StaticResources/RegisteredResources' : 'StaticResources'}"`), () => `F05-${k}2. read_report says a link was not followed: ${short(rr)}`);
       chk(() => !cr.err && cr.j && (cr.j.notChecked || []).some((n) => n.rule === 'links'), () => `F05-${k}3. check_report names the link it did not follow: ${short(cr)}`);
     }
   }

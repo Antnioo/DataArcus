@@ -71,7 +71,9 @@ export async function launch() {
 
 // The languages a page is tested in: an Arabic copy (ar/..., scripts/ar-pages.mjs) is Arabic whatever ?lang= says
 // (0.3.2 BF1) build/ (the unlisted live build page) is English only and loads no language scripts, like the go/ links
-export const langsOf = (p) => (p.startsWith('ar/') ? ['ar'] : p.startsWith('build/') ? ['en'] : ['en', 'ar']);
+// (0.3.3 IX4) a page whose Arabic is held (locale-routes.js AR_HELD, the one list) is English only until it ships
+const AR_HELD = createRequire(import.meta.url)('../../assets/js/locale-routes.js').AR_HELD.map((p) => p.replace(/^\/+/, ''));
+export const langsOf = (p) => (p.startsWith('ar/') ? ['ar'] : p.startsWith('build/') || AR_HELD.includes(p) ? ['en'] : ['en', 'ar']);
 
 // The HTML pages of the site (the go/ short links are redirects, not pages)
 // git runs without a shell, so the pattern needs no quotes (Windows' cmd.exe keeps single quotes and finds nothing)
@@ -149,15 +151,52 @@ export async function ready(pg) {
 // On a busy machine a smooth scroll can also stall mid-way for longer than that, so while the browser says a scroll is
 // under way (a scroll event without its scrollend yet) the readings don't count; a scrollend that never comes stops
 // the wait after about 3 s without movement.
-export async function settle(pg) {
-  let last = -1, same = 0, still = 0;
-  const end = Date.now() + WAIT;
+// (TR1, B-439) `from`: the position before a click that MUST scroll the page. A busy machine can start the smooth scroll
+// later than the 4 readings (on 10 Nov three CI runs read "top 715, bars 551": the page still at 0, the scroll not begun),
+// so readings at `from` do not count until the page has left it; a page that never moves ends the wait at WAIT and the
+// caller's own check fails, as it should. `wait`: the limit in ms (the settle test passes a short one).
+export async function settle(pg, { from, wait = WAIT } = {}) {
+  let last = -1, same = 0, still = 0, left = from === undefined;
+  const end = Date.now() + wait;
   while (Date.now() < end) {
     const [y, busy] = await pg.evaluate(() => [scrollY, !!window.__scrolling]);
+    if (y !== from) left = true;
     still = y === last ? still + 1 : 0;
-    same = y === last && (!busy || still >= 36) ? same + 1 : 0;
+    same = left && y === last && (!busy || still >= 36) ? same + 1 : 0;
     if (same >= 3) return y;
     last = y; await pg.waitForTimeout(80);
   }
   return last;
 }
+
+// (CI3) What a page still has to do after a step, so a check reads the state the step leads to, not a moment of it:
+// its own timers of up to SHORT_TIMER ms started since the step's mark (a debounce, a ripple's removal, Bootstrap's
+// collapse), the animation frames it asked for since then (a counter), its finite animations and transitions, and a
+// scroll (the page must hold still for QUIET_FRAMES frames in a row: frames, not milliseconds, so a busy runner that
+// starts a smooth scroll late is still waited for; the scroll flag above is not used, an instant scroll leaves it set).
+// A sleep raced all of these on a busy runner (sp35, run 43237079137: "ripples: 1 -> 0"). Longer timers (a result
+// hidden after 6 s, an article read after 30 s) are the page's own clocks, not work to wait for.
+// trackWork(ctx) before the page opens; markWork(pg) when a step begins; quiet(pg) waits for all of it (WAIT at most).
+export const SHORT_TIMER = 3000, QUIET_FRAMES = 5;
+export const trackWork = (ctx) => ctx.addInitScript(([limit, need]) => {
+  const w = window, st = w.setTimeout, ct = w.clearTimeout, raf = w.requestAnimationFrame, caf = w.cancelAnimationFrame;
+  const timers = new Map(), frames = new Map(), now = () => performance.now();
+  let mark = 0;
+  w.setTimeout = function (fn, ms, ...a) {
+    if (typeof fn !== 'function' || +ms > limit) return st.call(w, fn, ms, ...a);
+    const id = st.call(w, function (...x) { timers.delete(id); return fn.apply(this, x); }, ms, ...a);
+    timers.set(id, now()); return id;
+  };
+  w.clearTimeout = (id) => { timers.delete(id); return ct.call(w, id); };
+  w.requestAnimationFrame = (fn) => { const id = raf.call(w, (t) => { frames.delete(id); fn(t); }); frames.set(id, now()); return id; };
+  w.cancelAnimationFrame = (id) => { frames.delete(id); return caf.call(w, id); };
+  const since = (m) => [...m.values()].filter((t) => t >= mark).length;
+  const moving = () => document.getAnimations().filter((x) => x.playState === 'running' && x.effect && x.effect.getComputedTiming().endTime !== Infinity).length;
+  // resolves on the first frame that ends a run of `need` frames with no work left and the page in the same place
+  const still = () => new Promise((r) => { let n = 0, y = null; const f = () => { const at = scrollX + ',' + scrollY; n = !since(timers) && !since(frames) && !moving() && at === y ? n + 1 : 0; y = at; if (n >= need) r(); else raf.call(w, f); }; raf.call(w, f); });
+  Object.defineProperty(w, '__work', { value: { mark: () => { mark = now(); }, still } });
+}, [SHORT_TIMER, QUIET_FRAMES]);
+export const markWork = (pg) => pg.evaluate(() => window.__work && window.__work.mark());
+// a page without trackWork (a fake clock replaces its timers) waits for its scroll only (settle)
+export const quiet = (pg, { wait = WAIT } = {}) => pg.evaluate((ms) => (window.__work
+  ? Promise.race([window.__work.still(), new Promise((r) => setTimeout(r, ms))]) : null), wait).then((r) => (r === null ? settle(pg, { wait }) : r));

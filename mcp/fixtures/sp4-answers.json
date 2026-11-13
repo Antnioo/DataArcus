@@ -4,49 +4,49 @@
   "P1 a model without measures, Arabic": {
    "plan": {
     "err": false,
-    "length": 15913,
-    "sha256": "3c2e8427393d8cc40452be9280cd199d1d6864361d704c5c9381014a1ccea094"
+    "length": 15919,
+    "sha256": "4887ce2246d328aebd9af2bf2cfd2bafb398c6d53da7670580caeb93adf2e169"
    },
    "report": {
     "err": false,
-    "length": 11812,
-    "sha256": "abfeac06dc36039ba88effe8b76d308f7c5e6438912fd4689e8bc3596f975665"
+    "length": 11818,
+    "sha256": "32fcc90f32367edec4d7f803c0d424440baf1d39bde0b7fd7616c3ed53e74ff2"
    },
    "files": {
-    "count": 80,
-    "sha256": "1f148009eead0892a0a0c392fdcd397345cbc01ba74b341aee2b6167e496ceb2"
+    "count": 79,
+    "sha256": "db53fbcb111ce6891d14f4702af537bf6bd0a6eeb1d68c65739e3ea7ef6d00d5"
    }
   },
   "P2 kpiValues full, a Ramadan page filter": {
    "plan": {
     "err": false,
-    "length": 15547,
-    "sha256": "864349b6cd50c326e92dfe158a9f30315274c6dcd3c53758926d9210f34b2627"
+    "length": 15855,
+    "sha256": "57e792aa0b6b239155fa2c583cc42fc58965db7e1b9e6518ee3668a2bf7bd195"
    },
    "report": {
     "err": false,
-    "length": 10158,
-    "sha256": "3a963ac6b84e63668fffac9aacb08ab8bb384e1972de815923be7818fc04e46d"
+    "length": 9557,
+    "sha256": "74f8ab5532a4fba351a776bf997ec94bc5688390c12c3722675b84b90d29ae5b"
    },
    "files": {
     "count": 89,
-    "sha256": "e7e145f61a1206b9e2d8d9d4f9f215000835e6685a4785f2ef7c79a7f07d2283"
+    "sha256": "3cbe51f0f522e14755cb185cbc4e7066edd495236fa9254df72f964ac86fef1c"
    }
   },
   "P3 hand-placed pages, KPI slots left out": {
    "plan": {
     "err": false,
     "length": 12531,
-    "sha256": "e18961a9e81f056a95a231bc70ce7cae8167612d050083280784965a30a9c5b4"
+    "sha256": "3ad5f8c13cddfa131f511faec3d1e77402ca78ef229f2591298cdec12cea770d"
    },
    "report": {
     "err": false,
     "length": 7891,
-    "sha256": "2ffbeff77332ab1bf3a648d12867e6e91d776dcdf212344dc28a72bd0d5284ef"
+    "sha256": "f39e2558df4d787e67238780c0a68d736b3a8df4c39f7d0a8d67332053c07149"
    },
    "files": {
     "count": 34,
-    "sha256": "68cb4ec1ad12cef9110487b4b951c41685592aa4786f13e9ba8f1813c258c57d"
+    "sha256": "f87b1fb286a7f21ea2c400d34c80f29760d501e97dcc8165e346002a1b105be9"
    }
   }
  }

@@ -12,18 +12,16 @@
 //   refOf(field), keyOf(field), filterText(filter), typeName(type), isCustom(type), customNameOf(type), isDecor(visual)
 // No state: the answer comes from the source alone.
 import path from 'node:path';
-import { INSTRUCTION, LONG_TEXT, Linked, REPORT_LIMITS, safeName, safeText, TooBig } from './read-report.mjs';
+import { addLink, INSTRUCTION, LONG_TEXT, Linked, REPORT_LIMITS, safeName, safeText, TooBig } from './read-report.mjs';
 import { meaningInReport, VT, PV, TR } from './visual-meaning.mjs';
 
 // ---- reading a visual's parts ----
 // (0.3.2 DD1B) read-only, the value as shown (12D -> "12"), its number and its true or false: assets/js/pbir-values.js
 const litStr = PV.litShown, litNum = PV.litNumber, litBool = PV.litBool;
-// (A5-2, audit 5: only objects; a null entry in a list made the whole reader throw)
-const entries = (list) => (Array.isArray(list) ? list.filter((e) => e && typeof e === 'object') : []);
+// (A5-2, audit 5: only objects; a null entry in a list made the whole reader throw) (0.3.3 SG1) an objects list's entries, the plain ones' properties, all their properties: assets/js/pbir-values.js, their one place
+const entries = PV.entries, plain = PV.plain, anyOf = PV.anyOf;
 // a list of names (strings), for the lists that hold names, not objects
 const names = (list) => (Array.isArray(list) ? list.filter((e) => typeof e === 'string' || (e && typeof e === 'object' && typeof e.name === 'string')).map((e) => (typeof e === 'string' ? e : e.name)) : []);
-const plain = (list) => entries(list).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e.properties || {}), {});
-const anyOf = (list) => entries(list).reduce((a, e) => Object.assign(a, (e && e.properties) || {}), {});
 // Microsoft's QueryAggregateFunction (semantic query schema)
 const AGG = { 0: 'Sum', 1: 'Avg', 2: 'DistinctCount', 3: 'Min', 4: 'Max', 5: 'Count', 6: 'Median', 7: 'StDev', 8: 'Var' };
 // a field: { kind: column | measure | aggregation, table, name, agg?, report? (a report-level measure), level? }
@@ -119,7 +117,7 @@ export function inventory(src, reportName, opts) {
   sk.links = sk.links || [];
   // (F-R1/F-R2, the fuzz test: one shape check where a file comes in: a file that is not a JSON object is unreadable,
   // never read on; lists are read through entries() / names() only)
-  const json = (rel) => { if (++reads > REPORT_LIMITS.files) { sk.capped = true; return null; } try { const j = src.json(rel); if (!j || typeof j !== 'object' || Array.isArray(j)) { unreadableFiles.push(rel); return null; } return j; } catch (e) { if (e instanceof TooBig) sk.big.push({ file: rel, size: e.size }); else if (e instanceof Linked) sk.links.push(rel); else if (src.has(rel)) unreadableFiles.push(rel); return null; } };
+  const json = (rel) => { if (++reads > REPORT_LIMITS.files) { sk.capped = true; return null; } try { const j = src.json(rel); if (!j || typeof j !== 'object' || Array.isArray(j)) { unreadableFiles.push(rel); return null; } return j; } catch (e) { if (e instanceof TooBig) sk.big.push({ file: rel, size: e.size }); else if (e instanceof Linked) addLink(sk, e.rel || rel); else if (src.has(rel)) unreadableFiles.push(rel); return null; } };
   // the schema versions the files name (check_report's answer): family -> versions
   const note = (j) => { const u = String((j && j.$schema) || ''), m = /\/([A-Za-z]+)\/(\d+\.\d+\.\d+)\/schema(?:[.-]embedded)?\.json$/.exec(u); if (m) (versions[m[1]] = versions[m[1]] || new Set()).add(m[2]); return j; };
   const report = note(json('definition/report.json')) || {};

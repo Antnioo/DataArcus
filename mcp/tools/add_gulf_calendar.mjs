@@ -7,7 +7,7 @@ import { withPlan } from '../lib/files.mjs';
 import { addGulfCalendar } from '../lib/gulf-calendar.mjs';
 import { modelPrintOf } from '../lib/artifact.mjs';
 import * as Plans from '../lib/plans.mjs';
-import { UNTRUSTED } from '../lib/agent-text.mjs';
+import { UNTRUSTED, APPROVAL, NO_VALUES } from '../lib/agent-text.mjs';
 import { columnsByKind } from '../lib/gulf-calendar.mjs';
 import { scriptIs as scriptIsSaid, APPLY_STEPS, whereSaid, NEVER_APPLIED, NEVER_APPLIED_AR } from '../lib/plain-words.mjs';
 import { monthOffer as calendarOffer } from '../lib/arabic-twin.mjs';
@@ -42,25 +42,25 @@ function extrasSaid(r, ar) {
 export function register(server, ctx) {
   server.registerTool('add_gulf_calendar', {
     title: 'Add a Gulf calendar table',
-    description: 'Writes the DataArcus Calendar Generator\'s date table for a Gulf model (Hijri year, month and day, Ramadan and Eid flags and Ramadan Day, the UAE\'s announced Ramadan and Eid dates with later ones marked as estimates, and the official weekend of the chosen country with the dates it changed) as a TMDL script in a new file next to the project, only with an approved planId: called without one it checks everything, says what it would write and gives a proposed planId (show the user, wait for go, approve_plan, then call again with planId). The user applies it in Power BI Desktop\'s TMDL view after checking Preview; this tool never writes into the model, never returns the DAX and never overwrites a file. firstYear and lastYear are required: ask the user which years their data covers (the tool returns no data values). It refuses, writing nothing, when the model already has a table, measure or column with the table\'s name, when a relateTo column is missing or is not a date, and when the years are outside Power BI\'s dates or more than 60. Relationships are written only for the relateTo columns the user names (a column whose type the files don\'t give is accepted with a note); a relateTo column that already has an active relationship to a date table never gets a second one: the new table is related to that date table\'s Date instead, or the relationship is added inactive (relationshipsWhy says which and why); Month Name, Day Name and Hijri Month Name (and their (Arabic) columns) are sorted by their numbers in the script; marking the date table is a step by hand in the answer. Optional, only when the user asks: measures (Ramadan and Eid measures for up to 5 of their measures, on the new table), vat (a dated standard VAT rate column), pegs (a currency pegs table); the answer names them, never their DAX or rates. Tell the user every step and note.' + UNTRUSTED,
+    description: 'Writes the DataArcus Calendar Generator\'s date table for a Gulf model (Hijri year, month, day; Ramadan and Eid flags, Ramadan Day; the UAE\'s announced Ramadan and Eid dates, later ones marked estimates; the country\'s official weekend with the dates it changed) as a TMDL script in a new file beside the project. ' + APPROVAL + ' The user applies it in Desktop\'s TMDL view after checking Preview; this tool never writes into the model, never returns the DAX, never overwrites a file. firstYear and lastYear are required: ask the user which years their data covers. It refuses when the model has the table\'s name, a relateTo column is missing or not a date, or the years are more than 60. Relationships only for the relateTo columns the user names (relationshipsWhy); marking the date table is a step by hand in the answer. Only when the user asks: measures, vat, pegs. Tell the user every step and note.' + NO_VALUES + UNTRUSTED,
     inputSchema: strictInputs('add_gulf_calendar', {
-      path: modelPath.describe('The model the table is for (read for name clashes and the relateTo columns); the script file goes next to it'),
-      firstYear: z.number().int().optional().describe('First year of the calendar (1 January). Ask the user: the years their data covers. Needed unless arabicColumnsOnly'),
-      lastYear: z.number().int().optional().describe('Last year of the calendar (31 December); at most 60 years in all. Needed unless arabicColumnsOnly'),
-      arabicColumnsOnly: z.boolean().optional().describe('Only when the user wants Arabic month, day and flag names on their OWN date table, without a report: no new table; the script adds the Arabic calendar columns (each sorted like its English column) to the model\'s date table, as an Arabic report\'s script does. The years and country are not needed'),
-      country: z.enum(['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn']).default('uae').describe('The country whose official weekend the table uses (with the dates it changed) and that the answer names'),
-      weekend: z.enum(['country', 'shj', 'sat-sun', 'fri-sat', 'fri', 'sun']).default('country').describe('country (default): the country\'s official weekend; shj: Sharjah\'s government (Friday to Sunday from 2022, Friday and Saturday before); or a fixed weekend for a company whose weekend differs'),
-      announced: z.boolean().default(true).describe('Ramadan, Shawwal and Dhu al-Hijjah on the UAE\'s announced dates, for every country (later ones are Umm al-Qura estimates); false: Umm al-Qura only'),
-      lang: z.enum(['en', 'ar']).default('en').describe('Language of the month, day and Hijri month names in the table (the column names stay English)'),
-      arabicNames: z.boolean().default(true).describe('Also write Day Name (Arabic), Month Name (Arabic) and Hijri Month Name (Arabic), sorted by their numbers, so an Arabic report can show Arabic names, and the Arabic labels of the quarters, fiscal year and quarter and the flags (with lang "ar" the names are Arabic already: only those labels)'),
-      name: z.string().max(80).default('Gulf Calendar').describe('The new table\'s name: letters, digits, spaces and _, at most 40 characters. Never the name of a table, measure or column the model has'),
-      weekStart: z.enum(['sunday', 'monday', 'saturday']).default('sunday').describe('The first day of the week for Day of Week and Week Start'),
+      path: modelPath.describe('The model (read for name clashes and relateTo columns); the script goes beside it'),
+      firstYear: z.number().int().optional().describe('First year: ask the user which years their data covers. Needed unless arabicColumnsOnly'),
+      lastYear: z.number().int().optional().describe('Last year; at most 60 years in all. Needed unless arabicColumnsOnly'),
+      arabicColumnsOnly: z.boolean().optional().describe('Only when the user wants Arabic month, day and flag names on their OWN date table: no new table, the columns go on it. No years or country needed'),
+      country: z.enum(['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn']).default('uae').describe('The country whose official weekend (and its changes) the table uses'),
+      weekend: z.enum(['country', 'shj', 'sat-sun', 'fri-sat', 'fri', 'sun']).default('country').describe('country (default): its official weekend; shj: Sharjah\'s government (Friday to Sunday from 2022, Friday and Saturday before); or a fixed weekend for a company'),
+      announced: z.boolean().default(true).describe('Ramadan, Shawwal and Dhu al-Hijjah on the UAE\'s announced dates, every country (later: Umm al-Qura estimates); false: Umm al-Qura only'),
+      lang: z.enum(['en', 'ar']).default('en').describe('Language of month, day and Hijri month names (column names stay English)'),
+      arabicNames: z.boolean().default(true).describe('Also Arabic Day, Month and Hijri Month Name columns, sorted by number, and Arabic labels of quarters, fiscal periods and flags (with lang "ar": the labels only)'),
+      name: z.string().max(80).default('Gulf Calendar').describe('The new table\'s name: letters, digits, spaces, _, at most 40. Never a name the model already has'),
+      weekStart: z.enum(['sunday', 'monday', 'saturday']).default('sunday').describe('First day for Day of Week and Week Start'),
       fiscalStart: z.number().int().min(1).max(12).default(1).describe('The month the fiscal year starts'),
-      measures: z.array(z.string()).max(5).optional().describe('Up to 5 of the model\'s measures, as "Table[Measure]", that the user wants compared Ramadan to Ramadan and Eid to Eid: for each, the script adds 8 measures on the new table (Last Ramadan: the same Ramadan days of the Hijri year before, never SAMEPERIODLASTYEAR; vs Last Ramadan %; the Eid al-Fitr and Eid al-Adha windows, last year\'s and the %), the Measure Builder\'s own DAX; a name the model has is never taken ("... 2"). Only measures the user names'),
-      vat: z.boolean().optional().describe('true: also a "VAT Standard Rate %" column, the standard VAT rate in force on each date in the chosen country (sourced, with its change dates; Qatar and Kuwait 0: no VAT in force). Not the rate a sale was charged, never tax advice. Default false'),
-      pegs: z.boolean().optional().describe('true: also a 6-row table "Gulf Currency Pegs" (units per US dollar, each its central bank\'s figure; the Kuwaiti dinar a basket, with no rate); no conversion measure. Default false'),
-      relateTo: z.array(z.string()).max(5).optional().describe('Date columns of the user\'s fact tables to relate to the new table\'s Date, as "Table[Column]" (many to one, single direction). Only columns the user names'),
-      asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('The date the self-check counts as today (YYYY-MM-DD; default: today). For tests'),
+      measures: z.array(z.string()).max(5).optional().describe('Only measures the user names: up to 5, "Table[Measure]", compared Ramadan to Ramadan and Eid to Eid; 8 measures each on the new table (last year\'s and the %, by the Hijri calendar, never SAMEPERIODLASTYEAR)'),
+      vat: z.boolean().optional().describe('true: also a "VAT Standard Rate %" column, the country\'s standard rate on each date. Not a sale\'s charged rate, never tax advice. Default false'),
+      pegs: z.boolean().optional().describe('true: also a 6-row table "Gulf Currency Pegs" (units per US dollar, each central bank\'s figure; the Kuwaiti dinar a basket, no rate); no conversion measure. Default false'),
+      relateTo: z.array(z.string()).max(5).optional().describe('The user\'s fact-table date columns related to the new Date, "Table[Column]" (many to one, single direction). Only columns the user names'),
+      asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('Today for the self-check (YYYY-MM-DD). For tests'),
       planId: planIdInput
     }), annotations: ADDS_SAME
   }, safe(async (a) => {
@@ -79,7 +79,7 @@ export function register(server, ctx) {
       plan: Plans.proposal(Plans.propose('calendar', modelRef(m, a.path), [`the TMDL script "${path.basename(scriptFile)}" ${whereSaid(scriptDir)}, adding the table ${JSON.stringify(rest.table)} (${rest.range.from} to ${rest.range.to})${extrasSaid(rest)}${rest.relationships.length ? ' and ' + rest.relationships.length + ' relationship' + (rest.relationships.length > 1 ? 's' : '') : ''}${rest.relationshipsWhy ? ` (${rest.relationshipsWhy.join('; ')})` : ''}; ${NEVER_APPLIED}`], { pins: { add_gulf_calendar: inputsPin(a) }, outputs: [path.basename(scriptFile)],
         // (SQ3, T1-S6) the same line in Arabic, for the page of a plan with Arabic names
         writesAr: [`سكربت TMDL «${path.basename(scriptFile)}» ${whereSaid(scriptDir, undefined, true)}، يضيف الجدول «${rest.table}» (من ${rest.range.from} إلى ${rest.range.to})${extrasSaid(rest, true)}${rest.relationships.length ? `، والعلاقات: ${rest.relationships.length}` : ''}${relationshipsWhyAr ? ` (${relationshipsWhyAr.join('؛ ')})` : ''}؛ ${NEVER_APPLIED_AR}`] })) }));
-  }));
+  }, { lang: 'given' }));
 }
 
 // (0.3.0 T1, C1: the HR tester refused a 32-file report plan when she wanted one script) only the Arabic calendar columns

@@ -8,7 +8,11 @@
  *               child) when the page has none: the exam and health check pages' own boxes.
  *   copyText(text, node, { done, selected, toast })  the clipboard first (then toast(done)); refused or missing: the
  *               text of node selected and toast(selected). toast is the page's own (its time); the texts are the page's.
- * The ledger: mcp/docs/CONTRACTS.md "Equal copies, not probed"; the test: scripts/tests/dd2w.mjs.
+ *   el(doc, tag, cls, text)  a new element of doc: its class when cls is given, its text when text is not null (0.3.3 SG1:
+ *               the build page's cards and Fuel panel, the theme page's names box).
+ *   saveState(key, state)  the page's state as JSON in this browser's localStorage under key; refused (private mode,
+ *               full) or missing: nothing, never an error (0.3.3 SG1: the calendar, measure builder and licensing pages).
+ * The ledger: mcp/docs/CONTRACTS.md "Equal copies, not probed"; the tests: scripts/tests/dd2w.mjs, mcp/test-0.3.3-sg1.mjs.
  * Browser and Node (module.exports / window.DAPageToast). Reads document, navigator and getSelection when called. */
 (function (root) {
   'use strict';
@@ -30,6 +34,8 @@
     const fallback = () => { const r = document.createRange(); r.selectNodeContents(node); const s = getSelection(); s.removeAllRanges(); s.addRange(r); say(o.selected); };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => say(o.done), fallback); else fallback();
   }
-  const api = Object.freeze({ toast, boxToast, copyText });
+  const el = (doc, tag, cls, text) => { const e = doc.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const saveState = (key, state) => { try { localStorage.setItem(key, JSON.stringify(state)); } catch (e) { /* private mode */ } };
+  const api = Object.freeze({ toast, boxToast, copyText, el, saveState });
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPageToast = api;
 })(typeof self !== 'undefined' ? self : this);

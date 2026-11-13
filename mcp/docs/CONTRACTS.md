@@ -51,12 +51,25 @@ How it is kept true:
 | [contrast What is the contrast of two colours?](#contrast-what-is-the-contrast-of-two-colours) | 4 | 0 of 9 | generate_theme, the writer, the SVG KPIs | one place since DD2K: `assets/js/contrast.js` `contrast` |
 | [xml How is a text escaped for XML (SVG)?](#xml-how-is-a-text-escaped-for-xml-svg) | 2 | 0 of 10 | the SVG KPIs, the flip cards | equal |
 | [html How is a text escaped for HTML?](#html-how-is-a-text-escaped-for-html) | 9 | 0 of 10 | the website's pages, the approval window | one place since DD2H: `assets/js/html-escape.js` `htmlEsc` |
-| [tmdl-name How is a name written in TMDL?](#tmdl-name-how-is-a-name-written-in-tmdl) | 7 | 0 of 9 | check_model_health's fix scripts, the measure builder page, the twin's model, create_report's sample | equal (one place: `tmdl-name.js`) |
+| [tmdl-name How is a name written in TMDL?](#tmdl-name-how-is-a-name-written-in-tmdl) | 8 | 0 of 9 | check_model_health's fix scripts, the measure builder page, the twin's model, create_report's sample | equal (one place: `tmdl-name.js`) |
 | [decode What text do the bytes of a Power BI file hold?](#decode-what-text-do-the-bytes-of-a-power-bi-file-hold) | 4 | 0 of 10 | every model read (the MCP and the website) | one place since DD2D: `assets/js/model-file.js` `decodeText` |
 | [limits How large may a model file be?](#limits-how-large-may-a-model-file-be) | 4 | 0 of 8 | every model read (the MCP and the website) | one place since DD2D: `assets/js/model-file.js` `LIMITS` |
 | [text-runs What text does a text box hold?](#text-runs-what-text-does-a-text-box-hold) | 1 | 0 of 9 | check_report, read_report, the preview | one place since DD2T: `assets/js/text-runs.js` `paragraphTexts` |
 | [blank What is BLANK minus or divided by a number?](#blank-what-is-blank-minus-or-divided-by-a-number) | 2 | 0 of 14 | the SVG KPI designer page, create_report's SVG KPIs | one place since DD2Z: `assets/js/svg-expressions.js` `evalNode`, `evalValueKind` |
 
+| [expr-text What text does an expression given as lines hold?](#expr-text-what-text-does-an-expression-given-as-lines-hold) | 1 | 0 of 12 | the Model Health Check (its index, fix scripts, remembered answers), check_model_health, add_gulf_calendar, the twin's model | one place since SG1: `assets/js/dax-reference-parser.js` `exprText` |
+| [lit-value What value is a literal written as?](#lit-value-what-value-is-a-literal-written-as) | 1 | 0 of 14 | check_report, the twin, the writer's visual replacement, the Arabic lens | one place since SG1: `assets/js/pbir-values.js` `litValue` |
+| [obj-entries Which entries does an objects list hold?](#obj-entries-which-entries-does-an-objects-list-hold) | 1 | 0 of 9 | read_report, check_report, the layout check | one place since SG1: `assets/js/pbir-values.js` `entries` |
+| [hex-rgb What red, green and blue does a hex colour hold?](#hex-rgb-what-red-green-and-blue-does-a-hex-colour-hold) | 1 | 0 of 10 | generate_theme and the theme generator (colour mixes), the PBIP writer's colour mix | one place since SG1: `assets/js/design-colours.js` `hexToRgb` |
+| [page-el What element does a page make for a class and a text?](#page-el-what-element-does-a-page-make-for-a-class-and-a-text) | 1 | 0 of 9 | the build page (its cards, the Fuel panel), the theme generator's names box | one place since SG1: `assets/js/page-toast.js` `el` |
+| [page-save What does a page keep of its state?](#page-save-what-does-a-page-keep-of-its-state) | 1 | 0 of 8 | the calendar, measure builder and licensing calculator pages (the visitor's browser only) | one place since SG1: `assets/js/page-toast.js` `saveState` |
+| [measure-key Which table and measure does 'T'[M] name?](#measure-key-which-table-and-measure-does-tm-name) | 1 | 0 of 11 | create_report (the metric switcher, the status icons) | one place since SG1: `mcp/lib/model-script.mjs` `keyOf` |
+| [dax-name How is a table and column written as a DAX name 'T'[C]?](#dax-name-how-is-a-table-and-column-written-as-a-dax-name-tc) | 1 | 0 of 10 | create_report (the SVG columns, the metric switcher), the twin's month script, every written DAX name | one place since DQ1: `assets/js/pbip-query.js` `daxNames` |
+| [put-json What does a plan's file hold after a JSON is put in it?](#put-json-what-does-a-plans-file-hold-after-a-json-is-put-in-it) | 1 | 0 of 8 | create_report (the DAX functions, the status icons) | one place since SG1: `mcp/lib/model-script.mjs` `putJson` |
+| [leaves Which leaf pointers does a value hold?](#leaves-which-leaf-pointers-does-a-value-hold) | 1 | 0 of 11 | create_report's redesign (the copy's check, each patch's reason) | one place since SG1: `mcp/lib/redesign-kinds.mjs` `leaves` |
+| [path-out How is a path inside the working folder said, dots kept?](#path-out-how-is-a-path-inside-the-working-folder-said-dots-kept) | 1 | 0 of 8 | the twin, the native copy | one place since SG1: `mcp/lib/twin-read.mjs` `pathOut` |
+| [rel-out How is a path inside the working folder said, every part cleaned?](#rel-out-how-is-a-path-inside-the-working-folder-said-every-part-cleaned) | 1 | 0 of 8 | check_report (its redaction, the Arabic lens) | one place since SG1: `mcp/lib/check-redact.mjs` `relOut` |
+| [rel-both Does this relationship filter both ways?](#rel-both-does-this-relationship-filter-both-ways) | 1 | 0 of 11 | check_report (briefCheck, the Impact check), suggest_fields and the website's field picker | one place since LX1: `assets/js/relationship-filter.js` `filtersBoth` |
 "places" counts a function once for each family it answers (`mirror-policy.js` `kindOf` answers two). Who sees it:
 the MCP tool whose answer or written file carries the place's answer, or the website page. Golden tests that pin a
 place are not mapped yet (see the note's "Lessons").
@@ -112,6 +125,8 @@ dd1a's P runs the four on the 24 names and 26 more: one answer each. The probe: 
 "Today" table above is the ledger's snapshot before DD1A.
 
 **Since TN2 (5 Nov; the owner D-1105-04):** «عام» / «العام» is a time word only as the first word of a name («العام», «عام 2024»), never after another word («المدير العام», «القطاع العام»); every other word as before.
+
+**Since AU2 (12 Nov; AUD-051, B-307, B-402):** two more questions a name answers, in the same file, each one place: `isDateName` (does a date table's untyped column read as a date: English as mirror-policy's `DATE_LIKE` read it, unchanged; Arabic, the noun first: «تاريخ ...», «يوم» alone or before a word that is not a time word, «بداية» before a time word, «عام» as TN2) and `isWeekdayName` (the heatmap's rows: English as report-mirror's `WEEKDAY` read it, unchanged; «يوم الأسبوع», «اسم اليوم»). `DATE_LIKE` and `WEEKDAY` are gone from the mirror; mirror-policy.js `invertsTimeAxis` and report-mirror.js `heatmapBeside` call them. The test: dd1a U5, U6 (the English answers read from the two regexes on c21df8d5) and the au2 suite through the twin.
 
 ## 1b-text What text does a literal hold?
 
@@ -711,6 +726,10 @@ changed. The probe: one answer on all 10 inputs.
 
 **Newest copy:** equal since DD1G (4 Nov): the rule is `model-nearest.js` `nearest` (MANY_MODELS since 41bd0daa, 26 Oct,
 built from `model-discovery.mjs`); the browser's own sort is gone.
+Since 0.3.3 AU1 (AUD-068) the Health Check's worker (`model-health-worker.js` `fromZip`) reads the rule too, for a zip
+with more than one model: the nearest is read; on a tie, where the two callers below refuse, it reads the first of the
+tied (the rule's sorted order) and says, before the score, which it read and which not (no picker yet). Test:
+`mcp/test-0.3.3-au1.mjs` W4 to W11.
 
 | place | MODULES.md | who sees it |
 |---|---|---|
@@ -842,8 +861,9 @@ places are MCP only).
 | `mcp/lib/sample-project.mjs` `name` | [create_report](MODULES.md#the-mcp-create_report-and-its-options) | create_report's sample project (reads tmdl-name.js) |
 | `mcp/lib/shadow-model.mjs` `q` | [helpers](MODULES.md#the-mcp-what-leaves-the-server-and-the-tools-helpers) | a test only (MODULES.md: used by none; reads tmdl-name.js) |
 | `mcp/lib/twin-model.mjs` `tmdlName` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin's measures (reads tmdl-name.js) |
+| `mcp/lib/model-script.mjs` `functionLines` | [write path](MODULES.md#the-mcp-the-write-path) | the DAX functions' TMDL (create_report; reads tmdl-name.js since DQ1) |
 
-**Today:** all 7 answer the same on all 9 inputs.
+**Today:** all 8 answer the same on all 9 inputs (`functionLines` joined in DQ1, B-438: it kept its own copy of the rule, equal on the 9).
 
 **Before DD2N** (A: model-health-tmdl name, measure-builder tName; B: model-culture q, sample-project name,
 shadow-model q, twin-model tmdlName):
@@ -969,6 +989,190 @@ BLANK, a 0 and a missing target) and the probe's 14 inputs (family `blank`); the
 (`VALUE_NODES`, also read by svg-kpi-compiler.js) and evaluates it; its own ratio, diff and % rules are gone. `/` by BLANK
 or 0 no longer throws.
 
+## expr-text What text does an expression given as lines hold?
+
+**One place:** assets/js/dax-reference-parser.js exprText (test mcp/test-0.3.3-sg1.mjs).
+
+**Question:** an expression (a measure's, a partition's, a description) written as one text or as its lines, as a model's JSON writes both: one text, the lines joined by a newline; nothing (null, undefined) is ""; anything else its String.
+
+**Newest copy:** equal (0.3.3 SG1: the reviewer's same-job finder, 9 Nov; every copy was the same text).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `assets/js/dax-reference-parser.js` `exprText` | [engines](MODULES.md#the-website-engines) | the Model Health Check (its index, fix scripts, remembered answers), check_model_health, add_gulf_calendar, the twin's model |
+
+**Since SG1 (9 Nov):** gone, their calls read the one place: `assets/js/confirm-memory.js` `text`, `assets/js/gulf-health.js` `text`, `assets/js/model-health-tmdl.js` `text`, `assets/js/model-index.js` `text`, `mcp/lib/shadow-model.mjs` `textOf` (each now a name for exprText), and dax-reference-parser.js's own `text` (the first: it loads first on the tool page and in the worker). The parity: mcp/test-0.3.3-sg1.mjs (each old copy, as the base wrote it, and the one place on the same made-up inputs); the probe's 12 inputs (family `expr-text`).
+
+## lit-value What value is a literal written as?
+
+**One place:** assets/js/pbir-values.js litValue (test mcp/test-0.3.3-sg1.mjs).
+
+**Question:** a property's Literal (`{ expr: { Literal: { Value } } }`): its Value exactly as written (`'Sales'` with its quotes, `12D` with its letter, `false`), else undefined. Not what the literal holds (1b-text, 1b-number, 1b-bool): the raw token, for a caller that compares it as written.
+
+**Newest copy:** equal (0.3.3 SG1: the reviewer's same-job finder, 9 Nov; every copy was the same text).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `assets/js/pbir-values.js` `litValue` | [engines](MODULES.md#the-website-engines) | check_report, the twin, the writer's visual replacement, the Arabic lens |
+
+**Since SG1 (9 Nov):** gone, their calls read the one place: `assets/js/mirror-policy.js` `lit`, `assets/js/report-a11y.js` `lit`, `assets/js/report-rules.js` `lit`, `assets/js/visual-replace.js` `litOf`, `mcp/lib/check-impact.mjs` `litOf` (still exported, now litValue itself), `mcp/lib/arabic-lens.mjs` `litOf`. The parity: mcp/test-0.3.3-sg1.mjs (each old copy, as the base wrote it, and the one place on the same made-up inputs); the probe's 14 inputs (family `lit-value`).
+
+## obj-entries Which entries does an objects list hold?
+
+**One place:** assets/js/pbir-values.js entries (test mcp/test-0.3.3-sg1.mjs).
+
+**Question:** a visual's objects list (`objects.<name>`): its object entries (`entries`; a list that is not an array has none, a null entry is skipped), the properties of the entries with no selector merged (`plain`), the properties of all merged (`anyOf`). The probe answers the three as one.
+
+**Newest copy:** equal (0.3.3 SG1: the reviewer's same-job finder, 9 Nov; every copy was the same text).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `assets/js/pbir-values.js` `entries` | [engines](MODULES.md#the-website-engines) | read_report, check_report, the layout check |
+
+**Since SG1 (9 Nov):** gone, their calls read the one place: `assets/js/layout-check.js` `entries`, `plain`, `anyOf`; `mcp/lib/report-inventory.mjs` `entries`, `plain`, `anyOf` (each now a name for pbir-values.js's). The parity: mcp/test-0.3.3-sg1.mjs (each old copy, as the base wrote it, and the one place on the same made-up inputs); the probe's 9 inputs (family `obj-entries`).
+
+## hex-rgb What red, green and blue does a hex colour hold?
+
+**One place:** assets/js/design-colours.js hexToRgb (test mcp/test-0.3.3-sg1.mjs).
+
+**Question:** a colour `#rrggbb`: `[r, g, b]`, each 0 to 255 read from its two hex digits; a pair that is not hex is NaN (the callers pass `#rrggbb` they made).
+
+**Newest copy:** equal (0.3.3 SG1: the reviewer's same-job finder, 9 Nov; every copy was the same text).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `assets/js/design-colours.js` `hexToRgb` | [engines](MODULES.md#the-website-engines) | generate_theme and the theme generator (colour mixes), the PBIP writer's colour mix |
+
+**Since SG1 (9 Nov):** gone, their calls read the one place: `assets/js/pbip-query.js` `p` (in `mixHex`, now design-colours.js's, read when called: the theme pages load design-colours.js before it). design-colours.js's own was the first and stays (contrast.js holds luminance and contrast only, as mcp/test-0.3.2-dd2k.mjs M2 pins). The parity: mcp/test-0.3.3-sg1.mjs (each old copy, as the base wrote it, and the one place on the same made-up inputs); the probe's 10 inputs (family `hex-rgb`).
+
+## page-el What element does a page make for a class and a text?
+
+**One place:** assets/js/page-toast.js el (test mcp/test-0.3.3-sg1.mjs).
+
+**Question:** a document, a tag, a class and a text: a new element of that document, its class set when the class is not empty, its text set when the text is not null or undefined (0 and false are set).
+
+**Newest copy:** equal (0.3.3 SG1: the reviewer's same-job finder, 9 Nov; every copy was the same text).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `assets/js/page-toast.js` `el` | [pages](MODULES.md#the-browser-pages-own-scripts) | the build page (its cards, the Fuel panel), the theme generator's names box |
+
+**Since SG1 (9 Nov):** gone, their calls read the one place: `assets/js/build-page.js` `el`, `assets/js/build-usage.js` `el`, `assets/js/theme-download-ui.js` `el` (each now a one-line call with its document). build/index.html loads page-toast.min.js before build-usage.min.js. The parity: mcp/test-0.3.3-sg1.mjs (each old copy, as the base wrote it, and the one place on the same made-up inputs); the probe's 9 inputs (family `page-el`).
+
+## page-save What does a page keep of its state?
+
+**One place:** assets/js/page-toast.js saveState (test mcp/test-0.3.3-sg1.mjs).
+
+**Question:** a page's key and state: the state as JSON in localStorage under the key; a refusal (private mode, full) or no localStorage: nothing, never an error.
+
+**Newest copy:** equal (0.3.3 SG1: the reviewer's same-job finder, 9 Nov; every copy was the same text).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `assets/js/page-toast.js` `saveState` | [pages](MODULES.md#the-browser-pages-own-scripts) | the calendar, measure builder and licensing calculator pages (the visitor's browser only) |
+
+**Since SG1 (9 Nov):** gone, their calls read the one place: `assets/js/calendar-generator.js` `save`, `assets/js/licensing-calculator.js` `save`, `assets/js/measure-builder.js` `save` (each now a one-line call with its key and state). The licensing pages (EN and AR) load page-toast.min.js before licensing-calculator.min.js. The parity: mcp/test-0.3.3-sg1.mjs (each old copy, as the base wrote it, and the one place on the same made-up inputs); the probe's 8 inputs (family `page-save`).
+
+## measure-key Which table and measure does 'T'[M] name?
+
+**One place:** mcp/lib/model-script.mjs keyOf (test mcp/test-0.3.3-sg1.mjs).
+
+**Question:** a measure written `'Table'[Measure]` or `Table[Measure]` (spaces around trimmed): `{ t, m }`, else null.
+
+**Newest copy:** equal (0.3.3 SG1: the reviewer's same-job finder, 9 Nov; every copy was the same text).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `mcp/lib/model-script.mjs` `keyOf` | [write path](MODULES.md#the-mcp-the-write-path) | create_report (the metric switcher, the status icons) |
+
+**Since SG1 (9 Nov):** gone, their calls read the one place: `mcp/lib/metric-switcher.mjs` `keyOf`, `mcp/lib/status-icons.mjs` `keyOf` (both import it). The parity: mcp/test-0.3.3-sg1.mjs (each old copy, as the base wrote it, and the one place on the same made-up inputs); the probe's 11 inputs (family `measure-key`).
+
+## dax-name How is a table and column written as a DAX name 'T'[C]?
+
+**One place:** assets/js/pbip-query.js daxNames (test mcp/test-0.3.3-dq1.mjs).
+
+**Question:** a table and a column: the DAX name `'Table'[Column]` (a `'` in the table doubled, a `]` in the column doubled); a control character (a tab, a line break) is refused (AUD-032).
+
+**Newest copy:** merge (0.3.3 DQ1, B-437): the writer's `daxNames` refuses a control character; the hand-written copies in `mcp/lib` (`report-fields.mjs` `daxColumn`, `twin-model.mjs` `daxCol`, `metric-switcher.mjs` the first measure's name and `titleProblems`' regex) wrote the same text but never refused.
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `assets/js/pbip-query.js` `daxNames` | [engines](MODULES.md#the-website-engines) | the one place: the writer, the SVG KPIs, create_report's SVG columns, the metric switcher, the twin's month script |
+
+**Today:** one answer on all 10 inputs (the refusal for a control character, the quoted text for the rest).
+
+**Since DQ1 (10 Nov):** gone, their calls read the one place: `mcp/lib/report-fields.mjs` (an SVG column's column value; a name it refuses is told as a problem, not thrown), `mcp/lib/twin-model.mjs` (the Arabic month script), `mcp/lib/metric-switcher.mjs` (the first measure's name, the title check; a control-character name is skipped there). The test: mcp/test-0.3.3-dq1.mjs D1-D5; the probe's 10 inputs (family `dax-name`).
+
+## put-json What does a plan's file hold after a JSON is put in it?
+
+**One place:** mcp/lib/model-script.mjs putJson (test mcp/test-0.3.3-sg1.mjs).
+
+**Question:** the plan's files, an index of their paths, a path and a JSON: that file's data becomes the JSON with two spaces, as the writer writes it; a path the plan lacks throws (a TypeError, as before). flip-cards.mjs's `put` also adds a file the plan lacks: a different answer, left there.
+
+**Newest copy:** equal (0.3.3 SG1: the reviewer's same-job finder, 9 Nov; every copy was the same text).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `mcp/lib/model-script.mjs` `putJson` | [write path](MODULES.md#the-mcp-the-write-path) | create_report (the DAX functions, the status icons) |
+
+**Since SG1 (9 Nov):** gone, their calls read the one place: `mcp/lib/dax-functions.mjs` `put`, `mcp/lib/status-icons.mjs` `put` (each now a one-line call). The parity: mcp/test-0.3.3-sg1.mjs (each old copy, as the base wrote it, and the one place on the same made-up inputs); the probe's 8 inputs (family `put-json`).
+
+## leaves Which leaf pointers does a value hold?
+
+**One place:** mcp/lib/redesign-kinds.mjs leaves (test mcp/test-0.3.3-sg1.mjs).
+
+**Question:** a value and a start ("" unless given): every leaf pointer (`/a/b` for `{ a: { b: 1 } }`, a list's items by index); an empty object or list has none; a value that is not an object is the start itself.
+
+**Newest copy:** equal (0.3.3 SG1: the reviewer's same-job finder, 9 Nov; every copy was the same text).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `mcp/lib/redesign-kinds.mjs` `leaves` | [redesign](MODULES.md#the-mcp-the-redesign) | create_report's redesign (the copy's check, each patch's reason) |
+
+**Since SG1 (9 Nov):** gone, their calls read the one place: `mcp/lib/redesign-patches.mjs` `leaves` (now `Kinds.leaves`, always given its record's pointer). The parity: mcp/test-0.3.3-sg1.mjs (each old copy, as the base wrote it, and the one place on the same made-up inputs); the probe's 11 inputs (family `leaves`).
+
+## path-out How is a path inside the working folder said, dots kept?
+
+**One place:** mcp/lib/twin-read.mjs pathOut (test mcp/test-0.3.3-sg1.mjs).
+
+**Question:** a file: its path from the working folder with `/` between parts, each part cleaned (safeName), `..` and `.` kept as they are. The probe needs DATAARCUS_ROOT.
+
+**Newest copy:** equal (0.3.3 SG1: the reviewer's same-job finder, 9 Nov; every copy was the same text).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `mcp/lib/twin-read.mjs` `pathOut` | [twin](MODULES.md#the-mcp-the-arabic-twin) | the twin, the native copy |
+
+**Since SG1 (9 Nov):** gone, their calls read the one place: `mcp/lib/native-copy.mjs` `pathOut` and its `relRoot` (twin-read.mjs's, imported). The parity: mcp/test-0.3.3-sg1.mjs (each old copy, as the base wrote it, and the one place on the same made-up inputs); the probe's 8 inputs (family `path-out`).
+
+## rel-out How is a path inside the working folder said, every part cleaned?
+
+**One place:** mcp/lib/check-redact.mjs relOut (test mcp/test-0.3.3-sg1.mjs).
+
+**Question:** a file: its path from the working folder with `/` between parts, every part cleaned (safeName). Not path-out: a `..` goes through safeName here. The probe needs DATAARCUS_ROOT.
+
+**Newest copy:** equal (0.3.3 SG1: the reviewer's same-job finder, 9 Nov; every copy was the same text).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `mcp/lib/check-redact.mjs` `relOut` | [checkers](MODULES.md#the-mcp-the-checkers) | check_report (its redaction, the Arabic lens) |
+
+**Since SG1 (9 Nov):** gone, their calls read the one place: `mcp/lib/arabic-lens.mjs` `relOut` (imported). The parity: mcp/test-0.3.3-sg1.mjs (each old copy, as the base wrote it, and the one place on the same made-up inputs); the probe's 8 inputs (family `rel-out`).
+
+## rel-both Does this relationship filter both ways?
+
+**One place:** assets/js/relationship-filter.js filtersBoth (test mcp/test-0.3.3-lx1.mjs).
+
+**Question:** a relationship, as TMSL writes it (`crossFilteringBehavior`, `fromCardinality` default many, `toCardinality` default one) or as model-index.js gives it (`cross`, `fromCard`, `toCard`): does a filter on either table reach the other? Yes when it says both directions, and always for a one-to-one: Microsoft Learn, "Model relationships in Power BI Desktop", Cross filter direction: "For one-to-one relationships, the cross filter direction is always from both tables."
+
+**Newest copy:** merge (the reviewer's night audit AUD-069, 12 Nov: both copies read `crossFilteringBehavior` alone, so a one-to-one written without it was read as one way).
+
+| place | MODULES.md | who sees it |
+|---|---|---|
+| `assets/js/relationship-filter.js` `filtersBoth` | [engines](MODULES.md#the-website-engines) | check_report (briefCheck, the Impact check), suggest_fields and the website's field picker |
+
+**Since LX1 (12 Nov):** gone, their calls read the one place: `mcp/lib/lineage.mjs` `modelGraph` (each relationship's `both`, which `relsFor` and brief.mjs's `reachOf` read) and `assets/js/field-catalog.js` `relsOfTmsl` (the picker's `reached`; the theme generator loads relationship-filter.min.js before field-catalog.min.js). The probe's 11 inputs.
+
 ## Equal copies, not probed (the audit's Phase 2 list)
 
 Page code that needs a page to run (a toast, a copy, a worker's address) or a table of labels: not probed. "same
@@ -989,6 +1193,10 @@ A shape two places share is not a family when they answer different questions. E
 ledger does not add it again.
 
 - `mcp/lib/model.mjs` `isDir`: isDir and `isLink` share a shape (a stat and one test), not a question (Codex, 4 Nov).
+- `mcp/lib/read-report.mjs` `isFile` and `mcp/lib/read-report.mjs` `isDir`: never follow a link (lstat, the read boundary), where model.mjs's `isDir` follows one (stat): four questions (0.3.3 SG1, group 5).
+- `assets/js/field-suggest.js` `rank` and `mcp/lib/gulf-calendar.mjs` `addGulfCalendar`: two step pipelines (a context, five calls, the last one's answer), field ranking and the calendar table (0.3.3 SG1, group 6).
+- `assets/js/exam-view.js` `toast` and `assets/js/health-view.js` `toast`: one-line calls of page-toast.js's `toast` and `boxToast`, each its own box, class and time (2200, 1800 ms) (0.3.3 SG1, group 11; the copies went in DD2W).
+- `mcp/lib/plans.mjs` `shown` and `mcp/lib/read-report.mjs` `cleanName`: a plan value's canonical text capped at 200 for the approval's words, and a report name made visible and capped at 60 at the read boundary (0.3.3 SG1, group 12).
 - `assets/js/page-preview.js` `kindOf`: one shape drawn for a table and a matrix (the preview), not which one it is or
   whether its grid stays left to right (`grid`; mirror-policy.js `kindOf` names them apart) (the audit).
 - `assets/js/report-a11y.js` `readingOrder` and `mcp/lib/twin-texts.mjs` `readingOrder`: the Tab order a reader meets

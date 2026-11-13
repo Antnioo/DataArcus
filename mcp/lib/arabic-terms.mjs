@@ -39,12 +39,25 @@ export const allowed = (p) => { const a = ALLOW.find((x) => x.re.test(p)); retur
 // there, for search)
 export const KEYWORDS = /name=["']keywords["']|["']?keywords["']?\s*:/i;
 
-/** Every variant in a file's text, line by line: [{ line, id, variant, preferred }]. */
+// (0.3.3 AR7, D-1112-05) the key a text sits under, so a failure names the file, the key and the word: the last
+// `key:` before the word on its line ("heroTitle": '...', WHY's missingTable: [...]), else the key the line above ends
+// with (a text wrapped under its key); null in running text (an HTML page, a sentence built in code)
+const KEY = /(?:^|[\s{,(\[])["']?([A-Za-z_$][\w$.-]*)["']?\s*:(?!:)/g;
+const keyBefore = (s) => { let k = null; for (const m of s.matchAll(KEY)) k = m[1]; return k; };
+export function keyOf(lines, i, at) {
+  const here = keyBefore(lines[i].slice(0, at == null ? lines[i].length : at));
+  if (here) return here;
+  const m = i > 0 ? /^\s*["']?([A-Za-z_$][\w$.-]*)["']?\s*:\s*$/.exec(lines[i - 1]) : null;
+  return m ? m[1] : null;
+}
+
+/** Every variant in a file's text, line by line: [{ line, key, id, variant, preferred }] (key: see keyOf). */
 export function fileHits(text) {
-  const out = [];
-  String(text).split('\n').forEach((l, i) => {
+  const out = [], lines = String(text).split('\n');
+  lines.forEach((l, i) => {
     if (!/[ء-ي]/.test(l)) return;
-    for (const h of termHits(l, { context: KEYWORDS.test(l) ? 'keywords' : null })) out.push({ line: i + 1, ...h });
+    // the fold drops marks before the word, so the key is looked for before the word's first letter in the raw line
+    for (const h of termHits(l, { context: KEYWORDS.test(l) ? 'keywords' : null })) out.push({ line: i + 1, key: keyOf(lines, i, l.indexOf(h.variant.slice(0, 2)) < 0 ? null : l.indexOf(h.variant.slice(0, 2))), ...h });
   });
   return out;
 }
@@ -68,7 +81,7 @@ export function repoHits(root, under) {
   const by = {};
   for (const p of repoFiles(root, under)) {
     if (allowed(p)) continue;
-    for (const h of fileHits(fs.readFileSync(`${root}/${p}`, 'utf8'))) (by[h.id] = by[h.id] || []).push(`${p}:${h.line} «${h.variant}» (sheet: «${h.preferred}»)`);
+    for (const h of fileHits(fs.readFileSync(`${root}/${p}`, 'utf8'))) (by[h.id] = by[h.id] || []).push(`${p}:${h.line}${h.key ? ' key ' + h.key : ''} «${h.variant}» (sheet: «${h.preferred}»)`);
   }
   return by;
 }
@@ -95,4 +108,39 @@ export function keywordsProblem(html) {
   if (!m) return 'no keywords meta';
   const n = fold(m[0]).split(/داتا ?أركوس/).length - 1;
   return n === 1 ? null : `«داتا أركوس» ${n} times in its keywords (once)`;
+}
+
+// (0.3.3 AR7, D-1112-05) the glossary a person reads, content/ARABIC-GLOSSARY.md, is this sheet rendered: one row per
+// concept (English, the Arabic, Microsoft's word and Google's with where each was read, why the term stands, where it
+// is used). Written by scripts/arabic-glossary.mjs --write; mcp/test-0.3.3-ar7.mjs fails when the file and the sheet differ.
+export const APPROVALS = { 'D-1112-05': 'both use it (D-1112-05)', owner: 'the owner\'s own', 'one source': 'one source only: a new line waits' };
+const links = (src) => (Array.isArray(src) ? src.map((u, i) => `[${i + 1}](${u})`).join(' ') : src || 'not read');
+const cell = (s) => String(s == null ? '' : s).replace(/\|/g, '\\|');
+/** A concept's approval problem, or null: 'D-1112-05' needs both words, both sources and the date they were read. */
+export function approvalProblem(c) {
+  if (!Object.keys(APPROVALS).includes(c.approval)) return `approval is ${JSON.stringify(c.approval)}`;
+  if (c.approval !== 'D-1112-05') return null;
+  if (!c.microsoft || !Array.isArray(c.source) || !c.source.length) return 'D-1112-05 without Microsoft\'s word and source';
+  if (!c.google || !Array.isArray(c.googleSource) || !c.googleSource.length) return 'D-1112-05 without Google\'s word and source';
+  if (!c.googleSource.every((u) => /^https:\/\/(support|developer|cloud)\.google\.com\/|^https:\/\/developer\.android\.com\//.test(u))) return 'a Google source that is not Google\'s own page';
+  if (!/^\d{4}-\d\d-\d\d$/.test(c.read || '')) return 'D-1112-05 without the date its sources were read';
+  return null;
+}
+export function glossaryMd() {
+  const rows = CONCEPTS.map((c) => `| ${cell(c.id)} | ${cell(c.en)} | ${cell(c.ar)} | ${cell(c.microsoft || 'none found')} ${c.microsoft ? links(c.source) : ''} | ${cell(c.google || (c.googleSource ? 'none found' : 'not read'))} ${c.google ? links(c.googleSource) : ''} | ${APPROVALS[c.approval] || c.approval}${c.read ? ', read ' + c.read : ''} | ${cell(c.used || 'the tools and the site')} |`.replace(/ +\|/g, ' |'));
+  return [
+    '# DataArcus Arabic glossary', '',
+    'One Arabic term per concept, for every tool and the site. Rendered from the one term sheet,',
+    '`assets/data/arabic-report-words.json` (`concepts`): change a term there, then run',
+    '`node scripts/arabic-glossary.mjs --write`. Never edit this file by hand: the `ar7` suite fails when it and the sheet differ.',
+    'The rule (the owner, 12 Nov 2026, D-1112-05): a term or a line that Microsoft and Google both use for the same thing',
+    'in their own Arabic is approved, with both sources and the date read; anything else waits for him',
+    '([ARABIC-STYLE.md](ARABIC-STYLE.md#approval-d-1112-05)). The check that every Arabic text uses these terms:',
+    '`mcp/lib/arabic-terms.mjs`, run by `mcp/test-0.3.1-arabic-terms.mjs` and `scripts/test-arabic-terms.mjs`',
+    '(a failure names the file, the key and the word).', '',
+    '| Concept | English | Arabic | Microsoft | Google | Why it stands | Where used |', '|---|---|---|---|---|---|---|',
+    ...rows, '',
+    `${CONCEPTS.length} concepts: ${CONCEPTS.filter((c) => c.approval === 'D-1112-05').length} that both use, ${CONCEPTS.filter((c) => c.approval === 'owner').length} the owner's own, ${CONCEPTS.filter((c) => c.approval === 'one source').length} with one source only.`,
+    'The owner\'s other standing terms (rule 2 and rule 5) are in [ARABIC-STYLE.md](ARABIC-STYLE.md).', '',
+  ].join('\n');
 }

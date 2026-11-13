@@ -187,6 +187,15 @@ try {
     const r = ci({ 'mcp-shard-0.log': log, ...parts });
     assert.equal(r.status, 1, r.stdout); assert.deepEqual(causesOf(r), ['zero-checks mcp/test-b.mjs']);
   });
+  // (TR2 ask 7) a floor per suite (mcp/test-checks.json): fewer checks than the floor fails by its own cause, equal or more passes
+  const floors = (o) => { const f = path.join(fs.mkdtempSync(path.join(D, 'floors-')), 'test-checks.json'); fs.writeFileSync(f, JSON.stringify({ suites: o })); return ['--floors', f]; };
+  t('ci-sum: a suite under its floor in test-checks.json fails (fewer-checks); at or over it passes; no floor passes', () => {
+    const r = ci({ 'mcp-shard-0.log': ok0, ...parts }, floors({ a: 6, b: 6 }));
+    assert.equal(r.status, 1, r.stdout); assert.deepEqual(causesOf(r), ['fewer-checks mcp/test-a.mjs']); assert.match(r.stdout, /a: 5 checks, its floor in mcp\/test-checks\.json is 6/);
+    assert.equal(ci({ 'mcp-shard-0.log': ok0, ...parts }, floors({ a: 5, b: 3 })).status, 0, 'at and over the floor passes');
+    assert.equal(ci({ 'mcp-shard-0.log': ok0, ...parts }, floors({})).status, 0, 'no floor, no check');
+    assert.equal(ci({ 'mcp-shard-0.log': ok0, ...parts }, floors({ mcp: 99999 })).status, 0, 'the sharded suite has no floor of its own');
+  });
   t('ci-sum: a suite in two shards fails as duplicate-suite', () => {
     const r = ci({ 'mcp-shard-0.log': ok0, 'mcp-shard-1.log': parts['mcp-shard-1.log'] + 'PASS  a  5 checks\n', 'mcp-shard-2.log': parts['mcp-shard-2.log'] });
     assert.equal(r.status, 1, r.stdout); assert.ok(causesOf(r).includes('duplicate-suite mcp/test-a.mjs'), causesOf(r).join('; '));
@@ -357,13 +366,36 @@ try {
       for (const job of y.split(/\n(?= {2}[\w-]+:\n)/).filter((j) => /playwright-core install/.test(j))) {
         installs++;
         const at = (re) => { const m = re.exec(job); return m ? m.index : -1; }, name = /^ {2}([\w-]+):/m.exec(job)[1];
-        const cache = at(/uses: actions\/cache@[0-9a-f]{40} #/), install = at(/playwright-core install --with-deps chromium/), launch = at(/chromium\.launch\(\)[^\n]*b\.close\(\)[^\n]*process\.exit\(1\)/);
+        const cache = at(/uses: actions\/cache@[0-9a-f]{40} #/), install = at(/playwright-core install (--with-deps )?chromium/), launch = at(/chromium\.launch\(\)[^\n]*b\.close\(\)[^\n]*process\.exit\(1\)/);
         assert.ok(cache > 0 && cache < install && install < launch, `${f} ${name}: cache ${cache}, install ${install}, launch ${launch}`);
         assert.match(job, /path: ~\/\.cache\/ms-playwright\n {10}key: chromium-\$\{\{ runner\.os \}\}-\$\{\{ runner\.arch \}\}-\$\{\{ steps\.chromium\.outputs\.rev \}\}/, `${f} ${name}: the key`);
         assert.match(job, /browsers\.json[^\n]*\['chromium', 'chromium-headless-shell', 'ffmpeg'\][^\n]*revision/, `${f} ${name}: the revisions`);
       }
     }
     assert.equal(installs, 2, 'website-suites and coverage-web install Chromium');
+  });
+
+  // SN1 (11 Nov, "Temporary failure resolving azure.archive.ubuntu.com" in every website shard): the shards ask Ubuntu's
+  // mirror only when Chromium did not launch without its system packages
+  t('workflows: the website shards install the browser without apt, and fetch system packages only after a failed launch', () => {
+    const y = fs.readFileSync(path.join(REPO, '.github/workflows/tests.yml'), 'utf8');
+    const job = y.split(/\n(?= {2}[\w-]+:\n)/).find((j) => /^ {2}website-suites:/m.test(j));
+    assert.doesNotMatch(job.replace(/^ *#.*$/gm, ''), /--with-deps/, 'website-suites: no apt on every run');
+    assert.match(job, /name: Chromium launches[^\n]*\n {8}id: launch\n {8}continue-on-error: true\n/, 'the first launch may fail');
+    assert.match(job, /name: System packages for Chromium[^\n]*\n {8}if: steps\.launch\.outcome == 'failure'\n {8}run: \|\n {10}npx playwright-core install-deps chromium\n/, 'install-deps only after that failure');
+  });
+
+  // SN1 (FB3 "Seen" 5): the website runner says each suite as it ends, in a line no result-line reader counts
+  t('run-all: one "done <name> PASS|FAIL <n>s (k of N)" line per suite as it ends, before the final lines, which are unchanged', () => {
+    const r = node([path.join(REPO, 'scripts/tests/run-all.mjs'), 'svg-kpi', 'pl300-bank', '--jobs', '1']);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const lines = r.stdout.split('\n'), done = lines.filter((l) => /^done /.test(l));
+    assert.equal(done.length, 2, r.stdout);
+    for (const l of done) assert.match(l, /^done {2}(svg-kpi|pl300-bank) +PASS +\d+s \(\d of 2\)$/);
+    assert.ok(lines.lastIndexOf(done[1]) < lines.findIndex((l) => /^PASS {2}/.test(l)), 'the live lines come first');
+    assert.equal(lines.filter((l) => adapter.RESULT.test(l)).length, 2, 'the live lines are not result lines');
+    assert.match(r.stdout, /^PASS {2}svg-kpi {12}\s*\d+ checks {2}\d+s$/m);
+    assert.match(r.stdout, /All 2 passed \(\d+s, 1 at a time\)/);
   });
 
   // (SPD; Codex: a guard's baseline that timed out was counted as a pass) mutation rejects a baseline that timed out
@@ -397,8 +429,9 @@ try {
     assert.match(fs.readFileSync(path.join(REPO, 'mcp/docs/TESTS.md'), 'utf8'), /--affected[\s\S]{0,700}never use it/i);
   });
   // (SPD, Codex #9) the builder's local loop where builders read it: an area or --affected while working, one full run at the end
-  t('the local loop is written in mcp/CLAUDE.md and mcp/docs/TESTS.md: <area> / --affected while working, one full run at the end', () => {
-    for (const f of ['mcp/CLAUDE.md', 'mcp/docs/TESTS.md']) assert.match(fs.readFileSync(path.join(REPO, f), 'utf8'), /local loop[^]{0,120}npm test -- <area>` or\s+`npm test -- --affected`[^]{0,200}one full run\s+`npm test --\s+--keep-going`/, f);
+  t('the local loop is written in mcp/docs/TESTS.md (<area> / --affected while working, CI on the branch at the end, no full local run: SN1) and mcp/CLAUDE.md says: <area> while working, CI on the branch at the end, no full local run (LR3)', () => {
+    assert.match(fs.readFileSync(path.join(REPO, 'mcp/docs/TESTS.md'), 'utf8'), /builder's loop[^]{0,120}npm test -- <area>` or\s+`npm test -- --affected`[^]{0,200}CI on the branch[^]{0,120}no full local run/, 'mcp/docs/TESTS.md');
+    assert.match(fs.readFileSync(path.join(REPO, 'mcp/CLAUDE.md'), 'utf8'), /While working: `npm test -- <area>`\. At the end: CI on your branch \(`gh workflow run tests\.yml --ref <branch>`\); no full local run\./, 'mcp/CLAUDE.md');
   });
   t('--affected=HEAD lists the reasons and the picks, runs nothing with --list', () => {
     const r = node([path.join(REPO, 'mcp/run-tests.mjs'), '--affected=HEAD', '--list']);

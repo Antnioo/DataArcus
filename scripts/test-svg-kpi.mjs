@@ -414,5 +414,28 @@ const tricky = { name: 'Odd "name"', w: 100, h: 20, values: [{ id: 'a', kind: 'm
   const t2 = SVGKPI.toMeasure(noRing, { context: 'table' }), c2 = SVGKPI.toMeasure(noRing, { context: 'card' });
   ok(!('noNumber' in t2) && !c2.ringNumberDropped && c2.dax === SVGKPI.toMeasure(noRing).dax, 'A6-11: no ring, no variant: the design as it is');
 }
+// AUD-063 (SN3): formatNumber printed "1e+21" from 1e21 up (toFixed answers in exponent form there). First, 20 values under 1e21
+// pinned as the base answers them (they must not move), then the large ones: decimal digits, never an "e", grouped as the pattern says.
+{
+  const X = require('../assets/js/svg-expressions.js');
+  const vals = [0, 0.005, 0.004999, 69.115, 999999.995, 1e15, 1e20, -0.001, -1234.5, 0.995, 9.995, 99.5, 123456789.125, 1e6, 12345.678, -0.005, 1e-7, 0.5, 1.005, 999.9999];
+  const pinned = {"0.00": ["0.00", "0.01", "0.00", "69.12", "1000000.00", "1000000000000000.00", "100000000000000000000.00", "0.00", "-1234.50", "1.00", "10.00", "99.50", "123456789.13", "1000000.00", "12345.68", "-0.01", "0.00", "0.50", "1.01", "1000.00"], "#,0": ["0", "0", "0", "69", "1,000,000", "1,000,000,000,000,000", "100,000,000,000,000,000,000", "0", "-1,235", "1", "10", "100", "123,456,789", "1,000,000", "12,346", "0", "0", "1", "1", "1,000"], "#,0.0": ["0.0", "0.0", "0.0", "69.1", "1,000,000.0", "1,000,000,000,000,000.0", "100,000,000,000,000,000,000.0", "0.0", "-1,234.5", "1.0", "10.0", "99.5", "123,456,789.1", "1,000,000.0", "12,345.7", "0.0", "0.0", "0.5", "1.0", "1,000.0"], "#,0.00": ["0.00", "0.01", "0.00", "69.12", "1,000,000.00", "1,000,000,000,000,000.00", "100,000,000,000,000,000,000.00", "0.00", "-1,234.50", "1.00", "10.00", "99.50", "123,456,789.13", "1,000,000.00", "12,345.68", "-0.01", "0.00", "0.50", "1.01", "1,000.00"]};
+  for (const p of Object.keys(pinned)) vals.forEach((v, i) => ok(X.formatNumber(v, p) === pinned[p][i], `AUD-063 pin: formatNumber(${v}, "${p}") is ${pinned[p][i]}, not ${X.formatNumber(v, p)}`));
+  // from 1e21 up: the value's 15 significant digits, then zeros (what Power BI prints past 15 digits is not measured here)
+  ok(X.formatNumber(1e21, '#,0') === '1,000,000,000,000,000,000,000', 'AUD-063: formatNumber(1e21, "#,0") is 1,000,000,000,000,000,000,000, not ' + X.formatNumber(1e21, '#,0'));
+  ok(X.formatNumber(1e30, '#,0') === '1,000,000,000,000,000,000,000,000,000,000', 'AUD-063: 1e30 grouped');
+  ok(X.formatNumber(-1.5e25, '#,0.00') === '-15,000,000,000,000,000,000,000,000.00', 'AUD-063: negative, two decimals: ' + X.formatNumber(-1.5e25, '#,0.00'));
+  ok(X.formatNumber(1.23456789012345678e22, '0.00') === '12345678901234600000000.00', 'AUD-063: 15 digits then zeros, no grouping: ' + X.formatNumber(1.23456789012345678e22, '0.00'));
+  ok(X.formatNumber(1e21, '#,0.0') === '1,000,000,000,000,000,000,000.0', 'AUD-063: one decimal');
+  for (const v of [1e21, 1e22, 1e30, 1e100, 1e300, 1.7976931348623157e308, -1e30, 5e25]) for (const p of Object.keys(pinned)) ok(/^-?[0-9,]+(\.[0-9]+)?$/.test(X.formatNumber(v, p)), `AUD-063: formatNumber(${v}, "${p}") has only digits, got ${X.formatNumber(v, p)}`);
+  // the preview of a 1e30 value in each number format: no "e", and the percent formats are digits followed by %
+  for (const fmt of SVGKPI.FORMATS) {
+    const d = { name: 'B', w: 100, h: 30, values: [{ id: 'a', label: 'A', kind: 'measure', measure: 'A' }], layers: [{ type: 'text', x: 0, y: 14, fill: '#fff', bind: { text: { v: 'a', fmt } } }] };
+    const url = decodeURIComponent(SVGKPI.toImageUrl(d, { A: 1e30 }).url);
+    const txt = (/<text[^>]*>([^<]*)<\/text>/.exec(url) || [])[1] || '';
+    ok(txt !== '' && !/e[+-]?\d/i.test(txt) && !/^7%$/.test(txt), `AUD-063: the 1e30 preview in format ${fmt} shows "${txt}"`);
+    if (fmt === 'p0' || fmt === 'p1') ok(/^[0-9,]{20,}(\.0)?%$/.test(txt), `AUD-063: 1e30 as ${fmt} is a long run of digits then %, got "${txt}"`);
+  }
+}
 console.log(`${checks - fails}/${checks} checks passed`);
 process.exit(fails ? 1 : 0);

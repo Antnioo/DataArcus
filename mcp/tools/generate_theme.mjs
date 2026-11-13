@@ -10,6 +10,7 @@ import { withPlan, freeName, folderFor } from '../lib/files.mjs';
 import { existingTheme } from '../lib/read-report.mjs';
 import * as Plans from '../lib/plans.mjs';
 import { writeFileNew, noteWritten } from '../lib/files.mjs';
+import { APPROVAL, NO_VALUES } from '../lib/agent-text.mjs';
 import { text, safe } from '../lib/tool-answer.mjs';
 import { planIdInput, ADDS, modelPath, pageInput, langInput, strictInputs, strictObject } from '../lib/tool-inputs.mjs';
 import { modelKey, sameModelBeforeWrite, inputsPin } from '../lib/plan-keys.mjs';
@@ -24,27 +25,27 @@ const hexOk = (v) => typeof v === 'string' && !!clampHex(v);
 export function register(server, ctx) {
   server.registerTool('generate_theme', {
     title: 'Generate a Power BI theme',
-    description: 'Makes a Power BI report theme (JSON) as the DataArcus Theme Generator does. Without an approved planId it writes nothing: it returns the design (pass it to plan_layout and create_report; create_report puts the theme in the report itself), the colours, the readability checks and a proposed planId for the theme file. With an approved planId (this answer\'s own, after approve_plan with the user\'s go; plan_layout\'s plan approves the report, not a theme file) it writes the theme to a new file inside the DataArcus folder (never over an existing one). Colours from a full palette, a brand colour and a harmony, or a preset (in that order); with path (the model) and no colours asked, from the model\'s report\'s own theme when it has one (fromReport says which; say its line in the plan). A theme is light (mode "light") unless the user asks for dark; a brand colour is used exactly as given (the first data colour and the accent), never changed for contrast: a failing readability check is said in the plan (sayInPlan).',
+    description: 'Makes a Power BI report theme (JSON) as the DataArcus Theme Generator does. ' + APPROVAL + NO_VALUES + ' Without a planId it also returns the design (pass it to plan_layout: the report then carries the theme), the colours and readability checks. With an approved planId (this answer\'s own; plan_layout\'s plan approves a report, not a theme file) it writes the theme to a new file in the DataArcus folder (never over one). Colours from a full palette, a brand colour and harmony, or a preset (in that order); with path and no colours asked, from the model\'s report\'s theme (fromReport; say its line in the plan). Light unless the user asks for dark. A brand colour is used exactly as given, never changed for contrast: a failing readability check is said in the plan (sayInPlan).',
     inputSchema: strictInputs('generate_theme', {
       name: z.string().max(60).optional().describe('Theme name; empty or blank gives "My Brand Theme"'),
       palette: strictObject('palette', { data: z.array(z.string()).length(8).describe('8 data colours, hex'),
         ui: strictObject('palette.ui', { background: z.string(), card: z.string(), text: z.string(), accent: z.string(), good: z.string().optional(), neutral: z.string().optional(), bad: z.string().optional() })
-          .describe('Page, visual (card), text and table accent colours; good/neutral/bad come from the preset when left out') }).optional(),
+          .describe('Page, card, text and table accent colours; good/neutral/bad from the preset if left out') }).optional(),
       brand: z.string().optional().describe('A brand colour (hex): 8 data colours are generated from it with the harmony'),
       harmony: z.string().optional().describe('analogous (default), complementary, triadic or mono'),
       preset: z.string().optional().describe(`A preset palette: ${Object.keys(PRESETS).join(', ')} (default DataArcus)`),
-      font: z.string().optional().describe(`One of: ${FONTS.join(', ')}. For Arabic reports: ${AR_FONTS.join(', ')}`),
+      font: z.string().optional().describe(`${FONTS.join(', ')}; Arabic: ${AR_FONTS.join(', ')}`),
       chart: strictObject('chart', { labels: z.string(), grid: z.string(), legend: z.string(), axis: z.string(), table: z.string(), look: z.string() }).partial().optional()
-        .describe(`Chart style: ${Object.entries(CHART_OPTIONS).map(([k, v]) => `${k} ${v.join('|')}`).join('; ')}. legend "Right" sits at the right in both directions. look: "glass" by default (left out), where it keeps every text readable (else plain, said in look and sayInPlan): see-through cards (background transparency, a 1-pixel light border, a soft shadow) over a soft page picture create_report draws from the theme's colours; Power BI has no blur behind a visual, so never call it blur. "auto" (or "plain"): the plain look, Power BI's own cards, when the user asks for it`),
+        .describe(`Chart style: ${Object.entries(CHART_OPTIONS).map(([k, v]) => `${k} ${v.join('|')}`).join('; ')}. legend "Right" is right in both directions. look "glass" by default, where every text stays readable (else plain, said in look and sayInPlan): see-through cards over a soft page picture; Power BI has no blur: never call it blur. "auto" (or "plain"): Power BI's own cards, when the user asks`),
       layout: strictObject('layout', { page: pageInput.optional(), radius: z.number().optional().describe('Corner radius 0-24 (default 8)'), shadow: z.boolean().optional(),
-        transparent: z.boolean().optional().describe('Transparent visuals, for a background image with the panels'), dir: z.enum(['ltr', 'rtl']).optional() }).optional()
-        .describe('Page and style choices that change the theme (text sizes grow with the page, kept within 8-60)'),
-      mode: z.enum(['light', 'dark']).optional().describe('light (default): a near-white page and white visuals; dark only when the user asks for it'),
-      pageTint: z.boolean().optional().describe('A light design\'s page is a 6% tint of the lead colour (default); false keeps the plain page. Never on a dark design or over an asked background'),
+        transparent: z.boolean().optional().describe('Transparent visuals, over a background image'), dir: z.enum(['ltr', 'rtl']).optional() }).optional()
+        .describe('Page and style choices (text sizes grow with the page, within 8-60)'),
+      mode: z.enum(['light', 'dark']).optional().describe('light (default); dark only when the user asks'),
+      pageTint: z.boolean().optional().describe('false: no 6% lead-colour tint on a light page (default tinted; never dark or over an asked background)'),
       lang: langInput,
-      themeFrom: z.string().max(200).optional().describe('With path: the report (its name, as colours.otherReports lists it) whose colours to keep, when the model has several'),
-      path: modelPath.optional().describe('The model the theme is for: when no colours are asked (no palette, brand, preset or mode) and one of its reports has its own theme, the colours start from that theme (said in sayInPlan)'),
-      folder: z.string().max(500).optional().describe('Folder for the theme file, inside the DataArcus folder (default: the DataArcus folder)'),
+      themeFrom: z.string().max(200).optional().describe('With path: the report (named as in colours.otherReports) whose colours to keep, when there are several'),
+      path: modelPath.optional().describe('The model: with no colours asked, they start from its report\'s theme, if any (sayInPlan)'),
+      folder: z.string().max(500).optional().describe('Folder for the theme file inside the DataArcus folder (default: its root)'),
       planId: planIdInput
     }), annotations: ADDS
   }, safe(async (a) => {
@@ -89,5 +90,5 @@ export function register(server, ctx) {
       if (!nothingAt(path.join(inside(a.folder || '.'), name))) throw new Error(`Nothing was written: "${name}" is already there, and it is not the file the plan named (DataArcus never writes over a file, nor under another name than the plan showed). Make the plan again (call generate_theme without planId), show it to the user and wait for their go.`);
       const made = [], f = path.join(folderFor(a.folder, made), name); writeFileNew(f, JSON.stringify(withGlassPicture(buildTheme(design, a.lang), design), null, 2), { madeDirs: made }); noteWritten(f); return f; });
     return text({ path: file, file: path.basename(file), page, colours, sayInPlan, look, ...(glass ? { glass } : {}), design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}) });
-  }));
+  }, { lang: 'given' }));
 }

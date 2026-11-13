@@ -16,16 +16,16 @@ import fs from 'node:fs';
 import { ROOT, serve, launch, flushCoverage } from './lib.mjs';
 import { oneLine, budget, osName, scrub } from '../../mcp/test-results.mjs';
 
-const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'components', 'consent', 'lang-switcher', 'theme-generator', 'theme-generator-lab', 'pbip', 'dax', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model', 'design-engine', 'gulf-calendar', 'text-align', 'theme-logo', 'github-links', 'arabic-names', 'layout-canvas', 'sp5', 'sp6', 'sp7', 'sp8', 'sp9', 'sp13', 'sp12', 'sp15', 'sp14', 'sp24', 'sp25', 'sp27', 'sp33', 'sp29', 'sp32', 'sp34', 'fn1a', 'fn1b', 'fn1i', 'sp31', 'sp35', 'sp36', 'pv2', 'dd2z', 'dd2w', 'build-page'];
+const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'components', 'consent', 'lang-switcher', 'theme-generator', 'theme-generator-lab', 'pbip', 'dax', 'layout', 'layout-lab', 'svg-kpi', 'pl300-bank', 'tmdl-model', 'design-engine', 'gulf-calendar', 'text-align', 'theme-logo', 'github-links', 'arabic-names', 'layout-canvas', 'sp5', 'sp6', 'sp7', 'sp8', 'sp9', 'sp13', 'sp12', 'sp15', 'sp14', 'sp24', 'sp25', 'sp27', 'sp33', 'sp29', 'sp32', 'sp34', 'fn1a', 'fn1b', 'fn1i', 'sp31', 'sp35', 'sp36', 'pv2', 'dd2z', 'dd2w', 'build-page', 'gulf-like-for-like'];
 // the same test on the lab page, where the generator runs on the design engine (the live page keeps the old script for now)
 const LAB = { 'theme-generator-lab': 'theme-generator', 'layout-lab': 'layout' };
 // CI's parallel jobs (B-145, owner's go 18 Oct): every suite in exactly one shard, balanced by the seconds CI measured
 // on main 5c0ad21 (18 Oct, 3 at a time): site 379 with the short ones; design-engine 292 with tools 142, components 98,
 // spacing 79, gulf-calendar 62; anchors 259 with text-align 163 and the two theme generators (99, 93)
 const SHARDS = [
-  ['site', 'consent', 'lang-switcher', 'model-health', 'dax', 'pbip', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model', 'github-links', 'arabic-names', 'layout-canvas', 'sp5', 'sp7', 'sp8', 'sp13', 'sp12', 'sp14', 'sp35', 'sp36', 'pv2', 'build-page'],
+  ['site', 'consent', 'lang-switcher', 'model-health', 'dax', 'pbip', 'layout', 'layout-lab', 'svg-kpi', 'pl300-bank', 'tmdl-model', 'github-links', 'arabic-names', 'layout-canvas', 'sp5', 'sp7', 'sp8', 'sp13', 'sp12', 'sp14', 'sp35', 'sp36', 'pv2', 'build-page'],
   ['design-engine', 'tools', 'components', 'spacing', 'gulf-calendar', 'sp6', 'sp9', 'sp15', 'sp27', 'sp29', 'sp32', 'sp34', 'fn1a', 'fn1b', 'fn1i', 'sp31'],
-  ['anchors', 'text-align', 'theme-generator', 'theme-generator-lab', 'theme-logo', 'sp24', 'sp25', 'sp33', 'dd2z', 'dd2w'],
+  ['anchors', 'text-align', 'theme-generator', 'theme-generator-lab', 'theme-logo', 'sp24', 'sp25', 'sp33', 'dd2z', 'dd2w', 'gulf-like-for-like'],
 ];
 {
   const listed = SHARDS.flat(), twice = listed.filter((n, i) => listed.indexOf(n) !== i), none = ALL.filter((n) => !listed.includes(n)), extra = listed.filter((n) => !ALL.includes(n));
@@ -42,11 +42,12 @@ const pick = args.filter((a, i) => !a.startsWith('--') && !(ji >= 0 && i === ji 
 if (shard && pick.length) { console.error('--shard runs its own suites: name no test with it'); process.exit(2); }
 if (shard) pick.push(...SHARDS[+shard[1] - 1]);
 // the slowest tests start first, so the whole run ends as early as possible
-const SLOW = ['design-engine', 'anchors', 'site', 'theme-generator', 'theme-generator-lab', 'spacing', 'tools', 'model-health', 'lang-switcher', 'pbip', 'dax', 'layout', 'layout-lab', 'consent', 'svg-kpi', 'tmdl-model', 'gulf-calendar', 'text-align', 'theme-logo', 'github-links', 'arabic-names', 'layout-canvas', 'sp5', 'sp6', 'sp7', 'sp8', 'sp9', 'sp13', 'sp12', 'sp15', 'sp14', 'sp24', 'sp25', 'sp27', 'sp33', 'sp29', 'sp32', 'sp34', 'fn1a', 'fn1b', 'fn1i', 'sp31', 'sp35', 'sp36', 'pv2', 'build-page'];
+const SLOW = ['design-engine', 'anchors', 'site', 'theme-generator', 'theme-generator-lab', 'spacing', 'tools', 'model-health', 'lang-switcher', 'pbip', 'dax', 'layout', 'layout-lab', 'consent', 'svg-kpi', 'pl300-bank', 'tmdl-model', 'gulf-calendar', 'text-align', 'theme-logo', 'github-links', 'arabic-names', 'layout-canvas', 'sp5', 'sp6', 'sp7', 'sp8', 'sp9', 'sp13', 'sp12', 'sp15', 'sp14', 'sp24', 'sp25', 'sp27', 'sp33', 'sp29', 'sp32', 'sp34', 'fn1a', 'fn1b', 'fn1i', 'sp31', 'sp35', 'sp36', 'pv2', 'build-page', 'gulf-like-for-like'];
 const run = (pick.length ? pick : ALL).slice().sort((a, b) => SLOW.indexOf(a) - SLOW.indexOf(b));
 const unknown = run.filter((n) => !ALL.includes(n));
 if (unknown.length) { console.error(`Unknown test: ${unknown.join(', ')}. Tests: ${ALL.join(', ')}`); process.exit(2); }
 
+const FILE = { 'svg-kpi': 'scripts/test-svg-kpi.mjs', 'pl300-bank': 'scripts/test-pl300-bank.mjs' };
 const server = await serve();
 const browser = await launch();
 const t00 = Date.now();
@@ -55,11 +56,12 @@ async function one(name) {
   const t0 = Date.now();
   let res;
   try {
-    if (name === 'svg-kpi') {
+    if (name === 'svg-kpi' || name === 'pl300-bank') {
+      const file = FILE[name];
       // the KPI compiler test runs in Node, no browser
-      const p = spawnSync(process.execPath, [path.join(ROOT, 'scripts/test-svg-kpi.mjs')], { encoding: 'utf8' });
+      const p = spawnSync(process.execPath, [path.join(ROOT, file)], { encoding: 'utf8' });
       const line = (p.stdout.trim().split('\n').pop() || '');
-      res = { checks: +(line.match(/\/(\d+)/) || [])[1] || 0, problems: p.status ? [line, ...p.stdout.split('\n').filter((l) => /FAIL/i.test(l)).slice(0, 10)] : [] };
+      res = { checks: +(line.match(/\/(\d+)/) || line.match(/(\d+) checks/) || [])[1] || 0, problems: p.status ? [line, ...p.stdout.split('\n').filter((l) => /FAIL/i.test(l)).slice(0, 10)] : [] };
     } else {
       res = await (await import(`./${LAB[name] || name}.mjs`)).default({ browser, url: server.url, full, ...(LAB[name] ? { page: '/tools/power-bi-theme-generator-lab.html' } : {}) });
     }
@@ -71,10 +73,13 @@ async function one(name) {
 }
 
 // a small pool: `jobs` tests at a time, results printed in the usual order when all are done
+// (SN1) each test says so as it ends ("done" lines, in the order they end: not result lines, nothing counts them); the
+// full results below are as before
 const results = {}, queue = run.slice();
-await Promise.all(Array.from({ length: Math.min(jobs, queue.length) }, async () => { while (queue.length) { const n = queue.shift(); results[n] = await one(n); } }));
+let ended = 0;
+await Promise.all(Array.from({ length: Math.min(jobs, queue.length) }, async () => { while (queue.length) { const n = queue.shift(); results[n] = await one(n); const r = results[n]; console.log(`done  ${n} ${r.problems.length || !(r.checks > 0) ? 'FAIL' : 'PASS'} ${r.secs}s (${++ended} of ${run.length})`); } }));
 let failed = 0;
-const spend = budget(), FILE = { 'svg-kpi': 'scripts/test-svg-kpi.mjs' };
+const spend = budget();
 if (logDir) fs.mkdirSync(logDir, { recursive: true });
 for (const name of ALL.filter((n) => results[n])) {
   const res = results[name];

@@ -19,8 +19,9 @@ Moved here unchanged by A1 (0.3.1, 25 Oct) from `mcp/CLAUDE.md` ("Tests"); its s
   (`if (part('id')) {`) listed in exactly one of `SHARDS`; a part that reads what an earlier part wrote goes in
   `TOGETHER` with it. The run fails otherwise. To rebalance: `DA_PART_TIMES=1 node test.mjs` prints each part's
   seconds and reports (G-13 validates about 2 s a report). The website: `run-all.mjs --shard k/3`, `SHARDS` there.
-- macOS (CI2, 4 Nov): the same 5 plan shards in 3 jobs (shards 0 | 2, 3 | 1, 4 in turn, each its own log and manifest) on
-  `macos-15-intel`, the standard Intel runner: the arm64 pool (`macos-latest`) dropped shards unqueued for capacity.
+- macOS (CI2, 4 Nov; CI3, 12 Nov): the same 5 plan shards, one job each (each its own log and manifest; 3 jobs of two
+  shards ran into the 40 minutes on a slow runner), on `macos-15-intel`, the standard Intel runner: the arm64 pool
+  (`macos-latest`) dropped shards unqueued for capacity.
 - Every script in `npm test` ends with exactly one result line, `PASS  <name>  <N> checks` (or `FAIL  <name>  ...` /
   `SKIP  <name>  ...`), as `scripts/ci-sum.mjs` counts them; `scripts/check-result-lines.mjs` (CI) names a script without one.
 - Failures (A2, 0.3.1): the runner shows each suite's result line; a failing suite then prints one line,
@@ -36,10 +37,10 @@ Moved here unchanged by A1 (0.3.1, 25 Oct) from `mcp/CLAUDE.md` ("Tests"); its s
   folder: each suite's seconds, status, checks and cause, and whether the run finished) must be there, finished, and
   agree with the log; a suite that timed out, crashed or printed 0 checks fails the sum. It prints the total checks per
   OS and each shard's seconds. Each problem and each `::error` annotation is the one-line form above.
-- The builder's local loop (SPD, Codex #9): while working, the suites of the change only, `npm test -- <area>` or
-  `npm test -- --affected` (seconds to minutes); at the end, after the last code commit, one full run `npm test --
-  --keep-going` (30-40 min, in the background, waited on to its last line, "run-tests: N suites passed"), then CI on
-  the branch. The rule is unchanged: CI and the final gate run every suite; a partial run never stands for the full one.
+- The builder's loop (a cloud session): while working, the suites of the change only, `npm test -- <area>` or
+  `npm test -- --affected` (seconds to minutes); at the end, after the last code commit, CI on the branch
+  (`gh workflow run tests.yml --ref <branch>`, waited on to its last line); no full local run. The rule is unchanged:
+  CI and the final gate run every suite; a partial run never stands for the full one.
 - `npm test -- --affected[=<ref>]` is for local runs only: it runs the suites the files changed since `<ref>` touch
   (default tests.json `affected.base`; `git diff --name-only`, new files too), printing the reason for each pick
   ("mcp/lib/twin-write.mjs -> area twin: ..."); a safety-infrastructure path, an unmapped engine or an unknown path picks

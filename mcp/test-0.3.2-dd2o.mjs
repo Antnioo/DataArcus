@@ -5,7 +5,7 @@
 //   U1-U52   the module on 13 pairs (the contract probe's 9, then a zero-width box apart, a box exactly 0.5 px over,
 //            touching corners, two zero-size boxes at one point): overlaps and overlapArea, each on both box shapes
 //            ({ x, y, width, height } and { x, y, w, h }), each answer pinned (52 checks)
-//   P1-P26   the parity: the five old copies, run from the base's source (git show ae8c173: each definition read from the
+//   P1-P26   the parity: the five old copies, run from the base's source (saved in mcp/fixtures/hk1/dd2o, ae8c173's bytes: each definition read from the
 //            file as scripts/contracts-probe.mjs reads a nested name), and the one place on every pair: one answer per
 //            pair per question. overlap: twin-visuals overlaps and redesign-grid overlap (base), box-overlap overlaps on
 //            both shapes, twin-visuals overlaps and redesign-grid overlap now; overlap-area: twin-geometry overlapOf,
@@ -19,7 +19,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execFileSync } from 'node:child_process';
 import { overlaps, overlapArea } from './lib/box-overlap.mjs';
 import * as TV from './lib/twin-visuals.mjs';
 import * as RG from './lib/redesign-grid.mjs';
@@ -57,9 +56,9 @@ BOXES.forEach((x) => [['{width, height}', wh], ['{w, h}', xywh]].forEach(([shape
 }));
 
 // ---------- P: the old copies (the base's source) and the one place, one answer per input per question ----------
-const BASE = process.env.DD2O_BASE || 'ae8c173';
+// (HK1, 0.3.3) the base's files are saved copies (mcp/fixtures/hk1/dd2o, the commit ae8c173's bytes), not git reads
 const baseSrc = new Map();
-const baseOf = (f) => { if (!baseSrc.has(f)) baseSrc.set(f, execFileSync('git', ['show', `${BASE}:${f}`], { cwd: REPO, maxBuffer: 1 << 26 }).toString('utf8').replace(/\r\n/g, '\n')); return baseSrc.get(f); };
+const baseOf = (f) => { if (!baseSrc.has(f)) baseSrc.set(f, fs.readFileSync(path.join(HERE, 'fixtures', 'hk1', 'dd2o', ...f.split('/')), 'utf8').replace(/\r\n/g, '\n')); return baseSrc.get(f); };
 // one definition `const name = ...;` read from a source (as test-0.3.2-dd2p.mjs and scripts/contracts-probe.mjs read a
 // nested name): from its name to the ';' where its brackets close, the one inside `within` when given
 function definition(src, name, within) {

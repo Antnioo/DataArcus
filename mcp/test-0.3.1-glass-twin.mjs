@@ -141,7 +141,7 @@ try {
     for (let i = 0; i < 6 && !pl.err; i++) {
       const j = pl.j || {}, B = j.bilingual, more = {};
       if (B && !args.arabicTerms && B.terminology && (B.terminology.sheet || []).length) { const t = {}; [...new Set(B.terminology.sheet.map((x) => x.field).filter(Boolean))].forEach((f, k) => { t[f] = `حقل ${k + 1}`; }); more.arabicTerms = t; }
-      else if (B && !args.arabicTexts && (B.texts || []).some((x) => x.text != null && x.arabic == null && !x.field)) { const at = {}; let k = 0; (B.texts || []).filter((x) => x.text != null && x.arabic == null && !x.field).forEach((x) => { at[x.text] = x.draftArabic || (/\{1\}/.test(x.text) ? 'أعلى {1} من {2}: نص' : `نص ${++k}`); }); more.arabicTexts = at; }
+      else if (B && !args.arabicTexts && (B.texts || []).some((x) => x.text != null && x.arabic == null && !x.field)) { const at = {}; let k = 0; (B.texts || []).filter((x) => x.text != null && x.arabic == null && !x.field).forEach((x) => { at[x.text] = x.draftArabic || (/\{1\}/.test(x.text) ? 'أعلى {1} من أصل {2}: نص' : `نص ${++k}`); }); more.arabicTexts = at; }
       if (!Object.keys(more).length) break;
       args = Object.assign(args, more); pl = await s.call('plan_layout', args);
     }

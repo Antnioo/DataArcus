@@ -4,14 +4,19 @@ The current release only, capped (60 lines, 3,200 characters: `scripts/check-age
 [CLAUDE.md, "Keeping the memory"](CLAUDE.md#keeping-the-memory). Each job: `mcp/work/<ID>.md`, its `## Summary`
 first. Finished entries: [work/archive/](work/archive/README.md).
 
-## Where it stands (0.3.2)
-- 0.3.1 shipped: main b79a7ed6 (#104, #114, #115); each job's note in `mcp/work/<ID>.md`.
-- `integration/0.3.2`: builders branch from it, push only their branch; the reviewer merges; the owner merges to main.
-- 0.3.2: TK1, DP1, OP1, HR1-HR2 (answers uncut), HM1-HM2, R032 (main in, version 0.3.2, its own
-  CHANGELOG section), DT1 (texts order), ED1 (em dashes), LV1 (label, value apart), VC1-VC2 (a turned visual calculation said), TT1 (twin tables), SP1-16, SP18-44 (the split), CI1 (macOS where the reviewer merges), PK1 (redesign patch kinds), GM1 (Gulf measures), NC1 (the number check, layer 1), TR1 (tables to the edge), PH1 (path compares), AN1 (Arabic model names), MD1 (MODULES.md rows, check-modules), SP40 (twin measures), SP42 (the two readers), CL1 (the contract ledger, `docs/CONTRACTS.md`), DD1C-DD1C2 (one frame rule), ST1 (`?v=` stamps by build:min), CI2 (macOS on Intel), DD1A-DD2Z (28 families in one place), DD2W (one toast and copy for the pages), AR2 (نموذجين), TN2 (عام only first), SM1-SM2 (security mutants, 88), FL1 (sp44 flake), PF1-PF3 (chosen measure, twin time, cards, field list), PB1 (property tests), AR3 (R&D, lab/rd/ar3), AR4 (several models said in Arabic), PV2 (preview label order), AP1-AP2 (the page names and says all it writes), FN1A-FN1J (27 functions in steps), PL1 (options in plain words), HJ1 (Hijri lines), LG1 (lang on the readers), TP1 (tooltip pages drawn), B389 (gitleaks cached), BF1 (/build/, unlisted), RV1 (errors capped, the promises true), BF2-BF3 (/build/'s Fuel panel, its sentence exact), B387 (eslint 10.14), WN1 (Codex's Windows four), PC1 (checked date), RL032 (CHANGELOG).
+## Where it stands (0.3.3)
+- 0.3.2 is on main (#117, f3c1b7e1; the list in `CHANGELOG.md`).
+- `integration/0.3.3`: builders branch from it, push only their branch; the reviewer merges; the owner merges to main.
+- Merged first: BA1 to FB4, as written in [the archive](work/archive/WORK-2026-11-12.md).
+- DB2 (no plan id without a name). LG2 (B-419, `work/LG2.md`). MH1.
+- AT1 (B-429, B-449): Arabic title «من أصل», header bracket, 3 Arabic model-path errors (`work/AT1.md`).
+- TR1 (B-439; `TR1`), TR2 (`TR2`) merged.
+- LR3 (P-01, P-08: a Stop hook; `LR3`). HX1 (`HX1`). HX2 (Impact check; `HX2`). TL1 (`TL1`). OX1 (`OX1`). IX1 (`IX1`). IX2 (`IX2`). SN1 (`SN1`). OX2. IX4. LX1 (`LX1`). AU2. SN3 (`SN3`). AU1 (`AU1`). SN4 (`SN4`). WF3 (`WF3`). RX1 (`RX1`). AR7 (`AR7`). TB3 (`TB3`). CI3 (`CI3`). SW1 (`SW1`: first merged line archived).
 
+- LF1 (AUD-074, AUD-075; `work/LF1.md`): DONE on fix/0.3.3-lf1 once its CI line is in the note, for the reviewer.
+- RL33: checklist `work/RL33-RELEASE.md`.
 ## Next step
-1. The PR to main, the owner's Windows sitting and click. 2. After the publish: the download lines (RL032L).
+1. PR #121 (RL032L, download lines) is on main. 2. The reviewer merges the DONE jobs above, one check each.
 
 ## Open decisions (the owner's; no work before his go)
 - L6 "Seen" 1: Arabic DA measures for the twin and the bilingual report's Arabic half.
