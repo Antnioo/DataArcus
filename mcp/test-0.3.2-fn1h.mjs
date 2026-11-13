@@ -10,6 +10,7 @@ import './test-env.mjs';
 // pass); FN1H_DUMP=<file> writes the texts compared. The writer's random ids come from SP1's one fixed seed.
 // (0.3.3 TL1, D-1111-14: every tool's texts in tools/list were shortened on purpose) B1's pin alone was moved, by hand, to
 // check_model_health's new entry (5,597 -> 4,626 characters); its schema is pinned against the base by test-0.3.3-tl1.mjs.
+// (0.3.3 TB3, D-1112-06: the texts shortened again on purpose) B1's pin moved by hand once more, 4,626 -> 4,261.
 //   A1  create_report's answers;  B1  check_model_health in the tool list;  B2  its answers and refusals;
 //   C1  the writer's files and results;  C2  the builds reach the visual's parts (title, logo, text, Top N, detail,
 //   subtitles, fitted titles, "No data", the panel)
