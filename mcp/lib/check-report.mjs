@@ -13,7 +13,7 @@ import { createRequire } from 'node:module';
 import { loadModel, ROOT, visible, readCapped } from './model.mjs';
 import { DAX_MEASURE, SCRIPT_SUFFIX } from './dax-functions.mjs';   // (0.3.1 L6: the names the DAX function library gives its measures, its script's name)
 import { AIM } from './scope.mjs';
-import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, isFile, isDir, walk, locate, inventory, diskSource, isCustom } from './read-report.mjs';
+import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, isFile, isDir, walk, linksSaid, locate, inventory, diskSource, reading, isCustom, jsonOpt } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
 import { fieldParametersOf, titleProblems } from './metric-switcher.mjs';
 import { NO_DIRECT_EDITS } from './agent-text.mjs';
@@ -21,6 +21,7 @@ import { COPY_TAG } from './arabic-twin.mjs';
 import { KNOWN_TYPES, countsOf, mixedOf, boldItalicOf } from './text-format.mjs';   // (0.3.1 CS1: FORMAT_MIXED)
 import { langOfTexts, pageLanguages } from './check-language.mjs';   // (0.3.2 SP20: each page's language)
 import { sameQuestion } from './same-question.mjs';   // (0.3.2 NC1: the number check, layer 1, option against)
+import { impactCheck, likeForLike, readOnModel, briefCheck } from './impact.mjs';   // (0.3.3 HX2: the Impact check, option againstModel; IX2: likeForLike; OX2: briefCheck)
 import { scrub, rel, relOut, cleanPath, tidy } from './check-redact.mjs';   // (0.3.2 SP41: the one redaction boundary)
 import { outsideRel } from './path-rules.mjs';   // (0.3.2 WN1, F01: the one containment rule)
 import { schemaCheck, VALIDATOR_VERSION } from './check-schema.mjs';   // (0.3.2 SP41: the bundled schemas)
@@ -106,7 +107,8 @@ export function fixRoutesOf(B, loc) {
 const fixWithOf = (B, PL, f) => (B.kind === 'copy' ? (f.page && PL.pages[f.page.id] && PL.pages[f.page.id] !== 'ar' && PL.pages[f.page.id] !== 'he' ? 'original' : 'arabicCopy') : B.kind === 'twin' ? 'arabicCopy' : B.kind === 'report' ? 'newPlan' : null);
 
 // ---- the tool ----
-// p: a path inside the working folder. opts: { checks, lang ('auto'|'en'|'ar'), maxFindings (1-200, default 60) }
+// p: a path inside the working folder. opts: { checks, lang ('auto'|'en'|'ar'), maxFindings (1-200, default 60), against,
+// againstModel, likeForLike ({ year, country }), brief ([{ id, measure, by }]) }
 export async function checkReport(p, opts) {
   // (0.3.2 FN1E) the steps, in this order, on one context: the reading, the validator, the schemas and rules, the
   // measures not in the model yet, mixed fonts, instructions, field parameters, what was not judged, the findings, the
@@ -129,14 +131,34 @@ function readStep(p, opts) {
   const loc = locate(p, 'check_report');
   // (0.3.2 NC1, RD2's brief g) against: the original; the copy (p) compared with it visual by visual, first, so a
   // refusal (another model, outside the folder, a link, PBIR-Legacy) comes before any other work
-  const same = o.against != null ? sameQuestion(p, o.against) : null;
-  const sk = { big: [], deep: 0 };
+  // (0.3.3 LX1, HX2 "Seen") one reading per report this call reads: sameQuestion, the Impact check and the checks share it
+  const readings = new Map(), readingOf = (q) => { if (!readings.has(q)) readings.set(q, reading(q, 'check_report')); return readings.get(q); };
+  const same = o.against != null ? sameQuestion(p, o.against, { readingOf }) : null;
+  const pr = readings.get(p) || null, sk = pr ? pr.sk : { big: [], deep: 0 };
   // the report's files, walked once (round 22b, item 6: three walks counted a folder past the depth three times)
   const reportFiles = walk(loc.reportDir, [], 20000, 0, sk);
   // a file over the limit anywhere in the report: Microsoft's validator reads every file whole, so it is not run
   const scan = reportFiles.filter((f) => { try { return fs.lstatSync(f).size > REPORT_LIMITS.file; } catch (e) { return false; } });
-  const inv = inventory(diskSource(loc, sk), path.basename(loc.reportDir));
+  const src = pr ? pr.src : diskSource(loc, sk), inv = pr ? pr.inv : inventory(src, path.basename(loc.reportDir));
+  // (0.3.3 OX2) the model the report names, loaded once a call (a memo by path) for every section and step that reads it
+  const models = new Map();
+  const modelAt = (mp) => { if (!models.has(mp)) { try { models.set(mp, { m: loadModel(mp) }); } catch (e) { models.set(mp, { e }); } } const r = models.get(mp); if (r.e) throw r.e; return r.m; };
+  // (0.3.3 HX2) againstModel: the report read on an earlier model too; its refusals come before the checks as well
+  // (0.3.3 IX2) likeForLike: the same report on its own model, read once for both sections
+  // (0.3.3 OX2) brief: the same reading again (check_report's own, above); asked for, it is refused as they are
+  const wantBrief = o.brief != null || !(o.checks && o.checks.length), shared = { loc, src, inv, sk, modelAt };
+  const asked = o.againstModel != null ? 'againstModel' : o.likeForLike != null ? 'likeForLike' : o.brief != null ? 'brief' : null;
+  let onModel = asked ? readOnModel(p, asked, shared) : null, briefNote = null;
+  if (!onModel && wantBrief) { try { onModel = readOnModel(p, 'brief', shared); } catch (e) { briefNote = e; } }
+  const impactSection = o.againstModel != null ? impactCheck(p, o.against, o.againstModel, onModel, o.against != null ? readingOf(o.against) : null) : null;
+  const lflSection = o.likeForLike != null ? likeForLike(p, o.likeForLike, onModel) : null;
+  const briefSection = wantBrief && onModel ? briefCheck(onModel, o.brief != null ? o.brief : null) : null;
   const { R, versions, texts, customVisuals, unreadable, bookmarks } = rulesInput(inv);
+  // (0.3.3 RX1) bookmarks.json for the two bookmark rules: the ids it lists in order, a group's children in their
+  // place; read here, quietly (a file that is missing or not readable JSON gives no list and no new note), so the
+  // inventory read_report shares keeps its shape
+  { const bl = jsonOpt(src, 'definition/bookmarks/bookmarks.json');
+    R.bookmarkList = bl && Array.isArray(bl.items) ? { file: 'definition/bookmarks/bookmarks.json', ids: bl.items.flatMap((x) => (x && Array.isArray(x.children) ? x.children.filter((n) => typeof n === 'string') : x && typeof x.name === 'string' ? [x.name] : [])) } : null; }
   const all = [], notChecked = [];
   const add = (f) => all.push(f);
   // the reading direction: right to left when most letters of the titles, text boxes and page names are Arabic or Hebrew
@@ -157,7 +179,7 @@ function readStep(p, opts) {
   const isRtl = (l) => l === 'ar' || l === 'he';
   const mixed = PLg && new Set(Object.values(PLg.pages).map(isRtl)).size > 1;
   const B = builtByOf(loc, PL), routes = fixRoutesOf(B, loc);
-  return { checks, cap, loc, same, sk, reportFiles, scan, inv, R, versions, texts, customVisuals, unreadable, bookmarks, all, notChecked, add, lang, dir, PL, PLg, isRtl, mixed, B, routes };
+  return { checks, cap, loc, same, impactSection, lflSection, briefSection, briefNote, modelAt, sk, reportFiles, scan, inv, R, versions, texts, customVisuals, unreadable, bookmarks, all, notChecked, add, lang, dir, PL, PLg, isRtl, mixed, B, routes };
 }
 // (FN1E) Microsoft's validator
 async function validatorStep(cr) {
@@ -168,7 +190,7 @@ async function validatorStep(cr) {
   // the report (counted by the reading layer's walk) it is not run, as for a file that is too large)
   const links = sk.links || [];
   if (checks.includes('validator') && scan.length) Object.assign(validator, { why: `not run: ${scan.length} file${scan.length === 1 ? ' is' : 's are'} over the ${mbOf(REPORT_LIMITS.file)} DataArcus reads, and the validator reads every file whole (see notChecked)` });
-  else if (checks.includes('validator') && links.length) Object.assign(validator, { why: `not run: the report holds ${links.length} link${links.length === 1 ? '' : 's'} (a symbolic link or a junction), which DataArcus never follows and the validator would (see notChecked)` });
+  else if (checks.includes('validator') && links.length) Object.assign(validator, { why: `not run: the report holds ${links.length} link${links.length === 1 ? '' : 's'} (a symbolic link or a junction), ${linksSaid(sk).text}, which DataArcus never follows and the validator would (see notChecked)` });
   else if (checks.includes('validator')) {
     try {
       const { runReportValidation, getMetadataProvider } = await import('@microsoft/powerbi-report-authoring-cli');
@@ -220,7 +242,7 @@ function pendingStep(cr) {
   if (checks.includes('navigation')) {
     let tables = null;
     const daxDeclared = daxScriptMeasures(loc), isDax = (ms) => DAX_MEASURE.test(String(ms.Property)) && daxDeclared.has(ms.Expression.SourceRef.Entity + '\u0000' + ms.Property);
-    try { const pbir = readJson(path.join(loc.reportDir, 'definition.pbir')), by = pbir && pbir.datasetReference && pbir.datasetReference.byPath && pbir.datasetReference.byPath.path; if (by) tables = loadModel(path.resolve(loc.reportDir, String(by))).tables; } catch (e) { tables = null; }
+    try { const pbir = readJson(path.join(loc.reportDir, 'definition.pbir')), by = pbir && pbir.datasetReference && pbir.datasetReference.byPath && pbir.datasetReference.byPath.path; if (by) tables = cr.modelAt(path.resolve(loc.reportDir, String(by))).tables; } catch (e) { tables = null; }
     if (tables) R.visuals.filter((x) => x.type === 'image').forEach((x) => {
       const im = arr((((x.json || {}).visual || {}).objects || {}).image).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e.properties || {}), {});
       const ms = [im.sourceUrl, im.sourceField].map((p) => p && p.expr && p.expr.Measure).find((m) => m && m.Expression && m.Expression.SourceRef && !m.Expression.SourceRef.Schema);
@@ -306,7 +328,7 @@ function fieldParametersStep(cr) {
     if (used.length) {
       let tm = null;
       try { const pbir = readJson(path.join(loc.reportDir, 'definition.pbir')), by = pbir && pbir.datasetReference && pbir.datasetReference.byPath && pbir.datasetReference.byPath.path;
-        if (by) { const t = loadModel(path.resolve(loc.reportDir, String(by))).tmsl; tm = (t && t.model) || t; } } catch (e) { tm = null; }
+        if (by) { const t = cr.modelAt(path.resolve(loc.reportDir, String(by))).tmsl; tm = (t && t.model) || t; } } catch (e) { tm = null; }
       const tables = [...new Set(used.map((u) => u.table))], have = tm ? new Set((tm.tables || []).map((t) => t.name)) : null, missing = have ? tables.filter((t) => !have.has(t)) : [];
       const tp = tm ? titleProblems(tm) : { problems: [] };
       tp.problems.forEach((x) => add({ origin: 'rule', rule: 'FIELD_PARAMETER_TITLE', severity: 'warning', file: null, page: null, visual: null,
@@ -325,7 +347,9 @@ function fieldParametersStep(cr) {
 }
 // (FN1E) what the tool could not judge
 function notCheckedStep(cr) {
-  const { checks, sk, R, customVisuals, unreadable, notChecked, lang, dir, mixed, links } = cr;
+  const { checks, sk, R, customVisuals, unreadable, notChecked, lang, dir, mixed, links, briefNote } = cr;
+  // (0.3.3 OX2) the brief check could not read the report's model: said, never silently left out
+  if (briefNote) notChecked.push({ rule: 'briefCheck', why: /names no model folder/.test(String(briefNote.message)) ? 'whether each chart\'s columns can move its number is judged on the report\'s own model, and its definition.pbir names no model folder (byPath): not judged' : 'whether each chart\'s columns can move its number is judged on the report\'s own model, which could not be read: not judged' });
   // what the tool could not judge
   if (dir === 'rtl' || mixed) notChecked.push({ rule: 'RTL_MIRROR (tables)', why: 'which column a right-to-left table puts first is the report\'s choice: Power BI writes the total row\'s "Total" only in a first column of text, so the category at the left can be right (measured 2026-10-04); a hidden first column (width 0) with a row-label measure at the right that gives the row\'s name and «الإجمالي» on the total row is intentional (DataArcus\'s own Arabic tables since 8 Oct 2026, measured in Desktop 2.158.1304), not a finding; not judged' });
   else notChecked.push({ rule: 'RTL_MIRROR', why: `the report reads left to right (lang ${lang}); pass lang "ar" to apply the right-to-left rules` });
@@ -334,7 +358,7 @@ function notCheckedStep(cr) {
   notChecked.push({ rule: 'DataArcus layout rules', why: 'the header, filter rail and panel sizes describe DataArcus\'s own layouts, not Power BI: not run on any report' });
   if (customVisuals) notChecked.push({ rule: 'custom visuals', why: `${customVisuals} visual${customVisuals === 1 ? ' is' : 's are'} not a Power BI core visual: only the validator checks them` });
   if (sk.big.length) notChecked.push({ rule: 'files too large', why: `${sk.big.length} file${sk.big.length === 1 ? ' was' : 's were'} not read: over the ${mbOf(REPORT_LIMITS.file)} DataArcus reads (the largest report files are well under 1 MB): ${sk.big.slice(0, 5).map((b) => `${cleanPath(b.file)} (${mbOf(b.size)})`).join('; ')}` });
-  if (links.length) notChecked.push({ rule: 'links', why: `${links.length} file${links.length === 1 ? ' or folder is a link' : 's or folders are links'} (symbolic links or junctions) inside the report: never followed, not read; Microsoft's validator was not run because it would follow ${links.length === 1 ? 'it' : 'them'}` });
+  if (links.length) notChecked.push({ rule: 'links', why: `${links.length} file${links.length === 1 ? ' or folder is a link' : 's or folders are links'} (symbolic links or junctions) inside the report, ${linksSaid(sk).text}: never followed, not read; Microsoft's validator was not run because it would follow ${links.length === 1 ? 'it' : 'them'}` });
   if (sk.deep) notChecked.push({ rule: 'folders too deep', why: `folders deeper than ${REPORT_LIMITS.depth} levels inside the report were not read (a PBIR report is 6 levels deep): ${sk.deep} cut` });
   if (unreadable) notChecked.push({ rule: 'unreadable files', why: `${unreadable} file${unreadable === 1 ? '' : 's'} could not be read as JSON` });
   const sizes = [...new Set(R.pages.filter((p) => !p.tooltip && p.w > 0 && p.h > 0).map((p) => `${p.w}x${p.h}`))].filter((s) => !['1920x1080', '1280x720', '960x720', '640x360', '3840x2160'].includes(s));
@@ -367,7 +391,7 @@ function lintStep(cr) {
     let model = null, modelNote = null;
     try {
       const pbir = readJson(path.join(loc.reportDir, 'definition.pbir')), by = pbir && pbir.datasetReference && pbir.datasetReference.byPath && pbir.datasetReference.byPath.path;
-      if (by) model = loadModel(path.resolve(loc.reportDir, String(by))).tables; else modelNote = 'the report names no model folder (definition.pbir byPath): column types and sort-by columns are unknown';
+      if (by) model = cr.modelAt(path.resolve(loc.reportDir, String(by))).tables; else modelNote = 'the report names no model folder (definition.pbir byPath): column types and sort-by columns are unknown';
     } catch (e) { modelNote = 'the model the report names could not be read: column types and sort-by columns are unknown'; }
     // (A4-2: a file the reading layer cannot read never takes check_report's answer down with the lint)
     let L = null;
@@ -375,19 +399,22 @@ function lintStep(cr) {
     catch (e) { notChecked.push({ rule: 'lint', why: 'the design lint could not read this report (a file has a shape the reading layer did not expect); the validator and the rules ran' }); }
     // (A4-7: the lint's findings carry the same fields as the others: origin, impact, level on the common scale, source)
     if (L) lintSection = Object.assign({}, L, { findings: L.findings.slice(0, cap).map((f) => Object.assign({ origin: 'lint' }, f, { level: f.severity === 'note' ? 'note' : 'warning', impact: 'dataarcusRule', source: 'DataArcus design lint (0.2.9 item 11): a finding marked guess comes from names and types, not data', why: visible(f.why), visual: f.visual == null ? null : visible(f.visual) })) },
-      L.findings.length > cap ? { truncated: true } : {}, modelNote ? { modelNote } : {});
+      L.findings.length > cap ? { notListed: L.findings.length - cap } : {}, modelNote ? { modelNote } : {});
   }
   cr.lintSection = lintSection;
 }
 // (FN1E) the answer, cut to fit
 function answerStep(cr) {
-  const { checks, same, sk, R, versions, unreadable, bookmarks, all, notChecked, lang, mixed, PLg, B, routes, validator, schemas, ruled, suspicious, fieldParameters, byImpact, byRule, findings, lintSection } = cr;
+  const { checks, same, impactSection, lflSection, briefSection, sk, R, versions, unreadable, bookmarks, all, notChecked, lang, mixed, PLg, B, routes, validator, schemas, ruled, suspicious, fieldParameters, byImpact, byRule, findings, lintSection } = cr;
   const answer = {
     report: { pages: R.pages.filter((p) => !p.tooltip).length, tooltipPages: R.pages.filter((p) => p.tooltip).length, visuals: R.visuals.length, bookmarks, pageNames: R.pages.map((p) => p.name), schemaVersions: versions, builtBy: B.said },
     lang, ...(mixed ? { pageLanguages: pageLanguagesOut(PLg) } : {}), validator, schemas, rulesRun: ruled.ran,
     impact: { summary: impactSummary(byImpact, { validator, unread: sk.big.length + sk.deep + unreadable + (sk.links || []).length, desktopOpensErrors: all.filter((f) => f.impact === 'desktopOpens' && f.severity === 'error').length, known: all.filter((f) => f.known).length, checks }), kinds: Object.fromEntries(Object.entries(IMPACT).map(([k, means]) => [k, Object.assign({ count: byImpact[k], means }, k === 'desktopOpens' ? { measured: `measured: ${DESKTOP_OPENS_SOURCE.file}, ${DESKTOP_OPENS_SOURCE.date}, Desktop ${DESKTOP_OPENS_SOURCE.desktop}, "${DESKTOP_OPENS_SOURCE.section}"` } : k === 'mayLook' ? { measured: Object.fromEntries(Object.entries(DESKTOP_DRAWS).map(([c, x]) => [c, x.evidence])) } : k === 'openedInDesktop' ? { measured: Object.fromEntries(Object.entries(DESKTOP_OPENED).map(([c, x]) => [c, x.evidence])) } : {})])),
       tellUser: 'Tell the user the summary and, for each kind with findings, its sentence: what only strict validation or Fabric would refuse does not break a report in Desktop, nor does a mayLook warning (Desktop was measured to draw it), nor an openedInDesktop finding (Desktop was measured to open reports with it); check_report never opens Desktop, so say what ran, not that the report opens. Each finding\'s "impact" is its kind; its code is Microsoft\'s or DataArcus\'s, unchanged.' },
     ...(same ? { sameQuestion: same } : {}),
+    ...(impactSection ? { impactCheck: impactSection } : {}),
+    ...(lflSection ? { likeForLike: lflSection } : {}),
+    ...(briefSection ? { briefCheck: briefSection } : {}),
     findings, notChecked,
     ...(fieldParameters ? { fieldParameters } : {}),
     ...(lintSection ? { lint: lintSection } : {}),
@@ -405,9 +432,16 @@ function answerStep(cr) {
   const size = () => JSON.stringify(answer).length;
   while (size() > ANSWER_CAP && answer.findings.length > 1) { answer.findings = answer.findings.slice(0, Math.max(1, Math.floor(answer.findings.length * 0.7))); answer.truncated = true; }
   if (answer.findings.length < all.length) Object.assign(answer, { findingsNotListed: all.length - answer.findings.length, findingsHow: 'counts.byRule counts every finding. For the ones not listed, call check_report again with checks: ["<one check>"], one kind at a time.' });
-  while (size() > ANSWER_CAP && answer.lint && answer.lint.findings.length) { answer.lint.findings = answer.lint.findings.slice(0, Math.floor(answer.lint.findings.length * 0.7)); answer.lint.truncated = true; }
+  while (size() > ANSWER_CAP && answer.lint && answer.lint.findings.length) { const lt = answer.lint, all = lt.findings.length + (lt.notListed || 0); lt.findings = lt.findings.slice(0, Math.floor(lt.findings.length * 0.7)); lt.notListed = all - lt.findings.length; }
   // (PF3) the field parameter list, halved (its "more" kept true) when the answer is still over the cap
   while (size() > ANSWER_CAP && answer.fieldParameters && answer.fieldParameters.parameters.length > 1) { const fp = answer.fieldParameters, keep = Math.floor(fp.parameters.length / 2); fp.more = (fp.more || 0) + fp.parameters.length - keep; fp.parameters = fp.parameters.slice(0, keep); }
+  // (0.3.3 HX2) the Impact check's list, cut last but one: its counts kept, the cut said
+  while (size() > ANSWER_CAP && answer.impactCheck && answer.impactCheck.differ.length > 1) { const ic = answer.impactCheck, all = ic.differ.length + (ic.notListed || 0); ic.differ = ic.differ.slice(0, Math.floor(ic.differ.length * 0.7)); ic.notListed = all - ic.differ.length; }
+  // (0.3.3 IX2) like for like's list, cut as the Impact check's is
+  while (size() > ANSWER_CAP && answer.likeForLike && answer.likeForLike.list.length > 1) { const lf = answer.likeForLike; lf.list = lf.list.slice(0, Math.floor(lf.list.length * 0.7)); lf.notListed = lf.compared - lf.list.length; }
+  // (0.3.3 OX2) the brief check's lists, cut as the Impact check's are: the counts kept
+  while (size() > ANSWER_CAP && answer.briefCheck && answer.briefCheck.visuals.findings.length > 1) { const bv = answer.briefCheck.visuals; bv.findings = bv.findings.slice(0, Math.floor(bv.findings.length * 0.7)); bv.notListed = bv.oneValue - bv.findings.length; }
+  while (size() > ANSWER_CAP && answer.briefCheck && answer.briefCheck.questions && answer.briefCheck.questions.results.length > 1) { const bq = answer.briefCheck.questions; bq.results = bq.results.slice(0, Math.floor(bq.results.length * 0.7)); bq.notListed = bq.questions - bq.results.length; }
   if (size() > ANSWER_CAP && answer.suspiciousNames) { answer.suspiciousNames.names = answer.suspiciousNames.names.slice(0, 5); }
   if (size() > ANSWER_CAP) answer.notChecked = answer.notChecked.slice(0, 10);
   return answer;

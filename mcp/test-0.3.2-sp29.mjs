@@ -4,7 +4,7 @@ import './test-env.mjs';
 // exactly what they gave on the base (integration/0.3.2 at 39c46bb, before they moved to assets/js/design-metrics.js
 // and assets/js/design-state.js). Recorded on the base in fixtures/sp29-design.json (sha256 and length of each result);
 // SP29_RECORD=1 records them again (only on the base, never to make a run pass). B1 compares the same results with the
-// base engine itself (git show SP29_BASE, default 39c46bb, its four files) in the same process.
+// base engine itself (its four files saved in mcp/fixtures/hk1/sp29, 39c46bb's bytes) in the same process.
 //   D1-D12  a design's page, sizes, slots (every option), report pages, panel, rail fit, text sizes, theme, background
 //   G1      the geometry on 400 seeded random layouts;  S1  repairState on 20 broken saves, upgrade, fresh, SCHEMA
 //   I1      imageSize on made-up bytes;  B1  the base engine, live;  K1  the facade's names
@@ -15,7 +15,6 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
@@ -27,12 +26,25 @@ const sha = (b) => crypto.createHash('sha256').update(b).digest('hex').slice(0, 
 const js = (x) => sha(Buffer.from(JSON.stringify(x === undefined ? null : x), 'utf8'));
 const GOLD = path.join(HERE, 'fixtures', 'sp29-design.json');
 const E = require('../assets/js/design-engine.js');
-const BASE = process.env.SP29_BASE || '39c46bb';
+// (HK1, 0.3.3) the base's four files are saved copies (mcp/fixtures/hk1/sp29, the commit 39c46bb's bytes), not git reads
+const BASE = '39c46bb';
 
 // a seeded random source (mulberry32): the same 400 layouts on every machine
 const rng = (seed) => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 
 // ---------- the facts, for any engine (this one, or the base's in B1) ----------
+const ADDED_SINCE = ['pageFill'];
+// (0.3.3 FB1, changed on purpose) a page whose row of KPI cards lies over its shortened rail (fitSlots keeps that
+// arrangement where pageFill measures the page better filled, mcp/work/FB1.md) is placed differently from the base on
+// purpose: by the engine of today (never the base's), such a fit is this one line in G1, for the base's facts too, so
+// every other layout is still the base's byte for byte; the arrangement itself is pinned by test-0.3.3-fb1.mjs and L1
+// (0.3.3 FB3, changed on purpose, the same way) a page whose text box lies under its shortened rail (fitSlots' tuckText,
+// kept where pageFill measures a smaller hole, mcp/work/FB3.md) and whose cards are not over the rail is one line too,
+// counted by L2; a page with both is counted as lifted, as before
+const LIFTED = 'the cards over the rail (0.3.3 FB1)', LIFTED_FITS = 122, TUCKED = 'the text box under the rail (0.3.3 FB3)', TUCKED_FITS = 21;
+const lifted = (slots, opt) => { const f = E.fitSlots(slots, opt).slots, rail = f.find((x) => x.kind === 'slicer' && x.stack), k = f.find((x) => x.kind === 'kpi'), t = f.find((x) => x.kind === 'text'); if (rail && k && rail.y >= k.y + k.h) { liftedCount++; return LIFTED; }
+  if (rail && t && Math.abs(t.x - rail.x) <= 1 && t.y >= rail.y + rail.h) { tuckedCount++; return TUCKED; } return null; };
+let liftedCount = 0, tuckedCount = 0;   // counted over one facts() run: reset before each
 const facts = (E) => {
   const design = (preset, chart, layout) => { const d = E.fresh(); d.preset = preset; d.data = E.PRESETS[preset].data.slice(); d.ui = Object.assign({}, E.PRESETS[preset].ui); d.chart = chart; d.name = 'SP29 ' + preset; E.repairState(d); Object.assign(d.layout, layout); return d; };
   const DESIGNS = [
@@ -60,8 +72,8 @@ const facts = (E) => {
       panel: E.slidePanel(c, lang), second: E.secondLayout(c),
       kpi: [E.kpiInset(c), E.barW('kpiBarW', c), E.barW('headLineW', c), E.c0(c)],
       ranges: Object.keys(E.RANGE).map((k) => [k, E.rangeOf(k, PW, c), E.clampTo(k, 1e6, PW, c), E.clampTo(k, -5, PW, c), E.clampTo(k, '33.4', PW, c)]),
-      fitDrop: E.fitSlots(proj, { dropKinds: ['line', 'text'] }), fitHead: E.fitSlots(proj, { headerRows: 40 }), fitRail: E.fitSlots(proj, { railItems: RAIL, dropKinds: ['donut'] }),
-      fitGrid: E.fitSlots(slots, E.fitScale({ headerRows: 30, railItems: RAIL }, 1 / E.page(c).s)),
+      fitDrop: E.fitSlots(proj, { dropKinds: ['line', 'text'] }), fitHead: E.fitSlots(proj, { headerRows: 40 }), fitRail: lifted(proj, { railItems: RAIL, dropKinds: ['donut'] }) || E.fitSlots(proj, { railItems: RAIL, dropKinds: ['donut'] }),
+      fitGrid: lifted(slots, E.fitScale({ headerRows: 30, railItems: RAIL }, 1 / E.page(c).s)) || E.fitSlots(slots, E.fitScale({ headerRows: 30, railItems: RAIL }, 1 / E.page(c).s)),
       text: [8, 10, 12, 18, 28, 60].map((n) => [E.fs(n, c), E.sizeAt(n, E.page(c).h)]), scale: E.textScale(E.page(c).h)
     };
   };
@@ -128,11 +140,13 @@ const facts = (E) => {
     const jpg = (w, h, pre) => Uint8Array.from([0xff, 0xd8].concat(pre || [], [0xff, 0xc0, 0, 17, 8, h >> 8, h & 255, w >> 8, w & 255, 3], new Array(20).fill(0)));
     out.I1 = js([png(400, 100), png(0, 100), png(65536, 3), jpg(640, 480), jpg(300, 120, [0xff, 0xe0, 0, 4, 1, 2, 0xff, 0xff, 0xff, 0xc4, 0, 3, 9, 0xff, 0x01, 0xff, 0xd0]), jpg(0, 9), jpg(320, 200, [0xff, 0xe0, 0, 5, 1, 2, 0xff, 0xc1, 0, 17, 8, 0, 9, 0, 9]), new Uint8Array(10), null, Uint8Array.from(new Array(40).fill(7))].map((b) => E.imageSize(b)));
   }
-  out.K1 = js(Object.keys(E).sort());
+  // (0.3.3 FB1) the names the engine got on purpose after the base are not the split's: each is listed here, must be
+  // there now and is left out of the comparison with the base (pageFill: how well a page is filled, mcp/work/FB1.md)
+  out.K1 = js(Object.keys(E).filter((k) => !ADDED_SINCE.includes(k)).sort());
   return out;
 };
 
-const got = facts(E);
+const got = facts(E), liftedNow = liftedCount, tuckedNow = tuckedCount;
 if (process.env.SP29_RECORD === '1') { fs.writeFileSync(GOLD, JSON.stringify(got, null, 1) + '\n'); console.log('recorded ' + path.relative(REPO, GOLD)); }
 const gold = fs.existsSync(GOLD) ? JSON.parse(fs.readFileSync(GOLD, 'utf8')) : {};
 const diff = (a, b) => (typeof a === 'string' || typeof b === 'string' ? (a === b ? [] : ['the value']) : Object.keys(Object.assign({}, a, b)).filter((k) => JSON.stringify((a || {})[k]) !== JSON.stringify((b || {})[k])));
@@ -140,12 +154,20 @@ const diff = (a, b) => (typeof a === 'string' || typeof b === 'string' ? (a === 
 // ---------- D1-D12, G1, S1, I1, K1: byte for byte the base's ----------
 for (const name of Object.keys(got)) chk(() => gold[name] && !diff(got[name], gold[name]).length, () => `${name}: differs from the base in ${gold[name] ? diff(got[name], gold[name]).join(', ') : '(not recorded)'}`);
 
+chk(() => ADDED_SINCE.every((k) => typeof E[k] === 'function' && E[k] === require('../assets/js/design-metrics.js')[k]), () => `K2 a name added on purpose since the base (${ADDED_SINCE.join(', ')}) is not the engine's and the metrics' own`);
+
+{ // L1: how many of G1's 400 layouts are lifted in either fit (a number that moves says the rule moved)
+  const n = liftedNow;
+  chk(() => n === LIFTED_FITS, () => `L1 the fits with the cards over the rail among the suite's fits (two a layout): ${n} (pinned ${LIFTED_FITS})`);
+  chk(() => tuckedNow === TUCKED_FITS, () => `L2 the fits with the text box under the rail and the cards not over it: ${tuckedNow} (pinned ${TUCKED_FITS})`);
+}
+
 // ---------- B1: the base engine itself, live, on the same facts ----------
 {
   let B = null, why = '';
   try {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-sp29-base-'));
-    for (const f of ['design-engine.js', 'text-measure.js', 'design-colours.js', 'design-glass.js']) fs.writeFileSync(path.join(dir, f), execFileSync('git', ['show', `${BASE}:assets/js/${f}`], { cwd: REPO, maxBuffer: 1 << 26 }));
+    for (const f of ['design-engine.js', 'text-measure.js', 'design-colours.js', 'design-glass.js']) fs.writeFileSync(path.join(dir, f), fs.readFileSync(path.join(HERE, 'fixtures', 'hk1', 'sp29', 'assets', 'js', f)));
     B = require(path.join(dir, 'design-engine.js'));
   } catch (e) { why = String(e && e.message || e).slice(0, 200); }
   const was = B ? facts(B) : null, differ = was ? Object.keys(Object.assign({}, got, was)).filter((k) => diff(got[k], was[k]).length) : [];

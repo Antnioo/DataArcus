@@ -83,7 +83,10 @@ try {
     return Math.round((under.length ? Math.min(...under) : 1080) - B);
   };
   const got = [gapOf('exec', 2, 0), gapOf('exec', 3, 0), gapOf('ops', 2, 0), gapOf('ops', 3, 0), gapOf('exec', 3, 1)];
-  chk(() => JSON.stringify(got) === JSON.stringify([392, 308, 329, 245, 18]), () => `S10. the gaps under a shortened rail beside a row, as measured in SQ13.md (exec 2 and 3 slicers, ops 2 and 3, a second page): ${JSON.stringify(got)}`);
+  // (0.3.3 FB1, changed on purpose: [392, 308, 329, 245, 18] -> all 18) the four gaps SQ13 measured and left to the
+  // owner are closed: the cards' row lies over the rail, the row beside the rail ends at its bottom (each chart keeping
+  // REFLOW_KEEP) and the next row starts one gutter under it (mcp/work/FB1.md; test-0.3.3-fb1.mjs pins 80 plans)
+  chk(() => JSON.stringify(got) === JSON.stringify([18, 18, 18, 18, 18]), () => `S10. the gaps under a shortened rail beside a row, as measured in SQ13.md (exec 2 and 3 slicers, ops 2 and 3, a second page): ${JSON.stringify(got)}`);
 }
 
 // ---------- R1-see-the-result-S3 (OBSOLETE, verified): the approval page and the website draw the writer's files ----------

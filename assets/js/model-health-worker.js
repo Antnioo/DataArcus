@@ -6,7 +6,7 @@
  */
 /* global MHEngine, TmdlModel */
 // a model file's bytes to text and the size limits (0.3.2 DD2D: model-file.js, the MCP's too) first; the DAX tokens and report references (0.3.2 SP9), the model index (SP15), the rule texts, the rules and the questions (SP27), all before the engine; the engine, and the TMDL reader the MCP uses for projects saved as TMDL (Power BI Desktop's default)
-importScripts('model-file.min.js?v=47bc00d4a4cb', 'dax-reference-parser.min.js?v=cb66f18e1f1c', 'model-index.min.js?v=fb68d432364d', 'health-texts.min.js?v=dc21adf6917d', 'health-rules.min.js?v=23d84c4464f7', 'health-confirm.min.js?v=c9b40542eee2', 'model-health-engine.min.js?v=bb2af8492ffc', 'tmdl-model.min.js?v=f4832d0d3ac0');
+importScripts('model-file.min.js?v=47bc00d4a4cb', 'dax-reference-parser.min.js?v=a343dfa2bb0e', 'model-index.min.js?v=0302b5d27b99', 'health-texts.min.js?v=dc21adf6917d', 'health-rules.min.js?v=e604a64d4feb', 'health-confirm.min.js?v=eb4cc43fe6ee', 'model-health-engine.min.js?v=eae0f55d972c', 'tmdl-model.min.js?v=295f66a0c64d', 'model-nearest.min.js?v=c6ffd3114120', 'zip-models.min.js?v=0d04187fec57');
 
 const post = (type, data) => self.postMessage(Object.assign({ type }, data || {}));
 
@@ -100,27 +100,29 @@ const parseJson = (u8) => JSON.parse(decodeText(u8).replace(/^﻿/, ''));
 
 async function fromZip(buf, fileName) {
   const zip = readZip(buf);
-  const byName = (re) => zip.entries.filter((e) => re.test(e.name));
-  let modelEntry = byName(/(^|\/)DataModelSchema$/)[0] || byName(/(^|\/)model\.bim$/i)[0];
-  // a project saved as TMDL: the .tmdl files of its (first) semantic model's definition folder
-  const tmdl = byName(/(^|\/)definition\/.*\.tmdl$/i).filter((e) => !/TMDLScripts\//i.test(e.name));
-  const root = tmdl.length ? tmdl[0].name.slice(0, tmdl[0].name.search(/(^|\/)definition\//) + 1) : '';
-  if (!modelEntry && !tmdl.length) {
-    if (byName(/(^|\/)DataModel$/).length) throw new Error('PBIX');
-    throw new Error('NO_MODEL');
+  const entry = new Map(zip.entries.map((e) => [e.name, e]));
+  // (0.3.3 TF1) which model and which report: zip-models.js, the one place the MCP's reader uses too (AU1's choice,
+  // moved there as it was): every model by its folder, the nearest the top read (model-nearest.js), zip order never
+  // decides, only its own reports read and the others said. Each definition.pbir it asks for is read here first
+  const names = zip.entries.map((e) => e.name), byPath = new Map();
+  for (const n of self.DAZipModels.pbirsToRead(names)) {
+    const def = entry.get(n); if (!def || def.usize > LIMITS.entry) continue;
+    try { const p = parseJson(await zip.read(def)), rel = p && p.datasetReference && p.datasetReference.byPath && p.datasetReference.byPath.path; if (typeof rel === 'string') byPath.set(n, rel); }
+    catch (err) { if (err.message === 'ZIP_LIMIT') throw err; /* not readable: the folder decides */ }
   }
-  // the parts this check reads, all together within the limit, before any is unpacked
-  const layout = byName(/(^|\/)Report\/Layout$/)[0];
-  const legacyPbip = byName(/\.Report\/report\.json$/i)[0];
-  const pbir = byName(/(^|\/)definition\/(report\.json|reportExtensions\.json|pages\/.*\.json|bookmarks\/.*\.json)$/i).filter((e) => !/StaticResources|CustomVisuals/i.test(e.name));
-  const needed = (modelEntry ? [modelEntry] : tmdl.filter((x) => x.name.startsWith(root))).concat(layout ? [layout] : pbir.length ? pbir : legacyPbip ? [legacyPbip] : []);
+  const pick = self.DAZipModels.choose(names, (n) => (byPath.has(n) ? byPath.get(n) : null));
+  if (pick.error) throw new Error(pick.error);
+  const modelEntry = pick.modelEntry ? entry.get(pick.modelEntry) : null, tmdlRead = pick.tmdl.map((n) => entry.get(n));
+  const layout = pick.report.layout ? entry.get(pick.report.layout) : null, pbir = pick.report.pbir.map((n) => entry.get(n)), legacyPbip = pick.report.legacyPbip ? entry.get(pick.report.legacyPbip) : null;
+  const models = pick.models;
+  const needed = (modelEntry ? [modelEntry] : tmdlRead).concat(layout ? [layout] : pbir.length ? pbir : legacyPbip ? [legacyPbip] : []);
   if (needed.reduce((a, e) => a + e.usize, 0) > LIMITS.total) throw new Error('ZIP_LIMIT');
   post('progress', { step: 'model' });
   let model, unreadable = [];
   if (modelEntry) model = parseJson(await zip.read(modelEntry, LIMITS.model));
   else {
     const files = [];
-    for (const e of tmdl.filter((x) => x.name.startsWith(root))) files.push({ path: e.name, text: decodeText(await zip.read(e)) });
+    for (const e of tmdlRead) files.push({ path: e.name, text: decodeText(await zip.read(e)) });
     // (AU47, AUD-047) a TMDL file that could not be read fully is named, never skipped silently: the page gives no score
     const got = TmdlModel.read(files, { lineageTags: true });
     model = got.model; unreadable = got.skipped;
@@ -138,7 +140,7 @@ async function fromZip(buf, fileName) {
     const j = parseJson(await zip.read(legacyPbip));
     if (j.sections) report = { format: 'legacy', files: [{ path: legacyPbip.name, json: j }] };
   }
-  return { model, report, source: /\.pbit$/i.test(fileName) ? 'pbit' : 'zip', unreadable };
+  return { model, report, source: /\.pbit$/i.test(fileName) ? 'pbit' : 'zip', unreadable, models };
 }
 
 self.onmessage = async (ev) => {
@@ -156,10 +158,13 @@ self.onmessage = async (ev) => {
     }
     post('progress', { step: 'analyze' });
     const result = MHEngine.analyze(input.model, input.report);
-    if (!result.stats.tables) throw new Error('NO_MODEL');
+    // (AU1) no table read and nothing named is no model; tables the model names and no file defines are named instead
+    if (!result.stats.tables && !(input.unreadable && input.unreadable.length)) throw new Error('NO_MODEL');
     result.meta = { fileName, source: input.source, ms: Date.now() - t0, hasReport: !!input.report, analyzedAt: new Date().toISOString() };
     // (AU47) the files' names and why, and the one message in English and Arabic (the MCP's words, tmdl-model.js)
     if (input.unreadable && input.unreadable.length) result.unreadable = { files: input.unreadable, en: TmdlModel.unreadableSaid(input.unreadable, 'en', 'check'), ar: TmdlModel.unreadableSaid(input.unreadable, 'ar', 'check') };
+    // (AU1, AUD-068) more than one model in the zip: which was read and which not, before the score (the page draws it)
+    if (input.models) result.models = Object.assign(input.models, self.DAZipModels.said(input.models));
     post('done', { result });
   } catch (e) {
     post('error', { code: /^[A-Z_]+$/.test(e.message) ? e.message : 'PARSE', message: String(e && e.message || e) });

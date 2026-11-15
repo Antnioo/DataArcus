@@ -179,7 +179,7 @@ portfolio: {
           {
             tag: "Learn",
             title: "PL-300 Practice Exam",
-            desc: "228 Power BI questions, mock exams and renewal prep."
+            desc: "234 Power BI questions, mock exams and renewal prep."
           },
           {
             tag: "Build",
@@ -472,7 +472,7 @@ portfolio: {
           {
             tag: "تعلّم",
             title: "اختبار PL-300 التجريبي",
-            desc: "228 سؤالًا عن Power BI واختبارات تجريبية وتحضير للتجديد."
+            desc: "234 سؤالًا عن Power BI واختبارات تجريبية وتحضير للتجديد."
           },
           {
             tag: "ابنِ",

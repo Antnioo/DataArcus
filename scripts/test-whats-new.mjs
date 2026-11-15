@@ -1,5 +1,5 @@
-// W1 (20 Oct): the beta page /power-bi-mcp/ says what is new in 0.3.0, in English and Arabic, and names nothing that is
-// not in 0.3.0. Reads the translations (beta-page.js), the English page and its generated Arabic copy.
+// W1 (20 Oct), D5 (25 Oct): the beta page /power-bi-mcp/ says what is new in 0.3.0 and 0.3.1, in English and Arabic, and
+// names nothing that is not in them. Reads the translations (beta-page.js), the English page and its generated Arabic copy.
 //   node scripts/test-whats-new.mjs
 import fs from 'node:fs';
 import path from 'node:path';
@@ -17,6 +17,13 @@ const T = box.window.betaPageTranslations;
 const pages = { en: read('power-bi-mcp/index.html'), ar: read('ar/power-bi-mcp/index.html') };
 let checks = 0; const fails = [];
 const ok = (c, msg) => { checks++; if (!c) fails.push(msg); };
+
+// SW1 (I-1112-1702): this script checks the 0.3.0 and the 0.3.1 sections (beta.new and beta.new31), so its own words and its
+// printed name say both, not 0.3.0 alone.
+const NAME = 'whats-new-030-031';
+const SELF = read('scripts/test-whats-new.mjs');
+ok(/0\.3\.0 and 0\.3\.1/.test(SELF.split('\n').slice(0, 3).join(' ')), 'the header says which sections this checks (0.3.0 and 0.3.1)');
+ok(SELF.includes('console.log(`PASS  ${NAME}  '), 'the result line prints its name, whats-new-030-031');
 
 // 0.3.1 drafts and an unapproved comparison: never on the page as available
 const NOT_IN_030 = [/DAX function/i, /VS ?Code/i, /render_report/i, /Skills? for Fabric/i, /see the result/i, /Power BI Report skill/i,
@@ -93,5 +100,5 @@ for (const [lang, html] of Object.entries(pages)) {
   ok(html.indexOf('<section id="new-031"') < html.indexOf('<section id="new">'), `${lang}: the 0.3.1 section comes after the 0.3.0 one (newest first)`);
 }
 
-if (fails.length) { console.error(`FAIL  whats-new  ${fails.length} of ${checks} checks\n- ` + fails.join('\n- ')); process.exit(1); }
-console.log(`PASS  whats-new  ${checks} checks`);
+if (fails.length) { console.error(`FAIL  ${NAME}  ${fails.length} of ${checks} checks\n- ` + fails.join('\n- ')); process.exit(1); }
+console.log(`PASS  ${NAME}  ${checks} checks`);

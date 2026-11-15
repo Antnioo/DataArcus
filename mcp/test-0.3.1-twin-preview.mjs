@@ -79,7 +79,7 @@ try {
 
   // labels: every listed text in Arabic; one chart title planted far too long for its box (V1-5)
   const p0 = await s.call('create_arabic_twin', { path: 'large/Orders EN.pbip' }), T0 = (p0.j && p0.j.texts) || [];
-  let k = 0; const L = {}; T0.filter((t) => t.text != null).forEach((t) => { L[t.id] = t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من {2}: نص ${++k}` : `نص ${++k}`); });
+  let k = 0; const L = {}; T0.filter((t) => t.text != null).forEach((t) => { L[t.id] = t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من أصل {2}: نص ${++k}` : `نص ${++k}`); });
   // (a title of 200 characters, the most a label holds, on the narrowest chart of the report: two lines of its title can't
   // hold it, by the writer's own titleFit)
   const LONG = 'إجمالي المبيعات الشهرية لكل فرع من فروع الشركة في جميع المناطق والمدن خلال السنوات الماضية مقارنة بالأهداف المعتمدة لكل قسم وكل فريق ومقارنة بالعام السابق لكل منطقة ومدينة وفرع في الربع الأول'.slice(0, 200);

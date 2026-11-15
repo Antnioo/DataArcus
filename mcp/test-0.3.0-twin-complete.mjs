@@ -132,7 +132,7 @@ try {
 
   // ---------- TC-3: the twin, every text Arabic but the two fields kept in English ----------
   const KEEP = ['Coupon Region', 'Plan Group'], OLD = new Set(['page', 'title', 'textbox', 'button', 'field', 'bookmark', 'titleMeasure', 'measureText']);
-  let k = 0; const arabic = (t) => t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من {2}: نص ${++k}` : `نص ${++k}`);
+  let k = 0; const arabic = (t) => t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من أصل {2}: نص ${++k}` : `نص ${++k}`);
   const L1 = {}; T0.filter((t) => t.text != null && OLD.has(t.kind) && !t.phone && !KEEP.includes(t.text)).forEach((t) => { L1[t.id] = arabic(t); });
   const p1 = await s.call('create_arabic_twin', { path: 'large/Orders EN.pbip', labels: L1 }), T1 = (p1.j && p1.j.texts) || [];
   {

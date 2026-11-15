@@ -5,6 +5,12 @@
 //  - the Arabic label uses the site's Arabic font, keeps its letters joined, and gets its optical lift
 //  - the English label on Arabic pages stays in Inter with no lift
 import { visitor, pages, langsOf, WAIT } from './lib.mjs';
+import { createRequire } from 'node:module';
+
+// (0.3.3 LF1, AUD-075) a page whose Arabic is held (locale-routes.js AR_HELD, the one list) has no switcher, like build/:
+// there is no other language to switch to (gulf-like-for-like.mjs A1 checks it has none)
+const HELD = createRequire(import.meta.url)('../../assets/js/locale-routes.js').AR_HELD.map((p) => p.replace(/^\/+/, ''));
+const switched = (p) => !p.startsWith('build/') && !HELD.includes(p);
 
 export default async function ({ browser, url }) {
   const problems = []; let checks = 0;
@@ -12,7 +18,7 @@ export default async function ({ browser, url }) {
   for (const vp of [[390, 844], [1440, 900]]) {
     const v = await visitor(browser, { viewport: vp, motion: 'reduce' });
     const mobile = vp[0] < 992, sel = mobile ? '.lang-btn .lang-text' : '.lang-btn-desktop span';
-    for (const p of pages().filter((p) => !p.startsWith('build/'))) for (const lang of langsOf(p)) {   // build/: English only, no switcher (BF1)
+    for (const p of pages().filter(switched)) for (const lang of langsOf(p)) {   // build/: English only, no switcher (BF1)
       const where = `${p} ${lang} ${vp[0]}px`;
       await v.pg.goto(`${url}/${p}?lang=${lang}`, { waitUntil: 'domcontentloaded' });
       const s = await v.pg.waitForSelector(sel, { timeout: /404|offline/.test(p) ? 3000 : WAIT }).catch(() => null);
@@ -41,7 +47,7 @@ export default async function ({ browser, url }) {
       Object.defineProperty(window, 'localStorage', { get() { throw new DOMException('The operation is insecure.', 'SecurityError'); } });
       Object.defineProperty(navigator, 'language', { get: () => 'ar-AE' });
     });
-    for (const p of pages().filter((p) => !p.startsWith('build/'))) {   // build/: English only, no switcher (BF1)
+    for (const p of pages().filter(switched)) {   // build/: English only, no switcher (BF1)
       await v.pg.goto(`${url}/${p}`, { waitUntil: 'domcontentloaded' });
       const s = await v.pg.waitForSelector('.lang-btn-desktop', { timeout: /404|offline/.test(p) ? 3000 : WAIT }).catch(() => null);
       const lang = await v.pg.evaluate(() => document.documentElement.lang);

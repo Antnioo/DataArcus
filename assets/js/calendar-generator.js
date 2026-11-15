@@ -258,7 +258,7 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
   state = { ...DEFAULTS, ...(saved ? {} : { lang: (isAr() || (() => { try { return localStorage.getItem('dataarcus-lang') === 'ar'; } catch (e) { return false; } })()) ? 'ar' : 'en' }), ...(saved || {}) };
   // a table saved before the Arabic name columns existed keeps its columns (round 12b)
   if (saved && !own(saved, 'arabicNames')) state.arabicNames = false;
-  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* private mode */ } };
+  const save = () => window.DAPageToast.saveState(STORE, state);   // (0.3.3 SG1) page-toast.js, its one place
   // the table's rules live in the shared module (the MCP's add_gulf_calendar builds the same table)
   const observedOn = () => C.observedOn(state);
   const weekendDays = (t) => C.weekendDays(state, t);

@@ -1,3 +1,4 @@
+// @ts-check
 // The one writer of new files (audit 6, A6-4 and A6-7; the twin's T8): every tool that writes a new tree of files
 // (create_report, create_arabic_twin) writes it here, all or nothing, never over anything (and its clean-up never
 // removes what it did not create: 0.3.0 R4); and the one reader of a file
@@ -11,13 +12,17 @@ import { tooLongSaid } from './path-rules.mjs';   // (0.3.2 WN1, F05: a path ove
 export { writeFileNew };   // (B-153: the one writer of one new file, for the tools; writeNew in model.mjs is the same)
 
 // what was written in this server's life, in order (audit 6, A6-17): a tool that fails says what it had written
+/** @type {string[]} */
 const WRITTEN = [];
+/** @param {any} f */
 export const noteWritten = (f) => { WRITTEN.push(String(f)); };
-/** With no mark: the current mark. With a mark: what was written since, as paths relative to the working folder. */
+/** With no mark: the current mark. With a mark: what was written since, as paths relative to the working folder.
+ *  @param {number=} mark @returns {any} number with no mark, string[] with a mark (the two forms are not told apart by the checker, so callers read it as any) */
 export function writtenSince(mark) { if (mark === undefined) return WRITTEN.length; return WRITTEN.slice(mark).map((f) => path.relative(process.env.DATAARCUS_ROOT ? path.resolve(process.env.DATAARCUS_ROOT) : '.', f).split(path.sep).join('/')); }
 
 // tests only: DATAARCUS_TEST_WRITE_FAIL="<code>:<n>" makes the write fail with that error code after n files (a full
 // disk, ENOSPC; an I/O error, EIO), to prove the clean-up. It can only make a write fail, never make one succeed.
+/** @returns {{ code: string, after: number }|null} */
 function testFailure() {
   const m = /^([A-Z]{2,12}):(\d{1,5})$/.exec(String(process.env.DATAARCUS_TEST_WRITE_FAIL || ''));
   return m ? { code: m[1], after: +m[2] } : null;
@@ -31,9 +36,11 @@ function testFailure() {
  * folders first and .pbip files last (Power BI Desktop opens a project by its .pbip). On any failure everything this call
  * created and still finds as it made it is removed (write-io.mjs rollBack), and the error says "Nothing was written" or
  * names exactly what is left. Returns the top-level entries written, in order.
+ * @typedef {{ path: string, data?: any }} TreeFile a file of a tree: its path relative to dir ('/' between parts) and its content
+ * @param {string} dir @param {TreeFile[]} files @param {{ beforePlace?: (top: string) => void }=} opts @returns {string[]}
  */
 export function writeTree(dir, files, opts) {
-  const tops = [...new Set(files.map((f) => String(f.path).split('/')[0]))];
+  const tops = [...new Set(files.map((/** @type {TreeFile} */ f) => String(f.path).split('/')[0]))];
   const taken = tops.filter((t) => !nothingAt(path.join(dir, t)));
   if (taken.length) throw new Error(`Nothing was written: ${taken.length === 1 ? `"${taken[0]}" is` : `${taken.length} names are`} already there (e.g. "${taken[0]}"). DataArcus never writes over anything: choose another name, or rename or move the old one.`);
   // (0.3.2 WN1, F05) a path over the system's limit (Windows: 259 characters) is refused before anything is written;
@@ -47,14 +54,18 @@ export function writeTree(dir, files, opts) {
   // Now every file and folder this call creates is recorded, and only those are removed: files first, then the
   // folders, each only when empty; R4: each only while it is still what this call created; anything else is left and named)
   const made = [], dirs = new Map();
+  /** @param {string} t @returns {boolean} */
   const isDir = (t) => files.some((f) => String(f.path).startsWith(t + '/'));
   const order = tops.filter(isDir).concat(tops.filter((t) => !isDir(t) && !/\.pbip$/i.test(t)), tops.filter((t) => !isDir(t) && /\.pbip$/i.test(t)));
+  /** @param {string} relDir */
   const ensureDir = (relDir) => {
     const parts = relDir ? relDir.split('/') : [];
     for (let k = 1; k <= parts.length; k++) {
       const rel = parts.slice(0, k).join('/');
       if (dirs.has(rel)) continue;
       const via = parts.slice(0, k - 1).map((_, j) => dirs.get(parts.slice(0, j + 1).join('/')));
+      /** @type {any} */
+      // @ts-expect-error `new Error` gets a code below (e.code): the checker's Error has none, Node's errors do
       let r; try { r = makeDir(path.join(dir, ...parts.slice(0, k))); } catch (x) { if (x && x.code === 'EEXIST') { const e = new Error(`"${rel}" appeared while writing`); e.code = 'EEXIST'; throw e; } throw x; }
       r.via = via; made.push(r); dirs.set(rel, r);
     }
@@ -72,6 +83,7 @@ export function writeTree(dir, files, opts) {
         const e = { path: path.join(dir, ...parts), via: parts.slice(0, -1).map((_, j) => dirs.get(parts.slice(0, j + 1).join('/'))) };
         made.push(e);
         try { createFile(e, f.data); } catch (x) { if (x && x.code === 'EEXIST') made.pop(); throw x; }
+        // @ts-expect-error the error gets a code (x.code), as Node's errors have
         if (fail && ++n >= fail.after) { const x = new Error(`${fail.code}: the write failed after ${n} files (a test, DATAARCUS_TEST_WRITE_FAIL)`); x.code = fail.code; throw x; }
       }
       noteWritten(path.join(dir, t)); placed++;
@@ -97,6 +109,7 @@ export function writeTree(dir, files, opts) {
  * Either way the answer says which. An error that is not a write's (e.left absent) is passed on as it is: the plan is
  * used when files were placed before it (writtenSince), and as it was otherwise (a refusal before the write).
  */
+/** @param {any} planId @param {string} tool @param {() => any} write @returns {any} */
 export function withPlan(planId, tool, write) {
   let r; const mark = writtenSince();
   try { r = write(); } catch (e) {
@@ -117,9 +130,11 @@ export function withPlan(planId, tool, write) {
  * failed write removed all it had created, and nothing was written): the same planId writes once the cause is fixed. It
  * returns what to tell the user about the plan when a write failed (null when every write succeeded).
  */
+/** @param {any} planId @param {string} tool */
 export function planWrites(planId, tool) {
   const mark = writtenSince(); let failed = false, left = false, unknown = false;
   return {
+    /** @param {() => any} write @returns {any} */
     step(write) { try { return write(); } catch (e) { failed = true; if (!e || !e.left) unknown = true; else if (e.left.ours.length) left = true; throw e; } },
     /**
      * (0.3.1 CX1, Codex's F08: of two approved scripts one could stay on disk) several files written all or none: each
@@ -127,8 +142,9 @@ export function planWrites(planId, tool) {
      * everything in it is removed (rollBack: only while it is still what this batch wrote, never a file that was there
      * before), then one error, write-io's, says what is left; done() reads it as for one write. what: 'the fix scripts'.
      */
+    /** @param {Array<(made: any[]) => any>} writes @param {string} what @returns {any[]} */
     batch(writes, what) {
-      const made = [], m0 = WRITTEN.length;
+      const /** @type {any[]} */ made = [], m0 = WRITTEN.length;
       try { return writes.map((w) => w(made)); } catch (e) {
         failed = true;
         const back = rollBack(made), still = new Set(back.ours.concat(back.foreign));
@@ -145,7 +161,7 @@ export function planWrites(planId, tool) {
       if (failed && !left && !unknown && !wrote.length) return `The plan ${planId} was not used: once the cause is fixed (for a full disk: free some space), call this tool again with the same planId.`;
       consume(planId, tool);
       if (!failed) return null;
-      const named = wrote.length ? ` Written: ${wrote.map((f) => `"${f}"`).join(', ')}.` : '';
+      const named = wrote.length ? ` Written: ${wrote.map((/** @type {string} */ f) => `"${f}"`).join(', ')}.` : '';
       if (left) return `The plan ${planId} is now used: part of this write is still on disk, so the approval can't be used for another try. Delete what is named above, then make a new plan, show it to the user and wait for their go.` + named;
       if (unknown) return `The plan ${planId} is now used: a write failed without saying what it left, so the approval can't be used for another try. Look at the folder next to the project, then make a new plan, show it to the user and wait for their go.` + named;
       return `The plan ${planId} is now used: part of this write is on disk, so the approval can't be used for another try.${named} For what was not written, make a new plan once the cause is fixed, show it to the user and wait for their go.`;
@@ -159,6 +175,7 @@ export function planWrites(planId, tool) {
  * file that is not JSON is refused without quoting it (a file's text is untrusted and goes to the AI app).
  * Returns a Buffer, or the parsed JSON with json: true.
  */
+/** @param {string} p @param {{ kind?: string, max?: number, json?: boolean }=} opts @returns {any} a Buffer, or the parsed JSON with json: true */
 export function readUserFile(p, { kind = 'file', max = 2 * 1024 * 1024, json = false } = {}) {
   const full = inside(p), name = path.basename(String(p));
   // (Z-03, the outside review: measured by name, then read by name, so a swap in between was read through a link. Now
@@ -179,6 +196,7 @@ export function readUserFile(p, { kind = 'file', max = 2 * 1024 * 1024, json = f
 // that fails can remove them again (writeFileNew's madeDirs). R4 (the outside audit's F02): the folders are made one level
 // at a time, and only those its own mkdir made are told (a folder another program made in between is not ours); a mkdir
 // that fails half-way removes what it made and says so (writeFailed).
+/** @param {string} folder @param {string} base @param {string} ext @param {string[]=} made @returns {string} */
 export function freeFile(folder, base, ext, made) {
   const dir = folderFor(folder, made);
   for (let n = 1; ; n++) {
@@ -188,6 +206,7 @@ export function freeFile(folder, base, ext, made) {
 }
 /** (0.3.1 AF2, the release audit's F09) The name freeFile would give now, for a plan to show: nothing is made or written
  *  (a folder not there yet holds nothing, so the first name is free). The write then writes that name or nothing. */
+/** @param {string} folder @param {string} base @param {string} ext @returns {string} */
 export function freeName(folder, base, ext) {
   const dir = inside(folder || '.');
   for (let n = 1; ; n++) {
@@ -196,6 +215,7 @@ export function freeName(folder, base, ext) {
   }
 }
 /** (AF2) freeFile's folder: made one level at a time (made: the folders this call made, outermost first). */
+/** @param {string} folder @param {string[]=} made @returns {string} */
 export function folderFor(folder, made) {
   const dir = inside(folder || '.');
   // (the folders missing before, found by walking up from dir to the first one that is there, never by comparing a

@@ -8,7 +8,7 @@
 // untrusted input: they are quoted (Fix.name for TMDL, the writer's daxNames for DAX), compared, never followed.
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
-import { takenNames, nameKey, tagOf, scriptFileOf } from './model-script.mjs';   // (the one helper for model additions as scripts, shared with L4's flip cards)
+import { takenNames, nameKey, tagOf, scriptFileOf, keyOf } from './model-script.mjs';   // (the one helper for model additions as scripts, shared with L4's flip cards)
 
 const require = createRequire(import.meta.url);
 const Q = require('../../assets/js/pbip-query.js'), Fix = require('../../assets/js/model-health-tmdl.js'), Tmdl = require('../../assets/js/tmdl-model.js'), Bind = require('../../assets/js/pbip-bind.js');
@@ -24,7 +24,6 @@ export const BEFORE_APPLIED = 'Until the script is applied, only the Metric page
 export const MODEL_CHANGE = (t) => `A new table ${JSON.stringify(t)} (a field parameter: three columns and a title measure), as a TMDL script next to the project. DataArcus never changes the model: the user applies the script in TMDL view.`;
 export const SCRIPT_SUFFIX = ' - metric switcher';
 
-const keyOf = (s) => { const mk = String(s).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? { t: mk[1], m: mk[2] } : null; };
 
 /** The measures asked for, checked against the model's own (tables: the reader's). { measures: [{ t, m }], problems } */
 export function resolveSwitch(tables, list) {
@@ -136,7 +135,7 @@ export function addSwitch(r, o) {
   // (F1, the owner's decision of 20 Oct) the switch opens on its FIRST metric: general.filter in the shape Desktop 2.159
   // saved for it (the laptop proof, out/L3-saved-general.json): the field column In the first measure's NAMEOF text, with
   // the display column and the item's label in the annotations
-  const nameText = "'" + String(first.t).replace(/'/g, "''") + "'[" + String(first.m).replace(/\]/g, ']]') + ']', nameLit = { Literal: { Value: "'" + nameText.replace(/'/g, "''") + "'" } };
+  const nameText = daxNames.column(first.t, first.m), nameLit = { Literal: { Value: "'" + nameText.replace(/'/g, "''") + "'" } };
   const colOf = (src, c) => ({ Column: { Expression: { SourceRef: src }, Property: c } });
   const firstChosen = { filter: { Version: 2, From: [{ Name: 'm', Entity: names.table, Type: 0 }], Where: [{ Condition: { In: { Expressions: [colOf({ Source: 'm' }, names.fields)], Values: [[nameLit]] } },
     Annotations: { filterExpressionMetadata: { expressions: [colOf({ Entity: names.table }, names.display)], decomposedIdentities: { values: [[{ 0: [nameLit] }]], columns: [{ value: colOf({ Entity: names.table }, names.fields) }] }, valueMap: [{ 0: first.label }] } } }] } };
@@ -223,8 +222,9 @@ export function titleProblems(tmslModel) {
     if (display) params.push({ table: t.name, display: display.name, others: (t.columns || []).filter((c) => c !== display).map((c) => c.name) }); });
   const esc = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const out = [];
-  params.forEach((p) => tables.forEach((t) => (t.measures || []).forEach((ms) => {
-    const e = String(ms.expression || ''), tq = `(?:'${esc(p.table).replace(/'/g, "''")}'|${esc(p.table)})`, ref = (c) => new RegExp(`(${tq})?\\s*\\[${esc(c).replace(/\]/g, ']]')}\\]`, 'i');
+  // (B-437) a name with a control character can't be written in DAX (the quoter refuses it): no measure of ours names it
+  params.filter((p) => ![p.table, p.display, ...p.others].some((n) => hasControl(String(n)))).forEach((p) => tables.forEach((t) => (t.measures || []).forEach((ms) => {
+    const e = String(ms.expression || ''), tq = `(?:${esc(daxNames.table(p.table))}|${esc(p.table)})`, ref = (c) => new RegExp(`(${tq})?\\s*${esc(daxNames.measure(c))}`, 'i');
     if (ref(p.display).test(e) && !p.others.some((c) => ref(c).test(e))) out.push({ table: t.name, measure: ms.name, parameter: p.table, display: p.display });
   })));
   return { params, problems: out };

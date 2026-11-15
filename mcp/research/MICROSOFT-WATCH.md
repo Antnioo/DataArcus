@@ -41,3 +41,8 @@ owner), so a change is never lost silently.
    - a folder not to bundle: add it to `unbundledReportFolders` with its version and why.
 3. Close the issue once every line is handled in the repo (merged). A line still newer than the repo after the issue is
    closed opens a new issue the next Monday.
+
+## Facts read from Learn (kept so a later job does not read them again)
+- Desktop Bridge is on by default: Options > Security > "Enable external tool access to Power BI Desktop through secure
+  local APIs"; a registry policy (`DesktopNamedPipeBridge`, 1 or 0) can turn it off (Learn, power-bi-desktop-bridge-overview,
+  read 2026-09-21 by OX1 and again 2026-11-11).

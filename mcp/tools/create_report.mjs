@@ -8,7 +8,7 @@ import { modelPrintOf, digestOf, bindingOf } from '../lib/artifact.mjs';
 import { validatorVerdict } from '../lib/check-report.mjs';
 import * as Plans from '../lib/plans.mjs';
 import * as Terms from '../lib/terminology.mjs';
-import { UNTRUSTED } from '../lib/agent-text.mjs';
+import { UNTRUSTED, NO_VALUES } from '../lib/agent-text.mjs';
 import { writeSample, writtenSaid } from '../lib/sample-project.mjs';
 import { text, safe } from '../lib/tool-answer.mjs';
 import { ADDS, strictInputs } from '../lib/tool-inputs.mjs';
@@ -20,7 +20,7 @@ import { reportRun } from '../lib/report-run.mjs';
 export function register(server, ctx) {
   server.registerTool('create_report', {
     title: 'Create a report project for an existing model',
-    description: 'Writes an approved plan\'s report exactly as approved: call it with path (the model) and planId only. The plan holds every other input (pages or a design, the fields, names, theme, logo, page filters and options), so none is passed here; to change one, call plan_layout again, show the user the new plan and wait for their "go". Without an approved planId it refuses and writes nothing. Before it: plan_layout, show the user the plan and wait for their "go", then approve_plan. When the answer has formats (first), tell the user that first: the fields without their right number or date format and the script file that sets them in the model (never applied by this tool; the report already shows them right). Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed and bound to the model\'s fields, theme applied, a hidden tooltip page; the model and any existing report are never touched, and the new report gets a free name. The same call writes a planned native copy, redesign or sample project. Open the new .pbip in Power BI Desktop afterwards. Say any difference the answer lists in boundFields.' + UNTRUSTED,
+    description: 'Writes an approved plan\'s report exactly as approved: call it with path (the model) and planId only; the plan holds every other input (to change one: plan_layout again, show the new plan, wait for their "go"). Without an approved planId it refuses and writes nothing. Before it: plan_layout, show the user the plan and wait for their "go", then approve_plan. It writes a new PBIR report beside the model, or the planned native copy, redesign or sample project; the model and existing reports are never touched. When the answer has formats (first), tell the user first: the fields lacking their right number or date format and the script that sets them (never applied). Say any difference the answer lists in boundFields. Open the new .pbip in Power BI Desktop afterwards.' + NO_VALUES + UNTRUSTED,
     inputSchema: strictInputs('create_report', CREATE_REPORT_WRITE, heldSaid), annotations: ADDS
   }, safe(async (call) => {
     // (0.3.2 TK1, B-272) the inputs are the plan's own (heldInputs, kept with its proposal), with the model and the plan id

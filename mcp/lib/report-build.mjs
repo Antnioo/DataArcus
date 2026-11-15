@@ -17,7 +17,7 @@
 //   the theme, a page's background: files.mjs's readUserFile) and refuses ("Nothing was written ...") an input it cannot use.
 import path from 'node:path';
 import { inside, modelOf, nothingAt } from './model.mjs';
-import { planLayout, absorb, imageSize, isSmall, projectPages, designRtl, buildTheme, texts, themeName, themeScaleOf, scaleTheme, textScale, isGlass, glassPng } from './design.mjs';
+import { planLayout, absorb, imageSize, isSmall, projectPages, designRtl, buildTheme, texts, themeName, themeScaleOf, scaleTheme, textScale, isGlass, glassPng, themeFont } from './design.mjs';
 import { resolveSwitch, switchReach, addSwitch, switchSaid, SWITCH_MIN, SWITCH_MAX } from './metric-switcher.mjs';
 import { takenNames } from './report-names.mjs';
 import { modelPrintOf } from './artifact.mjs';
@@ -169,7 +169,7 @@ function designStep(rb) {
   const { a, m, F, PF, nCards, cardNote, bindFor, kpisOf, logo, logoRatio, withText, withValues, withSplit, listFormats, named, subKeys, galleryOn, svgFor, svgCardsFor, modelNames, modelColumns, countOf, png1 } = rb;
   let { r, bind, extra, written, boundPages, look, tinyPage, smallPageNote, designRepaired, switchAt, kpiCards } = rb;
     // the website's project download for this design: its pages (second page, slide-in panel), labels and theme
-    const planned = planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang, colors: a.colors, theme: a.theme });
+    const planned = planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang, colors: a.colors, theme: a.theme, font: a.font });
     let design = planned.design;
     // (the audit's A2-2: the note comes from the plan's own smallPage, the design engine's rule)
     if (planned.smallPage) smallPageNote = planned.smallPage;
@@ -209,7 +209,7 @@ function designStep(rb) {
     look = { ui: design.ui, font: design.font, rtl: designRtl(design.layout, a.lang) };
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: designRtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames, columns: modelColumns, counts: countOf }, bind: (bind = B0), gallery: galleryOn(pages), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, slicerStyle: a.slicerStyle, grid: a.grid, phoneLayout: design.layout.phoneLayout !== false, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', waterfallRtl: a.waterfallRtl, logoPlaceholder: false, quietGrid: true,
+      theme: (written = buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames, columns: modelColumns, counts: countOf }, bind: (bind = B0), gallery: galleryOn(pages), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, views: a.bookmarks, slicerStyle: a.slicerStyle, grid: a.grid, phoneLayout: design.layout.phoneLayout !== false, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', waterfallRtl: a.waterfallRtl, logoPlaceholder: false, quietGrid: true,
       texts: texts(a.lang), pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: isGlass(design) ? glassPng(design, p.page.w, p.page.h) : png1, panel: p.panel, grow: true }))
     });
     boundPages = pages; switchAt = { rtl: designRtl(design.layout, a.lang), page: pages[0].page };
@@ -263,12 +263,14 @@ function handStep(rb) {
       } else if (t10 > 0 && !ours) reportNotes.push(`The theme's text sizes were not scaled to the pages: it is not a theme generate_theme made, so its sizes are kept as its author set them. If they look too large or too small on these ${hs.join(' and ')}-high pages, change the theme, or make one with generate_theme (layout.page).`);
       else if (!ratio && t10 > 0 && hs.length > 1) reportNotes.push(`The theme's text sizes are made for a page about ${themeH} high and were not scaled: the pages have different heights (${hs.join(', ')}). Use one page size, or a theme made for it (generate_theme's layout.page).`);
     }
+    // (0.3.3 FT1) the report's font in the theme's text classes, so every visual without its own font shows it
+    theme = themeFont(theme, a.font);
     written = theme;
     look = { ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}), font: a.font, rtl: rtlHand };
     r = Pbip.build({
       name: a.name, title: a.title || a.name, lang: a.lang, rtl: rtlHand, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames, columns: modelColumns, counts: countOf }, bind: (bind = withSplit(listFormats(named(bindFor(kpisOf(a.pages)))), a.pages)), gallery: galleryOn(a.pages), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, slicerStyle: a.slicerStyle, grid: a.grid, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', waterfallRtl: a.waterfallRtl, logoPlaceholder: false, quietGrid: true,
+      model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames, columns: modelColumns, counts: countOf }, bind: (bind = withSplit(listFormats(named(bindFor(kpisOf(a.pages)))), a.pages)), gallery: galleryOn(a.pages), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, views: a.bookmarks, slicerStyle: a.slicerStyle, grid: a.grid, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', waterfallRtl: a.waterfallRtl, logoPlaceholder: false, quietGrid: true,
       // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
       texts: texts(a.lang),
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, hand: true, png: p.background ? readUserFile(p.background, { kind: 'background image', max: BACKGROUND_MAX }) : png1 }))

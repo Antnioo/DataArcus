@@ -248,6 +248,14 @@
   }
 
   // ---- columns ----
+  // The month and day names the sort rule looks for (one place, here). English, Gregorian or Hijri: "Month Name", "Hijri Month
+  // Name", "Day Name", "MMM", "Month Year"; Arabic: «الشهر», «اليوم», «اسم الشهر», «اسم اليوم».
+  const MONTH_NAME_LIKE = /(^|\s|_)(month|day|weekday)\s*_?(name|short)$|^(day of week|weekday|mmm|mmmm)$|short\s*month|month\s*-?\s*year|^month\s*year$|^(اسم\s*)?(الشهر|اليوم)$/i;
+  // (0.3.3 HC2, B-425) a Hijri month name written in Arabic: «الشهر الهجري», «اسم الشهر الهجري», «شهر هجري», the article and the
+  // spacing optional. Tested on the name with the Arabic short vowels and the tatweel taken off (the same marks time-names.js drops).
+  // The whole name only: «الهجري», «سنة هجرية», «رقم الشهر الهجري» are not month names.
+  const AR_MARKS = /[ً-ٰٟـ]/g;
+  const HIJRI_MONTH_AR = /^(اسم\s*)?(ال)?شهر[\s_]*(ال)?هجري$/;
   function columnRules(x, out, sh) {
     const { M, report: rep, used, userTables } = x, { add, skip } = out, daxOnlyColumn = daxOnlyColumnOf(sh);
     const doubles = [], calcCols = [], fkVisible = [], sumKeys = [], monthSort = [];
@@ -272,7 +280,7 @@
         const keyLike = !c.hidden && (c.summarizeBy === 'default' || c.summarizeBy === 'sum') && (/[a-z](ID|Id|Key|Code|No)$/.test(cn) || /((^|[\s_])(id|key|code|no|index)$|_id$|^(year|month|week|day|quarter)(\s*(no|num|number))?$|^(fiscal\s*)?year$|(month|week|day|quarter)\s*(no|num|number|of year)$|sort\s*(order|key)?$)/i.test(cn));
         if (keyLike && /^(int64|double|decimal)$/.test(c.dataType)) sumKeys.push({ obj: `${t.name}[${c.name}]` });
         if (keyLike && untyped(c)) skip('SUMMARIZE_KEYS', `${t.name}[${c.name}]`);
-        const monthLike = /(^|\s|_)(month|day|weekday)\s*_?(name|short)$|^(day of week|weekday|mmm|mmmm)$|short\s*month|month\s*-?\s*year|^month\s*year$|^(اسم\s*)?(الشهر|اليوم)$/i.test(cn) || (c.kind === 'calculated' && /FORMAT\s*\([^)]*"\s*(mmm|mmmm|ddd|dddd)\s*"/i.test(c.expr));
+        const monthLike = MONTH_NAME_LIKE.test(cn) || HIJRI_MONTH_AR.test(cn.replace(AR_MARKS, '')) || (c.kind === 'calculated' && /FORMAT\s*\([^)]*"\s*(mmm|mmmm|ddd|dddd)\s*"/i.test(c.expr));
         if (monthLike && c.dataType === 'string' && !c.sortBy) monthSort.push({ obj: `${t.name}[${c.name}]` });
         if (monthLike && untyped(c) && !c.sortBy) skip('MONTH_SORT', `${t.name}[${c.name}]`);
       });

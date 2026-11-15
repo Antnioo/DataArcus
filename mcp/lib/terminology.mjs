@@ -7,6 +7,7 @@
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { visible, shownName } from './model.mjs';
+import { fieldKey, fieldOfKey } from './field-key.mjs';
 
 const require = createRequire(import.meta.url);
 const Memory = require('../../assets/js/confirm-memory.js');
@@ -49,7 +50,7 @@ export function pageNamesOf(files) {
 export function fieldKeyOf(f) {
   if (!f || typeof f !== 'object') return null;
   const c = f.Column || f.Measure || (f.Aggregation && f.Aggregation.Expression && f.Aggregation.Expression.Column), sr = c && c.Expression && c.Expression.SourceRef;
-  return sr && sr.Schema !== 'extension' && typeof sr.Entity === 'string' && typeof c.Property === 'string' ? `${sr.Entity}[${c.Property}]` : null;
+  return sr && sr.Schema !== 'extension' && typeof sr.Entity === 'string' && typeof c.Property === 'string' ? fieldKey(sr.Entity, c.Property) : null;
 }
 const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
 const ROLE = { slicer: 'slicer header', advancedSlicerVisual: 'slicer header', tableEx: 'table header', pivotTable: 'table header', card: 'card', cardVisual: 'card', multiRowCard: 'card', kpi: 'card' };
@@ -92,7 +93,7 @@ export function placesOf(report, own) {
       const titles = [].concat(...props(vis, 'title', 'text').map((x) => shown(x, report.ext))), alts = [].concat(...props(vis, 'general', 'altText').map((x) => shown(x, report.ext)));
       const place = (role) => ({ page: String(pg.name), visual: String(v.name), role });
       for (const [k, dn] of keys) {
-        const e = get(k), said = new Set([k.replace(/^.*?\[(.*)\]$/, '$1')].concat(dn.filter((x) => x != null).map(plain)));
+        const e = get(k), said = new Set([fieldOfKey(k)].concat(dn.filter((x) => x != null).map(plain)));
         e.names.push(...dn);
         e.where.push(place(ROLE[vis.visualType] || 'chart'));
         if (pg.type === 'Tooltip') e.where.push(place('tooltip'));
@@ -158,7 +159,7 @@ export function sheetOf(keys, terms, places, isolate) {
   return (keys || []).map((k) => {
     const t = terms.get(k) || { ar: null, status: 'kept' }, p = places ? places.get(k) : null;
     // (the field's names are model text: an instruction-like one withheld, hidden characters shown as code points)
-    const row = { field: shownName(k, 200), en: shownName(k.replace(/^.*?\[(.*)\]$/, '$1'), 160), ar: t.ar == null ? null : visible(String(t.ar)).slice(0, 200), status: t.status };
+    const row = { field: shownName(k, 200), en: shownName(fieldOfKey(k), 160), ar: t.ar == null ? null : visible(String(t.ar)).slice(0, 200), status: t.status };
     if (t.status === 'kept') Object.assign(row, { why: t.declined ? WHY.declined : t.why || WHY.none }, t.declined ? { declined: true } : {});
     if (t.status === 'draft') row.why = t.why || 'a draft from the fixed list of report words: approved only with the plan (show it beside the English name)';
     if (t.earlier) row.earlier = true;

@@ -72,7 +72,7 @@ export async function v029b({ call, check, ROOT, fs = fs0 }) {
     const x = await ask('create_report', { path: dir, name: 'B29 month name', lang: 'en', design: (await ask('plan_layout', { layout: 'exec', path: dir })).j.design, fields: Object.assign({}, fields, { timeAxis: 'Calendar[Month Name]' }), noDataMessage: false, secondPage: false });
     const r = read(x), line = main(r).find((v) => typeOf(v) === 'lineChart');
     chk(() => line && !line.visual.query.queryState.Tooltips && !filtersOf(line).some((f) => extByField(r, f.field)), () => `O-13: a month name the model sorts keeps its own order and its 12 points: ${JSON.stringify(line && line.visual.query).slice(0, 300)} ${short(x)}`);
-    const pl = await ask('plan_layout', { layout: 'exec', path: dir, planFields: { timeAxis: 'Calendar[Month-Year]' } });
+    const pl = await ask('plan_layout', { layout: 'exec', path: dir, name: 'O13 Axis', planFields: { timeAxis: 'Calendar[Month-Year]' } });
     chk(() => pl.j.timeAxis.field === 'Calendar[Month-Year]' && /last 12 months/.test(pl.j.timeAxis.how) && /month start/i.test(pl.j.timeAxis.how), () => `O-13: the plan must say how the month axis is ordered and limited: ${JSON.stringify(pl.j && pl.j.timeAxis)}`);
   }
 

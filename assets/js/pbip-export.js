@@ -397,9 +397,37 @@
     return extFile;
   }
   // the Reset buttons' bookmarks:
-  function bookmarkFiles({ bookmarks, add, D }) {
+  // (0.3.3 RX1) views: the plan's views ([{ name, page }], page 1 = the first), each a bookmark that opens its page and
+  // nothing else: no data state (a bookmark's data state can hold values) and no display state (the slide-in panel and
+  // the flip cards keep theirs). They come first in bookmarks.json, in the plan's order (the Bookmarks pane, its View
+  // slide show and a bookmark navigator follow that order: Microsoft Learn, "Arranging bookmarks"), and report.json
+  // records the order (the annotation DataArcusBookmarkOrder: Desktop ignores annotations) for check_report.
+  // The shape is the writer's own bookmark's, which Desktop 2.158 opened and saved again (DESKTOP-TESTS.md, M5).
+  const VIEWS_NOTE = 'DataArcusBookmarkOrder';
+  function viewsOf({ views, PAGES }) {
+    const list = Array.isArray(views) ? views : [], seen = new Set();
+    // (a view the plan cannot have stops the plan with its reason: plan-artifact.mjs passes an error marked viewsProblem on)
+    const no = (why) => { const e = new Error('Nothing was written. bookmarks: ' + why); e.viewsProblem = true; throw e; };
+    return list.map((v, i) => {
+      const name = String((v && v.name) || '').trim(), page = v && v.page != null ? +v.page : 1, key = name.toLowerCase();
+      if (!name || hasControl(name)) no(`view ${i + 1} needs a name of plain text.`);
+      if (!Number.isInteger(page) || page < 1 || page > PAGES.length) no(`view ${i + 1} names page ${page}, and the plan has ${PAGES.length} page${PAGES.length === 1 ? '' : 's'}: give a page from 1 to ${PAGES.length}.`);
+      if (seen.has(key)) no(`view ${i + 1} has the same name as an earlier view: give each view its own name.`);
+      seen.add(key);
+      return { name: rnd(), label: name, page: PAGES[page - 1].id, pageNumber: page };
+    });
+  }
+  function bookmarkFiles({ bookmarks, views, add, D, files }) {
+    views.forEach((b) => add(D + '/bookmarks/' + b.name + '.bookmark.json', json({ $schema: SCHEMA.bookmark, displayName: b.label, name: b.name,
+      options: { suppressData: true, suppressDisplay: true },
+      explorationState: { version: '1.3', activeSection: b.page, sections: { [b.page]: { visualContainers: {} } } } })));
+    if (views.length) {
+      const rep = files.find((f) => f.path.endsWith(D + '/report.json')), j = JSON.parse(rep.data);
+      j.annotations = (j.annotations || []).concat([{ name: VIEWS_NOTE, value: JSON.stringify(views.map((b) => b.name)) }]);
+      rep.data = json(j);
+    }
     // Reset buttons: one data-only bookmark per page that brings that page's slicers back to "All"
-    if (bookmarks.length) {
+    if (bookmarks.length || views.length) {
       bookmarks.forEach((b) => add(D + '/bookmarks/' + b.name + '.bookmark.json', json(b.group
         ? { $schema: SCHEMA.bookmark, displayName: b.label, name: b.name,
             options: { targetVisualNames: b.targets, applyOnlyToTargetVisuals: true, suppressData: true, suppressActiveSection: true },
@@ -409,7 +437,7 @@
         : { $schema: SCHEMA.bookmark, displayName: b.label, name: b.name,
             options: { targetVisualNames: b.targets, applyOnlyToTargetVisuals: true, suppressDisplay: true, suppressActiveSection: true },
             explorationState: { version: '1.3', activeSection: b.page, sections: { [b.page]: { visualContainers: Object.fromEntries(b.targets.map((n) => [n, {}])) } } } })));
-      add(D + '/bookmarks/bookmarks.json', json({ $schema: SCHEMA.bookmarks, items: bookmarks.map((b) => ({ name: b.name })) }));
+      add(D + '/bookmarks/bookmarks.json', json({ $schema: SCHEMA.bookmarks, items: views.concat(bookmarks).map((b) => ({ name: b.name })) }));
     }
   }
   // the "No data", row-label and time-axis measures:
@@ -437,7 +465,7 @@
     } else if (o.namesNote) add(base + '.README.md', '# ' + base + o.namesNote);
   }
   // what build returns: alt text, the Arabic isolation, the notes:
-  function resultOf({ o, files, lang, rtl, readable, n, base, chartColors, chartAxes, tip, tipPages, six, galleryNotes }) {
+  function resultOf({ o, files, lang, rtl, readable, n, base, chartColors, chartAxes, tip, tipPages, six, galleryNotes, views }) {
     // (0.3, J7) alt text from each data visual's role and fields, tab stops in reading order, decorative parts out of it
     const a11y = Object.assign(A11y.apply(files.filter((f) => typeof f.data === 'string'), { lang, rtl }), { colours: readable.changed, card: readable.card || null });
     // (SQ15b, J18-S2) an Arabic report's texts, the alt texts above included: each Latin run inside Arabic text (an
@@ -449,6 +477,7 @@
     // (0.3.0 L2) the look options asked: each slicer's style with why; the charts given the gridlines asked
     if (o.slicerStyle === 'pills') out.slicerStyle = { asked: 'pills', slicers: n.slicerStyles };
     if (o.grid === 'dotted' || o.grid === 'none') out.grid = { asked: o.grid, charts: n.gridCharts.n };
+    if (views.length) out.views = views.length;   // (0.3.3 RX1) the plan's views written as bookmarks
     return o.gallery || galleryNotes.length ? Object.assign(out, { gallery: galleryNotes }) : out;
   }
   /** @param {BuildInput} o @returns {BuildResult} */
@@ -502,7 +531,8 @@
     // the report's pages (pbip-page.js)
     PAGES.forEach((pg, pageIndex) => Page.write(c, pg, pageIndex));
 
-    bookmarkFiles({ bookmarks, add, D });
+    const views = viewsOf({ views: o.views, PAGES });
+    bookmarkFiles({ bookmarks, views, add, D, files });
 
     // the tooltip pages (pbip-page.js); six: the trend kept to its last 6 months
     const six = Page.tooltips(c);
@@ -510,7 +540,7 @@
 
     extMeasures({ noData, rowLabels, timeExt, extFile, add, D });
     repoFiles({ o, W, add, base, theirs });
-    return resultOf({ o, files, lang, rtl, readable, n, base, chartColors, chartAxes, tip, tipPages, six, galleryNotes });
+    return resultOf({ o, files, lang, rtl, readable, n, base, chartColors, chartAxes, tip, tipPages, six, galleryNotes, views });
   }
 
   // AR_MONTHS: the one Arabic month list (the cross-review's duplicates: the twin uses it too)

@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // a saved value is used only when it has the default's type, so an old or hand-edited save cannot break the page
   // (the values themselves are checked once the patterns and the inputs are known, below)
   const state = Object.fromEntries(Object.entries(DEFAULTS).map(([k, d]) => [k, Array.isArray(d) ? (Array.isArray(saved[k]) ? saved[k] : d) : (typeof saved[k] === typeof d ? saved[k] : d)]));
-  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* private mode */ } };
+  const save = () => window.DAPageToast.saveState(STORE, state);   // (0.3.3 SG1) page-toast.js, its one place
 
   // ---------- DAX name helpers ----------
   const tbl = (t) => "'" + String(t || '').trim().replace(/'/g, "''") + "'";

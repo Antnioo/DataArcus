@@ -34,6 +34,7 @@ export const CAUSES = {
   'missing-shard': 'a shard log is missing or there twice',
   'g13': 'a report created by the parts does not validate',
   'missing-manifest': 'a shard has no manifest.json (the runner\'s record of each suite it ran)',
+  'fewer-checks': 'a suite printed fewer checks than its floor in mcp/test-checks.json (TR2)',
   'manifest-mismatch': 'a shard\'s log and its manifest disagree on a suite (its status or its checks)',
 };
 // (SPD, Codex #10) the runner's record of a run, in its log folder: { os, shard, commit, run, planned: [files], suites:

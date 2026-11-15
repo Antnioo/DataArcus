@@ -306,14 +306,25 @@ export default async function ({ browser, url }) {
   // it, and the SVG KPI Designer's first-visit banner is there from the start. Layout shift (CLS) over the first 3 s,
   // first visit, phone and desktop, English and Arabic: at most 0.1 ("good"). Web fonts are not loaded in the tests
   // (lib.mjs), so this is the script-caused part; the font swap is measured with Lighthouse.
-  for (const page of ['svg-kpi-designer', 'pl-300-practice-exam', 'dp-600-practice-exam', 'power-bi-model-health-check']) for (const lang of ['en', 'ar']) for (const vp of [[1440, 900], [390, 844]]) {
+  // (0.3.3 LF1, AUD-074: the Gulf like-for-like page jumped 0.20 at 1440 and 0.31 at 992, its result box filled by its
+  // deferred script) every page of tools/ at 1440 and 992 in English too; each value is printed, the worst first.
+  const clsRuns = [];
+  for (const page of ['svg-kpi-designer', 'pl-300-practice-exam', 'dp-600-practice-exam', 'power-bi-model-health-check']) for (const lang of ['en', 'ar']) for (const vp of [[1440, 900], [390, 844]]) clsRuns.push([page, lang, vp]);
+  for (const f of fs.readdirSync(path.join(ROOT, 'tools')).filter((n) => n.endsWith('.html')).sort()) for (const w of [1440, 992]) {
+    const page = f.replace(/\.html$/, '');
+    if (!clsRuns.some(([p, l, vp]) => p === page && l === 'en' && vp[0] === w)) clsRuns.push([page, 'en', [w, 900]]);
+  }
+  const clsSeen = [];
+  for (const [page, lang, vp] of clsRuns) {
     const v = await visitor(browser, { viewport: vp });
     await v.ctx.addInitScript(() => { window.__cls = 0; new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: 'layout-shift', buffered: true }); });
     await v.pg.goto(`${url}/tools/${page}.html?lang=${lang}`, { waitUntil: 'load' }); await v.pg.waitForTimeout(3000);
     const cls = await v.pg.evaluate(() => +window.__cls.toFixed(3));
+    clsSeen.push([cls, `${page} ${lang} ${vp[0]}px`]);
     check(cls <= 0.1, `${page} ${lang} ${vp[0]}px: layout shift ${cls} after loading (want 0.1 or less)`);
     await v.ctx.close();
   }
+  console.log('tools: layout shift after loading, worst first: ' + clsSeen.sort((a, b) => b[0] - a[0]).slice(0, 6).map(([c, n]) => `${n} ${c}`).join('; '));
   // a returning visitor (tutorial seen) never sees the SVG KPI Designer's banner, not even for a moment
   {
     const v = await visitor(browser, { viewport: [1440, 900] });

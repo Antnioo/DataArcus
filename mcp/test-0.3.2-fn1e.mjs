@@ -18,6 +18,10 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { disclosureCases, meaningCases } from './fixtures/fn1e-cases.mjs';
+import { withoutBrief } from './fixtures/ox2-pins.mjs';   // (0.3.3 OX2: its own section left out, pinned by ox2)
+const BRIEF_TALLY = { had: 0, noted: 0 };
+import { withoutBookmarkRules } from './fixtures/rx1-pins.mjs';   // (0.3.3 RX1: its two rules left out of rulesRun, pinned by rx1)
+const RX1_TALLY = { ran: 0 };
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const problems = []; let checks = 0;
@@ -216,7 +220,7 @@ CASES.push(['cut to the bone', worst, { maxFindings: 200 }]);
 
 for (const [name, p, o] of CASES) {
   let a; try { a = await CR.checkReport(p, o); } catch (e) { a = { refused: String(e && e.message || e) }; }
-  out['C ' + name] = norm(JSON.stringify(a));
+  out['C ' + name] = norm(JSON.stringify(withoutBookmarkRules(withoutBrief(a, BRIEF_TALLY), RX1_TALLY)));
 }
 
 // ---------- M: what each visual means ----------
@@ -226,11 +230,12 @@ for (const [name, v, o] of M) {
   out['M ' + name] = json(m);
 }
 
+// (0.3.3 SN4, on purpose, D-1112-01) the lint section's cut says notListed with its count: the C2 needle for the lint's cut follows, and the 4 cases that cut it are recorded again (mcp/work/SN4.md)
 // ---------- compare (or record) ----------
 const pins = Object.fromEntries(Object.entries(out).map(([k, t]) => [k, { sha: sha(t), len: t.length }]));
 if (process.env.FN1E_DUMP) fs.writeFileSync(process.env.FN1E_DUMP, JSON.stringify(out, null, 1));
 if (RECORD) {
-  fs.writeFileSync(GOLD, JSON.stringify({ about: 'FN1E: the whole output of summaryOf (with promptText and promptBox), checkReport and meaningOf for made-up inputs, recorded on integration/0.3.2 f6bf9fac before the split (test-0.3.2-fn1e.mjs). Never re-recorded to make a run pass.', linked: !!linked, pins }, null, 1) + '\n');
+  fs.writeFileSync(GOLD, JSON.stringify({ about: 'FN1E: the whole output of summaryOf (with promptText and promptBox), checkReport and meaningOf for made-up inputs, recorded on integration/0.3.2 f6bf9fac before the split (test-0.3.2-fn1e.mjs). Never re-recorded to make a run pass; on purpose, 0.3.3 SN4: the 4 cases that cut the lint section (it says notListed now).', linked: !!linked, pins }, null, 1) + '\n');
   console.log(`recorded ${Object.keys(pins).length} outputs`);
 }
 const gold = JSON.parse(fs.readFileSync(GOLD, 'utf8'));
@@ -250,12 +255,16 @@ const DO = all('D'), CO = all('C'), MO = all('M');
   .forEach((h) => chk(() => DO.includes(h.startsWith('"') ? h : h), () => `C2. no approval case reaches "${h}"`));
 ['IMAGE_MEASURE_PENDING', 'ICON_MEASURE_PENDING', 'DAX_MEASURE_PENDING', 'FORMAT_MIXED', 'INSTRUCTION_TEXT', 'FIELD_PARAMETER_TITLE', 'pageLanguages', 'page sizes', 'unreadable files', 'files too large',
   'custom visuals', 'findingsNotListed', 'suspiciousNames', 'modelNote', 'A11Y (accessibility)', 'RTL_MIRROR (tables)',
-  'the design lint could not read', '2 files could not be read', '"truncated":true}', 'folders too deep'].concat(linked ? ['"rule":"links"'] : [])
+  'the design lint could not read', '2 files could not be read', 'never as errors.","notListed":', 'folders too deep'].concat(linked ? ['"rule":"links"'] : [])
   .forEach((h) => chk(() => CO.includes(h), () => `C2. no check_report case reaches "${h}"`));
 ['"kind":"network"', '"kind":"map"', '"kind":"scatter"', '"kind":"matrix"', '"kind":"gauge"', '"kind":"card"', '"kind":"slicer"', '"kind":"kpi"', '"kind":"combo"', '"kind":"waterfall"', '"kind":"pie"',
   '"aggregate"', '"idFit":"', 'format objects', 'set aside', 'drill levels', 'a schedule']
   .forEach((h) => chk(() => MO.includes(h), () => `C2. no meaning case reaches ${h}`));
 
 fs.rmSync(ROOT, { recursive: true, force: true });
+// (0.3.3 OX2, on purpose) the answers above are compared without OX2's own section (fixtures/ox2-pins.mjs): the check_report cases: 42 answers carry briefCheck (the twin project names its model), 4 say in notChecked that it was not judged
+chk(() => BRIEF_TALLY.had === 42 && BRIEF_TALLY.noted === 4, () => `OX2: the answers that carry briefCheck and the notChecked lines, 42 and 4: ${JSON.stringify(BRIEF_TALLY)}`);
+// (0.3.3 RX1, on purpose) the answers above are compared without RX1's two bookmark rules in rulesRun (fixtures/rx1-pins.mjs)
+chk(() => RX1_TALLY.ran === 47, () => `RX1: the answers whose rulesRun lists a bookmark rule, 47: ${JSON.stringify(RX1_TALLY)}`);
 if (problems.length) { console.log(`FAIL script=test-0.3.2-fn1e.mjs cause=${problems[0].slice(0, 300)}`); problems.slice(0, 20).forEach((p) => console.log('  - ' + p.slice(0, 400))); console.log(`FAIL  fn1e  ${problems.length} of ${checks} checks failed`); process.exit(1); }
 console.log(`PASS  fn1e  ${checks} checks`);

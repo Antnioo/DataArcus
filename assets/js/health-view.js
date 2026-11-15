@@ -195,7 +195,7 @@
 
   // the result: the score ring and bars, the file bar, the score card, the tabs (each tab is drawn by its own step)
   function resultPart(v) {
-    const { app, host, S, $, isAr, L, num, bdi, score, grade, rt, render } = v;
+    const { app, host, S, $, isAr, L, num, bdi, esc, score, grade, rt, render } = v;
     const ring = (score, size) => {
       const [g, col] = grade(score), r = 44, c = 2 * Math.PI * r;
       return '<div class="mh-ring" style="width:' + size + 'px;height:' + size + 'px"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="' + r + '" class="bg"/><circle cx="50" cy="50" r="' + r + '" class="fg" style="stroke:' + col + ';stroke-dasharray:' + c + ';stroke-dashoffset:' + c * (1 - score / 100) + '"/></svg><div><b>' + score + '</b><span>' + g + '</span></div></div>';
@@ -211,6 +211,8 @@
       const gain = (f) => (window.MHEngine && window.MHEngine.scoreFrom ? window.MHEngine.scoreFrom(S.result.findings, new Set(Array.from(S.ignored).concat(f.id))).overall - sc.overall : 0);
       app.innerHTML =
         '<div class="mh-filebar"><span><i class="bi bi-file-earmark-bar-graph"></i> <b>' + bdi(S.result.meta.fileName) + '</b> · ' + L('checked in ', 'تم الفحص في ') + (S.result.meta.ms < 100 ? L('under 0.1 s', 'أقل من 0.1 ث') : (S.result.meta.ms / 1000).toFixed(1) + L(' s', ' ث')) + '</span><button type="button" class="tg-btn2 btn-sm" id="mhNew"><i class="bi bi-arrow-repeat"></i> ' + L('Check another file', 'افحص ملفًا آخر') + '</button></div>' +
+        // (AU1, AUD-068) a zip with more than one model: which was read and which not, before the score
+        (S.result.models ? '<div class="mh-panel mh-note mh-models mb-3"><i class="bi bi-info-circle"></i> ' + esc(L(S.result.models.en, S.result.models.ar)) + '</div>' : '') +
         '<div class="row g-4">' +
         '<div class="col-lg-4"><div class="mh-panel mh-scorecard text-center">' + ring(sc.overall, 170) +
         (S.prev ? (() => { const dlt = sc.overall - S.prev.s; return '<div class="mh-delta ' + (dlt > 0 ? 'up' : dlt < 0 ? 'down' : '') + '">' + (dlt > 0 ? '▲ +' + dlt : dlt < 0 ? '▼ ' + dlt : '=') + ' ' + L('since your last check (' + S.prev.d + ')', 'منذ آخر فحص (' + S.prev.d + ')') + '</div>'; })() : '') +

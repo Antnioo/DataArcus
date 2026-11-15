@@ -71,12 +71,12 @@ export function tokenPatches(restyle, themeRel, themeJson) {
 export const namePatches = (files, name) => (files.includes('.platform') ? [{ file: '.platform', pointer: '/metadata/displayName', from: null, to: name }, { file: '.platform', pointer: '/config/logicalId', from: null, to: 'a new id' }] : []);
 
 // ---- each record's reason: the enabled kind (lib/redesign-kinds.mjs) whose file and pointers cover it ----
-// (a value set where there was none, an object or a list, is covered pointer by pointer, as the copy's check reads it)
-const leaves = (o, at) => (o && typeof o === 'object' ? Object.keys(o).flatMap((k) => leaves(o[k], at + '/' + k)) : [at]);
+// (a value set where there was none, an object or a list, is covered pointer by pointer, as the copy's check reads it:
+// redesign-kinds.mjs leaves, its one place since 0.3.3 SG1)
 export function kindOfPatch(x, themeRel) {
   const named = (kind) => (kind ? { kind, reason: Kinds.sentenceOf(kind, 'en') } : null), ctx = { themeRel };
   if (x.op === 'add') { const a = Kinds.addRuleOf(x.file); return named(a && a.kind); }
   const covers = (at) => Kinds.KINDS.find((kd) => kd.enabled === true && at.every((ptr) => (kd.changes || []).some((c) => Kinds.FILES[c.file](x.file, ctx) && c.pointers.some((re) => re.test(ptr)))));
-  const k = covers([x.pointer]) || (x.op !== 'remove' && x.to && typeof x.to === 'object' ? covers(leaves(x.to, x.pointer)) : null);
+  const k = covers([x.pointer]) || (x.op !== 'remove' && x.to && typeof x.to === 'object' ? covers(Kinds.leaves(x.to, x.pointer)) : null);
   return named(k && k.name);
 }

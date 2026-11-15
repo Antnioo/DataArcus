@@ -37,9 +37,9 @@
   const MIN_CONTRAST = 3;   // a graphical object against what it is drawn on (WCAG 1.4.11; GUIDE#report-themes)
 
   // ---- reading a visual.json ----
-  const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
   // a literal's text, number and true or false, a column's set width: pbir-values.js, their one home (0.3.2 DD1B)
   const PV = node ? require('./pbir-values.js') : root.DAPbirValues;
+  const lit = PV.litValue;   // (0.3.3 SG1) a raw literal: its one place, pbir-values.js
   // a text box's paragraphs: one text each, text-runs.js, their one home (0.3.2 DD2T)
   const TR = node ? require('./text-runs.js') : root.DATextRuns;
   const strOf = PV.litText;

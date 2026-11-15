@@ -63,7 +63,7 @@ try {
   const made = id ? await s.call('create_report', { path: 'lab', planId: id }) : pl;
   chk(() => !made.err && made.j.written > 0, () => `T4 setup. the Time Lab report is written: ${short(made)}`);
   const first = await s.call('create_arabic_twin', { path: 'lab/TL.Report' });
-  let k = 0; const labels = {}; ((!first.err && first.j.texts) || []).filter((t) => t.text != null).forEach((t) => { labels[t.id] = t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من {2}: نص ${++k}` : `نص ${++k}`); });
+  let k = 0; const labels = {}; ((!first.err && first.j.texts) || []).filter((t) => t.text != null).forEach((t) => { labels[t.id] = t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من أصل {2}: نص ${++k}` : `نص ${++k}`); });
   let turned = -1;
   for (const [choice, trl] of [['the default', true], ['kept left to right', false]]) {
     const p = await s.call('create_arabic_twin', { path: 'lab/TL.Report', labels, timeRightToLeft: trl });

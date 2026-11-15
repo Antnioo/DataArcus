@@ -700,6 +700,16 @@ footer a.text-white-50:hover {
   color: var(--accent);
 }
 
+/* The title keeps three lines of room from 1400 px up (English only), so the Inter swap cannot move the page (B-435,
+   audit AUD-062). Measured 10 Nov 2026: the fallback's width is 0.983 to 1.004 of Inter's across the 17 article
+   titles, so no single size-adjust makes every title wrap alike (a sweep of size-adjust from 0.975 to 1.02 over 17
+   titles and widths 300 to 900 px left 103 of 2567 wraps different at the best value, the current one); the Copilot
+   title is 1656 px in the fallback and 1634 px in Inter at 48 px bold: 3 lines against 2 in the 856 px column.
+   3 x line-height 1.2 = 3.6em. Arabic pages keep their own wrap (Plex font waits, no swap). */
+@media (min-width: 1400px) {
+  html[lang="en"] .article-header h1 { min-height: 3.6em; }
+}
+
 .article-body {
   font-size: 1.1rem;
   line-height: 1.8;

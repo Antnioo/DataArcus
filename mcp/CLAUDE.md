@@ -26,13 +26,12 @@ starts with `## Summary` (40 lines at most). After each step: update, commit, pu
 - Every script ends with one line, `PASS  <name>  <N> checks` (or FAIL / SKIP), as `scripts/ci-sum.mjs` counts them;
   `scripts/check-result-lines.mjs` names a script without one. A failure: one `FAIL script=... cause=...` line first.
 - `npm test -- --affected`: local runs only; CI and the final gate run every suite.
-- The local loop: while working, `npm test -- <area>` or `npm test -- --affected`; at the end, one full run
-  `npm test -- --keep-going` (the gate's line). CI's shards: `npm test -- --plan` ([TESTS.md](docs/TESTS.md)).
+- While working: `npm test -- <area>`. At the end: CI on your branch (`gh workflow run tests.yml --ref <branch>`); no full local run.
 - A new `test.mjs` block is a part listed in one of `SHARDS`. After an `assets/js/` edit: `npm run build:min`.
 
 ## Constraints
 - **Never use the "MCP Engine for Power BI" connector here**; only Microsoft's Power BI Authoring MCP
-  ([the laptop loop](docs/LAPTOP.md)).
+  ([the owner's laptop loop](docs/LAPTOP.md)).
 - The MCP stays self-contained: only `mcp/package.json`'s packages.
 - Power BI rules are measured: [docs/RULES-POWERBI.md](docs/RULES-POWERBI.md), measurements in
   [DESKTOP-TESTS.md](../scripts/tests/DESKTOP-TESTS.md).

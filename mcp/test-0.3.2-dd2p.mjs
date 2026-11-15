@@ -10,7 +10,7 @@
 //            base deff19e (measured before DD2P, mcp/work/DD2P.md), pinned. node:zlib's own bytes for a fixed input are
 //            compared first: on a platform whose zlib writes other bytes the pictures it deflates are checked by B only
 //            (15 checks)
-//   P1-P40   the parity: every old place, run from the base's source (git show deff19e: each definition and the names it
+//   P1-P40   the parity: every old place, run from the base's source (saved in mcp/fixtures/hk1/dd2p, deff19e's bytes: each definition and the names it
 //            needs, read from the file as scripts/contracts-probe.mjs reads a nested name), and the one place on every
 //            input: one answer each. crc: design-engine, pbip-zip, glass-picture, page-picture, theme-download-ui and
 //            png-bytes crc32 (8 byte strings); png-chunk: design-engine chunk (in pngOf), glass-picture chunk (in
@@ -118,7 +118,11 @@ const png = (i) => new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, i]);
 function outputs(m) {
   const design = (preset) => designOf(m.E, preset);
   const glass = m.E.glassPng(design('DataArcus'), 1280, 720);
-  const input = (lang, preset) => { const d = design(preset), pages = m.E.projectPages(d.layout, lang, { second: true });
+  // (0.3.3 FB1, changed on purpose: one page, was two) the made-up report's second page has a filter rail, whose cards'
+  // row lies over the rail since FB1 (mcp/work/FB1.md): the base's engines place that page differently on purpose, so
+  // the report zipped here is the first page alone, which both place the same; the two hashes below are the base's
+  // bytes for this input (B13, B14 prove it: the base's engines, live, write the same bytes as now)
+  const input = (lang, preset) => { const d = design(preset), pages = m.E.projectPages(d.layout, lang, { second: false });
     return { name: 'DD2P ' + lang, title: lang === 'ar' ? 'لوحة المبيعات 2026' : 'Sales 2026', pageName: pages[0].name, lang, rtl: lang === 'ar', font: d.font, sample: true, logo: null, theme: m.E.buildTheme(d, lang), ui: d.ui,
       texts: m.E.REPORT_TEXTS[lang], pages: pages.map((p, i) => ({ name: p.name, page: p.page, slots: p.slots, png: i ? png(i) : glass, panel: p.panel, kpiInset: p.kpiInset })) }; };
   return [
@@ -153,8 +157,8 @@ const BASE_SHAS = {
   'page picture interlaced (testPng)': '8f2fe12287a189a5cb414437f161d5aafaedbf39cf75bb1c68f0ef29f0ff9f09',
   'page picture flipped (pagePicture, Normal)': '72311c4312473a493767b1a0ded12b117dd34244a283e136f9afb93a25423157',
   'theme generator text chunks (textChunk x2)': 'b657f58e0bc1408e6facd01aeb43114fff1c6c4d1a8a5655bd53b302b080c4d5',
-  'ZIP of a made-up report (pbip-export build, en)': '522a03df9d598fb2afa863b6d5ef3a642e844802eaa4d6c97bb2dfc336c84bd8',
-  'ZIP of a made-up report (pbip-export build, ar)': 'a27b9650da281fcfcd45e2d4103e269f7d6d9721aca83248743a24ec9d2ab4f2',
+  'ZIP of a made-up report (pbip-export build, en)': '1649f3f3189f30620f040a4f8bf36a69249c2f9ef6933169f9f126563a6e425f',
+  'ZIP of a made-up report (pbip-export build, ar)': 'd7b9345b5d151aab99a8de94b999964e8e82d69b1408ccccae40994716b6f3ea',
   'ZIP of three made-up entries (pbip-zip zip)': 'd38b248badeb359367d4d1e9b9199eb23b044835ef490436becc1cf67139f992',
 };
 const shasOf = (m) => Object.fromEntries(outputs(m).map(([label, , make]) => { let got; try { got = sha(make()); } catch (e) { got = 'throws ' + e.message; } return [label, got]; }));
@@ -171,9 +175,10 @@ now.forEach(([label, usesZlib, make], i) => {
 });
 
 // ---------- P: every old place (the base's source) and the one place, one answer per input ----------
-const BASE = process.env.DD2P_BASE || 'deff19e';
+// (HK1, 0.3.3) the base's files are saved copies (mcp/fixtures/hk1/dd2p, the commit deff19e's bytes), not git reads
+const BASE_FIX = path.join(HERE, 'fixtures', 'hk1', 'dd2p');
 const baseSrc = new Map();
-const baseOf = (f) => { if (!baseSrc.has(f)) baseSrc.set(f, execFileSync('git', ['show', `${BASE}:${f}`], { cwd: REPO, maxBuffer: 1 << 26 }).toString('utf8').replace(/\r\n/g, '\n')); return baseSrc.get(f); };
+const baseOf = (f) => { if (!baseSrc.has(f)) baseSrc.set(f, fs.readFileSync(path.join(BASE_FIX, ...f.split('/')), 'utf8').replace(/\r\n/g, '\n')); return baseSrc.get(f); };
 // one definition `const name = ...;` read from a source: from its name to the ';' where its brackets close (the one
 // inside `within` when given); the old copies are one-line helpers with no brackets inside strings but balanced ones
 function definition(src, name, within) {
@@ -217,7 +222,7 @@ chk(() => engines.Zip.crc32 === P.crc32, () => 'P41. pbip-zip.js exports png-byt
   let base = null, why = '';
   try {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-dd2p-base-'));
-    const files = execFileSync('git', ['ls-tree', '--name-only', BASE, 'assets/js/'], { cwd: REPO }).toString('utf8').split('\n').filter((f) => /^assets\/js\/[^/]+\.js$/.test(f) && !/\.min\.js$/.test(f))
+    const files = fs.readdirSync(path.join(BASE_FIX, 'assets', 'js')).map((n) => 'assets/js/' + n).filter((f) => /^assets\/js\/[^/]+\.js$/.test(f) && !/\.min\.js$/.test(f))
       .concat(['mcp/lib/glass-picture.mjs', 'mcp/lib/page-picture.mjs']);
     for (const f of files) { const to = path.join(dir, ...f.split('/')); fs.mkdirSync(path.dirname(to), { recursive: true }); fs.writeFileSync(to, baseOf(f)); }
     const out = execFileSync(process.execPath, [fileURLToPath(import.meta.url)], { cwd: HERE, env: Object.assign({}, process.env, { DD2P_TREE: dir }), maxBuffer: 1 << 24 }).toString('utf8').trim().split('\n').pop();

@@ -8,7 +8,7 @@
  *   tables         the readers' shape: [{ name, hidden, date, columns: [{ name, dataType, isHidden, dataCategory, sortBy?,
  *                  displayFolder?, formatString?, summarizeBy? }], measures: [{ name, isHidden, formatString, divides,
  *                  displayFolder?, formatStringDefinition? }] }] (a measure's DAX in META: exprOf)
- *   relationships  [{ fromTable, toTable, both? }], the active ones (many to one, from fromTable to toTable)
+ *   relationships  [{ fromTable, toTable, both? }], the active ones (many to one, from fromTable to toTable; both: relationship-filter.js)
  *   fields         the Field shape below: { measures, columns, hiddenMeasures } from catalog(tables, modelTables?)
  * Interface:
  *   fromTmsl(json) -> tables; relsOfTmsl(json) -> relationships; clean(tables) -> tables without the automatic date
@@ -31,6 +31,8 @@
   const SC = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./sort-column.js') : root.DASortColumn;
   // is this text Arabic: arabic-script.js, its one home (0.3.2 DD1F; CONTRACTS.md 1f)
   const AS = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./arabic-script.js') : root.DAArabicScript;
+  // which ways a relationship filters: relationship-filter.js, its one home (0.3.3 LX1, AUD-069: a one-to-one filters both ways)
+  const RF = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./relationship-filter.js') : root.DARelationshipFilter;
   /**
    * The field shape the picker gives out (builder 7's audit A3-9, 11 Oct: one documented contract):
    * @typedef {Object} Field
@@ -95,7 +97,7 @@
   // them to suggest. From a model.bim or DataModelSchema (TMSL: isActive) or the health engine's answer (active), and
   // from a project's definition/relationships.tmdl (isActive: false left out; a column is Table.Column, either quoted).
   const relsOfTmsl = (json) => { const m = (json && json.model) || json || {};
-    return (m.relationships || []).filter((r) => r && r.fromTable && r.toTable && r.isActive !== false && String(r.isActive) !== 'false' && r.active !== false).map((r) => Object.assign({ fromTable: String(r.fromTable), toTable: String(r.toTable) }, /^bothDirections$/i.test(r.crossFilteringBehavior || r.cross || '') ? { both: true } : {})); };   // (part 5: both: filters both ways)
+    return (m.relationships || []).filter((r) => r && r.fromTable && r.toTable && r.isActive !== false && String(r.isActive) !== 'false' && r.active !== false).map((r) => Object.assign({ fromTable: String(r.fromTable), toTable: String(r.toTable) }, RF.filtersBoth(r) ? { both: true } : {})); };   // (part 5: both: filters both ways; LX1: a one-to-one too, RF)
   // Power BI's hidden automatic date tables are not fields anyone picks
   const clean = (tables) => tables.filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name));
 

@@ -9,6 +9,7 @@
 // never changed by DataArcus: the person applies the script in TMDL view. Model names are untrusted: quoted, never followed.
 import { createRequire } from 'node:module';
 import { shownName } from './model.mjs';
+import { fieldKey } from './field-key.mjs';
 
 const require = createRequire(import.meta.url);
 const { hasControl } = require('../../assets/js/pbip-export.js');
@@ -69,7 +70,7 @@ export function cultureScript(raw, terms, cultures) {
       if (!o || typeof o.name !== 'string') continue;
       if (o.isHidden) { hidden++; continue; }
       if (o.description) descriptions++;
-      const key = `${t.name}[${o.name}]`, x = terms && terms.get(key), field = shownName(key, 200);
+      const key = fieldKey(t.name, o.name), x = terms && terms.get(key), field = shownName(key, 200);
       const write = x && x.status === 'approved' && x.given && x.ar != null && String(x.ar).trim() !== '';
       const why = !x ? 'notShown' : x.status === 'kept' ? (x.declined ? 'kept' : 'none') : x.status === 'draft' ? 'draft' : !write ? (x.earlier ? 'earlier' : 'label') : null;
       if (why) { english.push({ field, why }); continue; }

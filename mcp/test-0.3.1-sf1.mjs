@@ -164,7 +164,7 @@ try {
       if (j.gulfDates && j.gulfDates.askNext && !a.gulfDates && ((j.gulfDates.candidates || [])[0] || {}).field) more.gulfDates = { dateRole: j.gulfDates.candidates[0].field, grain: 'gregorian', scope: 'all' };
       if (j.sharedAxes && (j.sharedAxes.ask || []).length) more.sharedAxes = SHARED_AXES.concat(j.sharedAxes.ask.map((q) => ({ measures: q.measures, answer: 'comparable' })));
       if (!a.arabicTerms && B.terminology && (B.terminology.sheet || []).length) { const t = {}; B.terminology.sheet.forEach((x) => { if (x.field) t[x.field] = ar(); }); more.arabicTerms = t; }
-      else if (a.arabicTerms && !a.arabicTexts && (B.texts || []).length) { const at = {}; B.texts.filter((x) => x.text != null && x.arabic == null && !x.field).forEach((x) => { at[x.text] = x.draftArabic || (/\{1\}/.test(x.text) ? `أعلى {1} من {2}: ${ar()}` : ar()); }); more.arabicTexts = at; }
+      else if (a.arabicTerms && !a.arabicTexts && (B.texts || []).length) { const at = {}; B.texts.filter((x) => x.text != null && x.arabic == null && !x.field).forEach((x) => { at[x.text] = x.draftArabic || (/\{1\}/.test(x.text) ? `أعلى {1} من أصل {2}: ${ar()}` : ar()); }); more.arabicTexts = at; }
       if (!Object.keys(more).length) break; a = Object.assign(a, more); pl = await ask(srv, 'plan_layout', a); }
     return { pl, a }; };
   const PATHS = [

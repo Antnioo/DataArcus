@@ -115,7 +115,7 @@ try {
   chk(() => TL && TL.isolateLatin(KPI) === RLI + 'مؤشر ' + FSI + 'KPI 2024' + PDI + RLM + PDI, () => `TS-4a. "${KPI}" written with its Latin run isolated (and a right-to-left mark after the run that ends it): ${TL ? JSON.stringify(TL.isolateLatin(KPI)) : 'lib/terminology.mjs missing'}`);
   chk(() => TL && TL.isolateLatin('مؤشر KPI 2024 حسب الشهر') === RLI + 'مؤشر ' + FSI + 'KPI 2024' + PDI + ' حسب الشهر' + PDI && TL.isolateLatin('KPI المبيعات') === RLI + RLM + FSI + 'KPI' + PDI + ' المبيعات' + PDI
     && TL.isolateLatin('Q1/2024 الربع') === RLI + RLM + FSI + 'Q1/2024' + PDI + ' الربع' + PDI, () => `TS-4b. a run inside, at the start, with a slash: ${TL ? JSON.stringify(['مؤشر KPI 2024 حسب الشهر', 'KPI المبيعات', 'Q1/2024 الربع'].map(TL.isolateLatin)) : 'missing'}`);
-  chk(() => TL && ['المبيعات', 'Total Sales', 'أعلى 6 من 10', 'أعلى {1} من {2}: المبيعات', ''].every((x) => TL.isolateLatin(x) === x) && TL.isolateLatin(TL.isolateLatin(KPI)) === TL.isolateLatin(KPI),
+  chk(() => TL && ['المبيعات', 'Total Sales', 'أعلى 6 من 10', 'أعلى {1} من أصل {2}: المبيعات', ''].every((x) => TL.isolateLatin(x) === x) && TL.isolateLatin(TL.isolateLatin(KPI)) === TL.isolateLatin(KPI),
     () => `TS-4c. Arabic only, English only, numbers alone and placeholders unchanged; isolating twice changes nothing`);
   chk(() => TM.textWidth(FSI + PDI + RLM, 10) === 0 && Math.abs(TM.textWidth('مؤشر ' + FSI + 'KPI' + PDI, 10) - TM.textWidth('مؤشر KPI', 10)) < 1e-9, () => `TS-4d. the isolates have no width (text-measure): ${TM.textWidth(FSI + PDI, 10)}`);
 
@@ -227,7 +227,7 @@ try {
     // said here, so a list that pages fails here, by name, every time)
     chk(() => !J.truncated && !J.moreTexts, () => `TS-2 the twin's plan is answered whole (no cut, every text listed: no moreTexts), the sheet in it: ${JSON.stringify([J.truncated, J.moreTexts])}`);
     const tm = T1.find((t) => t.kind === 'titleMeasure' && t.text === 'Top {1} of {2}: Web Orders Total Score by Coupon Region'), al = T1.find((t) => t.kind === 'altText' && t.text === 'Web Orders Total Score by Plan Group: detail');
-    chk(() => tm && tm.label === `أعلى {1} من {2}: ${KPI} حسب منطقة القسيمة` && al && al.label === `${KPI} حسب مجموعة الخطة: التفاصيل` && /term/i.test(String(tm.labelFrom || '')),
+    chk(() => tm && tm.label === `أعلى {1} من أصل {2}: ${KPI} حسب منطقة القسيمة` && al && al.label === `${KPI} حسب مجموعة الخطة: التفاصيل` && /term/i.test(String(tm.labelFrom || '')),
       () => `TS-2b. a title and an alt text made of the fields' names take the terms (derived): ${JSON.stringify([tm, al].map((t) => t && [t.text, t.label, t.labelFrom]))}`);
     const sh = (J.terminology && J.terminology.sheet) || [], cr = rowOf(sh, 'Coupon[Coupon Region]');
     const ms = rowOf(sh, 'Calendar[Year Month]'), yr = rowOf(sh, 'Calendar[Year]');

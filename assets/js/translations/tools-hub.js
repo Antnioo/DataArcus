@@ -47,7 +47,7 @@ window.toolsHubTranslations = {
         },
         "pl300": {
           "title": "PL-300 Practice Exam Simulator",
-          "desc": "228 original Power BI questions with explanations, timed mock exams scored out of 1000, case studies and a study plan. Good prep for renewal too.",
+          "desc": "234 original Power BI questions with explanations, timed mock exams scored out of 1000, case studies and a study plan. Good prep for renewal too.",
           "tag1": "New",
           "tag2": "Renewal ready",
           "tag3": "Apr 2026 outline"
@@ -151,7 +151,7 @@ window.toolsHubTranslations = {
         },
         "pl300": {
           "title": "محاكي اختبار PL-300",
-          "desc": "228 سؤالًا أصليًا عن Power BI مع الشرح، واختبارات تجريبية بوقت ونتيجة من 1000، ودراسات حالة وخطة مذاكرة. مفيد أيضًا لتجديد الشهادة.",
+          "desc": "234 سؤالًا أصليًا عن Power BI مع الشرح، واختبارات تجريبية بوقت ونتيجة من 1000، ودراسات حالة وخطة مذاكرة. مفيد أيضًا لتجديد الشهادة.",
           "tag1": "جديد",
           "tag2": "جاهز للتجديد",
           "tag3": "منهج أبريل 2026"

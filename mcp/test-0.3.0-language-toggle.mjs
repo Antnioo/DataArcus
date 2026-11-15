@@ -72,7 +72,7 @@ try {
 
   // labels: every listed text in Arabic (the fixed list's draft, else a made-up Arabic text), as D3's suite
   const p0 = await s.call('create_arabic_twin', { path: 'large/Orders EN.pbip' }), T0 = (p0.j && p0.j.texts) || [];
-  let k = 0; const L = {}; T0.filter((t) => t.text != null).forEach((t) => { L[t.id] = t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من {2}: نص ${++k}` : `نص ${++k}`); });
+  let k = 0; const L = {}; T0.filter((t) => t.text != null).forEach((t) => { L[t.id] = t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من أصل {2}: نص ${++k}` : `نص ${++k}`); });
   // ---------- L7 (guard): the separate twin's plan has none of it ----------
   chk(() => !p0.err && p0.j.twin && p0.j.twin.report === 'Orders EN AR.Report' && !('languages' in p0.j), () => `L7a. the separate twin's plan is as before (no languages): ${short(p0)}`);
 

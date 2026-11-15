@@ -16,7 +16,8 @@
   const TN = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./tmdl-name.js') : root.DATmdlName;
   const TAB = '\t';
   const ind = (n) => TAB.repeat(n);
-  const text = (v) => (Array.isArray(v) ? v.join('\n') : v == null ? '' : String(v));
+  // an expression as one text: the one place, dax-reference-parser.js exprText (0.3.3 SG1; loaded before this file on the tool page, read when called)
+  const text = (v) => (typeof require === 'function' && typeof module === 'object' && module.exports ? require('./dax-reference-parser.js') : root.DADaxParser).exprText(v);
 
   // Names: bare when plain, else in single quotes with ' doubled (a hyphen is quoted): tmdl-name.js
   const name = TN.tmdlName;

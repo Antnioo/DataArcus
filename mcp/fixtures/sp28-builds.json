@@ -4,31 +4,31 @@
   "B1 the sample download, EN, exec 1280 x 720, two pages": {
    "files": {
     "count": 94,
-    "sha256": "2e30eb76b2ae32de98260ea9a07e304be6271ff00d86ba8a91a42e22fa57f201"
+    "sha256": "06b7576e7b5341cf37ac1c3d38c3d82cf20b3e8ec2f7226abdaa028238782eb7"
    },
    "result": {
     "length": 2056,
-    "sha256": "865d30144e7b8e17e636c0cc689df652ba2501b05be33c70cbedc964b57a662b"
+    "sha256": "ae1989864cf4ff3916b1f4696a4d5b0c6db1a592ea5da39a1b826f4c1eed7798"
    }
   },
   "B2 the sample download, AR, analysis 1920 x 1080, the rail, transparent": {
    "files": {
     "count": 52,
-    "sha256": "436a1404be4c53d99ceb19953eca530cbceac1a527fa01147079242921bcb328"
+    "sha256": "0d4b3c152d0fe75524b8464377ec3947921a80e246b1541fbb0125d244543f49"
    },
    "result": {
     "length": 1537,
-    "sha256": "09e4c27f663efb6a953b0a9ec01658c7c20e389e9d0bed0585baae14f147b138"
+    "sha256": "a57508eacda3850f3b2e97101bcce4f5a22b178dbbf178de10d2542842960a25"
    }
   },
   "B3 EN own model, exec, gradient colours, quiet grid, \"No data\", two pages": {
    "files": {
     "count": 94,
-    "sha256": "f75998cda4231153b0957ba41f3826de4f38996db767b66f697b5454361a35b2"
+    "sha256": "1cb63d252a01b675914e2c65cd06a544736097888da71403863063a564bdab12"
    },
    "result": {
-    "length": 3232,
-    "sha256": "22acc63fa5dbb1236e460688899ee3807e630985fb4034e26ea18cac0fc86670"
+    "length": 3632,
+    "sha256": "2ced65d846d3ac24fdb89014d01a372fecea71dbfef77660e6980dd1d8a288bd"
    }
   },
   "B4 EN own model, analysis 1920 x 1080, filters on top, pills, dotted grid, straight lines": {
@@ -74,11 +74,11 @@
   "B8 EN hand-placed: a column chart by many names and by quarter, a two-valued bar, many fields in a narrow table": {
    "files": {
     "count": 31,
-    "sha256": "98624c38e9ea285ef053726039afe1b163360518bb53d4ab49ccb76f8e71abce"
+    "sha256": "71b3522df27bd71007282c37bc9d8b6f6551034180fa3071a3329d6ffc1e7639"
    },
    "result": {
-    "length": 2231,
-    "sha256": "54ffad44a6bc58aa61e4069c36533f71c29ec1127651c265ef5796f82fb3cf15"
+    "length": 2234,
+    "sha256": "c9530bbd6f6196fca14a19ef1867e5e6d8e1a21fa0a07ed8a5f8324e273eea90"
    }
   },
   "B9 AR hand-placed: a right-to-left table with its row label, twin titles renamed, a matrix of months": {

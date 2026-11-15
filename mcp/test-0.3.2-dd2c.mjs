@@ -6,15 +6,14 @@
 //           an empty object and array, a string, a number, true), each answer pinned; F1 the module's one name
 //   B1-B3, M1-M4, D1-D3  the base's (128285e, measured before DD2C, mcp/work/DD2C.md) digests and differences of
 //           made-up plans: bindingOf, modelPrintOf and inputDifferences, byte for byte
-//   P1-P16  parity: both old copies (artifact.mjs canon and plans.mjs canon, read from the base's source with git show,
-//           DD2C_BASE to name another) and canon.mjs on C1-C16: one answer per value
+//   P1-P16  parity: both old copies (artifact.mjs canon and plans.mjs canon, read from the base's source saved in
+//           mcp/fixtures/hk1/dd2c, the commit 128285e's bytes) and canon.mjs on C1-C16: one answer per value
 //   Q1-Q3   the bindings and prints of B1, B2 and M1 taken with each old copy (sha256 of its text): the same digest
 //   S1-S2   one place: neither caller holds a canonical text of its own; each imports canon.mjs
 //   node test-0.3.2-dd2c.mjs
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import * as Canon from './lib/canon.mjs';
 import { bindingOf, modelPrintOf } from './lib/artifact.mjs';
@@ -68,12 +67,12 @@ export const DIGESTS = [
 for (const [id, f, want] of DIGESTS) { let got; try { got = f(); } catch (e) { got = 'throws ' + e.message; } chk(() => got === want, () => `${id}: ${show(got).slice(0, 200)}, the base gave ${show(want).slice(0, 200)}`); }
 
 // ---------- P: both old copies (the base's source) and canon.mjs, one answer per value ----------
-const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
-const BASE = process.env.DD2C_BASE || '128285e';
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+// (HK1, 0.3.3) the base's files are saved copies (mcp/fixtures/hk1/dd2c, the commit 128285e's bytes), not git reads
 // the old copy: its one line `const canon = ...;` read from the base's file, run as it was
 const oldCanon = (file) => {
   try {
-    const src = execFileSync('git', ['show', `${BASE}:${file}`], { cwd: REPO, maxBuffer: 1 << 26 }).toString('utf8').replace(/\r\n/g, '\n');
+    const src = fs.readFileSync(path.join(HERE, 'fixtures', 'hk1', 'dd2c', file), 'utf8').replace(/\r\n/g, '\n');
     const line = src.split('\n').filter((l) => l.startsWith('const canon = '));
     if (line.length !== 1) throw new Error(`${file}: ${line.length} lines "const canon = " in the base's source, 1 wanted`);
     return { file, f: new Function('"use strict";\n' + line[0] + '\nreturn canon;')() };

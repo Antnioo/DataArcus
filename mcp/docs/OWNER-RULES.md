@@ -7,8 +7,7 @@ here). Nothing was reworded; where a moved line says "this file" or names a sect
 # From the root CLAUDE.md
 
 This repo is dataarcus.com (the website and its free Power BI tools) and the DataArcus MCP (`mcp/`).
-The owner is Abdelrahman. He relays messages between two Claude sessions: a builder on his laptop (hands-on work,
-Power BI Desktop) and a reviewer in the cloud (reviews, the full test run on Linux, merges). He decides every step.
+The owner is Abdelrahman. Builders are cloud sessions on their own branches; a reviewer session reviews and merges into the integration branch; CI on three systems is the test gate; the owner merges to main and does the laptop checks in Power BI Desktop.
 
 **Before doing anything:**
 1. Read `mcp/WORK.md`: the current step, its approved plan and expected numbers, and what is open. It is the
@@ -24,12 +23,12 @@ LinkedIn post, read `content/LINKEDIN-PLAN.md`. Update them after each post (the
 ## Working efficiently (every session: the builder and the reviewer)
 The owner wants this done fast without losing accuracy. So:
 - **Batch, don't drip.** Gather everything that needs the owner (clicks, decisions, screenshots) into one request,
-  not one at a time. Automate Desktop steps where Windows allows it (UI Automation for buttons such as Mobile
-  layout), keep reusable scripts in `C:\DataArcus\tests\phase2-try\builder-scripts\` and reuse them.
+  not one at a time. Desktop steps are the owner's one batched laptop run; automate them where Windows allows it
+  (UI Automation for buttons such as Mobile layout), and keep reusable scripts in the repo (`scripts/`, `mcp/lab/`).
 - **Measure, don't estimate.** Any size or rule Power BI decides is measured in Desktop once (English and Arabic,
   smallest and largest page) before it is coded; estimates have cost whole rounds.
-- **Test in the right order.** The failing tests first; then the suites the change touches; the full run once, at
-  the end. Never rerun everything to check a one-line change.
+- **Test in the right order.** The failing tests first; then the suites the change touches (`npm test -- <area>`); at
+  the end CI on your branch, no full local run. Never rerun everything to check a one-line change.
 - **Stop when a failure could change what Desktop shows** (owner 2026-10-01): report it with its cause and a
   proposed fix, and don't pile up results that the fix will invalidate. Any other failure (a fixture that needs the
   owner's go, a validator message, a test expectation to discuss): note it with its cause and proposed fix, and
@@ -50,7 +49,7 @@ collecting every point decided so far, so nothing is lost between sessions. Chec
 1. The request itself, first line ("Go on X", "Plan only").
 2. Every decision the owner made that applies (with what was rejected), and what is out of scope.
 3. The files and branch, by name.
-4. The steps in order, including tests first, the full run, Desktop checks and the memory update.
+4. The steps in order, including tests first, CI on the branch, the owner's Desktop checks and the memory update.
 5. The rules: scope folder, no employer or client data, don't change tests or expected numbers to pass, stop and
    report on failure, don't merge.
 6. The expected results, written down before any run.
@@ -58,6 +57,21 @@ collecting every point decided so far, so nothing is lost between sessions. Chec
 8. Open items that must not be forgotten.
 Before a session is compacted or ends: write the current state, every decision and the next step into
 `mcp/WORK.md` (or the file that owns it), commit and push.
+
+## The job note: the three sections a machine reads (WF3, owner D-1112-03)
+Every builder's `mcp/work/<ID>.md` ends its report items in these sections; the Stop hook (`scripts/agent-stop-check.mjs`)
+refuses a note with a `CI green:` line when a line below does not match. One item per list line ("- ", "* " or "1. ");
+a wrapped item continues on the next line, which may start with spaces and "| route:" (or any other field). "none" is a line.
+- **`## For the owner`**: only a question that is his to decide. The text ends with "?" before the first " | ", then the fields
+  `| class: x | rec: ... | yes: ... | no: ... | default: ...`. class is one of: arabic, public, money, main, rules, github,
+  laptop, direction. Example:
+  `- Should the cap be 3 or 5? | class: rules | rec: 5 | yes: cap 5 | no: cap 3 | default: 3`
+- **`## Seen, not in scope`**: each line has `| route: <fix|job|backlog|drop> | why: ...`; route fix also `| size: S|M|L`. Example:
+  `- A wrong label on page 2 | route: backlog | why: not this job`
+  `- The cut text on the About card | route: fix | size: S | why: one line, same file`
+- **`## For the reviewer`**: everything that is a statement and not a question: "no new Arabic", "nothing to decide", result lines.
+Not a question for the owner? Move it under "## For the reviewer". Other field names the engine reads: risk, proof, where.
+Notes already written stay as they are.
 
 ## Website changes (owner's rule 2026-10-06)
 Any change to the website runs the check of all its config files: `node scripts/test-site-config.mjs` (in CI on every

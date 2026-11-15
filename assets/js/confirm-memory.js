@@ -9,10 +9,12 @@
 // name the person approved for a field. (0.3.0 J17) The Gulf date questions' answers too (dateRecord below): hashes and
 // the answer. No network: nothing here sends or loads anything.
 (function (root, factory) {
-  const api = factory();
-  if (typeof module === 'object' && module.exports) module.exports = api;
+  const node = typeof module === 'object' && module.exports;
+  // (0.3.3 SG1) dax-reference-parser.js: an expression as one text (the tool page loads it before this file)
+  const api = factory(node ? require('./dax-reference-parser.js') : root.DADaxParser);
+  if (node) module.exports = api;
   else root.DataArcusConfirmMemory = api;
-})(typeof self !== 'undefined' ? self : this, function () {
+})(typeof self !== 'undefined' ? self : this, function (DAX) {
   'use strict';
   const ANSWERS = ['intended', 'mistake'];
 
@@ -59,7 +61,7 @@
     return H.map((x) => (x >>> 0).toString(16).padStart(8, '0')).join('');
   }
 
-  const text = (x) => (Array.isArray(x) ? x.join('\n') : x == null ? '' : String(x));
+  const text = DAX.exprText;   // (0.3.3 SG1) an expression as one text: the one place, dax-reference-parser.js
   const lc = (s) => String(s == null ? '' : s).toLowerCase();
   // the measure a question is about ("[Name]"): measure names are unique in a model
   function measureOf(q, rawTables) {

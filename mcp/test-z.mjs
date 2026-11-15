@@ -26,7 +26,7 @@ export async function zgate({ call, check, ROOT, fs = fs0 }) {
 
   // ---------- Z-01: a plan kind that allows a tool but pins nothing for it fails closed; a report plan writes no theme file ----------
   {
-    const pl = await call('plan_layout', { path: 'zg', layout: 'exec' }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
+    const pl = await call('plan_layout', { path: 'zg', name: 'Z01 Plan', layout: 'exec' }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
     await call('approve_plan', { planId: pid });
     const before = all(), t = await call('generate_theme', { brand: '#B91C1C', name: 'Any Inputs', folder: 'zg', planId: pid });
     chk(() => t.err && /Nothing was written/.test(t.t) && all() === before, () => `Z-01. a report plan writes no theme file (any inputs): ${short(t)}`);

@@ -78,11 +78,18 @@
   }
 
   // the normalised model, its index, the auto date tables and the dependency graph from DAX and the model
-  function graphStep(modelJson) {
+  // (0.3.3 HX2, exported: the MCP's Impact check, mcp/lib/lineage.mjs, reads this one graph, never a copy of it.
+  // opts.edges: also each edge's kind, node -> { kind: [nodes] }: dax (a measure's, a calculated column's or table's,
+  // a function's or a calculation item's DAX), format (a measure's format string expression), table (a column's table),
+  // sort (a sort-by column), agg (an aggregation column's detail), group (a field parameter's grouping column). The
+  // health check calls it without opts: its graph and its answers are as before.)
+  function graphStep(modelJson, opts) {
     const M = normalizeModel(modelJson);
     const IX = buildIndex(M);
     const deps = new Map();   // node -> Set(nodes it depends on)
     const addDeps = (node, arr) => { if (!deps.has(node)) deps.set(node, new Set()); arr.forEach((x) => deps.get(node).add(x)); };
+    const edges = opts && opts.edges ? new Map() : null;
+    const edge = (node, kind, arr) => { if (!edges) return; if (!edges.has(node)) edges.set(node, {}); const e = edges.get(node); e[kind] = Array.from(new Set((e[kind] || []).concat(arr))); };
     const styleByMeasure = {};
 
     const autoDateTables = M.tables.filter((t) => /^(LocalDateTable_|DateTableTemplate_)/.test(t.name));
@@ -90,38 +97,39 @@
     const userTables = M.tables.filter((t) => !autoSet.has(lc(t.name)));
 
     // dependencies from DAX
-    M.functions.forEach((f) => addDeps(K.f(f.name), daxRefs(f.expr, null, IX).refs));
+    M.functions.forEach((f) => { const r = daxRefs(f.expr, null, IX).refs; addDeps(K.f(f.name), r); edge(K.f(f.name), 'dax', r); });
     M.tables.forEach((t) => {
       t.measures.forEach((ms) => {
         const r = daxRefs(ms.expr + '\n' + ms.fsExpr + '\n' + ms.detailRows + '\n' + ms.kpi, null, IX);
         addDeps(K.m(ms.name), r.refs);
         styleByMeasure[ms.name] = r.style;
+        if (edges) { edge(K.m(ms.name), 'dax', daxRefs(ms.expr, null, IX).refs); if (ms.fsExpr) edge(K.m(ms.name), 'format', daxRefs(ms.fsExpr, null, IX).refs); }
       });
-      t.columns.forEach((c) => { if (c.kind === 'calculated') addDeps(K.c(t.name, c.name), daxRefs(c.expr, t.name, IX).refs); });
+      t.columns.forEach((c) => { if (c.kind === 'calculated') { const r = daxRefs(c.expr, t.name, IX).refs; addDeps(K.c(t.name, c.name), r); edge(K.c(t.name, c.name), 'dax', r); } });
       if (t.isCalcTable) {
         const r = daxRefs(t.calcExpr, null, IX).refs;
-        addDeps(K.t(t.name), r);
+        addDeps(K.t(t.name), r); edge(K.t(t.name), 'dax', r);
         t.columns.forEach((c) => addDeps(K.c(t.name, c.name), [K.t(t.name)]));
       }
-      if (t.calcGroup) t.calcGroup.items.forEach((ci) => addDeps(K.t(t.name), daxRefs(ci.expr + '\n' + ci.fsExpr, null, IX).refs));
-      t.columns.forEach((c) => { if (c.sortBy) addDeps(K.c(t.name, c.name), [K.c(t.name, c.sortBy)]); });
+      if (t.calcGroup) t.calcGroup.items.forEach((ci) => { const r = daxRefs(ci.expr + '\n' + ci.fsExpr, null, IX).refs; addDeps(K.t(t.name), r); edge(K.t(t.name), 'dax', r); });
+      t.columns.forEach((c) => { if (c.sortBy) { addDeps(K.c(t.name, c.name), [K.c(t.name, c.sortBy)]); edge(K.c(t.name, c.name), 'sort', [K.c(t.name, c.sortBy)]); } });
       // aggregation tables: queries on the detail table are answered from the hidden aggregation table, so an aggregation
       // column is used whenever its detail column (or for Count table rows, its detail table) is, and it needs that detail
       t.columns.forEach((c) => {
         const base = aggBase(c.alternateOf);
-        if (base) { addDeps(base, [K.c(t.name, c.name)]); addDeps(K.c(t.name, c.name), [base]); }
+        if (base) { addDeps(base, [K.c(t.name, c.name)]); addDeps(K.c(t.name, c.name), [base]); edge(K.c(t.name, c.name), 'agg', [base]); }
       });
       // field parameters: the visible column groups by the hidden "Fields" column, so a visual using one uses both
-      t.columns.forEach((c) => ((c.relatedColumnDetails && c.relatedColumnDetails.groupByColumns) || []).forEach((g) => { if (g && g.groupingColumn) addDeps(K.c(t.name, c.name), [K.c(t.name, g.groupingColumn)]); }));
+      t.columns.forEach((c) => ((c.relatedColumnDetails && c.relatedColumnDetails.groupByColumns) || []).forEach((g) => { if (g && g.groupingColumn) { addDeps(K.c(t.name, c.name), [K.c(t.name, g.groupingColumn)]); edge(K.c(t.name, c.name), 'group', [K.c(t.name, g.groupingColumn)]); } }));
       t.hierarchies.forEach((h) => h.levels.forEach((l) => addDeps('h:' + lc(t.name) + '|' + lc(h.name), [K.c(t.name, l.column)])));
       // a column always needs its table
-      t.columns.forEach((c) => addDeps(K.c(t.name, c.name), [K.t(t.name)]));
+      t.columns.forEach((c) => { addDeps(K.c(t.name, c.name), [K.t(t.name)]); edge(K.c(t.name, c.name), 'table', [K.t(t.name)]); });
       t.measures.forEach((ms) => addDeps(K.m(ms.name), [K.t(t.name)]));
       // a measures table needs its only column (the "Enter data" placeholder): a table cannot lose its last column
       const cols = t.columns.filter((c) => c.kind !== 'rowNumber');
       if (t.measures.length && cols.length === 1) addDeps(K.t(t.name), [K.c(t.name, cols[0].name)]);
     });
-    return { M, IX, deps, styleByMeasure, autoDateTables, autoSet, userTables };
+    return Object.assign({ M, IX, deps, styleByMeasure, autoDateTables, autoSet, userTables }, edges ? { edges } : {});
   }
 
   // the roots: the report's use (per visual too), its broken references, the relationships, security, calculation groups
@@ -331,7 +339,7 @@
     return out;
   }
 
-  const api = { analyze, scoreFrom, normalizeModel, tokenizeDax, daxRefs, collectReportRefs, analyzeReport, RULES, BPA_URL };
+  const api = { analyze, graphStep, scoreFrom, normalizeModel, tokenizeDax, daxRefs, collectReportRefs, analyzeReport, RULES, BPA_URL };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MHEngine = api;
 })(typeof self !== 'undefined' ? self : this);

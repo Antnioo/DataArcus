@@ -16,7 +16,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import os from 'node:os';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const S = 'https://developer.microsoft.com/json-schemas/fabric/';
@@ -188,9 +189,15 @@ export function writeLab(out) {
 // custom visual's type apart: Desktop needs the package for those, the lab ships none)
 export function validate(reportDir) {
   const cli = path.join(HERE, '../node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
-  const r = spawnSync(process.execPath, [cli, 'validate', reportDir, '--format', 'json'], { encoding: 'utf8' });
+  // (TR2 ask 3) the schemas come from the saved copy in lab/schemas/ (lab/schema-offline.mjs answers the validator's https
+  // requests from it), never the network: 2 false reds on 8 and 10 Nov were PBIR_SCHEMA_UNREACHABLE. `served` = its log.
+  const log = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'cv-schemas-')), 'served.txt');
+  const r = spawnSync(process.execPath, ['--import', pathToFileURL(path.join(HERE, 'schema-offline.mjs')).href, cli, 'validate', reportDir, '--format', 'json'],
+    { encoding: 'utf8', env: { ...process.env, DATAARCUS_SCHEMA_LOG: log } });
   let j = null; try { j = JSON.parse(r.stdout); } catch (e) { j = null; }
-  return { exit: r.status, json: j, text: ((r.stdout || '') + (r.stderr || '')).trim() };
+  const served = fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : [];
+  fs.rmSync(path.dirname(log), { recursive: true, force: true });
+  return { exit: r.status, json: j, served, text: ((r.stdout || '') + (r.stderr || '')).trim() };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -84,6 +84,12 @@ if (area === 'mcp') {
       if (!g) problem({ script: 'mcp/test.mjs', check: 'no G13 line', cause: 'g13', shard }); else { reports += +g[1]; bad += +g[2]; }
     }
   }
+  // (TR2 ask 7) a suite may not print fewer checks than its floor (mcp/test-checks.json, written by scripts/test-checks.mjs from a green
+  // run: the least on any OS). A fall is a change the builder says in the note, by lowering the number (the engine's risk.py reads it)
+  let floors = {};
+  try { floors = JSON.parse(fs.readFileSync(opt('--floors', path.join(path.dirname(opt('--registry', path.join(REPO, 'mcp/tests.json'))), 'test-checks.json')), 'utf8')).suites || {}; } catch { /* no floors: none checked */ }
+  for (const r of all.filter((x) => x.status === 'PASS' && Number.isFinite(floors[x.name]) && count(x.rest) != null && count(x.rest) < floors[x.name]))
+    problem({ script: fileOf(r.name), check: `${r.name}: ${count(r.rest)} checks, its floor in mcp/test-checks.json is ${floors[r.name]} (a fall needs a line in the note: "${r.name} ${floors[r.name]} -> ${count(r.rest)}: why")`, cause: 'fewer-checks', shard: '-' });
   // (SPD) every suite exactly once over all the shards: two shards running one suite is a duplicate
   identityProblems(all, reg.suites.filter((x) => !x.sharded).map((x) => ({ name: x.name, skip: false }))).filter((p) => p.cause === 'duplicate-suite')
     .forEach((p) => problem({ script: fileOf(p.name), check: p.check, cause: p.cause, shard: `0-${n}/${n}` }));

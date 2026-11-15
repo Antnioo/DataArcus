@@ -31,6 +31,8 @@
   else { root.BuildPage = api; if (root.document) api.start(root); }
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
+  // (0.3.3 SG1) the page helpers (an element with its class and text): page-toast.js, loaded before this file on the page
+  const PT = typeof module === 'object' && module.exports ? require('./page-toast.js') : self.DAPageToast;
 
   const REPO = 'Antnioo/DataArcus';
   const API = 'https://api.github.com/repos/' + REPO;
@@ -158,12 +160,12 @@ const MAX_LOOKUPS = 40, KEEP_CALLS = 12;   // latest-commit lookups per refresh;
     const client = createClient({ fetch: (u, o) => win.fetch(u, o), now: () => Date.now() });
     const last = {};   // section -> its last data: a section that cannot load keeps it
     // the helix (build-helix.js, three.js): where either is missing the page still works with its cards
-    const helix = win.BuildHelix ? win.BuildHelix.mount($('bp-line'), win) : null;
+    const helix = win.BuildHelix ? win.BuildHelix.mount($('bp-line'), win, { hhmm }) : null;
     // the Fuel panel (build-usage.js, BF2): read through this same client, once per refresh; the page works without it
     const usage = win.BuildUsage ? win.BuildUsage.mount(win, client) : null;
     let timer = 0, busy = null;
 
-    const el = (tag, cls, text) => { const e = doc.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+    const el = (tag, cls, text) => PT.el(doc, tag, cls, text);   // (0.3.3 SG1) page-toast.js, its one place
     const when = (ms) => { const t = el('time', 'bp-when', ago(ms, Date.now())); t.dateTime = new Date(ms).toISOString(); t.dataset.ts = String(ms); t.title = new Date(ms).toLocaleString(); return t; };
     const link = (href, text) => { const a = el('a', 'bp-link', text); if (/^https:\/\/github\.com\//.test(href)) { a.href = href; a.target = '_blank'; a.rel = 'noopener'; } return a; };
     const pill = (result) => el('span', 'bp-pill bp-' + result, { queued: 'queued', running: 'in progress', green: 'green', red: 'red', other: 'ended' }[result] || result);
@@ -203,7 +205,7 @@ const MAX_LOOKUPS = 40, KEEP_CALLS = 12;   // latest-commit lookups per refresh;
       const n = (id, v) => { $(id).textContent = String(v); };
       n('bp-n-running', mod.running); n('bp-n-red', mod.red); n('bp-n-done', mod.done); n('bp-n-merged', mod.merged); n('bp-n-open', mod.open);
       $('bp-line').classList.toggle('bp-moving', !!mod.moving);
-      if (helix) helix.set(win.BuildHelix.helixModel(mod.items, mod.mergeList));
+      if (helix) helix.set(win.BuildHelix.helixModel(mod.items, mod.mergeList, Date.now()));
     };
 
     // ---- one refresh: at most 5 API calls; the notes and package.json come from raw.githubusercontent.com
@@ -246,7 +248,9 @@ const MAX_LOOKUPS = 40, KEEP_CALLS = 12;   // latest-commit lookups per refresh;
           const ci = ciRows(runs, now), merges = mergesOf(commits, now);
           const headSha = commits && commits[0] && commits[0].sha, headRun = headSha && runsOf(runs).find((r) => r.head_sha === headSha);
           if (usageDone) await usageDone;
-          const sats = builders.map((b) => ({ code: b.code, costText: usage && usage.costOf(b.code) != null ? usage.fmtUsd(usage.costOf(b.code)) : '', status: statusOf(b, notes[b.branch], now), message: b.message, time: b.time, note: notes[b.branch] || '',
+          // (0.3.3 RL33) for the helix's replay: a job's first known event (its earliest tests.yml run in the list, else its last push)
+          const firstRun = {}; for (const r of runsOf(runs)) { const t = stamp(r && (r.run_started_at || r.created_at)); if (t && r.head_branch && (!firstRun[r.head_branch] || t < firstRun[r.head_branch])) firstRun[r.head_branch] = t; }
+          const sats = builders.map((b) => ({ code: b.code, cost: usage ? usage.costOf(b.code) : null, started: Math.min(b.time, firstRun[b.branch] || b.time), costText: usage && usage.costOf(b.code) != null ? usage.fmtUsd(usage.costOf(b.code)) : '', status: statusOf(b, notes[b.branch], now), message: b.message, time: b.time, note: notes[b.branch] || '',
             ci: b.run ? { queued: 'queued', running: 'in progress', green: 'green', red: 'red', other: 'ended' }[b.run.result] : '' }));
           drawBuilders(builders, notes, now); drawCi(ci);
           drawMerges({ merges, head: headSha ? { sha: short(headSha), run: headRun ? runInfo(headRun) : null } : null });

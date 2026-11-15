@@ -36,11 +36,40 @@ export function readTimes(dir = HERE) {
   try { return JSON.parse(fs.readFileSync(path.join(dir, 'test-times.json'), 'utf8')); } catch { return {}; }
 }
 
+// SN1: the keys written twice in one object of a JSON text, as "a.b" paths (JSON.parse keeps the last, so the first value is dead text)
+export function duplicateKeys(text) {
+  const dups = [];
+  let i = 0;
+  const ws = () => { while (/\s/.test(text[i] || '')) i++; };
+  const str = () => { let j = i + 1; while (text[j] !== '"') j += text[j] === '\\' ? 2 : 1; const raw = text.slice(i, j + 1); i = j + 1; return JSON.parse(raw); };
+  const value = (where) => {
+    ws();
+    if (text[i] === '{') {
+      i++; const seen = new Set(); ws();
+      while (text[i] !== '}') {
+        ws(); const k = str(); ws(); i++; // the colon
+        const at = where ? `${where}.${k}` : k;
+        if (seen.has(k)) { if (!dups.includes(at)) dups.push(at); } else seen.add(k);
+        value(at); ws(); if (text[i] === ',') i++; ws();
+      }
+      i++;
+    } else if (text[i] === '[') {
+      i++; ws();
+      while (text[i] !== ']') { value(where); ws(); if (text[i] === ',') i++; ws(); }
+      i++;
+    } else if (text[i] === '"') str();
+    else while (i < text.length && !/[,}\]\s]/.test(text[i])) i++;
+  };
+  value('');
+  return dups;
+}
+
 // what is wrong with the registry: a test-*.mjs file listed nowhere, a listed file that is not there, a file twice,
 // an unknown area, a pending suite whose file has landed, a suite without its result name or with another's
 // (names: true, as the runner and check-result-lines ask: every suite has its result name)
 export function registryProblems(dir = HERE, reg = readRegistry(dir), { names: needNames = false } = {}) {
   const problems = [], seen = new Map(), names = new Map();
+  for (const k of duplicateKeys(fs.readFileSync(path.join(dir, 'tests.json'), 'utf8'))) problems.push(`tests.json: the key "${k}" is written twice (JSON keeps the last)`);
   const add = (f, where) => { if (seen.has(f)) problems.push(`${f}: listed twice (${seen.get(f)} and ${where})`); else seen.set(f, where); };
   for (const s of reg.suites || []) {
     add(s.file, 'suites');

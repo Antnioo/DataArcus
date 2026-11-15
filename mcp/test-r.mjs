@@ -59,7 +59,7 @@ export async function rgate({ call, check, ROOT, fs = fs0 }) {
   {
     const pl = await ask('plan_layout', { path: 'rg', layout: 'exec', lang: 'ar', displayNames: { 'Sales[Region]': 'المنطقة‮' } });
     chk(() => pl.err && /invisible sign/.test(pl.t) && /U\+202E/.test(pl.t), () => `R-04. plan_layout refuses a display name with a direction override: ${short(pl)}`);
-    const ok = await ask('plan_layout', { path: 'rg', layout: 'exec', lang: 'ar', displayNames: { 'Sales[Region]': 'المنطقة' } });
+    const ok = await ask('plan_layout', { path: 'rg', name: 'R04 Plain', layout: 'exec', lang: 'ar', displayNames: { 'Sales[Region]': 'المنطقة' } });
     chk(() => !ok.err && ok.j.plan && /^plan-/.test(ok.j.plan.planId), () => `R-04. the same plan with a plain Arabic name is made: ${short(ok)}`);
   }
 
@@ -113,7 +113,7 @@ export async function rgate({ call, check, ROOT, fs = fs0 }) {
     chk(() => opt.err && /secondPage/.test(opt.t), () => `A-02. an option other than the approved one is refused: ${short(opt)}`);
     const ok = await ask('create_report', { path: 'rg', planId: pid });   // (0.3.2 TK1: path and planId; the plan holds the rest)
     chk(() => !ok.err && fs.existsSync(path.join(ROOT, 'rg', 'Look Test.Report')), () => `A-02. left out, the plan's name and title are written: ${short(ok)}`);
-    const pl2 = await ask('plan_layout', { path: 'rg', layout: 'exec' }), pid2 = pl2.j && pl2.j.plan && pl2.j.plan.planId;
+    const pl2 = await ask('plan_layout', { path: 'rg', name: 'Plan Name', layout: 'exec' }), pid2 = pl2.j && pl2.j.plan && pl2.j.plan.planId;
     await ask('approve_plan', { planId: pid2 });
     const th = await ask('create_report', { path: 'rg', planId: pid2, design: pl2.j && pl2.j.design, name: 'Theme Test', theme: 'some-theme.json' });
     chk(() => th.err && /Nothing was written/.test(th.t) && /(name|theme)/.test(th.t), () => `A-02. a theme or name the plan did not show is refused: ${short(th)}`);

@@ -108,14 +108,14 @@ try {
   const dCols = (x) => { const d = x.j && (x.j.tables || []).find((t) => t.table === 'Dates'); return d ? d.columns.length : null; };
   // I. the intact model (its plan's design is the one create_report is given below)
   {
-    const r = await s.call('read_model', { path: 'intact' }), h = await s.call('check_model_health', { path: 'intact' }), p = await s.call('plan_layout', { path: 'intact', layout: 'exec', lang: 'en' });
+    const r = await s.call('read_model', { path: 'intact' }), h = await s.call('check_model_health', { path: 'intact' }), p = await s.call('plan_layout', { path: 'intact', name: 'I3 Intact', layout: 'exec', lang: 'en' });
     chk(() => !r.err && dCols(r) === 5 && !('unreadable' in r.j), () => `I1. the intact model: read_model's Dates 5 columns, no unreadable: ${short(r)}`);
     chk(() => !h.err && h.j.score.overall === 92 && !('unreadable' in h.j) && !('scoreWithheld' in h.j), () => `I2. the intact model: health score 92, no unreadable: ${short(h)}`);
     chk(() => !p.err && p.j.plan && p.j.plan.planId, () => `I3. the intact model: plan_layout plans: ${short(p)}`);
   }
   // W. whole files: no unreadable, the score as with the break (92; the shorter file its own), planned
   for (const [k, v] of Object.entries(WHOLE)) {
-    const r = await s.call('read_model', { path: k }), h = await s.call('check_model_health', { path: k }), p = await s.call('plan_layout', { path: k, layout: 'exec', lang: 'en' });
+    const r = await s.call('read_model', { path: k }), h = await s.call('check_model_health', { path: k }), p = await s.call('plan_layout', { path: k, name: 'W3 Whole', layout: 'exec', lang: 'en' });
     chk(() => !r.err && dCols(r) === v.columns && !('unreadable' in r.j), () => `W1-${k}. read_model: Dates ${v.columns} columns, no unreadable: ${short(r)}`);
     chk(() => !h.err && h.j.score && (k !== 'noFinalBreak' || h.j.score.overall === 92) && !('unreadable' in h.j), () => `W2-${k}. check_model_health scores it${k === 'noFinalBreak' ? ' 92, as with the break' : ''}: ${short(h)}`);
     chk(() => !p.err && p.j.plan && p.j.plan.planId, () => `W3-${k}. plan_layout plans: ${short(p)}`);

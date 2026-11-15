@@ -67,7 +67,6 @@ const screenshot = (file, url, style) => `<div class="shot"${style ? ` style="${
 // ---------- dashboards: title, 3 facts from the page, the real screenshot ----------
 const DASH = [
   ['adventureworks', 'Retail · Power BI dashboard', 'AdventureWorks Sales & Operations', ['6 pages', 'Sales, customers, products', 'What-if analysis'], 'adventureworks-preview.jpg'],
-  ['call-center', 'E-commerce · Power BI dashboard', 'E-commerce Customer Service', ['Agent performance', 'Resolution rates', 'Satisfaction'], 'call-center-preview.jpg'],
   ['cfpb', 'Finance · Power BI dashboard', 'U.S. Consumer Financial Complaints', ['4 pages', '7 years of data', 'Company accountability'], 'cfpb-preview.jpg'],
   ['er-health', 'Healthcare · Power BI dashboard', 'ER Health: Patient Flow Analytics', ['Patient flow', 'Wait times', 'Satisfaction'], 'er-health-preview.jpg'],
   ['fintech', 'Fintech · Power BI dashboard', 'Fintech Portfolio Risk Engine', ['72 projects', 'EVM risk signals', 'ZoomCharts'], 'fintech-preview.jpg'],
@@ -83,7 +82,7 @@ const TOOLS = [
   ['licensing-calculator', 'power-bi-licensing-cost-calculator', 'Power BI Licensing Cost Calculator', ['Pro vs PPU vs Fabric', 'F64 break-even', 'USD, AED, SAR'], 'tool-licensing.jpg'],
   ['model-health-check', 'power-bi-model-health-check', 'Power BI Model Health Check', ['Unused columns', 'Slow DAX', 'Nothing uploaded'], 'tool-health.jpg'],
   ['dp-600', 'dp-600-practice-exam', 'DP-600 Practice Exam', ['220 questions', 'Timed mocks', 'Score out of 1000'], 'tool-dp600.jpg'],
-  ['pl-300', 'pl-300-practice-exam', 'PL-300 Practice Exam', ['228 questions', 'Timed mocks', 'Renewal prep'], 'tool-pl300.jpg'],
+  ['pl-300', 'pl-300-practice-exam', 'PL-300 Practice Exam', ['234 questions', 'Timed mocks', 'Renewal prep'], 'tool-pl300.jpg'],
   ['svg-kpi-designer', 'svg-kpi-designer', 'SVG KPI Designer for Power BI', ['Link to measures', 'Sparklines', 'One DAX measure'], 'tool-svgkpi.jpg']
 ];
 // small line icons for the tools hub
@@ -95,7 +94,7 @@ const HUB = [
   ['Theme & layout', 'Colors, JSON, layout', icon('<circle cx="8" cy="9" r="1.5"/><circle cx="12" cy="7" r="1.5"/><circle cx="16" cy="9" r="1.5"/><path d="M12 21a9 9 0 1 1 9-9c0 2-1.5 3-3 3h-2a2 2 0 0 0-1 3.7c.3.2.5.6.5 1 0 .7-.6 1.3-1.5 1.3z"/>')],
   ['DAX calendar', 'Hijri, Ramadan, Eid', icon('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>')],
   ['Measure builder', 'YTD, YoY, rolling DAX', icon('<path d="M17 5H7l6 7-6 7h10"/>')],
-  ['PL-300 exam', '228 practice questions', icon('<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>')],
+  ['PL-300 exam', '234 practice questions', icon('<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>')],
   ['SVG KPI designer', 'KPI cards as DAX', icon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 15l3-3 3 2 4-5"/>')]
 ];
 
@@ -110,7 +109,7 @@ const shopMods = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14p
 
 // ---------- portfolio, blog and articles: a visual of what the page is about ----------
 const pill = (t, c) => `<span style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${c || '#00d4ff'}">${esc(t)}</span>`;
-const mosaic = ['maven-market', 'fintech', 'repeatiq', 'cfpb', 'call-center', 'adventureworks'].map((k) => `<div class="shot" style="border-radius:10px"><div class="vp" style="max-height:150px"><img src="${dataUrl('assets/img/portfolio/' + k + '-preview.jpg')}"></div></div>`);
+const mosaic = ['maven-market', 'fintech', 'repeatiq', 'cfpb', 'er-health', 'adventureworks'].map((k) => `<div class="shot" style="border-radius:10px"><div class="vp" style="max-height:150px"><img src="${dataUrl('assets/img/portfolio/' + k + '-preview.jpg')}"></div></div>`);
 const PORTFOLIO = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">${mosaic.join('')}</div>`;
 const BLOG = [['Report design', 'One Design Doesn’t Fit All: 7 Power BI Report Styles'], ['Report design', 'Same Visuals, New Design: A Report Redesign in 5 Minutes'], ['Ramadan · DAX', 'Compare This Ramadan With Last Ramadan'], ['Licensing', 'Pro, PPU or Fabric: Which License Do You Need?']]
   .map(([t, n]) => `<div class="card" style="padding:16px 20px">${pill(t)}<div style="font-size:20px;font-weight:700;margin-top:4px;line-height:1.3">${esc(n)}</div></div>`).join('');
@@ -195,7 +194,7 @@ const COPILOTCHECK = `<div class="card" style="padding:16px 22px">${pill('A 10-m
   <div class="card" style="padding:12px 20px;font-size:16px;font-weight:600;text-align:center;color:#cbd5e1">Then Prep data for AI, as Microsoft Learn says today</div>`;
 
 const PAGES = [
-  ['portfolio', 'Power BI showcases', 'Dashboards Built for Real Business Problems', { chips: ['7 dashboards', 'Retail to healthcare', 'Real models'] }, PORTFOLIO, '470px 1fr'],
+  ['portfolio', 'Power BI showcases', 'Dashboards Built for Real Business Problems', { chips: ['6 dashboards', 'Retail to healthcare', 'Real models'] }, PORTFOLIO, '470px 1fr'],
   ['blog', 'Blog · Power BI for Gulf teams', 'The Power BI Playbook', { sub: 'Gulf calendars and Ramadan, Copilot-ready models, report design, DAX and licensing.' }, BLOG, '500px 1fr'],
   ['clv', 'E-commerce · Power BI', 'Customer Lifetime Value: The Metric That Defines Growth', { sub: 'Why CLV, not revenue, is the north-star KPI, and how to track it in Power BI.', size: 46 }, CLV, '520px 1fr'],
   ['etl-vs-power-query', 'E-commerce data strategy', 'ETL vs Power Query: Where Should Your Data Work Happen?', { size: 46, sub: 'Scale and governance, or speed and analyst autonomy.' }, ETL, '480px 1fr'],
@@ -217,7 +216,7 @@ const PAGES = [
 const JOBS = [
   ...DASH.map(([id, kicker, title, chips, shot]) => ({ id, html: page(textBlock({ kicker, title, chips }), screenshot('assets/img/portfolio/' + shot), '430px 1fr') })),
   ...TOOLS.map(([id, slug, title, chips, shot]) => ({ id, html: page(textBlock({ kicker: 'Free tool · No sign-up', title, chips, size: title.length > 26 ? 46 : 52 }), screenshot('assets/img/og/src/' + shot, 'dataarcus.com/tools/' + slug + '.html'), '430px 1fr') })),
-  { id: 'home', html: page(textBlock({ kicker: 'Power BI consulting · Dubai', title: 'From Scattered Business Data to Decisions You Can Trust', size: 42, chips: ['7 showcase dashboards', '8 free tools', 'English & Arabic'] }),
+  { id: 'home', html: page(textBlock({ kicker: 'Power BI consulting · Dubai', title: 'From Scattered Business Data to Decisions You Can Trust', size: 42, chips: ['6 showcase dashboards', '8 free tools', 'English & Arabic'] }),
     `<div class="fan">${screenshot('assets/img/portfolio/cfpb-preview.jpg', '', 'left:0;top:10px;transform:rotate(-5deg);opacity:.75')}${screenshot('assets/img/portfolio/repeatiq-preview.jpg', '', 'left:110px;top:0;transform:rotate(4deg);opacity:.85')}${screenshot('assets/img/portfolio/fintech-preview.jpg', '', 'left:40px;top:120px')}</div>`, '500px 1fr') },
   ...PAGES.map(([id, kicker, title, o, right, cols]) => ({ id, html: page(textBlock(Object.assign({ kicker, title }, o)), right, cols) })),
   { id: 'tools', html: page(textBlock({ kicker: 'Free · No sign-up · English & Arabic', title: 'Free Power BI & Fabric Tools', sub: 'Build, check and learn. Nothing to install.' }), (() => {

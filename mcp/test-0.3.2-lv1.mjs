@@ -61,8 +61,8 @@ chk(() => evalDax(first, VALS) === RLM + FSI + 'Thursday' + PDI + ' هو الي�
 // the Top N title: two branches, its condition kept
 const topExpr = 'VAR _n = [Count] VAR _s = MIN ( 10, _n ) RETURN IF ( _s = _n, "Score by Region", "Top " & _s & " of " & _n & ": Score by Region" )';
 const tm = titleMeasuresOf({ ext: { entities: [{ name: 'Coupon', measures: [{ name: 'Title: Score', dataType: 'Text', expression: topExpr }] }] }, pages: [{ id: 'p1', page: {}, visuals: [{ json: { name: 'v1', visual: { visualType: 'barChart', visualContainerObjects: { title: [{ properties: { text: { expr: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: 'Coupon' } }, Property: 'Title: Score' } } } } }] } } } }] }] })[0];
-const top = tm && tm.pd.branches ? arabicDax(tm.pd, ['النقاط حسب المنطقة', 'أعلى {1} من {2}: النقاط حسب المنطقة']) : '';
-chk(() => top.includes('IF ( _s = _n, "النقاط حسب المنطقة", "أعلى " & UNICHAR ( 8296 ) & _s & UNICHAR ( 8297 ) & " من " & UNICHAR ( 8296 ) & _n & UNICHAR ( 8297 ) & ": النقاط حسب المنطقة" )'), () => `V3. the Top N title: the plain branch as approved, the other's values isolated, the condition kept: ${top}`);
+const top = tm && tm.pd.branches ? arabicDax(tm.pd, ['النقاط حسب المنطقة', 'أعلى {1} من أصل {2}: النقاط حسب المنطقة']) : '';
+chk(() => top.includes('IF ( _s = _n, "النقاط حسب المنطقة", "أعلى " & UNICHAR ( 8296 ) & _s & UNICHAR ( 8297 ) & " من أصل " & UNICHAR ( 8296 ) & _n & UNICHAR ( 8297 ) & ": النقاط حسب المنطقة" )'), () => `V3. the Top N title: the plain branch as approved, the other's values isolated, the condition kept: ${top}`);
 // V4: what must not change
 const sameAsBase = [[pd, ['Busiest: Day: {1} Hour: {2}']], [pd, [null]], [tm.pd, ['Score by Region', null]], [tm.pd, [null, null]]];
 const noVal = textMeasuresOf(card('IF ( ISEMPTY ( Visits ), "No data for this selection", "" )'))[0];
@@ -92,7 +92,7 @@ try {
   const t0 = await s.call('create_arabic_twin', { path: 'large/Busy.Report' });
   const T = (!t0.err && t0.j.texts) || [], busy = T.find((t) => t.kind === 'measureText' && t.text === 'Busiest: Day: {1} Hour: {2}');
   chk(() => busy, () => `V5 setup. the twin lists the ER card's text: ${short(t0)}`);
-  let k = 0; const labels = {}; T.filter((t) => t.text != null).forEach((t) => { labels[t.id] = t === busy ? ER_AR : t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من {2}: نص ${++k}` : `نص ${++k}`); });
+  let k = 0; const labels = {}; T.filter((t) => t.text != null).forEach((t) => { labels[t.id] = t === busy ? ER_AR : t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من أصل {2}: نص ${++k}` : `نص ${++k}`); });
   const before = Object.fromEntries(tree(ORIG).map((f) => [path.relative(ORIG, f), hash(f)]));
   // the separate twin
   const p1 = await s.call('create_arabic_twin', { path: 'large/Busy.Report', labels });

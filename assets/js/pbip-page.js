@@ -55,7 +55,7 @@
     const kk = pg.page.h / 1080, all3 = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null);
     // (the Reset's height does not depend on its width: resetFit)
     const railItems = { n: Math.max(1, (B && own ? all3.filter(Boolean) : all3).length), minH: slicerH(SLICER_TEXT), maxH: 76 * kk, resetH: resetFit('', 0, kk).h, pad: 10 * kk, gap: 8 * kk };
-    return { dropKinds, headerRows, railItems };
+    return { dropKinds, headerRows, railItems, topScale: pg.page.h / 720 };
   }
   // The visuals' look and sizes shared by a report's pages and its tooltip pages (pbip-visuals.js look), made once per
   // report from its context c (see build)

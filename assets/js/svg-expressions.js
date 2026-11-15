@@ -50,6 +50,13 @@
   // FORMAT with the en-US locale: half away from zero, like .NET
   // Rounds the number as written (69.115 -> 69.12), not its binary value (69.11499...), like .NET and Intl do
   function roundDecimal(abs, d) {
+    // toFixed answers in exponent form from 1e21 up: there the value's 15 significant digits, then zeros (AUD-063; what
+    // Power BI's FORMAT prints past 15 digits is not measured here). Infinity and NaN cannot come from the page's inputs.
+    if (abs >= 1e21) {
+      const [m, e] = abs.toExponential(14).split('e');
+      const big = m.replace('.', '') + '0'.repeat(+e - 14);
+      return d ? big + '.' + '0'.repeat(d) : big;
+    }
     const [ip, fp = ''] = abs.toFixed(d + 6).split('.');
     let digits = ip + fp.slice(0, d);
     if (fp[d] >= '5') {

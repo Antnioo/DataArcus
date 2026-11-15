@@ -36,7 +36,8 @@ export const FILES = {
 };
 const additionsOnly = (at) => (at.before !== undefined ? 'which was already in the original' : null);
 // every value an added JSON holds, as pointers (an object or list: its members; anything else: itself)
-const leaves = (o, at = '') => (o && typeof o === 'object' ? Object.keys(o).flatMap((k) => leaves(o[k], at + '/' + k)) : [at]);
+// every leaf pointer of a value ("/a/b" for { a: { b: 1 } }), from at: the copy's check and the patches' reasons read it here (0.3.3 SG1)
+export const leaves = (o, at = '') => (o && typeof o === 'object' ? Object.keys(o).flatMap((k) => leaves(o[k], at + '/' + k)) : [at]);
 
 // ---- the kinds a redesign makes today ----
 export const KINDS = [

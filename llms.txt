@@ -8,11 +8,12 @@
 - [Power BI Theme Generator](https://dataarcus.com/tools/power-bi-theme-generator.html): a report theme JSON from your brand colours, with a matching page background and layout.
 - [SVG KPI Designer](https://dataarcus.com/tools/svg-kpi-designer.html): design KPI cards, progress rings and sparklines visually and copy one DAX image measure for Power BI's own visuals.
 - [DAX Measure Builder](https://dataarcus.com/tools/dax-measure-builder.html): YoY, YTD, MTD and rolling measures written as DAX.
+- [Gulf Like-for-Like Month Check](https://dataarcus.com/tools/gulf-like-for-like.html): whether a month and the same month a year earlier hold the same Ramadan, Eid, weekend and VAT days in each Gulf country (English; its Arabic version is not published yet).
 - [Power BI Licensing Cost Calculator](https://dataarcus.com/tools/power-bi-licensing-cost-calculator.html): compares Pro, Premium Per User and Fabric capacity costs for a team.
 - [PL-300 practice exam](https://dataarcus.com/tools/pl-300-practice-exam.html) and [DP-600 practice exam](https://dataarcus.com/tools/dp-600-practice-exam.html).
 
 ## Arabic versions
-- [DataArcus - Power BI مُتحقَّق منه ومهيّأ للخليج](https://dataarcus.com/ar/): every page above has an Arabic version at its own address, the same path under https://dataarcus.com/ar/ (for example the [Arabic tools hub](https://dataarcus.com/ar/tools/) and the [Arabic Model Health Check](https://dataarcus.com/ar/tools/power-bi-model-health-check.html)).
+- [DataArcus - Power BI مُتحقَّق منه ومهيّأ للخليج](https://dataarcus.com/ar/): every page above but the Gulf Like-for-Like Month Check has an Arabic version at its own address, the same path under https://dataarcus.com/ar/ (for example the [Arabic tools hub](https://dataarcus.com/ar/tools/) and the [Arabic Model Health Check](https://dataarcus.com/ar/tools/power-bi-model-health-check.html)).
 
 ## Articles
 - [A Gulf calendar in Power BI](https://dataarcus.com/articles/article-gulf-calendar-power-bi.html)

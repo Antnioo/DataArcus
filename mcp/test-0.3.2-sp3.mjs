@@ -101,8 +101,17 @@ for (const [name] of CASES) chk(() => gold[name] && JSON.stringify(now[name]) ==
 // bilingual report's Arabic title measures write each value in a first-strong isolate; with those isolates taken out,
 // its reportExtensions.json is the base's file byte for byte (its hash as recorded on the base, 4418828), so nothing
 // else in R5 moved: the other differences were the plan's digest of these files
-const BASE_EXT = 'e3986dfffeed6a099ae26a92148014cb4e805cd8fa597d5e10191db82d1be036';
-const unLv1 = (t) => t.replace(/(?:UNICHAR \( 8207 \) & )?UNICHAR \( 8296 \) & (_[A-Za-z0-9_]+) & UNICHAR \( 8297 \)(?: & UNICHAR \( 8207 \))?/g, '$1');
+// (0.3.3 FB1, changed on purpose: e3986dff... -> the hash below) the Details page's main chart is no longer pressed to 168
+// high beside the rail (the cards' row lies over the rail, mcp/work/FB1.md), so it holds as many categories as the
+// other chart by Product and the two share one Keep and one Title measure: "Keep: Total Sales by Product (2)", its
+// "Title: ... (2)" and "Title AR: ... (2)" are gone from the file, nothing else moved (the two files diffed)
+// (0.3.3 FB4, changed on purpose: d87bede3... -> the hash below) a chart's Top N follows the size its page ends with (fitSlots),
+// so the Details page's chart by Region, reflowed shorter, holds fewer categories than the other chart by Region and the two
+// no longer share one Keep and one Title measure: "Keep: Total Sales by Region (2)", "Title: ... (3)" and "Title AR: ... (3)"
+// are in the file, nothing else moved (the two files diffed)
+const BASE_EXT = 'db46d4c63c6fc3dd95e5f1675bcf24d405d38a6294e9bf6f23cb715cd23af24b';
+// (0.3.3 AT1, changed on purpose: the owner's «من أصل», D-1110-07) the approved words taken out too, so the hash is the base's
+const unLv1 = (t) => t.replace(/(\\?")( )من أصل( )/g, '$1$2من$3').replace(/(?:UNICHAR \( 8207 \) & )?UNICHAR \( 8296 \) & (_[A-Za-z0-9_]+) & UNICHAR \( 8297 \)(?: & UNICHAR \( 8207 \))?/g, '$1');
 chk(() => lv1Ext && /UNICHAR \( 8296 \) & _s & UNICHAR \( 8297 \)/.test(lv1Ext) && (norm(unLv1(lv1Ext)) !== unLv1(lv1Ext) ? sha(norm(unLv1(lv1Ext))) : sha(unLv1(lv1Ext))) === BASE_EXT,
   () => `L1. R5's reportExtensions.json is the base's but for LV1's isolates: ${lv1Ext ? sha(norm(unLv1(lv1Ext))) : 'not written'}`);
 

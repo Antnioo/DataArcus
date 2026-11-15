@@ -132,7 +132,7 @@ export async function v029d({ call, check, ROOT, OUT }) {
   write(path.join(ROOT, 'r3', 'M.SemanticModel', 'model.bim'), bim([{ name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime'), col('Month-Year', 'string')] },
     { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Order Date', 'dateTime'), col('Region', 'string'), col('Product', 'string')],
       measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }] }]));
-  const pl3 = await ask('plan_layout', { layout: 'exec', path: 'r3', planFields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]'], measure: 'Sales[Total Sales]', category: 'Sales[Product]' } });
+  const pl3 = await ask('plan_layout', { layout: 'exec', path: 'r3', name: 'R3 Lint', planFields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]'], measure: 'Sales[Total Sales]', category: 'Sales[Product]' } });
   chk(() => pl3.j && pl3.j.designLint && (pl3.j.designLint.findings || []).some((f) => f.rule === 'COVER_CARDS'), () => `R3. the plan's lint keeps every finding (the "no data" cards included as a note): ${short(pl3)}`);
   const rep7 = mkReport('r7', [{ id: 'p1', name: 'One', visuals: [{ name: 'tb', type: 'textbox', at: [0, 0, 300, 40], text: 'Your logo' }] }]);
   const c7 = await ask('check_report', { path: rep7, checks: ['lint'] }), ph = c7.j && c7.j.lint.findings.find((f) => f.rule === 'PLACEHOLDER_TEXT');
@@ -150,7 +150,7 @@ export async function v029d({ call, check, ROOT, OUT }) {
       { name: 'Sales', partitions: [{ name: 'Sales', mode: 'import', source: { type: 'm', expression: `let Source = #table(type table [Region = text, Amount = number], {{"${V2}", 5}}) in Source` } }], columns: [col('Amount', 'double'), col('Region', 'string')],
         measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] }]));
     const answers = [await ask('read_model', { path: 'v1' }), await ask('read_model', { path: 'v1', tables: ['Branch Codes', 'Sales'] }), await ask('suggest_fields', { path: 'v1' }),
-      await ask('check_model_health', { path: 'v1' }), await ask('plan_layout', { path: 'v1', layout: 'exec' })];
+      await ask('check_model_health', { path: 'v1' }), await ask('plan_layout', { path: 'v1', name: 'T1 Leak', layout: 'exec' })];
     const leaked = answers.map((a, i) => (a.err ? `call ${i} failed: ${a.t.slice(0, 120)}` : new RegExp(`${V}|${V2}`).test(JSON.stringify(a.j || a.t)) ? `call ${i} holds a value` : null)).filter(Boolean);
     chk(() => !leaked.length, () => `T1. no reading answer holds a value of the model's rows: ${leaked.join('; ')}`);
   }

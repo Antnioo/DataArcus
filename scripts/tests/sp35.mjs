@@ -21,7 +21,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { visitor, ready, ROOT } from './lib.mjs';
+import { visitor, ready, ROOT, WAIT, trackWork, markWork, quiet } from './lib.mjs';
 import { releasedVersion } from '../check-release.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -38,9 +38,24 @@ const SEED = () => {
   let a = 35;
   Math.random = () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 };
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-// a step's effects settled: two frames (a scroll event's handler has run), then 150 ms (a debounced listener)
-const settle = (pg) => pg.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 150)))));
+// (CI3) every ripple the page adds, kept until the step's state is read: the ripple is removed 600 ms after the click,
+// and the read now waits for that timer (quiet), so the state counts the ripples of the step, not those still on screen
+const RIPPLES = () => {
+  window.__ripples = new Set();
+  new MutationObserver((ms) => ms.forEach((m) => m.addedNodes.forEach((n) => { if (n.classList && n.classList.contains('ripple')) window.__ripples.add(n); })))
+    .observe(document, { childList: true, subtree: true });
+};
+// (CI3) a step's effects are waited for, never timed (lib.mjs quiet: the page's short timers, frames, transitions and
+// scroll since the step began); fixed waits of 100 to 3000 ms raced them on a busy runner (I-1112-1700)
+// (CI3) the #contact arrival keeps its target in place for 2.5 s after load (site-navigation.js), then smooth scrolling
+// starts; "opened" read during that hold only while ready() ended in time (base, 16x throttled: "A3 opened smooth: false
+// -> true"). The hold's timer is held here until the step that ends it, so "opened" is always read inside it.
+const HOLD = (ms) => {
+  const st = window.setTimeout, held = [];
+  window.setTimeout = function (fn, t, ...a) { if (+t === ms && typeof fn === 'function') { held.push(() => fn(...a)); return 0; } return st.call(this, fn, t, ...a); };
+  window.__release = () => held.splice(0).forEach((f) => f());
+};
+const until = (pg, fn, arg) => pg.waitForFunction(fn, arg, { timeout: WAIT }).catch(() => null);
 // a made-up link, clicked and kept from navigating (the adapter listens on document, capture)
 const linkClick = (pg, href, text, cls) => pg.evaluate(([h, t, c]) => {
   const a = document.createElement('a'); a.href = h; a.textContent = t; if (c) a.className = c;
@@ -50,16 +65,17 @@ const linkClick = (pg, href, text, cls) => pg.evaluate(([h, t, c]) => {
 const realClick = (pg, sel) => pg.evaluate((q) => { const a = document.querySelector(q); a.addEventListener('click', (e) => e.preventDefault(), { once: true }); a.click(); }, sel);
 const scrollTo = (pg, y) => pg.evaluate((n) => window.scrollTo({ top: n, behavior: 'instant' }), y);
 const fillContact = async (pg) => { await pg.fill('#contact-name', 'Test Person'); await pg.fill('#contact-email', 'person@example.com'); await pg.fill('#contact-company', 'Made-up Co'); await pg.fill('#contact-details', 'A made-up request.'); };
-const send = (sel) => async (pg) => { await pg.evaluate((q) => document.querySelector(q).scrollIntoView({ block: 'center', behavior: 'instant' }), sel); await pg.click(sel); await wait(400); };
-const openMenu = async (pg) => { await pg.click('.navbar-toggler'); await wait(500); };
+// sent: the button is enabled again when the post has its answer (site-forms.js, finally)
+const send = (sel) => async (pg) => { await pg.evaluate((q) => document.querySelector(q).scrollIntoView({ block: 'center', behavior: 'instant' }), sel); await pg.click(sel); await until(pg, (q) => !document.querySelector(q).disabled, sel); };
+const openMenu = (pg) => pg.click('.navbar-toggler');
 
 // [name, page, visitor options, steps]; a step is [label, act]; opts.before(ctx, pg) runs before the page opens
 const SESSIONS = [
   ['home: navbar, offsets, counters, particles, ripple', 'index.html', {}, [
-    ['scroll 400', (pg) => scrollTo(pg, 400)], ['the counters in view', async (pg) => { await pg.evaluate(() => document.querySelector('#about [data-count]').scrollIntoView({ block: 'center', behavior: 'instant' })); await wait(2600); }],
-    ['back to the top', (pg) => scrollTo(pg, 0)], ['the toggler clicked twice (blurred; the menu opened and closed again)', async (pg) => { for (let i = 0; i < 2; i++) { await pg.evaluate(() => document.querySelector('.navbar-toggler').click()); await wait(700); } }],
+    ['scroll 400', (pg) => scrollTo(pg, 400)], ['the counters in view', async (pg) => { await pg.evaluate(() => document.querySelector('#about [data-count]').scrollIntoView({ block: 'center', behavior: 'instant' })); await until(pg, () => [...document.querySelectorAll('#about [data-count]')].every((c) => c.textContent === c.getAttribute('data-count') + (c.getAttribute('data-suffix') || ''))); }],
+    ['back to the top', (pg) => scrollTo(pg, 0)], ['the toggler clicked twice (blurred; the menu opened and closed again)', async (pg) => { for (let i = 0; i < 2; i++) { await markWork(pg); await pg.evaluate(() => document.querySelector('.navbar-toggler').click()); await quiet(pg); } }],
     ['a ripple on the submit button', async (pg) => { await pg.evaluate(() => document.querySelector('#contact-form button[type=submit]').scrollIntoView({ block: 'center', behavior: 'instant' })); await pg.click('#contact-form button[type=submit]'); }],
-    ['the ripple gone', () => wait(700)]]],
+    ['the ripple gone', () => null]]],
   ['home: the clicks the adapter counts', 'index.html', { consent: 'granted' }, [
     ['mail', (pg) => linkClick(pg, 'mailto:someone@example.com', 'Email us')], ['phone', (pg) => linkClick(pg, 'tel:+000000000', 'Call')],
     ['whatsapp', (pg) => linkClick(pg, 'https://wa.me/000000000', 'Chat')], ['release', (pg) => linkClick(pg, 'https://github.com/Antnioo/dataarcus-releases/releases/tag/v9.9.9', 'Download 9.9.9')],
@@ -68,12 +84,12 @@ const SESSIONS = [
     ['outbound', (pg) => linkClick(pg, 'https://user:pw@www.example.com/a/b?email=x@y.com#f', 'Example')], ['internal', (pg) => linkClick(pg, '/blog.html', 'Blog')],
     ['the WhatsApp button', (pg) => realClick(pg, '.wa-float')],
     ['a form first focus, twice', async (pg) => { await pg.focus('#contact-name'); await pg.focus('#contact-email'); await pg.evaluate(() => document.activeElement.blur()); await pg.focus('#contact-name'); }],
-    ['the language attribute flips', async (pg) => { await pg.evaluate(() => { document.documentElement.lang = document.documentElement.lang === 'ar' ? 'en' : 'ar'; }); await wait(100); }]]],
-  ['a #contact arrival', 'index.html#contact', {}, [['settled', () => wait(3000)]]],
+    ['the language attribute flips', (pg) => pg.evaluate(() => { document.documentElement.lang = document.documentElement.lang === 'ar' ? 'en' : 'ar'; })]]],
+  ['a #contact arrival', 'index.html#contact', { hold: 2500 }, [['settled', async (pg) => { await pg.evaluate(() => window.__release()); await until(pg, () => document.documentElement.classList.contains('smooth-scroll')); }]]],   // the hold ends
   ['phone menu', 'index.html', { viewport: [390, 844] }, [
-    ['open', openMenu], ['an inside link', async (pg) => { await pg.evaluate(() => document.querySelector('a[href="#contact"]').click()); await wait(600); }],
-    ['open again', async (pg) => { await scrollTo(pg, 0); await openMenu(pg); }], ['an outside click', async (pg) => { await pg.mouse.click(200, 700); await wait(600); }],
-    ['open again', openMenu], ['Escape', async (pg) => { await pg.keyboard.press('Escape'); await wait(600); }]]],
+    ['open', openMenu], ['an inside link', (pg) => pg.evaluate(() => document.querySelector('a[href="#contact"]').click())],
+    ['open again', async (pg) => { await scrollTo(pg, 0); await openMenu(pg); }], ['an outside click', (pg) => pg.mouse.click(200, 700)],
+    ['open again', openMenu], ['Escape', (pg) => pg.keyboard.press('Escape')]]],
   ['contact form sent', 'index.html', { consent: 'granted' }, [['fill', fillContact], ['send', send('#contact-form button[type=submit]')]]],
   ['contact form failed, validation UX', 'index.html', { consent: 'granted', fail: true }, [
     ['focus name', (pg) => pg.focus('#contact-name')], ['blur empty', (pg) => pg.focus('#contact-company')], ['a bad email', (pg) => pg.fill('#contact-email', 'not-an-email')],
@@ -84,23 +100,23 @@ const SESSIONS = [
     ['fill', async (pg) => { await pg.fill('#beta-name', 'Test Person'); await pg.fill('#beta-email', 'person@example.com'); await pg.fill('#beta-model', 'A made-up model.'); }],
     ['send', send('#beta-form button[type=submit]')]]],
   ['blog: search, filters, redaction', 'blog.html', { consent: 'granted' }, [
-    ['search dax', async (pg) => { await pg.fill('#blogSearch', 'dax'); await wait(1700); }], ['a filter', async (pg) => { await pg.click('[data-filter]:not([data-filter="all"])'); await wait(100); }],
-    ['search a phone number', async (pg) => { await pg.fill('#blogSearch', '050 123 4567'); await wait(1700); }], ['search nothing found', async (pg) => { await pg.fill('#blogSearch', 'zzzqqq'); await wait(1700); }],
-    ['all, cleared', async (pg) => { await pg.fill('#blogSearch', ''); await pg.click('[data-filter="all"]'); await wait(400); }]]],
+    ['search dax', (pg) => pg.fill('#blogSearch', 'dax')], ['a filter', (pg) => pg.click('[data-filter]:not([data-filter="all"])')],
+    ['search a phone number', (pg) => pg.fill('#blogSearch', '050 123 4567')], ['search nothing found', (pg) => pg.fill('#blogSearch', 'zzzqqq')],
+    ['all, cleared', async (pg) => { await pg.fill('#blogSearch', ''); await pg.click('[data-filter="all"]'); }]]],
   ['dashboard: the live report facade', 'dashboards/adventureworks-dashboard.html', { consent: 'granted' }, [
-    ['load the live report', async (pg) => { await pg.click('[data-pbi-src] button'); await wait(300); }]]],
+    ['load the live report', (pg) => pg.click('[data-pbi-src] button')]]],
   ['article read', 'articles/article-clv.html', { consent: 'granted', clock: true }, [
-    ['scroll to the end', async (pg) => { await pg.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' })); await wait(200); }],
-    ['31 s later', async (pg) => { await pg.clock.fastForward(31000); await wait(100); }]]],
+    ['scroll to the end', (pg) => pg.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }))],
+    ['31 s later', (pg) => pg.clock.fastForward(31000)]]],
   ['Berlin: the banner, Accept', 'index.html', { timezone: 'Europe/Berlin', consent: null }, [
-    ['accept', async (pg) => { await pg.click('[data-cc="accept"]'); await wait(300); }], ['the next page', async (pg, o) => { await pg.goto(o.page('portfolio.html'), { waitUntil: 'networkidle' }); await ready(pg); }]]],
+    ['accept', (pg) => pg.click('[data-cc="accept"]')], ['the next page', async (pg, o) => { await pg.goto(o.page('portfolio.html'), { waitUntil: 'networkidle' }); await ready(pg); }]]],
   ['London: Reject clears the cookies', 'index.html', { timezone: 'Europe/London', consent: null }, [
     ['cookies set', (pg) => pg.evaluate(() => { document.cookie = '_ga=GA1.1.1; path=/'; document.cookie = '_clck=x; path=/'; document.cookie = 'keep=1; path=/'; })],
-    ['reject', async (pg) => { await pg.click('[data-cc="reject"]'); await wait(200); }], ['the next page', async (pg, o) => { await pg.goto(o.page('portfolio.html'), { waitUntil: 'networkidle' }); await ready(pg); }]]],
+    ['reject', (pg) => pg.click('[data-cc="reject"]')], ['the next page', async (pg, o) => { await pg.goto(o.page('portfolio.html'), { waitUntil: 'networkidle' }); await ready(pg); }]]],
   ['privacy: Cookie settings after consent', 'privacy.html', { consent: 'granted' }, [
-    ['open', async (pg) => { await pg.click('[data-cc-open]'); await wait(100); }], ['reject', async (pg) => { await pg.click('[data-cc="reject"]'); await wait(200); }],
-    ['open again, accept', async (pg) => { await pg.click('[data-cc-open]'); await pg.click('[data-cc="accept"]'); await wait(200); }]]],
-  ['an AI referral', 'index.html', { consent: 'granted', referer: 'https://chatgpt.com/c/made-up-id' }, [['clicked nothing', () => wait(100)]]],
+    ['open', (pg) => pg.click('[data-cc-open]')], ['reject', (pg) => pg.click('[data-cc="reject"]')],
+    ['open again, accept', async (pg) => { await pg.click('[data-cc-open]'); await pg.click('[data-cc="accept"]'); }]]],
+  ['an AI referral', 'index.html', { consent: 'granted', referer: 'https://chatgpt.com/c/made-up-id' }, [['clicked nothing', () => null]]],
   ['reduced motion, AOS blocked', 'index.html', { motion: 'reduce', noAos: true }, [['scroll 400', (pg) => scrollTo(pg, 400)]]]
 ];
 
@@ -120,7 +136,8 @@ const state = (pg) => pg.evaluate(() => {
     counters: $$('#about [data-count], [data-stats] [data-count]').map((c) => c.textContent).join(' '),
     wa: wa ? [wa.getAttribute('href'), wa.getAttribute('aria-label'), wa.title, wa.parentElement.tagName, wa.parentElement.getAttribute('aria-label')].join(' | ') : null,
     bar: bar ? [bar.getAttribute('aria-label'), bar.innerHTML].join(' | ') : null, ccOpen: document.body.classList.contains('cc-open'), ccH: document.body.style.getPropertyValue('--cc-h') !== '',
-    menu: menu ? menu.className : null, ripples: $$('.ripple').length,
+    // (CI3) the ripples this step added (RIPPLES), and any still on screen; then the next step counts its own
+    menu: menu ? menu.className : null, ripples: ((n) => { window.__ripples = new Set(); return n; })(new Set([...(window.__ripples || []), ...$$('.ripple')]).size),
     results: ['#form-result', '#beta-form-result'].map((q) => [disp(q), html(q)].join(' ')).join(' || '),
     buttons: $$('form button[type=submit]').map((b) => { const c = b.cloneNode(true); c.querySelectorAll('.ripple').forEach((r) => r.remove()); return [b.disabled, c.innerHTML.replace(/\s+/g, ' ').trim()].join(' '); }).join(' || '),
     fields: $$('form .form-control').map((f) => f.id + ':' + [f.parentElement.classList.contains('focused') && 'focused', f.classList.contains('is-valid') && 'valid', f.classList.contains('is-invalid') && 'invalid', f.value].filter(Boolean).join(',')).join(' '),
@@ -147,7 +164,8 @@ export default async function ({ browser, url }) {
     for (const [k, [name, start, opts, steps]] of SESSIONS.entries()) {
       const id = (lang === 'en' ? 'E' : 'A') + (k + 1), bad = [];
       const v = await visitor(browser, { viewport: opts.viewport || [1440, 900], timezone: opts.timezone || 'Asia/Dubai', consent: opts.consent === undefined ? 'denied' : opts.consent, motion: opts.motion || 'no-preference' });
-      await v.ctx.addInitScript(SEED);
+      await v.ctx.addInitScript(SEED); await v.ctx.addInitScript(RIPPLES); if (!opts.clock) await trackWork(v.ctx);   // (a fake clock replaces the timers trackWork wraps)
+      if (opts.hold) await v.ctx.addInitScript(HOLD, opts.hold);
       const posts = [];
       await v.ctx.route(/web3forms/, (rt) => { posts.push(rt.request().postData()); rt.fulfill({ status: opts.fail ? 500 : 200, body: '' }); });
       if (opts.noAos) await v.ctx.route(/cdn\.jsdelivr\.net\/npm\/aos/, (rt) => rt.abort());
@@ -156,8 +174,9 @@ export default async function ({ browser, url }) {
       try {
         await v.pg.goto(page(start), { waitUntil: 'networkidle', ...(opts.referer ? { referer: opts.referer } : {}) }); await ready(v.pg);
         for (const [label, act] of [['opened', null]].concat(steps)) {
+          await markWork(v.pg);
           try { if (act) await act(v.pg, { page }); } catch (e) { bad.push(`${label}: ${e.message.split('\n')[0]}`); break; }
-          await settle(v.pg);
+          await quiet(v.pg);
           const st = await state(v.pg);
           st.gtag = st.gtag.map(TOKEN);
           // the counters and the ripple are read in the home session only (elsewhere a smooth scroll can pass the
@@ -175,7 +194,7 @@ export default async function ({ browser, url }) {
           for (let i = 0; i < n && bad.length < 6; i++) {
             const a = want.rec[i] || {}, b = rec[i] || {};
             for (const key of new Set([...Object.keys(a), ...Object.keys(b)])) {
-              if (JSON.stringify(a[key]) !== JSON.stringify(b[key])) bad.push(`${a.step || b.step} ${key}: ${JSON.stringify(a[key]).slice(0, 300)} -> ${JSON.stringify(b[key]).slice(0, 300)}`);
+              if (JSON.stringify(a[key]) !== JSON.stringify(b[key])) bad.push(`${a.step || b.step} ${key}: ${String(JSON.stringify(a[key])).slice(0, 300)} -> ${String(JSON.stringify(b[key])).slice(0, 300)}`);
             }
           }
         }

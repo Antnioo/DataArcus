@@ -48,8 +48,18 @@ jobs:
             git add assets/data/dp600-outline.json assets/data/pl300-outline.json
             git commit -m "Weekly exam outline check $DAY"
             git push -u origin "$BRANCH"
-            gh pr create --base main --head "$BRANCH" --title "Weekly exam outline check $DAY" \
-              --body "The weekly check of Microsoft's DP-600 and PL-300 outlines. If an issue was opened too, the questions need a review first."
+            BODY="The weekly check of Microsoft's DP-600 and PL-300 outlines. If an issue was opened too, the questions need a review first."
+            gh pr create --base main --head "$BRANCH" --title "Weekly exam outline check $DAY" --body "$BODY"
+            # D-1109-10: a pull request that changes only the data files merges itself once the required checks are green;
+            # the list of allowed files lives in scripts/bot-pr-files.mjs only. --auto never skips the required checks.
+            FILES=$(gh pr diff "$BRANCH" --name-only)
+            VERDICT=$(printf '%s\n' "$FILES" | node scripts/bot-pr-files.mjs)
+            if [ "$VERDICT" = "auto" ]; then
+              gh pr merge --auto --squash "$BRANCH" || echo "::warning::auto-merge could not be enabled, the owner merges this one"
+              gh pr edit "$BRANCH" --body "$BODY Merges itself when CI is green: only the data file changed, D-1109-10."
+            else
+              gh pr edit "$BRANCH" --body "$BODY Waits for the owner: ${VERDICT#owner }"
+            fi
             gh workflow run tests.yml --ref "$BRANCH"
             gh workflow run privacy.yml --ref "$BRANCH"
           fi

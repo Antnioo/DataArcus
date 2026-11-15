@@ -90,7 +90,7 @@ if (Agg) {
 // ---------- 2. plan_layout: what the plan says (the page built as create_report writes it) ----------
 {
   const s = await serverClient(ROOT);
-  const plan = (pf, lang) => s.call('plan_layout', Object.assign({ path: 'Guard', layout: 'exec', filters: 'none', planFields: pf }, lang ? { lang } : {}));
+  const plan = (pf, lang) => s.call('plan_layout', Object.assign({ path: 'Guard', name: 'B146 Guard', layout: 'exec', filters: 'none', planFields: pf }, lang ? { lang } : {}));
   // A: Sales on the trend, the ratios on cards and in the table: no question; the table's ratios said
   const A = await plan({ kpis: ['Sales[Sales]', 'Sales[Margin %]', 'Sales[Avg Order Value]', 'Sales[Distinct Customers]'], measure: 'Sales[Sales]', timeAxis: 'Calendar[Date]', category: 'Sales[Region]', table: ['Sales[Region]', 'Sales[Margin %]', 'Sales[Sales]'] });
   const ag = A.j && A.j.aggregation;

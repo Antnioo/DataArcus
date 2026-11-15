@@ -22,7 +22,8 @@ const Bind = require('../../assets/js/pbip-bind.js');
 // plan_layout's exact artifact (J14): create_report's build with the plan's inputs, checked on every page; or why not
 export async function exactArtifact(ab, pin, lang) {
   let built;
-  try { built = reportRun(ab, 'build'); } catch (e) { return null; }
+  // (0.3.3 RX1) a view the plan cannot have (a page it lacks, a name twice) is told as itself: no plan is made
+  try { built = reportRun(ab, 'build'); } catch (e) { if (e && e.viewsProblem) throw e; return null; }
   // (0.3.1 X2) languages "en+ar": the English report just built, made one report with its Arabic pages by the EN-AR
   // copy's engine; the build's own file list takes the combined files, so the check, the digest and the write are theirs
   let bilingual = null;

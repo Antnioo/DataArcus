@@ -351,7 +351,9 @@ export default async function ({ browser, url, page = PAGE }) {
     await v.pg.reload({ waitUntil: 'networkidle' });
     s1 = await st();
     check(s1[0].folded && s1[1].folded && !s1[2].folded, `${lang}: folds not kept after a reload ${JSON.stringify(s1.map((x) => x.folded))}`);
-    await v.pg.click('#tgSteps a[data-step=layout]'); await settle(v.pg);
+    // (TR1, B-439) the click must scroll the page: wait from the position it had, never read `top` before the scroll began
+    const y0 = await v.pg.evaluate(() => scrollY);
+    await v.pg.click('#tgSteps a[data-step=layout]'); await settle(v.pg, { from: y0 });
     const land = await v.pg.evaluate(() => ({ open: !document.getElementById('layout').classList.contains('tg-folded'), top: Math.round(document.getElementById('layout').getBoundingClientRect().top), bars: Math.round(document.getElementById('tgSteps').getBoundingClientRect().bottom) }));
     check(land.open && land.top >= land.bars - 1 && land.top < land.bars + 60, `${lang}: steps bar did not open and land on Layout ${JSON.stringify(land)}`);
     await v.pg.click('#layout > .tg-fold'); await v.pg.click('#download > .tg-fold');

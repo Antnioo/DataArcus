@@ -67,7 +67,7 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     chk(() => typeof B.fieldOf === 'function' && (!B.fieldOf({ name: 'Payments', columns: [col('Order Date', 'dateTime'), col('Payment Period', 'string')] }, 'Payment Period').dateOf
       && B.fieldOf({ name: 'Dates', dataCategory: 'Time', columns: [col('Date', 'dateTime'), col('Month Label', 'string')] }, 'Month Label').dateOf.c === 'Date'),
       () => 'G11: "Payment Period" of a fact table gets no date to sort by; a month label of the date table does');
-    const pl = await ask('plan_layout', { layout: 'exec', path: 'i-pay', planFields: { timeAxis: 'Payments[Payment Period]', measure: 'Payments[Total Paid]' } });
+    const pl = await ask('plan_layout', { layout: 'exec', path: 'i-pay', name: 'G11 Pay', planFields: { timeAxis: 'Payments[Payment Period]', measure: 'Payments[Total Paid]' } });
     chk(() => !pl.err && !/month start/i.test(pl.j.timeAxis.how) && /A to Z/.test(pl.j.timeAxis.how), () => `G11: the plan must not promise a time order it can't give "Payment Period": ${JSON.stringify(pl.j && pl.j.timeAxis)}`);
   }
 
@@ -108,7 +108,7 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
   // ---------- G6: the plan's time axis is the writer's own decision ----------
   {
     const Px = req('../assets/js/pbip-export.js'), B = req('../assets/js/pbip-bind.js');
-    const pl = await ask('plan_layout', { layout: 'exec', path: 'i-hr', planFields: { timeAxis: 'Calendar[Month Name]' } });
+    const pl = await ask('plan_layout', { layout: 'exec', path: 'i-hr', name: 'G6 Hr', planFields: { timeAxis: 'Calendar[Month Name]' } });
     chk(() => typeof Px.timeAxisPlan === 'function' && pl.j.timeAxis.order === Px.timeAxisPlan(B.fieldOf({ name: 'Calendar', dataCategory: 'Time', columns: [col('Date', 'dateTime'), Object.assign(col('Month Name', 'string'), { sortByColumn: 'Month Number' }), col('Month Number', 'int64')] }, 'Month Name')).order,
       () => `G6: plan_layout's timeAxis comes from the writer's timeAxisPlan: ${JSON.stringify(pl.j && pl.j.timeAxis)}`);
   }

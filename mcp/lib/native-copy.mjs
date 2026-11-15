@@ -9,19 +9,18 @@
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
-import { real, nothingAt, ROOT } from './model.mjs';
+import { real, nothingAt } from './model.mjs';
 import { safeName, mustJson, readBytes, isFile, locate as readerLocate, strictFiles, notCopiedOf, inventory, diskSource } from './read-report.mjs';
 import { replacementsOf, replacementLine, typeOfModel, categoryOfModel, wordsOf, CONFIDENCE_LEVELS, AZURE_NEEDS } from './visual-meaning.mjs';
 import { rulesInput, filledLanguages } from './check-report.mjs';
 import { newPlatform } from './twin-copy.mjs';
 import { writeTree } from './files.mjs';
 import { digestOf } from './artifact.mjs';
+import { pathOut } from './twin-read.mjs';   // (0.3.3 SG1) a path inside the working folder, as an answer says it: its one place
 
 const require = createRequire(import.meta.url);
 const Replace = require('../../assets/js/visual-replace.js');
 const json = (o) => JSON.stringify(o, null, 2) + '\n';
-const relRoot = (f) => path.relative(ROOT, f).split(path.sep).join('/');
-const pathOut = (f) => relRoot(f).split('/').map((seg) => (seg === '..' || seg === '.' ? seg : safeName(seg))).join('/');
 const SUFFIX = ' native';
 
 function locate(p) {

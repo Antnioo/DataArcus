@@ -1,6 +1,6 @@
 {
   "name": "dataarcus-mcp",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "DataArcus design and model tools for Power BI as an MCP server, on your own computer. It reads and checks Power BI models and reports, and writes new reports, themes and scripts after your approval.",
   "private": true,
   "type": "module",
@@ -23,7 +23,9 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@types/node": "20.19.39",
     "fast-check": "4.10.2",
-    "pngjs": "^7.0.0"
+    "pngjs": "^7.0.0",
+    "typescript": "7.0.2"
   }
 }

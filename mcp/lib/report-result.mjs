@@ -127,6 +127,8 @@ function looksStep(ra) {
   const looks = Object.assign(r.slicerStyle ? { slicerStyle: r.slicerStyle } : {}, r.grid ? { grid: r.grid } : {});
   // (L4) the flip cards: which cards, their bookmarks, the script and how to apply it first
   if (flip) looks.flipCards = Object.assign(flipAnswer(flip), flip.scriptFile ? { scriptFile: flip.scriptFile, howToApply: flipHow(flip.scriptFile, m.projectDir) } : {});
+  // (0.3.3 RX1) the plan's views, written as bookmarks in the plan's order
+  if (r.views) looks.bookmarks = { views: r.views, say: `${r.views} bookmark${r.views === 1 ? '' : 's'} for the plan's views, first in the Bookmarks pane in the plan's order (View > Bookmarks; "View" in that pane plays them as a slide show). Each opens its page and changes no filter, slicer or visual.` };
   // (L5) the status icons: each column, its way and rule, the script and how to apply it first
   if (icons) looks.statusIcons = Object.assign(iconsSaid(icons), icons.scriptFile ? { scriptFile: icons.scriptFile, howToApply: iconsHow(icons.scriptFile, m.projectDir) } : {});
   // (L6) the DAX function library: said FIRST in the answer (its compatibility step), with the script and how to apply it

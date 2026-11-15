@@ -457,6 +457,25 @@ const blankByEditor = async (x, get) => {
 };
 const editorTakes = (x) => x.o === 'DIVIDE' || x.o === '-';
 
+// ---- (0.3.3 SG1) the inputs of the moved groups (made up) ----
+const lab = (v) => (v === undefined ? 'undefined' : JSON.stringify(v));
+const SG1_TEXTS = [undefined, null, '', 'a', ['a', 'b'], [], 0, 12, true, {}, ['x', null, 3], 'a\nb'].map((v) => ({ label: lab(v), v }));
+const SL = (v) => ({ expr: { Literal: { Value: v } } });
+const SG1_LITS = [undefined, null, 0, 'x', {}, { expr: null }, { expr: {} }, { expr: { Literal: null } }, { expr: { Literal: {} } }, SL("'Sales'"), SL('12D'), SL(12), SL(false), SL(null)].map((v) => ({ label: lab(v), v }));
+const SG1_LISTS = [undefined, null, {}, [], [1, null, 'x', {}], [{ properties: { a: 1 } }, { selector: { metadata: 'x' }, properties: { a: 2, b: 3 } }], [{ properties: null }, { properties: { c: 1 } }], [[1], { properties: { z: 0 } }], 'abc'].map((v) => ({ label: lab(v), v }));
+const SG1_HEX = ['#000000', '#ffffff', '#FFFFFF', '#118DFF', '#12ab3', '#1', '', '#gg0000', '118DFF', '#118dff80'].map((v) => ({ label: lab(v), v }));
+const SG1_ELS = [['div'], ['div', 'a b'], ['span', '', 'x'], ['span', null, ''], ['p', 'c', 0], ['p', 'c', null], ['p', 'c', undefined], ['a', 0, false], ['time', 'w', 12]].map((v) => ({ label: lab(v), v }));
+const SG1_STATES = [['k', { a: 1 }], ['dataarcus-x', { currency: 'AED', users: [1, 2] }], ['k', null], ['k', 'text'], ['k', { a: 1 }, true], ['k', {}], ['k', [1]], ['', 0]].map(([key, state, refuses]) => ({ label: lab([key, state]) + (refuses ? ' (refused)' : ''), key, state, refuses }));
+const SG1_KEYS = ["'Sales'[Total]", 'Sales[Total]', "  'My Table'[A [b]]  ", '[Total]', 'Sales', '', null, undefined, 12, "'Sales'[]", "'a''b'[c]"].map((v) => ({ label: lab(v), v }));
+const DQ1_DAX = [['Sales', 'Amount'], ["O'Brien", 'A]B'], ['My Table', 'Col [x]'], ['A[B]', 'C'], ['A', 'B][C'], ['', 'X'], [12, 'Y'], ['T', 'A\tB'], ['A\nB', 'C'], ['  pad  ', ' c ']].map((v) => ({ label: lab(v), v }));
+const SG1_PUTS = [[['a.json', 'b.json'], 'b.json', { x: 1 }], [['a.json'], 'a.json', [1, 'two']], [['a.json'], 'a.json', null], [['a.json'], 'missing.json', { x: 1 }], [['a.json', 'a.json'], 'a.json', { y: 'ي' }], [['a.json'], 'a.json', 'text'], [['a.json'], 'a.json', 0], [['a.json'], 'a.json', { n: { m: [] } }]].map(([paths, p, j]) => ({ label: lab([paths, p, j]), paths, p, j }));
+const SG1_LEAVES = [[{ a: 1 }], [{ a: { b: 1, c: [1, 2] } }], [{}], [[]], [null], [1], ['x'], [{ a: null }], [{ a: 1 }, '/x'], [{ a: { b: {} } }, '/visual'], [5, '/p']].map((v) => ({ label: lab(v), v }));
+// (0.3.3 LX1, AUD-069) relationships as TMSL writes them and as model-index.js gives them: which ways each filters
+const LX1_RELS = [{}, { crossFilteringBehavior: 'bothDirections' }, { crossFilteringBehavior: 'oneDirection' }, { fromCardinality: 'one', toCardinality: 'one' }, { fromCardinality: 'one' },
+  { fromCardinality: 'many', toCardinality: 'many' }, { fromCardinality: 'one', toCardinality: 'many' }, { cross: 'bothDirections', fromCard: 'many', toCard: 'one' },
+  { cross: 'oneDirection', fromCard: 'one', toCard: 'one' }, { crossFilteringBehavior: 'BothDirections' }, null].map((v) => ({ label: lab(v), v }));
+const SG1_PATHS = [['p', 'Sales.Report'], ['a', 'b', 'c.json'], ['Sales‮.Report'], ['x'.repeat(80)], ['ar', 'تقرير'], ['..', 'out'], ['.', 'p'], ['p q', 'r']].map((v) => ({ label: lab(v.map((s) => (s.length > 20 ? s.slice(0, 20) + '...' : s))), v }));
+
 export const FAMILIES = [
   { id: '1a', title: 'Is this column time?', question: 'a column named like this: is it a date part (a day, month, quarter, year, a date)?',
     inputs: NAMES, places: [
@@ -620,6 +639,7 @@ export const FAMILIES = [
       P('mcp/lib/sample-project.mjs', 'name', 'source', esc1n()),
       P('mcp/lib/shadow-model.mjs', 'q', 'source', esc1n()),
       P('mcp/lib/twin-model.mjs', 'tmdlName', 'source', esc1n()),
+      P('mcp/lib/model-script.mjs', 'functionLines', 'export', async (x, get) => { const l = (await get())({ name: x.n, expression: '1' }, 0)[0]; return l.slice('function '.length, -' ='.length); }),   // (DQ1, B-438) the name in the function's first line
     ] },
   { id: 'u32', title: 'What number do four bytes hold?', question: 'bytes and an offset: the big-endian unsigned 32-bit number there (a PNG read)',
     inputs: U32, places: [
@@ -650,11 +670,73 @@ export const FAMILIES = [
       P('assets/js/svg-expressions.js', 'evalNode', 'inner', blankByCompiler),
       P('assets/js/svg-editor-panels.js', 'evalValues', 'source', blankByEditor, { applies: editorTakes }),
     ] },
+  // (0.3.3 SG1) the reviewer's same-shape groups that answer one question: one place each since SG1 (test mcp/test-0.3.3-sg1.mjs).
+  // path-out and rel-out answer from the working folder: run the probe with DATAARCUS_ROOT set (any empty folder), else both throw.
+  { id: 'expr-text', title: 'What text does an expression given as lines hold?', question: 'an expression written as one text or as its lines (a model JSON writes both): one text',
+    inputs: SG1_TEXTS, places: [
+      P('assets/js/dax-reference-parser.js', 'exprText', 'export', async (x, get) => (await get())(x.v)),
+    ] },
+  { id: 'lit-value', title: 'What value is a literal written as?', question: "a property's Literal: its Value as written (12D stays \"12D\"), else undefined",
+    inputs: SG1_LITS, places: [
+      P('assets/js/pbir-values.js', 'litValue', 'export', async (x, get) => (await get())(x.v)),
+    ] },
+  { id: 'obj-entries', title: 'Which entries does an objects list hold?', question: "a visual's objects list: its object entries, the plain ones' properties merged, all properties merged",
+    inputs: SG1_LISTS, places: [
+      P('assets/js/pbir-values.js', 'entries', 'export', async (x, get) => { const PV = createRequire(abs('assets/js/pbir-values.js'))(abs('assets/js/pbir-values.js')); await get(); return [PV.entries(x.v), PV.plain(x.v), PV.anyOf(x.v)]; }),   // entries, plain, anyOf: one answer
+    ] },
+  { id: 'hex-rgb', title: 'What red, green and blue does a hex colour hold?', question: '#rrggbb: its [r, g, b] (0 to 255; NaN where a pair is not hex)',
+    inputs: SG1_HEX, places: [
+      P('assets/js/design-colours.js', 'hexToRgb', 'export', async (x, get) => (await get())(x.v)),
+    ] },
+  { id: 'page-el', title: 'What element does a page make for a class and a text?', question: 'a tag, a class and a text: a new element with that class (when given) and that text (when not null)',
+    inputs: SG1_ELS, places: [
+      P('assets/js/page-toast.js', 'el', 'export', async (x, get) => { const e = (await get())({ createElement: (tag) => ({ tag, className: '(unset)', textContent: '(unset)' }) }, ...x.v); return [e.tag, e.className, e.textContent]; }),
+    ] },
+  { id: 'page-save', title: 'What does a page keep of its state?', question: "a page's key and state: what localStorage is given (nothing, never an error, when it refuses)",
+    inputs: SG1_STATES, places: [
+      P('assets/js/page-toast.js', 'saveState', 'export', async (x, get) => { const save = await get(), log = [], had = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+        Object.defineProperty(globalThis, 'localStorage', { value: x.refuses ? { setItem: () => { throw new Error('quota'); } } : { setItem: (k, v) => log.push([k, v]) }, configurable: true, writable: true });
+        try { return [save(x.key, x.state), log]; } finally { if (had) Object.defineProperty(globalThis, 'localStorage', had); else delete globalThis.localStorage; } }),
+    ] },
+  { id: 'measure-key', title: "Which table and measure does 'T'[M] name?", question: "a measure written 'Table'[Measure] or Table[Measure]: { t, m }, else null",
+    inputs: SG1_KEYS, places: [
+      P('mcp/lib/model-script.mjs', 'keyOf', 'export', async (x, get) => (await get())(x.v)),
+    ] },
+  { id: 'dax-name', title: "How is a table and column written as a DAX name 'T'[C]?", question: "a table and a column: the DAX name 'Table'[Column] (' doubled, ] doubled), or a refusal for a control character",
+    inputs: DQ1_DAX, places: [
+      P('assets/js/pbip-query.js', 'daxNames', 'export', async (x, get) => (await get()).column(...x.v)),
+    ] },
+  { id: 'put-json', title: "What does a plan's file hold after a JSON is put in it?", question: "the plan's files, a path and a JSON: the files after (two spaces; a path the plan lacks throws)",
+    inputs: SG1_PUTS, places: [
+      P('mcp/lib/model-script.mjs', 'putJson', 'export', async (x, get) => { const files = x.paths.map((p) => ({ path: p, data: 'old' })), at = new Map(files.map((f, i) => [f.path, i])); (await get())(files, at, x.p, x.j); return files; }),
+    ] },
+  { id: 'leaves', title: 'Which leaf pointers does a value hold?', question: 'a value and a start: every leaf pointer ("/a/b" for { a: { b: 1 } })',
+    inputs: SG1_LEAVES, places: [
+      P('mcp/lib/redesign-kinds.mjs', 'leaves', 'export', async (x, get) => (await get())(...x.v)),
+    ] },
+  { id: 'path-out', title: 'How is a path inside the working folder said, dots kept?', question: "a file: its path from the working folder, '/' between parts, each part cleaned, '..' and '.' kept",
+    inputs: SG1_PATHS, places: [
+      P('mcp/lib/twin-read.mjs', 'pathOut', 'export', async (x, get) => { const { ROOT } = await import(pathToFileURL(abs('mcp/lib/model.mjs')).href); return (await get())(path.join(ROOT || path.sep, ...x.v)); }),
+    ] },
+  { id: 'rel-out', title: 'How is a path inside the working folder said, every part cleaned?', question: "a file: its path from the working folder, '/' between parts, every part cleaned",
+    inputs: SG1_PATHS, places: [
+      P('mcp/lib/check-redact.mjs', 'relOut', 'export', async (x, get) => { const { ROOT } = await import(pathToFileURL(abs('mcp/lib/model.mjs')).href); return (await get())(path.join(ROOT || path.sep, ...x.v)); }),
+    ] },
+  // (0.3.3 LX1, AUD-069) one rule: a one-to-one relationship filters both ways (Microsoft Learn); test mcp/test-0.3.3-lx1.mjs
+  { id: 'rel-both', title: 'Does this relationship filter both ways?', question: 'a relationship (TMSL or the model index): true when a filter on either table reaches the other',
+    inputs: LX1_RELS, places: [
+      P('assets/js/relationship-filter.js', 'filtersBoth', 'export', async (x, get) => (await get())(x.v)),
+    ] },
 ];
 
 // the families that are NOT one question, with the reason (CONTRACTS.md's "Not one question" list holds the same names)
 export const NOT_ONE = [
   { file: 'mcp/lib/model.mjs', fn: 'isDir', why: 'isDir and isLink share a shape (an lstat and a test), not a question (Codex, 4 Nov)' },
+  // (0.3.3 SG1) the reviewer's same-shape groups that are not one question (mcp/work/SG1.md, the allow list)
+  { file: 'mcp/lib/read-report.mjs', fn: 'isDir', why: 'never follows a link (lstat), where model.mjs isDir follows one: two questions (group 5)' },
+  { file: 'assets/js/field-suggest.js', fn: 'rank', why: 'a step pipeline like addGulfCalendar: field ranking, not the calendar table (group 6)' },
+  { file: 'assets/js/exam-view.js', fn: 'toast', why: "a one-line call of page-toast.js with the exam page's own box and time (group 11)" },
+  { file: 'mcp/lib/plans.mjs', fn: 'shown', why: "a plan value's canonical text capped at 200, not a report name capped at 60 (cleanName) (group 12)" },
 ];
 
 // ---- running ----

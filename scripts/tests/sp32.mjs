@@ -72,7 +72,9 @@ const ERRORS = [
 ];
 
 // dates and times a run can write
-const DATES = [-1, 0, 1].map((d) => new Date(Date.now() + d * 864e5).toISOString().slice(0, 10));
+// the page writes them (the history's day, an export's time), so they are the page's days, not node's: set from the page's clock in open()
+const around = (ms) => [-1, 0, 1].map((d) => new Date(ms + d * 864e5).toISOString().slice(0, 10));
+let DATES = around(Date.now());
 const undate = (t) => DATES.reduce((s, d) => s.split(d).join('<DATE>'), String(t)).replace(/<DATE>T[\d:.]+Z/g, '<TIME>');
 
 // ---------- the page, watched: analytics, the clipboard, the worker ----------
@@ -99,6 +101,7 @@ function watch() {
 
 async function open(browser, url, page, lang, opts = {}) {
   const v = await visitor(browser, { viewport: [1440, 900] });
+  DATES = around(await v.pg.evaluate(() => Date.now()));
   await v.ctx.addInitScript(watch);
   if (opts.block) await v.ctx.addInitScript(() => { window.__blockWorker = true; });
   if (opts.noSample) await v.ctx.route(/model-health-sample\.pbit/, (rt) => rt.fulfill({ status: 404, body: '' }));

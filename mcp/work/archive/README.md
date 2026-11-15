@@ -6,6 +6,7 @@ text unchanged, newest first as it was; `mcp/WORK.md` now holds only the current
 
 | File | Period | What |
 |---|---|---|
+| [WORK-2026-11-12.md](WORK-2026-11-12.md) | 12 Nov 2026 | 0.3.3: the first merged jobs (BA1 to FB4), moved by SW1 |
 | [WORK-2026-10-25.md](WORK-2026-10-25.md) | 25-26 Oct 2026 | 0.3.1 waves 1 to 6 (the integration branch `integration/0.3.1`) |
 | [WORK-2026-10-15-22.md](WORK-2026-10-15-22.md) | 15 to 22 Oct 2026 | 0.3.0 and its R&D, with 0.2.9 rc.22 to rc.24 and 0.2.9.1 that ran alongside |
 | [WORK-2026-10-11-14.md](WORK-2026-10-11-14.md) | 11 to 14 Oct 2026 | 0.2.9: the gate, the integration, picker and writer rounds |
@@ -24,6 +25,9 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 ```
 
 ## Every section, by file
+
+### [WORK-2026-11-12.md](WORK-2026-11-12.md)
+- 0.3.3: the first merged jobs (moved unchanged from "Where it stands", SW1, from 9ee1b0ce)
 
 ### [WORK-2026-10-25.md](WORK-2026-10-25.md)
 - mcp/WORK.md's top as it stood before SQ12 (26 Oct, fe3682f; moved unchanged by SQ12)

@@ -1,0 +1,14 @@
+{
+  "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json": "8d12daa644f6e8f44e4ccc6788e29a40a2a2ecad1a96be91e77330ed7c8a4453",
+  "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/filterConfiguration/1.2.0/schema-embedded.json": "48e1ad41bf24433b2d643156085681d9f59add13a5bb464e55e5c6b1774c8351",
+  "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/formattingObjectDefinitions/1.4.0/schema.json": "711133a013a1aa5a8586a8488fca857449985ca96eee04726281f5b57a16429c",
+  "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json": "fc2fba11b040f581f4f57f60c7acec108775bcf147429d6edbe183645238b404",
+  "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.0.0/schema.json": "3281fda0f3979dfb968ca094e0f984f705985c669a659ba186df316a414bab13",
+  "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/2.1.0/schema.json": "90f2817ff253ed7d2587f23a5b7e5d6c1141ed80d61aa5f9556db99d0d6ea20c",
+  "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/semanticQuery/1.3.0/schema.json": "106e726a65e1e5c3b00fbe987fc0d4982eb68c0b311689c5e1845ac08f3e28f4",
+  "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/versionMetadata/1.0.0/schema.json": "2c77c510cb12e11f10172174422d0efb1d4e97da06b8d453b2abdf81537e68b2",
+  "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualConfiguration/2.1.0/schema-embedded.json": "157905e9c08dff07bf9ff2b04005b7cc3e006ec4603652f2f37d3f040ffafead",
+  "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json": "3221d6b1f6934228bc2b2bac38126c091394660bc44ead9e4481584c5846f5a7",
+  "https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json": "e46b78fce6f2107a005f27acce1d12f7bd03714c1f0ea4b41e11b0720e478cc1",
+  "https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json": "af66cd9850f8f99373c4ebc991e3c1612e74aebdcdc67a9f564d6122c313250d"
+}

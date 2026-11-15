@@ -336,7 +336,7 @@ const byName = (list, n) => (list.find((x) => x.v.name === n) || {}).v;
     for (let round = 0; round < 4 && ok(pl) && pl.j.bilingual; round++) {
       const J = pl.j.bilingual; let more = false;
       ((J.terminology || {}).sheet || []).forEach((r) => { if (r.field && terms[r.field] == null) { terms[r.field] = r.ar && r.status !== 'kept' ? r.ar : `حقل ${++k}`; more = true; } });
-      (J.texts || []).forEach((t) => { if (t.text != null && !t.field && t.arabic == null && at[t.text] == null) { at[t.text] = t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من {2}: نص ${++k}` : `نص ${++k}`); more = true; } });
+      (J.texts || []).forEach((t) => { if (t.text != null && !t.field && t.arabic == null && at[t.text] == null) { at[t.text] = t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من أصل {2}: نص ${++k}` : `نص ${++k}`); more = true; } });
       if (!more) break;
       a = Object.assign({}, a, { arabicTerms: Object.assign({}, terms), arabicTexts: Object.assign({}, at) }); pl = await wb.call('plan_layout', a);
     }

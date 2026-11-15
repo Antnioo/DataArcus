@@ -153,6 +153,31 @@ export default async function ({ browser, url }) {
       check(r.inter && r.cls <= 0.1, `${page} ${vp[0]}px: the Inter swap shifts the page ${r.cls}${r.inter ? '' : ' (Inter never loaded)'} (want 0.1 or less)`);
       await v.ctx.close();
     }
+    // (0.3.3 CL2, B-435: the Copilot article's title is 1656 px in the fallback and 1634 px in Inter, so at 1400 px and up
+    // it wraps to 3 lines then 2 and everything under it moved 58 px, CLS 0.13 to 0.47; the stylesheet now keeps 3 lines of
+    // room for an English title from 1400 px.) What is measured is the title's own shift: Inter arrives 2.5 s late (the load
+    // event waits for it, so the page is read at DOMContentLoaded + 0.8 s), the title's height and the date line under it are read before and after, and neither may move (1 px). The page's CLS is
+    // not the number: a body paragraph can still wrap a line apart between the fallback and Inter, and how often depends on
+    // the machine's Arial (0.089 on one, 0.118 on CI), which is another job's. The Arabic copy never swaps: CLS 0.01.
+    for (const [page, lang, vp] of [['articles/article-power-bi-copilot-ready-check.html', 'en', 1400], ['articles/article-power-bi-copilot-ready-check.html', 'en', 1600], ['articles/article-power-bi-copilot-ready-check.html', 'en', 1920], ['articles/article-power-bi-model-ai-ready.html', 'en', 1400]]) {
+      const v = await visitor(browser, { viewport: [vp, 900] }); await lateFonts(v, 2500);
+      await v.pg.goto(`${url}/${page}?lang=${lang}`, { waitUntil: 'domcontentloaded' }); await v.pg.waitForTimeout(800);
+      const read = () => v.pg.evaluate(() => { const h = document.querySelector('.article-header h1'), d = document.querySelector('.article-header .lead'); return { h: h.getBoundingClientRect().height, y: d.getBoundingClientRect().top + scrollY, swapped: [...document.fonts].some((f) => f.family === 'Inter' && f.status === 'loaded') }; });
+      const a = await read();
+      await v.pg.waitForFunction(() => [...document.fonts].some((f) => f.family === 'Inter' && f.status === 'loaded'), null, { timeout: 15000 }).catch(() => {}); await v.pg.waitForTimeout(500);
+      const b = await read();
+      check(!a.swapped && b.swapped, `${page} ${lang} ${vp}px: Inter ${a.swapped ? 'arrived before the first reading' : 'never arrived'}`);
+      check(Math.abs(a.y - b.y) <= 1 && Math.abs(a.h - b.h) <= 1, `${page} ${lang} ${vp}px: the Inter swap moves the date line ${Math.round((b.y - a.y) * 10) / 10} px (title ${Math.round(a.h)} -> ${Math.round(b.h)} px, want 0)`);
+      await v.ctx.close();
+    }
+    {
+      const v = await visitor(browser, { viewport: [1400, 900] }); await lateFonts(v, 500);
+      await v.ctx.addInitScript(() => { window.__cls = 0; new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput && e.startTime >= 450) window.__cls += e.value; }).observe({ type: 'layout-shift', buffered: true }); });
+      await v.pg.goto(`${url}/articles/article-power-bi-copilot-ready-check.html?lang=ar`, { waitUntil: 'load' }); await v.pg.waitForTimeout(2500);
+      const cls = await v.pg.evaluate(() => +window.__cls.toFixed(3));
+      check(cls <= 0.01, `articles/article-power-bi-copilot-ready-check.html ar 1400px: the Arabic copy shifts ${cls} (want 0.01 or less)`);
+      await v.ctx.close();
+    }
     for (const [page, delay] of [['articles/article-gulf-calendar-power-bi.html', 700], ['articles/article-power-bi-licensing-guide.html', 700], ['tools/power-bi-theme-generator.html', 5000]]) {
       const v = await visitor(browser, { viewport: [390, 844] }); await lateFonts(v, delay);
       await v.ctx.addInitScript(() => { window.__shown = 0; const t0 = performance.now(); new MutationObserver(() => { if (!window.__shown && !document.documentElement.classList.contains('i18n-pending')) { window.__shown = performance.now() - t0; window.__fontAtShow = document.fonts.check('400 16px "IBM Plex Sans Arabic"', 'ع'); } }).observe(document, { attributes: true, subtree: true, attributeFilter: ['class'] }); });
@@ -171,7 +196,6 @@ export default async function ({ browser, url }) {
     const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
     const REPORTS = {
       "dashboards/adventureworks-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiNWM0ZTJmMjgtMDMyOS00OGM4LTg1YzYtZWZlODE0OGFjZGUyIiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&pageName=b1001ce2d5a628ad47b5&language=en",
-      "dashboards/call-center-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiZDljNDRmMzItYWZkZS00ZGZiLWFkOGMtOWY3ODNhMDAxNTA2IiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
       "dashboards/consumer-financial-complaints.html": "https://app.powerbi.com/view?r=eyJrIjoiMTliODc1NjktOTM5Yy00OTM2LWIwNzYtMDY1MjE0ZWNiOTVlIiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
       "dashboards/er-health-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiNWU2MmMzNGUtMjU4NS00YTZiLWIyYzYtYTE3MTY3NjQ5NjhiIiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
       "dashboards/fintech-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiNDlhY2I0YjgtZGI4Mi00NzU4LThhYWMtNGVhNGUzMDBlYTE5IiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
@@ -192,6 +216,31 @@ export default async function ({ browser, url }) {
         check(r && r.src === src && r.title.length > 5, `${page} ${lang}: after the click the report is ${r ? r.src.slice(0, 60) + '... "' + r.title + '"' : 'missing'}`);
       }
       if (v.errs.length) problems.push(`${page} ${lang}: ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
+  }
+
+  // (0.3.3 GC4, D-1115-05) The Call Center dashboard is off the public website: no page, script or the sitemap links to it,
+  // and its two old addresses (English and Arabic) still lead to the portfolio, as a redirect that is not in the sitemap.
+  {
+    const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+    const REDIRECTS = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', 'redirect-pages.json'), 'utf8'));
+    const files = [...pages(), 'sitemap.xml', 'llms.txt', ...fs.readdirSync(path.join(ROOT, 'assets/js')).filter((f) => f.endsWith('.js')).map((f) => 'assets/js/' + f),
+      ...fs.readdirSync(path.join(ROOT, 'assets/js/translations')).map((f) => 'assets/js/translations/' + f)];
+    const linking = files.filter((f) => /call-center-dashboard|callcenter\.(min\.)?js|call-center(-preview)?[.-]/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')));
+    check(!linking.length, `GC4: files that still name the removed Call Center dashboard: ${linking.join(', ')}`);
+    check(REDIRECTS.length === 2 && REDIRECTS.every((p) => fs.existsSync(path.join(ROOT, p))), 'GC4: the two old addresses are not both there as redirect pages');
+    for (const old of REDIRECTS) {
+      const want = old.startsWith('ar/') ? '/ar/portfolio.html' : '/portfolio.html';
+      const html = fs.readFileSync(path.join(ROOT, old), 'utf8');
+      check(html.includes(`<link rel="canonical" href="https://dataarcus.com${want}" />`) && /<meta name="robots" content="noindex"/.test(html) && html.includes(`<a href="https://dataarcus.com${want}">`) && html.includes(`http-equiv="refresh" content="0; url=https://dataarcus.com${want}"`), `GC4: ${old} is not a noindex redirect with a canonical and a plain link to ${want}`);
+      check(!fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8').includes('/' + old), `GC4: ${old} is listed in sitemap.xml`);
+      const v = await visitor(browser, { viewport: [1440, 900] });
+      await v.pg.route('https://dataarcus.com/**', (rt) => rt.fulfill({ status: 200, contentType: 'text/html', body: '<title>portfolio</title>' }));
+      await v.pg.goto(`${url}/${old}`, { waitUntil: 'load' });
+      await v.pg.waitForURL((u) => u.pathname.endsWith(want) || u.hostname === 'dataarcus.com', { timeout: 15000 }).catch(() => {});
+      const u = new URL(v.pg.url());
+      check(u.pathname === want, `GC4: /${old} ended at ${u.href}, not ${want}`);
       await v.ctx.close();
     }
   }
