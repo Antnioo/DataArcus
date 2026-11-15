@@ -730,6 +730,10 @@ Since 0.3.3 AU1 (AUD-068) the Health Check's worker (`model-health-worker.js` `f
 with more than one model: the nearest is read; on a tie, where the two callers below refuse, it reads the first of the
 tied (the rule's sorted order) and says, before the score, which it read and which not (no picker yet). Test:
 `mcp/test-0.3.3-au1.mjs` W4 to W11.
+Since 0.3.3 TF1 (test033 D10: check_model_health took a zip's first model.bim in the zip's order, with every report in it)
+that choice is `assets/js/zip-models.js` `choose`, moved from the worker as it was; the worker and `mcp/lib/model.mjs`
+`loadModel` (check_model_health, read_model) both call it, so a zip gives one answer on the website and in the MCP.
+Test: `mcp/test-0.3.3-tf1.mjs` Z0 to Z9.
 
 | place | MODULES.md | who sees it |
 |---|---|---|

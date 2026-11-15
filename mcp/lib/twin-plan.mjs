@@ -226,7 +226,7 @@ function pagesStep(a, ctx) {
     u.bars.forEach((x) => together.bars.push(at(x.bars) + ' with ' + safeName(x.names)));
     pg.visuals.forEach((v) => { const k = Mirror.kindOf(v.json), f = k === 'matrix' ? Mirror.flatMatrix(v.json) : null; if (f && f.ok) return;
       // (0.3.1 MX2) the kinds Power BI cannot mirror, each said on a line of its own (KINDS_SAID)
-      const hb = k === 'matrix' ? Mirror.heatmapBeside(v.json) : null;
+      const hb = k === 'matrix' ? Mirror.heatmapBeside(v.json, { theme: R.theme }) : null;   // (0.3.3 TF1: the matrix's text size from its theme)
       if (hb && hb.ok) { where.heatNames.push(safeName(pg.id) + '/' + safeName(v.json.name)); return; }
       // (0.3.1 MX4, laptop part 10: ER p1's heatmap kept as it is, unsaid) a matrix with a Columns field (a heatmap) kept
       // with its row headers at the left says why its names are not beside it

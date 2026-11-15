@@ -24,6 +24,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
+import { zipOf } from './fixtures/stored-zip.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..'), JS = path.join(REPO, 'assets/js');
 const require = createRequire(import.meta.url);
@@ -95,20 +96,6 @@ const says = (r) => (r.skipped || []).map((s) => `${s.table || s.path}:${s.code}
 }
 
 // ---------- W. the website's worker, in a vm ----------
-const crc32 = (b) => { let c = ~0; for (const x of b) { c ^= x; for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xedb88320 & -(c & 1)); } return ~c >>> 0; };
-// a stored (uncompressed) zip of [name, Buffer|string] in the order given
-const zipOf = (entries) => {
-  const parts = [], dir = []; let off = 0;
-  for (const [name, d] of entries) {
-    const data = Buffer.isBuffer(d) ? d : Buffer.from(d), nb = Buffer.from(name), crc = crc32(data);
-    const h = Buffer.alloc(30); h.writeUInt32LE(0x04034b50, 0); h.writeUInt16LE(20, 4); h.writeUInt32LE(crc, 14); h.writeUInt32LE(data.length, 18); h.writeUInt32LE(data.length, 22); h.writeUInt16LE(nb.length, 26);
-    const c = Buffer.alloc(46); c.writeUInt32LE(0x02014b50, 0); c.writeUInt16LE(20, 4); c.writeUInt16LE(20, 6); c.writeUInt32LE(crc, 16); c.writeUInt32LE(data.length, 20); c.writeUInt32LE(data.length, 24); c.writeUInt16LE(nb.length, 28); c.writeUInt32LE(off, 42);
-    parts.push(h, nb, data); dir.push(c, nb); off += 30 + nb.length + data.length;
-  }
-  const cd = Buffer.concat(dir), e = Buffer.alloc(22);
-  e.writeUInt32LE(0x06054b50, 0); e.writeUInt16LE(entries.length, 8); e.writeUInt16LE(entries.length, 10); e.writeUInt32LE(cd.length, 12); e.writeUInt32LE(off, 16);
-  return Buffer.concat([...parts, cd, e]);
-};
 const worker = (min) => {
   const ctx = { console, TextDecoder, TextEncoder, Blob, Response, DecompressionStream, setTimeout, clearTimeout, Date, posted: [] };
   ctx.self = ctx; vm.createContext(ctx);
@@ -169,7 +156,9 @@ for (const [label, w] of Object.entries(W)) {
   const deeper = [...health, ...plain().map(([n, b2]) => ['Archive/' + n, b2])];
   const d = await run(W.min, zipOf(deeper), 'two.zip'), dm = d.result && d.result.models;
   chk(() => d.type === 'done' && dm && dm.read === 'Health Test.SemanticModel' && J(dm.notRead) === '["Archive/Plain Orders.SemanticModel"]' && d.result.score.overall === alone.result.score.overall, () => `W10. the model at the top is read, never the deeper copy (model-nearest.js): ${J(dm || d)}`);
-  chk(() => /model-nearest\.min\.js\?v=/.test(fs.readFileSync(path.join(JS, 'model-health-worker.js'), 'utf8')) && /DAModelNearest\.nearest\(/.test(fs.readFileSync(path.join(JS, 'model-health-worker.js'), 'utf8')), () => 'W11. the worker reads model-nearest.js (importScripts and DAModelNearest.nearest), never a rule of its own');
+  // (0.3.3 TF1) the choice moved, as it was, into zip-models.js (the MCP's reader calls it too); it reads model-nearest.js
+  const wsrc = fs.readFileSync(path.join(JS, 'model-health-worker.js'), 'utf8'), zsrc = fs.readFileSync(path.join(JS, 'zip-models.js'), 'utf8');
+  chk(() => /model-nearest\.min\.js\?v=/.test(wsrc) && /zip-models\.min\.js\?v=/.test(wsrc) && /DAZipModels\.choose\(/.test(wsrc) && /Nearest\.nearest\(/.test(zsrc) && !/DAModelNearest\.nearest\(/.test(wsrc), () => 'W11. the worker reads zip-models.js (importScripts and DAZipModels.choose), which reads model-nearest.js: never a rule of its own');
 }
 
 // ---------- S. the real server ----------

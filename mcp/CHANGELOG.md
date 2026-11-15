@@ -5,6 +5,33 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.3
+- `check_model_health` and `read_model` now read a zip holding two semantic models as the website's Model Health Check
+  does: they say first which model was read and which was not, and read only that model's own report. Before, they scored
+  the model whose files came first in the zip with the reports of every model in it, and said nothing (a laptop run
+  found a score of 79 for one model with the other model's report). A zip of one model is read as before, and a project
+  saved as TMDL can now be zipped too.
+- `check_report`'s warning for a bookmark that names visuals its page no longer has now says only that, and to update or
+  delete the bookmark. It said Power BI drops those visuals from the bookmark when it saves; Power BI Desktop kept them
+  in a laptop run, and Microsoft's validator then reported them too. The warning now also finds a visual named only in
+  the bookmark's list of visuals it applies to, which is where Desktop kept it; before, only a visual named in the
+  bookmark's page state was found.
+- `plan_layout`'s list of what the plan writes now names the report, as the approval window always did: "the report
+  "Gulf Views.Report" and its "Gulf Views.pbip"", or the free name when that name is taken. It said "<name>.Report".
+- The Arabic twin's day names beside a heatmap now have the heatmap's own row height. They were written at text size 10
+  whenever the heatmap set no text size of its own, while the heatmap drew at its theme's size or Power BI's, so the
+  names drifted down the grid and the last one sat on the Total row (a laptop run, Power BI's default row height). Now
+  they take the heatmap's text size and row spacing: its own, else its theme's for matrices, else nothing of their own,
+  as the heatmap. A theme that sizes tables and not matrices gets no names beside the heatmap, and the plan says why.
+  0.3.2 wrote the same size.
+- Arabic name drafts for two-word field names now put the words in Arabic order: "Sales Region" is drafted «منطقة
+  المبيعات», "Order Date" «تاريخ الطلب», not «المبيعات المنطقة» in English order (a laptop run, on Microsoft's Corporate
+  Spend sample). A draft uses only the words of DataArcus's fixed list, and the person still approves every name. Where
+  the Arabic order would need more than dropping a word's article, or the name has three or more words, there is no
+  draft and the assistant proposes a name for the person to approve, as for any name not in the list.
+- The Arabic glossary's Microsoft sources for nine terms (filters, filtering, slicer, visual, chart, measure, page,
+  report, fiscal year) are now Microsoft Support pages written in Arabic, each read on 15 Nov. The Microsoft Learn
+  training pages cited before show their text in English, so they did not show Microsoft's Arabic word. Every term
+  keeps its Arabic; for "page" Microsoft's own word is «صفحة».
 - Arabic: with `lang` "ar", a wrong model name or path in a working folder that holds no model is now answered in
   Arabic. English answers are unchanged.
 - The Arabic words DataArcus uses are in one glossary, `content/ARABIC-GLOSSARY.md`, each with Microsoft's and Google's

@@ -14,6 +14,7 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 - LR3 (P-01, P-08: a Stop hook; `LR3`). HX1 (`HX1`). HX2 (Impact check; `HX2`). TL1 (`TL1`). OX1 (`OX1`). IX1 (`IX1`). IX2 (`IX2`). SN1 (`SN1`). OX2. IX4. LX1 (`LX1`). AU2. SN3 (`SN3`). AU1 (`AU1`). SN4 (`SN4`). WF3 (`WF3`). RX1 (`RX1`). AR7 (`AR7`). TB3 (`TB3`). CI3 (`CI3`). SW1 (`SW1`: first merged line archived).
 
 - LF1 (AUD-074, AUD-075; `work/LF1.md`): DONE on fix/0.3.3-lf1 once its CI line is in the note, for the reviewer.
+- TF1 (test033, D-1115-01; `work/TF1.md`): six findings fixed, DONE on fix/0.3.3-tf1 once its CI line is in the note.
 - RL33: checklist `work/RL33-RELEASE.md`.
 ## Next step
 1. PR #121 (RL032L, download lines) is on main. 2. The reviewer merges the DONE jobs above, one check each.

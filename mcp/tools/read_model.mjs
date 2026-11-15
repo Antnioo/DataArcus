@@ -25,7 +25,8 @@ export function register(server, ctx) {
       return compact(Object.assign({}, unreadableOf(m), { reach: reachOf(p, reach) }));
     }
     // (AU47) a definition file that could not be read fully is named first, before the part that was read
-    const m = loadModel(p), first = unreadableOf(m);
+    // (0.3.3 TF1) a zip of more than one model: which was read and which not, first too (zip-models.js)
+    const m = loadModel(p), first = Object.assign(unreadableOf(m), m.models ? { models: m.models } : {});
     // (SQ15a) each KPI and its target: a measure, or "an expression" (its text never)
     if (tables) return text(Object.assign({}, first, namedTables(m, tables, hiddenOf(m)), kpisOf(m), hiddenOf(m)));
     return isLarge(m) ? compact(Object.assign({}, first, largeSummary(m), kpisOf(m), hiddenOf(m))) : text(Object.assign({}, first, fullAnswer(m), kpisOf(m), hiddenOf(m)));

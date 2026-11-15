@@ -246,7 +246,8 @@ function answerStep(hc) {
   const answersWrite = writeAnswersFile && scriptDir && !write ? [`the answers file "${answersName(scriptBase)}" ${whereSaid(scriptDir)}, ${mem.ours ? REPLACES : 'a new file'}: ${forgetAnswers ? 'emptied (the user\'s recorded answers forgotten)' : `the user's answers to ${given.length} "Please confirm" question${given.length === 1 ? '' : 's'}${mem.ours && applied.stale.length ? `; ${applied.stale.length} earlier answer${applied.stale.length === 1 ? '' : 's'} that no longer appl${applied.stale.length === 1 ? 'ies' : 'y'} dropped` : ''}`} (hashes, the answer and its date; no name, no DAX)`] : [];
   const plan = !write && (wouldWrite.length || answersWrite.length) ? { plan: Plans.proposal(Plans.propose('scripts', modelRef(m, p), wouldWrite.map((f) => `the fix script "${f}" ${whereSaid(scriptDir)} (${NEVER_APPLIED})`).concat(answersWrite), { pins: { check_model_health: pinH }, scriptNames, answersShown: (answers || []).filter((x) => byKey.has(x.answerKey)).map((x) => { const q = byKey.get(x.answerKey); return { object: q.obj, question: (q.message && q.message.en) || q.id, answer: x.answer }; }), forgetAnswers: !!forgetAnswers })) } : {};
   return text(healthFit({
-    source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report, ...plan, ...(planUse ? { planUse } : {}),
+    // (0.3.3 TF1) a zip of more than one model: which was read and which not, before the score (zip-models.js)
+    source: m.source, ...(m.models ? { models: m.models } : {}), score: r.score, stats: r.stats, reportRead: !!m.report, ...plan, ...(planUse ? { planUse } : {}),
     // (rc.22, B-144) when no report was read, the answer says so and why, beside the unused-columns figures it leaves out
     ...(!m.report ? { reportNotRead: (m.reportsSeen && m.reportsSeen.notRead && m.reportsSeen.notRead.length ? `No report of this model could be read (${m.reportsSeen.notRead.map((x) => `"${x.report}": ${x.why}`).join('; ')}).` : m.reportsSeen && m.reportsSeen.counted.length === 0 ? 'No report of this model was found next to it (a .Report folder whose definition.pbir points at this model).' : 'No report was read: the model is not inside a project folder with its reports.') + ' So unused columns and measures were not checked (stats.unusedColumns and unusedMeasures are null): never tell the user that columns are unused.' } : {}),
     // (0.2.9 item 13) which reports beside the model were read: only this model's (lib/model.mjs, notThisModel)
@@ -285,7 +286,7 @@ function findingOut(f, maxItems) {
 // be wrong: the audit measured 96 for a model Desktop could not open, 92 for the whole one), the findings partial
 function partialHealth(m, maxItems) {
   const r = Health.analyze(m.tmsl, m.report);
-  return Object.assign(unreadableOf(m), { source: m.source,
+  return Object.assign(unreadableOf(m), { source: m.source, ...(m.models ? { models: m.models } : {}),
     scoreWithheld: `No score: ${m.skipped.length} model file(s) could not be read, and a score of the part that was read would be wrong (a model Power BI Desktop cannot open can score higher than the whole model). Fix the file and check again for the score.`,
     stats: r.stats, reportRead: !!m.report,
     findingsPartial: 'Partial: these are the findings the check could still make on the part of the model that was read; nothing in the files above was checked, and no fix script is offered until they are read.',

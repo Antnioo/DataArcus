@@ -16,7 +16,7 @@ import { writesNote, writesNoteAr } from './answers.mjs';   // (R5, F04: the ans
 import { scriptIs, APPLY_STEPS, SCRIPT_IS_AR, APPLY_STEPS_AR } from './plain-words.mjs';   // (0.3.0 T1, T-4)
 import { arOf } from './approval-ar.mjs';   // (0.3.1 FX1: an Arabic plan's page wholly Arabic)
 // (0.3.2 SP23) what each page says: approval-disclosure.mjs (pure); this file renders it
-import { cut, HEX, KIND_AR, isScript, kindsLine, plainLine } from './approval-disclosure.mjs';
+import { cut, HEX, KIND_AR, isScript, kindsLine, plainLine, withName } from './approval-disclosure.mjs';
 
 // (0.3.0 step 1, "Preview before Approve": the planned pages drawn by the shared renderer, the lab page's too)
 const Preview = createRequire(import.meta.url)('../../assets/js/page-preview.js');
@@ -154,7 +154,7 @@ export function askPage(w) {
   const arTitle = ar && s.titleKey && W.titles[s.titleKey] ? W.titles[s.titleKey] : null;
   // (SQ3, T1-S6: an Arabic page listed the writes in English) each write in Arabic (the plan's writesAr, made by its tool
   // from the same facts), the plan's English line under it; a writesAr that is not one line per write is not shown
-  const named = (x) => (s.name ? String(x).split('<name>').join(s.name) : String(x));
+  const named = (x) => withName(x, s.name);
   const WA = ar && Array.isArray(s.writesAr) && s.writesAr.length === w.plan.writes.length ? s.writesAr : null;
   // (FX1, the laptop's part 3: "each Arabic file line is followed by its English copy") the Arabic line alone
   const writesHtml = w.plan.writes.map((x, i) => (WA ? `<li dir="auto">${isoText(named(WA[i]), true)}</li>` : `<li dir="auto">${esc(named(x))}</li>`)).join('');

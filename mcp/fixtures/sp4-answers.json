@@ -4,8 +4,8 @@
   "P1 a model without measures, Arabic": {
    "plan": {
     "err": false,
-    "length": 15919,
-    "sha256": "4887ce2246d328aebd9af2bf2cfd2bafb398c6d53da7670580caeb93adf2e169"
+    "length": 15927,
+    "sha256": "c8a34b7f5d283094f2fe468dc61ae85b157594576ed4852af3207552b8ae30dd"
    },
    "report": {
     "err": false,
@@ -20,8 +20,8 @@
   "P2 kpiValues full, a Ramadan page filter": {
    "plan": {
     "err": false,
-    "length": 15855,
-    "sha256": "57e792aa0b6b239155fa2c583cc42fc58965db7e1b9e6518ee3668a2bf7bd195"
+    "length": 15859,
+    "sha256": "22f99b7796ac20fc3bfca675da144473f5bfa246cee8427b9d01332e4d2f5f7e"
    },
    "report": {
     "err": false,
@@ -36,8 +36,8 @@
   "P3 hand-placed pages, KPI slots left out": {
    "plan": {
     "err": false,
-    "length": 12531,
-    "sha256": "3ad5f8c13cddfa131f511faec3d1e77402ca78ef229f2591298cdec12cea770d"
+    "length": 12535,
+    "sha256": "8197e7368f36b9986e9ae60ea15e37059ad0e588f72833ec7c53add57ea18a35"
    },
    "report": {
     "err": false,

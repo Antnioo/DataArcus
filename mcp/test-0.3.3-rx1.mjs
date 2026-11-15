@@ -12,6 +12,7 @@
 //   R   an Arabic report: the names as given, the same order
 //   C   check_report on a report broken by hand: a bookmark whose page is gone, whose visual is gone, a listed bookmark
 //       without a file, the views out of the plan's order; in numbers only, never the bookmark's own name
+//   D   (TF1) a view as Power BI Desktop saved it (mcp/fixtures/test033, R-82): pinned, read, and found when it names a gone visual
 //   node test-0.3.3-rx1.mjs
 import './test-env.mjs';
 import fs from 'node:fs';
@@ -24,6 +25,7 @@ import { serverClient } from './test-0.2.9.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const problems = []; let checks = 0;
 const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } catch (e) { err = ' (threw: ' + String(e && e.message || e).slice(0, 200) + ')'; } checks++; if (!ok) { let m = ''; try { m = msg(); } catch (e) { m = 'unexpected shape'; } problems.push(m + err); } };
+const J0 = (x) => JSON.stringify(x);
 const short = (x) => (x.err || !x.j ? String(x.t).slice(0, 400) : JSON.stringify(x.j).slice(0, 400));
 const rd = (f) => JSON.parse(fs.readFileSync(f, 'utf8'));
 const wr = (f, j) => fs.writeFileSync(f, JSON.stringify(j, null, 2));
@@ -168,7 +170,11 @@ try {
     { const X = copy('health/Gone visual.Report'), b = X.files[X.items[3]], pg = b.explorationState.activeSection;
       b.options.targetVisualNames.push('visualthatisgone0001', 'visualthatisgone0002'); b.explorationState.sections[pg].visualContainers.visualthatisgone0001 = {}; b.explorationState.sections[pg].visualContainers.visualthatisgone0002 = {}; save(b);
       const { c, by } = await run('health/Gone visual.Report'), f = by('BOOKMARK_TARGET_MISSING');
-      chk(() => f.length === 1 && /2 visuals/.test(f[0].what) && !JSON.stringify(c.j).includes('visualthatisgone'), () => `C4. the bookmark whose 2 visuals are gone, counted, never named: ${JSON.stringify(f)}`); }
+      chk(() => f.length === 1 && /2 visuals/.test(f[0].what) && !JSON.stringify(c.j).includes('visualthatisgone'), () => `C4. the bookmark whose 2 visuals are gone, counted, never named: ${JSON.stringify(f)}`);
+      // (0.3.3 TF1, test033 C6: Desktop kept the deleted slicer's name in the bookmarks after a save) the finding says what
+      // is true, and claims nothing about what Power BI does when it saves
+      chk(() => f.length === 1 && f[0].what === 'a bookmark still names 2 visuals its page no longer has' && /^Update the bookmark .*, or delete the bookmark\.$/.test(f[0].fix) && !/save|drop/i.test(f[0].what + ' ' + f[0].fix),
+        () => `C4b. the sentence is true (the bookmark still names them; update or delete it), no claim about Desktop's save: ${JSON.stringify(f)}`); }
     // C5: bookmarks.json lists a bookmark that has no file
     { const X = copy('health/No file.Report'), l = rd(X.list); l.items.push({ name: 'bookmarkwithoutfile01' }); wr(X.list, l);
       const { c, by } = await run('health/No file.Report'), f = by('BOOKMARK_TARGET_MISSING');
@@ -182,6 +188,23 @@ try {
     { const X = copy('health/Removed.Report'), l = rd(X.list), gone = l.items.shift(); wr(X.list, l); fs.rmSync(X.files[gone.name]._file);
       const { by } = await run('health/Removed.Report');
       chk(() => by('BOOKMARK_ORDER').length === 0 && by('BOOKMARK_TARGET_MISSING').length === 0, () => `C8. a view the owner removed is no finding: ${JSON.stringify(by('BOOKMARK_ORDER').concat(by('BOOKMARK_TARGET_MISSING')))}`); }
+    // D (0.3.3 TF1, R-82): a view as Power BI Desktop saved it (mcp/fixtures/test033, the laptop's test033 C: DataArcus
+    // wrote schema 1.4.0 and explorationState 1.3; Desktop rewrote it as 2.1.0 and 1.0, Data and Display still off). The
+    // file's structure is Desktop's own; only its ids are this report's (its name and page)
+    { const FX = path.join(REPO, 'mcp/fixtures/test033'), saved = rd(path.join(FX, 'desktop-saved-view.bookmark.json')), list = rd(path.join(FX, 'desktop-saved-bookmarks.json'));
+      chk(() => /\/bookmark\/2\.1\.0\/schema\.json$/.test(saved.$schema) && saved.explorationState.version === '1.0' && saved.options.suppressData === true && saved.options.suppressDisplay === true && Object.keys(saved.options).length === 2
+        && J0(Object.keys(saved)) === '["$schema","displayName","name","options","explorationState"]' && J0(saved.explorationState.sections[saved.explorationState.activeSection]) === '{"visualContainers":{}}' && list.items.length === 6,
+        () => `D1. the R-82 source pinned: a view saved by Desktop (bookmark schema 2.1.0, explorationState 1.0, Data and Display off, no visual state; bookmarks.json 6 items): ${J0(saved).slice(0, 300)}`);
+      const X = copy('health/Desktop saved.Report'), b = X.files[X.items[0]], pg = b.explorationState.activeSection;
+      const asDesktop = JSON.parse(JSON.stringify(saved));
+      asDesktop.name = b.name; asDesktop.displayName = b.displayName; asDesktop.explorationState.activeSection = pg; asDesktop.explorationState.sections = { [pg]: saved.explorationState.sections[saved.explorationState.activeSection] };
+      wr(b._file, asDesktop);
+      const { c, by } = await run('health/Desktop saved.Report');
+      chk(() => !c.err && by('BOOKMARK_TARGET_MISSING').length === 0 && by('BOOKMARK_ORDER').length === 0, () => `D2. Desktop's saved view on its page: no bookmark finding: ${short(c)}`);
+      // the laptop's C6: the slicer deleted, Desktop's save kept its name in the view (targetVisualNames)
+      asDesktop.options.targetVisualNames = ['slicerdeletedonthelaptop']; wr(b._file, asDesktop);
+      const d3 = await run('health/Desktop saved.Report'), g = d3.by('BOOKMARK_TARGET_MISSING');
+      chk(() => g.length === 1 && g[0].what === 'a bookmark still names 1 visual its page no longer has' && !JSON.stringify(d3.c.j).includes('slicerdeleted'), () => `D3. a Desktop-saved view still naming a deleted visual: found, counted, never named: ${JSON.stringify(g)}`); }
     // C9: only the navigation family, when asked, still runs both
     { const only = await s.call('check_report', { path: 'health/Swapped.Report', checks: ['navigation'] });
       chk(() => !only.err && BM_RULES.every((x) => only.j.rulesRun.includes(x)) && only.j.findings.some((f) => f.rule === 'BOOKMARK_ORDER'), () => `C9. checks ["navigation"] runs the bookmark rules: ${short(only)}`); }

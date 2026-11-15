@@ -4,8 +4,8 @@
   "T1 EN glass 1920 x 1080": {
    "plan": {
     "err": false,
-    "length": 13449,
-    "sha256": "b0a9f7a4c7fcdda9990ac4516724c167f4e5c7422e12b8cc870c9bce423a915d"
+    "length": 13461,
+    "sha256": "17c43804375016fcaa87f75e24e80850e279fac225ce4d33e2891945826eea78"
    },
    "report": {
     "err": false,
@@ -20,8 +20,8 @@
   "T2 EN plain 1280 x 720": {
    "plan": {
     "err": false,
-    "length": 13249,
-    "sha256": "d07b6c7a757de65480f3c2e400b3485debe57b37ef861103b880b7af00cc59cb"
+    "length": 13261,
+    "sha256": "9009a250f1298145629007ab46fd688a031733cb3a4a71c9c0e8760494f847ae"
    },
    "report": {
     "err": false,
@@ -36,8 +36,8 @@
   "T3 AR glass 1920 x 1080, names approved": {
    "plan": {
     "err": false,
-    "length": 18201,
-    "sha256": "9009775ffa63d2122e50b616b97febc934255292433b49a33ead07bf3cc3359f"
+    "length": 18213,
+    "sha256": "c2415127ae553189778409b4696f14261458eee83db55213a7365f414dc267e3"
    },
    "report": {
     "err": false,
@@ -52,8 +52,8 @@
   "T4 AR plain 1280 x 720, names approved": {
    "plan": {
     "err": false,
-    "length": 20065,
-    "sha256": "de7a44ece90be1bc39f2ed876b730071ce23b8b133368306c9d9b04a325413ef"
+    "length": 20077,
+    "sha256": "1f4b427a5cc34a35826f7fde01e9d4f27bf95f563d8019f801c608d8be9d821c"
    },
    "report": {
     "err": false,
@@ -68,8 +68,8 @@
   "T5 EN glass on the twin": {
    "plan": {
     "err": false,
-    "length": 11663,
-    "sha256": "a22c38f05bd6e229082bf478da31adcb4bfb7d19cfb43dd6c28b48929a370fd4"
+    "length": 11673,
+    "sha256": "dd0a738976685bdadc903a68f281631e3e82f181453dd13aa7d48b639d9d2aab"
    },
    "report": {
     "err": false,
@@ -84,8 +84,8 @@
   "T6 AR plain 1280 x 720 on the twin, no names": {
    "plan": {
     "err": false,
-    "length": 21139,
-    "sha256": "d5af3202b7d687fe08b8e246c55b00b65c4c88bd364b82f6f9398bfc769ca563"
+    "length": 21149,
+    "sha256": "1bea291b5b2fc142ab04f1b1574799d36368af91940a3cbaba172b4b8ae3e41a"
    },
    "report": {
     "err": false,
@@ -100,8 +100,8 @@
   "T7 AR glass 1280 x 720 on the twin": {
    "plan": {
     "err": false,
-    "length": 17540,
-    "sha256": "fce67cd4c8f8584bd2d729212472ab9108deb2416ef1f08ae69450e152a57eba"
+    "length": 17562,
+    "sha256": "e03c55b57e04ae7e1977c54e45a956cb34d8ecefedeb2781b5a1dcb964234f06"
    },
    "report": {
     "err": false,
@@ -116,8 +116,8 @@
   "T8 hand-placed pages, no chart": {
    "plan": {
     "err": false,
-    "length": 11091,
-    "sha256": "e2266ce799cf4caf9364b1a9bdcf4faa2533d55507eacdf4562e5a6a044fa448"
+    "length": 11095,
+    "sha256": "c823fd52e46196c17bcc79c6c43976467d2e404529f54f6022c3f4242bf304b1"
    },
    "report": {
     "err": false,
