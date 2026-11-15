@@ -3,7 +3,7 @@
 - **Base:** origin/integration/0.3.3 at 103097b2 (branch fix/0.3.3-tf1). Push only this branch; never merge, no PR.
 - **Scope:** (1) check_model_health/read_model on a zip of two semantic models: one shared chooser for the website's worker and the MCP (a new engine `assets/js/zip-models.js`), the models note before the score, only the model's own report; (2) BOOKMARK_TARGET_MISSING's sentence made true, Desktop's saved bookmark (lab/test033-fixture 4c727719) pinned in rx1; (3) plan_layout's writesAfterGo with the report's name filled; (4) the Arabic twin's weekday names table: its text size and row padding the matrix's (own, else the theme's matrix style), said when it cannot match; (5) noun + noun drafts in Arabic order (idafa); (6) the glossary's Microsoft citations re-read in Arabic. One commit per item, each with a test red on 103097b2 first and its CHANGELOG line.
 - **Expected checks:** `node scripts/check-modules.mjs --strict`; `node scripts/check-contracts.mjs`; check-agent-memory, check-result-lines, changelog-words; area runs model, checker, report, arabic, twin; the capped suites (terminology-sheet, bilingual-report) 3 times; lint 0; CI green on the last code commit.
-- **Resume:** all six items done and pushed; CI run 43707733607 on d64cca61 was red (6 pins, fixed in 4d776922, see "Changed on purpose"); what is left: the CI line on the next run (below, "CI green:").
+- **Resume:** DONE (2026-11-15T11:58Z): CI green on aa40b6d4 (the line at the end); nothing left on this branch.
 - Done: items 1-6 (c1e00d1d, 9d513513, aa56de5f, 8125bb8f, 8f049bb5, 43c4e96e), follow-ups abb56c37 (ar7), 8d9cb958 and 895d9a14 (pins re-recorded on purpose). Requires added: mcp/lib/model.mjs requires assets/js/zip-models.js (R-92); zip-models.js requires model-nearest.js (already staged).
 - R-33: origin/integration/0.3.3 still at 103097b2 at 2026-11-15T11:10Z: no merge.
 
@@ -78,3 +78,5 @@ none
 - An Arabic wording change moves the Arabic approval page's pins (sp23, sp44) and any check that measures Arabic names against a box (test.mjs round 18): grep the pins for the old Arabic text too, not only the English.
 - A long area run blocks edits to shared engines; a git worktree at the last commit lets it run while the next item is written.
 - I stopped a background run with `pkill -f` once (R-40 says by its task id): nothing else was running, but it is the wrong tool.
+
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/43710355270 on aa40b6d4ffc16cd21a11c2b544fd9165ae4d4984 (2026-11-15T11:58Z; 17 jobs success on Linux and Windows, every website and MCP job; mcp-macos and mcp-macos-parts skipped by the workflow itself, D-1104-19, so macOS did not run; origin/integration/0.3.3 still at 103097b2: no merge). DONE
