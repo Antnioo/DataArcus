@@ -7,6 +7,7 @@
 //   A2  the same chart on the untyped column «تاريخ الشحن»: the same axis treatment (red on c21df8d5: kept left to right)
 //   H1  guard: a heatmap whose rows are "Weekday": the twin gives it its day names beside the grid (MX3)
 //   H2  the same heatmap by «يوم الأسبوع»: the same (red on c21df8d5: kept a matrix, its rows "not the days of the week")
+//   H3  (TF1, test033 D9) the written names tables have the matrix's text size and row padding (none written here)
 //   V   the written twin passes Microsoft's validator (R-73: the names beside are a visual the twin adds)
 // The names are read by assets/js/time-names.js (isDateName, isWeekdayName), their one home (D-1104-15, D-1104-12).
 // Made-up names only, no data.   node test-0.3.3-au2.mjs
@@ -80,6 +81,14 @@ const hn = get(() => j.mirrors.find((x) => x.kind === 'heatmapNames')), where = 
 const kept = get(() => (j.cannot || []).filter((c) => (c.where || []).some((x) => /heat/.test(x))).map((c) => c.what + ': ' + (c.where || []).join() + ' ' + (c.why || '')));
 chk(() => where.includes(PG + '/heatEn'), () => `H1 (guard) the heatmap by "Weekday" gets its names beside it: ${JSON.stringify(hn)} ${JSON.stringify(kept)}`);
 chk(() => where.includes(PG + '/heatAr'), () => `H2 the heatmap by «يوم الأسبوع» gets its names beside it as the one by "Weekday" does: ${JSON.stringify(hn)} ${JSON.stringify(kept)}`);
+// (0.3.3 TF1, test033 D9: this heatmap's shape; the names table was written at text size 10 while the matrix, which sets
+// none, draws at Power BI's default: its rows taller than the grid's) the names table written beside it takes the
+// matrix's text size and row padding: none of its own here, none written (both at the default; the theme has no style)
+const namesOf = (h) => get(() => fs.readdirSync(AR).filter((n) => n.startsWith(h + 'Names')).map((n) => rd(path.join(AR, n, 'visual.json')))[0]);
+const gridOf = (v) => get(() => ((v.visual.objects.grid || [])[0] || {}).properties || {});
+chk(() => ['heatEn', 'heatAr'].every((h) => { const t = namesOf(h), g = gridOf(t), m = gridOf(get(() => rd(path.join(AR, h, 'visual.json'))));
+  return t && t.visual.visualType === 'tableEx' && g.textSize === undefined && g.rowPadding === undefined && m.textSize === undefined && ((t.visual.objects.values || [])[0] || {}).properties.fontSize === undefined; }),
+  () => `H3 the written names tables take the matrix's text size and row padding (none here: none written): ${JSON.stringify(['heatEn', 'heatAr'].map((h) => gridOf(namesOf(h))))}`);
 const v = w.err ? { ran: false, why: 'no twin' } : validatorCounts(path.join(D, 'Twin Sales AR.Report'));
 chk(() => v.ran && v.errorCount === 0, () => `V Microsoft's validator on the written twin: ${JSON.stringify(v).slice(0, 400)}`);
 

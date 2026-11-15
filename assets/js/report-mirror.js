@@ -418,10 +418,17 @@
     const f = rows && rows.length === 1 && isObj(rows[0]) && isObj(rows[0].field) ? rows[0].field : null, name = f && isObj(f.Column) ? f.Column.Property : null;
     if (typeof name !== 'string' || !TN.isWeekdayName(name)) return { ok: false, why: 'its rows are not the days of the week (told from the row field\'s name)' };
     const ob = isObj(v.objects) ? v.objects : {}, pv = (k, x) => { const e = (Array.isArray(ob[k]) ? ob[k] : []).find((y) => isObj(y) && !y.selector && isObj(y.properties) && y.properties[x] !== undefined); return e ? e.properties[x] : undefined; };
-    const pt = parseFloat(String(lit(pv('grid', 'textSize')) || lit(pv('values', 'fontSize')) || lit(pv('rowHeaders', 'fontSize')) || '10').replace(/D$/, '')) || 10;
+    // (0.3.3 TF1, test033 D9: the names table was given text size 10 whenever the matrix set none, while the matrix drew
+    // at its theme's or Power BI's own size: its rows were taller than the grid's and the last name sat on the Total row)
+    // the text size and the row padding the matrix draws with: its own, else the report theme's for matrices; none known:
+    // nothing is written on the names table either, so both draw at the same default. The theme giving tables one and
+    // matrices none: the names' rows could not be the grid's, so no names beside it (said)
+    const sz = matrixRowStyle(json, opts && opts.theme);
+    if (sz.why) return { ok: false, why: sz.why };
+    const pt = sz.size != null ? sz.size : 10;
     // (0.3.2 HM1, B-299: Codex F1-1, rowPadding 6 at 10pt in a box 190 passed: its 8 rows are 269) a row counts the
     // matrix's grid.rowPadding, above and below its text
-    const rp = parseFloat(String(lit(pv('grid', 'rowPadding'))).replace(/D$/, ''));
+    const rp = sz.padding != null ? sz.padding : NaN;
     const rowH = ROW_LINE * pt + ROW_PAD + (Number.isFinite(rp) && rp > 0 ? 2 * rp : 0), total = lit(pv('subTotals', 'rowSubtotals')) !== 'false' ? 1 : 0;
     const t = (entries(v.visualContainerObjects, 'title') || []).find((e) => !e.selector && isObj(e.properties)), titled = !!(t && lit(t.properties.show) === 'true');
     const need = (7 + 1 + total) * rowH + (titled ? rowH * ROW_TITLE : 0) + ROW_MARGINS;
@@ -433,7 +440,23 @@
     const slack = padOf(json, opts && opts.mirrored ? 'left' : 'right');
     if (slack < TABLE_PAD_MORE - 0.01) return { ok: false, why: `its box has no room beside its grid for the names table's cell padding (${TABLE_PAD_MORE} more than a row header's; its padding there ${round(slack)}): names beside it would wrap` };
     if (json.position.width <= (R - 1 + TABLE_PAD_MORE) * 2) return { ok: false, why: 'its box is too narrow for the names beside its grid' };
-    return { ok: true, textSize: pt, width: round(R - 1 + TABLE_PAD_MORE), slack: TABLE_PAD_MORE, rowHeight: rowH, need };
+    return Object.assign({ ok: true, textSize: pt, width: round(R - 1 + TABLE_PAD_MORE), slack: TABLE_PAD_MORE, rowHeight: rowH, need }, sz.from === 'theme' ? { themeSize: sz.size, themePadding: sz.padding } : {});
+  }
+  // (0.3.3 TF1) a matrix's text size and row padding, and where each comes from: its own formatting (grid.textSize,
+  // values.fontSize, rowHeaders.fontSize; grid.rowPadding), else the theme's style for matrices (visualStyles.pivotTable,
+  // "*": the same cards), else unknown (Power BI's default, the same for a table). { size, padding, from, why }: why when
+  // the theme gives tables a size or padding the matrix's own and its theme style do not give (the names would differ)
+  const num = (v) => { const n = parseFloat(String(v).replace(/D$/, '')); return Number.isFinite(n) ? n : null; };
+  const themeCard = (theme, type, card, key) => { const vs = isObj(theme) && isObj(theme.visualStyles) && isObj(theme.visualStyles[type]) ? theme.visualStyles[type]['*'] : null;
+    const e = isObj(vs) && Array.isArray(vs[card]) ? vs[card].find((x) => isObj(x) && x[key] !== undefined) : null; return e ? num(e[key]) : null; };
+  function matrixRowStyle(json, theme) {
+    const ob = isObj(json.visual.objects) ? json.visual.objects : {}, pv = (k, x) => { const e = (Array.isArray(ob[k]) ? ob[k] : []).find((y) => isObj(y) && !y.selector && isObj(y.properties) && y.properties[x] !== undefined); return e ? num(lit(e.properties[x])) : null; };
+    const own = { size: pv('grid', 'textSize') ?? pv('values', 'fontSize') ?? pv('rowHeaders', 'fontSize'), padding: pv('grid', 'rowPadding') };
+    const tm = (t) => ({ size: themeCard(theme, t, 'grid', 'textSize') ?? themeCard(theme, t, 'values', 'fontSize') ?? themeCard(theme, t, 'rowHeaders', 'fontSize'), padding: themeCard(theme, t, 'grid', 'rowPadding') });
+    const mt = tm('pivotTable'), tt = tm('tableEx'), size = own.size ?? mt.size, padding = own.padding ?? mt.padding;
+    const gap = [size == null && tt.size != null ? 'text size' : null, padding == null && tt.padding != null ? 'row padding' : null].filter(Boolean);
+    return { size, padding, from: own.size == null && mt.size != null || own.padding == null && mt.padding != null ? 'theme' : own.size != null || own.padding != null ? 'own' : 'default',
+      why: gap.length ? `the report's theme gives tables a ${gap.join(' and a ')} and matrices none, and the matrix sets none of its own: a names table beside it would not have its rows' height` : null };
   }
   // the twin's heatmap (mirrored) and its names table: the names table in the room of the English row headers (no padding
   // of its own at its sides, so its column is all of it), the matrix the rest of the box, its grid filling it
@@ -443,7 +466,7 @@
   // table: its column set to its width, word wrap off on its values and header (tableEx values.wordWrap,
   // columnHeaders.wordWrap, Microsoft's capabilities), the matrix's text size and row padding, so its rows are the grid's
   function heatmapNames(json, o) {
-    const h = heatmapBeside(json, { mirrored: true }); if (!h.ok) return null;
+    const h = heatmapBeside(json, { mirrored: true, theme: o && o.theme }); if (!h.ok) return null;
     const r = rowNamesBeside(json, Object.assign({}, o || {}, { width: h.width })); if (!r) return null;
     plainEntry(r.matrix.visual.objects, 'columnHeaders').properties.columnAdjustment = str('growToFit');
     const mp = plainEntry(r.matrix.visual.visualContainerObjects, 'padding').properties;
@@ -457,7 +480,11 @@
     to.columnWidth = [{ properties: { value: mk(round(h.width - TABLE_EDGES) + 'D') }, selector: { metadata: rq } }];
     to.values[0].properties.wordWrap = mk('false');
     Object.assign(to.columnHeaders[0].properties, { wordWrap: mk('false'), autoSizeColumnWidth: mk('false') });
-    const g = to.grid[0].properties; if (g.textSize === undefined) g.textSize = mk(h.textSize + 'D');
+    // (0.3.3 TF1) the names' text size and row padding are the matrix's: its own are copied (rowNamesBeside: grid, values,
+    // row headers); the theme's for matrices written here; none known: none written (both at Power BI's default)
+    const g = to.grid[0].properties;
+    if (h.themeSize != null) { if (g.textSize === undefined) g.textSize = mk(h.themeSize + 'D'); if (to.values[0].properties.fontSize === undefined) to.values[0].properties.fontSize = mk(h.themeSize + 'D'); }
+    if (h.themePadding != null && g.rowPadding === undefined) g.rowPadding = mk(h.themePadding + 'D');
     // (0.3.1 MX8, laptop part 13: the names table's 7 rows and its blank header drew a few px taller than the 188.3 the
     // matrix's header and 7 rows fit in: a vertical scrollbar over «Mor», «Wec», then a horizontal one half over «Sun»)
     // Microsoft's capabilities give a tableEx no header switch (columnHeaders has no show) and no row height (a row is

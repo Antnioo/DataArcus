@@ -2,6 +2,8 @@
 //   Z  (test033 D10, BLOCKER) check_model_health and read_model on a zip of two semantic models, on the real server:
 //      the model read is the website's choice (zip-models.js, shared), named before the score with the one not read;
 //      only its own report is read; zip order never changes the answer; a zip of one model is unchanged
+//   H  (test033 D9) the Arabic twin's weekday names beside a heatmap: their rows the grid's (text size and row padding the
+//      matrix's: its own, else its theme's for matrices, else none written); a theme that cannot be matched: said
 //   N  (test033 C) plan_layout's writesAfterGo names the report as it is written (its name, or the free name), no "<name>"
 // Made-up projects only (mcp/fixtures/health-project, twin-project; mcp/test-models/no-measures).
 import fs from 'node:fs';
@@ -75,6 +77,43 @@ try {
   }
 } finally { await s.close(); }
 fs.rmSync(ROOT, { recursive: true, force: true });
+
+// ---------- H. the Arabic twin's weekday names beside a heatmap: the names' rows the grid's (test033 D9) ----------
+// test033 D9's matrix (made up): Rows a weekday, Columns Hour, Values Sum of Calls, no text size or row padding of its
+// own (Power BI's default row height), English's row header strip 82. Each visual's rows are drawn at the text size and
+// row padding it is given, else its theme's for its type (pivotTable, tableEx), else Power BI's default, the same for
+// both (DESKTOP-TESTS round 11: a row is 1.887 x pt + 2 + 2 x rowPadding; nothing written draws as 8pt and padding 1)
+{
+  const { createRequire } = await import('node:module'), require = createRequire(import.meta.url), Mirror = require('../assets/js/report-mirror.js');
+  const L = (v) => ({ expr: { Literal: { Value: v } } }), lit = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value) : undefined);
+  const col = (c) => ({ field: { Column: { Expression: { SourceRef: { Entity: 'Calendar' } }, Property: c } }, queryRef: 'Calendar.' + c, nativeQueryRef: c });
+  const calls = { field: { Aggregation: { Expression: { Column: { Expression: { SourceRef: { Entity: 'Calendar' } }, Property: 'Calls' } }, Function: 0 } }, queryRef: 'Sum(Calendar.Calls)', nativeQueryRef: 'Calls' };
+  // the twin's (mirrored) matrix: the padding English had at its right is at its left
+  const heat = (objects) => ({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json', name: 'heat', position: { x: 40, y: 360, z: 2000, width: 300, height: 300, tabOrder: 2000 },
+    visual: { visualType: 'pivotTable', query: { queryState: { Rows: { projections: [col('يوم الأسبوع')] }, Columns: { projections: [col('Hour')] }, Values: { projections: [calls] } } },
+      objects: Object.assign({ columnWidth: [{ properties: { value: L('82D') }, selector: { metadata: 'Calendar.يوم الأسبوع' } }] }, objects || {}), visualContainerObjects: { padding: [{ properties: { left: L('6D') } }] } } });
+  const num = (v) => (v === undefined ? undefined : parseFloat(String(v).replace(/D$/, '')));
+  const card = (o, c, k) => { const e = ((o || {})[c] || []).find((x) => x && !x.selector && x.properties && x.properties[k] !== undefined); return e ? num(lit(e.properties[k])) : undefined; };
+  const themed = (theme, type, c, k) => { const e = ((((theme || {}).visualStyles || {})[type] || {})['*'] || {})[c]; const x = Array.isArray(e) ? e.find((y) => y && y[k] !== undefined) : null; return x ? num(x[k]) : undefined; };
+  // what a visual draws with: its own, else its theme's for its type, else Power BI's default (the same for both types)
+  const drawn = (v, theme) => { const o = v.visual.objects, t = v.visual.visualType;
+    const size = card(o, 'grid', 'textSize') ?? card(o, 'values', 'fontSize') ?? card(o, 'rowHeaders', 'fontSize') ?? themed(theme, t, 'grid', 'textSize') ?? themed(theme, t, 'values', 'fontSize') ?? themed(theme, t, 'rowHeaders', 'fontSize') ?? 8;
+    const pad = card(o, 'grid', 'rowPadding') ?? themed(theme, t, 'grid', 'rowPadding') ?? 1; return { size, pad }; };
+  // the top edge of the matrix's Total row (the header and 7 days above it) and the names table's 8th row, in px
+  const edge8 = (d) => 8 * (1.887 * d.size + 2 + 2 * d.pad);
+  const cases = { 'no size, no theme style (test033 D9)': [{}, null], 'the theme sizes matrices (a DataArcus theme at 1920)': [{}, { visualStyles: { pivotTable: { '*': { values: [{ fontSize: 15 }], rowHeaders: [{ fontSize: 15 }] } }, tableEx: { '*': { values: [{ fontSize: 15 }] } } } }],
+    'the theme pads matrices': [{}, { visualStyles: { pivotTable: { '*': { grid: [{ rowPadding: 4 }] } } } }], 'its own size and padding (guard)': [{ grid: [{ properties: { textSize: L('9D'), rowPadding: L('3D') } }] }, null] };
+  for (const [k, [objects, theme]] of Object.entries(cases)) {
+    const m = heat(objects), r = Mirror.heatmapNames(m, { theme }), dm = drawn(r ? r.matrix : m, theme), dt = r ? drawn(r.table, theme) : null;
+    chk(() => r && Math.abs(edge8(dm) - edge8(dt)) <= 0.5, () => `H1 (${k}). the names table's 8th row and the matrix's Total row start within 0.5 px (the names' rows are the grid's): matrix ${J(dm)} ${r && edge8(dm).toFixed(1)}, names ${J(dt)} ${r && dt && edge8(dt).toFixed(1)}; the names' grid ${J(r && r.table.visual.objects.grid)}`);
+  }
+  // test033 D9 itself: nothing is written on the names table (both at Power BI's default), never a size of DataArcus's own
+  const d9 = Mirror.heatmapNames(heat(), {});
+  chk(() => d9 && card(d9.table.visual.objects, 'grid', 'textSize') === undefined && card(d9.table.visual.objects, 'values', 'fontSize') === undefined, () => `H2. D9's matrix sets no text size: the names table gets none (it got 10): ${J(d9 && d9.table.visual.objects.grid)}`);
+  // the theme gives tables a size and matrices none: the rows cannot be matched, so no names beside it, and why (the plan says it)
+  const odd = { visualStyles: { tableEx: { '*': { values: [{ fontSize: 12 }] } } } }, hb = Mirror.heatmapBeside(heat(), { mirrored: true, theme: odd });
+  chk(() => !hb.ok && /theme gives tables a text size and matrices none/.test(hb.why) && Mirror.heatmapNames(heat(), { theme: odd }) === null, () => `H3. a theme that sizes tables and not matrices: no names beside it, said: ${J(hb)}`);
+}
 
 if (problems.length) { console.log(`FAIL script=test-0.3.3-tf1.mjs cause=${problems[0].slice(0, 300)}`); problems.forEach((x) => console.log('  - ' + x)); console.log(`FAIL  tf1  ${problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  tf1  ${checks} checks`);

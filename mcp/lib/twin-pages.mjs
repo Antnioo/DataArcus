@@ -201,10 +201,10 @@ export function buildTwin(P, labels) {
     if (!P.keepLtr(pg)) { badgesWithText(pg, r); aroundTables(pg, r, opts); }
     // (0.3.1 MX3) a heatmap by weekday whose rows all fit: its names beside its grid, a table of their own (extra)
     const extra = [];
-    if (!P.keepLtr(pg)) r.visuals.forEach((vj, i) => { const o = pg.visuals[i] && pg.visuals[i].json; if (!o || !Mirror.heatmapBeside(o).ok) return;
+    if (!P.keepLtr(pg)) r.visuals.forEach((vj, i) => { const o = pg.visuals[i] && pg.visuals[i].json; if (!o || !Mirror.heatmapBeside(o, { theme: R.theme }).ok) return;
       // (MX8) the room the names table may take below the matrix's top: its page's height, or its group's
       const gp = vj.parentGroupName != null ? r.visuals.find((x) => isObj(x) && String(x.name) === String(vj.parentGroupName)) : null, bottom = gp ? (posOf(gp) || {}).height : pageOf(pg).height;
-      let hn = null; try { hn = Mirror.heatmapNames(vj, Number.isFinite(bottom) ? { bottom } : {}); } catch (e) { hn = null; } if (!hn) return; r.visuals[i] = hn.matrix; extra.push({ from: String(o.name), json: hn.table }); });
+      let hn = null; try { hn = Mirror.heatmapNames(vj, Object.assign({ theme: R.theme }, Number.isFinite(bottom) ? { bottom } : {})); } catch (e) { hn = null; } if (!hn) return; r.visuals[i] = hn.matrix; extra.push({ from: String(o.name), json: hn.table }); });
     // (0.3.1 MX7) a chart lined up under or over a heatmap's grid keeps English's offset from the grid's left edge
     if (!P.keepLtr(pg)) { try { underGrids(pg, r, pageOf(pg).width, extra); } catch (e) { /* a shape not expected: left as it is */ } }
     const autoTitled = new Map();   // (FX3b) visual name -> the title text written for Power BI's automatic title

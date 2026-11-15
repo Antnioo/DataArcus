@@ -17,6 +17,12 @@ package's manifest; this file says what is in it.
   bookmark's page state was found.
 - `plan_layout`'s list of what the plan writes now names the report, as the approval window always did: "the report
   "Gulf Views.Report" and its "Gulf Views.pbip"", or the free name when that name is taken. It said "<name>.Report".
+- The Arabic twin's day names beside a heatmap now have the heatmap's own row height. They were written at text size 10
+  whenever the heatmap set no text size of its own, while the heatmap drew at its theme's size or Power BI's, so the
+  names drifted down the grid and the last one sat on the Total row (a laptop run, Power BI's default row height). Now
+  they take the heatmap's text size and row spacing: its own, else its theme's for matrices, else nothing of their own,
+  as the heatmap. A theme that sizes tables and not matrices gets no names beside the heatmap, and the plan says why.
+  0.3.2 wrote the same size.
 - Arabic: with `lang` "ar", a wrong model name or path in a working folder that holds no model is now answered in
   Arabic. English answers are unchanged.
 - The Arabic words DataArcus uses are in one glossary, `content/ARABIC-GLOSSARY.md`, each with Microsoft's and Google's
