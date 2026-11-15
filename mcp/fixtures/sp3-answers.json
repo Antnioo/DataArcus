@@ -20,8 +20,8 @@
   "R9 a report on the sample": {
    "plan": {
     "err": false,
-    "length": 13030,
-    "sha256": "f9aa8c5bd806ffd657f6a15385e86df047e208aede13727d10a195f155ed07ab"
+    "length": 13052,
+    "sha256": "735ebc06efaeef3661b9fa745dfc8e52690bcd164d65fd2c2fb493353c049284"
    },
    "report": {
     "err": false,
@@ -36,8 +36,8 @@
   "R2 glass (the default look)": {
    "plan": {
     "err": false,
-    "length": 11661,
-    "sha256": "6389f4385660b0897326844e4e337f97785105d4e0dfe62e2193905b40a33082"
+    "length": 11667,
+    "sha256": "4494e27012e37dcfd08f429f2c3644f28eb584c18728a302ddfb9ef6696685e3"
    },
    "report": {
     "err": false,
@@ -52,8 +52,8 @@
   "R3 the plain look asked, subtitles": {
    "plan": {
     "err": false,
-    "length": 13431,
-    "sha256": "aed48de9d6222aec89f3f1552afe397eafac32d338aeab20bd178b4b79dc8e57"
+    "length": 13437,
+    "sha256": "6e1b90be5860a7fb319c2e1923afc2812e38f7030948a40dff5b7acd06bf3b6e"
    },
    "report": {
     "err": false,
@@ -68,8 +68,8 @@
   "R4 Arabic, names approved, a page filter": {
    "plan": {
     "err": false,
-    "length": 17429,
-    "sha256": "78d97965c6d28a5dcbdde44dd2e948658ebed093ff25d86643232474b2f9a972"
+    "length": 17437,
+    "sha256": "dc78dc057d3c8926d4dacf376346d61b0a38d53df1fa3e340b595f516655d8a0"
    },
    "report": {
     "err": false,
@@ -84,8 +84,8 @@
   "R5 bilingual": {
    "plan": {
     "err": false,
-    "length": 24105,
-    "sha256": "793f92835b28772aa2b3ce9478bc66b714adfd3c40160f98a3b4af5c8bacaa4c"
+    "length": 24109,
+    "sha256": "37c3f8368216b5965258f4ccaff554829fa07ae0b026801c67844e061568a60e"
    },
    "report": {
     "err": false,
@@ -100,8 +100,8 @@
   "R6 scripts offered": {
    "plan": {
     "err": false,
-    "length": 23152,
-    "sha256": "387566f648da81eeb2be3d9b3cf40840188ed00032553dfae7e9d1e6d805abb9"
+    "length": 23167,
+    "sha256": "e7d4506c45f950944ff844404d6504f3c4219a977d728ab689f6eff7ef9e353c"
    },
    "report": {
     "err": false,
@@ -128,8 +128,8 @@
   "R8 hand-placed pages": {
    "plan": {
     "err": false,
-    "length": 11134,
-    "sha256": "2d6006417146962915985d2cb6b32652b3b58f1aca373dc002f8175f08cf6c1b"
+    "length": 11138,
+    "sha256": "412554ca7f8286842453a8eed49f511a48179d765d4e7f43b0551b9bb3cca1a1"
    },
    "report": {
     "err": false,
