@@ -4,6 +4,8 @@
 //      only its own report is read; zip order never changes the answer; a zip of one model is unchanged
 //   H  (test033 D9) the Arabic twin's weekday names beside a heatmap: their rows the grid's (text size and row padding the
 //      matrix's: its own, else its theme's for matrices, else none written); a theme that cannot be matched: said
+//   A  (test033 F2) noun + noun drafts in Arabic order (idafa: «منطقة المبيعات»), only the list's words; no draft where the
+//      composed form is not plain; through plan_layout on the real server and the engine
 //   N  (test033 C) plan_layout's writesAfterGo names the report as it is written (its name, or the free name), no "<name>"
 // Made-up projects only (mcp/fixtures/health-project, twin-project; mcp/test-models/no-measures).
 import fs from 'node:fs';
@@ -65,6 +67,19 @@ try {
     chk(() => /DAZipModels\.choose\(/.test(worker) && /ZipModels\.choose\(/.test(reader) && !/new Map\(\)[^\n]*folders|folders\.set\(/.test(worker + reader) && !/find\(\(\[n\]\) => \/\(\^\|\\\/\)model\\\.bim\$\/i\.test\(n\)\)/.test(reader),
       () => 'Z9. one place (D-1104-12): model-health-worker.js and mcp/lib/model.mjs both call zip-models.js choose; no folder map or first-model.bim pick of their own');
   }
+  // ---------- A. noun + noun drafts in Arabic order (test033 F2, Microsoft's Corporate Spend sample: "Sales Region" was
+  // drafted «المبيعات المنطقة»): plan_layout's suggestedDisplayNames on a made-up model, through the real server ----------
+  {
+    const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"A"}, {}) in Source' } }], c = (name, dataType) => ({ name, dataType, sourceColumn: name });
+    fs.mkdirSync(path.join(ROOT, 'spend', 'Spend.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, 'spend', 'Spend.SemanticModel', 'model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { culture: 'en-US', tables: [
+      { name: 'Spend', partitions: mp('Spend'), columns: [c('Sales Region', 'string'), c('Product Category', 'string'), c('Sales Employees', 'string'), c('Amount', 'double'), c('Order Date', 'dateTime')],
+        measures: [{ name: 'Total Sales', expression: 'SUM ( Spend[Amount] )', formatString: '#,0' }] }] } }));
+    const p = await s.call('plan_layout', { path: 'spend', layout: 'exec', name: 'Spend AR', lang: 'ar', planFields: { slicers: ['Spend[Sales Region]', 'Spend[Product Category]', 'Spend[Sales Employees]'] } });
+    const an = p.j && p.j.arabicNames, sug = (an && an.suggestedDisplayNames) || {}, own = (an && an.proposeYourself) || [];
+    chk(() => sug['Spend[Sales Region]'] === 'منطقة المبيعات' && sug['Spend[Product Category]'] === 'فئة المنتج', () => `A1. "Sales Region" drafted «منطقة المبيعات» (the head first, idafa), "Product Category" «فئة المنتج»: ${J(sug)}`);
+    chk(() => !('Spend[Sales Employees]' in sug) && own.includes('Spend[Sales Employees]'), () => `A2. a head with no plain form without its article (the sound plural «الموظفون») is not composed: the assistant proposes it, the person approves: ${J({ sug, own })}`);
+  }
   // ---------- N. plan_layout's writesAfterGo names the report (test033 C: name "Gulf Views", the line said "<name>") ----------
   {
     fs.cpSync(path.join(HERE, 'fixtures/health-project'), path.join(ROOT, 'views'), { recursive: true });
@@ -113,6 +128,29 @@ fs.rmSync(ROOT, { recursive: true, force: true });
   // the theme gives tables a size and matrices none: the rows cannot be matched, so no names beside it, and why (the plan says it)
   const odd = { visualStyles: { tableEx: { '*': { values: [{ fontSize: 12 }] } } } }, hb = Mirror.heatmapBeside(heat(), { mirrored: true, theme: odd });
   chk(() => !hb.ok && /theme gives tables a text size and matrices none/.test(hb.why) && Mirror.heatmapNames(heat(), { theme: odd }) === null, () => `H3. a theme that sizes tables and not matrices: no names beside it, said: ${J(hb)}`);
+}
+
+// ---------- A (the engine). the composer of drafts, one for the website and the MCP (arabic-names.js make) ----------
+{
+  const { createRequire } = await import('node:module'), require = createRequire(import.meta.url);
+  const LIST = JSON.parse(fs.readFileSync(path.join(REPO, 'assets/data/arabic-report-words.json'), 'utf8')), N = require('../assets/js/arabic-names.js').make(LIST);
+  const { proposeArabic } = await import('./lib/arabic-names.mjs');
+  // English's qualifier first, its head last; Arabic's head first without its article, the qualifier keeping its own
+  const pairs = { 'Sales Region': 'منطقة المبيعات', 'Order Date': 'تاريخ الطلب', 'Product Category': 'فئة المنتج', 'Customer City': 'مدينة العميل', 'Sales Amount': 'مبلغ المبيعات',
+    'Store Sales': 'مبيعات المتجر', 'Profit Margin': 'هامش الربح', 'Discount Amount': 'مبلغ الخصم', 'Ramadan Sales': 'مبيعات رمضان', 'Weekday Sales': 'مبيعات يوم الأسبوع',
+    'Brand Sales': 'مبيعات العلامة التجارية', 'Hijri Year Sales': 'مبيعات السنة الهجرية', 'Total Sales Amount': 'إجمالي مبلغ المبيعات', 'Sales Growth %': 'نسبة نمو المبيعات' };
+  const got = Object.fromEntries(Object.keys(pairs).map((n) => [n, N.propose(n)]));
+  chk(() => Object.entries(pairs).every(([n, ar]) => got[n] === ar), () => `A3. noun + noun pairs in Arabic order: ${Object.entries(pairs).filter(([n, ar]) => got[n] !== ar).map(([n, ar]) => `${n}: ${got[n]} (want ${ar})`).join('; ')}`);
+  // no draft (the person types it): a head that is two words, a sound plural, an adjective or has no article; three nouns
+  const none = ['Product Brand', 'Order Weekday', 'Sales Employees', 'Hijri Sales', 'Sales Ramadan', 'Store Country City'];
+  chk(() => none.every((n) => N.propose(n) === null), () => `A4. no draft where the composed form is not plain: ${J(none.map((n) => [n, N.propose(n)]))}`);
+  // unchanged: one word, the fixed compounds and the patterns
+  const kept = { Sales: 'المبيعات', 'Total Sales': 'إجمالي المبيعات', 'Order Count': 'عدد الطلبات', 'Year Month': 'الشهر والسنة', 'Hijri Month': 'الشهر الهجري', 'Customer Name': 'اسم العميل' };
+  chk(() => Object.entries(kept).every(([n, ar]) => N.propose(n) === ar), () => `A5. guard: one word, the date compounds and the patterns as before: ${J(Object.keys(kept).map((n) => [n, N.propose(n)]))}`);
+  // only the list's own words: every word of every draft is a list word, or that word without its article
+  const words = new Set(Object.values(LIST.words).flatMap((w) => w.split(/\s+/)).flatMap((w) => [w, w.replace(/^ال/, '')]).concat(['إجمالي', 'نسبة', 'والسنة', 'عدد', 'اسم', 'الهجرية']));
+  chk(() => Object.values(pairs).every((ar) => ar.split(/\s+/).every((w) => words.has(w))), () => `A6. no word outside the list: ${J(Object.values(pairs).flatMap((ar) => ar.split(/\s+/)).filter((w) => !words.has(w)))}`);
+  chk(() => Object.keys(pairs).concat(none).every((n) => proposeArabic(n) === N.propose(n)), () => 'A7. the MCP\'s proposeArabic is the engine\'s (one composer)');
 }
 
 if (problems.length) { console.log(`FAIL script=test-0.3.3-tf1.mjs cause=${problems[0].slice(0, 300)}`); problems.forEach((x) => console.log('  - ' + x)); console.log(`FAIL  tf1  ${problems.length} of ${checks} checks`); process.exit(1); }

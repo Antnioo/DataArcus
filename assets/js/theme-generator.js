@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(() => (window.DAFieldSuggest ? null : loadScript('/assets/js/field-suggest.min.js?v=ca404cf26ee2')))
       .then(() => loadScript('/assets/js/pbip-bind.min.js?v=600d69b2b551')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
   let words = null;
-  const loadNames = () => Promise.all([window.DAArabicNames ? window.DAArabicNames : loadScript('/assets/js/arabic-names.min.js?v=637dc63aff40').then(() => window.DAArabicNames),
+  const loadNames = () => Promise.all([window.DAArabicNames ? window.DAArabicNames : loadScript('/assets/js/arabic-names.min.js?v=9d5fe7c111b3').then(() => window.DAArabicNames),
     words || (words = fetch('/assets/data/arabic-report-words.json').then((r) => (r.ok ? r.json() : Promise.reject(new Error('words')))).catch((e) => { words = null; throw e; }))]);
   const CHECK = ['../assets/js/visual-types.min.js?v=55431aa586c5', '../assets/js/report-rules.min.js?v=c034f8cd7475', '../assets/js/layout-check.min.js?v=2521530e0f97'];
   const loadCheck = () => (window.DALayoutCheck ? Promise.resolve(window.DALayoutCheck) : loadBuilder().then(() => CHECK.reduce((q, src) => q.then(() => loadScript(src)), Promise.resolve())).then(() => window.DALayoutCheck));

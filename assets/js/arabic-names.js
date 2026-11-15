@@ -35,10 +35,24 @@
     [/^(.+?)\s*%$/i, (x) => 'نسبة ' + x],
     [/^(.+?)\s+(?:rate|ratio)$/i, (x) => 'نسبة ' + x],
   ];
+  // (TF1) a head noun of an idafa: its article dropped («المنطقة» -> «منطقة»), only when that is its whole change: one
+  // word with the article, not a sound masculine plural (its ن drops too), not an adjective (a date compound's own
+  // adjective, «الهجري», is not a noun); null otherwise
+  const ADJECTIVES = new Set(['الهجري']);
+  const construct = (w) => (/^ال[؀-ۿ]{2,}$/.test(w) && !/(ون|ين)$/.test(w) && !ADJECTIVES.has(w) ? w.slice(2) : null);
+  // the qualifier of an idafa: a definite noun (its last word with the article: «المبيعات», «يوم الأسبوع», «الشهر والسنة»),
+  // or a name (رمضان); never an adjective alone
+  const NAMES = new Set(['رمضان']);
+  const definite = (w) => !ADJECTIVES.has(w) && (NAMES.has(w) || /(^|\s)(و)?ال[؀-ۿ]+$/.test(w));
   function make(list) {
     const WORDS = (list && list.words) || {};
     const W = (w) => (Object.prototype.hasOwnProperty.call(WORDS, String(w).toLowerCase()) ? WORDS[String(w).toLowerCase()] : undefined);
     // date words are never joined word for word: two of them are a fixed compound, any other run of them gets no draft
+    // (0.3.3 TF1, test033 F2: "Sales Region" was drafted «المبيعات المنطقة», English's order) two words are a noun and the
+    // noun it qualifies, as English puts them ("Sales Region": the region of the sales); Arabic says the head first,
+    // without its article, then the other word, which keeps its own (idafa): «منطقة المبيعات». Only the list's own words;
+    // a head whose form without the article is not plain (two words, a sound plural in ون or ين, an adjective, no article)
+    // or a qualifier that is not a definite noun gives no draft: the person types it. Three nouns or more: no draft
     const phrase = (s) => {
       const ws = String(s).trim().split(/\s+/).filter(Boolean); if (!ws.length) return null;
       const out = [];
@@ -48,7 +62,11 @@
         if (DATE_WORDS.has((ws[i + 2] || '').toLowerCase()) || !DATE_PAIRS[a + ' ' + b]) return null;
         out.push(DATE_PAIRS[a + ' ' + b]); i++;
       }
-      return out.every(Boolean) ? out.join(' ') : null;
+      if (!out.every(Boolean)) return null;
+      if (out.length === 1) return out[0];
+      if (out.length > 2) return null;
+      const [qual, head] = out, bare = construct(head);
+      return bare && definite(qual) ? bare + ' ' + qual : null;
     };
     function propose(name) {
       const n = String(name || '').replace(/\s*\((arabic|عربي)\)\s*$/i, '').trim();

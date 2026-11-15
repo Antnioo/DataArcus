@@ -23,6 +23,11 @@ package's manifest; this file says what is in it.
   they take the heatmap's text size and row spacing: its own, else its theme's for matrices, else nothing of their own,
   as the heatmap. A theme that sizes tables and not matrices gets no names beside the heatmap, and the plan says why.
   0.3.2 wrote the same size.
+- Arabic name drafts for two-word field names now put the words in Arabic order: "Sales Region" is drafted «منطقة
+  المبيعات», "Order Date" «تاريخ الطلب», not «المبيعات المنطقة» in English order (a laptop run, on Microsoft's Corporate
+  Spend sample). A draft uses only the words of DataArcus's fixed list, and the person still approves every name. Where
+  the Arabic order would need more than dropping a word's article, or the name has three or more words, there is no
+  draft and the assistant proposes a name for the person to approve, as for any name not in the list.
 - Arabic: with `lang` "ar", a wrong model name or path in a working folder that holds no model is now answered in
   Arabic. English answers are unchanged.
 - The Arabic words DataArcus uses are in one glossary, `content/ARABIC-GLOSSARY.md`, each with Microsoft's and Google's
