@@ -56,4 +56,4 @@ mcp/CHANGELOG.md under [Unreleased]: 0.3.3: "The portfolio no longer shows the C
 - The site suite takes about 11 minutes alone: run it in the background without a 590 s limit.
 
 ## CI
-(pending)
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/43708410328 on 89b0fa48a1d053dc4784614aa082b403b6b4135e (run 1: 81e9741 red on sp35, the Arabic terms checks; fixed in 89b0fa4). Finished 2026-11-15T11:34Z.
