@@ -75,10 +75,11 @@ export async function launch() {
 const AR_HELD = createRequire(import.meta.url)('../../assets/js/locale-routes.js').AR_HELD.map((p) => p.replace(/^\/+/, ''));
 export const langsOf = (p) => (p.startsWith('ar/') ? ['ar'] : p.startsWith('build/') || AR_HELD.includes(p) ? ['en'] : ['en', 'ar']);
 
-// The HTML pages of the site (the go/ short links are redirects, not pages)
+// The HTML pages of the site (the go/ short links and the old addresses of removed pages, scripts/redirect-pages.json, are redirects, not pages)
+const REDIRECT_PAGES = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', 'redirect-pages.json'), 'utf8'));
 // git runs without a shell, so the pattern needs no quotes (Windows' cmd.exe keeps single quotes and finds nothing)
 export const pages = () => {
-  const list = execFileSync('git', ['ls-files', '*.html'], { cwd: ROOT }).toString().trim().split(/\r?\n/).filter((p) => p && !p.startsWith('go/'));
+  const list = execFileSync('git', ['ls-files', '*.html'], { cwd: ROOT }).toString().trim().split(/\r?\n/).filter((p) => p && !p.startsWith('go/') && !REDIRECT_PAGES.includes(p));
   if (!list.length) throw new Error('No HTML pages found with git ls-files');
   return list;
 };

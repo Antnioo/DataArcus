@@ -64,6 +64,9 @@ const walk = (d) => { for (const e of fs.readdirSync(path.join(ROOT, d), { withF
   else if (e.name.endsWith('.html')) pages.push(p);
 } };
 walk('.');
+// (0.3.3 GC4) the old addresses of removed pages (scripts/redirect-pages.json) are redirects like go/, not pages
+const REDIRECT_PAGES = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', 'redirect-pages.json'), 'utf8'));
+for (let i = pages.length - 1; i >= 0; i--) if (REDIRECT_PAGES.includes(pages[i].split(path.sep).join('/'))) pages.splice(i, 1);
 for (const p of pages) {
   const h = read(p);
   ok(/rel="icon"[^>]*favicon-48\.png/.test(h), `${p}: no 48 px PNG icon`);
@@ -204,7 +207,7 @@ for (const f of ['tools/power-bi-model-health-check.html', 'ar/tools/power-bi-mo
       canonical: (links.find((l) => l.rel === 'canonical') || {}).href, alt: links.filter((l) => l.rel === 'alternate' && l.hreflang).map((l) => [l.hreflang, l.href]) };
   };
   const AR = /[؀-ۿ]/;
-  const onDisk = exists('ar') ? fs.readdirSync(path.join(ROOT, 'ar'), { recursive: true }).map((f) => 'ar/' + f.split(path.sep).join('/')).filter((f) => f.endsWith('.html')) : [];
+  const onDisk = exists('ar') ? fs.readdirSync(path.join(ROOT, 'ar'), { recursive: true }).map((f) => 'ar/' + f.split(path.sep).join('/')).filter((f) => f.endsWith('.html') && !REDIRECT_PAGES.includes(f)) : [];
   // every public page has its copy: the pages outside the sitemap are exactly the ones lang-manager's hasArCopy() leaves
   // English (404.html, a -lab page), so the links it rewrites at run time go to copies that exist
   // (0.3.3 IX4) and a page whose Arabic is held (locale-routes.js AR_HELD): in the sitemap, English only, no copy

@@ -196,7 +196,6 @@ export default async function ({ browser, url }) {
     const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
     const REPORTS = {
       "dashboards/adventureworks-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiNWM0ZTJmMjgtMDMyOS00OGM4LTg1YzYtZWZlODE0OGFjZGUyIiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&pageName=b1001ce2d5a628ad47b5&language=en",
-      "dashboards/call-center-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiZDljNDRmMzItYWZkZS00ZGZiLWFkOGMtOWY3ODNhMDAxNTA2IiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
       "dashboards/consumer-financial-complaints.html": "https://app.powerbi.com/view?r=eyJrIjoiMTliODc1NjktOTM5Yy00OTM2LWIwNzYtMDY1MjE0ZWNiOTVlIiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
       "dashboards/er-health-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiNWU2MmMzNGUtMjU4NS00YTZiLWIyYzYtYTE3MTY3NjQ5NjhiIiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
       "dashboards/fintech-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiNDlhY2I0YjgtZGI4Mi00NzU4LThhYWMtNGVhNGUzMDBlYTE5IiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
@@ -217,6 +216,31 @@ export default async function ({ browser, url }) {
         check(r && r.src === src && r.title.length > 5, `${page} ${lang}: after the click the report is ${r ? r.src.slice(0, 60) + '... "' + r.title + '"' : 'missing'}`);
       }
       if (v.errs.length) problems.push(`${page} ${lang}: ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
+  }
+
+  // (0.3.3 GC4, D-1115-05) The Call Center dashboard is off the public website: no page, script or the sitemap links to it,
+  // and its two old addresses (English and Arabic) still lead to the portfolio, as a redirect that is not in the sitemap.
+  {
+    const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+    const REDIRECTS = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', 'redirect-pages.json'), 'utf8'));
+    const files = [...pages(), 'sitemap.xml', 'llms.txt', ...fs.readdirSync(path.join(ROOT, 'assets/js')).filter((f) => f.endsWith('.js')).map((f) => 'assets/js/' + f),
+      ...fs.readdirSync(path.join(ROOT, 'assets/js/translations')).map((f) => 'assets/js/translations/' + f)];
+    const linking = files.filter((f) => /call-center-dashboard|callcenter\.(min\.)?js|call-center(-preview)?[.-]/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')));
+    check(!linking.length, `GC4: files that still name the removed Call Center dashboard: ${linking.join(', ')}`);
+    check(REDIRECTS.length === 2 && REDIRECTS.every((p) => fs.existsSync(path.join(ROOT, p))), 'GC4: the two old addresses are not both there as redirect pages');
+    for (const old of REDIRECTS) {
+      const want = old.startsWith('ar/') ? '/ar/portfolio.html' : '/portfolio.html';
+      const html = fs.readFileSync(path.join(ROOT, old), 'utf8');
+      check(html.includes(`<link rel="canonical" href="https://dataarcus.com${want}" />`) && /<meta name="robots" content="noindex"/.test(html) && html.includes(`<a href="https://dataarcus.com${want}">`) && html.includes(`http-equiv="refresh" content="0; url=https://dataarcus.com${want}"`), `GC4: ${old} is not a noindex redirect with a canonical and a plain link to ${want}`);
+      check(!fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8').includes('/' + old), `GC4: ${old} is listed in sitemap.xml`);
+      const v = await visitor(browser, { viewport: [1440, 900] });
+      await v.pg.route('https://dataarcus.com/**', (rt) => rt.fulfill({ status: 200, contentType: 'text/html', body: '<title>portfolio</title>' }));
+      await v.pg.goto(`${url}/${old}`, { waitUntil: 'load' });
+      await v.pg.waitForURL((u) => u.pathname.endsWith(want) || u.hostname === 'dataarcus.com', { timeout: 15000 }).catch(() => {});
+      const u = new URL(v.pg.url());
+      check(u.pathname === want, `GC4: /${old} ended at ${u.href}, not ${want}`);
       await v.ctx.close();
     }
   }

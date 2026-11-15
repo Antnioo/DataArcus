@@ -33,6 +33,8 @@ export const AR_HELD = createRequire(import.meta.url)('../assets/js/locale-route
 export const PAIRS = [...fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8').matchAll(/<loc>https:\/\/dataarcus\.com\/([^<]*)<\/loc>/g)]
   .map((m) => m[1]).filter((p) => !p.startsWith('ar/')).map((p) => (!p || p.endsWith('/') ? p + 'index.html' : p)).filter((p) => !AR_HELD.includes(p));
 
+// (0.3.3 GC4) Old addresses of removed pages: small redirect pages, in no sitemap, never a page or a copy (one list: scripts/redirect-pages.json)
+export const REDIRECT_PAGES = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', 'redirect-pages.json'), 'utf8'));
 export const arFile = (file) => 'ar/' + file;
 // a page file's address ("tools/index.html" -> https://dataarcus.com/tools/), and back
 export const urlOf = (file) => SITE + file.replace(/(^|\/)index\.html$/, '$1');
@@ -178,7 +180,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   // the English pages first: the copies are rendered from them, hreflang lines included
   for (const f of PAIRS) put(f, withAlternates(read(f), f));
   put('sitemap.xml', sitemapWithPairs(read('sitemap.xml')));
-  const orphans = fs.existsSync(path.join(ROOT, 'ar')) ? fs.readdirSync(path.join(ROOT, 'ar'), { recursive: true }).map((f) => 'ar/' + f.split(path.sep).join('/')).filter((f) => f.endsWith('.html') && !PAIRS.map(arFile).includes(f)) : [];
+  const orphans = fs.existsSync(path.join(ROOT, 'ar')) ? fs.readdirSync(path.join(ROOT, 'ar'), { recursive: true }).map((f) => 'ar/' + f.split(path.sep).join('/')).filter((f) => f.endsWith('.html') && !REDIRECT_PAGES.includes(f) && !PAIRS.map(arFile).includes(f)) : [];
   for (const f of orphans) { if (write) { fs.rmSync(path.join(ROOT, f)); stale.push(`${f} (removed: no English page in PAIRS)`); } else stale.push(`${f}: not the copy of a page in PAIRS`); }
   const server = await serve(), browser = await launch(), problems = [];
   try {

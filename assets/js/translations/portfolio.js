@@ -7,7 +7,6 @@ window.portfolioTranslations = {
       cfpb: "A preview of the Consumer Financial Complaints Analysis dashboard",
       er: "A preview of the Emergency Room Performance Analysis dashboard",
       maven: "A preview of the Maven-Market Retail Analysis dashboard",
-      callcenter: "A preview of the Call Center Performance dashboard",
       adventureworks: "A preview of the AdventureWorks Sales & Operations dashboard"
     },
     // Page Meta
@@ -75,12 +74,6 @@ window.portfolioTranslations = {
           description: "An in-depth analysis of retail trends, helping an e-commerce business identify top-selling products and optimize marketing spend based on customer behavior.",
           button: "View Showcase"
         },
-        callcenter: {
-          badge: "CUSTOMER SERVICE",
-          title: "Call Center Performance",
-          description: "A complete command center for monitoring call center KPIs, tracking agent performance, and improving customer satisfaction through data-driven insights.",
-          button: "View Showcase"
-        },
         adventureworks: {
           badge: "SALES & OPERATIONS",
           title: "AdventureWorks Sales & Operations",
@@ -124,7 +117,6 @@ window.portfolioTranslations = {
       cfpb: "معاينة للوحة تحليل الشكاوى المالية للمستهلكين",
       er: "معاينة للوحة تحليل أداء قسم الطوارئ",
       maven: "معاينة للوحة تحليل مبيعات التجزئة Maven-Market",
-      callcenter: "معاينة للوحة أداء مركز الاتصال",
       adventureworks: "معاينة للوحة المبيعات والعمليات AdventureWorks"
     },
     // Page Meta Arabic
@@ -190,12 +182,6 @@ window.portfolioTranslations = {
           badge: "تحليلات التجزئة",
           title: "تحليل مبيعات Maven Market",
           description: "تحليل متعمق لاتجاهات قطاع التجزئة، لمساعدة إحدى شركات التجارة الإلكترونية على تحديد المنتجات الأكثر مبيعًا وتحسين الإنفاق التسويقي.",
-          button: "عرض النموذج"
-        },
-        callcenter: {
-          badge: "خدمة العملاء",
-          title: "أداء مركز الاتصال",
-          description: "مركز تحكم متكامل لمراقبة مؤشرات الأداء الرئيسية لمركز الاتصال، وتتبع أداء الموظفين، وتحسين رضا العملاء.",
           button: "عرض النموذج"
         },
         adventureworks: {

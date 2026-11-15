@@ -56,7 +56,6 @@
     ['/tools/', 'toolsHubTranslations'],
     ['/power-bi-mcp/', 'betaPageTranslations'],
     ['adventureworks-dashboard', 'adventureworksTranslations'],
-    ['call-center-dashboard', 'callcenterTranslations'],
     ['maven-market-dashboard', 'mavenmarketTranslations'],
     ['portfolio', 'portfolioTranslations'],
     [HOME, 'homepageTranslations'],
