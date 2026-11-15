@@ -47,13 +47,11 @@ const Gallery = require('../../assets/js/visual-gallery.js');
 const MUST_RUN = { validator: 'Microsoft\'s validator', references: 'the check of its fields against the model' };
 // (J14) a proposed plan keeps its exact artifact (plans.mjs, this process only); the plan id, for the proposal
 const attached = (id, art) => { if (art) Plans.attach(id, art); return id; };
-// (0.3.3 TF1, test033 C: writesAfterGo said "<name>.Report" with name given) the plan block, its writes naming the report
-// as the write and the approval page name it (approval-disclosure.mjs planReportName: the plan's own .pbip, else name)
+// (0.3.3 TF1, test033 C: writesAfterGo said "<name>.Report") the plan block, its writes naming the report as the approval page does (planReportName)
 const namedProposal = (id, extra) => { const pr = Plans.proposal(id, extra), nm = planReportName(((Plans.planOf(id) || {}).data) || {}); pr.writesAfterGo = pr.writesAfterGo.map((x) => withName(x, nm)); return pr; };
 // (0.3.2 SP2) the sample and the redesign (lib/plan-variants.mjs) give their answer and what to propose: proposed here, the
 // one place a plan is proposed, its plan block the answer's last key; the redesign's exact copy kept with it (J14, AF2)
 const proposed = (v) => (v.propose ? Object.assign(v.answer, { plan: namedProposal(attached(Plans.propose(v.propose.kind, v.propose.model, v.propose.writes, v.propose.data), v.propose.artifact)) }) : v.answer);
-
 export function register(server, ctx) {
   const { LIMITS } = ctx;
   server.registerTool('plan_layout', {
@@ -100,7 +98,6 @@ export function register(server, ctx) {
     return answerStep(lc);
   }, { lang: 'given' }));
 }
-
 // (0.3.2 FN1J) the plan's names so far, the terms reused from this session, and the names given checked as create_report checks them
 function stateStep(lc) { let { a } = lc;
     // formats fixed at the source (the owner's ask, 6 Oct 2026): with the model, the fields that lack their right format
@@ -204,7 +201,6 @@ function layoutStep(lc) { let { a, m0 } = lc;
     const r = planLayout(Object.assign({}, a, a.planFields && a.planFields.table ? { tableFields: a.planFields.table.length } : {}, { fit: planFit, noTime: planNoTime })), { page, fitted } = pageOf(r.design.layout);
     // (0.3.0 D2) the gallery kinds the user asked for, on the designed page's slots as create_report puts them (each slot
     // keeps its own kind in insteadOf; the writer's decision on the fields is said below, gallery)
-
     const unknown = a.design ? unknownKeys(a.design) : null;
     // (0.3.1 GD1) a new report's look (glass by default, plain where glass can't keep it readable), as planLayout chose
     // it; a native copy and hand-placed pages have no design, so no look of DataArcus's
