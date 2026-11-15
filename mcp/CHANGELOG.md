@@ -149,6 +149,7 @@ package's manifest; this file says what is in it.
   for the measure you are asked to create; it was cut at 60.
 - read_model's `reach`, when more than 60 visuals use a name, now lists first the visuals whose numbers it decides, on any
   page; before, the first pages filled the list and such a visual on a later page could be left out.
+- The portfolio no longer shows the Call Center dashboard; its old address leads to the portfolio.
 
 ## [0.3.2]: 2026-11-09 (the version for testers, second round)
 The second version for testers. In short:

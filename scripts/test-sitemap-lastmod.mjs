@@ -54,7 +54,7 @@ eq(dubaiDate(Date.parse('2026-10-03T19:59:59Z') / 1000), '2026-10-03', 'a commit
 const AT = 'e0eb2db';
 // the 16 pages whose only change since 29 September is the Bootstrap 5.3.8 tags keep 29 September (the 17th of the
 // earlier list, report styles, had a real change on 4 October: 4f6a984)
-const UNCHANGED = ['dashboards/adventureworks-dashboard.html', 'dashboards/call-center-dashboard.html', 'dashboards/maven-market-dashboard.html',
+const UNCHANGED = ['dashboards/adventureworks-dashboard.html', 'dashboards/maven-market-dashboard.html',
   'dashboards/er-health-dashboard.html', 'dashboards/consumer-financial-complaints.html', 'dashboards/repeatiq-dashboard.html',
   'dashboards/fintech-dashboard.html', 'articles/article-clv.html', 'articles/article-etl-vs-power-query.html', 'articles/article-kpi.html',
   'articles/article-shopify.html', 'articles/article-evm.html', 'tools/dp-600-practice-exam.html', 'tools/pl-300-practice-exam.html',
