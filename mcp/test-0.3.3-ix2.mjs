@@ -19,6 +19,7 @@ import './test-env.mjs';
 //   D1-D3  TOOLS.md, PRIVACY.md and CHANGELOG
 // Made up, in os.tmpdir(), from fixtures/ix1-souq-gulf.mjs: no model rows.   node test-0.3.3-ix2.mjs
 import fs from 'node:fs';
+import { newest } from '../scripts/changelog-words.mjs';   // the changelog's first section, [Unreleased] or a dated version (one place)
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -152,7 +153,7 @@ try {
     chk(() => lf(res) && lf(res).compared === 4 && answers.every((t) => !String(t).includes(CANARY)), () => `S1 a literal planted in a comparison's DAX and in a page filter is in no answer: ${cut(res)}`); }
 
   // ---------- D: the words ----------
-  { const tools = SRC('mcp/TOOLS.md'), priv = SRC('mcp/PRIVACY.md'), log = SRC('mcp/CHANGELOG.md'), un = log.slice(log.indexOf('## [Unreleased]'), log.indexOf('\n## [', log.indexOf('## [Unreleased]') + 5));
+  { const tools = SRC('mcp/TOOLS.md'), priv = SRC('mcp/PRIVACY.md'), log = SRC('mcp/CHANGELOG.md'), un = (newest(log) || { text: '' }).text;
     chk(() => /likeForLike/.test(tools) && /like for like/i.test(tools) && /Ramadan/.test(tools), () => 'D1 TOOLS.md says likeForLike, like for like and Ramadan');
     chk(() => priv.split('\n').some((l) => /likeForLike/.test(l) && /name/i.test(l) && /value/i.test(l)), () => 'D2 PRIVACY.md has a row for likeForLike: names, never values');
     chk(() => /like for like/i.test(un) && /Ramadan/.test(un) && !/\b(first|only|official)\b/i.test(un.split('\n').filter((l) => /like for like/i.test(l)).join(' ')), () => 'D3 CHANGELOG [Unreleased]: one plain line, never "first", "only" or "official"'); }

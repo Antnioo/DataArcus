@@ -16,6 +16,7 @@ import './test-env.mjs';
 //   D1-D3  TOOLS.md, PRIVACY.md and CHANGELOG say Impact check, both options, names and hashes only
 // Made up, in os.tmpdir(), from mcp/fixtures/twin-project: no model rows.   node test-0.3.3-hx2.mjs
 import fs from 'node:fs';
+import { newest } from '../scripts/changelog-words.mjs';   // the changelog's first section, [Unreleased] or a dated version (one place)
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -175,7 +176,7 @@ chk(() => /graphStep/.test(fs.readFileSync(path.join(HERE, 'lib/lineage.mjs'), '
 const doc = (f) => fs.readFileSync(path.join(HERE, f), 'utf8');
 chk(() => /`againstModel`/.test(doc('TOOLS.md')) && /`reach`/.test(doc('TOOLS.md')) && /Impact check/.test(doc('TOOLS.md')), () => 'D1 TOOLS.md names againstModel, reach and Impact check');
 chk(() => /Impact check/.test(doc('PRIVACY.md')) && /hash/i.test(doc('PRIVACY.md').split('\n').find((l) => /Impact check/.test(l)) || ''), () => 'D2 PRIVACY.md: Impact check\'s row, names and hashes only');
-chk(() => { const u = doc('CHANGELOG.md').split(/^## /m).find((x) => /^\[Unreleased\]/.test(x)) || ''; return /Impact check/.test(u) && /againstModel/.test(u) && /reach/.test(u) && !/\b(first|only|official)\b/i.test(u.split('\n').filter((l) => /Impact check/.test(l)).join(' ')); }, () => 'D3 CHANGELOG [Unreleased]: Impact check, both options, never first, only or official');
+chk(() => { const u = (newest(doc('CHANGELOG.md')) || { text: '' }).text; return /Impact check/.test(u) && /againstModel/.test(u) && /reach/.test(u) && !/\b(first|only|official)\b/i.test(u.split('\n').filter((l) => /Impact check/.test(l)).join(' ')); }, () => 'D3 CHANGELOG [Unreleased]: Impact check, both options, never first, only or official');
 
 fs.rmSync(ROOT, { recursive: true, force: true });
 problems.forEach((p) => console.log('problem: ' + String(p).slice(0, 900)));

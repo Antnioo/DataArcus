@@ -9,6 +9,7 @@ import './test-env.mjs';
 //   L  B-283 (the answer limit only): one constant, every user importing it; no new literal 40000
 //   node test-0.3.2-tk1.mjs
 import fs from 'node:fs';
+import { newest } from '../scripts/changelog-words.mjs';   // the changelog's first section, [Unreleased] or a dated version (one place)
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -27,8 +28,8 @@ const reports = () => fs.readdirSync(path.join(ROOT, MODEL)).filter((f) => f.end
 // the tools/list sizes a doc states: "tool list ... N characters" (CHANGELOG.md's [Unreleased] only; TOOLS.md whole)
 const SIZE_SAID = /tools?[ /]list\b[^.]{0,160}?\b(\d{1,3}(?:,\d{3})+) characters/gi;
 function statedListSizes() {
-  const log = fs.readFileSync(path.join(HERE, 'CHANGELOG.md'), 'utf8'), at = log.indexOf('## [Unreleased]'), end = log.indexOf('\n## [', at + 5);
-  const docs = { 'CHANGELOG.md': at < 0 ? '' : log.slice(at, end < 0 ? undefined : end), 'TOOLS.md': fs.readFileSync(path.join(HERE, 'TOOLS.md'), 'utf8') };
+  const sec = newest(fs.readFileSync(path.join(HERE, 'CHANGELOG.md'), 'utf8'));
+  const docs = { 'CHANGELOG.md': sec ? sec.text : '', 'TOOLS.md': fs.readFileSync(path.join(HERE, 'TOOLS.md'), 'utf8') };
   return Object.entries(docs).flatMap(([file, text]) => [...text.replace(/\s+/g, ' ').matchAll(SIZE_SAID)].map((m) => ({ file, n: Number(m[1].replace(/,/g, '')) })));
 }
 let headroom = '';
