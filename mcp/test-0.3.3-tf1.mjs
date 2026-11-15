@@ -2,6 +2,7 @@
 //   Z  (test033 D10, BLOCKER) check_model_health and read_model on a zip of two semantic models, on the real server:
 //      the model read is the website's choice (zip-models.js, shared), named before the score with the one not read;
 //      only its own report is read; zip order never changes the answer; a zip of one model is unchanged
+//   N  (test033 C) plan_layout's writesAfterGo names the report as it is written (its name, or the free name), no "<name>"
 // Made-up projects only (mcp/fixtures/health-project, twin-project; mcp/test-models/no-measures).
 import fs from 'node:fs';
 import os from 'node:os';
@@ -61,6 +62,16 @@ try {
     const worker = fs.readFileSync(path.join(JS, 'model-health-worker.js'), 'utf8'), reader = fs.readFileSync(path.join(HERE, 'lib/model.mjs'), 'utf8');
     chk(() => /DAZipModels\.choose\(/.test(worker) && /ZipModels\.choose\(/.test(reader) && !/new Map\(\)[^\n]*folders|folders\.set\(/.test(worker + reader) && !/find\(\(\[n\]\) => \/\(\^\|\\\/\)model\\\.bim\$\/i\.test\(n\)\)/.test(reader),
       () => 'Z9. one place (D-1104-12): model-health-worker.js and mcp/lib/model.mjs both call zip-models.js choose; no folder map or first-model.bim pick of their own');
+  }
+  // ---------- N. plan_layout's writesAfterGo names the report (test033 C: name "Gulf Views", the line said "<name>") ----------
+  {
+    fs.cpSync(path.join(HERE, 'fixtures/health-project'), path.join(ROOT, 'views'), { recursive: true });
+    const p = await s.call('plan_layout', { path: 'views', layout: 'exec', name: 'Gulf Views', lang: 'en' }), w = p.j && p.j.plan ? p.j.plan.writesAfterGo : null;
+    chk(() => w && /^the report "Gulf Views\.Report" and its "Gulf Views\.pbip" /.test(w[0]) && !w.some((x) => x.includes('<name>')), () => `N1. writesAfterGo names the report as it is written ("Gulf Views.Report", "Gulf Views.pbip"), no "<name>": ${J(w || p.t)}`);
+    // the name taken: the free name the write uses (the plan's own .pbip), as the approval page says
+    fs.mkdirSync(path.join(ROOT, 'views', 'Gulf Views.Report'));
+    const t = await s.call('plan_layout', { path: 'views', layout: 'exec', name: 'Gulf Views', lang: 'en' }), tw = t.j && t.j.plan ? t.j.plan.writesAfterGo : null;
+    chk(() => tw && !tw.some((x) => x.includes('<name>')) && /^the report "Gulf Views - [^"]+\.Report" and its "Gulf Views - [^"]+\.pbip" /.test(tw[0]), () => `N2. the name taken: the free name the write uses (the plan's own .pbip, as the approval page says): ${J(tw || t.t)}`);
   }
 } finally { await s.close(); }
 fs.rmSync(ROOT, { recursive: true, force: true });

@@ -73,8 +73,15 @@ export function promptSummary(kind, data, ar) {
 // only) the app's prompt (MCP elicitation), in the plan's language as its page is: on an Arabic plan each write in
 // Arabic with its English line under it, the files counted in Arabic, then the English prompt; writes name the report
 // by the name the write uses (summary's name). plan: { id, kind, writes }; data: the plan's data
+// (0.3.3 TF1, test033 C: plan_layout's writesAfterGo said "<name>.Report" while the page named the report) a report
+// plan's name as its write uses it: the plan's own .pbip among its outputs (a taken name gets a free one), else the
+// name asked; and a write's line with "<name>" filled. One place for the page, the app's prompt and plan_layout's answer
+export const planReportName = (data) => { const d = data || {}, p = (d.pins || {}).create_report || {};
+  const pbip = Array.isArray(d.outputs) ? d.outputs.map(String).find((f) => /\.pbip$/i.test(f)) : null;
+  return (pbip ? pbip.replace(/^.*\//, '').replace(/\.pbip$/i, '') : null) || p.name || null; };
+export const withName = (x, nm) => (nm ? String(x).split('<name>').join(nm) : String(x));
 export function promptText(plan, data) {
-  const s = summary(plan.kind, data), nm = s.name, named = (x) => (nm ? String(x).split('<name>').join(nm) : String(x));
+  const s = summary(plan.kind, data), nm = s.name, named = (x) => withName(x, nm);
   const en = plan.writes.map(named), WA = s.lang === 'ar' && Array.isArray(s.writesAr) && s.writesAr.length === en.length ? s.writesAr.map(named) : null;
   const inShort = promptSummary(plan.kind, data), english = `DataArcus asks before it writes anything. Approve this plan (${plan.kind}, ${plan.id})? It will write:\n- ${en.join('\n- ')}\n${inShort ? inShort + '\n' : ''}${writesNote(plan.writes)}`;
   if (!WA) return english;
@@ -266,7 +273,7 @@ function reportHeadStep(sc) {
     const p = pins.create_report || {}, L = (p.design && p.design.layout) || {};
     // (0.3.1 R4A, the laptop's rc.1 run: the prompt named the taken "Gulf Retail Sales" while the write went to the free
     // "Gulf Retail Sales - New design") the name the write uses: the plan's own .pbip, else the name asked
-    const pbipOf = Array.isArray(d.outputs) ? d.outputs.map(String).find((f) => /\.pbip$/i.test(f)) : null, wName = pbipOf ? pbipOf.replace(/^.*\//, '').replace(/\.pbip$/i, '') : null, nm0 = wName || p.name;
+    const wName = planReportName({ outputs: d.outputs }), nm0 = wName || p.name;
     const T = { title: (d.bilingual ? 'English and Arabic in one report' : 'Report') + (nm0 ? ` "${cut(nm0, 80)}"` : ''), name: nm0 || null, previews: d.preview && Array.isArray(d.preview.pages) ? d.preview : null, files, kind, lang: p.lang === 'ar' ? 'ar' : 'en', scriptWhat: 'the changes listed with the plan', titleKey: d.bilingual ? 'same' : 'report',
       // (0.3.1 CX2) one report in both languages whose Arabic pages could not be drawn (twinPreview failed: no pairs)
       ...(d.bilingual && d.preview && Array.isArray(d.preview.pages) && !Array.isArray(d.preview.pairs) ? { previewFailed: 'arabic' } : {}) };

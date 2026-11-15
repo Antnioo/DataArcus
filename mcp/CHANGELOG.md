@@ -15,6 +15,8 @@ package's manifest; this file says what is in it.
   in a laptop run, and Microsoft's validator then reported them too. The warning now also finds a visual named only in
   the bookmark's list of visuals it applies to, which is where Desktop kept it; before, only a visual named in the
   bookmark's page state was found.
+- `plan_layout`'s list of what the plan writes now names the report, as the approval window always did: "the report
+  "Gulf Views.Report" and its "Gulf Views.pbip"", or the free name when that name is taken. It said "<name>.Report".
 - Arabic: with `lang` "ar", a wrong model name or path in a working folder that holds no model is now answered in
   Arabic. English answers are unchanged.
 - The Arabic words DataArcus uses are in one glossary, `content/ARABIC-GLOSSARY.md`, each with Microsoft's and Google's
