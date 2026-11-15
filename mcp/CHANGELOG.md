@@ -4,7 +4,7 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
-## [Unreleased]: 0.3.3
+## [0.3.3]: 2026-11-15 (bookmarks, the Arabic glossary, the build helix)
 - `check_model_health` and `read_model` now read a zip holding two semantic models as the website's Model Health Check
   does: they say first which model was read and which was not, and read only that model's own report. Before, they scored
   the model whose files came first in the zip with the reports of every model in it, and said nothing (a laptop run
