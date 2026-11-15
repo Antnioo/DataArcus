@@ -316,8 +316,10 @@
         });
       } },
     // (0.3.3 RX1) a bookmark that names a page or visuals the report no longer has, or a bookmark listed without its
-    // file. Microsoft Learn (the PBIR format's page): "any invalid visuals are removed from the bookmark configuration"
-    // when Desktop saves, so the bookmark quietly does less than its name says. Counts and the file only: a bookmark's
+    // file. (0.3.3 TF1, test033 C6: Microsoft Learn's PBIR page says invalid visuals are removed from the bookmark when
+    // Desktop saves, but Power BI Desktop (Store build, 15 Nov 2026) kept a deleted slicer's name in all three bookmarks
+    // after a save, and Microsoft's validator 0.5.0 then reported PBIR_BOOKMARK_VISUAL_REF_MISSING: the finding claims
+    // nothing about what Desktop does on save.) Counts and the file only: a bookmark's
     // name and the ids it holds are the report's own text, never quoted. A report with no bookmark: not run (when), so
     // it is not in the answer's rulesRun either, as a right-to-left rule is not on a left-to-right report
     { id: 'BOOKMARK_TARGET_MISSING', group: 'navigation', severity: 'warning', source: BOOKMARK_SRC,
@@ -332,7 +334,7 @@
           if (gone.length) { out(null, `a bookmark names ${s(gone.length, 'page', 'pages')} this report does not have, so it has nowhere to go`, 'Remove the bookmark (the Bookmarks pane), or make it again on the page it was meant for and update the buttons that use it.', { file: b.file }); return; }
           const here = new Set(); Object.entries(b.sections || {}).forEach(([id, list]) => list.forEach((n) => { if (!pages.get(id).has(n)) here.add(n); }));
           const on = b.page && pages.get(b.page); (b.targets || []).forEach((n) => { if (on && !on.has(n)) here.add(n); });
-          if (here.size) out(null, `a bookmark names ${s(here.size, 'visual', 'visuals')} its page no longer has: Power BI drops them from the bookmark when it saves, so the bookmark does less than before`, 'Open the page, set it as the bookmark should show it, then right-click the bookmark and choose Update; or remove the bookmark.', { file: b.file });
+          if (here.size) out(null, `a bookmark still names ${s(here.size, 'visual', 'visuals')} its page no longer has`, 'Update the bookmark (open the page, set it as the bookmark should show it, then right-click the bookmark in the Bookmarks pane and choose Update), or delete the bookmark.', { file: b.file });
         });
         const L = R.bookmarkList;
         if (L && Array.isArray(L.ids)) { const have = new Set(R.bookmarks.map((b) => b.id)), lost = L.ids.filter((n) => !have.has(n)).length;

@@ -10,6 +10,11 @@ package's manifest; this file says what is in it.
   the model whose files came first in the zip with the reports of every model in it, and said nothing (a laptop run
   found a score of 79 for one model with the other model's report). A zip of one model is read as before, and a project
   saved as TMDL can now be zipped too.
+- `check_report`'s warning for a bookmark that names visuals its page no longer has now says only that, and to update or
+  delete the bookmark. It said Power BI drops those visuals from the bookmark when it saves; Power BI Desktop kept them
+  in a laptop run, and Microsoft's validator then reported them too. The warning now also finds a visual named only in
+  the bookmark's list of visuals it applies to, which is where Desktop kept it; before, only a visual named in the
+  bookmark's page state was found.
 - Arabic: with `lang` "ar", a wrong model name or path in a working folder that holds no model is now answered in
   Arabic. English answers are unchanged.
 - The Arabic words DataArcus uses are in one glossary, `content/ARABIC-GLOSSARY.md`, each with Microsoft's and Google's

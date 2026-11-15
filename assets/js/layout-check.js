@@ -282,7 +282,9 @@
     R.bookmarks = (inv.bookmarks || []).map((b) => { const raw = b.raw || {}, st = raw.explorationState || {}, sec = st.sections && typeof st.sections === 'object' ? st.sections : {};
       return { file: b.file, id: String(raw.name || ''), page: typeof st.activeSection === 'string' ? st.activeSection : null,
         sections: Object.fromEntries(keys(sec).map((k) => [k, keys((sec[k] || {}).visualContainers).concat(keys((sec[k] || {}).visualContainerGroups))])),
-        targets: entries((raw.options || {}).targetVisualNames).filter((n) => typeof n === 'string') }; });
+        // (0.3.3 TF1, test033 C6: the names are strings, and entries() keeps only objects, so a visual named only here,
+        // as Desktop's save kept a deleted slicer, was never read) the list's names, as they are
+        targets: (Array.isArray((raw.options || {}).targetVisualNames) ? raw.options.targetVisualNames : []).filter((n) => typeof n === 'string') }; });
     R.bookmarkList = null;   // (check_report reads bookmarks.json itself and sets it: the inventory's shape stays as it is)
     R.bookmarkPlan = (() => { const a = entries((inv.report || {}).annotations).find((x) => x && x.name === 'DataArcusBookmarkOrder'); if (!a) return null;
       try { const l = JSON.parse(String(a.value)); return Array.isArray(l) && l.every((n) => typeof n === 'string') ? l : null; } catch (e) { return null; } })();
