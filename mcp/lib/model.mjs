@@ -25,6 +25,8 @@ const Bind = require('../../assets/js/pbip-bind.js');
 const Tmdl = require('../../assets/js/tmdl-model.js');
 // (0.3.2 DD2D) a model file's bytes to text and the size limits: assets/js/model-file.js's, the website's readers' too
 const ModelFile = require('../../assets/js/model-file.js');
+// (0.3.3 TF1) which model and which report a zip's check reads: the website's worker's own choice, one place
+const ZipModels = require('../../assets/js/zip-models.js');
 
 // (0.3.3 TC1, the type-checking pilot) The types below are JSDoc comments, checked by `npx tsc -p tsconfig.tc1.json`
 // (mcp/tsconfig.tc1.json); they change no runtime line. Shapes used by more than one function:
@@ -139,6 +141,10 @@ const refuse = (what) => new ReadError('TOO_BIG', { what }, `This file was not r
 const isModelPart = (n) => n === 'DataModelSchema' || /(^|\/)model\.bim$/i.test(n);
 /** @param {string} n @returns {boolean} */
 const isReportPart = (n) => n === 'Report/Layout' || (/(^|\/)definition\/(report\.json|reportExtensions\.json|pages\/.*\.json|bookmarks\/.*\.json)$/i.test(n) && !/StaticResources|CustomVisuals/i.test(n));
+// (0.3.3 TF1) and what zip-models.js needs to choose the model and its report, as the website's worker reads them: each
+// report's definition.pbir (the model it points at), an older report.json, a project's TMDL files
+/** @param {string} n @returns {boolean} */
+const isChoicePart = (n) => /(^|\/)definition\.pbir$/i.test(n) || /\.Report\/report\.json$/i.test(n) || (/(^|\/)definition\/.*\.tmdl$/i.test(n) && !/TMDLScripts\//i.test(n));
 // buf: the zip (a Buffer, or a reader { size, at(start, n) }: the .pbit's descriptor, SQ6); lim: the limits
 // (PBIT_LIMITS, or smaller ones in a test). Returns { name: bytes } of the needed parts.
 // (SQ6, 0.2.9-reader-S12: the .pbit route read the whole file, up to 300 MB, into memory before picking its parts. Now
@@ -162,7 +168,7 @@ export function unzipNeeded(buf, lim) {
   for (let n = count; n > 0 && p + 46 <= dir.length && dir.readUInt32LE(p) === 0x02014b50; n--) {
     const method = dir.readUInt16LE(p + 10), csize = dir.readUInt32LE(p + 20), usize = dir.readUInt32LE(p + 24), nlen = dir.readUInt16LE(p + 28), xlen = dir.readUInt16LE(p + 30), clen = dir.readUInt16LE(p + 32);
     const name = dir.toString('utf8', p + 46, p + 46 + nlen), lho = dir.readUInt32LE(p + 42);
-    if (isModelPart(name) || isReportPart(name)) want.push({ name, method, csize, usize, lho, model: isModelPart(name) });
+    if (isModelPart(name) || isReportPart(name) || isChoicePart(name)) want.push({ name, method, csize, usize, lho, model: isModelPart(name) });
     p += 46 + nlen + xlen + clen;
   }
   // refused before anything is unpacked: a part or the total declared above the limits
@@ -310,12 +316,15 @@ function zipDirectoryCheck(full, size) {
  * @property {{counted:string[], notCounted:Array<any>, notRead?:Array<any>, skipped?:Array<{file:string, why:string}>, partial?:string}|null} reportsSeen
  * @property {string|null} print  the model's fingerprint, a sha256 of the definition files read (B-154; was missing from this list)
  * @property {number} partsSkipped  model parts left out because they were not lists of objects (F-M2)
+ * @property {ZipModelsRead} [models]  a zip holding more than one model: the one read, the ones not read, the reports read and the
+ *   sentence (zip-models.js, TF1); absent otherwise
  * @property {SkippedPart[]} skipped  definition files that could not be read fully (AU47), or tables named and not defined (AU1), named
  *   relative to the project (screened), never their text; empty when every file was read
  */
 /**
  * What modelRead takes: a ModelRead's fields before the tables are derived from tmsl.
- * @typedef {{ source: string, tmsl: any, folder?: string|null, projectDir?: string|null, report?: ModelRead['report'], reportsSeen?: ModelRead['reportsSeen'], print?: string|null, skipped?: SkippedPart[] }} ModelIn
+ * @typedef {{ source: string, tmsl: any, folder?: string|null, projectDir?: string|null, report?: ModelRead['report'], reportsSeen?: ModelRead['reportsSeen'], print?: string|null, skipped?: SkippedPart[], models?: ZipModelsRead }} ModelIn
+ * @typedef {{ read: string, notRead: string[], report: string, reports: string[], message: string }} ZipModelsRead
  */
 // (F-M2, the fuzz test: a model.bim or .pbit whose tables, columns, measures, partitions or relationships were not lists of
 // objects crashed in the field picker's catalog. The shape is checked here, where the model comes in: a list that is
@@ -337,7 +346,7 @@ function shapeChecked(tmsl) {
 }
 /** @param {ModelIn} o0 @returns {ModelRead} */
 const modelRead = (o0) => { const c = shapeChecked(o0.tmsl), o = Object.assign({}, o0, { tmsl: c.tmsl }); return ({ source: o.source, folder: o.folder || null, projectDir: o.projectDir || null, tmsl: o.tmsl, partsSkipped: c.skipped,
-  tables: Bind.fromTmsl(o.tmsl).filter(/** @param {any} t */ (t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name)), report: o.report || null, reportsSeen: o.reportsSeen || null, print: o.print || null, skipped: o.skipped || [] }); };
+  tables: Bind.fromTmsl(o.tmsl).filter(/** @param {any} t */ (t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name)), report: o.report || null, reportsSeen: o.reportsSeen || null, print: o.print || null, skipped: o.skipped || [], ...(o.models ? { models: o.models } : {}) }); };
 // (AU47, the night audit's AUD-047) a model with a definition file that could not be read fully: the answer's first key
 // (read_model, check_model_health), and the planning tools' refusal (nothing is planned on part of a model)
 /** @param {ModelRead|null|undefined} m @returns {{ unreadable?: { message: string, skipped: SkippedPart[] } }} */
@@ -392,15 +401,33 @@ export function loadModel(p, opts) {
     if (isZip) zipDirectoryCheck(full, st.size);
     const source = shownName(path.basename(full), 80);
     if (isZip) {
-      const { z, print } = zipParts(full, cap, st.size), dms = z.DataModelSchema || Object.entries(z).find(([n]) => /(^|\/)model\.bim$/i.test(n))?.[1];
-      if (!dms) throw new ReadError('NO_MODEL_IN_FILE', {}, 'No model in this file. Use a .pbit (File > Export > Power BI template), a model.bim, or a project folder.');
-      // the report: the legacy Report/Layout file, or PBIR files (same choice as the website's worker)
-      const tmsl = partJson(dms, 'model part'), layout = z['Report/Layout'], /** @type {SkippedFile[]} */ skipped = [];
-      const pbir = Object.keys(z).filter((n) => /(^|\/)definition\/(report\.json|reportExtensions\.json|pages\/.*\.json|bookmarks\/.*\.json)$/i.test(n) && !/StaticResources|CustomVisuals/i.test(n));
-      const report = layout ? { format: 'legacy', files: [{ path: 'Report/Layout', json: partJson(layout, 'report part') }] }
-        : pbir.length ? { format: 'pbir', files: pbir.map((n) => { try { return { path: n, json: partJson(z[n], 'report part') }; } catch (e) { skipped.push({ file: shownPath(n), why: skippedOf(e) }); return null; } }).filter(Boolean) } : null;
+      const { z, print } = zipParts(full, cap, st.size);
+      // (0.3.3 TF1, test033 D10: a zip of two models was read as its first model.bim in the zip's order, with every
+      // report in the zip, and said nothing) the model and its report: zip-models.js, the website's worker's own choice
+      const byPath = (/** @type {string} */ n) => { try { const j = z[n] ? partJson(z[n], 'definition.pbir') : null, rel = j && j.datasetReference && j.datasetReference.byPath && j.datasetReference.byPath.path; return typeof rel === 'string' ? rel : null; } catch (e) { return null; } };
+      const chosen = ZipModels.choose(Object.keys(z), byPath);
+      if (chosen.error) throw new ReadError('NO_MODEL_IN_FILE', {}, 'No model in this file. Use a .pbit (File > Export > Power BI template), a model.bim, or a project folder.');
+      const pick = /** @type {{ modelEntry: string|null, tmdl: string[], report: { layout: string|null, pbir: string[], legacyPbip: string|null }, models: { read: string, notRead: string[], report: string, reports: string[] }|null }} */ (chosen);
+      /** @type {SkippedFile[]} */
+      const skipped = [];
+      /** @type {SkippedPart[]} */
+      let unread = [], tmsl;
+      if (pick.modelEntry) tmsl = partJson(z[pick.modelEntry], 'model part');
+      else {
+        // a project saved as TMDL (AU47, AU1: a file not read fully, a table named and not defined: named, screened)
+        const got = Tmdl.read(pick.tmdl.map((n) => ({ path: n, text: decode(z[n]) })), { lineageTags: true });
+        tmsl = got.model;
+        unread = got.skipped.map(/** @param {any} x */ (x) => (x.table != null ? { table: shownName(x.table, 80), why: Tmdl.whyOf(x, 'en') } : { file: shownPath(x.path), why: Tmdl.whyOf(x, 'en') }));
+      }
+      const R = pick.report, part = (/** @type {string} */ n) => { try { return { path: n, json: partJson(z[n], 'report part') }; } catch (e) { skipped.push({ file: shownPath(n), why: skippedOf(e) }); return null; } };
+      const legacy = R.legacyPbip ? part(R.legacyPbip) : null;
+      const report = R.layout ? { format: 'legacy', files: [{ path: 'Report/Layout', json: partJson(z[R.layout], 'report part') }] }
+        : R.pbir.length ? { format: 'pbir', files: R.pbir.map(part).filter(Boolean) }
+        : legacy && legacy.json && /** @type {any} */ (legacy.json).sections ? { format: 'legacy', files: [legacy] } : null;
+      // the folder names are the zip's own text: screened as every name the reader shows
+      const models = pick.models ? (() => { const x = pick.models, s = /** @param {string} f */ (f) => shownPath(f); const o = { read: s(x.read), notRead: x.notRead.map(s), report: x.report, reports: x.reports.map(s) }; return Object.assign(o, { message: ZipModels.said(o).en }); })() : null;
       // @ts-expect-error the .filter(Boolean) drops the nulls at run time; the checker keeps them in the type
-      return modelRead({ source, tmsl, report, print, reportsSeen: skipped.length ? { counted: [], notCounted: [], skipped, partial: PARTIAL } : null });
+      return modelRead(Object.assign({ source, tmsl, report, print, reportsSeen: skipped.length ? { counted: [], notCounted: [], skipped, partial: PARTIAL } : null, skipped: unread }, models ? { models } : {}));
     }
     const buf = readCapped(full, cap, 'model file');
     return modelRead({ source, tmsl: partJson(buf, 'model file'), print: sha(buf) });

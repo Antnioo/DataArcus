@@ -5,6 +5,11 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.3
+- `check_model_health` and `read_model` now read a zip holding two semantic models as the website's Model Health Check
+  does: they say first which model was read and which was not, and read only that model's own report. Before, they scored
+  the model whose files came first in the zip with the reports of every model in it, and said nothing (a laptop run
+  found a score of 79 for one model with the other model's report). A zip of one model is read as before, and a project
+  saved as TMDL can now be zipped too.
 - Arabic: with `lang` "ar", a wrong model name or path in a working folder that holds no model is now answered in
   Arabic. English answers are unchanged.
 - The Arabic words DataArcus uses are in one glossary, `content/ARABIC-GLOSSARY.md`, each with Microsoft's and Google's
