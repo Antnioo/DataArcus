@@ -36,7 +36,7 @@ mcp/CHANGELOG.md under [Unreleased]: 0.3.3: "The portfolio no longer shows the C
 - No merge of origin/integration/0.3.3: it had no new commits since 103097b2 (R-33).
 
 ## For the owner
-- Is the Arabic redirect line above fine?
+- Is the Arabic redirect line («لم تعد هذه اللوحة معروضة. جارٍ فتح صفحة الأعمال…», link «الانتقال إلى الأعمال») fine? | class: arabic | rec: yes, keep it; it shows for a moment on an old link | yes: keep as is | no: the owner gives the wording and a builder swaps the two lines in both redirect pages | default: keep as is
 
 ## For the reviewer
 - Many pages in the diff are only the new ?v= stamp of locale-routes.min.js.
@@ -48,8 +48,8 @@ mcp/CHANGELOG.md under [Unreleased]: 0.3.3: "The portfolio no longer shows the C
 - none.
 
 ## Seen, not in scope
-- Code comments naming Call Center remain in assets/js/mirror-*.js and report-mirror.js and in mcp/ (twin tests and fixtures use it as a test dashboard name).
-- sp35-site.json fixture mentions a Power BI frame address; not touched.
+- Code comments naming Call Center remain in assets/js/mirror-charts.js, mirror-policy.js, report-mirror.js and mcp/ (twin tests and fixtures use it as a test dashboard name) | route: drop | why: they are measured-case notes, not public text
+- The sp35-site.json fixture holds a Power BI frame address | route: drop | why: unrelated to this job, left untouched
 
 ## Lessons for the reviewer
 - csp.mjs and ar-pages.mjs both want a brand-new page `git add`ed first; ar-pages.mjs also deletes any /ar/ page not in the sitemap, so a redirect page needs a list (now redirect-pages.json).
