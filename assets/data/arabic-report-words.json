@@ -91,8 +91,8 @@
       ],
       "microsoft": "عوامل التصفية",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction",
-        "https://learn.microsoft.com/ar-sa/training/modules/perform-analytics-power-bi/3-visuals"
+        "https://support.microsoft.com/ar-sa/excel/get-started/filter-data-in-a-range-or-table-in-excel",
+        "https://support.microsoft.com/ar-sa/excel/when-to-use-calculated-columns-and-calculated-fields"
       ],
       "status": "chosen",
       "note": "The owner chose it (25 Oct). What every report writes; Power BI's menus say «عوامل التصفية».",
@@ -103,7 +103,7 @@
       ],
       "approval": "owner",
       "used": "every report DataArcus writes, the tools, the site",
-      "read": "2026-11-12"
+      "read": "2026-11-15"
     },
     {
       "id": "filtering",
@@ -115,7 +115,8 @@
       ],
       "microsoft": "التصفية",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction"
+        "https://support.microsoft.com/ar-sa/excel/get-started/filter-data-in-a-range-or-table-in-excel",
+        "https://support.microsoft.com/ar-sa/excel/understand-and-create-date-tables-in-power-pivot-in-excel"
       ],
       "status": "chosen",
       "note": "The act; the things are «الفلاتر». DAX's filter context stays «سياق التصفية».",
@@ -125,7 +126,7 @@
       ],
       "approval": "owner",
       "used": "the tools' and the site's texts",
-      "read": "2026-11-12"
+      "read": "2026-11-15"
     },
     {
       "id": "reset",
@@ -156,8 +157,8 @@
       ],
       "microsoft": "مقسم طريقة العرض",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction",
-        "https://learn.microsoft.com/ar-sa/training/modules/power-bi-effective-reports/2-report-objects",
+        "https://support.microsoft.com/ar-sa/excel/get-started/use-slicers-to-filter-data",
+        "https://support.microsoft.com/ar-sa/excel/slicers-in-power-view",
         "https://support.microsoft.com/ar-sa/office/249f966b-a9d5-4b0f-b31a-12651785d29d"
       ],
       "status": "chosen",
@@ -170,7 +171,7 @@
       ],
       "approval": "owner",
       "used": "every report DataArcus writes, the site",
-      "read": "2026-11-12"
+      "read": "2026-11-15"
     },
     {
       "id": "tooltip",
@@ -242,7 +243,8 @@
       ],
       "microsoft": "المرئيات",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction"
+        "https://support.microsoft.com/ar-sa/excel/charts-and-other-visualizations-in-power-view",
+        "https://support.microsoft.com/ar-sa/excel/power-view-in-excel-on-microsoft-365-or-in-sharepoint-server"
       ],
       "status": "chosen",
       "note": "The owner chose it (25 Oct). The singular «مرئي» (a visual). «العناصر المرئية» is a variant.",
@@ -250,7 +252,7 @@
       "googleSource": "none found",
       "approval": "owner",
       "used": "the tools' answers, the approval page, the site",
-      "read": "2026-11-12"
+      "read": "2026-11-15"
     },
     {
       "id": "chart",
@@ -262,8 +264,8 @@
       ],
       "microsoft": "مخطط",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction",
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/5-context-transition",
+        "https://support.microsoft.com/ar-sa/excel/get-started/create-a-chart-from-start-to-finish",
+        "https://support.microsoft.com/ar-sa/excel/create-a-measure-in-power-pivot",
         "https://support.microsoft.com/ar-sa/office/0baf399e-dd61-4e18-8a73-b3fd5d5680c2"
       ],
       "status": "chosen",
@@ -273,7 +275,7 @@
       ],
       "approval": "D-1112-05",
       "used": "the approval page, the site",
-      "read": "2026-11-12"
+      "read": "2026-11-15"
     },
     {
       "id": "kpicard",
@@ -333,8 +335,8 @@
       ],
       "microsoft": "مقياس",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction",
-        "https://learn.microsoft.com/ar-sa/training/modules/choose-power-bi-model-framework/2-describe-power-bi-model-fundamentals"
+        "https://support.microsoft.com/ar-sa/excel/create-a-measure-in-power-pivot",
+        "https://support.microsoft.com/ar-sa/excel/measures-in-power-pivot"
       ],
       "status": "chosen",
       "note": "Plural «مقاييس».",
@@ -344,7 +346,7 @@
       ],
       "approval": "D-1112-05",
       "used": "the tools' answers, the Health Check, the site",
-      "read": "2026-11-12"
+      "read": "2026-11-15"
     },
     {
       "id": "column",
@@ -372,10 +374,9 @@
       "en": "Page",
       "ar": "صفحة",
       "variants": [],
-      "microsoft": "صفحة التقرير",
+      "microsoft": "صفحة",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction",
-        "https://learn.microsoft.com/ar-sa/training/modules/choose-power-bi-model-framework/2-describe-power-bi-model-fundamentals"
+        "https://support.microsoft.com/ar-sa/access/create-a-simple-report"
       ],
       "status": "chosen",
       "google": "صفحة",
@@ -384,7 +385,7 @@
       ],
       "approval": "D-1112-05",
       "used": "the tools' answers, the approval page, the site",
-      "read": "2026-11-12"
+      "read": "2026-11-15"
     },
     {
       "id": "report",
@@ -393,8 +394,8 @@
       "variants": [],
       "microsoft": "تقرير",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction",
-        "https://learn.microsoft.com/ar-sa/training/modules/choose-power-bi-model-framework/2-describe-power-bi-model-fundamentals"
+        "https://support.microsoft.com/ar-sa/excel/reports-with-multiple-views-in-power-view-in-sharepoint",
+        "https://support.microsoft.com/ar-sa/excel/when-to-use-calculated-columns-and-calculated-fields"
       ],
       "status": "chosen",
       "google": "تقرير",
@@ -403,7 +404,7 @@
       ],
       "approval": "D-1112-05",
       "used": "the tools' answers, the approval page, the site",
-      "read": "2026-11-12"
+      "read": "2026-11-15"
     },
     {
       "id": "model",
@@ -513,10 +514,12 @@
       ],
       "microsoft": "السنة المالية",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction"
+        "https://support.microsoft.com/ar-sa/excel/understand-and-create-date-tables-in-power-pivot-in-excel",
+        "https://support.microsoft.com/ar-sa/excel/measures-in-power-pivot"
       ],
       "status": "chosen",
-      "approval": "owner"
+      "approval": "owner",
+      "read": "2026-11-15"
     },
     {
       "id": "hijri",

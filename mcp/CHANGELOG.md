@@ -28,6 +28,10 @@ package's manifest; this file says what is in it.
   Spend sample). A draft uses only the words of DataArcus's fixed list, and the person still approves every name. Where
   the Arabic order would need more than dropping a word's article, or the name has three or more words, there is no
   draft and the assistant proposes a name for the person to approve, as for any name not in the list.
+- The Arabic glossary's Microsoft sources for nine terms (filters, filtering, slicer, visual, chart, measure, page,
+  report, fiscal year) are now Microsoft Support pages written in Arabic, each read on 15 Nov. The Microsoft Learn
+  training pages cited before show their text in English, so they did not show Microsoft's Arabic word. Every term
+  keeps its Arabic; for "page" Microsoft's own word is «صفحة».
 - Arabic: with `lang` "ar", a wrong model name or path in a working folder that holds no model is now answered in
   Arabic. English answers are unchanged.
 - The Arabic words DataArcus uses are in one glossary, `content/ARABIC-GLOSSARY.md`, each with Microsoft's and Google's

@@ -6,6 +6,7 @@
 //      matrix's: its own, else its theme's for matrices, else none written); a theme that cannot be matched: said
 //   A  (test033 F2) noun + noun drafts in Arabic order (idafa: «منطقة المبيعات»), only the list's words; no draft where the
 //      composed form is not plain; through plan_layout on the real server and the engine
+//   G  (test033 D2) the glossary's nine terms cite a Microsoft page read in Arabic, never an English-bodied Learn page
 //   N  (test033 C) plan_layout's writesAfterGo names the report as it is written (its name, or the free name), no "<name>"
 // Made-up projects only (mcp/fixtures/health-project, twin-project; mcp/test-models/no-measures).
 import fs from 'node:fs';
@@ -151,6 +152,22 @@ fs.rmSync(ROOT, { recursive: true, force: true });
   const words = new Set(Object.values(LIST.words).flatMap((w) => w.split(/\s+/)).flatMap((w) => [w, w.replace(/^ال/, '')]).concat(['إجمالي', 'نسبة', 'والسنة', 'عدد', 'اسم', 'الهجرية']));
   chk(() => Object.values(pairs).every((ar) => ar.split(/\s+/).every((w) => words.has(w))), () => `A6. no word outside the list: ${J(Object.values(pairs).flatMap((ar) => ar.split(/\s+/)).filter((w) => !words.has(w)))}`);
   chk(() => Object.keys(pairs).concat(none).every((n) => proposeArabic(n) === N.propose(n)), () => 'A7. the MCP\'s proposeArabic is the engine\'s (one composer)');
+}
+
+// ---------- G. the glossary's Microsoft citations (test033 D2): learn.microsoft.com's ar-sa module pages serve an English body
+// (lang en-us), so they do not show Microsoft's Arabic. Each of the nine terms cites a Microsoft page read in Arabic
+// (support.microsoft.com/ar-sa, lang ar-SA, the word in its body, read 2026-11-15: mcp/work/TF1.md lists each page) ----------
+{
+  const LIST = JSON.parse(fs.readFileSync(path.join(REPO, 'assets/data/arabic-report-words.json'), 'utf8')), G = fs.readFileSync(path.join(REPO, 'content/ARABIC-GLOSSARY.md'), 'utf8');
+  const NINE = ['filters', 'filtering', 'slicer', 'visual', 'chart', 'measure', 'page', 'report', 'fiscalyear'], by = Object.fromEntries(LIST.concepts.map((c) => [c.id, c]));
+  const bad = NINE.filter((id) => { const src = Array.isArray(by[id].source) ? by[id].source : []; return !src.some((u) => /^https:\/\/support\.microsoft\.com\/ar-sa\//.test(u)) || src.some((u) => /learn\.microsoft\.com\/ar-sa\/training\//.test(u)) || by[id].read !== '2026-11-15'; });
+  chk(() => bad.length === 0, () => `G1. each of the nine terms cites a Microsoft page in Arabic (support.microsoft.com/ar-sa), no English-bodied Learn module page, read 2026-11-15: ${bad.map((id) => id + ' ' + J(by[id].source)).join('; ')}`);
+  // the ones approved by D-1112-05 keep it (Microsoft's Arabic found, Google's as before); the owner's stay his
+  chk(() => ['chart', 'measure', 'page', 'report'].every((id) => by[id].approval === 'D-1112-05' && by[id].google) && ['filters', 'filtering', 'slicer', 'visual', 'fiscalyear'].every((id) => by[id].approval === 'owner'),
+    () => `G2. approvals: chart, measure, page, report by D-1112-05 (both found); the owner's terms his: ${J(NINE.map((id) => [id, by[id].approval]))}`);
+  // what Microsoft's page says for "page": «صفحة» («أي صفحة في التقرير»); no page has «صفحة التقرير»
+  chk(() => by.page.microsoft === 'صفحة' && /\| page \| Page \| صفحة \| صفحة \[1\]\(https:\/\/support\.microsoft\.com\/ar-sa\/access\/create-a-simple-report\)/.test(G) && !/learn\.microsoft\.com\/ar-sa\/training\/modules\/dax-power-bi-modify-filter\/1-introduction/.test(G.split('\n').filter((l) => NINE.some((id) => l.startsWith(`| ${id} |`))).join('\n')),
+    () => 'G3. the glossary is rendered from the sheet: page cites the Access page with «صفحة»; none of the nine rows cites the English Learn page');
 }
 
 if (problems.length) { console.log(`FAIL script=test-0.3.3-tf1.mjs cause=${problems[0].slice(0, 300)}`); problems.forEach((x) => console.log('  - ' + x)); console.log(`FAIL  tf1  ${problems.length} of ${checks} checks`); process.exit(1); }
