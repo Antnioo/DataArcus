@@ -4558,12 +4558,18 @@ if (part('round18')) {
       const th = x.err ? null : themeOf(path.join(ROOT, dir, x.j.report)), T0 = th ? +(((th.visualStyles.pivotTable || {})['*'] || {}).values || [{}])[0].fontSize || 10 : 10, TITLE = th ? +(th.textClasses.title || {}).fontSize || 12 : 12;
       const sizes = ['values', 'columnHeaders', 'rowHeaders', 'total'].map((k) => lit(o, k)), T = sizes[0] || T0;
       const ps = m ? m.visual.query.queryState.Rows.projections.concat(m.visual.query.queryState.Values.projections).filter((p) => !/^Min\(/.test(p.queryRef)) : [];
-      const wide = ps.reduce((a, p) => a + Px.columnRoom(p, T, 'Segoe UI'), 0);
+      // (0.3.3 TF1) each column measured as the writer measures it (pbip-sizing.js fieldRoom): a day or month column by its
+      // widest name (0.2.9, B-06), not the 12-letter stand-in; the stand-in was 15 wider for Day Name, which the Arabic
+      // drafts in Arabic order (shorter) brought to the box's edge. The 420 and every condition below are as before
+      const Q = req('../assets/js/pbip-query.js'), namesFor = (p) => { const c = p.field && p.field.Column, f = c ? { t: c.Expression.SourceRef.Entity, c: c.Property } : null, k = f && Q.catKind(f); return k && (k.kind === 'day' || k.kind === 'month') ? Q.namesOf(f, k.kind) : undefined; };
+      const wide = ps.reduce((a, p) => a + Px.columnRoom(p, T, 'Segoe UI', namesFor(p)), 0);
       const pad = ((o.grid || [])[0] || {}).properties && o.grid[0].properties.rowPadding ? 0 : 1, pitch = 1.415 * T * 4 / 3 + 2 * pad, need = 1.5 * TITLE * 4 / 3 + pitch + 7 + 8 * pitch + 16;
       const at8 = 1.5 * TITLE * 4 / 3 + 9 * (1.415 * 8 * 4 / 3) + 7 + 16;   // the rows at Power BI's smallest text, tight
       const notes = x.err ? '' : JSON.stringify(x.j), told = /needs about \d+ to show its 7 rows/.test(notes), named = x.err ? [] : ((x.j.tableColumns || [])[0] || {}).leftOut || [];
       // (round 19, item 9: the measures are picked at the size the rows are drawn at: no left-out measure would have fit)
-      const leftRoom = named.length ? Px.columnRoom({ displayName: named[0].replace(/^.*\[|\]$/g, ''), field: { Measure: {} } }, T, 'Segoe UI') : 0;
+      // (TF1) the left-out measure by the name the report would show: in an Arabic report its Arabic draft, not its English name
+      const leftName = named.length ? named[0].replace(/^.*\[|\]$/g, '') : '', leftShown = lang === 'ar' ? proposeArabic(leftName) || leftName : leftName;
+      const leftRoom = named.length ? Px.columnRoom({ displayName: leftShown, field: { Measure: {} } }, T, 'Segoe UI') : 0;
       chk(() => !named.length || wide + leftRoom > 420, () => `${lang} ${W} x ${H}: the first left-out measure (${named[0]}, ${Math.round(leftRoom)}) would fit beside the kept ones (${Math.round(wide)}) at the drawn ${T}pt`);
       chk(() => m && sizes.every((s) => s === sizes[0]) && (sizes[0] == null || sizes[0] < T0) && wide <= 420 && (need <= 220 || (told && at8 > 220)) && ps.length - 1 + named.length === 4,
         () => `${lang} ${W} x ${H}: the matrix must draw at the size its fit chose (values, headers, row headers, total: ${JSON.stringify(sizes)}, the theme's ${T0}), its kept columns within 420 (${Math.round(wide)}), seven rows and the total within 220, or told when even 8pt does not hold them (need ${Math.round(need)}, at 8pt ${Math.round(at8)}, told ${told}), the left-out measures named (${JSON.stringify(named)}, kept ${ps.length - 1}) ${x.err ? x.t.slice(0, 300) : ''}`);

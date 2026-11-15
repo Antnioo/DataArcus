@@ -13,18 +13,18 @@
   },
   "P3 English on a model": {
    "err": false,
-   "length": 11662,
-   "sha256": "b8063ddaf0166c64344ec978185ffc5a55a9be4760e331d0caafeb0d30b68c7f"
+   "length": 11672,
+   "sha256": "9d9a1227562f6df023947b2ceb7edfc1cc641bf938686afe165b099774ee4b39"
   },
   "P4 Arabic, names approved": {
    "err": false,
-   "length": 17432,
-   "sha256": "3206e16f9edb613eb7f41ff60ccdc91f7cabe4cb2525be8a353155ae1fe107d0"
+   "length": 17440,
+   "sha256": "50c6bba6c5814aac2a775c62d0801a22ceac424748b2973f679d77d3ad301543"
   },
   "P5 Arabic, no names": {
    "err": false,
-   "length": 19855,
-   "sha256": "48fac9c5bd5acfba1734590699d84e365bd8343193017e46d2e5f708a953e2df"
+   "length": 19873,
+   "sha256": "9d304663d114d5557cfd62b2a3516c9229acf487ea53f7c5917a8b83e0e41f6d"
   },
   "P6 bilingual": {
    "err": false,
@@ -38,8 +38,8 @@
   },
   "P8 hand-placed pages": {
    "err": false,
-   "length": 11074,
-   "sha256": "209159cfd86ef7e3cfc3a018a7d3fb176729de09aabe16d818409c2d2b1ea647"
+   "length": 11078,
+   "sha256": "4040cf7afa91e6363226122aadadf2b87e0172130279d0e928016dec7b9857d8"
   },
   "P10 Arabic, a field no list names": {
    "err": false,
@@ -48,8 +48,8 @@
   },
   "P9 options and scripts": {
    "err": false,
-   "length": 16695,
-   "sha256": "8691cdc56c53039647d55e24af66a8f817c85c4e8952bc5b987bca41b1635a66"
+   "length": 16710,
+   "sha256": "c5fddfafe5aed263a8ffc29e5ade41f5a202f4f529bf01c27fa12fbb77bd7012"
   }
  }
 }
