@@ -92,7 +92,8 @@ const worker = (min) => {
   return ctx;
 };
 for (const min of [false, true]) {
-  const two = worker(min).modelsSaid({ read: 'Sales.SemanticModel', notRead: ['Stock.SemanticModel'], report: 'read', reports: ['Sales.Report'] });
+  // (0.3.3 TF1) the sentence moved, as it was, from the worker to zip-models.js (said), which the worker loads
+  const two = worker(min).DAZipModels.said({ read: 'Sales.SemanticModel', notRead: ['Stock.SemanticModel'], report: 'read', reports: ['Sales.Report'] });
   chk(() => two.ar === two.en && /^This zip holds 2 semantic models: /.test(two.en), () => `S2 (${min ? '.min.js' : 'source'}). the two-models sentence is held: its Arabic side stays the English: ${J(two)}`);
 }
 chk(() => rows.filter((l) => /^\| I-1112-(1004|1005|1006) /.test(l)).every((l) => /^HELD/.test(l.split(' | ')[5])) && rows.filter((l) => /^APPROVED/.test(l.split(' | ')[5])).length === 5,
