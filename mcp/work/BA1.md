@@ -44,3 +44,6 @@ Runs "Update Power BI prices" and "Check exam skills outlines" (05:00 and 05:15 
 none.
 
 CI green: https://github.com/Antnioo/DataArcus/actions/runs/42689156655 on fca631cc01a9b242d1b437d45500803d9dca8278 (2026-11-09T20:37Z)
+
+## BA2 (16 Nov, D-1116-06): what changed and why
+The owner (16 Nov): "i wanna grant an option to automatically approve the checks for both weekly price and exam checks"; D-1116-06 replaces D-1109-10. The one list in `scripts/bot-pr-files.mjs` is now per bot (`prices`, `outlines`): the price bot may also change the 7 files its own workflow regenerates, but only when a content guard re-runs the generator and the min build and finds them equal byte for byte (`sitemap.xml`: only `<lastmod>` dates). A file of the other bot, or any look-alike, still answers `owner`. See `mcp/work/BA2.md`.
