@@ -1,4 +1,4 @@
-STOP: the code is done and green locally (232 checks, gate PASS), but git push to Antnioo/DataArcus is refused by the git proxy (403, repository not in this session's authorized set); the brief says never ask to attach it and the owner's add_repo permission names reviewer worker sessions, so I did not call add_repo; no push, no CI run, no PR (2026-11-16T15:01Z). The hub decides.
+DONE: the hub applied the builder's patch (the builder's push was refused by the proxy) and opened PR #132; CI 25/25 green; waits for the owner's merge (2026-11-16).
 
 ## Summary
 - **Approval:** the owner, 16 Nov, D-1116-06 ("i wanna grant an option to automatically approve the checks for both weekly price and exam checks"); replaces D-1109-10.
