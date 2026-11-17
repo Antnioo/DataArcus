@@ -50,13 +50,14 @@ jobs:
             git push -u origin "$BRANCH"
             BODY="The weekly check of Microsoft's DP-600 and PL-300 outlines. If an issue was opened too, the questions need a review first."
             gh pr create --base main --head "$BRANCH" --title "Weekly exam outline check $DAY" --body "$BODY"
-            # D-1109-10: a pull request that changes only the data files merges itself once the required checks are green;
-            # the list of allowed files lives in scripts/bot-pr-files.mjs only. --auto never skips the required checks.
+            # D-1116-06 (it replaced D-1109-10): a pull request that changes only the two outline files merges itself once
+            # the required checks are green; the list of allowed files lives in scripts/bot-pr-files.mjs only. --auto never
+            # skips the required checks.
             FILES=$(gh pr diff "$BRANCH" --name-only)
-            VERDICT=$(printf '%s\n' "$FILES" | node scripts/bot-pr-files.mjs)
+            VERDICT=$(printf '%s\n' "$FILES" | node scripts/bot-pr-files.mjs outlines)
             if [ "$VERDICT" = "auto" ]; then
               gh pr merge --auto --squash "$BRANCH" || echo "::warning::auto-merge could not be enabled, the owner merges this one"
-              gh pr edit "$BRANCH" --body "$BODY Merges itself when CI is green: only the data file changed, D-1109-10."
+              gh pr edit "$BRANCH" --body "$BODY Merges itself when CI is green: only the two outline files changed, D-1116-06."
             else
               gh pr edit "$BRANCH" --body "$BODY Waits for the owner: ${VERDICT#owner }"
             fi

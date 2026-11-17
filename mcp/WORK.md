@@ -34,3 +34,4 @@ first. Finished entries: [work/archive/](work/archive/README.md).
   new behaviour goes in tool descriptions.
 - The owner's Arabic terms: «الفلاتر، مقسم، تلميح، المرئيات، لوحة معلومات» (E2).
 - Each suite once in `mcp/tests.json` (G1). Startup files capped, cut text moved to `mcp/docs/` (A1).
+- BA2 (D-1116-06): `scripts/bot-pr-files.mjs <prices|outlines>`: a list per bot, the price bot's generated pages only if they equal a fresh regeneration (`mcp/work/BA2.md`).
