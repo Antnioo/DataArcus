@@ -4,6 +4,8 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
+## [Unreleased]: 0.3.4
+
 ## [0.3.3]: 2026-11-17 (bookmarks, the Arabic glossary, the build helix)
 In short: bookmarks in a plan and two new report checks, one Arabic glossary with Arabic answers in more places, better-filled layouts, and a fix for zips holding two models.
 - `check_model_health` and `read_model` now read a zip holding two semantic models as the website's Model Health Check

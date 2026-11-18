@@ -6,6 +6,7 @@ text unchanged, newest first as it was; `mcp/WORK.md` now holds only the current
 
 | File | Period | What |
 |---|---|---|
+| [WORK-0.3.3.md](WORK-0.3.3.md) | 12 to 18 Nov 2026 | 0.3.3: the rest of its list, moved when 0.3.4 opened |
 | [WORK-2026-11-12.md](WORK-2026-11-12.md) | 12 Nov 2026 | 0.3.3: the first merged jobs (BA1 to FB4), moved by SW1 |
 | [WORK-2026-10-25.md](WORK-2026-10-25.md) | 25-26 Oct 2026 | 0.3.1 waves 1 to 6 (the integration branch `integration/0.3.1`) |
 | [WORK-2026-10-15-22.md](WORK-2026-10-15-22.md) | 15 to 22 Oct 2026 | 0.3.0 and its R&D, with 0.2.9 rc.22 to rc.24 and 0.2.9.1 that ran alongside |
