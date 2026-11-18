@@ -124,6 +124,35 @@
             <article class="article-body">
               <p class="small text-white-50 mt-4" data-i18n-html="beta.hero.ga">Microsoft: <em>"Power BI Desktop projects (PBIP) and Power BI enhanced report format (PBIR) are generally available."</em> (<a href='https://learn.microsoft.com/power-bi/developer/projects/projects-external-editing' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>)</p>
 
+              <section id="new-033">
+                <h2 class="mt-5 mb-3" data-i18n="beta.new33.title">What's new in 0.3.3</h2>
+                <p class="small text-white-50" data-i18n="beta.new33.date">Released on 17 November 2026.</p>
+                <ul class="beta-steps">
+                  <li data-i18n-html="beta.new33.l1"><strong>Impact check: what a model change can move.</strong> <code translate="no">check_report</code> with <code translate="no">againstModel</code> (an earlier copy of your model, such as a backup or a git checkout) says which visuals can show another number after the model was edited, and why, by the chain of names. Before an edit, <code translate="no">read_model</code> with <code translate="no">reach</code> names the pages and visuals a measure, a column or a table reaches. It reads the files only: names, never values.</li>
+                  <li data-i18n-html="beta.new33.l2"><strong>Like for like in the Gulf.</strong> <code translate="no">check_report</code> with <code translate="no">likeForLike</code> (a year and a Gulf country) names the visuals that compare the same Gregorian dates of another period, the months whose Ramadan or Eid days differ from the months they are compared with, and the "Last Ramadan" measures your model lacks.</li>
+                  <li data-i18n-html="beta.new33.l3"><strong>Bookmarks as views, when you ask.</strong> A plan can hold up to 8 views, each a name and a page. The approval page lists them, and the report gets one bookmark for each view in the plan's order, so "View" in the Bookmarks pane plays them as a slide show. A view opens its page and holds no filter, slicer or visual state; it does not show or hide visuals yet, and it is still to be tried in Power BI Desktop.</li>
+                  <li data-i18n-html="beta.new33.l4"><strong>Charts that would show one value on every row.</strong> <code translate="no">check_report</code> names each chart whose column cannot change the number it shows on your model, with why. Give it the questions the report must answer, and it says which a visual answers, which only partly and which the model cannot answer. It also warns about a bookmark that names a page or visuals the report no longer has.</li>
+                  <li data-i18n-html="beta.new33.l5"><strong>The Model Health Check says what it did not read.</strong> A model that names a table no file defines gets no score, and the table is named, instead of a higher score for a smaller model. A zip holding two models says which model was read and reads only that model's report; a project saved as TMDL can be zipped too. The same on this website and in DataArcus.</li>
+                  <li data-i18n-html="beta.new33.l6"><strong>More Arabic, from one glossary.</strong> Arabic name drafts for two-word field names follow Arabic word order («منطقة المبيعات» for "Sales Region"); the "Top N of M" title reads «أعلى N من أصل M»; Arabic date and weekday column names are read like English ones; and with <code translate="no">lang</code> "ar" the write tools and the "which model" errors answer in Arabic. Every Arabic word DataArcus uses is in one glossary, with Microsoft's and Google's own word and where it was read.</li>
+                  <li data-i18n-html="beta.new33.l7"><strong>Fuller pages.</strong> On a page with its filters in a side rail, the KPI cards run across the page and the charts beside the rail take its height; a bar chart's Top N follows the size the chart ends with; and in the Arabic twin, the day names beside a heatmap line up with its rows.</li>
+                  <li data-i18n-html="beta.new33.l8"><strong>Your font everywhere, and a lighter start.</strong> The font you give <code translate="no">create_report</code> (for example Tahoma) now reaches tables, cards and charts too, in the English report and its Arabic twin. The tool list an AI app reads at the start of each chat is about a quarter shorter: the same tools and options, in fewer words.</li>
+                </ul>
+              </section>
+
+              <section id="new-032">
+                <h2 class="mt-5 mb-3" data-i18n="beta.new32.title">What's new in 0.3.2</h2>
+                <p class="small text-white-50" data-i18n="beta.new32.date">Released on 9 November 2026.</p>
+                <ul class="beta-steps">
+                  <li data-i18n-html="beta.new32.l1"><strong>The approval page says what the click writes.</strong> Every page and tooltip page it writes, and on each page every visual, slicer, button and card, in plain words and in the order a person reads the page, with a picture of each tooltip page in the preview.</li>
+                  <li data-i18n-html="beta.new32.l2"><strong>Check that a copy asks the same questions.</strong> <code translate="no">check_report</code> with the original report as <code translate="no">against</code> says, visual by visual, whether an Arabic twin, a native copy, a redesign or your own copy asks the model the same question. It reads the files and changes nothing.</li>
+                  <li data-i18n-html="beta.new32.l3"><strong>Arabic names in the model, as an option of the Arabic twin.</strong> A script for TMDL view gives the model's fields the Arabic names you approved, for each Gulf culture; a name left in English is listed, with why. The Power BI service shows the Arabic names; Power BI Desktop keeps the model's own names.</li>
+                  <li data-i18n-html="beta.new32.l4"><strong>Ramadan and Eid measures with the Gulf calendar.</strong> <code translate="no">add_gulf_calendar</code> can add, for up to 5 of your measures, the same Ramadan days of the Hijri year before, their growth and the Eid windows; on request also a dated VAT rate column and a table of the Gulf currency pegs. Every rate and date is sourced; nothing is tax advice, and your amounts are never read.</li>
+                  <li data-i18n-html="beta.new32.l5"><strong>The Arabic twin, steadier.</strong> Tables reach the right edge, an Arabic label beside a value keeps the value in its place, a chart under a heatmap keeps its hours in line, and a turned chart that holds a running calculation is named on the approval page, so you can check it in Power BI Desktop.</li>
+                  <li data-i18n-html="beta.new32.l6"><strong>Windows.</strong> A folder whose name begins with two dots is read like any other, a .pbip that names its report folder in another case is found, DataArcus asks Windows to open a folder window with a shortcut when the browser does not open the approval page, and a plan whose files would pass the 260-character path limit is refused before you approve, with a plain message.</li>
+                  <li data-i18n-html="beta.new32.l7"><strong>Shorter, plainer answers.</strong> Every answer has its cap, input errors too; <code translate="no">timeAxis</code> "none" writes a report with no time axis, and <code translate="no">lang</code> sets the several-models answer in Arabic or English.</li>
+                </ul>
+              </section>
+
               <section id="new-031">
                 <h2 class="mt-5 mb-3" data-i18n="beta.new31.title">What's new in 0.3.1</h2>
                 <p class="small text-white-50" data-i18n="beta.new31.date">Released on 4 November 2026.</p>
@@ -313,7 +342,7 @@
   </footer>
 
   <script src="../assets/js/translations/common.min.js?v=434124bdf3f2" defer></script>
-  <script src="../assets/js/translations/beta-page.min.js?v=cd10be721281" defer></script>
+  <script src="../assets/js/translations/beta-page.min.js?v=0799a596ed1a" defer></script>
   <script src="../assets/js/locale-routes.min.js?v=63b224b0f9a3" defer></script>
   <script src="../assets/js/locale-catalog.min.js?v=1464f13d8c0b" defer></script>
   <script src="../assets/js/locale-dom.min.js?v=faf294f00eb2" defer></script>
