@@ -35,6 +35,15 @@ export function newest(md) {
   return m ? { text: m[1], lines: m[1].split('\n').filter((l) => l.trim()) } : null;
 }
 
+// (OV034, 18 Nov) the section of one version, however its heading reads: "## [<version>]: ..." (released) or
+// "## [Unreleased]: <version>" (being built); null when none names it. A version-bound check reads its own version here,
+// never newest(), so opening the next version (an empty section on top) cannot break a check about a released one.
+export function section(md, version) {
+  const esc = String(version).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const m = new RegExp(`^## \\[(?:${esc}\\]|Unreleased\\]: ${esc}(?![\\d.]*\\d))[^\n]*\n([\\s\\S]*?)(?=^## |(?![\\s\\S]))`, 'm').exec(String(md).replace(/\r\n/g, '\n'));
+  return m ? { text: m[1], lines: m[1].split('\n').filter((l) => l.trim()) } : null;
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const file = process.argv[2] || path.join(ROOT, 'mcp/CHANGELOG.md');
   const sec = newest(fs.readFileSync(file, 'utf8'));
