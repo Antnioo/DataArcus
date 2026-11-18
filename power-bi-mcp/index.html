@@ -79,6 +79,8 @@
     .beta-steps li { margin-bottom: .75rem; }
     /* Older "What's new" sections, folded (WN033): a native <details>, closed by default; the chevron sits at the
        summary's end in either direction (margin-inline-start), the site's accent, the h2's own size. */
+    /* the folded sections drop the site's section padding (their rows sit close), so a #link lands them under the bars */
+    #new-032, #new-031, #new { padding: 0; scroll-margin-top: calc(var(--top-gap) + 1rem); }
     .whats-new-fold { border-top: 1px solid rgba(255,255,255,.12); }
     #new-032 .whats-new-fold { margin-top: 3rem; }
     #new .whats-new-fold { border-bottom: 1px solid rgba(255,255,255,.12); }

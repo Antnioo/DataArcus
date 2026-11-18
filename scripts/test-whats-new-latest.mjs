@@ -41,7 +41,7 @@ for (const s of SECTIONS.filter((x) => x.day)) {
     for (const k of lines) ok(!HEADING.some((re) => re.test(strip((n[k].match(/<strong>([\s\S]*?)<\/strong>/) || [])[1] || ''))), `${lang}: beta.${s.key}.${k}'s heading says first, only or official`);
     ok(!HEADING.some((re) => re.test(n.title || '')), `${lang}: the ${s.version} title says first, only or official`);
     ok(!/\bfree\b|مجان/i.test(text), `${lang}: the ${s.version} section says free`);
-    ok(!/—/.test(text), `${lang}: the ${s.version} section has an em dash`);
+    ok(!/\u2014/.test(text), `${lang}: the ${s.version} section has an em dash`);
     ok(!JOB.test(text), `${lang}: the ${s.version} section names an internal job code: ${(text.match(JOB) || [])[0]}`);
     if (lang === 'ar') ok(/[؀-ۿ]/.test(text) && lines.every((k) => /[؀-ۿ]/.test(strip(n[k]))), `ar: a ${s.version} line is not in Arabic`);
   }
