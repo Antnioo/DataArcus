@@ -9,7 +9,7 @@ import './test-env.mjs';
 //   L  B-283 (the answer limit only): one constant, every user importing it; no new literal 40000
 //   node test-0.3.2-tk1.mjs
 import fs from 'node:fs';
-import { newest } from '../scripts/changelog-words.mjs';   // the changelog's first section, [Unreleased] or a dated version (one place)
+import { section } from '../scripts/changelog-words.mjs';   // one version's own section of the changelog (one place; OV034)
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,10 +25,10 @@ fs.cpSync(path.join(HERE, 'fixtures', 'twin-project'), path.join(ROOT, 'twin-pro
 const MODEL = 'twin-project', REPORT = 'twin-project/Twin Sales.pbip';
 const s = await serverClient(ROOT, {});
 const reports = () => fs.readdirSync(path.join(ROOT, MODEL)).filter((f) => f.endsWith('.Report')).sort();
-// the tools/list sizes a doc states: "tool list ... N characters" (CHANGELOG.md's [Unreleased] only; TOOLS.md whole)
+// the tools/list sizes a doc states: "tool list ... N characters" (CHANGELOG.md's [0.3.3] section only; TOOLS.md whole)
 const SIZE_SAID = /tools?[ /]list\b[^.]{0,160}?\b(\d{1,3}(?:,\d{3})+) characters/gi;
 function statedListSizes() {
-  const sec = newest(fs.readFileSync(path.join(HERE, 'CHANGELOG.md'), 'utf8'));
+  const sec = section(fs.readFileSync(path.join(HERE, 'CHANGELOG.md'), 'utf8'), '0.3.3');
   const docs = { 'CHANGELOG.md': sec ? sec.text : '', 'TOOLS.md': fs.readFileSync(path.join(HERE, 'TOOLS.md'), 'utf8') };
   return Object.entries(docs).flatMap(([file, text]) => [...text.replace(/\s+/g, ' ').matchAll(SIZE_SAID)].map((m) => ({ file, n: Number(m[1].replace(/,/g, '')) })));
 }
@@ -47,10 +47,10 @@ try {
   const crSize = JSON.stringify(cr || {}).length;
   chk(() => crSize < 3000 && listSize < 61000, () => `K4. create_report's entry under 3,000 characters and tools/list under 61,000: ${crSize}, ${listSize}`);
   // (0.3.3 TB3, hub I-1112-1706: the size a public text states had drifted from the measured one, 60,532 said, 60,930
-  // measured; nothing compared them) every tools/list size the CHANGELOG's [Unreleased] or TOOLS.md states is the
+  // measured; nothing compared them) every tools/list size the CHANGELOG's [0.3.3] section or TOOLS.md states is the
   // measured one; the CHANGELOG states one
   const said = statedListSizes();
-  chk(() => said.some((x) => x.file === 'CHANGELOG.md') && said.every((x) => x.n === listSize), () => `K7. the tools/list size the docs state is the measured ${listSize.toLocaleString('en-US')}: ${said.map((x) => `${x.file} says ${x.n.toLocaleString('en-US')}`).join('; ') || 'CHANGELOG.md [Unreleased] states none'}`);
+  chk(() => said.some((x) => x.file === 'CHANGELOG.md') && said.every((x) => x.n === listSize), () => `K7. the tools/list size the docs state is the measured ${listSize.toLocaleString('en-US')}: ${said.map((x) => `${x.file} says ${x.n.toLocaleString('en-US')}`).join('; ') || 'CHANGELOG.md [0.3.3] states none'}`);
   headroom = `tools/list ${listSize.toLocaleString('en-US')} of 61,000 (${(61000 - listSize).toLocaleString('en-US')} left)`;
 
   const base = { path: MODEL, layout: 'exec', name: 'TK One', lang: 'en', noDataMessage: false };

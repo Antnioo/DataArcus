@@ -13,7 +13,7 @@ import './test-env.mjs';
 //   D1-D3  TOOLS.md, PRIVACY.md and CHANGELOG
 // Made up, in os.tmpdir(), from fixtures/hx1-souq.mjs and fixtures/ox1-ai-page.mjs: no model rows.   node test-0.3.3-ox2.mjs
 import fs from 'node:fs';
-import { newest } from '../scripts/changelog-words.mjs';   // the changelog's first section, [Unreleased] or a dated version (one place)
+import { section } from '../scripts/changelog-words.mjs';   // one version's own section of the changelog (one place; OV034)
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -133,11 +133,11 @@ try {
     chk(() => answers.every((t) => !/"[0-9a-f]{64}"/.test(String(t))), () => 'S1b no hash in an answer'); }
 
   // ---------- D: the words ----------
-  { const tools = SRC('mcp/TOOLS.md'), priv = SRC('mcp/PRIVACY.md'), log = SRC('mcp/CHANGELOG.md'), un = (newest(log) || { text: '' }).text;
+  { const tools = SRC('mcp/TOOLS.md'), priv = SRC('mcp/PRIVACY.md'), log = SRC('mcp/CHANGELOG.md'), un = (section(log, '0.3.3') || { text: '' }).text;
     chk(() => /briefCheck/.test(tools) && /answers it, split further/.test(tools) && /not (yet )?measured in Power BI Desktop|a rule, not a Desktop measurement/i.test(tools), () => 'D1 TOOLS.md says briefCheck, "answers it, split further", and that the rule is not a Desktop measurement');
     chk(() => priv.split('\n').some((l) => /briefCheck/.test(l) && /name/i.test(l) && /value/i.test(l)), () => 'D2 PRIVACY.md says what briefCheck sends: names, never values');
     chk(() => /one value on every row/i.test(un) && !/\b(first|only|official)\b/i.test(un.split('\n').filter((l) => /one value on every row/i.test(l)).join(' ')) && !/^- A new measure[^\n]*\n[^\n]*\n\s*Nothing a tool writes or answers changes\./m.test(un),
-      () => 'D3 CHANGELOG [Unreleased]: one plain line for the brief check, never "first", "only" or "official"; the first bullet no longer says nothing changes while the next ones change the layout'); }
+      () => 'D3 CHANGELOG [0.3.3]: one plain line for the brief check, never "first", "only" or "official"; the first bullet no longer says nothing changes while the next ones change the layout'); }
 } finally {
   await s.close();
 }
