@@ -27,6 +27,7 @@ af3: 73 checks.
   generate #fafafa analogous #c05959 #c7996b ... -> #8c8c8c + the 7 calm; mono #813131 ... -> #595959 #737373 #8c8c8c #a6a6a6 #bababa #cfcfcf #d9d9d9 #d9d9d9.
   logoTheme(['#333333'], mono): #333333 #b86e00 #e0aeae #943838 #2f6e9e #c46464 #4a1c1c #1f7a70 -> #333333 #949494 #2f6e9e #b5452f #6a4c93 #666666 #b86e00 #1f7a70.
   So C1 leaves out `generate` and `logoTheme` (AF3_CHANGED) and B1 now compares both, live, with the base engine on every C1 input with a hue (#00d4ff, #1f4e79, #c8963e, #e63946, #ffd166: identical). B1's names leave out `noHue` (as `pageFill`). sp6 13 checks before and after.
+- scripts/tests/fixtures/sp36-lang.json (website sp36, SP36_RECORD=1): CI run 44475059370 on 161b2b0a was red in sp36 only (S9 "a lab page (no copy) in Arabic": the lab page shows the theme generator's translations, item 2's text). Re-recorded; the diff is exactly 4 lines, all in S9 (steps "open /tools/power-bi-theme-generator-lab.html?lang=ar" and "switch"): `html` 5744ce19946c71d0 -> d3249ccd7457a1e2 and 0ef265fad565828a -> f8e729a4afca6655, `dict` 18401 -> 18768 twice (the translations file grew 380 bytes, 20130 -> 20510). sp36 18 checks after. The base fixture kept in the scratchpad.
 - mcp/test-0.3.2-sp29.mjs: `noHue` joins ADDED_SINCE (K1), K2 reads each added name's home module (noHue: design-colours.js). 24 checks before and after.
 
 ## CHANGELOG line
@@ -68,6 +69,7 @@ none (no new Arabic wording).
 - generate()'s lightness clamp at 0.85 gives two equal last colours in mono for a light lead (lightness 0.53 and over, e.g. #fafafa -> #d9d9d9 twice; also any light hued brand) | route: backlog | size: S | why: on the base for every light brand, not this finding.
 
 ## Lessons for the reviewer
+- The brief's pinning list did not name sp36: a theme-generator translation change reaches it through the lab page (S9). Add sp36 to the pins of assets/js/translations/theme-generator.js (PQ1 found the same for the home and tools pages).
 - The sp6 C1 gold holds hashes: a change on purpose can only be shown by a live comparison with the saved base engine (B1), so a dump per input belongs in the note.
 
 ## CI

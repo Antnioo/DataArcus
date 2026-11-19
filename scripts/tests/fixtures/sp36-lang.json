@@ -630,7 +630,7 @@
     "title": "مولّد سمات Power BI: ملف JSON وخلفية - DataArcus",
     "metas": "c3131c649002dfca",
     "i18n": "8ff1654003d8dc1a",
-    "html": "5744ce19946c71d0",
+    "html": "d3249ccd7457a1e2",
     "attrs": "26c488cf6235261f",
     "switcher": [
      "<li class=\"nav-item desktop-lang-switcher\"> <button class=\"nav-link lang-btn-desktop\" type=\"button\" aria-label=\"التبديل إلى الإنجليزية\"> <i class=\"bi bi-globe2 me-1\"></i> <span lang=\"en\">English</span> </button> </li>"
@@ -640,7 +640,7 @@
     "history": 2,
     "hstate": "null",
     "warns": [],
-    "dict": 18401
+    "dict": 18768
    },
    {
     "step": "switch",
@@ -660,7 +660,7 @@
     "title": "Power BI Theme Generator: JSON + Background - DataArcus",
     "metas": "52e8170595ee9910",
     "i18n": "28cf85a015438868",
-    "html": "0ef265fad565828a",
+    "html": "f8e729a4afca6655",
     "attrs": "80f52b37a9e7c528",
     "switcher": [
      "<li class=\"nav-item desktop-lang-switcher\"> <button class=\"nav-link lang-btn-desktop\" type=\"button\" aria-label=\"Switch to Arabic\" style=\"pointer-events: auto;\"><i class=\"bi bi-globe2 me-1\"></i> <span lang=\"ar\">العربية</span></button> </li>"
@@ -670,7 +670,7 @@
     "history": 2,
     "hstate": "{}",
     "warns": [],
-    "dict": 18401
+    "dict": 18768
    }
   ]
  },
