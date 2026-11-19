@@ -5,7 +5,7 @@
 - **Base:** `fix/0.3.4-af3` from `origin/integration/0.3.4` at ed5f69de. Push only this branch; never merge, no PR.
 - **Scope:** assets/js/design-colours.js (+ the Generate button's note in assets/js/theme-layout-ui.js and the page's translations); tools/power-bi-theme-generator.html, assets/js/translations/theme-generator.js, articles/article-power-bi-report-redesign.html, assets/js/translations/article-power-bi-report-redesign.js, scripts/tests/DESKTOP-TESTS.md line 17; articles/article-evm.html, assets/js/translations/article-evm.js; their .min.js, the generated ar/ copies, and their tests.
 - **Expected checks:** `node scripts/check-modules.mjs --strict`; csp, ar-pages, sitemap-lastmod, test-site-config; the theme generator's suites (theme-generator, pbip, sp31) and the article suites, each alone; mcp/test-0.3.2-sp{5,6,7,8,10,13,14,28,29,30,39,43}.mjs, scripts/tests/sp6.mjs, sp31.mjs; lint.
-- **Resume:** all three items done and pushed (f1af8119, 395e6e32, 9373d285); next: merge integration once, CI, then DONE.
+- **Resume:** DONE: three items pushed (f1af8119, 395e6e32, 9373d285), CI green on beb290c5 (see "CI").
 
 ## Plan (written before the work, 2026-11-19T06:31Z)
 1. I-1119-04 (AUD-081): measured on ed5f69de: `generate('#000000','analogous')` -> #943838 #a6733f ... (red-led), #ffffff -> #c05959..., #808080 -> #b94747...; #0084ff -> #0084ff first. Cause to prove: generate() takes HSL hue 0 of a grey and lifts saturation to 0.45. Fix at the source (design-colours.js generate, so the page, the logo path and the MCP's generate_theme all get it): a colour with no hue (the logo path's own grey rule, Lab chroma under 8, one shared helper) keeps its grey lead and takes the calm colours (CALM) for the harmonies; mono gives the grey's own shades. The page says so after Generate (English; the Arabic sentence drafted and held unless Microsoft and Google both use it). Test red first: a new check that a grey brand gives no red-led palette.
@@ -73,4 +73,4 @@ none (no new Arabic wording).
 - The sp6 C1 gold holds hashes: a change on purpose can only be shown by a live comparison with the saved base engine (B1), so a dump per input belongs in the note.
 
 ## CI
-(filled at the end)
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/44477180404 on beb290c5 (2026-11-19T07:22Z; the earlier run 44475059370 on 161b2b0a was red in sp36 S9 only, re-recorded above). Integration did not move during the job (no merge needed, R-33). Locally after items 2-3: theme-generator 928, site 647, sp36 18.
