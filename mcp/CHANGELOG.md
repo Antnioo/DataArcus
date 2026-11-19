@@ -5,6 +5,7 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.4
+- `generate_theme`: a brand colour with no hue (black, white or grey) now keeps its grey and takes the calm colours, and says so, instead of a red palette.
 
 ## [0.3.3]: 2026-11-17 (bookmarks, the Arabic glossary, the build helix)
 In short: bookmarks in a plan and two new report checks, one Arabic glossary with Arabic answers in more places, better-filled layouts, and a fix for zips holding two models.
