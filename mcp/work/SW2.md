@@ -5,7 +5,7 @@
 - **Base:** `fix/0.3.4-sw2` from `origin/integration/0.3.4` at 87fd7896. Push only this branch; never merge, no PR.
 - **Scope:** only the files the six items name and their tests: mcp/work/IX2.md, OX1.md, TF1.md, AR7.md; scripts/tests/run-all.mjs; scripts/check-modules.mjs (+ scripts/test-modules.mjs); the Gulf like-for-like page (tools/gulf-like-for-like.html, assets/js/gulf-like-for-like.js and its .min.js) and its suite.
 - **Expected checks:** `node scripts/check-modules.mjs --strict`; `node scripts/test-modules.mjs`; `node scripts/tests/run-all.mjs gulf-like-for-like` (alone); csp, ar-pages, sitemap-lastmod, test-site-config; lint.
-- **Resume:** all six items done and pushed; only the CI line is left (see "CI").
+- **Resume:** all six items done and pushed; DONE; CI green (see "CI").
 
 ## Plan (written before the work)
 1. I-1113-04: IX2.md draft «مرئية» -> «مرئي». A note, no code: red = grep finds «مرئية» on 87fd7896.
@@ -57,3 +57,6 @@ none
 ## Lessons for the reviewer
 - A brief that sends a builder to a file that lives elsewhere (the audit) should paste the finding.
 - Learn's Arabic body varies by page: the same TF1 line ("all serve English") was half true four days later; a re-read before a fix is worth it.
+
+## CI
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/44443800640 on b13006555a120c8896149252f3440d48af98d9d2 (2026-11-19T02:41Z). The first run (44440584469, on 6bd8f7e2) failed one check: "Every sitemap lastmod is its page's last content change": I had run `sitemap-lastmod --write` before my last commit to the page, not after (R-56); fixed in b1300655 (sitemap.xml, the Like-for-Like page 2026-11-15 -> 2026-11-19), not a flaky test. origin/integration/0.3.4 had not moved from 87fd7896 (nothing to merge).
