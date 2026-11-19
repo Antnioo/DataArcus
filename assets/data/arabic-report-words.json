@@ -314,7 +314,7 @@
       ],
       "microsoft": "لوحة معلومات",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/perform-analytics-power-bi/9-quick-insights"
+        "https://support.microsoft.com/ar-sa/visio/add-visio-visuals-to-power-bi-reports"
       ],
       "status": "chosen",
       "note": "The owner chose it (25 Oct). Plural «لوحات المعلومات»; Microsoft's term too.",
@@ -355,7 +355,6 @@
       "variants": [],
       "microsoft": "عمود محسوب",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/5-context-transition",
         "https://support.microsoft.com/ar-sa/office/fe1b6be7-1d85-4add-a629-8a3848820be3"
       ],
       "status": "chosen",
@@ -462,8 +461,7 @@
       ],
       "microsoft": "إشارة مرجعية",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/power-bi-effective-user-experience/4-bookmarks",
-        "https://learn.microsoft.com/ar-sa/training/modules/power-bi-effective-reports/2-report-objects"
+        "https://support.microsoft.com/ar-sa/word/add-or-delete-bookmarks-in-a-word-document-or-outlook-message"
       ],
       "status": "chosen",
       "note": "Plural «الإشارات المرجعية».",
@@ -476,8 +474,7 @@
       "variants": [],
       "microsoft": "التنقل لأسفل",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/perform-analytics-power-bi/1-introduction",
-        "https://learn.microsoft.com/ar-sa/training/modules/power-bi-effective-requirements/3-determine"
+        "https://support.microsoft.com/ar-sa/excel/drill-into-pivottable-data"
       ],
       "status": "chosen",
       "note": "One form in DataArcus's texts; Power BI's menus say «التنقل لأسفل» (said for the owner).",
@@ -574,7 +571,6 @@
       ],
       "microsoft": "وسيلة الإيضاح",
       "source": [
-        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/5-context-transition",
         "https://support.microsoft.com/ar-sa/office/0baf399e-dd61-4e18-8a73-b3fd5d5680c2"
       ],
       "status": "chosen",

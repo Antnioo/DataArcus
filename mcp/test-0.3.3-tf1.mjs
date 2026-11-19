@@ -162,6 +162,9 @@ fs.rmSync(ROOT, { recursive: true, force: true });
   const NINE = ['filters', 'filtering', 'slicer', 'visual', 'chart', 'measure', 'page', 'report', 'fiscalyear'], by = Object.fromEntries(LIST.concepts.map((c) => [c.id, c]));
   const bad = NINE.filter((id) => { const src = Array.isArray(by[id].source) ? by[id].source : []; return !src.some((u) => /^https:\/\/support\.microsoft\.com\/ar-sa\//.test(u)) || src.some((u) => /learn\.microsoft\.com\/ar-sa\/training\//.test(u)) || by[id].read !== '2026-11-15'; });
   chk(() => bad.length === 0, () => `G1. each of the nine terms cites a Microsoft page in Arabic (support.microsoft.com/ar-sa), no English-bodied Learn module page, read 2026-11-15: ${bad.map((id) => id + ' ' + J(by[id].source)).join('; ')}`);
+  // (SW2, I-1115-05) read again 2026-11-19: these five cite no Learn training page (its ar-sa body is English, html lang en-us); each keeps a Microsoft Support page read in Arabic (lang ar-SA, the word in its body)
+  chk(() => ['bookmark', 'drill', 'dashboard', 'column', 'legend'].every((id) => by[id].source.length && by[id].source.every((u) => /^https:\/\/support\.microsoft\.com\/ar-sa\//.test(u))),
+    () => `G1b. bookmark, drill, dashboard, column, legend cite Microsoft Support pages in Arabic only: ${['bookmark', 'drill', 'dashboard', 'column', 'legend'].map((id) => id + ' ' + J(by[id].source)).join('; ')}`);
   // the ones approved by D-1112-05 keep it (Microsoft's Arabic found, Google's as before); the owner's stay his
   chk(() => ['chart', 'measure', 'page', 'report'].every((id) => by[id].approval === 'D-1112-05' && by[id].google) && ['filters', 'filtering', 'slicer', 'visual', 'fiscalyear'].every((id) => by[id].approval === 'owner'),
     () => `G2. approvals: chart, measure, page, report by D-1112-05 (both found); the owner's terms his: ${J(NINE.map((id) => [id, by[id].approval]))}`);
