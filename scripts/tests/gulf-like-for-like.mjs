@@ -22,6 +22,8 @@
 //       to each, at 1440 and 992; and the empty result box hides when the month is not known
 //   Y1  (SW2, AUD-076) the Year list offers only years that can answer (the table's first year + 1 to its last: every one
 //       is known in Node and in the page), and a verdict that says "not known" never says "yet"
+//   O1  (SW2, AUD-077) at 390 px the year overview's last column ("like for like") is inside its box: the box does not
+//       scroll and the last cell's right edge is within 1 px of the box's
 //   A1  (AUD-075) a page in AR_HELD stays lang="en" dir="ltr", visible from the start, in English, with no Arabic font and
 //       no language switch, whether Arabic comes from ?lang=ar or from the saved choice (which it leaves as it was), at
 //       390 and 1440 px; the held list read from locale-routes.js only (the page has no Arabic head guard, every other
@@ -196,6 +198,17 @@ export default async function ({ browser, url }) {
       const dead = offered.filter((k) => !A({ year: k, month: 1, country: 'uae' }).known);
       check(!dead.length, `Y1 every year offered is known (not known: ${dead.join(', ')})`);
     } finally { await y.ctx.close(); }
+  }
+
+  // O1 at 390 px: the overview's answer column is whole
+  {
+    const o = await visitor(browser, { viewport: [390, 844] });
+    try {
+      await o.pg.goto(`${url}${PAGE}?lang=en`, { waitUntil: 'load' }); await ready(o.pg);
+      await o.pg.selectOption('#lfYear', '2027'); await o.pg.selectOption('#lfMonth', '3');
+      const m = await o.pg.evaluate(() => { const b = document.querySelector('#lfYearWrap .lf-scroll'), br = b.getBoundingClientRect().right; return { sw: b.scrollWidth, cw: b.clientWidth, over: Math.max(...[...b.querySelectorAll('tr')].map((r) => r.lastElementChild.getBoundingClientRect().right - br)) }; });
+      check(m.sw <= m.cw + 1 && m.over <= 1, `O1 at 390 px the year overview fits its box (box ${m.cw} px, content ${m.sw}; the last column ends ${m.over.toFixed(1)} px past the box's right edge, want 1 or less)`);
+    } finally { await o.ctx.close(); }
   }
 
   // L1: the clock set to a month (the page opens on the visitor's month), layout shift over the first 2.5 s
