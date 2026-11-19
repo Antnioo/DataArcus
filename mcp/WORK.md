@@ -9,6 +9,7 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 - `integration/0.3.4`: builders branch from it, push only their branch; the reviewer merges; the owner merges to main.
 - 0.3.3's list: [the archive](work/archive/WORK-0.3.3.md).
 - SW2 (`fix/0.3.4-sw2`): the job sweep's six items, to merge: [work/SW2.md](work/SW2.md).
+- AF3 (`fix/0.3.4-af3`): AUD-081, AUD-083, AUD-084, to merge: [work/AF3.md](work/AF3.md).
 
 ## Next step
 1. The reviewer plans 0.3.4's first jobs (the night audit's AUD-078 and AUD-080 are routed to it).
