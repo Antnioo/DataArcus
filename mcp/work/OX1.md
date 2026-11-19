@@ -203,8 +203,9 @@ The demo's output (made-up Souq; run on this branch):
 1. Is the brief check the direction you want built next (stages 2 to 4 above)? yes / no.
 2. May the next laptop batch include one run that measures the "one value on every row" rule in Desktop on a
    made-up model (three charts: a missing relationship, the many side, an inactive relationship)? yes / no.
-3. May a builder draft the Arabic words for the verdicts and statuses («قيمة واحدة في كل صف», «مُجاب», «غير مُجاب»:
-   examples only, not approved) for your approval? yes / no.
+3. May a builder draft the Arabic words for the verdicts and statuses? yes / no. (Done in OX2.md "For the owner" 1: that
+   table is the one draft that reaches you; OX1's examples «قيمة واحدة في كل صف», «مُجاب», «غير مُجاب» are withdrawn,
+   each read two ways.)
 4. Should "Revenue by month and region" count as answering "Revenue by month"? (today: partly) yes / no.
 5. A proposed public sentence, held: "DataArcus checks, from the files only, whether each chart's columns can
    actually change the number it shows on your model, and which of your questions a report answers." Approve after
