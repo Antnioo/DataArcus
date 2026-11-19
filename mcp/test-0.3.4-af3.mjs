@@ -4,6 +4,8 @@
 //          rule, Lab chroma under 8: design-colours.js noHue) keeps its grey as the lead and takes the calm colours;
 //          mono gives the grey's own shades; a colour with a hue is unchanged (the base's answers, written below);
 //          G9 generate_theme's note names the calm set for a grey brand
+//   M1-M4  AUD-083 (I-1119-06): the theme import step is Power BI Desktop's current one, Design > Import theme (Microsoft
+//          Learn, desktop-report-themes, read 19 Nov), with the older path in brackets for a Desktop not updated
 // Made-up colours only.   node test-0.3.4-af3.mjs
 import fs from 'node:fs';
 import path from 'node:path';
@@ -46,6 +48,23 @@ chk('G8', () => /E\.noHue\(b\)/.test(read('assets/js/theme-layout-ui.js')) && /n
 const D = await import('./lib/design.mjs');
 const said = (b, h) => D.themeDesign({ brand: b, harmony: h }).notes.join(' ');
 chk('G9', () => /the calm set/.test(said('#000000', 'analogous')) && !/the analogous harmony/.test(said('#000000', 'analogous')) && /the mono harmony/.test(said('#808080', 'mono')) && /the triadic harmony/.test(said('#0084ff', 'triadic')), `generate_theme's note for a grey brand: "${said('#000000', 'analogous')}"`);
+
+// ---------- AUD-083: the theme import step ----------
+const OLD = /View (?:›|→|>) Themes (?:›|→|>) Browse for themes/;
+const NEW_EN = /Design (?:›|→) Import theme<\/(?:b|strong)> \(older Desktop: (?:<(?:b|strong)>)?View (?:›|→) Themes (?:›|→) Browse for themes/;
+const NEW_AR = /Design (?:›|→) Import theme(?:<\/bdi>)?<\/(?:b|strong)> \(أو (?:<(?:b|strong)>)?(?:<bdi dir=\\?"ltr\\?">)?View (?:›|→) Themes (?:›|→) Browse for themes/;
+const TG = read('assets/js/translations/theme-generator.js'), RD = read('assets/js/translations/article-power-bi-report-redesign.js');
+const half = (src, lang) => { const i = src.indexOf('\n  "ar"') >= 0 ? src.indexOf('\n  "ar"') : src.indexOf('\n  ar:'); return lang === 'en' ? src.slice(0, i) : src.slice(i); };
+const line = (src, key) => src.split('\n').filter((l) => l.includes(`"${key}":`) || l.includes(`${key}:`));
+for (const [file, src, keys] of [['theme-generator.js', TG, ['themeDesc', 'importNote', 'how2', 'a1']], ['article-power-bi-report-redesign.js', RD, ['l4_1']]]) for (const lang of ['en', 'ar']) for (const k of keys) {
+  const l = line(half(src, lang), k).join(' ');
+  chk('M1', () => l && (lang === 'en' ? NEW_EN : NEW_AR).test(l), `${file} ${lang} ${k}: names Design › Import theme, the older path in brackets (got ${l.trim().slice(0, 200)})`);
+}
+const PAGES = ['tools/power-bi-theme-generator.html', 'ar/tools/power-bi-theme-generator.html', 'articles/article-power-bi-report-redesign.html', 'ar/articles/article-power-bi-report-redesign.html'];
+for (const pg of PAGES) { const h = read(pg), lines = h.split('\n').filter((l) => OLD.test(l));
+  chk('M2', () => lines.length && lines.every((l) => (pg.startsWith('ar/') ? NEW_AR : NEW_EN).test(l) || /"acceptedAnswer"/.test(l)), `${pg}: every line with the old path names Design › Import theme first (got ${lines.map((l) => l.trim().slice(0, 120)).join(' | ')})`); }
+for (const pg of ['tools/power-bi-theme-generator.html', 'ar/tools/power-bi-theme-generator.html']) chk('M3', () => /"acceptedAnswer": \{ "@type": "Answer", "text": "In Power BI Desktop, on the Design ribbon select Import theme \(older Desktop: View > Themes > Browse for themes\)/.test(read(pg)), `${pg}: the FAQ JSON-LD names the Design ribbon's Import theme`);
+chk('M4', () => /Design > Import theme/.test(read('scripts/tests/DESKTOP-TESTS.md').split('\n')[16]), 'scripts/tests/DESKTOP-TESTS.md line 17 names the current path beside the measured one');
 
 if (problems.length) { console.log(`FAIL script=test-0.3.4-af3.mjs cause=${problems[0].slice(0, 300)}`); for (const p of problems) console.log('  - ' + p); console.log(`FAIL  af3  ${problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  af3  ${checks} checks`);
