@@ -66,8 +66,12 @@
     for (let n = 12; n >= 3; n--) { const low = mix(b, k, n / 20); if (contrast(low, k) >= 3 && contrast(low, k) < contrast(b, k)) return { low, high: b }; }
     return { low: mix(b, k, 0.45), high: b, soft: true };
   };
+  // (0.3.4 AF3, AUD-081: black, white or grey gave a red palette: a grey's HSL hue is 0, red, and the saturation was lifted
+  // to 0.45) a colour with no hue, the logo's own grey rule (Lab chroma under LOGO.grey, logoColours below), keeps its
+  // grey (saturation 0) as the lead: mono gives grey shades, a harmony the calm colours (CALM): there is no hue to turn
   const generate = (base, mode) => {
-    const [h, s0, l0] = hexToHsl(base); const s = Math.max(0.45, s0), l = Math.min(0.55, Math.max(0.4, l0));
+    const [h, s0, l0] = hexToHsl(base), grey = noHue(base); const s = grey ? 0 : Math.max(0.45, s0), l = Math.min(0.55, Math.max(0.4, l0));
+    if (grey && mode !== 'mono') return [hslToHex(h, s, l)].concat(CALM.slice(0, 7));
     const plans = {
       analogous: [[0, 0], [30, 0.05], [-30, 0.05], [60, 0.12], [-60, 0.1], [0, 0.2], [30, -0.12], [-30, -0.12]],
       complementary: [[0, 0], [180, 0], [0, 0.18], [180, 0.18], [0, -0.14], [180, -0.14], [30, 0.1], [210, 0.1]],
@@ -108,6 +112,9 @@
     return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
   };
   const hexToLab = (h) => rgbToLab(hexToRgb(h));
+  // a colour's chroma (Lab), and whether it has no hue: the logo's grey rule, the one place (0.3.4 AF3: generate() too)
+  const chromaOf = (lab) => Math.hypot(lab[1], lab[2]);
+  const noHue = (c) => chromaOf(hexToLab(c)) < LOGO.grey;
   // CIEDE2000 between two Lab colours (Sharma, Wu, Dalal 2005): under 2-3 most eyes see one colour
   const deltaE = (p, q) => {
     const rad = Math.PI / 180, [L1, a1, b1] = p, [L2, a2, b2] = q, s7 = (c) => Math.sqrt(Math.pow(c, 7) / (Math.pow(c, 7) + Math.pow(25, 7)));
@@ -146,7 +153,7 @@
     }
     const hues = [], greys = [], darks = [];
     counts.forEach((w, key) => {
-      const rgb = [(key >> 16) & 255, (key >> 8) & 255, key & 255], lab = rgbToLab(rgb), C = Math.hypot(lab[1], lab[2]), p = { hex: rgbToHex(rgb), lab, w };
+      const rgb = [(key >> 16) & 255, (key >> 8) & 255, key & 255], lab = rgbToLab(rgb), C = chromaOf(lab), p = { hex: rgbToHex(rgb), lab, w };
       if (lab[0] >= LOGO.light && C < LOGO.flat) skipped.light += w;
       else if (lab[0] <= LOGO.dark && C < LOGO.flat) { skipped.dark += w; darks.push(p); }
       else (C < LOGO.grey ? greys : hues).push(p);
@@ -233,7 +240,7 @@
     return { data, accent: data[0], brand: own, harmony, before, adjusted, table, cvd };
   };
 
-  const api = { clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, calmPalette, CALM, rgbToLab, hexToLab, deltaE, simulateCvd, logoColours, logoTheme };
+  const api = { clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, noHue, calmPalette, CALM, rgbToLab, hexToLab, deltaE, simulateCvd, logoColours, logoTheme };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAColours = api;
 })(typeof self !== 'undefined' ? self : this);

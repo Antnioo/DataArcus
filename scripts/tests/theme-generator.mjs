@@ -477,5 +477,21 @@ export default async function ({ browser, url, page = PAGE }) {
     if (v.errs.length) problems.push(`${lang} glass: ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }
+  // (0.3.4 AF3, AUD-081) Generate from black: a grey lead and the calm colours, never a red-led palette, and the page says
+  // why under the button (English on both pages until the owner approves the Arabic: mcp/work/AF3.md); a brand with a hue
+  // gives no note
+  for (const lang of ['en', 'ar']) {
+    const v = await open(lang);
+    const gen = async (c, h) => { await v.pg.fill('#brand', c); await v.pg.selectOption('#harmony', h); await v.pg.click('#genBtn');
+      return v.pg.evaluate(() => ({ data: [...document.querySelectorAll('#dataColors input[type=text]')].map((e) => e.value), note: (document.getElementById('genNote') || {}).textContent || '', shown: !!document.getElementById('genNote') && !document.getElementById('genNote').hidden })); };
+    let g = await gen('#000000', 'analogous');
+    check(g.data.join(' ') === E.generate('#000000', 'analogous').join(' ') && E.noHue(g.data[0]) && g.data[1] === E.CALM[0] && g.shown && /no hue/i.test(g.note), `${lang}: Generate from #000000: ${JSON.stringify(g)}`);
+    g = await gen('#808080', 'mono');
+    check(g.data.every((c) => E.noHue(c)) && g.shown && /shades of its grey/.test(g.note), `${lang}: Generate mono from #808080: ${JSON.stringify(g)}`);
+    g = await gen('#0084ff', 'analogous');
+    check(g.data[0] === '#0084ff' && !g.shown, `${lang}: Generate from #0084ff: no note: ${JSON.stringify(g)}`);
+    if (v.errs.length) problems.push(`${lang} grey brand: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
   return { checks, problems };
 }

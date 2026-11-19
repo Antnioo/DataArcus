@@ -33,7 +33,7 @@ const BASE = '39c46bb';
 const rng = (seed) => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 
 // ---------- the facts, for any engine (this one, or the base's in B1) ----------
-const ADDED_SINCE = ['pageFill'];
+const ADDED_SINCE = ['pageFill', 'noHue'];   // (0.3.4 AF3) noHue: a colour with no hue (mcp/work/AF3.md; af3 G1 pins it)
 // (0.3.3 FB1, changed on purpose) a page whose row of KPI cards lies over its shortened rail (fitSlots keeps that
 // arrangement where pageFill measures the page better filled, mcp/work/FB1.md) is placed differently from the base on
 // purpose: by the engine of today (never the base's), such a fit is this one line in G1, for the base's facts too, so
@@ -154,7 +154,8 @@ const diff = (a, b) => (typeof a === 'string' || typeof b === 'string' ? (a === 
 // ---------- D1-D12, G1, S1, I1, K1: byte for byte the base's ----------
 for (const name of Object.keys(got)) chk(() => gold[name] && !diff(got[name], gold[name]).length, () => `${name}: differs from the base in ${gold[name] ? diff(got[name], gold[name]).join(', ') : '(not recorded)'}`);
 
-chk(() => ADDED_SINCE.every((k) => typeof E[k] === 'function' && E[k] === require('../assets/js/design-metrics.js')[k]), () => `K2 a name added on purpose since the base (${ADDED_SINCE.join(', ')}) is not the engine's and the metrics' own`);
+const HOME_OF = { pageFill: '../assets/js/design-metrics.js', noHue: '../assets/js/design-colours.js' };   // (0.3.4 AF3: noHue's home)
+chk(() => ADDED_SINCE.every((k) => typeof E[k] === 'function' && E[k] === require(HOME_OF[k])[k]), () => `K2 a name added on purpose since the base (${ADDED_SINCE.join(', ')}) is not the engine's and its home module's own`);
 
 { // L1: how many of G1's 400 layouts are lifted in either fit (a number that moves says the rule moved)
   const n = liftedNow;

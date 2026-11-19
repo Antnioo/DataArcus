@@ -83,7 +83,12 @@ const diff = (a, b) => Object.keys(Object.assign({}, a, b)).filter((k) => JSON.s
 
 // ---------- D1-D10, C1: byte for byte the base's ----------
 for (const [name] of DESIGNS) chk(() => gold[name] && !diff(got[name], gold[name]).length, () => `${name}: differs from the base in ${gold[name] ? diff(got[name], gold[name]).join(', ') : '(not recorded)'}`);
-chk(() => gold.C1 && !diff(got.C1, gold.C1).length, () => `C1 the colour functions: differ from the base in ${gold.C1 ? diff(got.C1, gold.C1).join(', ') : '(not recorded)'}`);
+// (0.3.4 AF3, changed on purpose) a colour with no hue (Lab chroma under 8: #777777, #0b0d17, #fafafa, the grey logo
+// #333333) keeps its grey and takes the calm colours instead of a red palette (AUD-081): generate and logoTheme differ
+// from the recorded base for those inputs only (mcp/work/AF3.md "Changed on purpose"; test-0.3.4-af3.mjs pins the new
+// answers); every input with a hue is compared with the base engine live in B1
+const AF3_CHANGED = ['generate', 'logoTheme'];
+chk(() => gold.C1 && !diff(got.C1, gold.C1).filter((k) => !AF3_CHANGED.includes(k)).length, () => `C1 the colour functions: differ from the base in ${gold.C1 ? diff(got.C1, gold.C1).join(', ') : '(not recorded)'}`);
 
 // ---------- B1: the base engine itself, live (the zlib PNG, the theme with its glass picture) ----------
 {
@@ -100,7 +105,16 @@ chk(() => gold.C1 && !diff(got.C1, gold.C1).length, () => `C1 the colour functio
     if (bytes(E.glassPng(d, p.w, p.h)) !== bytes(B.glassPng(make(), p.w, p.h))) differ.push(name + ' glassPng');
     if (js(E.withGlassPicture(th, d)) !== js(B.withGlassPicture(B.buildTheme(make(), lang), make()))) differ.push(name + ' withGlassPicture');
     // (0.3.3 FB1) pageFill was added on purpose after the base (how well a page is filled, mcp/work/FB1.md; sp29 K2 pins it)
-    if (js(Object.keys(E).filter((k) => k !== 'pageFill').sort()) !== js(Object.keys(B).sort())) differ.push('the facade\'s names');
+    // (0.3.4 AF3) noHue was added on purpose after the base (a colour with no hue, mcp/work/AF3.md; af3 G1 pins it)
+    if (js(Object.keys(E).filter((k) => k !== 'pageFill' && k !== 'noHue').sort()) !== js(Object.keys(B).sort())) differ.push('the facade\'s names');
+  }
+  // (0.3.4 AF3) generate and logoTheme on C1's inputs with a hue: the base engine's answers, live
+  if (B) {
+    const hued = ['#00d4ff', '#1f4e79', '#c8963e', '#e63946', '#ffd166'], ms = ['analogous', 'complementary', 'triadic', 'mono'];
+    if (hued.some((h) => E.noHue(h))) differ.push('a C1 input with a hue read as none');
+    if (js(hued.flatMap((h) => ms.map((m) => E.generate(h, m)))) !== js(hued.flatMap((h) => ms.map((m) => B.generate(h, m))))) differ.push('generate with a hue');
+    const lt = (X) => [X.logoTheme(['#e63946', '#1d3557', '#a8dadc'], { harmony: 'triadic' }), X.logoTheme([{ hex: '#c8963e' }], { ui: X.PRESETS.Midnight.ui }), X.logoTheme([], {})];
+    if (js(lt(E)) !== js(lt(B))) differ.push('logoTheme with a hue');
   }
   chk(() => B && !differ.length, () => `B1 the base engine (${BASE}), live: ${B ? 'differs: ' + [...new Set(differ)].slice(0, 6).join('; ') : 'not loaded: ' + why}`);
 }

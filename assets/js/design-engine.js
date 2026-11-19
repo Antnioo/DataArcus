@@ -17,7 +17,7 @@
   const TM = typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure;
   // design-colours.js: the colour math (0.3.2 SP6; the generator pages load it before this file)
   const C = typeof module !== 'undefined' && module.exports ? require('./design-colours.js') : root.DAColours;
-  const { clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, calmPalette, CALM, rgbToLab, hexToLab, deltaE, simulateCvd, logoColours } = C;
+  const { clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, noHue, calmPalette, CALM, rgbToLab, hexToLab, deltaE, simulateCvd, logoColours } = C;
   // design-metrics.js: the layout geometry and the typography (0.3.2 SP29; the generator pages load it before this file)
   const Mx = typeof module !== 'undefined' && module.exports ? require('./design-metrics.js') : root.DAMetrics;
   const { M, G, HH, PAGES, DEFAULT_PAGE, LIM, within, fitCustom, page, pw, toPage, boxOf, T, baseLang, label, LAYOUTS, RTL_LANGS, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, RANGE, rangeOf, clampTo, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, noTimeOf, LAYOUT_PREVIEW, isPreview, hasMain, hasSplit, sizes, computeSlots, imageSize, pngSize, FHD_TEXT, textScale, sizeAt, fs, TEXT_BASES, themeScaleOf, scaleTheme, barW, c0, kpiInset, projectSlots, secondLayout, slidePanel, absorb, SLOT_GAP, REFLOW_KEEP, fitSlots, fitScale, projectPages, pageFill } = Mx;
@@ -434,7 +434,7 @@
 
   const api = {
     PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, DEFAULT_PAGE, LIM, RANGE, M, G, HH,
-    clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, calmPalette, CALM, rgbToLab, hexToLab, deltaE, simulateCvd, logoColours, logoTheme,
+    clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, noHue, calmPalette, CALM, rgbToLab, hexToLab, deltaE, simulateCvd, logoColours, logoTheme,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
     GLASS, DEFAULT_LOOK, glassFit, GLASS_MARK, isGlassPng, withGlassPicture, isGlass, glassLook, glassTables, glassPixels, glassPng, encodePng, fs, sizeAt, FHD_TEXT, textScale, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, REFLOW_KEEP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, statusIcons, ICON_NAMES, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, pageFill, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
