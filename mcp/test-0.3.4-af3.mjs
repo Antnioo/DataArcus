@@ -6,6 +6,8 @@
 //          G9 generate_theme's note names the calm set for a grey brand
 //   M1-M4  AUD-083 (I-1119-06): the theme import step is Power BI Desktop's current one, Design > Import theme (Microsoft
 //          Learn, desktop-report-themes, read 19 Nov), with the older path in brackets for a Desktop not updated
+//   V1-V3  AUD-084 (I-1119-07): the EVM article makes no "only way" claim: EN the auditor's wording, AR the false clause
+//          cut (its new Arabic sentence is drafted in mcp/work/AF3.md, held for the owner)
 // Made-up colours only.   node test-0.3.4-af3.mjs
 import fs from 'node:fs';
 import path from 'node:path';
@@ -65,6 +67,13 @@ for (const pg of PAGES) { const h = read(pg), lines = h.split('\n').filter((l) =
   chk('M2', () => lines.length && lines.every((l) => (pg.startsWith('ar/') ? NEW_AR : NEW_EN).test(l) || /"acceptedAnswer"/.test(l)), `${pg}: every line with the old path names Design › Import theme first (got ${lines.map((l) => l.trim().slice(0, 120)).join(' | ')})`); }
 for (const pg of ['tools/power-bi-theme-generator.html', 'ar/tools/power-bi-theme-generator.html']) chk('M3', () => /"acceptedAnswer": \{ "@type": "Answer", "text": "In Power BI Desktop, on the Design ribbon select Import theme \(older Desktop: View > Themes > Browse for themes\)/.test(read(pg)), `${pg}: the FAQ JSON-LD names the Design ribbon's Import theme`);
 chk('M4', () => /Design > Import theme/.test(read('scripts/tests/DESKTOP-TESTS.md').split('\n')[16]), 'scripts/tests/DESKTOP-TESTS.md line 17 names the current path beside the measured one');
+
+// ---------- AUD-084: the EVM article's claim ----------
+const EV = read('assets/js/translations/article-evm.js'), EVP = ['articles/article-evm.html', 'ar/articles/article-evm.html'].map(read);
+const p3 = (lang) => line(half(EV, lang), 'p3').join(' ');
+chk('V1', () => /it's a well-tested way to forecast a project's landing spot from its own numbers\./.test(p3('en')) && !/only way/.test(p3('en')) && /a well-tested way to forecast a project's landing spot from its own numbers/.test(EVP[0]) && !/only way/.test(EVP[0]), `the EVM article (EN): the auditor's wording, no "only way" (got ${p3('en').slice(-160)})`);
+chk('V2', () => !/الطريقة الوحيدة/.test(p3('ar')) && !/الطريقة الوحيدة/.test(EVP[1]) && /محرك مخاطر محافظ التكنولوجيا المالية<\/a>\./.test(p3('ar')), `the EVM article (AR): no «الطريقة الوحيدة», the sentence ends after the showcase's name (got ${p3('ar').slice(-160)})`);
+chk('V3', () => /ingest data from Jira \(for progress\) and SAP\/Oracle/.test(EVP[0]), 'the Fintech showcase line is unchanged (a question for the owner, not a finding)');
 
 if (problems.length) { console.log(`FAIL script=test-0.3.4-af3.mjs cause=${problems[0].slice(0, 300)}`); for (const p of problems) console.log('  - ' + p); console.log(`FAIL  af3  ${problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  af3  ${checks} checks`);

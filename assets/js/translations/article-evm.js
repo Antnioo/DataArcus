@@ -34,7 +34,7 @@ window.evmTranslations = {
     content: {
       p1: "We've all seen the <strong>'Watermelon Project'</strong>. In every weekly status meeting, the project manager reports the status as 'Green' (On Track). Green, green, green... until suddenly, one week before the deadline, it turns bright 'Red' (Critical Delay).",
       p2: "This happens because traditional status reporting is <strong>subjective</strong>. It relies on feelings, optimism, and the fear of reporting bad news. But in high-stakes industries like Fintech, you can't afford to run projects on feelings. You need math.",
-      p3: "This is where <strong>Earned Value Management (EVM)</strong> comes in. It is the methodology we used to build our <a href='../dashboards/fintech-dashboard.html' class='text-accent'>Fintech Portfolio Risk Engine</a>, and it's the only way to mathematically predict a project's landing spot.",
+      p3: "This is where <strong>Earned Value Management (EVM)</strong> comes in. It is the methodology we used to build our <a href='../dashboards/fintech-dashboard.html' class='text-accent'>Fintech Portfolio Risk Engine</a>, and it's a well-tested way to forecast a project's landing spot from its own numbers.",
 
       h_sec1: "The Two Metrics That Don't Lie: CPI & SPI",
       p_sec1_1: "EVM strips away the opinion and looks at two hard numbers:",
@@ -99,7 +99,7 @@ window.evmTranslations = {
     content: {
       p1: "لقد رأينا جميعًا <strong>'مشروع البطيخة'</strong>. في كل اجتماع أسبوعي، يبلغ مدير المشروع أن الحالة 'خضراء' (على المسار الصحيح). خضراء، خضراء... حتى تتحول فجأة، قبل أسبوع واحد من الموعد النهائي، إلى 'حمراء' فاقعة (تأخير حرج).",
       p2: "يحدث هذا لأن تقارير الحالة التقليدية <strong>ذاتية</strong>. تعتمد على المشاعر والتفاؤل والخوف من الإبلاغ عن الأخبار السيئة. ولكن في صناعات حساسة مثل التكنولوجيا المالية، لا يمكنك إدارة المشاريع بناءً على المشاعر. أنت بحاجة إلى الرياضيات.",
-      p3: "هنا يأتي دور <strong>إدارة القيمة المكتسبة (EVM)</strong>. إنها المنهجية التي استخدمناها لبناء <a href='../dashboards/fintech-dashboard.html' class='text-accent'>محرك مخاطر محافظ التكنولوجيا المالية</a>، وهي الطريقة الوحيدة للتنبؤ رياضيًا بنقطة هبوط المشروع.",
+      p3: "هنا يأتي دور <strong>إدارة القيمة المكتسبة (EVM)</strong>. إنها المنهجية التي استخدمناها لبناء <a href='../dashboards/fintech-dashboard.html' class='text-accent'>محرك مخاطر محافظ التكنولوجيا المالية</a>.",
 
       h_sec1: "المقياسان اللذان لا يكذبان: CPI و SPI",
       p_sec1_1: "تزيل EVM الآراء وتنظر إلى رقمين صلبين:",
