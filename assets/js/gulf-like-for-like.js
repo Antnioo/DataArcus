@@ -51,7 +51,7 @@
     const name = MONTHS[month - 1] || '?', base = { year, month, country, rows: [], dates: [], estimated: null, like: null };
     const c = GC.monthsCompared({ year, back: 12, country });
     if (!c.known || !MONTHS[month - 1]) {
-      return Object.assign(base, { known: false, verdict: `Not known: ${c.why || 'pick a month.'} ${name} ${year} against ${name} ${year - 1} cannot be compared yet.`, note: '' });
+      return Object.assign(base, { known: false, verdict: `Not known: ${c.why || 'pick a month.'} ${name} ${year} against ${name} ${year - 1} cannot be compared.`, note: '' });
     }
     const r = c.months[month - 1], A = GC.monthOn({ year, month, country }), B = GC.monthOn({ year: year - 1, month, country });
     const rows = [
@@ -92,7 +92,8 @@
     if (!year || !month || !country) return;
     const el = (tag, text, cls) => { const e = doc.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; };
     const opt = (v, t) => { const e = el('option', t); e.value = String(v); return e; };
-    for (let y = GC.RANGE.first; y <= GC.RANGE.last + 2; y++) year.appendChild(opt(y, String(y)));
+    // (SW2, AUD-076) only a year whose month and the month before it are both in the table can answer: first + 1 to last
+    for (let y = GC.RANGE.first + 1; y <= GC.RANGE.last; y++) year.appendChild(opt(y, String(y)));
     MONTHS.forEach((m, i) => month.appendChild(opt(i + 1, m)));
     COUNTRIES.forEach(([v, t]) => country.appendChild(opt(v, t)));
     const now = new Date(), y0 = now.getUTCFullYear();
