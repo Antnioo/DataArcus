@@ -202,7 +202,7 @@ export function themeDesign(a) {
     // mode "dark", or a dark preset chosen with the brand)
     else { d.ui = Object.assign({}, a.mode ? (dark ? E.PRESETS.DataArcus.ui : LIGHT_UI) : a.preset != null && Object.hasOwn(E.PRESETS, a.preset) ? E.PRESETS[a.preset].ui : LIGHT_UI);
       d.data = h === 'calm' ? E.calmPalette(b, d.ui.card, d.ui.text) : E.generate(b, h); d.data[0] = b; d.ui.accent = b; d.preset = null;
-      notes.push(`The brand colour ${b} is used exactly as given: the first data colour and the accent. The other 7 data colours come from ${h === 'calm' ? 'the calm set' : 'the ' + h + ' harmony'}.`); }
+      notes.push(`The brand colour ${b} is used exactly as given: the first data colour and the accent. The other 7 data colours come from ${h === 'calm' ? 'the calm set' : h !== 'mono' && E.noHue(b) ? `the calm set (the brand has no hue, so no ${h} harmony)` : 'the ' + h + ' harmony'}.`); }
   } else if (a.harmony != null) fix('harmony', a.harmony, null, 'not used: no brand colour given');
   if (a.name != null) d.name = String(a.name);
   if (a.font != null) {

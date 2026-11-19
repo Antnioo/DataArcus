@@ -22,7 +22,7 @@ window.themeGeneratorTranslations = {
         "title": "Your Power BI design",
         "subtitle": "Three files, one design. They use every choice above; if you change something after downloading, you'll see which file to download again.",
         "themeName": "Theme (.json)",
-        "themeDesc": "Colors, font and visual styles. Import it: <b>View › Themes › Browse for themes</b>.",
+        "themeDesc": "Colors, font and visual styles. Import it: <b>Design › Import theme</b> (older Desktop: <b>View › Themes › Browse for themes</b>).",
         "themeBtn": "Download theme",
         "bgName": "Background (.png)",
         "bgDesc": "The layout as an image. Use it: <b>Format page › Canvas background</b>.",
@@ -71,7 +71,7 @@ window.themeGeneratorTranslations = {
         "bottom": "Bottom", "side": "Side", "hidden": "Hidden", "minimal": "Minimal lines", "banded": "Banded rows", "look": "Card look", "glass": "Glass (default)", "plain": "Plain" },
       "preview": "Live preview",
       "copy": "Copy",
-      "importNote": "Import it in Power BI Desktop: <strong>View → Themes → Browse for themes</strong>, then pick the file.",
+      "importNote": "Import it in Power BI Desktop: <strong>Design → Import theme</strong> (older Desktop: View → Themes → Browse for themes), then pick the file.",
       "cta": {
         "title": "Need more than the design?",
         "desc": "DataArcus also builds complete Power BI solutions, from the data model and measures to dashboards your team uses every day.",
@@ -81,7 +81,7 @@ window.themeGeneratorTranslations = {
       "faq": {
         "title": "Questions",
         "q1": "How do I import a theme into Power BI?",
-        "a1": "In Power BI Desktop open the <strong>View</strong> tab, click the <strong>Themes</strong> dropdown, choose <strong>Browse for themes</strong>, and select the downloaded .json file. Every visual updates at once.",
+        "a1": "In Power BI Desktop select <strong>Design › Import theme</strong> (older Desktop: <strong>View › Themes › Browse for themes</strong>), and select the downloaded .json file. Every visual updates at once.",
         "q2": "Does it work in Power BI Service?",
         "a2": "Yes. Import the theme in Desktop and publish. The theme travels with the report.",
         "q3": "How many data colors should I use?",
@@ -103,7 +103,7 @@ window.themeGeneratorTranslations = {
         "csv": "Download .csv",
         "howTitle": "How to use it in Power BI",
         "how1": "Set visual backgrounds to <strong>Transparent</strong> (above), then download the files.",
-        "how2": "Import the theme: <strong>View › Themes › Browse for themes</strong>.",
+        "how2": "Import the theme: <strong>Design › Import theme</strong> (older Desktop: <strong>View › Themes › Browse for themes</strong>).",
         "how3": "Set the background: <strong>Format page › Canvas background › Image</strong>, Image fit <strong>Stretch</strong>, Transparency <strong>0%</strong>.",
         "how4": "Add each visual, then type its numbers from the table into <strong>Format › General › Properties</strong> (Size and Position). It lands exactly on its panel.",
         "png": "Download background (PNG)"
@@ -139,7 +139,7 @@ window.themeGeneratorTranslations = {
         "title": "تصميم Power BI الخاص بك",
         "subtitle": "ثلاثة ملفات لتصميم واحد. كلها تستخدم اختياراتك أعلاه؛ وإذا غيّرت شيئًا بعد التنزيل سترى أي ملف تنزّله من جديد.",
         "themeName": "السمة (json.)",
-        "themeDesc": "الألوان والخط وأنماط العناصر. استوردها: <b><bdi dir=\"ltr\">View › Themes › Browse for themes</bdi></b>.",
+        "themeDesc": "الألوان والخط وأنماط العناصر. استوردها: <b><bdi dir=\"ltr\">Design › Import theme</bdi></b> (أو <b><bdi dir=\"ltr\">View › Themes › Browse for themes</bdi></b>).",
         "themeBtn": "نزّل السمة",
         "bgName": "الخلفية (png.)",
         "bgDesc": "التخطيط كصورة. استخدمها: <b><bdi dir=\"ltr\">Format page › Canvas background</bdi></b>.",
@@ -188,7 +188,7 @@ window.themeGeneratorTranslations = {
         "bottom": "أسفل", "side": "جانبي", "hidden": "مخفية", "minimal": "خطوط قليلة", "banded": "صفوف متناوبة", "look": "شكل البطاقات", "glass": "زجاجي (افتراضي)", "plain": "عادي" },
       "preview": "معاينة مباشرة",
       "copy": "نسخ",
-      "importNote": "استورده في Power BI Desktop: <strong>View → Themes → Browse for themes</strong> ثم اختر الملف.",
+      "importNote": "استورده في Power BI Desktop: <strong><bdi dir=\"ltr\">Design → Import theme</bdi></strong> (أو <bdi dir=\"ltr\">View → Themes → Browse for themes</bdi>) ثم اختر الملف.",
       "cta": {
         "title": "تحتاج أكثر من التصميم؟",
         "desc": "تبني DataArcus أيضًا حلول Power BI كاملة، من نموذج البيانات والمقاييس إلى لوحات يستخدمها فريقك كل يوم.",
@@ -198,7 +198,7 @@ window.themeGeneratorTranslations = {
       "faq": {
         "title": "أسئلة شائعة",
         "q1": "كيف أستورد سمة إلى Power BI؟",
-        "a1": "في Power BI Desktop افتح تبويب <strong>View</strong>، ثم قائمة <strong>Themes</strong>، واختر <strong>Browse for themes</strong>، وحدد ملف json الذي نزّلته. تتحدث كل المرئيات فورًا.",
+        "a1": "في Power BI Desktop اختر <strong><bdi dir=\"ltr\">Design › Import theme</bdi></strong> (أو <strong><bdi dir=\"ltr\">View › Themes › Browse for themes</bdi></strong>)، وحدد ملف json الذي نزّلته. تتحدث كل المرئيات فورًا.",
         "q2": "هل تعمل في Power BI Service؟",
         "a2": "نعم. استورد السمة في Desktop ثم انشر التقرير، وستنتقل السمة معه.",
         "q3": "كم لونًا للبيانات يجب أن أستخدم؟",
@@ -220,7 +220,7 @@ window.themeGeneratorTranslations = {
         "csv": "نزّل ملف .csv",
         "howTitle": "طريقة الاستخدام في Power BI",
         "how1": "اضبط خلفيات العناصر على <strong>شفافة</strong> (أعلاه)، ثم نزّل الملفات.",
-        "how2": "استورد السمة: <strong><bdi dir=\"ltr\">View › Themes › Browse for themes</bdi></strong>.",
+        "how2": "استورد السمة: <strong><bdi dir=\"ltr\">Design › Import theme</bdi></strong> (أو <strong><bdi dir=\"ltr\">View › Themes › Browse for themes</bdi></strong>).",
         "how3": "ضع الخلفية: <strong><bdi dir=\"ltr\">Format page › Canvas background › Image</bdi></strong>، واختر <strong><bdi dir=\"ltr\">Image fit: Stretch</bdi></strong> والشفافية <strong><bdi dir=\"ltr\">0%</bdi></strong>.",
         "how4": "أضف كل عنصر، ثم اكتب أرقامه من الجدول في <strong><bdi dir=\"ltr\">Format › General › Properties</bdi></strong> (الحجم والموضع). سيستقر تمامًا على لوحته.",
         "png": "نزّل الخلفية (PNG)"

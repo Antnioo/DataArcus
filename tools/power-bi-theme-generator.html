@@ -85,7 +85,7 @@
         "@type": "FAQPage",
         "mainEntity": [
           { "@type": "Question", "name": "How do I import a theme into Power BI?",
-            "acceptedAnswer": { "@type": "Answer", "text": "In Power BI Desktop open the View tab, click the Themes dropdown, choose Browse for themes, and select the downloaded .json file." } },
+            "acceptedAnswer": { "@type": "Answer", "text": "In Power BI Desktop, on the Design ribbon select Import theme (older Desktop: View > Themes > Browse for themes), and select the downloaded .json file." } },
           { "@type": "Question", "name": "Does the theme work in Power BI Service?",
             "acceptedAnswer": { "@type": "Answer", "text": "Yes. Import the theme in Power BI Desktop and publish the report. The theme travels with the report to the Service." } },
           { "@type": "Question", "name": "How many data colors should a Power BI theme have?",
@@ -426,7 +426,7 @@
         <div id="dlVis" class="mb-3"></div>
         <div class="tg-files">
           <div class="tg-file" data-file="json">
-            <div class="tg-file-h"><i class="bi bi-filetype-json" aria-hidden="true"></i><div><strong data-i18n="tg.dl.themeName">Theme (.json)</strong><small data-i18n-html="tg.dl.themeDesc">Colors, font and visual styles. Import it: <b>View › Themes › Browse for themes</b>.</small></div></div>
+            <div class="tg-file-h"><i class="bi bi-filetype-json" aria-hidden="true"></i><div><strong data-i18n="tg.dl.themeName">Theme (.json)</strong><small data-i18n-html="tg.dl.themeDesc">Colors, font and visual styles. Import it: <b>Design › Import theme</b> (older Desktop: <b>View › Themes › Browse for themes</b>).</small></div></div>
             <button class="btn btn-accent w-100" id="dlBtn" type="button"><i class="bi bi-download me-1"></i><span data-i18n="tg.dl.themeBtn">Download theme</span></button>
           </div>
           <div class="tg-file" data-file="png">
@@ -448,7 +448,7 @@
             <span class="tg-label" data-i18n="tg.layout.howTitle">How to use it in Power BI</span>
             <ol class="tg-how mb-0">
               <li data-i18n-html="tg.layout.how1">Set visual backgrounds to <strong>Transparent</strong> (above), then download the files.</li>
-              <li data-i18n-html="tg.layout.how2">Import the theme: <strong>View › Themes › Browse for themes</strong>.</li>
+              <li data-i18n-html="tg.layout.how2">Import the theme: <strong>Design › Import theme</strong> (older Desktop: <strong>View › Themes › Browse for themes</strong>).</li>
               <li data-i18n-html="tg.layout.how3">Set the background: <strong>Format page › Canvas background › Image</strong>, Image fit <strong>Stretch</strong>, Transparency <strong>0%</strong>.</li>
               <li data-i18n-html="tg.layout.how4">Add each visual, then type its numbers from the table into <strong>Format › General › Properties</strong> (Size and Position). It lands exactly on its panel.</li>
             </ol>
@@ -473,7 +473,7 @@
           <section class="tg-faq">
             <h2 class="h4 fw-bold" data-i18n="tg.faq.title">Questions</h2>
             <h3 data-i18n="tg.faq.q1">How do I import a theme into Power BI?</h3>
-            <p data-i18n-html="tg.faq.a1">In Power BI Desktop open the <strong>View</strong> tab, click the <strong>Themes</strong> dropdown, choose <strong>Browse for themes</strong>, and select the downloaded .json file. Every visual updates at once.</p>
+            <p data-i18n-html="tg.faq.a1">In Power BI Desktop select <strong>Design › Import theme</strong> (older Desktop: <strong>View › Themes › Browse for themes</strong>), and select the downloaded .json file. Every visual updates at once.</p>
             <h3 data-i18n="tg.faq.q2">Does it work in Power BI Service?</h3>
             <p data-i18n="tg.faq.a2">Yes. Import the theme in Desktop and publish. The theme travels with the report.</p>
             <h3 data-i18n="tg.faq.q3">How many data colors should I use?</h3>
@@ -548,7 +548,7 @@
   </footer>
 
   <script src="../assets/js/translations/common.min.js?v=434124bdf3f2" defer></script>
-  <script src="../assets/js/translations/theme-generator.min.js?v=17e94ec0a68e" defer></script>
+  <script src="../assets/js/translations/theme-generator.min.js?v=d02fe15907db" defer></script>
   <script src="../assets/js/locale-routes.min.js?v=63b224b0f9a3" defer></script>
   <script src="../assets/js/locale-catalog.min.js?v=1464f13d8c0b" defer></script>
   <script src="../assets/js/locale-dom.min.js?v=faf294f00eb2" defer></script>
@@ -563,17 +563,17 @@
   <script src="../assets/js/text-measure.min.js?v=13d0792030b9" defer></script>
   <script src="../assets/js/png-bytes.min.js?v=0f8f6e3b3c39" defer></script>
   <script src="../assets/js/contrast.min.js?v=064538a9ae1e" defer></script>
-  <script src="../assets/js/design-colours.min.js?v=4d8080b71ee5" defer></script>
+  <script src="../assets/js/design-colours.min.js?v=4e938ec8eb80" defer></script>
   <script src="../assets/js/design-glass.min.js?v=1907c8961c9a" defer></script>
   <script src="../assets/js/design-metrics.min.js?v=c2441c247ff4" defer></script>
   <script src="../assets/js/design-state.min.js?v=2d912e3e124a" defer></script>
-  <script src="../assets/js/design-engine.min.js?v=313b2a6791b2" defer></script>
+  <script src="../assets/js/design-engine.min.js?v=f498601a7229" defer></script>
   <script src="../assets/js/arabic-calendar.min.js?v=bdeaa2ea50a0" defer></script>
   <script src="../assets/js/time-names.min.js?v=ae53c726782a" defer></script>
   <script src="../assets/js/pbip-query.min.js?v=c618c34e093a" defer></script>
   <script src="../assets/js/pbip-sizing.min.js?v=14c9a147b14e" defer></script>
   <script src="../assets/js/theme-state-ui.min.js?v=04794f3133ec" defer></script>
-  <script src="../assets/js/theme-layout-ui.min.js?v=7b7f00538f59" defer></script>
+  <script src="../assets/js/theme-layout-ui.min.js?v=9566e7181735" defer></script>
   <script src="../assets/js/page-toast.min.js?v=995950255945" defer></script>
   <script src="../assets/js/theme-download-ui.min.js?v=ce2b2db5efc7" defer></script>
   <script src="../assets/js/html-escape.min.js?v=b560fc5666ec" defer></script>

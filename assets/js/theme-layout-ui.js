@@ -73,7 +73,7 @@
   }
   // the controls' listeners: presets, colours, Generate, name, font, chart styles:
   function controlsStep(ui) {
-    const { PRESETS, design, clampHex, generate, chart, CHART_INPUTS, renderInputs, setColor, store, $, L, track, toast, hooks } = ui;
+    const { E, PRESETS, design, clampHex, generate, chart, CHART_INPUTS, renderInputs, setColor, store, $, L, track, toast, hooks } = ui;
     $('presets').addEventListener('click', (e) => {
       const b = e.target.closest('[data-p]'); if (!b) return;
       const p = PRESETS[b.dataset.p]; design().preset = b.dataset.p; design().data = p.data.slice(); design().ui = { ...p.ui };
@@ -97,9 +97,20 @@
       if (!val) toast(L('Use a hex color like #1a2b3c', 'استخدم رمز لون مثل ‎#1a2b3c'));
       el.value = val || cur; el.classList.remove('is-invalid'); el.setAttribute('aria-invalid', 'false');
     }));
+    // (0.3.4 AF3, AUD-081) a brand colour with no hue (black, white, a grey: the engine's noHue) has no hue to build a
+    // harmony on: generate() keeps its grey and adds the calm colours (mono: grey shades); said under Generate, as the logo
+    // path says its own. English on both pages for now: the Arabic sentence is drafted in mcp/work/AF3.md, held for the
+    // owner (D-1112-05)
+    const greyNote = () => {
+      const row = $('genBtn').parentElement; let n = $('genNote');
+      if (!n) { n = document.createElement('small'); n.id = 'genNote'; n.className = 'd-block mt-1 tg-logo-out'; n.setAttribute('role', 'status'); row.insertAdjacentElement('afterend', n); }
+      const b = clampHex($('brand').value), mono = $('harmony').value === 'mono';
+      n.textContent = b && E.noHue(b) ? (mono ? 'No hue in this colour: the palette is shades of its grey.' : 'No hue in this colour: the palette starts from its grey and adds calm colours.') : '';
+      n.hidden = !n.textContent;
+    };
     $('genBtn').addEventListener('click', () => {
       design().data = generate($('brand').value, $('harmony').value); design().ui.accent = design().data[0]; design().preset = null;
-      renderInputs(); hooks.renderAll(); track('theme_generate', { harmony: $('harmony').value });
+      renderInputs(); hooks.renderAll(); track('theme_generate', { harmony: $('harmony').value }); greyNote();
     });
     $('themeName').addEventListener('input', (e) => { design().name = e.target.value.slice(0, 60); hooks.renderJson(); store.save(); });
     $('font').addEventListener('change', (e) => { design().font = e.target.value; hooks.renderAll(); });
