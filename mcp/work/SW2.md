@@ -13,5 +13,5 @@
 3. I-1113-25: run-all.mjs honours `--list` (prints the suites, exit 0) and refuses an unknown `--flag` (exit 2); check-modules says `not a file: <name>` with the fix when a "used by" cell names a function. Red first in scripts/test-modules.mjs and a run-all check.
 4. I-1115-01 (AUD-076): the Year select offers only years that can answer (RANGE.first+1 to RANGE.last: 2019 to 2030, 13 options -> 12), and the unknown verdict does not say "yet". Test red first.
 5. I-1115-02 (AUD-077): at 390 px the overview's last column ("like for like") is wholly inside its box. Test red first on the page.
-6. I-1115-06 (TF1 note line): measure first (read each Learn page in Arabic); an item no longer true says "not so on <sha>".
+6. I-1115-05 (TF1 note line): measure first (read each Learn page in Arabic); an item no longer true says "not so on <sha>".
 Expected numbers are filled in as measured.
