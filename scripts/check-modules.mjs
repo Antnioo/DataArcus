@@ -87,6 +87,7 @@ export function checkModules(root = ROOT, { strict = false } = {}) {
     for (const m of r.cells[3].matchAll(/`([^`]+)`/g)) {
       checks++;
       const to = resolveName(m[1], root, mods, byBase);
+      if (!to && !/\.(m?js|cjs|html)$/.test(m[1])) { problems.push(`FAIL ${DOC}:${r.line}: ${r.name}'s "used by" has "${m[1]}": not a file: put the caller's file name (go.mjs), never a function or a word`); continue; }
       if (!to) { problems.push(`FAIL ${DOC}:${r.line}: ${r.name}'s "used by" names ${m[1]}, which is not a module, server.mjs or a page: name the caller's file`); continue; }
       if (to.ambiguous) { problems.push(`FAIL ${DOC}:${r.line}: ${r.name}'s "used by" name ${m[1]} is ${to.ambiguous.length} modules (${to.ambiguous.join(', ')}): name it by its path`); continue; }
       if (f && !f.usedBy.includes(to) && !f.pages.includes(to)) problems.push(`FAIL ${DOC}:${r.line}: ${r.name}'s "used by" names ${m[1]}, which does not load it (node scripts/modules-facts.mjs)`);

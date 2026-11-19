@@ -252,6 +252,18 @@ try {
     assert.match(src, /zero-checks/); assert.match(src, /res\.checks/);
   });
 
+  // (SW2, L-1110-38) --list lists the suites and exits at once (it once ran every suite); a flag it does not know is refused
+  t('run-all: --list prints the suites and runs none; an unknown --flag is refused (exit 2)', () => {
+    const RUN = path.join(REPO, 'scripts/tests/run-all.mjs');
+    const l = spawnSync(process.execPath, [RUN, '--list'], { cwd: REPO, encoding: 'utf8', timeout: 20000 });
+    assert.equal(l.status, 0, `--list exit ${l.status} (${l.error ? l.error.message : l.stderr.slice(0, 200)})`);
+    const names = l.stdout.trim().split('\n');
+    assert.ok(names.length > 40 && names.includes('site') && names.includes('gulf-like-for-like') && !/PASS|FAIL/.test(l.stdout), names.slice(0, 5).join(','));
+    const u = spawnSync(process.execPath, [RUN, '--nope'], { cwd: REPO, encoding: 'utf8', timeout: 20000 });
+    assert.equal(u.status, 2, `--nope exit ${u.status}`);
+    assert.match(u.stderr, /Unknown option: --nope/);
+  });
+
   // ---- (SPD, Codex #1) the plan: tests.json's suites dealt over the shards by their measured seconds, per OS
   const planShards = adapter.planShards || (() => { throw new Error('no planShards in mcp/test-results.mjs'); });
   const PR = { suites: [{ file: 'test.mjs', name: 'mcp', sharded: true }, ...['a', 'b', 'c', 'd', 'e', 'f'].map((x) => ({ file: `test-${x}.mjs`, name: x }))] };
