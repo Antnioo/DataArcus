@@ -8,6 +8,7 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 - 0.3.3 is on main (#129, cbab5f96; the download lines #133, cc03504b; the list in `CHANGELOG.md`).
 - `integration/0.3.4`: builders branch from it, push only their branch; the reviewer merges; the owner merges to main.
 - 0.3.3's list: [the archive](work/archive/WORK-0.3.3.md).
+- SW2 (`fix/0.3.4-sw2`): the job sweep's six items, to merge: [work/SW2.md](work/SW2.md).
 
 ## Next step
 1. The reviewer plans 0.3.4's first jobs (the night audit's AUD-078 and AUD-080 are routed to it).
