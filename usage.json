@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-12T05:02Z",
+  "generated_at": "2026-11-22T09:12Z",
   "today": {
-    "date": "2026-11-12",
-    "cost_usd": 55.79,
-    "tokens": 150006202,
-    "sessions": 13,
+    "date": "2026-11-22",
+    "cost_usd": 31.57,
+    "tokens": 91030222,
+    "sessions": 7,
     "by_kind": {
       "builder": {
-        "cost_usd": 45.67,
-        "count": 7
+        "cost_usd": 19.08,
+        "count": 2
       },
       "worker": {
-        "cost_usd": 10.12,
-        "count": 6
+        "cost_usd": 12.49,
+        "count": 5
       },
       "probe": {
         "cost_usd": 0,
@@ -25,81 +25,17 @@
       }
     },
     "by_model": {
-      "opus": {
-        "cost_usd": 30.1,
-        "count": 6
-      },
-      "fable": {
-        "cost_usd": 17.81,
+      "sonnet": {
+        "cost_usd": 0.87,
         "count": 2
       },
-      "sonnet": {
-        "cost_usd": 7.88,
+      "opus": {
+        "cost_usd": 30.7,
         "count": 5
       }
     }
   },
   "days": [
-    {
-      "date": "2026-10-30",
-      "cost_usd": 0,
-      "tokens": 0,
-      "sessions": 0
-    },
-    {
-      "date": "2026-10-31",
-      "cost_usd": 0,
-      "tokens": 0,
-      "sessions": 0
-    },
-    {
-      "date": "2026-11-01",
-      "cost_usd": 0,
-      "tokens": 0,
-      "sessions": 0
-    },
-    {
-      "date": "2026-11-02",
-      "cost_usd": 0,
-      "tokens": 0,
-      "sessions": 0
-    },
-    {
-      "date": "2026-11-03",
-      "cost_usd": 0,
-      "tokens": 0,
-      "sessions": 0
-    },
-    {
-      "date": "2026-11-04",
-      "cost_usd": 0,
-      "tokens": 0,
-      "sessions": 0
-    },
-    {
-      "date": "2026-11-05",
-      "cost_usd": 0,
-      "tokens": 0,
-      "sessions": 0
-    },
-    {
-      "date": "2026-11-06",
-      "cost_usd": 0,
-      "tokens": 0,
-      "sessions": 0
-    },
-    {
-      "date": "2026-11-07",
-      "cost_usd": 0,
-      "tokens": 0,
-      "sessions": 0
-    },
-    {
-      "date": "2026-11-08",
-      "cost_usd": 214.57,
-      "tokens": 691734488,
-      "sessions": 44
-    },
     {
       "date": "2026-11-09",
       "cost_usd": 128.41,
@@ -108,24 +44,246 @@
     },
     {
       "date": "2026-11-10",
-      "cost_usd": 153.12,
-      "tokens": 503169609,
-      "sessions": 47
+      "cost_usd": 153.4,
+      "tokens": 503953980,
+      "sessions": 48
     },
     {
       "date": "2026-11-11",
-      "cost_usd": 257.48,
-      "tokens": 602833447,
-      "sessions": 47
+      "cost_usd": 258.38,
+      "tokens": 606818057,
+      "sessions": 48
     },
     {
       "date": "2026-11-12",
-      "cost_usd": 55.79,
-      "tokens": 150006202,
-      "sessions": 13
+      "cost_usd": 202.17,
+      "tokens": 494631652,
+      "sessions": 41
+    },
+    {
+      "date": "2026-11-13",
+      "cost_usd": 22.57,
+      "tokens": 72257537,
+      "sessions": 12
+    },
+    {
+      "date": "2026-11-14",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-11-15",
+      "cost_usd": 113.7,
+      "tokens": 262995289,
+      "sessions": 16
+    },
+    {
+      "date": "2026-11-16",
+      "cost_usd": 328.43,
+      "tokens": 1034875532,
+      "sessions": 21
+    },
+    {
+      "date": "2026-11-17",
+      "cost_usd": 343.63,
+      "tokens": 1194020488,
+      "sessions": 27
+    },
+    {
+      "date": "2026-11-18",
+      "cost_usd": 595.28,
+      "tokens": 1998253838,
+      "sessions": 46
+    },
+    {
+      "date": "2026-11-19",
+      "cost_usd": 384.42,
+      "tokens": 1219702845,
+      "sessions": 32
+    },
+    {
+      "date": "2026-11-20",
+      "cost_usd": 41.46,
+      "tokens": 113920711,
+      "sessions": 7
+    },
+    {
+      "date": "2026-11-21",
+      "cost_usd": 0,
+      "tokens": 0,
+      "sessions": 0
+    },
+    {
+      "date": "2026-11-22",
+      "cost_usd": 31.57,
+      "tokens": 91030222,
+      "sessions": 7
     }
   ],
   "jobs": [
+    {
+      "id": "AF3",
+      "title": "AF3: audit fixes AUD-081 (grey brand palette), AUD-083 (Design > Import theme), AUD-084 (EVM only-way claim)",
+      "model": "opus",
+      "cost_usd": 7.74,
+      "tokens": 22501253,
+      "minutes": 55,
+      "finished_at": "2026-11-19T07:23Z"
+    },
+    {
+      "id": "SW2",
+      "title": "SW2: sweep of 6 small fixes (I-1113-04, I-1113-05, I-1113-25, I-1115-01, I-1115-02, I-1115-05)",
+      "model": "sonnet",
+      "cost_usd": 2.49,
+      "tokens": 13276440,
+      "minutes": 61,
+      "finished_at": "2026-11-19T02:41Z"
+    },
+    {
+      "id": "BA2",
+      "title": "BA2: the weekly price PR merges itself too (D-1116-06)",
+      "model": "sonnet",
+      "cost_usd": 1.42,
+      "tokens": 5933073,
+      "minutes": 56,
+      "finished_at": "2026-11-16T15:38Z"
+    },
+    {
+      "id": "LCE1",
+      "title": "LCE1: the private engine's GitHub checks move local (D-1116-03)",
+      "model": "sonnet",
+      "cost_usd": 2.55,
+      "tokens": 11572021,
+      "minutes": 20,
+      "finished_at": "2026-11-16T13:36Z"
+    },
+    {
+      "id": "CI3",
+      "title": "CI3: sp35 timing flake at its cause; the macOS mutation shard under its 40-minute limit (I-1112-1700, I-1112-1703)",
+      "model": "opus",
+      "cost_usd": 8.2,
+      "tokens": 23138893,
+      "minutes": 96,
+      "finished_at": "2026-11-13T00:25Z"
+    },
+    {
+      "id": "AR7",
+      "title": "AR7: the Arabic backlog under D-1112-05 (Microsoft and Google both), glossary and its check",
+      "model": "fable",
+      "cost_usd": 21.36,
+      "tokens": 28884871,
+      "minutes": 156,
+      "finished_at": "2026-11-12T23:33Z"
+    },
+    {
+      "id": "SW1",
+      "title": "SW1: sweep of 2 small fixes (WORK.md cap, the What is new 0.3.0 test name; I-1112-1696, I-1112-1702)",
+      "model": "sonnet",
+      "cost_usd": 0.87,
+      "tokens": 2720802,
+      "minutes": 19,
+      "finished_at": "2026-11-12T23:08Z"
+    },
+    {
+      "id": "TB3",
+      "title": "TB3: the tools/list budget (60,930 of 61,000) and a check on the stated size",
+      "model": "opus",
+      "cost_usd": 7.02,
+      "tokens": 19386661,
+      "minutes": 71,
+      "finished_at": "2026-11-12T22:09Z"
+    },
+    {
+      "id": "RL33",
+      "title": "RL33: 0.3.3 release-ready; dataarcus.com/build in the helix style (D-1112-04)",
+      "model": "fable",
+      "cost_usd": 26.86,
+      "tokens": 69741400,
+      "minutes": 454,
+      "finished_at": "2026-11-12T21:40Z"
+    },
+    {
+      "id": "RX1",
+      "title": "RX1: alt text, bookmarks and their order, the next level for reports (D-1112-04)",
+      "model": "fable",
+      "cost_usd": 20.23,
+      "tokens": 37064026,
+      "minutes": 64,
+      "finished_at": "2026-11-12T15:09Z"
+    },
+    {
+      "id": "TA7",
+      "title": "TA7: Today app: star as a box, expand button, cards touching, bug sweep (D-1112-04)",
+      "model": "fable",
+      "cost_usd": 13.28,
+      "tokens": 20472157,
+      "minutes": 56,
+      "finished_at": "2026-11-12T15:01Z"
+    },
+    {
+      "id": "WF8",
+      "title": "WF8: a focus window in items.py queue (D-1111-07 until 18 Nov)",
+      "model": "sonnet",
+      "cost_usd": 0.63,
+      "tokens": 2896562,
+      "minutes": 9,
+      "finished_at": "2026-11-12T09:13Z"
+    },
+    {
+      "id": "WF7",
+      "title": "WF7: the 34 owner items as real questions or routed out; a check (D-1112-03)",
+      "model": "opus",
+      "cost_usd": 3.35,
+      "tokens": 5864753,
+      "minutes": 13,
+      "finished_at": "2026-11-12T08:49Z"
+    },
+    {
+      "id": "WF6",
+      "title": "WF6: migration of the old piles into items (D-1112-03)",
+      "model": "opus",
+      "cost_usd": 11.25,
+      "tokens": 32567899,
+      "minutes": 31,
+      "finished_at": "2026-11-12T08:23Z"
+    },
+    {
+      "id": "WF5",
+      "title": "WF5: items.py age, queue, answer, metrics (D-1112-03)",
+      "model": "sonnet",
+      "cost_usd": 1.61,
+      "tokens": 5836731,
+      "minutes": 14,
+      "finished_at": "2026-11-12T07:18Z"
+    },
+    {
+      "id": "WF4",
+      "title": "WF4: wiring items.py into R-24, merge, routines (D-1112-03)",
+      "model": "opus",
+      "cost_usd": 6.77,
+      "tokens": 18482249,
+      "minutes": 19,
+      "finished_at": "2026-11-12T06:26Z"
+    },
+    {
+      "id": "WF3",
+      "title": "WF3: the Stop hook checks the note sections (D-1112-03)",
+      "model": "sonnet",
+      "cost_usd": 1.01,
+      "tokens": 3394654,
+      "minutes": 19,
+      "finished_at": "2026-11-12T06:25Z"
+    },
+    {
+      "id": "WF2",
+      "title": "WF2: items.py, one record per seen item and ask (WF1, D-1112-03)",
+      "model": "opus",
+      "cost_usd": 3.74,
+      "tokens": 8029397,
+      "minutes": 13,
+      "finished_at": "2026-11-12T05:50Z"
+    },
     {
       "id": "AU1",
       "title": "AU1: the Health Check says what it did not read (AUD-067, AUD-068; D-1112-01)",
@@ -323,219 +481,57 @@
       "tokens": 7389765,
       "minutes": 22,
       "finished_at": "2026-11-11T08:31Z"
-    },
-    {
-      "id": "TR2",
-      "title": "TR2: build TR1's 8 approved asks (D-1111-06)",
-      "model": "sonnet",
-      "cost_usd": 7.09,
-      "tokens": 47517898,
-      "minutes": 143,
-      "finished_at": "2026-11-11T06:52Z"
-    },
-    {
-      "id": "LR2",
-      "title": "LR2: build LR1's approved rules and checks in the engine (D-1111-03)",
-      "model": "opus",
-      "cost_usd": 16.38,
-      "tokens": 52160063,
-      "minutes": 44,
-      "finished_at": "2026-11-11T04:20Z"
-    },
-    {
-      "id": "CO1",
-      "title": "CO1: what is outdated, what newer techniques we miss, how to grow into a company (D-1111-06)",
-      "model": "fable",
-      "cost_usd": 23.45,
-      "tokens": 23987529,
-      "minutes": 41,
-      "finished_at": "2026-11-11T04:16Z"
-    },
-    {
-      "id": "FB2",
-      "title": "FB2: restore FB1's cards' row over the rail (D-1111-01)",
-      "model": "sonnet",
-      "cost_usd": 1.44,
-      "tokens": 8056682,
-      "minutes": 89,
-      "finished_at": "2026-11-11T04:15Z"
-    },
-    {
-      "id": "BT1",
-      "title": "BT1: 10 tester candidates and the invite for 0.3.2 (D-1111-07 ask 2)",
-      "model": "sonnet",
-      "cost_usd": 0.77,
-      "tokens": 2079596,
-      "minutes": 4,
-      "finished_at": "2026-11-11T04:09Z"
-    },
-    {
-      "id": "TR1",
-      "title": "TR1: review the checks run every time: outdated, missing, slow; build the safe fixes (D-1111-02)",
-      "model": "fable",
-      "cost_usd": 29.65,
-      "tokens": 45740079,
-      "minutes": 40,
-      "finished_at": "2026-11-11T03:26Z"
-    },
-    {
-      "id": "LR1",
-      "title": "LR1: review every lesson and rule, propose what to keep, fix and add (D-1111-02)",
-      "model": "fable",
-      "cost_usd": 6.52,
-      "tokens": 5765388,
-      "minutes": 11,
-      "finished_at": "2026-11-11T02:57Z"
-    },
-    {
-      "id": "TA6",
-      "title": "TA6: Today v2.6, a calmer, simpler, mind-blowing app (D-1110-11)",
-      "model": "fable",
-      "cost_usd": 26.1,
-      "tokens": 47785500,
-      "minutes": 61,
-      "finished_at": "2026-11-10T20:01Z"
-    },
-    {
-      "id": "FB1",
-      "title": "FB1: DataArcus's toughest open challenge: find it, plan it, build the first stage",
-      "model": "fable",
-      "cost_usd": 22.68,
-      "tokens": 50286475,
-      "minutes": 157,
-      "finished_at": "2026-11-10T19:14Z"
-    },
-    {
-      "id": "AT1",
-      "title": "AT1: the approved Arabic title template and model-path errors (B-429, B-449)",
-      "model": "sonnet",
-      "cost_usd": 3.37,
-      "tokens": 21037739,
-      "minutes": 205,
-      "finished_at": "2026-11-10T18:14Z"
-    },
-    {
-      "id": "MH1",
-      "title": "MH1: the shared MCP test client times out each call and restarts after a throw (L-1108-25, D-1110-06)",
-      "model": "sonnet",
-      "cost_usd": 0.94,
-      "tokens": 4942188,
-      "minutes": 62,
-      "finished_at": "2026-11-10T15:30Z"
-    },
-    {
-      "id": "AR6",
-      "title": "AR6: Arabic drafts for the 'Nothing was written' checks, for the owner's approval (D-1110-08)",
-      "model": "opus",
-      "cost_usd": 3.83,
-      "tokens": 8084556,
-      "minutes": 12,
-      "finished_at": "2026-11-10T15:18Z"
-    },
-    {
-      "id": "OR2",
-      "title": "OR2: apply the owner's Lessons Review answers and build the approved lessons (D-1110-06)",
-      "model": "opus",
-      "cost_usd": 8.83,
-      "tokens": 24034265,
-      "minutes": 20,
-      "finished_at": "2026-11-10T14:13Z"
-    },
-    {
-      "id": "HK2",
-      "title": "HK2: website sp6 and sp29 read saved fixtures, not git (B-414 rest)",
-      "model": "sonnet",
-      "cost_usd": 0.59,
-      "tokens": 2684705,
-      "minutes": 24,
-      "finished_at": "2026-11-10T14:08Z"
-    },
-    {
-      "id": "DB2",
-      "title": "DB2: a plan without a report name asks for one (A-DB1-2)",
-      "model": "sonnet",
-      "cost_usd": 1.99,
-      "tokens": 11940402,
-      "minutes": 109,
-      "finished_at": "2026-11-10T14:04Z"
-    },
-    {
-      "id": "LG2",
-      "title": "LG2: the write tools answer input errors in the approved Arabic (B-419)",
-      "model": "sonnet",
-      "cost_usd": 0.86,
-      "tokens": 3510481,
-      "minutes": 24,
-      "finished_at": "2026-11-10T13:05Z"
-    },
-    {
-      "id": "TC2",
-      "title": "TC2: type checking rolled out to read-report and files (A-TC1-1)",
-      "model": "sonnet",
-      "cost_usd": 1.43,
-      "tokens": 7781512,
-      "minutes": 57,
-      "finished_at": "2026-11-10T12:29Z"
-    },
-    {
-      "id": "OR1",
-      "title": "OR1: lessons page, old asks sorted, show_shas false alarm (D-1110-05)",
-      "model": "opus",
-      "cost_usd": 5.11,
-      "tokens": 12600532,
-      "minutes": 14,
-      "finished_at": "2026-11-10T11:47Z"
     }
   ],
   "workers": {
-    "count": 6,
-    "cost_usd": 10.12,
+    "count": 5,
+    "cost_usd": 12.49,
     "costliest": [
       {
-        "label": "worker 00:47",
-        "cost_usd": 2.59,
-        "minutes": 6,
-        "started": "2026-11-12T00:48Z"
+        "label": "worker 03:03",
+        "cost_usd": 1.22,
+        "minutes": 3,
+        "started": "2026-11-22T03:04Z"
       },
       {
-        "label": "worker 02:49",
-        "cost_usd": 2.67,
-        "minutes": 32,
-        "started": "2026-11-12T02:49Z"
+        "label": "worker 03:53",
+        "cost_usd": 1.17,
+        "minutes": 3,
+        "started": "2026-11-22T03:53Z"
       },
       {
-        "label": "worker 03:46",
-        "cost_usd": 1.66,
-        "minutes": 56,
-        "started": "2026-11-12T03:47Z"
+        "label": "cleanup",
+        "cost_usd": 9.23,
+        "minutes": 37,
+        "started": "2026-11-22T06:18Z"
       }
     ]
   },
   "top": [
     {
-      "label": "LX1",
+      "label": "builder 05:15",
       "kind": "builder",
-      "cost_usd": 13.86
+      "cost_usd": 14.2
     },
     {
-      "label": "WF1",
-      "kind": "builder",
-      "cost_usd": 11.63
+      "label": "cleanup",
+      "kind": "worker",
+      "cost_usd": 9.23
     },
     {
-      "label": "SN2",
+      "label": "builder 08:28",
       "kind": "builder",
-      "cost_usd": 6.18
+      "cost_usd": 4.88
     },
     {
-      "label": "AU1",
-      "kind": "builder",
-      "cost_usd": 5.4
+      "label": "worker 03:03",
+      "kind": "worker",
+      "cost_usd": 1.22
     },
     {
-      "label": "AU2",
-      "kind": "builder",
-      "cost_usd": 4.47
+      "label": "worker 03:53",
+      "kind": "worker",
+      "cost_usd": 1.17
     }
   ]
 }
