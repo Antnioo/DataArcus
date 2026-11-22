@@ -49,6 +49,10 @@ jobs:
       - name: The ?v= stamps are what the build makes (made-up trees and the real one)
         run: node scripts/test-stamps.mjs
 
+      # (LG3, 0.3.4, D-1122-06) the mark keeps a space between its bars and its arc
+      - name: The favicon's bars keep their space from the arc
+        run: node scripts/test-favicon-gap.mjs
+
       - name: The shipped code loads every module by a literal path (packaging stages only what it can name, B-196)
         run: node scripts/test-literal-requires.mjs && node scripts/check-literal-requires.mjs
 

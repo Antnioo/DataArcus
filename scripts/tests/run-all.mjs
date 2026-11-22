@@ -2,6 +2,7 @@
 //   npm test                    all tests, 3 at a time (one browser, a separate window per test)
 //   npm test -- anchors consent only these
 //   npm test -- --jobs 1        one at a time (slower; use it to rule out a machine that is too busy)
+//   npm test -- --list          print the suites' names and stop
 //   npm test -- --full          also the long layout stress test on every page size
 //   npm test -- --slow 6        pages run 6 times slower, like a busy machine (to check the tests don't depend on speed)
 //   npm test -- --shard 2/3     only the suites of SHARDS[1] (CI runs the shards as parallel jobs; B-145)
@@ -32,6 +33,13 @@ const SHARDS = [
   if (twice.length || none.length || extra.length) { console.error(`SHARDS must hold every test exactly once: in two shards ${twice.join(', ') || '-'}; in none ${none.join(', ') || '-'}; unknown ${extra.join(', ') || '-'}`); process.exit(2); }
 }
 const args = process.argv.slice(2), full = args.includes('--full');
+// (SW2, L-1110-38) --list prints the suites (one a line) and stops; an option this runner does not know is refused, not ignored
+const KNOWN = ['--full', '--jobs', '--slow', '--shard', '--log-dir', '--list'];
+{
+  const bad = args.filter((a) => a.startsWith('--') && !KNOWN.includes(a));
+  if (bad.length) { console.error(`Unknown option: ${bad.join(', ')}. Options: ${KNOWN.join(', ')}`); process.exit(2); }
+  if (args.includes('--list')) { console.log(ALL.join('\n')); process.exit(0); }
+}
 const ji = args.indexOf('--jobs'), jobs = Math.max(1, ji >= 0 ? +args[ji + 1] || 1 : 3);
 const si = args.indexOf('--slow');
 if (si >= 0) process.env.DATAARCUS_TEST_SLOW = String(Math.max(1, +args[si + 1] || 4));

@@ -55,6 +55,7 @@ t('red: a made-up module with no row is named, with the fix', () => {
 t('red: a row whose file is gone is named', () => one(repo({ 'mcp/docs/MODULES.md': doc({ ...ROW, lib: [ROW.lib, '| `delta.mjs` | gone | x -> y | `go.mjs` | yes |'] }) }), /the row for mcp\/lib\/delta\.mjs names a file that is not there/));
 t('red: a file with two rows is named, with both lines', () => one(repo({ 'mcp/docs/MODULES.md': doc({ ...ROW, lib: [ROW.lib, ROW.lib] }) }), /^FAIL mcp\/lib\/beta\.mjs: 2 rows \(mcp\/docs\/MODULES\.md lines \d+, \d+\): keep one/));
 t('red: a "used by" name that is not a module or a page is named', () => one(repo({ 'mcp/docs/MODULES.md': doc({ ...ROW, tool: ROW.tool.replace('`server.mjs`', '`server.mjs`, `nowhere.mjs`') }) }), /go\.mjs's "used by" names nowhere\.mjs, which is not a module, server\.mjs or a page/));
+t('red: a "used by" name that is a function, not a file, says "not a file" with the fix (L-1110-38)', () => one(repo({ 'mcp/docs/MODULES.md': doc({ ...ROW, tool: ROW.tool.replace('`server.mjs`', '`server.mjs`, `register()`') }) }), /go\.mjs's "used by" has "register\(\)": not a file: put the caller's file name \(go\.mjs\), never a function or a word/));
 t('red: a page that is not there, a row in a table with no folder, a missing section', () => {
   one(repo({ 'tools/page.html': null }), /names tools\/page\.html, which is not a module/);
   const p = repo({ 'mcp/docs/MODULES.md': doc().replace('In `mcp/lib/`.', 'No folder.') }).problems;

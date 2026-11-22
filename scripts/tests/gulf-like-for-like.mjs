@@ -20,6 +20,10 @@
 //   L1  (0.3.3 LF1, AUD-074) the page does not jump on load (CLS at most 0.1; 0.20 at 1440 and 0.31 at 992 before) for the
 //       months that fill the most (March and February 2027: estimates, the most dates) and November 2026, the clock set
 //       to each, at 1440 and 992; and the empty result box hides when the month is not known
+//   Y1  (SW2, AUD-076) the Year list offers only years that can answer (the table's first year + 1 to its last: every one
+//       is known in Node and in the page), and a verdict that says "not known" never says "yet"
+//   O1  (SW2, AUD-077) at 390 px the year overview's last column ("like for like") is inside its box: the box does not
+//       scroll and the last cell's right edge is within 1 px of the box's
 //   A1  (AUD-075) a page in AR_HELD stays lang="en" dir="ltr", visible from the start, in English, with no Arabic font and
 //       no language switch, whether Arabic comes from ?lang=ar or from the saved choice (which it leaves as it was), at
 //       390 and 1440 px; the held list read from locale-routes.js only (the page has no Arabic head guard, every other
@@ -75,6 +79,8 @@ export default async function ({ browser, url }) {
     const a = A({ year: y, month: 3, country: 'uae' });
     check(a.known === false && /not known/i.test(a.verdict) && !(a.rows || []).length && !/\d+ against \d+/.test(a.verdict), `E8 March ${y}: "not known", no number (got ${a.verdict})`);
   }
+  for (const y of [2031, 2018]) check(!/\byet\b/.test(A({ year: y, month: 3, country: 'uae' }).verdict), `Y1 March ${y}: "not known" never says "yet" about a year (got ${A({ year: y, month: 3, country: 'uae' }).verdict})`);
+  const GCmp = require('../../assets/js/gulf-compare.js');
   check(!/\bwrong\b/i.test([feb26, mar26, jan22, jul20, feb27].map((a) => a.verdict + ' ' + (a.note || '')).join(' ')), 'E1-E7 never "wrong"');
 
   // D1
@@ -147,6 +153,8 @@ export default async function ({ browser, url }) {
     check(s.over.length === 12 && s.over.filter((o) => /not like for like/.test(o.text)).length === 5 && s.over.find((o) => o.month === '2').on, `B8 the 2026 overview: 12 months, 5 not like for like, February marked (got ${s.over.map((o) => o.text).join(' / ').slice(0, 300)})`);
     await pick(2026, 8, 'uae'); s = await view();
     check(/are like for like on the Gulf calendar/.test(s.verdict), `B2 August 2026: like for like (got ${s.verdict})`);
+    // (SW2, AUD-076) the Year list no longer offers 2031: the option is added so the page's not-known path still runs
+    await v.pg.evaluate(() => { const o = document.createElement('option'); o.value = '2031'; o.textContent = '2031'; document.querySelector('#lfYear').appendChild(o); });
     await pick(2031, 3, 'uae'); s = await view();
     check(/not known/i.test(s.verdict) && !s.tableShown && !/\d+ against \d+/.test(s.verdict), `B3 2031: not known, no table (got ${s.verdict})`);
     await pick(2027, 2, 'uae'); s = await view();
@@ -179,6 +187,30 @@ export default async function ({ browser, url }) {
     } finally { await p.ctx.close(); }
   }
 
+  // Y1 (browser): every year the select offers answers; none that cannot is offered
+  {
+    const y = await visitor(browser, { viewport: [1440, 900] });
+    try {
+      await y.pg.goto(`${url}${PAGE}?lang=en`, { waitUntil: 'load' }); await ready(y.pg);
+      const offered = (await y.pg.evaluate(() => [...document.querySelectorAll('#lfYear option')].map((o) => +o.value)));
+      const want = []; for (let k = GCmp.RANGE.first + 1; k <= GCmp.RANGE.last; k++) want.push(k);
+      check(JSON.stringify(offered) === JSON.stringify(want), `Y1 the Year list is ${want[0]} to ${want[want.length - 1]} (${want.length} years), all that can answer (got ${offered[0]} to ${offered[offered.length - 1]}, ${offered.length})`);
+      const dead = offered.filter((k) => !A({ year: k, month: 1, country: 'uae' }).known);
+      check(!dead.length, `Y1 every year offered is known (not known: ${dead.join(', ')})`);
+    } finally { await y.ctx.close(); }
+  }
+
+  // O1 at 390 px: the overview's answer column is whole
+  {
+    const o = await visitor(browser, { viewport: [390, 844] });
+    try {
+      await o.pg.goto(`${url}${PAGE}?lang=en`, { waitUntil: 'load' }); await ready(o.pg);
+      await o.pg.selectOption('#lfYear', '2027'); await o.pg.selectOption('#lfMonth', '3');
+      const m = await o.pg.evaluate(() => { const b = document.querySelector('#lfYearWrap .lf-scroll'), br = b.getBoundingClientRect().right; return { sw: b.scrollWidth, cw: b.clientWidth, over: Math.max(...[...b.querySelectorAll('tr')].map((r) => r.lastElementChild.getBoundingClientRect().right - br)) }; });
+      check(m.sw <= m.cw + 1 && m.over <= 1, `O1 at 390 px the year overview fits its box (box ${m.cw} px, content ${m.sw}; the last column ends ${m.over.toFixed(1)} px past the box's right edge, want 1 or less)`);
+    } finally { await o.ctx.close(); }
+  }
+
   // L1: the clock set to a month (the page opens on the visitor's month), layout shift over the first 2.5 s
   for (const [y, m] of [[2027, 3], [2027, 2], [2026, 11]]) for (const w of [1440, 992]) {
     const c = await visitor(browser, { viewport: [w, 900] });
@@ -194,6 +226,8 @@ export default async function ({ browser, url }) {
     const c = await visitor(browser, { viewport: [1440, 900] });
     try {
       await c.pg.goto(`${url}${PAGE}?lang=en`, { waitUntil: 'load' }); await ready(c.pg);
+      // (SW2, AUD-076) the list no longer offers 2031: the page is made to hold it, as a stale or typed address could
+      await c.pg.evaluate(() => { const o = document.createElement('option'); o.value = '2031'; o.textContent = '2031'; document.querySelector('#lfYear').appendChild(o); });
       await c.pg.selectOption('#lfYear', '2031');
       const shown = await c.pg.evaluate(() => document.querySelector('#lfDetail').getClientRects().length);
       check(shown === 0, 'L1 a month not known: the empty result box (#lfDetail) is not shown');

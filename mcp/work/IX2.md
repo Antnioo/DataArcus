@@ -138,7 +138,7 @@
      check_report التقرير "<report>" على نموذجه، ولا يسمّي ملف definition.pbir مجلد نموذج (byPath): أعطِ تقريرًا
      محفوظًا مع نموذجه (مشروع ‎.pbip). لم يُقارَن شيء.»
    - "model or report files that could not be read fully: a comparison or a visual in them is not counted, so more
-     visuals can compare than said" Draft: «ملفات في النموذج أو التقرير تعذّرت قراءتها كاملة: لا تُحسب مقارنة أو مرئية
+     visuals can compare than said" Draft: «ملفات في النموذج أو التقرير تعذّرت قراءتها كاملة: لا تُحسب مقارنة أو مرئي
      فيها، فقد تكون المرئيات التي تقارن أكثر مما ذُكر.»
    - In notProved: "the items of a calculation group are read on the visuals that use the group's column (a field or a
      filter), not where the group is applied another way." Draft: «تُقرأ عناصر مجموعة الحساب في المرئيات التي تستخدم

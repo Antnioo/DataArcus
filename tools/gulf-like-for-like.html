@@ -22,8 +22,8 @@
   <meta property="og:image:type" content="image/jpeg" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/gulf-calendar.jpg" />
-  <link rel="icon" href="../assets/img/favicon.svg"/>
-  <link rel="icon" href="../assets/img/favicon-48.png" sizes="48x48" type="image/png" />
+  <link rel="icon" href="../assets/img/favicon.svg?v=402611c1508a"/>
+  <link rel="icon" href="../assets/img/favicon-48.png?v=9d541928dfb8" sizes="48x48" type="image/png" />
   <link rel="manifest" href="/site.webmanifest" />
   <meta name="theme-color" content="#0a0f1c" />
   <link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png" />
@@ -119,7 +119,9 @@
     @media (min-width: 576px) { .lf-verdict { min-height: calc(4 * 1.6em + 30px); } #lfDetail > .lf-scroll { min-height: 266.3px; } #lfDates { min-height: 22.5px; } #lfYearWrap > .lf-scroll { min-height: 586.8px; } }
     @media (min-width: 768px) { #lfYearWrap > .lf-scroll { min-height: 494.6px; } }
     @media (min-width: 1400px) { .lf-verdict { min-height: calc(3 * 1.6em + 30px); } }
-    @media (max-width: 575px) { .lf-picks { grid-template-columns: 1fr; } .lf-table { font-size: .82rem; } .lf-table th, .lf-table td { padding: 6px 5px; } }
+    @media (max-width: 575px) { .lf-picks { grid-template-columns: 1fr; } .lf-table { font-size: .82rem; } .lf-table th, .lf-table td { padding: 6px 5px; }
+      /* (SW2, AUD-077) the year's answer column wraps instead of running past the box: all five columns fit at 390 px */
+      #lfYearWrap .lf-table th, #lfYearWrap .lf-table td { white-space: normal; } }
   </style>
 </head>
 <body>
@@ -279,6 +281,6 @@
   <script src="../assets/js/page-toast.min.js?v=995950255945" defer></script>
   <script src="../assets/js/gulf-dates.min.js?v=ceff70a43bc8" defer></script>
   <script src="../assets/js/gulf-compare.min.js?v=fad996dbb5bc" defer></script>
-  <script src="../assets/js/gulf-like-for-like.min.js?v=ddb554d09a0a" defer></script>
+  <script src="../assets/js/gulf-like-for-like.min.js?v=108aa8ccdc36" defer></script>
 </body>
 </html>
