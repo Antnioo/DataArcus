@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "generated_at": "2026-11-22T12:12Z",
+  "generated_at": "2026-11-22T13:11Z",
   "today": {
     "date": "2026-11-22",
-    "cost_usd": 87.18,
-    "tokens": 272122610,
-    "sessions": 14,
+    "cost_usd": 112.36,
+    "tokens": 362423100,
+    "sessions": 15,
     "by_kind": {
       "builder": {
-        "cost_usd": 67.36,
-        "count": 6
+        "cost_usd": 92.54,
+        "count": 7
       },
       "worker": {
         "cost_usd": 19.82,
@@ -30,8 +30,8 @@
         "count": 5
       },
       "opus": {
-        "cost_usd": 83.03,
-        "count": 9
+        "cost_usd": 108.21,
+        "count": 10
       }
     }
   },
@@ -116,9 +116,9 @@
     },
     {
       "date": "2026-11-22",
-      "cost_usd": 87.18,
-      "tokens": 272122610,
-      "sessions": 14
+      "cost_usd": 112.36,
+      "tokens": 362423100,
+      "sessions": 15
     }
   ],
   "jobs": [
@@ -509,6 +509,11 @@
   },
   "top": [
     {
+      "label": "builder 08:50",
+      "kind": "builder",
+      "cost_usd": 25.18
+    },
+    {
       "label": "builder 09:18",
       "kind": "builder",
       "cost_usd": 18.7
@@ -527,11 +532,6 @@
       "label": "builder 10:54",
       "kind": "builder",
       "cost_usd": 11.05
-    },
-    {
-      "label": "cleanup",
-      "kind": "worker",
-      "cost_usd": 9.23
     }
   ]
 }
