@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-22T09:12Z",
+  "generated_at": "2026-11-22T10:02Z",
   "today": {
     "date": "2026-11-22",
-    "cost_usd": 31.57,
-    "tokens": 91030222,
-    "sessions": 7,
+    "cost_usd": 51.18,
+    "tokens": 161300921,
+    "sessions": 10,
     "by_kind": {
       "builder": {
-        "cost_usd": 19.08,
-        "count": 2
+        "cost_usd": 37.61,
+        "count": 4
       },
       "worker": {
-        "cost_usd": 12.49,
-        "count": 5
+        "cost_usd": 13.57,
+        "count": 6
       },
       "probe": {
         "cost_usd": 0,
@@ -26,12 +26,12 @@
     },
     "by_model": {
       "sonnet": {
-        "cost_usd": 0.87,
-        "count": 2
+        "cost_usd": 2.88,
+        "count": 4
       },
       "opus": {
-        "cost_usd": 30.7,
-        "count": 5
+        "cost_usd": 48.3,
+        "count": 6
       }
     }
   },
@@ -116,12 +116,21 @@
     },
     {
       "date": "2026-11-22",
-      "cost_usd": 31.57,
-      "tokens": 91030222,
-      "sessions": 7
+      "cost_usd": 51.18,
+      "tokens": 161300921,
+      "sessions": 10
     }
   ],
   "jobs": [
+    {
+      "id": "LG3",
+      "title": "LG3: the mark with a space between the bars and the arc (D-1122-06)",
+      "model": "sonnet",
+      "cost_usd": 0.93,
+      "tokens": 4155505,
+      "minutes": 38,
+      "finished_at": "2026-11-22T09:42Z"
+    },
     {
       "id": "AF3",
       "title": "AF3: audit fixes AUD-081 (grey brand palette), AUD-083 (Design > Import theme), AUD-084 (EVM only-way claim)",
@@ -472,20 +481,11 @@
       "tokens": 10205167,
       "minutes": 32,
       "finished_at": "2026-11-11T08:41Z"
-    },
-    {
-      "id": "RW1",
-      "title": "RW1: release by the owner's approval on GitHub, dry run on 0.3.2 (C-01, D-1111-12)",
-      "model": "opus",
-      "cost_usd": 3.45,
-      "tokens": 7389765,
-      "minutes": 22,
-      "finished_at": "2026-11-11T08:31Z"
     }
   ],
   "workers": {
-    "count": 5,
-    "cost_usd": 12.49,
+    "count": 6,
+    "cost_usd": 13.57,
     "costliest": [
       {
         "label": "worker 03:03",
@@ -509,6 +509,11 @@
   },
   "top": [
     {
+      "label": "builder 07:18",
+      "kind": "builder",
+      "cost_usd": 17.6
+    },
+    {
       "label": "builder 05:15",
       "kind": "builder",
       "cost_usd": 14.2
@@ -527,11 +532,6 @@
       "label": "worker 03:03",
       "kind": "worker",
       "cost_usd": 1.22
-    },
-    {
-      "label": "worker 03:53",
-      "kind": "worker",
-      "cost_usd": 1.17
     }
   ]
 }
