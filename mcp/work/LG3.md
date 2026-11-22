@@ -32,6 +32,10 @@ Expected numbers: filled in as measured.
 - Pictures: mcp/work/LG3/before-after-48.png and before-after-192.png (left before, right after); before/ and after/ hold the files.
 - Checks run: check-modules --strict PASS 1272; test-site-config PASS; test-stamps 17; check-result-lines; check-agent-memory; csp, ar-pages, sitemap-lastmod written.
 
+## Changed on purpose
+- scripts/tests/fixtures/sp36-lang.json (SP36_RECORD=1): CI run 45006316289 on 32da5e4c was red in sp36 (S1 "metas '95232293d8e7e630' -> '7d41f99f580e4d89'"): the pages' icon links now carry ?v=. Re-recorded; the diff is 35 lines changed, all `"metas"` values, nothing else (base kept in the scratchpad). sp36 14 checks after.
+- Same run: Windows shard 0, mcp/test-0.3.1-mutation.mjs, baseline "large-model-caps fails on the unmutated copy, 2 of 210". No mcp file is touched by this job and the same suite passed 217 in the real tree on the same run; the failed checks' names are not in the log. Not fixed here (cause not measured, R-9); see Seen.
+
 ## CHANGELOG line
 none (website only).
 
@@ -54,6 +58,7 @@ Look at the tab icon in a browser after a hard refresh.
 
 ## Seen, not in scope
 - site.webmanifest icons have no ?v=, so a returning install keeps the old 192/512 icon until its cache turns over | route: backlog | size: S | why: stamps.mjs does not read json
+- mutation baseline on Windows: large-model-caps failed 2 of 210 in a mutation copy on 32da5e4c's run, passed in the real tree | route: fix | size: M | why: needs the failed check names (run it in a copy on Windows; the log keeps only the count)
 - Desk (SP5) and Pulse (PD3) still hold the old geometry | route: job | size: S | why: the brief says they take it separately
 
 ## Lessons for the reviewer
