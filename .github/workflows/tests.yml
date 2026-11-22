@@ -119,6 +119,9 @@ jobs:
       - name: The beta page's "What's new" sections (0.3.0 and 0.3.1), English and Arabic, name only what each version shipped
         run: node scripts/test-whats-new.mjs
 
+      - name: The beta page's newest "What's new" sections (0.3.3 and 0.3.2), English and Arabic; older versions folded
+        run: node scripts/test-whats-new-latest.mjs
+
   website-suites:
     runs-on: ubuntu-latest
     timeout-minutes: 40
