@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "generated_at": "2026-11-22T11:11Z",
+  "generated_at": "2026-11-22T12:12Z",
   "today": {
     "date": "2026-11-22",
-    "cost_usd": 52.45,
-    "tokens": 167858996,
-    "sessions": 11,
+    "cost_usd": 87.18,
+    "tokens": 272122610,
+    "sessions": 14,
     "by_kind": {
       "builder": {
-        "cost_usd": 37.61,
-        "count": 4
+        "cost_usd": 67.36,
+        "count": 6
       },
       "worker": {
-        "cost_usd": 14.84,
-        "count": 7
+        "cost_usd": 19.82,
+        "count": 8
       },
       "probe": {
         "cost_usd": 0,
@@ -30,8 +30,8 @@
         "count": 5
       },
       "opus": {
-        "cost_usd": 48.3,
-        "count": 6
+        "cost_usd": 83.03,
+        "count": 9
       }
     }
   },
@@ -104,9 +104,9 @@
     },
     {
       "date": "2026-11-20",
-      "cost_usd": 41.46,
-      "tokens": 113920711,
-      "sessions": 7
+      "cost_usd": 76.49,
+      "tokens": 185207561,
+      "sessions": 8
     },
     {
       "date": "2026-11-21",
@@ -116,9 +116,9 @@
     },
     {
       "date": "2026-11-22",
-      "cost_usd": 52.45,
-      "tokens": 167858996,
-      "sessions": 11
+      "cost_usd": 87.18,
+      "tokens": 272122610,
+      "sessions": 14
     }
   ],
   "jobs": [
@@ -484,15 +484,9 @@
     }
   ],
   "workers": {
-    "count": 7,
-    "cost_usd": 14.84,
+    "count": 8,
+    "cost_usd": 19.82,
     "costliest": [
-      {
-        "label": "worker 03:03",
-        "cost_usd": 1.22,
-        "minutes": 3,
-        "started": "2026-11-22T03:04Z"
-      },
       {
         "label": "cleanup",
         "cost_usd": 9.23,
@@ -504,10 +498,21 @@
         "cost_usd": 1.27,
         "minutes": 26,
         "started": "2026-11-22T10:02Z"
+      },
+      {
+        "label": "worker 11:00",
+        "cost_usd": 4.98,
+        "minutes": 39,
+        "started": "2026-11-22T11:00Z"
       }
     ]
   },
   "top": [
+    {
+      "label": "builder 09:18",
+      "kind": "builder",
+      "cost_usd": 18.7
+    },
     {
       "label": "builder 07:18",
       "kind": "builder",
@@ -519,19 +524,14 @@
       "cost_usd": 14.2
     },
     {
+      "label": "builder 10:54",
+      "kind": "builder",
+      "cost_usd": 11.05
+    },
+    {
       "label": "cleanup",
       "kind": "worker",
       "cost_usd": 9.23
-    },
-    {
-      "label": "builder 08:28",
-      "kind": "builder",
-      "cost_usd": 4.88
-    },
-    {
-      "label": "worker 10:02",
-      "kind": "worker",
-      "cost_usd": 1.27
     }
   ]
 }
