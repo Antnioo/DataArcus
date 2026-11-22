@@ -4,8 +4,12 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
-## [Unreleased]: 0.3.4
+## [0.3.4]: 2026-11-22 (a calmer theme for grey brands, newer server libraries)
+In short: a brand colour with no hue gives a grey theme with calm colours instead of a red one, and the libraries under the MCP connection carry their makers' latest fixes.
 - `generate_theme`: a brand colour with no hue (black, white or grey) now keeps its grey and takes the calm colours, and says so, instead of a red palette.
+- The MCP SDK's own web libraries are updated to hono 4.13.18 and @hono/node-server 2.1.8, with their makers' security
+  fixes. DataArcus talks to Claude Desktop over the standard input and output of its own process and starts no web server,
+  so DataArcus does not use them; no answer changes.
 
 ## [0.3.3]: 2026-11-17 (bookmarks, the Arabic glossary, the build helix)
 In short: bookmarks in a plan and two new report checks, one Arabic glossary with Arabic answers in more places, better-filled layouts, and a fix for zips holding two models.
