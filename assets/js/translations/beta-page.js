@@ -28,6 +28,12 @@ window.betaPageTranslations = {
         "facts": "Free during the beta. Windows, with Power BI Desktop and Claude Desktop.",
         "ga": "Microsoft: <em>\"Power BI Desktop projects (PBIP) and Power BI enhanced report format (PBIR) are generally available.\"</em> (<a href='https://learn.microsoft.com/power-bi/developer/projects/projects-external-editing' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>)"
       },
+      "new34": {
+        "title": "What's new in 0.3.4",
+        "date": "Released on 22 November 2026.",
+        "l1": "<strong>A grey brand gets a grey theme.</strong> Give <code translate='no'>generate_theme</code> a brand colour with no hue (black, white or a grey), and it now keeps that grey as the lead colour, takes the calm colours for the rest of the theme, and says so. Before, it made a red palette.",
+        "l2": "<strong>Newer libraries.</strong> The MCP SDK's own web libraries are updated (hono 4.13.18, @hono/node-server 2.1.8) with their makers' security fixes. DataArcus talks to Claude Desktop through its own process and starts no web server, so it does not use them; no answer changes."
+      },
       "new33": {
         "title": "What's new in 0.3.3",
         "date": "Released on 17 November 2026.",
@@ -165,6 +171,12 @@ window.betaPageTranslations = {
         "how": "شاهد كيف يعمل",
         "facts": "مجاني خلال النسخة التجريبية. يعمل على Windows مع Power BI Desktop و Claude Desktop.",
         "ga": "Microsoft: <em>\"Power BI Desktop projects (PBIP) and Power BI enhanced report format (PBIR) are generally available.\"</em> أي أن مشاريع Power BI Desktop (PBIP) وصيغة التقارير المحسّنة (PBIR) متاحة للجميع. (<a href='https://learn.microsoft.com/power-bi/developer/projects/projects-external-editing' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>)"
+      },
+      "new34": {
+        "title": "الجديد في الإصدار 0.3.4",
+        "date": "صدر في 22 نوفمبر 2026.",
+        "l1": "<strong>علامة تجارية رمادية، سمة رمادية.</strong> حين تعطي <code translate='no'>generate_theme</code> لونًا محايدًا للعلامة التجارية (أسود أو أبيض أو رمادي)، تُبقي الآن ذلك الرمادي لونًا رئيسيًا، وتأخذ الألوان الهادئة لبقية السمة، وتقول ذلك. وكانت قبل ذلك تصنع لوحة ألوان حمراء.",
+        "l2": "<strong>مكتبات أحدث.</strong> حُدّثت مكتبات الويب الخاصة بـ MCP SDK (hono 4.13.18 و @hono/node-server 2.1.8) بإصلاحات أمنية من صانعيها. يتصل DataArcus بـ Claude Desktop عبر عمليته الخاصة ولا يشغّل خادم ويب، فلا يستخدمها؛ ولا تتغير أي إجابة."
       },
       "new33": {
         "title": "الجديد في الإصدار 0.3.3",

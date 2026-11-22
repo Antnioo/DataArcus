@@ -140,19 +140,30 @@
             <article class="article-body">
               <p class="small text-white-50 mt-4" data-i18n-html="beta.hero.ga">Microsoft: <em>"Power BI Desktop projects (PBIP) and Power BI enhanced report format (PBIR) are generally available."</em> أي أن مشاريع Power BI Desktop (PBIP) وصيغة التقارير المحسّنة (PBIR) متاحة للجميع. (<a href="https://learn.microsoft.com/power-bi/developer/projects/projects-external-editing" class="text-accent" target="_blank" rel="noopener">Microsoft Learn</a>)</p>
 
-              <section id="new-033">
-                <h2 class="mt-5 mb-3" data-i18n="beta.new33.title">الجديد في الإصدار 0.3.3</h2>
-                <p class="small text-white-50" data-i18n="beta.new33.date">صدر في 17 نوفمبر 2026.</p>
+              <section id="new-034">
+                <h2 class="mt-5 mb-3" data-i18n="beta.new34.title">الجديد في الإصدار 0.3.4</h2>
+                <p class="small text-white-50" data-i18n="beta.new34.date">صدر في 22 نوفمبر 2026.</p>
                 <ul class="beta-steps">
-                  <li data-i18n-html="beta.new33.l1"><strong>فحص الأثر: ما الذي قد يغيّره تعديل النموذج.</strong> تقول <code translate="no">check_report</code> مع <code translate="no">againstModel</code> (نسخة سابقة من نموذجك، كنسخة احتياطية أو نسخة من git) أي المرئيات قد تُظهر رقمًا آخر بعد تعديل النموذج، ولماذا، بسلسلة الأسماء. وقبل التعديل تذكر <code translate="no">read_model</code> مع <code translate="no">reach</code> الصفحات والمرئيات التي يصل إليها مقياس أو عمود أو جدول. وهي تقرأ الملفات فقط: الأسماء، لا القيم أبدًا.</li>
-                  <li data-i18n-html="beta.new33.l2"><strong>كل موسم بنظيره في الخليج.</strong> تذكر <code translate="no">check_report</code> مع <code translate="no">likeForLike</code> (سنة ودولة خليجية) المرئيات التي تقارن التواريخ الميلادية نفسها من فترة أخرى، والأشهر التي تختلف أيام رمضان أو العيد فيها عن الأشهر التي تُقارن بها، ومقاييس "Last Ramadan" التي يفتقدها نموذجك.</li>
-                  <li data-i18n-html="beta.new33.l3"><strong>الإشارات المرجعية عروضًا، حين تطلبها.</strong> يمكن أن تضم الخطة حتى 8 عروض، لكل منها اسم وصفحة. تعرضها صفحة الموافقة، ويحصل التقرير على إشارة مرجعية لكل عرض بترتيب الخطة، فيعرضها "View" في جزء الإشارات المرجعية (Bookmarks) كعرض شرائح. يفتح العرض صفحته ولا يحمل حالة الفلاتر أو المقسمات (Slicers) أو المرئيات؛ ولا يُظهر المرئيات أو يخفيها بعد، ولم يُجرَّب بعد في Power BI Desktop.</li>
-                  <li data-i18n-html="beta.new33.l4"><strong>مخططات قد تُظهر القيمة نفسها في كل صف.</strong> تذكر <code translate="no">check_report</code> كل مخطط لا يستطيع عموده أن يغيّر الرقم الذي يعرضه على نموذجك، مع السبب. وأعطها الأسئلة التي يجب أن يجيب عنها التقرير، فتقول أيها يجيب عنه مرئي، وأيها جزئيًا، وأيها لا يستطيع النموذج الإجابة عنه. وتنبّه أيضًا إلى الإشارة المرجعية التي تذكر صفحة أو مرئيات لم تعد في التقرير.</li>
-                  <li data-i18n-html="beta.new33.l5"><strong>فحص صحة النموذج يقول ما لم يقرأه.</strong> النموذج الذي يذكر جدولًا لا يعرّفه أي ملف لا يُعطى درجة، ويُذكر الجدول، بدل درجة أعلى لنموذج أصغر. وملف ZIP الذي يضم نموذجين يقول أي نموذج قُرئ، ولا يقرأ إلا تقرير ذلك النموذج؛ وصار يمكن ضغط مشروع محفوظ بصيغة TMDL أيضًا. والأمر نفسه في هذا الموقع وفي DataArcus.</li>
-                  <li data-i18n-html="beta.new33.l6"><strong>عربية أكثر، من قائمة مصطلحات واحدة.</strong> صارت مسودات الأسماء العربية لأسماء الحقول ذات الكلمتين تتبع ترتيب الكلمات العربي («منطقة المبيعات» لـ "Sales Region")؛ وصار عنوان "Top N of M" يُقرأ «أعلى N من أصل M»؛ وتُقرأ أسماء أعمدة التاريخ وأيام الأسبوع العربية كما تُقرأ الإنجليزية؛ ومع <code translate="no">lang</code> "ar" تجيب أدوات الكتابة وأخطاء "أي نموذج" بالعربية. وكل كلمة عربية يستخدمها DataArcus في قائمة مصطلحات واحدة، مع كلمة Microsoft وكلمة Google ومكان قراءتهما.</li>
-                  <li data-i18n-html="beta.new33.l7"><strong>صفحات أكثر امتلاءً.</strong> في الصفحة التي فلاترها في شريط جانبي، تمتد بطاقات المؤشرات على عرض الصفحة وتأخذ المخططات بجانب الشريط ارتفاعه؛ ويتبع Top N في المخطط الشريطي الحجم الذي ينتهي إليه المخطط؛ وفي النسخة العربية تصطف أسماء الأيام بجانب الخريطة الحرارية (heatmap) مع صفوفها.</li>
-                  <li data-i18n-html="beta.new33.l8"><strong>خطك في كل مكان، وبداية أخف.</strong> صار الخط الذي تعطيه لـ <code translate="no">create_report</code> (مثل Tahoma) يصل إلى الجداول والبطاقات والمخططات أيضًا، في التقرير الإنجليزي ونسخته العربية. وصارت قائمة الأدوات التي يقرؤها تطبيق الذكاء الاصطناعي في بداية كل محادثة أقصر بنحو الربع: الأدوات والخيارات نفسها، بكلمات أقل.</li>
+                  <li data-i18n-html="beta.new34.l1"><strong>علامة تجارية رمادية، سمة رمادية.</strong> حين تعطي <code translate="no">generate_theme</code> لونًا محايدًا للعلامة التجارية (أسود أو أبيض أو رمادي)، تُبقي الآن ذلك الرمادي لونًا رئيسيًا، وتأخذ الألوان الهادئة لبقية السمة، وتقول ذلك. وكانت قبل ذلك تصنع لوحة ألوان حمراء.</li>
+                  <li data-i18n-html="beta.new34.l2"><strong>مكتبات أحدث.</strong> حُدّثت مكتبات الويب الخاصة بـ MCP SDK (hono 4.13.18 و @hono/node-server 2.1.8) بإصلاحات أمنية من صانعيها. يتصل DataArcus بـ Claude Desktop عبر عمليته الخاصة ولا يشغّل خادم ويب، فلا يستخدمها؛ ولا تتغير أي إجابة.</li>
                 </ul>
+              </section>
+
+              <section id="new-033">
+                <details class="whats-new-fold">
+                  <summary><h2 data-i18n="beta.new33.title">الجديد في الإصدار 0.3.3</h2></summary>
+                  <p class="small text-white-50" data-i18n="beta.new33.date">صدر في 17 نوفمبر 2026.</p>
+                  <ul class="beta-steps">
+                    <li data-i18n-html="beta.new33.l1"><strong>فحص الأثر: ما الذي قد يغيّره تعديل النموذج.</strong> تقول <code translate="no">check_report</code> مع <code translate="no">againstModel</code> (نسخة سابقة من نموذجك، كنسخة احتياطية أو نسخة من git) أي المرئيات قد تُظهر رقمًا آخر بعد تعديل النموذج، ولماذا، بسلسلة الأسماء. وقبل التعديل تذكر <code translate="no">read_model</code> مع <code translate="no">reach</code> الصفحات والمرئيات التي يصل إليها مقياس أو عمود أو جدول. وهي تقرأ الملفات فقط: الأسماء، لا القيم أبدًا.</li>
+                    <li data-i18n-html="beta.new33.l2"><strong>كل موسم بنظيره في الخليج.</strong> تذكر <code translate="no">check_report</code> مع <code translate="no">likeForLike</code> (سنة ودولة خليجية) المرئيات التي تقارن التواريخ الميلادية نفسها من فترة أخرى، والأشهر التي تختلف أيام رمضان أو العيد فيها عن الأشهر التي تُقارن بها، ومقاييس "Last Ramadan" التي يفتقدها نموذجك.</li>
+                    <li data-i18n-html="beta.new33.l3"><strong>الإشارات المرجعية عروضًا، حين تطلبها.</strong> يمكن أن تضم الخطة حتى 8 عروض، لكل منها اسم وصفحة. تعرضها صفحة الموافقة، ويحصل التقرير على إشارة مرجعية لكل عرض بترتيب الخطة، فيعرضها "View" في جزء الإشارات المرجعية (Bookmarks) كعرض شرائح. يفتح العرض صفحته ولا يحمل حالة الفلاتر أو المقسمات (Slicers) أو المرئيات؛ ولا يُظهر المرئيات أو يخفيها بعد، ولم يُجرَّب بعد في Power BI Desktop.</li>
+                    <li data-i18n-html="beta.new33.l4"><strong>مخططات قد تُظهر القيمة نفسها في كل صف.</strong> تذكر <code translate="no">check_report</code> كل مخطط لا يستطيع عموده أن يغيّر الرقم الذي يعرضه على نموذجك، مع السبب. وأعطها الأسئلة التي يجب أن يجيب عنها التقرير، فتقول أيها يجيب عنه مرئي، وأيها جزئيًا، وأيها لا يستطيع النموذج الإجابة عنه. وتنبّه أيضًا إلى الإشارة المرجعية التي تذكر صفحة أو مرئيات لم تعد في التقرير.</li>
+                    <li data-i18n-html="beta.new33.l5"><strong>فحص صحة النموذج يقول ما لم يقرأه.</strong> النموذج الذي يذكر جدولًا لا يعرّفه أي ملف لا يُعطى درجة، ويُذكر الجدول، بدل درجة أعلى لنموذج أصغر. وملف ZIP الذي يضم نموذجين يقول أي نموذج قُرئ، ولا يقرأ إلا تقرير ذلك النموذج؛ وصار يمكن ضغط مشروع محفوظ بصيغة TMDL أيضًا. والأمر نفسه في هذا الموقع وفي DataArcus.</li>
+                    <li data-i18n-html="beta.new33.l6"><strong>عربية أكثر، من قائمة مصطلحات واحدة.</strong> صارت مسودات الأسماء العربية لأسماء الحقول ذات الكلمتين تتبع ترتيب الكلمات العربي («منطقة المبيعات» لـ "Sales Region")؛ وصار عنوان "Top N of M" يُقرأ «أعلى N من أصل M»؛ وتُقرأ أسماء أعمدة التاريخ وأيام الأسبوع العربية كما تُقرأ الإنجليزية؛ ومع <code translate="no">lang</code> "ar" تجيب أدوات الكتابة وأخطاء "أي نموذج" بالعربية. وكل كلمة عربية يستخدمها DataArcus في قائمة مصطلحات واحدة، مع كلمة Microsoft وكلمة Google ومكان قراءتهما.</li>
+                    <li data-i18n-html="beta.new33.l7"><strong>صفحات أكثر امتلاءً.</strong> في الصفحة التي فلاترها في شريط جانبي، تمتد بطاقات المؤشرات على عرض الصفحة وتأخذ المخططات بجانب الشريط ارتفاعه؛ ويتبع Top N في المخطط الشريطي الحجم الذي ينتهي إليه المخطط؛ وفي النسخة العربية تصطف أسماء الأيام بجانب الخريطة الحرارية (heatmap) مع صفوفها.</li>
+                    <li data-i18n-html="beta.new33.l8"><strong>خطك في كل مكان، وبداية أخف.</strong> صار الخط الذي تعطيه لـ <code translate="no">create_report</code> (مثل Tahoma) يصل إلى الجداول والبطاقات والمخططات أيضًا، في التقرير الإنجليزي ونسخته العربية. وصارت قائمة الأدوات التي يقرؤها تطبيق الذكاء الاصطناعي في بداية كل محادثة أقصر بنحو الربع: الأدوات والخيارات نفسها، بكلمات أقل.</li>
+                  </ul>
+                </details>
               </section>
 
               <section id="new-032">
@@ -364,7 +375,7 @@
   </footer>
 
   <script src="/assets/js/translations/common.min.js?v=434124bdf3f2" defer=""></script>
-  <script src="/assets/js/translations/beta-page.min.js?v=0aea2e5693a8" defer=""></script>
+  <script src="/assets/js/translations/beta-page.min.js?v=d4d7b6a23ef7" defer=""></script>
   <script src="/assets/js/locale-routes.min.js?v=63b224b0f9a3" defer=""></script>
   <script src="/assets/js/locale-catalog.min.js?v=1464f13d8c0b" defer=""></script>
   <script src="/assets/js/locale-dom.min.js?v=faf294f00eb2" defer=""></script>

@@ -1,12 +1,13 @@
-// WN033 (18 Nov): the beta page /power-bi-mcp/ says what is new in 0.3.3 and 0.3.2, in English and Arabic, newest first,
-// with only the newest section open: 0.3.2, 0.3.1 and 0.3.0 are each folded in a closed native <details>, keeping their ids.
+// WN033 (18 Nov), 0.3.4 (22 Nov): the beta page /power-bi-mcp/ says what is new in 0.3.4, 0.3.3 and 0.3.2, in English and
+// Arabic, newest first, with only the newest section open: 0.3.3, 0.3.2, 0.3.1 and 0.3.0 are each folded in a closed native
+// <details>, keeping their ids. 0.3.4 is a small version: its section has 2 to 8 lines (the others 5 to 8).
 //   node scripts/test-whats-new-latest.mjs
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
-const NAME = 'whats-new-033-032';
+const NAME = 'whats-new-034-033';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const box = { window: {} };
@@ -23,7 +24,8 @@ const FLUFF = [/\bthe first\b/i, /\bfirst (tool|agent|mcp)\b/i, /\bonly (tool|ag
 const HEADING = [/\bfirst\b/i, /\bonly\b/i, /\bofficial\b/i, /الأول/, /فقط/, /رسمي/];
 const JOB = /\b(?:[A-Z]{1,4}\d{1,4}|[A-Z]-\d{3,4}(?:-\d+)?|D-\d{4}-\d{2})\b/;
 const SECTIONS = [
-  { key: 'new33', id: 'new-033', version: '0.3.3', day: { en: /17 November 2026/, ar: /17 نوفمبر 2026/ }, folded: false },
+  { key: 'new34', id: 'new-034', version: '0.3.4', day: { en: /22 November 2026/, ar: /22 نوفمبر 2026/ }, folded: false, min: 2 },
+  { key: 'new33', id: 'new-033', version: '0.3.3', day: { en: /17 November 2026/, ar: /17 نوفمبر 2026/ }, folded: true },
   { key: 'new32', id: 'new-032', version: '0.3.2', day: { en: /9 November 2026/, ar: /9 نوفمبر 2026/ }, folded: true },
   { key: 'new31', id: 'new-031', version: '0.3.1', folded: true },
   { key: 'new', id: 'new', version: '0.3.0', folded: true }
@@ -35,7 +37,8 @@ for (const s of SECTIONS.filter((x) => x.day)) {
     const lines = Object.keys(n).filter((k) => /^l\d+$/.test(k));
     ok(n.title && n.title.includes(s.version), `${lang}: beta.${s.key}.title names ${s.version} ("${n.title}")`);
     ok(s.day[lang].test(n.date || ''), `${lang}: beta.${s.key}.date is the release day ("${n.date}")`);
-    ok(lines.length >= 5 && lines.length <= 8, `${lang}: ${lines.length} ${s.version} lines, want 5 to 8`);
+    const min = s.min || 5;
+    ok(lines.length >= min && lines.length <= 8, `${lang}: ${lines.length} ${s.version} lines, want ${min} to 8`);
     const text = Object.values(n).map(strip).join(' \n ');
     for (const re of FLUFF) ok(!re.test(text), `${lang}: the ${s.version} section makes a claim it must not: ${re}`);
     for (const k of lines) ok(!HEADING.some((re) => re.test(strip((n[k].match(/<strong>([\s\S]*?)<\/strong>/) || [])[1] || ''))), `${lang}: beta.${s.key}.${k}'s heading says first, only or official`);
@@ -52,12 +55,12 @@ for (const s of SECTIONS.filter((x) => x.day)) {
 for (const [lang, html] of Object.entries(pages)) {
   const at = SECTIONS.map((s) => html.indexOf(`<section id="${s.id}">`));
   ok(at.every((i) => i > 0), `${lang}: a section is missing: ${SECTIONS.filter((s, i) => at[i] < 0).map((s) => s.id).join(', ')}`);
-  ok(at.every((i, j) => j === 0 || at[j - 1] < i), `${lang}: the sections are not newest first (0.3.3, 0.3.2, 0.3.1, 0.3.0)`);
+  ok(at.every((i, j) => j === 0 || at[j - 1] < i), `${lang}: the sections are not newest first (0.3.4, 0.3.3, 0.3.2, 0.3.1, 0.3.0)`);
   for (const s of SECTIONS) {
     const sec = (html.match(new RegExp(`<section id="${s.id}">[\\s\\S]*?</section>`)) || [''])[0];
     const used = [...sec.matchAll(new RegExp(`data-i18n(?:-html)?="beta\\.${s.key}\\.([^"]+)"`, 'g'))].map((m) => m[1]);
     if (s.day) {
-      ok(used.length >= 7, `${lang}: the ${s.version} section uses ${used.length} beta.${s.key} keys, want the title, the date and every line`);
+      ok(used.length >= 2 + (s.min || 5), `${lang}: the ${s.version} section uses ${used.length} beta.${s.key} keys, want the title, the date and every line`);
       for (const k of used) ok((T.en.beta[s.key] || {})[k] != null && (T.ar.beta[s.key] || {})[k] != null, `${lang}: beta.${s.key}.${k} missing in a language`);
     }
     if (!s.folded) {
