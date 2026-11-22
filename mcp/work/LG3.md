@@ -7,7 +7,7 @@
   script to regenerate them, a gap test, the site's ?v= stamps (made by `npm run build:min`), before/after pictures in mcp/work/LG3/.
   Not logo.svg, not any text, not Desk or Pulse (SP5, PD3).
 - **Expected checks:** `node scripts/check-modules.mjs --strict`; the new test; `node scripts/stamps.mjs`; `node scripts/test-site-config.mjs`.
-- **Resume:** built and pushed; CI result under "CI" below.
+- **Resume:** DONE. CI green: https://github.com/Antnioo/DataArcus/actions/runs/45007585427 on ba71f087.
 
 ## Plan (written before the work, 2026-11-22T09:05Z)
 1. Measured on b62a59eb (R-9): the gap is arc stroke edge (round caps included) to bar edge. favicon.svg: 0.05 of 40 per the brief
@@ -63,3 +63,6 @@ Look at the tab icon in a browser after a hard refresh.
 
 ## Lessons for the reviewer
 - The brief's "bump the ?v= stamp" assumed one existed; the pages had none, so the links were added.
+
+## CI
+CI green: https://github.com/Antnioo/DataArcus/actions/runs/45007585427 on ba71f087 (the Windows mutation baseline passed this time; the first run's failure was not reproduced, cause not measured, see Seen).
