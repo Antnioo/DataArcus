@@ -2,12 +2,20 @@
 # Minor and patch updates come grouped, one pull request per folder each week (16 Oct: four single PRs conflicted with
 # each other in package-lock.json). A major update still comes alone, since it can break things; security updates
 # stay one per problem.
+# 22 Nov (the owner, D-1122-17): every update waits 7 days after its release (a bad release is usually pulled within
+# days), and the site's bootstrap and three are left out: the pages load them from a CDN with an integrity hash, so a
+# bump of package.json alone fails the SRI checks (#124, #128, #136). They are updated by hand with their hashes.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: "/"
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
+    ignore:
+      - dependency-name: "bootstrap"
+      - dependency-name: "three"
     open-pull-requests-limit: 5
     groups:
       site-minor-and-patch:
@@ -16,6 +24,8 @@ updates:
     directory: "/mcp"
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     groups:
       mcp-minor-and-patch:
@@ -24,6 +34,8 @@ updates:
     directory: "/"
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns: ["*"]
